@@ -1,13 +1,13 @@
 import copy
 import random
-from collections import namedtuple
+from error_handling import LastElementError
 
 class Experience(object):
-    def __init__(self, obs, action, reward, done):
+    def __init__(self, obs, action, reward, episode_end):
         self.obs = obs
         self.reward = reward
         self.action = action
-        self.done = done
+        self.episode_end = episode_end
 
 class Sample(object):
     def __init__(self, i, n):
@@ -72,7 +72,7 @@ class ReplayBuffer(object):
         for _ in xrange(num_entries):
             while True:
                 idx = random.randint(0, len(self._buffer)-1)
-                if self.has_next(idx) and not self._buffer[idx].done:
+                if self.has_next(idx) and not self._buffer[idx].episode_end:
                     break
             yield Sample(idx, 1)
 
@@ -88,8 +88,8 @@ class ReplayBuffer(object):
         exps = []
         p = sample.i
         for _ in xrange(sample.n):
-            if not self.has_next(p) or self._buffer[p].done:
-                print("warning")
+            if not self.has_next(p) or self._buffer[p].episode_end:
+                raise LastElementError(p, self._buffer[p].episode_end)
             # make a copy of the buffer element as e may be modified somewhere
             e = copy.copy(self._buffer[p])
             exps.append(e)

@@ -1,2 +1,2 @@
-# RL
-Reinforcement learning framework
+# PPRL
+PaddlePaddle Reinforcement Learning Framework

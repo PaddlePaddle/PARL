@@ -45,20 +45,20 @@ class TestParamName(unittest.TestCase):
 
         ## fc5 has a custom name without a bias
         ## fc5 has a different param name with fc1
-        self.assertEqual(self.fc5.param_name, "fc_0_.w")
+        self.assertEqual(self.fc5.param_name, "_fc_0.w")
         self.assertEqual(self.fc5.bias_name, None)
 
         ## embedding layer has no bias
         self.assertEqual(self.embedding.param_name, "embedding_0.w")
         self.assertEqual(self.embedding.bias_name, None)
 
-        ## embedding layer with a custom name; the custom id is 1 up to this point
+        ## embedding layer with a custom name
         self.assertEqual(self.embedding_custom.param_name,
-                         "embedding_custom_1_.w")
+                         "_embedding_custom_0.w")
 
-        ## conv2d shares param with embedding; has a custom bias name; the custom id is 2 now
+        ## conv2d shares param with embedding; has a custom bias name
         self.assertEqual(self.conv2d.param_name, "embedding_0.w")
-        self.assertEqual(self.conv2d.bias_name, "my_conv2d_2_.wbias")
+        self.assertEqual(self.conv2d.bias_name, "_my_conv2d_0.wbias")
 
         for i, gru in enumerate(self.dynamic_grus):
             self.assertEqual(gru.param_name, "dynamic_gru_%d.w" % i)

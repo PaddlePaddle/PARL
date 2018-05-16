@@ -19,6 +19,7 @@ from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
 import paddle.fluid.layers as layers
 import warnings
+import inspect
 
 all_wrapped_layers = [
     "create_parameters", "fc", "embedding", "dynamic_lstm", "dynamic_lstmp",
@@ -28,7 +29,7 @@ all_wrapped_layers = [
 
 
 class LayerCounter:
-    custom = 0
+    custom = {}
     create_parameter = 0
     fc = 0
     embedding = 0
@@ -44,26 +45,36 @@ class LayerCounter:
 
 class LayerFunc(object):
     def __init__(self, param_attr=False, bias_attr=False):
-        self.param_name = (None if not param_attr else param_attr.name)
-        self.bias_name = (None if not bias_attr else bias_attr.name)
+        self.param_attr = param_attr
+        self.bias_attr = bias_attr
+
+    @property
+    def param_name(self):
+        if self.param_attr:
+            return self.param_attr.name
+        else:
+            return None
+
+    @property
+    def bias_name(self):
+        if self.bias_attr:
+            return self.bias_attr.name
+        else:
+            return None
 
     def parameters(self):
-        return (self.param_name, self.bias_name)
-
-    @staticmethod
-    def check_type(layer_func):
-        """
-        Check whether the input is a LayerFunc
-        """
-        bases = layer_func.__class__.__bases__
-        return len(bases) == 1 and bases[0].__name__ == "LayerFunc"
+        return (self.param_attr, self.bias_attr)
 
 
 def get_set_paras(set_paras):
     param_name, bias_name = None, None
     if set_paras is not None:
         assert (type(set_paras) is tuple) and len(set_paras) == 2
-        param_name, bias_name = set_paras
+        param_attr, bias_attr = set_paras
+        if param_attr:
+            param_name = param_attr.name
+        if bias_attr:
+            bias_name = bias_attr.name
     return param_name, bias_name
 
 
@@ -82,6 +93,31 @@ def check_or_replace_name(name, new_name, attr):
     return attr
 
 
+def update_attr_name(name, param_name, field_name, attr, suffix,
+                     counter_increase):
+    if name is None:
+        name = field_name
+    else:
+        name = "_" + name
+        field_name = "custom"
+
+    if field_name == "custom":
+        custom_counter = getattr(LayerCounter, field_name)
+        if not name in custom_counter:
+            custom_counter[name] = 0
+        idx = custom_counter[name]
+        if counter_increase:
+            custom_counter[name] += 1
+        setattr(LayerCounter, field_name, custom_counter)
+    else:
+        idx = getattr(LayerCounter, field_name)
+        if counter_increase:
+            setattr(LayerCounter, field_name, idx + 1)
+
+    new_name = "%s_%d%s" % (name, idx, suffix)
+    return check_or_replace_name(param_name, new_name, attr)
+
+
 def create_parameter(shape,
                      dtype,
                      attr=None,
@@ -92,16 +128,10 @@ def create_parameter(shape,
     """
     Return a function that creates paddle.fluid.layers.create_parameter.
     """
-    param_name, _ = get_set_paras(set_paras)
 
-    if name is None:
-        attr = check_or_replace_name(param_name, "para_%d.w" %
-                                     LayerCounter.create_parameter, attr)
-        LayerCounter.create_parameter += 1
-    else:
-        attr = check_or_replace_name(param_name, "%s_%d_.w" %
-                                     (name, LayerCounter.custom), attr)
-        LayerCounter.custom += 1
+    param_name, _ = get_set_paras(set_paras)
+    self_name = inspect.stack[0][3]
+    attr = update_attr_name(name, param_name, self_name, attr, ".w", True)
 
     class CreateParameter_(LayerFunc):
         def __init__(self):
@@ -131,19 +161,11 @@ def fc(size,
     Return a function that creates a paddle.fluid.layers.fc.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "fc_%d.w" %
-                                           LayerCounter.fc, param_attr)
-        bias_attr = check_or_replace_name(bias_name, "fc_%d.wbias" %
-                                          LayerCounter.fc, bias_attr)
-        LayerCounter.fc += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class FC_(LayerFunc):
         def __init__(self):
@@ -174,15 +196,9 @@ def embedding(size,
     Return a function that creates a paddle.fluid.layers.embedding.
     """
     param_name, _ = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "embedding_%d.w" %
-                                           LayerCounter.embedding, param_attr)
-        LayerCounter.embedding += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", True)
 
     class Embedding_(LayerFunc):
         def __init__(self):
@@ -216,20 +232,11 @@ def dynamic_lstm(size,
     Return a function that creates a paddle.fluid.layers.dynamic_lstm.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "dynamic_lstm_%d.w" %
-                                           LayerCounter.dynamic_lstm,
-                                           param_attr)
-        bias_attr = check_or_replace_name(bias_name, "dynamic_lstm_%d.wbias" %
-                                          LayerCounter.dynamic_lstm, bias_attr)
-        LayerCounter.dynamic_lstm += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class DynamicLstm_(LayerFunc):
         def __init__(self):
@@ -268,21 +275,11 @@ def dynamic_lstmp(size,
     Return a function that creates a paddle.fluid.layers.dynamic_lstmp.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "dynamic_lstmp_%d.w" %
-                                           LayerCounter.dynamic_lstmp,
-                                           param_attr)
-        bias_attr = check_or_replace_name(bias_name, "dynamic_lstmp_%d.wbias" %
-                                          LayerCounter.dynamic_lstmp,
-                                          bias_attr)
-        LayerCounter.dynamic_lstmp += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class DynamicLstmp_(LayerFunc):
         def __init__(self):
@@ -319,20 +316,11 @@ def dynamic_gru(size,
     Return a function that creates a paddle.fluid.layers.dynamic_gru.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "dynamic_gru_%d.w" %
-                                           LayerCounter.dynamic_gru,
-                                           param_attr)
-        bias_attr = check_or_replace_name(bias_name, "dynamic_gru_%d.wbias" %
-                                          LayerCounter.dynamic_gru, bias_attr)
-        LayerCounter.dynamic_gru += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class DynamicGru_(LayerFunc):
         def __init__(self):
@@ -380,21 +368,11 @@ def sequence_conv(num_filters,
     Return a function that creates a paddle.fluid.layers.sequence_conv.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "sequence_conv_%d.w" %
-                                           LayerCounter.sequence_conv,
-                                           param_attr)
-        bias_attr = check_or_replace_name(bias_name, "sequence_conv_%d.wbias" %
-                                          LayerCounter.sequence_conv,
-                                          bias_attr)
-        LayerCounter.sequence_conv += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class SequenceConv_(LayerFunc):
         def __init__(self):
@@ -431,19 +409,11 @@ def conv2d(num_filters,
     Return a function that creates a paddle.fluid.layers.conv2d.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "conv2d_%d.w" %
-                                           LayerCounter.conv2d, param_attr)
-        bias_attr = check_or_replace_name(bias_name, "conv2d_%d.wbias" %
-                                          LayerCounter.conv2d, bias_attr)
-        LayerCounter.conv2d += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class Conv2D_(LayerFunc):
         def __init__(self):
@@ -483,21 +453,11 @@ def conv2d_transpose(num_filters,
     Return a function that creates a paddle.fluid.layers.conv2d_transpose.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "conv2d_trans_$d.w" %
-                                           LayerCounter.conv2d_transpose,
-                                           param_attr)
-        bias_attr = check_or_replace_name(bias_name, "conv2d_trans_%d.wbias" %
-                                          LayerCounter.conv2d_transpose,
-                                          bias_attr)
-        LayerCounter.conv2d_transpose += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class Conv2DTranspose_(LayerFunc):
         def __init__(self):
@@ -529,19 +489,11 @@ def lstm_unit(forget_bias=0.0,
     Return a function that creates a paddle.fluid.layers.lstm_unit.
     """
     param_name, bias_name = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "lstm_unit_%d.w" %
-                                           LayerCounter.lstm_unit, param_attr)
-        bias_attr = check_or_replace_name(bias_name, "lstm_unit_%d.wbias" %
-                                          LayerCounter.lstm_unit, bias_attr)
-        LayerCounter.lstm_unit += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" % (
-            name, LayerCounter.custom), param_attr)
-        bias_attr = check_or_replace_name(bias_name, "%s_%d_.wbias" % (
-            name, LayerCounter.custom), bias_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", False)
+    bias_attr = update_attr_name(name, bias_name, self_name, bias_attr,
+                                 ".wbias", True)
 
     class LstmUnit_(LayerFunc):
         def __init__(self):
@@ -572,15 +524,9 @@ def row_conv(future_context_size,
     Return a function that creates a paddle.fluid.layers.row_conv.
     """
     param_name, _ = get_set_paras(set_paras)
-
-    if name is None:
-        param_attr = check_or_replace_name(param_name, "row_conv_%d.w" %
-                                           LayerCounter.row_conv, param_attr)
-        LayerCounter.row_conv += 1
-    else:
-        param_attr = check_or_replace_name(param_name, "%s_%d_.w" %
-                                           LayerCounter.custom, param_attr)
-        LayerCounter.custom += 1
+    self_name = inspect.stack()[0][3]
+    param_attr = update_attr_name(name, param_name, self_name, param_attr,
+                                  ".w", True)
 
     class RowConv_(LayerFunc):
         def __init__(self):

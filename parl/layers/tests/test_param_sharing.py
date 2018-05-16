@@ -27,7 +27,7 @@ class TestParamSharing(unittest.TestCase):
         self.fc4 = layers.fc(64, name="fc")
         ## we bind the paras of self.embedding to those of self.fc1
         self.embedding = layers.embedding(
-            (100, 64), set_paras=self.fc1.parameters())
+            (100, 64), param_attr=self.fc1.param_attr)
 
     def test_param_sharing(self):
         """

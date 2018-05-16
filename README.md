@@ -1,2 +1,2 @@
-# PPRL
-PaddlePaddle Reinforcement Learning Framework
+# PARL
+**Pa**ddlePaddle **R**einforcement **L**earning Framework

@@ -22,12 +22,6 @@ import paddle.fluid.unique_name as unique_name
 import warnings
 import inspect
 
-all_wrapped_layers = [
-    "create_parameters", "fc", "embedding", "dynamic_lstm", "dynamic_lstmp",
-    "dynamic_gru", "sequence_conv", "conv2d", "conv2d_transpose", "lstm_unit",
-    "row_conv"
-]
-
 
 class LayerFunc(object):
     def __init__(self, param_attr=False, bias_attr=False):
@@ -86,8 +80,7 @@ def fc(size,
        use_mkldnn=False,
        act=None,
        is_test=False,
-       name=None,
-       set_paras=None):
+       name=None):
     """
     Return a function that creates a paddle.fluid.layers.fc.
     """
@@ -118,8 +111,7 @@ def embedding(size,
               padding_idx=None,
               param_attr=None,
               dtype="float32",
-              name=None,
-              set_paras=None):
+              name=None):
     """
     Return a function that creates a paddle.fluid.layers.embedding.
     """
@@ -151,8 +143,7 @@ def dynamic_lstm(size,
                  cell_activation="tanh",
                  candidate_activation="tanh",
                  dtype="float32",
-                 name=None,
-                 set_paras=None):
+                 name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_lstm.
     """
@@ -191,8 +182,7 @@ def dynamic_lstmp(size,
                   candidate_activation='tanh',
                   proj_activation='tanh',
                   dtype='float32',
-                  name=None,
-                  set_paras=None):
+                  name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_lstmp.
     """
@@ -229,8 +219,7 @@ def dynamic_gru(size,
                 gate_activation='sigmoid',
                 candidate_activation='tanh',
                 h_0=None,
-                name=None,
-                set_paras=None):
+                name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_gru.
     """
@@ -278,8 +267,7 @@ def sequence_conv(num_filters,
                   bias_attr=None,
                   param_attr=None,
                   act=None,
-                  name=None,
-                  set_paras=None):
+                  name=None):
     """
     Return a function that creates a paddle.fluid.layers.sequence_conv.
     """
@@ -316,8 +304,7 @@ def conv2d(num_filters,
            use_cudnn=True,
            use_mkldnn=False,
            act=None,
-           name=None,
-           set_paras=None):
+           name=None):
     """
     Return a function that creates a paddle.fluid.layers.conv2d.
     """
@@ -357,8 +344,7 @@ def conv2d_transpose(num_filters,
                      bias_attr=None,
                      use_cudnn=True,
                      act=None,
-                     name=None,
-                     set_paras=None):
+                     name=None):
     """
     Return a function that creates a paddle.fluid.layers.conv2d_transpose.
     """
@@ -387,11 +373,7 @@ def conv2d_transpose(num_filters,
     return Conv2DTranspose_()
 
 
-def lstm_unit(forget_bias=0.0,
-              param_attr=None,
-              bias_attr=None,
-              name=None,
-              set_paras=None):
+def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
     """
     Return a function that creates a paddle.fluid.layers.lstm_unit.
     """
@@ -419,11 +401,7 @@ def nce(**kwargs):
     raise NotImplementedError()
 
 
-def row_conv(future_context_size,
-             param_attr=None,
-             act=None,
-             name=None,
-             set_paras=None):
+def row_conv(future_context_size, param_attr=None, act=None, name=None):
     """
     Return a function that creates a paddle.fluid.layers.row_conv.
     """

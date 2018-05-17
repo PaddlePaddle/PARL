@@ -1,12 +1,28 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 import unittest
 from error_handling import LastElementError
 from replay_buffer import Experience, Sample, ReplayBuffer
 
+
 class ExperienceTest(Experience):
     def __init__(self, obs, reward, action, state, done):
         super(ExperienceTest, self).__init__(obs, reward, action, done)
         self.state = state
+
 
 class TestReplayBuffer(unittest.TestCase):
     def test_single_instance_replay_buffer(self):
@@ -15,12 +31,13 @@ class TestReplayBuffer(unittest.TestCase):
         buf = ReplayBuffer(capacity, ExperienceTest)
         total = 0
         expect_total = 0
-        for i in xrange(10*capacity):
-            e = ExperienceTest(np.zeros(10), i, i, np.ones(20), (i+1) % episode_len == 0)
+        for i in xrange(10 * capacity):
+            e = ExperienceTest(
+                np.zeros(10), i, i, np.ones(20), (i + 1) % episode_len == 0)
             buf.add(e)
             # check the circular queue in the buffer
-            self.assertTrue(len(buf) == min(i+1, capacity))
-            if (len(buf) < 2): # need at least two elements
+            self.assertTrue(len(buf) == min(i + 1, capacity))
+            if (len(buf) < 2):  # need at least two elements
                 continue
             # should raise error when trying to pick up the last element
             with self.assertRaises(LastElementError):
@@ -34,9 +51,10 @@ class TestReplayBuffer(unittest.TestCase):
                     total += 1
                 except LastElementError as err:
                     self.fail('test_single_instance_replay_buffer raised '
-                              'LastElementError: ' +  err.message)
+                              'LastElementError: ' + err.message)
         # check the total number of elements added into the buffer
         self.assertTrue(total == expect_total)
 
+
 if __name__ == '__main__':
-    unittest.main(exit = False)
+    unittest.main(exit=False)

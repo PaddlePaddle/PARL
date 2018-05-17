@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-import pprl.layers as layers
+import parl.layers as layers
 import paddle.fluid as fluid
 import numpy as np
 

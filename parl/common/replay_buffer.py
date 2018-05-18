@@ -26,9 +26,12 @@ class Experience(object):
 
 
 class Sample(object):
+    """
+    A Sample represents one or a sequence of Experiences
+    """
     def __init__(self, i, n):
-        self.i = i
-        self.n = n
+        self.i = i # starting index of the first experience in the sample
+        self.n = n # length of the sequence
 
     def __repr__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
@@ -45,36 +48,37 @@ class ReplayBuffer(object):
                 the buffer overflows the old memories are dropped.
         """
         # TODO: check exp_type is a type of Experience
-        self._buffer = []  # a circular queue to store experiences
-        self._capacity = capacity  # capacity of the buffer
-        self._last = -1  # the index of the last element in the buffer
-        self._exp_type = exp_type  # Experience class used in the buffer
+        assert(capacity > 1)
+        self.buffer = []  # a circular queue to store experiences
+        self.capacity = capacity  # capacity of the buffer
+        self.last = -1  # the index of the last element in the buffer
+        self.exp_type = exp_type  # Experience class used in the buffer
 
     def __len__(self):
-        return len(self._buffer)
+        return len(self.buffer)
 
-    def has_next(self, i):
-        return i != self._last
+    def end_of_buffer(self, i):
+        return i == self.last
 
     def next_idx(self, i):
-        if not self.has_next(i):
+        if self.end_of_buffer(i):
             return -1
         else:
-            return (i + 1) % self._capacity
+            return (i + 1) % self.capacity
 
     def add(self, exp):
         """
         Store one experience into the buffer.
 
         Args:
-            exp(Experience): the experience to store in the buffer.
+            exp(self.exp_type): the experience to store in the buffer.
         """
-        assert (isinstance(exp, self._exp_type))
+        assert (isinstance(exp, self.exp_type))
 
-        if len(self._buffer) < self._capacity:
-            self._buffer.append(None)
-        self._last = (self._last + 1) % self._capacity
-        self._buffer[self._last] = exp
+        if len(self.buffer) < self.capacity:
+            self.buffer.append(None)
+        self.last = (self.last + 1) % self.capacity
+        self.buffer[self.last] = exp
 
     def sample(self, num_entries):
         """
@@ -88,8 +92,8 @@ class ReplayBuffer(object):
 
         for _ in xrange(num_entries):
             while True:
-                idx = random.randint(0, len(self._buffer) - 1)
-                if self.has_next(idx) and not self._buffer[idx].episode_end:
+                idx = random.randint(0, len(self.buffer) - 1)
+                if not self.end_of_buffer(idx) and not self.buffer[idx].episode_end:
                     break
             yield Sample(idx, 1)
 
@@ -105,10 +109,10 @@ class ReplayBuffer(object):
         exps = []
         p = sample.i
         for _ in xrange(sample.n):
-            if not self.has_next(p) or self._buffer[p].episode_end:
-                raise LastElementError(p, self._buffer[p].episode_end)
+            if self.end_of_buffer(p) or self.buffer[p].episode_end:
+                raise LastElementError(p, self.buffer[p].episode_end)
             # make a copy of the buffer element as e may be modified somewhere
-            e = copy.copy(self._buffer[p])
+            e = copy.copy(self.buffer[p])
             exps.append(e)
             p = self.next_idx(p)
 

@@ -1,6 +1,9 @@
 # tilde
 *~
 
+# VIM swap file
+.*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

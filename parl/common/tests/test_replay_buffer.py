@@ -14,26 +14,24 @@
 
 import numpy as np
 import unittest
-from error_handling import LastElementError
-from replay_buffer import Experience, Sample, ReplayBuffer
+from parl.common.error_handling import LastElementError
+from parl.common.replay_buffer import Experience, Sample, ReplayBuffer
 
-
-class ExperienceTest(Experience):
-    def __init__(self, obs, reward, action, state, done):
-        super(ExperienceTest, self).__init__(obs, reward, action, done)
-        self.state = state
-
+class ExperienceForTest(Experience):
+    def __init__(self, obs, reward, actions, new_field, status):
+        super(ExperienceForTest, self).__init__([obs, reward], [], actions, status)
+        self.new_field = new_field
 
 class TestReplayBuffer(unittest.TestCase):
     def test_single_instance_replay_buffer(self):
         capacity = 30
         episode_len = 4
-        buf = ReplayBuffer(capacity, ExperienceTest)
+        buf = ReplayBuffer(capacity, ExperienceForTest)
         total = 0
         expect_total = 0
         for i in xrange(10 * capacity):
-            e = ExperienceTest(
-                np.zeros(10), i, i, np.ones(20), (i + 1) % episode_len == 0)
+            e = ExperienceForTest(
+                np.zeros(10), i*0.5, i, np.ones(20), (i + 1) % episode_len == 0)
             buf.add(e)
             # check the circular queue in the buffer
             self.assertTrue(len(buf) == min(i + 1, capacity))
@@ -54,6 +52,10 @@ class TestReplayBuffer(unittest.TestCase):
                               'LastElementError: ' + err.message)
         # check the total number of elements added into the buffer
         self.assertTrue(total == expect_total)
+        # detect incompatible Experience type
+        with self.assertRaises(TypeError):
+            e = Experience([np.zeros(10), i*0.5], [], i, 0)
+            buf.add(e)
 
 
 if __name__ == '__main__':

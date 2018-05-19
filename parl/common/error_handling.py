@@ -14,18 +14,42 @@
 
 class LastElementError(Exception):
     """
-    Raised when the last element or an episode-end element is sampled.
+    Raised when the last element or an element with non-zero game status is
+    sampled.
 
     Attributes:
-        idx(int): the index of the element being picked
-        is_episode_end(bool): whether the element is an episode end
+        message(string): error message
     """
 
-    def __init__(self, idx, is_episode_end):
-        self._idx = idx
-        self._episode_end = is_episode_end
-        self.message = 'The element at ' + str(idx) + ' is '
-        if is_episode_end:
-            self.message += 'an episode end.'
+    def __init__(self, idx, status):
+        self.message = 'The element at {}' .format(idx)
+        if status:
+            self.message += ' has game status: {}'.format(status)
         else:
-            self.message += 'the last element.'
+            self.message += ' is the last element.'
+
+
+def check_error(error_type, *args):
+    """
+    Check if there is a specific error and raise the corresponding Exception
+    if so.
+
+    Args:
+        error_type(string): the type of error to check
+        args: variable-length argument list used to check the error's existence
+    """
+    if error_type == 'TypeError':
+        if args[0].__name__ != args[1].__name__:
+            raise TypeError('{} expected, but {} given.'
+                            .format(args[0].__name__, args[1].__name__))
+    elif error_type == 'LastElementError':
+        if args[0]:
+            raise LastElementError(args[1], args[2])
+    elif error_type == 'ValueError':
+        if args[0] == '==' and args[1] != args[2] or \
+           args[0] == '>' and args[1] <= args[2] or \
+           args[0] == '>=' and args[1] < args[2] or \
+           args[0] == '<' and args[1] >= args[2] or \
+           args[0] == '<=' and args[1] > args[2] or \
+           args[0] == '!=' and args[1] == args[2]:
+            raise ValueError('{} {} {} not holds'.format(args[1], args[0], args[2]))

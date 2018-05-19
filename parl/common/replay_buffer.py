@@ -14,16 +14,20 @@
 
 import copy
 import random
-from error_handling import LastElementError
-
+from parl.common.error_handling import LastElementError, check_error
 
 class Experience(object):
-    def __init__(self, obs, action, reward, episode_end):
-        self.obs = obs
-        self.reward = reward
-        self.action = action
-        self.episode_end = episode_end
+    def __init__(self, sensor_inputs, states, actions, game_status):
+        check_error('TypeError', list, type(sensor_inputs)) 
+        self.sensor_inputs = sensor_inputs # (observation, reward)
+        self.states = states               # other states
+        self.actions = actions             # actions taken
+        self.game_status = game_status     # game status, e.g., max_steps or
+                                           # episode end reached
+        self.next_exp = None               # copy of the next Experience
 
+    def set_next_exp(self, next_exp):
+        self.next_exp = copy.copy(next_exp)
 
 class Sample(object):
     """
@@ -47,21 +51,20 @@ class ReplayBuffer(object):
             capacity(int): Max number of experience to store in the buffer. When
                 the buffer overflows the old memories are dropped.
         """
-        # TODO: check exp_type is a type of Experience
-        assert(capacity > 1)
-        self.buffer = []  # a circular queue to store experiences
+        check_error('ValueError', '>', capacity, 1)
+        self.buffer = []          # a circular queue to store experiences
         self.capacity = capacity  # capacity of the buffer
-        self.last = -1  # the index of the last element in the buffer
+        self.last = -1            # the index of the last element in the buffer
         self.exp_type = exp_type  # Experience class used in the buffer
 
     def __len__(self):
         return len(self.buffer)
 
-    def end_of_buffer(self, i):
+    def buffer_end(self, i):
         return i == self.last
 
     def next_idx(self, i):
-        if self.end_of_buffer(i):
+        if self.buffer_end(i):
             return -1
         else:
             return (i + 1) % self.capacity
@@ -73,47 +76,52 @@ class ReplayBuffer(object):
         Args:
             exp(self.exp_type): the experience to store in the buffer.
         """
-        assert (isinstance(exp, self.exp_type))
+        check_error('TypeError', self.exp_type, type(exp)) 
+        # the next_exp field should be None at this point
+        check_error('ValueError', '==', exp.next_exp, None)
 
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
         self.last = (self.last + 1) % self.capacity
-        self.buffer[self.last] = exp
+        self.buffer[self.last] = copy.copy(exp)
 
-    def sample(self, num_entries):
+    def sample(self, num_samples):
         """
-        Generate a batch of Samples.
+        Generate a batch of Samples. Each Sample contains the starting index
+        and the length of a sequence of Experiences.
 
         Args:
-            num_entries(int): Number of samples to generate.
+            num_samples(int): Number of samples to generate.
             
-        Returns(Sample): one sample of experiences.
+        Returns: A generator of Samples
         """
-
-        for _ in xrange(num_entries):
+        for _ in xrange(num_samples):
             while True:
                 idx = random.randint(0, len(self.buffer) - 1)
-                if not self.end_of_buffer(idx) and not self.buffer[idx].episode_end:
+                if not self.buffer_end(idx) and not self.buffer[idx].game_status:
                     break
             yield Sample(idx, 1)
 
     def get_experiences(self, sample):
         """
-        Get experiences from a sample
+        Get Experiences from a Sample
 
         Args:
-            sample(Sample): a sample of experiences
+            sample(Sample): a Sample representing a sequence of Experiences
 
         Return(list): a list of Experiences
         """
         exps = []
         p = sample.i
         for _ in xrange(sample.n):
-            if self.end_of_buffer(p) or self.buffer[p].episode_end:
-                raise LastElementError(p, self.buffer[p].episode_end)
+            check_error('LastElementError',
+                        self.buffer_end(p) or self.buffer[p].game_status,
+                        p,
+                        self.buffer[p].game_status)
             # make a copy of the buffer element as e may be modified somewhere
             e = copy.copy(self.buffer[p])
-            exps.append(e)
             p = self.next_idx(p)
+            e.set_next_exp(self.buffer[p])
+            exps.append(e)
 
         return exps

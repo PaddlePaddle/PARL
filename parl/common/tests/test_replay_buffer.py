@@ -15,7 +15,7 @@
 import numpy as np
 import unittest
 from parl.common.error_handling import LastExpError
-from parl.common.replay_buffer import Experience, Sample, ReplayBuffer
+from parl.common.replay_buffer import Experience, Sample, ReplayBuffer, ExperienceQueue
 
 
 class ExperienceForTest(Experience):
@@ -23,6 +23,60 @@ class ExperienceForTest(Experience):
         super(ExperienceForTest, self).__init__([obs, reward], [], actions,
                                                 status)
         self.new_field = new_field
+
+
+class TestExperienceQueue(unittest.TestCase):
+    def test_single_instance_sampling(self):
+        exp_q = ExperienceQueue(sample_seq=False)
+        e0 = Experience([np.zeros(10), 1], [], 0, 1)
+        e1 = Experience([np.zeros(10), 1], [], 1, 0)
+        e2 = Experience([np.zeros(10), 1], [], 2, 0)
+        e3 = Experience([np.zeros(10), 1], [], 3, 1)
+        e4 = Experience([np.zeros(10), 1], [], 4, 0)
+        exp_q.add(e0)
+        exp_q.add(e1)
+        exp_q.add(e2)
+        exp_q.add(e3)
+        exp_q.add(e4)
+        exp_seqs = exp_q.sample()
+        self.assertEqual(len(exp_seqs), 2)
+        self.assertEqual(len(exp_q), 1)
+        self.assertEqual(exp_seqs[0][0].actions, 1)
+        self.assertEqual(exp_seqs[0][0].next_exp.actions, 2)
+        self.assertEqual(exp_seqs[1][0].actions, 2)
+        self.assertEqual(exp_seqs[1][0].next_exp.actions, 3)
+        e5 = Experience([np.zeros(10), 1], [], 5, 1)
+        exp_q.add(e5)
+        exp_seqs = exp_q.sample()
+        self.assertEqual(len(exp_seqs), 1)
+        self.assertEqual(len(exp_seqs[0]), 1)
+        self.assertEqual(exp_seqs[0][0].actions, 4)
+        self.assertEqual(exp_seqs[0][0].next_exp.actions, 5)
+        self.assertEqual(len(exp_q), 0)
+
+    def test_sequence_sampling(self):
+        exp_q = ExperienceQueue(sample_seq=True)
+        e0 = Experience([np.zeros(10), 1], [], 0, 1)
+        e1 = Experience([np.zeros(10), 1], [], 1, 0)
+        e2 = Experience([np.zeros(10), 1], [], 2, 0)
+        e3 = Experience([np.zeros(10), 1], [], 3, 1)
+        e4 = Experience([np.zeros(10), 1], [], 4, 0)
+        e5 = Experience([np.zeros(10), 1], [], 5, 0)
+        exp_q.add(e0)
+        exp_q.add(e1)
+        exp_q.add(e2)
+        exp_q.add(e3)
+        exp_q.add(e4)
+        exp_q.add(e5)
+        exp_seqs = exp_q.sample()
+        self.assertEqual(len(exp_seqs), 2)
+        self.assertEqual(len(exp_seqs[0]), 2)
+        self.assertEqual(exp_seqs[0][0].actions, 1)
+        self.assertEqual(exp_seqs[0][1].actions, 2)
+        self.assertEqual(exp_seqs[0][1].next_exp.actions, 3)
+        self.assertEqual(len(exp_seqs[1]), 1)
+        self.assertEqual(exp_seqs[1][0].actions, 4)
+        self.assertEqual(exp_seqs[1][0].next_exp.actions, 5)
 
 
 class TestReplayBuffer(unittest.TestCase):

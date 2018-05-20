@@ -17,10 +17,13 @@ import unittest
 from parl.common.error_handling import LastElementError
 from parl.common.replay_buffer import Experience, Sample, ReplayBuffer
 
+
 class ExperienceForTest(Experience):
     def __init__(self, obs, reward, actions, new_field, status):
-        super(ExperienceForTest, self).__init__([obs, reward], [], actions, status)
+        super(ExperienceForTest, self).__init__([obs, reward], [], actions,
+                                                status)
         self.new_field = new_field
+
 
 class TestReplayBuffer(unittest.TestCase):
     def test_single_instance_replay_buffer(self):
@@ -31,7 +34,8 @@ class TestReplayBuffer(unittest.TestCase):
         expect_total = 0
         for i in xrange(10 * capacity):
             e = ExperienceForTest(
-                np.zeros(10), i*0.5, i, np.ones(20), (i + 1) % episode_len == 0)
+                np.zeros(10), i * 0.5, i,
+                np.ones(20), (i + 1) % episode_len == 0)
             buf.add(e)
             # check the circular queue in the buffer
             self.assertTrue(len(buf) == min(i + 1, capacity))
@@ -54,9 +58,29 @@ class TestReplayBuffer(unittest.TestCase):
         self.assertTrue(total == expect_total)
         # detect incompatible Experience type
         with self.assertRaises(TypeError):
-            e = Experience([np.zeros(10), i*0.5], [], i, 0)
+            e = Experience([np.zeros(10), i * 0.5], [], i, 0)
             buf.add(e)
+
+    def test_deep_copy(self):
+        capacity = 5
+        buf = ReplayBuffer(capacity, Experience)
+        e0 = Experience([np.zeros(10), 0], [], 0, 0)
+        e1 = Experience([np.ones(10) * 2, 1], [], 0, 1)
+        buf.add(e0)
+        e0.sensor_inputs[0] += 1
+        buf.add(e0)
+        buf.add(e1)
+        s = Sample(0, 2)
+        exps = buf.get_experiences(s)
+        self.assertTrue(np.sum(exps[0].sensor_inputs[0] == 0) == 10)
+        self.assertTrue(np.sum(exps[1].sensor_inputs[0] == 1) == 10)
+        self.assertTrue(np.sum(exps[1].next_exp.sensor_inputs[0] == 2) == 10)
+        exps[0].next_exp.sensor_inputs[0] += 3
+        self.assertTrue(np.sum(exps[1].sensor_inputs[0] == 1) == 10)
+        exps[1].sensor_inputs[0] += 4
+        exps = buf.get_experiences(s)
+        self.assertTrue(np.sum(exps[0].next_exp.sensor_inputs[0] == 1) == 10)
 
 
 if __name__ == '__main__':
-    unittest.main(exit=False)
+    unittest.main()

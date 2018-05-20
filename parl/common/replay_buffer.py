@@ -16,26 +16,31 @@ import copy
 import random
 from parl.common.error_handling import LastElementError, check_error
 
+
 class Experience(object):
     def __init__(self, sensor_inputs, states, actions, game_status):
-        check_error('TypeError', list, type(sensor_inputs)) 
-        self.sensor_inputs = sensor_inputs # (observation, reward)
-        self.states = states               # other states
-        self.actions = actions             # actions taken
-        self.game_status = game_status     # game status, e.g., max_steps or
-                                           # episode end reached
-        self.next_exp = None               # copy of the next Experience
+        check_error('TypeError', list, type(sensor_inputs))
+        self.sensor_inputs = sensor_inputs  # (observation, reward)
+        self.states = states  # other states
+        self.actions = actions  # actions taken
+        self.game_status = game_status  # game status, e.g., max_steps or
+        # episode end reached
+        self.next_exp = None  # copy of the next Experience
 
     def set_next_exp(self, next_exp):
-        self.next_exp = copy.copy(next_exp)
+        self.next_exp = copy.deepcopy(next_exp)
+
+    #TODO: write copy function
+
 
 class Sample(object):
     """
     A Sample represents one or a sequence of Experiences
     """
+
     def __init__(self, i, n):
-        self.i = i # starting index of the first experience in the sample
-        self.n = n # length of the sequence
+        self.i = i  # starting index of the first experience in the sample
+        self.n = n  # length of the sequence
 
     def __repr__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
@@ -52,9 +57,9 @@ class ReplayBuffer(object):
                 the buffer overflows the old memories are dropped.
         """
         check_error('ValueError', '>', capacity, 1)
-        self.buffer = []          # a circular queue to store experiences
+        self.buffer = []  # a circular queue to store experiences
         self.capacity = capacity  # capacity of the buffer
-        self.last = -1            # the index of the last element in the buffer
+        self.last = -1  # the index of the last element in the buffer
         self.exp_type = exp_type  # Experience class used in the buffer
 
     def __len__(self):
@@ -76,14 +81,14 @@ class ReplayBuffer(object):
         Args:
             exp(self.exp_type): the experience to store in the buffer.
         """
-        check_error('TypeError', self.exp_type, type(exp)) 
+        check_error('TypeError', self.exp_type, type(exp))
         # the next_exp field should be None at this point
         check_error('ValueError', '==', exp.next_exp, None)
 
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
         self.last = (self.last + 1) % self.capacity
-        self.buffer[self.last] = copy.copy(exp)
+        self.buffer[self.last] = copy.deepcopy(exp)
 
     def sample(self, num_samples):
         """
@@ -98,7 +103,8 @@ class ReplayBuffer(object):
         for _ in xrange(num_samples):
             while True:
                 idx = random.randint(0, len(self.buffer) - 1)
-                if not self.buffer_end(idx) and not self.buffer[idx].game_status:
+                if not self.buffer_end(idx) and not self.buffer[
+                        idx].game_status:
                     break
             yield Sample(idx, 1)
 
@@ -115,11 +121,10 @@ class ReplayBuffer(object):
         p = sample.i
         for _ in xrange(sample.n):
             check_error('LastElementError',
-                        self.buffer_end(p) or self.buffer[p].game_status,
-                        p,
+                        self.buffer_end(p) or self.buffer[p].game_status, p,
                         self.buffer[p].game_status)
             # make a copy of the buffer element as e may be modified somewhere
-            e = copy.copy(self.buffer[p])
+            e = copy.deepcopy(self.buffer[p])
             p = self.next_idx(p)
             e.set_next_exp(self.buffer[p])
             exps.append(e)

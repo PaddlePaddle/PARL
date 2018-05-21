@@ -14,7 +14,7 @@
 
 import numpy as np
 import unittest
-from parl.common.error_handling import LastElementError
+from parl.common.error_handling import LastExpError
 from parl.common.replay_buffer import Experience, Sample, ReplayBuffer
 
 
@@ -34,15 +34,18 @@ class TestReplayBuffer(unittest.TestCase):
         expect_total = 0
         for i in xrange(10 * capacity):
             e = ExperienceForTest(
-                np.zeros(10), i * 0.5, i,
-                np.ones(20), (i + 1) % episode_len == 0)
+                obs=np.zeros(10),
+                reward=i * 0.5,
+                actions=i,
+                new_field=np.ones(20),
+                status=(i + 1) % episode_len == 0)
             buf.add(e)
             # check the circular queue in the buffer
             self.assertTrue(len(buf) == min(i + 1, capacity))
             if (len(buf) < 2):  # need at least two elements
                 continue
             # should raise error when trying to pick up the last element
-            with self.assertRaises(LastElementError):
+            with self.assertRaises(LastExpError):
                 t = Sample(i % capacity, 1)
                 buf.get_experiences(t)
             expect_total += len(buf)
@@ -51,9 +54,9 @@ class TestReplayBuffer(unittest.TestCase):
                 try:
                     exps = buf.get_experiences(s)
                     total += 1
-                except LastElementError as err:
+                except LastExpError as err:
                     self.fail('test_single_instance_replay_buffer raised '
-                              'LastElementError: ' + err.message)
+                              'LastExpError: ' + err.message)
         # check the total number of elements added into the buffer
         self.assertTrue(total == expect_total)
         # detect incompatible Experience type
@@ -64,7 +67,11 @@ class TestReplayBuffer(unittest.TestCase):
     def test_deep_copy(self):
         capacity = 5
         buf = ReplayBuffer(capacity, Experience)
-        e0 = Experience([np.zeros(10), 0], [], 0, 0)
+        e0 = Experience(
+            sensor_inputs=[np.zeros(10), 0],
+            states=[],
+            actions=0,
+            game_status=0)
         e1 = Experience([np.ones(10) * 2, 1], [], 0, 1)
         buf.add(e0)
         e0.sensor_inputs[0] += 1
@@ -72,14 +79,14 @@ class TestReplayBuffer(unittest.TestCase):
         buf.add(e1)
         s = Sample(0, 2)
         exps = buf.get_experiences(s)
-        self.assertTrue(np.sum(exps[0].sensor_inputs[0] == 0) == 10)
-        self.assertTrue(np.sum(exps[1].sensor_inputs[0] == 1) == 10)
-        self.assertTrue(np.sum(exps[1].next_exp.sensor_inputs[0] == 2) == 10)
+        self.assertEqual(np.sum(exps[0].sensor_inputs[0] == 0), 10)
+        self.assertEqual(np.sum(exps[1].sensor_inputs[0] == 1), 10)
+        self.assertEqual(np.sum(exps[1].next_exp.sensor_inputs[0] == 2), 10)
         exps[0].next_exp.sensor_inputs[0] += 3
-        self.assertTrue(np.sum(exps[1].sensor_inputs[0] == 1) == 10)
+        self.assertEqual(np.sum(exps[1].sensor_inputs[0] == 1), 10)
         exps[1].sensor_inputs[0] += 4
         exps = buf.get_experiences(s)
-        self.assertTrue(np.sum(exps[0].next_exp.sensor_inputs[0] == 1) == 10)
+        self.assertEqual(np.sum(exps[0].next_exp.sensor_inputs[0] == 1), 10)
 
 
 if __name__ == '__main__':

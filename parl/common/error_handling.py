@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class LastElementError(Exception):
+
+class LastExpError(Exception):
     """
     Raised when the last element or an element with non-zero game status is
     sampled.
@@ -22,34 +23,49 @@ class LastElementError(Exception):
     """
 
     def __init__(self, idx, status):
-        self.message = 'The element at {}' .format(idx)
+        self.message = 'The element at {}'.format(idx)
         if status:
             self.message += ' has game status: {}'.format(status)
         else:
-            self.message += ' is the last element.'
+            self.message += ' is the last experience of a game.'
 
 
-def check_error(error_type, *args):
-    """
-    Check if there is a specific error and raise the corresponding Exception
-    if so.
+def check_last_exp_error(is_last_exp, idx, game_status):
+    if is_last_exp:
+        raise LastExpError(idx, game_status)
 
-    Args:
-        error_type(string): the type of error to check
-        args: variable-length argument list used to check the error's existence
-    """
-    if error_type == 'TypeError':
-        if args[0].__name__ != args[1].__name__:
-            raise TypeError('{} expected, but {} given.'
-                            .format(args[0].__name__, args[1].__name__))
-    elif error_type == 'LastElementError':
-        if args[0]:
-            raise LastElementError(args[1], args[2])
-    elif error_type == 'ValueError':
-        if args[0] == '==' and args[1] != args[2] or \
-           args[0] == '>' and args[1] <= args[2] or \
-           args[0] == '>=' and args[1] < args[2] or \
-           args[0] == '<' and args[1] >= args[2] or \
-           args[0] == '<=' and args[1] > args[2] or \
-           args[0] == '!=' and args[1] == args[2]:
-            raise ValueError('{} {} {} not holds'.format(args[1], args[0], args[2]))
+
+def check_type_error(type1, type2):
+    if type1.__name__ != type2.__name__:
+        raise TypeError('{} expected, but {} given.'
+                        .format(type1.__name__, type2.__name__))
+
+
+def check_eq(v1, v2):
+    if v1 != v2:
+        raise ValueError('{} == {} does not hold'.format(v1, v2))
+
+
+def check_neq(v1, v2):
+    if v1 == v2:
+        raise ValueError('{} != {} does not hold'.format(v1, v2))
+
+
+def check_gt(v1, v2):
+    if v1 <= v2:
+        raise ValueError('{} > {} does not hold'.format(v1, v2))
+
+
+def check_geq(v1, v2):
+    if v1 < v2:
+        raise ValueError('{} >= {} does not hold'.format(v1, v2))
+
+
+def check_lt(v1, v2):
+    if v1 >= v2:
+        raise ValueError('{} < {} does not hold'.format(v1, v2))
+
+
+def check_leq(v1, v2):
+    if v1 > v2:
+        raise ValueError('{} <= {} does not hold'.format(v1, v2))

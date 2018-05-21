@@ -14,12 +14,12 @@
 
 import copy
 import random
-from parl.common.error_handling import LastElementError, check_error
+from parl.common.error_handling import *
 
 
 class Experience(object):
     def __init__(self, sensor_inputs, states, actions, game_status):
-        check_error('TypeError', list, type(sensor_inputs))
+        check_type_error(list, type(sensor_inputs))
         self.sensor_inputs = sensor_inputs  # (observation, reward)
         self.states = states  # other states
         self.actions = actions  # actions taken
@@ -56,7 +56,7 @@ class ReplayBuffer(object):
             capacity(int): Max number of experience to store in the buffer. When
                 the buffer overflows the old memories are dropped.
         """
-        check_error('ValueError', '>', capacity, 1)
+        check_gt(capacity, 1)
         self.buffer = []  # a circular queue to store experiences
         self.capacity = capacity  # capacity of the buffer
         self.last = -1  # the index of the last element in the buffer
@@ -81,9 +81,9 @@ class ReplayBuffer(object):
         Args:
             exp(self.exp_type): the experience to store in the buffer.
         """
-        check_error('TypeError', self.exp_type, type(exp))
+        check_type_error(self.exp_type, type(exp))
         # the next_exp field should be None at this point
-        check_error('ValueError', '==', exp.next_exp, None)
+        check_eq(exp.next_exp, None)
 
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
@@ -92,14 +92,18 @@ class ReplayBuffer(object):
 
     def sample(self, num_samples):
         """
-        Generate a batch of Samples. Each Sample contains the starting index
-        and the length of a sequence of Experiences.
+        Generate a batch of Samples. Each Sample represents a sequence of
+        Experiences (length>=1). And a sequence must not cross the boundary
+        between two games. 
 
         Args:
             num_samples(int): Number of samples to generate.
             
         Returns: A generator of Samples
         """
+        if len(self.buffer) <= 1:
+            yield []
+
         for _ in xrange(num_samples):
             while True:
                 idx = random.randint(0, len(self.buffer) - 1)
@@ -120,9 +124,9 @@ class ReplayBuffer(object):
         exps = []
         p = sample.i
         for _ in xrange(sample.n):
-            check_error('LastElementError',
-                        self.buffer_end(p) or self.buffer[p].game_status, p,
-                        self.buffer[p].game_status)
+            check_last_exp_error(
+                self.buffer_end(p) or self.buffer[p].game_status, p,
+                self.buffer[p].game_status)
             # make a copy of the buffer element as e may be modified somewhere
             e = copy.deepcopy(self.buffer[p])
             p = self.next_idx(p)

@@ -1,0 +1,15 @@
+language: python
+sudo: required
+dist: trusty
+services:
+  - docker
+os:
+  - linux
+env:
+  - JOB=check_style
+script:
+  - docker run -it -v $PWD:/work -w /work paddlepaddle/paddle:latest-dev ./scripts/build.sh ${JOB}
+notifications:
+  email:
+    on_success: change
+    on_failure: always

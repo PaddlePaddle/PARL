@@ -14,10 +14,11 @@
 
 import unittest
 import parl.layers as layers
+from parl.layers import Network
 
 
-class TestParamName(unittest.TestCase):
-    def test_name_number(self):
+class MyNetWork(Network):
+    def __init__(self):
         self.fc1 = layers.fc(100)
         self.fc2 = layers.fc(100)
         self.fc3 = layers.fc(100, bias_attr=False)
@@ -33,37 +34,36 @@ class TestParamName(unittest.TestCase):
             filter_size=3,
             param_attr=self.embedding.param_attr,
             name="my_conv2d")
-        self.dynamic_grus = []
-        for i in range(5):
-            self.dynamic_grus.append(layers.dynamic_gru(50))
+
+
+class TestParamName(unittest.TestCase):
+    def test_name_number(self):
+        net = MyNetWork()
 
         ## fc1 and fc2 have different parameters
-        self.assertEqual(self.fc1.param_name, "fc.w_0")
-        self.assertEqual(self.fc2.param_name, "fc.w_1")
+        self.assertEqual(net.fc1.param_name, "fc.w_0")
+        self.assertEqual(net.fc2.param_name, "fc.w_1")
 
         ## fc3 has no bias and fc4 has no param; so the names are None
-        self.assertEqual(self.fc3.bias_name, None)
-        self.assertEqual(self.fc4.param_name, None)
-        self.assertEqual(self.fc4.bias_name, "fc.b_3")
+        self.assertEqual(net.fc3.bias_name, None)
+        self.assertEqual(net.fc4.param_name, None)
+        self.assertEqual(net.fc4.bias_name, "fc.b_3")
 
         ## fc5 has a custom name without a bias
-        self.assertEqual(self.fc5.param_name, "fc.w_4")
-        self.assertEqual(self.fc5.bias_name, None)
+        self.assertEqual(net.fc5.param_name, "fc.w_4")
+        self.assertEqual(net.fc5.bias_name, None)
 
         ## embedding layer has no bias
-        self.assertEqual(self.embedding.param_name, "embedding.w_0")
-        self.assertEqual(self.embedding.bias_name, None)
+        self.assertEqual(net.embedding.param_name, "embedding.w_0")
+        self.assertEqual(net.embedding.bias_name, None)
 
         ## embedding layer with a custom name
-        self.assertEqual(self.embedding_custom.param_name,
+        self.assertEqual(net.embedding_custom.param_name,
                          "embedding_custom.w_0")
 
         ## conv2d shares param with embedding; has a custom bias name
-        self.assertEqual(self.conv2d.param_name, "embedding.w_0")
-        self.assertEqual(self.conv2d.bias_name, "my_conv2d.b_0")
-
-        for i, gru in enumerate(self.dynamic_grus):
-            self.assertEqual(gru.param_name, "dynamic_gru.w_%d" % i)
+        self.assertEqual(net.conv2d.param_name, "embedding.w_0")
+        self.assertEqual(net.conv2d.bias_name, "my_conv2d.b_0")
 
 
 if __name__ == '__main__':

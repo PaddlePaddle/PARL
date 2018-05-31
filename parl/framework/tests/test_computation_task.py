@@ -78,8 +78,8 @@ class TestModelCNN(Model):
 
 
 class TestAlgorithm1(Algorithm):
-    def __init__(self, model_func, num_dims):
-        super(TestAlgorithm1, self).__init__(model_func, gpu_id=-1)
+    def __init__(self, num_dims):
+        super(TestAlgorithm1, self).__init__(gpu_id=-1)
         self.mlp = Feedforward([layers.fc(num_dims) for _ in range(1)])
 
     def _predict(self, policy_states):

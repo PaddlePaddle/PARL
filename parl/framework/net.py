@@ -110,6 +110,15 @@ class Model(Network):
         return actions, states
 
 
+def check_model(func):
+    def wrapper(s, *args, **kwargs):
+        assert s.model is not None, \
+            "Algorithm.model is None; you should call set_model_func first!"
+        return func(s, *args, **kwargs)
+
+    return wrapper
+
+
 class Algorithm(Network):
     """
     An Algorithm implements two functions:
@@ -120,11 +129,9 @@ class Algorithm(Network):
     implement the rest of the network in the Model class.
     """
 
-    def __init__(self, model_func, gpu_id):
+    def __init__(self, gpu_id):
         super(Algorithm, self).__init__()
-        ## When it is called, model_func() will create a new set of model paras
-        ## It should be a function with no argument.
-        self.set_model_func(model_func)
+        self.model = None
         self.ref_alg = self
         self.place = fluid.CPUPlace() if gpu_id < 0 \
                      else fluid.CUDAPlace(gpu_id)
@@ -156,6 +163,7 @@ class Algorithm(Network):
         self.model = model_func()
         check_duplicate_spec_names(self.model)
 
+    @check_model
     def predict(self, inputs, states):
         """
         Return a dictionary of results
@@ -180,6 +188,7 @@ class Algorithm(Network):
                 assert act.dtype == convert_np_dtype_to_dtype_("float32")
         return actions, states
 
+    @check_model
     def learn(self, inputs, next_inputs, states, next_states, actions,
               rewards):
         policy_states, _ = self.model.perceive(inputs,
@@ -198,15 +207,19 @@ class Algorithm(Network):
         optimizer.minimize(avg_cost)
         return dict(cost=avg_cost)
 
+    @check_model
     def get_input_specs(self):
         return self.model.get_input_specs()
 
+    @check_model
     def get_state_specs(self):
         return self.model.get_state_specs()
 
+    @check_model
     def get_action_specs(self):
         return self.model.get_action_specs()
 
+    @check_model
     def get_reward_specs(self):
         return self.model.get_reward_specs()
 
@@ -247,7 +260,14 @@ def create_algorithm_func(model_class, model_args, algorithm_class,
     assert isinstance(model_args, dict)
     assert issubclass(algorithm_class, Algorithm)
     assert isinstance(algorithm_args, dict)
+
     model_func = lambda: model_class(**model_args)
-    algorithm_func = lambda: algorithm_class(model_func=model_func,
-                                             **algorithm_args)
+
+    def algorithm_func():
+        alg = algorithm_class(**algorithm_args)
+        ## When it is called, model_func() will create a new set of model paras
+        ## It should be a function with no argument.
+        alg.set_model_func(model_func)
+        return alg
+
     return algorithm_func

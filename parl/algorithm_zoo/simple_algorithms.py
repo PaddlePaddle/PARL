@@ -24,7 +24,6 @@ class SimpleAC(Algorithm):
     """
 
     def __init__(self,
-                 model_func,
                  num_actions,
                  mlp_layer_confs,
                  gpu_id=-1,
@@ -34,7 +33,7 @@ class SimpleAC(Algorithm):
         num_actions: the number of discrete actions
         mlp_layer_confs: a list of fc configs
         """
-        super(SimpleAC, self).__init__(model_func, gpu_id)
+        super(SimpleAC, self).__init__(gpu_id)
         self.num_actions = num_actions
         self.discount_factor = discount_factor
         self.min_exploration = min_exploration
@@ -81,7 +80,6 @@ class SimpleQ(Algorithm):
     """
 
     def __init__(self,
-                 model_func,
                  num_actions,
                  mlp_layer_confs,
                  gpu_id=-1,
@@ -92,7 +90,7 @@ class SimpleQ(Algorithm):
         num_actions: the number of discrete actions
         mlp_layer_confs: a list of fc configs
         """
-        super(SimpleQ, self).__init__(model_func, gpu_id)
+        super(SimpleQ, self).__init__(gpu_id)
         self.num_actions = num_actions
         self.discount_factor = discount_factor
         self.min_exploration = min_exploration
@@ -109,10 +107,10 @@ class SimpleQ(Algorithm):
         We create a new copy
         """
         self.ref_alg = SimpleQ(
-            model_func=self.model_func,
             num_actions=self.num_actions,
             mlp_layer_confs=self.mlp_layer_confs,
             gpu_id=self.gpu_id)
+        self.ref_alg.set_model_func(self.model_func)
 
     def before_every_batch(self):
         if self.total_batches % self.update_ref_interval == 0:

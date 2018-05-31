@@ -46,3 +46,10 @@ def sum_to_one_norm_layer(input):
     eps = 1e-9  # avoid dividing 0
     sum = layers.reduce_sum(input + eps, dim=-1)
     return layers.elementwise_div(x=input, y=sum, axis=0)
+
+
+def feedforward(input, sequence_of_layer_funcs):
+    assert isinstance(sequence_of_layer_funcs, list)
+    for lf in sequence_of_layer_funcs:
+        input = lf(input)
+    return input

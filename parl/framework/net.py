@@ -16,6 +16,7 @@ import paddle.fluid as fluid
 import parl.layers as layers
 from parl.layers import Network
 from paddle.fluid.framework import convert_np_dtype_to_dtype_
+import inspect
 
 
 def check_duplicate_spec_names(model):
@@ -30,28 +31,6 @@ def check_duplicate_spec_names(model):
     duplicates = set([n for n in names if names.count(n) > 1])
     assert not duplicates, \
         "duplicate names with different specs: " + " ".join(duplicates)
-
-
-class Feedforward(Network):
-    """
-    A feedforward network can contain a sequence of components,
-    where each component can be either a LayerFunc or a Feedforward.
-    The purpose of this class is to create a collection of LayerFuncs that can
-    be easily copied from one Network to another.
-    """
-
-    def __init__(self, components):
-        for i in range(len(components)):
-            setattr(self, "ff%04d" % i, components[i])
-
-    def __call__(self, input):
-        attrs = {
-            attr: getattr(self, attr)
-            for attr in dir(self) if "ff" in attr
-        }
-        for k in sorted(attrs.keys()):
-            input = attrs[k](input)
-        return input
 
 
 class Model(Network):
@@ -110,39 +89,36 @@ class Model(Network):
         return actions, states
 
 
-def check_model(func):
-    def wrapper(s, *args, **kwargs):
-        assert s.model is not None, \
-            "Algorithm.model is None; you should call set_model_func first!"
-        return func(s, *args, **kwargs)
-
-    return wrapper
-
-
 class Algorithm(Network):
     """
     An Algorithm implements two functions:
-    1. _predict(): receives a policy state and computes actions
-    2. _learn(): receives a policy state and computs a cost
+    1. _predict() computes actions
+    2. _learn() computes a cost for optimization
+    3. _value() computes values
 
-    An algorithm should be part of a network. The user only needs to
+    An algorithm should be only part of a network. The user only needs to
     implement the rest of the network in the Model class.
     """
 
-    def __init__(self, gpu_id):
+    def __init__(self, model, gpu_id=-1):
         super(Algorithm, self).__init__()
-        self.model = None
-        self.ref_alg = self
-        self.place = fluid.CPUPlace() if gpu_id < 0 \
-                     else fluid.CUDAPlace(gpu_id)
+        assert isinstance(model, Model)
+        check_duplicate_spec_names(model)
+        self.model = model
+        self.gpu_id = gpu_id
 
-    def init(self):
+    def get_reference_alg(self):
         """
-        A callback function inserted right after the algorithm is created,
-        but *before* the program is defined.
-        See ComputationTask.__init__() for details.
+        Get the reference algorithm which is used for computing the policy or
+        value for next_inputs
         """
-        pass
+        return self
+
+    def get_behavior_alg(self):
+        """
+        Get the behavior algorithm which is used for computing the prediction
+        """
+        return self
 
     def before_every_batch(self):
         """
@@ -158,24 +134,24 @@ class Algorithm(Network):
         """
         pass
 
-    def set_model_func(self, model_func):
-        self.model_func = model_func
-        self.model = model_func()
-        check_duplicate_spec_names(self.model)
-
-    @check_model
     def predict(self, inputs, states):
         """
         Return a dictionary of results
         """
-        policy_states, states = self.model.perceive(inputs,
-                                                    states)  # problem-specific
-        actions = self._predict(policy_states)  # general algorithm
-        actions, states = self.model.post_prediction(
+        behavior_alg = self.get_behavior_alg()
+        policy_states, states = behavior_alg.model.perceive(
+            inputs, states)  # problem-specific
+        actions = behavior_alg._predict(policy_states)  # general algorithm
+        if actions is None:
+            return NotImplementedError("behavior_alg._predict not implemented"), \
+                NotImplementedError()
+
+        actions, states = behavior_alg.model.post_prediction(
             inputs, actions, states)  # problem-specific
 
         #### check data specs matching
-        specs = dict(self.get_action_specs() + self.get_state_specs())
+        specs = dict(behavior_alg.get_action_specs() \
+                     + behavior_alg.get_state_specs())
         assert len(actions.keys() + states.keys()) == len(specs)
         for key in actions.keys() + states.keys():
             act = actions[key]
@@ -188,15 +164,26 @@ class Algorithm(Network):
                 assert act.dtype == convert_np_dtype_to_dtype_("float32")
         return actions, states
 
-    @check_model
     def learn(self, inputs, next_inputs, states, next_states, actions,
               rewards):
+        ref_alg = self.get_reference_alg()
         policy_states, _ = self.model.perceive(inputs,
                                                states)  # problem-specific
-        next_policy_states, _ = self.ref_alg.model.perceive(
+        next_policy_states, _ = ref_alg.model.perceive(
             next_inputs, next_states)  # problem-specific
-        cost = self._learn(policy_states, next_policy_states, actions,
+        next_values = ref_alg._value(next_policy_states)
+        if next_values is None:
+            return NotImplementedError("ref_alg._value() not implemented")
+
+        ## we stop the gradients for all the next values
+        for nv in next_values.values():
+            nv.stop_gradient = True
+
+        cost = self._learn(policy_states, next_values, actions,
                            rewards)  # general algorithm
+        if cost is None:
+            return NotImplementedError("_learn() not implemented")
+
         assert len(cost) == 1 and "cost" in cost
         assert cost["cost"].dtype == convert_np_dtype_to_dtype_("float32") \
             and list(cost["cost"].shape[1:]) == [1]
@@ -207,67 +194,42 @@ class Algorithm(Network):
         optimizer.minimize(avg_cost)
         return dict(cost=avg_cost)
 
-    @check_model
     def get_input_specs(self):
         return self.model.get_input_specs()
 
-    @check_model
     def get_state_specs(self):
         return self.model.get_state_specs()
 
-    @check_model
     def get_action_specs(self):
         return self.model.get_action_specs()
 
-    @check_model
     def get_reward_specs(self):
         return self.model.get_reward_specs()
 
     def _predict(self, policy_states):
         """
-        Given an internal hidden state, this function predicts actions based on the state.
+        Given the policy states, this function predicts actions.
         The return should be a dictionary containing different kinds of actions.
         Input: policy_states(dict)
         Output: actions(dict)
         """
-        raise NotImplementedError()
+        pass
 
-    def _learn(self, policy_states, next_policy_states, actions, rewards):
+    def _learn(self, policy_states, next_values, actions, rewards):
         """
-        Given an internal hidden state, a dictionary of taken actions, a reward,
-        and a next hidden state, this function computes a learning cost to be optimized.
+        Given the policy states, the values at next time steps,
+        a dictionary of taken actions, and rewards,
+        this function computes a learning cost to be optimized.
         The return should be the cost.
         Input: policy_states(dict), next_policy_states(dict), actions(dict), rewards(dict)
         Output: cost(dict)
         """
-        raise NotImplementedError()
+        pass
 
-
-def create_algorithm_func(model_class, model_args, algorithm_class,
-                          algorithm_args):
-    """
-    User API for creating an algorithm lambda function
-    Given a model class type, an algorithm class type, and their corresponding
-    __init__ args, this function returns an algorithm function that can be called
-    without args. Each time the algorithm function is called, it returns a totally
-    new algorithm object with its own parameter memory.
-    You can pass an algorithm func to create a ComputationTask object.
-
-    The reason we use lambda functions (closure) for both Model and Algorithm is
-    that later copies can be created without specifying the args again.
-    """
-    assert issubclass(model_class, Model)
-    assert isinstance(model_args, dict)
-    assert issubclass(algorithm_class, Algorithm)
-    assert isinstance(algorithm_args, dict)
-
-    model_func = lambda: model_class(**model_args)
-
-    def algorithm_func():
-        alg = algorithm_class(**algorithm_args)
-        ## When it is called, model_func() will create a new set of model paras
-        ## It should be a function with no argument.
-        alg.set_model_func(model_func)
-        return alg
-
-    return algorithm_func
+    def _value(self, policy_states):
+        """
+        Given the policy states, this function computes values for _learn()
+        Input: policy_states(dict)
+        Output: values(dict)
+        """
+        pass

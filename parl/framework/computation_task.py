@@ -41,21 +41,14 @@ class ComputationTask(object):
     """
 
     def __init__(self, algorithm):
-        if isinstance(algorithm, Algorithm):
-            ## the arg is an Algorithm object
-            ## might be useful if multiple CTs share the same paras
-            self.alg_func = None
-            self.alg = algorithm
-        else:
-            ## this is an algorithm function
-            assert callable(algorithm)
-            self.alg_func = algorithm
-            self.alg = algorithm()
-
-        self.alg.init()
+        assert isinstance(algorithm, Algorithm)
+        self.alg = algorithm
         ## create an Fluid executor
-        self.fluid_executor = fluid.Executor(self.alg.place)
         self._define_program()
+        place = fluid.CPUPlace() if self.alg.gpu_id < 0 \
+                else fluid.CUDAPlace(self.alg.gpu_id)
+        self.fluid_executor = fluid.Executor(place)
+        self.fluid_executor.run(fluid.default_startup_program())
 
     def _create_data_layers(self, specs):
         data_layers = {}
@@ -108,8 +101,6 @@ class ComputationTask(object):
             ### TODO: implement a recurrent layer to strip the sequence information
             self.cost = self.alg.learn(inputs, next_inputs, states,
                                        next_states, actions, rewards)
-
-        self.fluid_executor.run(fluid.default_startup_program())
 
     def predict(self, inputs, states):
         """

@@ -21,6 +21,7 @@ from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
+from copy import deepcopy
 import warnings
 import inspect
 
@@ -60,7 +61,7 @@ class LayerFunc(object):
         self.param_attr = param_attr
         self.bias_attr = bias_attr
 
-    def copy_to(self, target_layer, place):
+    def sync_paras_to(self, target_layer, gpu_id):
         """
         Copy the paras from self to a target layer
         """
@@ -68,6 +69,10 @@ class LayerFunc(object):
         assert isinstance(target_layer, LayerFunc)
         src_attrs = [self.param_attr, self.bias_attr]
         target_attrs = [target_layer.param_attr, target_layer.bias_attr]
+
+        place = fluid.CPUPlace() if gpu_id < 0 \
+                else fluid.CUDAPlace(gpu_id)
+
         for i, attrs in enumerate(zip(src_attrs, target_attrs)):
             src_attr, target_attr = attrs
             assert (src_attr and target_attr) \
@@ -77,6 +82,33 @@ class LayerFunc(object):
             src_var = fetch_var(src_attr.name)
             target_var = fetch_var(target_attr.name, return_numpy=False)
             target_var.set(src_var, place)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        ## __new__ won't init the class, we need to do that ourselves
+        copied = cls.__new__(cls)
+        ## record in the memo that self has been copied to avoid recursive copying
+        memo[id(self)] = copied
+
+        ## first copy all content
+        for k, v in self.__dict__.items():
+            setattr(copied, k, deepcopy(v, memo))
+
+        ## then we need to create new para names for self.param_attr and self.bias_attr
+        def create_new_para_name(attr):
+            if attr:
+                assert attr.name, "attr should have a name already!"
+                ## remove the last number id but keep the name key
+                name_key = "_".join(attr.name.split("_")[:-1])
+                attr.name = unique_name.generate(name_key)
+
+        create_new_para_name(copied.param_attr)
+        create_new_para_name(copied.bias_attr)
+        ## We require the user to sync the parameter values later, because
+        ## this deepcopy is supposed to be called only before the startup
+        ## program. This function will cause the computation graph change, so
+        ## it cannot be called during the execution.
+        return copied
 
     @property
     def param_name(self):
@@ -98,26 +130,28 @@ class Network(object):
     A Network is an unordered set of LayerFunc, Layers, or Networks.
     """
 
-    def copy_to(self, target_net, place):
+    def sync_paras_to(self, target_net, gpu_id):
         assert not target_net is self, "cannot copy between identical networks"
 
-        target_attrs = dir(target_net)
-        for attr in dir(self):
-            if attr == "ref_alg":  ## we don't copy the ref algorithm
-                continue
-            if not attr in target_attrs:
+        for attr in self.__dict__:
+            if not attr in target_net.__dict__:
                 continue
             val = getattr(self, attr)
             target_val = getattr(target_net, attr)
 
+            assert type(val) == type(target_val)
             ## only these two types of members will be copied
-            ## the others will be ignored
-            if isinstance(val, Network):
-                assert isinstance(target_val, Network)
-                val.copy_to(target_val, place)
-            elif isinstance(val, LayerFunc):
-                assert isinstance(target_val, LayerFunc)
-                val.copy_to(target_val, place)
+            ## the others will be ignorped
+            if isinstance(val, Network) or isinstance(val, LayerFunc):
+                val.sync_paras_to(target_val, gpu_id)
+            elif isinstance(val, tuple) or isinstance(val, list) or isinstance(
+                    val, set):
+                for v, tv in zip(val, target_val):
+                    v.sync_paras_to(tv, gpu_id)
+            elif isinstance(val, dict):
+                for k in val.keys():
+                    assert k in target_val
+                    val[k].sync_paras_to(target_val[k], gpu_id)
             else:
                 # for any other type, we do not copy
                 pass
@@ -155,8 +189,8 @@ def fc(size,
             return layers.fc(input=input,
                              size=size,
                              num_flatten_dims=num_flatten_dims,
-                             param_attr=param_attr,
-                             bias_attr=bias_attr,
+                             param_attr=self.param_attr,
+                             bias_attr=self.bias_attr,
                              use_mkldnn=use_mkldnn,
                              act=act,
                              is_test=is_test)
@@ -188,7 +222,7 @@ def embedding(size,
                 is_sparse=is_sparse,
                 is_distributed=is_distributed,
                 padding_idx=padding_idx,
-                param_attr=param_attr,
+                param_attr=self.param_attr,
                 dtype=dtype)
 
     return Embedding_()
@@ -220,8 +254,8 @@ def dynamic_lstm(size,
             return layers.dynamic_lstm(
                 input=input,
                 size=size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_peepholes=use_peepholes,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
@@ -261,8 +295,8 @@ def dynamic_lstmp(size,
                 input=input,
                 size=size,
                 proj_size=proj_size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_peepholes=use_peepholes,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
@@ -298,8 +332,8 @@ def dynamic_gru(size,
             return layers.dynamic_gru(
                 input=input,
                 size=size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
                 candidate_activation=candidate_activation,
@@ -350,8 +384,8 @@ def sequence_conv(num_filters,
                 filter_size=filter_size,
                 filter_stride=filter_stride,
                 padding=padding,
-                bias_attr=bias_attr,
-                param_attr=param_attr,
+                bias_attr=self.bias_attr,
+                param_attr=self.param_attr,
                 act=act)
 
     return SequenceConv_()
@@ -390,8 +424,8 @@ def conv2d(num_filters,
                 padding=padding,
                 dilation=dilation,
                 groups=groups,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_cudnn=use_cudnn,
                 use_mkldnn=use_mkldnn,
                 act=act)
@@ -431,8 +465,8 @@ def conv2d_transpose(num_filters,
                 padding=padding,
                 stride=stride,
                 dilation=dilation,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_cudnn=use_cudnn,
                 act=act)
 
@@ -458,8 +492,8 @@ def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
                 hidden_t_prev=hidden_t_prev,
                 cell_t_prev=cell_t_prev,
                 forget_bias=forget_bias,
-                param_attr=param_attr,
-                bias_attr=bias_attr)
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr)
 
     return LstmUnit_()
 
@@ -483,7 +517,7 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
             return layers.row_conv(
                 input=input,
                 future_context_size=future_context_size,
-                param_attr=param_attr,
+                param_attr=self.param_attr,
                 act=act)
 
     return RowConv_()

@@ -20,14 +20,12 @@ class GameLogEntry(object):
 
     def __init__(self,
                  agent_id,
-                 game_name,
-                 alg_name,
+                 ct_name,
                  num_steps=0,
                  total_reward=0,
                  success=False):
         self.agent_id = agent_id
-        self.game_name = game_name
-        self.alg_name = alg_name
+        self.ct_name = ct_name
         self.num_steps = num_steps
         self.total_reward = total_reward
         self.success = success

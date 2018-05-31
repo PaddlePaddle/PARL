@@ -12,26 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from parl.framework.computation_task import ComputationTask
 from multiprocessing import Queue
 from threading import Thread
-from parl.common import Communicator
 
 
 class Manager(object):
-    def __init__(self, wrapper_creators, helper_creators):
+    def __init__(self, ct_settings):
         # TODO: a centralized logger
         self.agents = []
+        self.cts = {}
         self.wrappers = {}
-        for name, creator in wrapper_creators.iteritems():
-            self.wrappers[name] = creator(name)
-        self.helper_creators = helper_creators
+        for name, setting in ct_settings.iteritems():
+            self.cts[name] = ComputationTask(name, **setting)
+            self.wrappers[name] = self.cts[name].wrapper
 
     def add_agent(self, agent):
         agent.id = len(self.agents)
         self.agents.append(agent)
         for name, wrapper in self.wrappers.iteritems():
-            comm = wrapper.create_communicator(agent.id)
-            agent.add_helper(self.helper_creators[name](name, comm))
+            agent.add_helper(wrapper.create_helper(agent.id))
 
     def remove_agent(self):
         self.agents[-1].exit_flag.value = 1

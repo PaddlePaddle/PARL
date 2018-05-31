@@ -47,8 +47,8 @@ class SimpleAC(Algorithm):
         values = self.model.value(inputs, states)
         next_values = self.model.value(next_inputs, next_states)
         value = values["v_value"]
-        next_value = next_values["v_value"] * next_episode_end[
-            "next_episode_end"]
+        next_value = next_values["v_value"] * (
+            1 - next_episode_end["next_episode_end"])
         next_value.stop_gradient = True
         assert value.shape[1] == next_value.shape[1]
 
@@ -61,7 +61,9 @@ class SimpleAC(Algorithm):
         assert isinstance(dist, pd.CategoricalDistribution)
 
         pg_cost = 0 - dist.loglikelihood(action)
-        avg_cost = layers.mean(x=value_cost + pg_cost * td_error)
+        td_error_no_grad = td_error + 0
+        td_error_no_grad.stop_gradient = True
+        avg_cost = layers.mean(x=value_cost + pg_cost * td_error_no_grad)
         optimizer = fluid.optimizer.DecayedAdagradOptimizer(
             learning_rate=self.hp["lr"])
         optimizer.minimize(avg_cost)

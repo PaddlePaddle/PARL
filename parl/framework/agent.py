@@ -14,25 +14,107 @@
 
 from abc import ABCMeta, abstractmethod
 from multiprocessing import Process, Value
-from py_simulator import Simulator
-from parl.common.replay_buffer import Experience
-from parl.common.logging import GameLogEntry
+from parl.common.error_handling import check_type_error
+
+
+class DataProcessorBase(object):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, specs):
+        self.specs = specs
+        pass
+
+    @abstractmethod
+    def process_prediction_inputs(self, inputs, states):
+        pass
+
+    @abstractmethod
+    def process_learning_inputs(self, data):
+        pass
+
+
+class AgentHelperBase(object):
+    """
+    AgentHelper abstracts some part of Agent's data processing and the I/O 
+    communication between Agent and ComputationWrapper. It receives a
+    Communicator from one ComputationWrapper and uses it to send data to the
+    ComputationWrapper.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, name, communicator):
+        self.name = name
+        self.comm = communicator
+
+    @abstractmethod
+    def predict(self, inputs, states=dict()):
+        """
+        Process the inputs (if necessary), send data to ComputationWrapper for
+        prediction, and receive the outcome.
+
+        Args:
+            inputs(dict): data used for prediction. It is caller's job 
+            to make sure inputs contains all data needed and they are in the 
+            right form.
+        """
+        pass
+
+    def store_data(self, data):
+        """
+        Store the past experience for later use, e.g., experience replay.
+
+        Args:
+            data(dict): data to store. 
+        """
+        pass
+
+    @abstractmethod
+    def learn(self):
+        """
+        Send data to ComputationWrapper for learning and receive learning
+        return (if any). 
+
+        Depends on users' need, this function can be called in three ways:
+        1. In Agent's run_one_episode
+        2. In store_data(), e.g., learning once every few steps
+        3. As a separate thread, e.g., using experience replay
+        """
+        pass
 
 
 class AgentBase(Process):
+    """
+    Agent implements the control flow and logics of how Robot interacts with 
+    the environment and does computation. It is a subclass of Process. The entry
+    function of the Agent process is run().
+
+    Agent has the following members:
+    env: the environment
+    num_games:  number of games to run
+    helpers:    a dictionary of AgentHelper, each corresponds to one 
+                ComputationTask
+    log_q:      communication channel between Agent and the centralized logger
+    exit_flag:  signal when the Agent should stop. It is usually set by some 
+                other process.
+    """
     __metaclass__ = ABCMeta
 
-    def __init__(self, game_name, game_options, num_games):
+    def __init__(self, env, num_games):
         super(AgentBase, self).__init__()
-        self.id = -1  # isolated agent, not recognized by the framework yet
-        self.game_name = game_name
-        self.game = Simulator.create(game_name, game_options)
+        self.id = -1  # just created, not added to the Robot yet
+        self.env = env
         self.num_games = num_games
         self.helpers = {}
         self.log_q = []
         self.exit_flag = Value('i', 0)
+        self.daemon = True
 
     def add_helper(self, helper):
+        """
+        Add an AgentHelper, with the its name (also the name of its
+        correspoding ComputationTask) as key.
+        """
+        assert isinstance(helper, AgentHelperBase)
         self.helpers[helper.name] = helper
 
     def set_log_queue(log_q):
@@ -40,56 +122,19 @@ class AgentBase(Process):
 
     @abstractmethod
     def _run_one_episode(self):
-        pass
-
-    @abstractmethod
-    def _game_over(self, game_status):
-        pass
-
-    @abstractmethod
-    def _game_success(self, game_status):
+        """
+        This function implements the control flow of running one episode, which
+        includes:
+        1. The interaction with the environment
+        2. Calls AgentHelper's interfaces to process the data 
+        """
         pass
 
     def run(self):
-        for _ in range(self.num_games):
-            self._run_one_episode()
-
-
-class SimpleRLAgent(AgentBase):
-    def __init__(self, game_name, game_options, num_games):
-        super(SimpleRLAgent, self).__init__(game_name, game_options, num_games)
-
-    def _game_over(self, game_status):
-        return game_status != 'alive'
-
-    def _game_success(self, game_status):
-        return True
-
-    def _run_one_episode(self):
-        # sensor_inputs, (prev_)states and actions are all dict
-        self.game.reset_game()
-        r = 0
-        prev_states = []
-        log_entry = GameLogEntry(self.id, self.game_name, 'RL')
-        game_status = self.game.game_over()
-        while self.exit_flag.value == 0 and not self._game_over(game_status):
-            sensor_inputs = self.game.get_state()
-            predict_inputs = {
-                "sensor_inputs": [sensor_inputs, r],
-                "states": prev_states
-            }
-            pred_ret = self.helpers['RL'].predict(predict_inputs)
-            a = {"action": pred_ret["actions"]}
-            r = self.game.take_actions(a, 1, False)
-            game_status = self.game.game_over()
-            log_entry.num_steps += 1
-            log_entry.total_reward += r
-            data = predict_inputs
-            data.update({
-                "actions": pred_ret["actions"],
-                "game_status": game_status
-            })
-            self.helpers['RL'].store_data(data)
-            prev_states = pred_ret["states"]
-        log_entry.success = self._game_success(game_status)
-        #self.log_q.put(log_entry)
+        """
+        Entry function of Agent process.
+        """
+        for i in range(self.num_games):
+            episode_reward = self._run_one_episode()
+            if i % 50 == 0:
+                print("%d episode reward: %f" % (self.id, episode_reward))

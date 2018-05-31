@@ -15,6 +15,7 @@
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.algorithm import Model, Algorithm
+from parl.framework.computation_wrapper import ComputationWrapper
 
 
 def split_list(l, sizes):
@@ -40,8 +41,9 @@ class ComputationTask(object):
     c. define a ComputationTask with the algorithm
     """
 
-    def __init__(self, algorithm):
+    def __init__(self, name, algorithm, **kwargs):
         assert isinstance(algorithm, Algorithm)
+        self.name = name
         self.alg = algorithm
         ## create an Fluid executor
         self._define_program()
@@ -49,6 +51,15 @@ class ComputationTask(object):
                 else fluid.CUDAPlace(self.alg.gpu_id)
         self.fluid_executor = fluid.Executor(place)
         self.fluid_executor.run(fluid.default_startup_program())
+        self._wrapper_args = kwargs
+        self._wrapper = None
+
+    @property
+    def wrapper(self):
+        if self._wrapper is None:
+            self._wrapper = ComputationWrapper(self.name, self,
+                                               **self._wrapper_args)
+        return self._wrapper
 
     def _create_data_layers(self, specs):
         data_layers = {}
@@ -111,6 +122,7 @@ class ComputationTask(object):
 
             ## call alg learn()
             ### TODO: implement a recurrent layer to strip the sequence information
+            ### TODO: algorithm.learn returns customized outputs not a fixed cost
             self.cost = self.alg.learn(inputs, next_inputs, states,
                                        next_states, next_episode_end, actions,
                                        rewards)
@@ -169,6 +181,7 @@ class ComputationTask(object):
         data.update(next_episode_end)
         data.update(actions)
         data.update(rewards)
+        #print ('training', data)
         assert sorted(data.keys()) == self.learn_feed_names, \
             "field names mismatch: %s %s" % ()
         feed = {n: data[n] for n in self.learn_feed_names}

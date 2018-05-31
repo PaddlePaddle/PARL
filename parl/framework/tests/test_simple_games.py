@@ -39,7 +39,7 @@ class TestGymGame(unittest.TestCase):
         Test games in OpenAI gym.
         """
 
-        games = ["MountainCar-v0", "CartPole-v0"]
+        games = ["CartPole-v0"]
         final_rewards_thresholds = [
             -1.8,  ## drive to the right top in 180 steps (timeout is -2.0)
             1.5  ## hold the pole for at least 150 steps
@@ -55,7 +55,7 @@ class TestGymGame(unittest.TestCase):
         ]
 
         for game, threshold in zip(games, final_rewards_thresholds):
-            for on_policy in [False, True]:
+            for on_policy in [True]:
 
                 if on_policy and game != "CartPole-v0":
                     ## SimpleAC has difficulty training mountain-car and acrobot
@@ -87,7 +87,7 @@ class TestGymGame(unittest.TestCase):
 
                 print "algorithm: " + alg.__class__.__name__
 
-                ct = ComputationTask(algorithm=alg)
+                ct = ComputationTask("RL", algorithm=alg)
                 batch_size = 16
                 if not on_policy:
                     train_every_steps = batch_size / 4
@@ -98,6 +98,7 @@ class TestGymGame(unittest.TestCase):
                 average_episode_reward = []
                 past_exps = []
                 max_steps = env._max_episode_steps
+                max_episode = 2
                 for n in range(max_episode):
                     ob = env.reset()
                     episode_reward = 0
@@ -105,10 +106,15 @@ class TestGymGame(unittest.TestCase):
                         res, _ = ct.predict(inputs=dict(sensor=np.array(
                             [ob]).astype("float32")))
                         pred_action = res["action"][0][0]
-
                         next_ob, reward, next_is_over, _ = env.step(
                             pred_action)
                         reward /= 100
+                        print('step', t)
+                        print dict(
+                            sensor=np.array([ob]),
+                            action=pred_action,
+                            reward=reward,
+                            next_episode_end=next_is_over)
                         episode_reward += reward
 
                         past_exps.append((ob, next_ob, [pred_action],
@@ -139,6 +145,12 @@ class TestGymGame(unittest.TestCase):
                                     next_episode_end=next_episode_end),
                                 actions=dict(action=action),
                                 rewards=dict(reward=reward))
+                            print('learning', dict(
+                                sensor=sensor,
+                                next_sensor=next_sensor,
+                                action=action,
+                                reward=reward,
+                                next_episode_end=next_episode_end))
                             ## we clear the exp buffer for on-policy
                             if on_policy:
                                 past_exps = []

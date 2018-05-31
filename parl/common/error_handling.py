@@ -36,49 +36,6 @@ def check_last_exp_error(is_last_exp, idx, game_status):
 
 
 def check_type_error(type1, type2):
-    if type1.__name__ != type2.__name__:
+    if type2.__name__ != 'NoneType' and type1.__name__ != type2.__name__:
         raise TypeError('{} expected, but {} given.'
                         .format(type1.__name__, type2.__name__))
-
-
-def nv_str(name, value):
-    if name:
-        return '{}({})'.format(name, value)
-    else:
-        return '{}'.format(value)
-
-
-def check_eq(n1, v1, n2, v2):
-    if v1 != v2:
-        raise ValueError('{} == {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))
-
-
-def check_neq(n1, v1, n2, v2):
-    if v1 == v2:
-        raise ValueError('{} != {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))
-
-
-def check_gt(n1, v1, n2, v2):
-    if v1 <= v2:
-        raise ValueError('{} > {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))
-
-
-def check_geq(n1, v1, n2, v2):
-    if v1 < v2:
-        raise ValueError('{} >= {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))
-
-
-def check_lt(n1, v1, n2, v2):
-    if v1 >= v2:
-        raise ValueError('{} < {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))
-
-
-def check_leq(n1, v1, n2, v2):
-    if v1 > v2:
-        raise ValueError('{} <= {} not hold'.format(
-            nv_str(n1, v1), nv_str(n2, v2)))

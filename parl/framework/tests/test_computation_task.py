@@ -118,9 +118,9 @@ class TestComputationTask(unittest.TestCase):
         sensor = np.zeros([batch_size, dims]).astype("float32")
         image = np.zeros([batch_size, 1, height, width]).astype("float32")
 
-        ct0 = ComputationTask(algorithm=ac)
-        ct1 = ComputationTask(algorithm=q)
-        ct2 = ComputationTask(algorithm=ac_cnn)
+        ct0 = ComputationTask("ac", algorithm=ac)
+        ct1 = ComputationTask("q", algorithm=q)
+        ct2 = ComputationTask("ac_cnn", algorithm=ac_cnn)
 
         test(dict(sensor=sensor), ct0, max=False)
         test(dict(sensor=sensor), ct1, max=True)
@@ -132,8 +132,8 @@ class TestComputationTask(unittest.TestCase):
         """
         alg = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
-        ct0 = ComputationTask(algorithm=alg)
-        ct1 = ComputationTask(algorithm=alg)
+        ct0 = ComputationTask("ct0", algorithm=alg)
+        ct1 = ComputationTask("ct1", algorithm=alg)
 
         batch_size = 10
         sensor = np.random.uniform(
@@ -153,8 +153,8 @@ class TestComputationTask(unittest.TestCase):
         alg = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
 
-        ct0 = ComputationTask(algorithm=alg)
-        ct1 = ComputationTask(algorithm=deepcopy(alg))
+        ct0 = ComputationTask("ct0", algorithm=alg)
+        ct1 = ComputationTask("ct1", algorithm=deepcopy(alg))
 
         batch_size = 10
         sensor = np.random.uniform(
@@ -199,7 +199,7 @@ class TestComputationTask(unittest.TestCase):
                                 size=num_actions, act="softmax")
                         ]),
                     hyperparas=dict(lr=1e-1))
-                ct = ComputationTask(algorithm=alg)
+                ct = ComputationTask("simple_ac", algorithm=alg)
             else:
                 alg = SimpleQ(
                     model=SimpleModelQ(
@@ -213,7 +213,7 @@ class TestComputationTask(unittest.TestCase):
                         ]),
                     update_ref_interval=100,
                     hyperparas=dict(lr=1e-1))
-                ct = ComputationTask(algorithm=alg)
+                ct = ComputationTask("simple_q", algorithm=alg)
 
             for i in range(1000):
                 if on_policy:

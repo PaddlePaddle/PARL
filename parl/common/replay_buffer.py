@@ -20,19 +20,28 @@ from parl.common.error_handling import *
 
 
 class Experience(object):
-    def __init__(self, sensor_inputs, states, actions, game_status):
-        check_type_error(list, type(sensor_inputs))
-        self.sensor_inputs = sensor_inputs  # (observation, reward)
-        self.states = states  # other states
-        self.actions = actions  # actions taken
-        self.game_status = game_status  # game status, e.g., max_steps or
-        # episode end reached
-        self.next_exp = None  # copy of the next Experience
-
     def set_next_exp(self, next_exp):
         self.next_exp = deepcopy(next_exp)
 
-    #TODO: write copy function
+    @staticmethod
+    def define(name, attrs):
+        """
+        Create an Experience 
+        """
+
+        def set_attributes(self, **kwargs):
+            for k, v in kwargs.iteritems():
+                if not hasattr(self, k):
+                    raise TypeError
+                setattr(self, k, v)
+
+        check_type_error(list, type(attrs))
+        cls_attrs = dict((attr, None) for attr in attrs)
+        cls_attrs['next_exp'] = None  # add attribute "next_exp"
+        # __init__ of the new Experience class
+        cls_attrs['__init__'] = set_attributes
+        cls = type(name, (Experience, ), cls_attrs)
+        return cls
 
 
 class Sample(object):
@@ -49,7 +58,7 @@ class Sample(object):
 
 
 class ReplayBuffer(object):
-    def __init__(self, capacity, exp_type=Experience):
+    def __init__(self, capacity):
         """
         Create Replay buffer.
 
@@ -58,11 +67,10 @@ class ReplayBuffer(object):
             capacity(int): Max number of experience to store in the buffer. When
                 the buffer overflows the old memories are dropped.
         """
-        check_gt("capacity", capacity, [], 1)
+        assert capacity > 1
         self.buffer = []  # a circular queue to store experiences
         self.capacity = capacity  # capacity of the buffer
         self.last = -1  # the index of the last element in the buffer
-        self.exp_type = exp_type  # Experience class used in the buffer
 
     def __len__(self):
         return len(self.buffer)
@@ -81,11 +89,11 @@ class ReplayBuffer(object):
         Store one experience into the buffer.
 
         Args:
-            exp(self.exp_type): the experience to store in the buffer.
+            exp(Experience): the experience to store in the buffer.
         """
-        check_type_error(self.exp_type, type(exp))
         # the next_exp field should be None at this point
-        check_eq("next_exp", exp.next_exp, [], None)
+        assert isinstance(exp, Experience)
+        assert exp.next_exp is None
 
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
@@ -110,7 +118,7 @@ class ReplayBuffer(object):
             while True:
                 idx = random.randint(0, len(self.buffer) - 1)
                 if not self.buffer_end(idx) and not self.buffer[
-                        idx].game_status:
+                        idx].episode_end:
                     break
             yield Sample(idx, 1)
 
@@ -127,8 +135,8 @@ class ReplayBuffer(object):
         p = sample.i
         for _ in xrange(sample.n):
             check_last_exp_error(
-                self.buffer_end(p) or self.buffer[p].game_status, p,
-                self.buffer[p].game_status)
+                self.buffer_end(p) or self.buffer[p].episode_end, p,
+                self.buffer[p].episode_end)
             # make a copy of the buffer element as e may be modified somewhere
             e = deepcopy(self.buffer[p])
             p = self.next_idx(p)
@@ -143,9 +151,19 @@ class ExperienceQueueBase(object):
 
     def __init__(self, sample_seq):
         self.sample_seq = sample_seq
+        self.exp_cls = None
+
+    def __pre_add(self, **kwargs):
+        if not self.exp_cls:
+            self.exp_cls = Experience.define("Experience", kwargs.keys())
+        return self.exp_cls(**kwargs)
+
+    def add(self, **kwargs):
+        exp = self.__pre_add(**kwargs)
+        self._add(exp)
 
     @abstractmethod
-    def add(self, exp):
+    def _add(self, exp):
         pass
 
     @abstractmethod
@@ -153,22 +171,22 @@ class ExperienceQueueBase(object):
         pass
 
 
-class ExperienceQueue(ExperienceQueueBase):
+class NoReplacementQueue(ExperienceQueueBase):
     def __init__(self, sample_seq):
-        super(ExperienceQueue, self).__init__(sample_seq)
+        super(NoReplacementQueue, self).__init__(sample_seq)
         self.q = deque()
 
     def __len__(self):
         return len(self.q)
 
-    def add(self, exp):
+    def _add(self, exp):
         self.q.append(exp)
 
     def sample(self):
         exp_seqs = []
         while len(self.q) > 1:
             exps = []
-            while not self.q[0].game_status and len(self.q) > 1:
+            while not self.q[0].episode_end and len(self.q) > 1:
                 exps.append(self.q.popleft())
             if len(exps) > 0:
                 for i in xrange(len(exps) - 1):
@@ -179,6 +197,6 @@ class ExperienceQueue(ExperienceQueueBase):
                 else:
                     for e in exps:
                         exp_seqs.append([e])
-            if self.q[0].game_status:
+            if self.q[0].episode_end:
                 self.q.popleft()
         return exp_seqs

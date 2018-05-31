@@ -16,25 +16,72 @@ from multiprocessing import Queue
 from parl.common.error_handling import check_type_error
 
 
-class Communicator(object):
+class CommunicatorBase(object):
     """
-    A Communicator is responsible for data passing between Agent and
-    ComputationWrapper. A Communicator is created by ComputationWrapper and
-    passed to one Agent.
+    A Communicator is responsible for data passing between AgentHelper and
+    ComputationWrapper (CW). Its only members are some Queues, which are the 
+    channels between the Agent processes and computation processes.
+
+    Communicator is created by CW and passed to AgentHelper.
+
+    There are two types of Communicator that will be derived from this class:
+    1. CommunicatorCT: the Communicator used by CW
+    2. CommunicatorAgent: the Communicator used by AgentHelper
     """
 
-    #TODO decide whether to use task_done and Queue.join()
-    def __init__(self, agent_id, training_q, prediction_q):
+
+class CommunicatorCT(CommunicatorBase):
+    """
+    The Communicator used by ComputationWrapper (CW). It provides the necessary
+    interfaces for CW to get data from and return results to the Agent side .
+    """
+
+    def __init__(self, timeout):
         """
         Create Communicator.
 
         Args:
-            agent_id(integer): The id of the Agent this Communicator is
-            connected to.
+            timeout(float): timeout for Queue's get and put operations.
+        """
+        self.timeout = timeout
+        self.training_q = Queue()
+        self.prediction_q = Queue()
+
+    def get_training_data(self):
+        return self.training_q.get(timeout=self.timeout)
+
+    def training_return(self, data, comm):
+        assert isinstance(comm, CommunicatorAgent)
+        comm.training_return_q.put(data, timeout=self.timeout)
+
+    def get_prediction_data(self):
+        return self.prediction_q.get(timeout=self.timeout)
+
+    def prediction_return(self, data, comm):
+        assert isinstance(comm, CommunicatorAgent)
+        comm.prediction_return_q.put(data, timeout=self.timeout)
+
+
+class CommunicatorAgent(CommunicatorBase):
+    """
+    The Communicator used by AgentHelper. It provides the necessary
+    interfaces for AgentHelper to send data to and get results from the 
+    Agent side .
+    """
+
+    def __init__(self, agent_id, training_q, prediction_q, timeout):
+        """
+        Create Communicator.
+
+        Args:
             training_q(Queue), prediction_q(Queue): references to Queues owned
-            by some ComputationWrapper.
+            by a ComputationWrapper.
+            timeout(float): timeout for Queue's get and put operations.
         """
         self.agent_id = agent_id
+        self.timeout = timeout
+        assert not training_q is None
+        assert not prediction_q is None
         self.training_q = training_q
         self.prediction_q = prediction_q
         # A Communicator owns the returning Queues
@@ -42,21 +89,15 @@ class Communicator(object):
         self.prediction_return_q = Queue(1)
 
     def put_training_data(self, exp_seqs):
-        check_type_error(list, type(exp_seqs))
-        self.training_q.put((self.agent_id, exp_seqs))
-
-    def put_training_return(self, data):
-        self.training_return_q.put(data)
+        check_type_error(dict, type(exp_seqs))
+        self.training_q.put((self.agent_id, exp_seqs), timeout=self.timeout)
 
     def get_training_return(self):
-        return self.training_return_q.get()
+        return self.training_return_q.get(timeout=self.timeout)
 
     def put_prediction_data(self, data):
         check_type_error(dict, type(data))
-        self.prediction_q.put((self.agent_id, data))
-
-    def put_prediction_return(self, data):
-        self.prediction_return_q.put(data)
+        self.prediction_q.put((self.agent_id, data), timeout=self.timeout)
 
     def get_prediction_return(self):
-        return self.prediction_return_q.get()
+        return self.prediction_return_q.get(timeout=self.timeout)

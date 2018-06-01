@@ -71,6 +71,7 @@ class ComputationTask(object):
         next_state_specs = _get_next_specs(state_specs)
         action_specs = self.alg.get_action_specs()
         reward_specs = self.alg.get_reward_specs()
+        use_next_value_specs = [("use_next_value", dict(shape=[1]))]
 
         with fluid.program_guard(self.learn_program):
             data_layer_dict = self._create_data_layers(input_specs)
@@ -81,6 +82,8 @@ class ComputationTask(object):
             data_layer_dict.update(self._create_data_layers(next_state_specs))
             data_layer_dict.update(self._create_data_layers(action_specs))
             data_layer_dict.update(self._create_data_layers(reward_specs))
+            data_layer_dict.update(
+                self._create_data_layers(use_next_value_specs))
             self.learn_feed_names = sorted(data_layer_dict.keys())
 
             inputs = _select_data(data_layer_dict, input_specs)
@@ -89,6 +92,8 @@ class ComputationTask(object):
             next_states = _select_data(data_layer_dict, next_state_specs)
             actions = _select_data(data_layer_dict, action_specs)
             rewards = _select_data(data_layer_dict, reward_specs)
+            use_next_value = _select_data(data_layer_dict,
+                                          use_next_value_specs)
 
             ### call alg predict()
             pred_actions, pred_states = self.alg.predict(inputs, states)
@@ -100,9 +105,10 @@ class ComputationTask(object):
             ## call alg learn()
             ### TODO: implement a recurrent layer to strip the sequence information
             self.cost = self.alg.learn(inputs, next_inputs, states,
-                                       next_states, actions, rewards)
+                                       next_states, use_next_value, actions,
+                                       rewards)
 
-    def predict(self, inputs, states):
+    def predict(self, inputs, states=dict()):
         """
         ComputationTask predict API
         This function is responsible to convert Python data to Fluid tensors, and
@@ -133,8 +139,14 @@ class ComputationTask(object):
         states = dict(zip([name for name, _ in state_tensors], states))
         return actions, states
 
-    def learn(self, inputs, next_inputs, states, next_states, actions,
-              rewards):
+    def learn(self,
+              inputs,
+              next_inputs,
+              use_next_value,
+              actions,
+              rewards,
+              states=dict(),
+              next_states=dict()):
         """
         ComputationTask learn API
         This function is responsible to convert Python data to Fluid tensors, and
@@ -145,6 +157,7 @@ class ComputationTask(object):
         data.update(next_inputs)
         data.update(states)
         data.update(next_states)
+        data.update(use_next_value)
         data.update(actions)
         data.update(rewards)
         assert sorted(data.keys()) == self.learn_feed_names, \

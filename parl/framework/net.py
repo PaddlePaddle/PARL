@@ -164,8 +164,8 @@ class Algorithm(Network):
                 assert act.dtype == convert_np_dtype_to_dtype_("float32")
         return actions, states
 
-    def learn(self, inputs, next_inputs, states, next_states, actions,
-              rewards):
+    def learn(self, inputs, next_inputs, states, next_states, use_next_value,
+              actions, rewards):
         ref_alg = self.get_reference_alg()
         policy_states, _ = self.model.perceive(inputs,
                                                states)  # problem-specific
@@ -179,7 +179,7 @@ class Algorithm(Network):
         for nv in next_values.values():
             nv.stop_gradient = True
 
-        cost = self._learn(policy_states, next_values, actions,
+        cost = self._learn(policy_states, next_values, use_next_value, actions,
                            rewards)  # general algorithm
         if cost is None:
             return NotImplementedError("_learn() not implemented")
@@ -190,7 +190,7 @@ class Algorithm(Network):
 
         avg_cost = layers.mean(x=cost["cost"])
         ## TODO: add customized options for the optimizer
-        optimizer = fluid.optimizer.SGD(learning_rate=1e-2)
+        optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
         optimizer.minimize(avg_cost)
         return dict(cost=avg_cost)
 

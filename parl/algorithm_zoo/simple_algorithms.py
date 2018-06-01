@@ -48,7 +48,8 @@ class SimpleAC(Algorithm):
         policy = comf.sum_to_one_norm_layer(policy + self.min_exploration)
         return dict(action=comf.discrete_random(policy))
 
-    def _learn(self, policy_states, next_values, actions, rewards):
+    def _learn(self, policy_states, next_values, use_next_value, actions,
+               rewards):
         assert len(policy_states) == 1
         assert len(actions) == 1
         assert len(next_values) == 1
@@ -57,6 +58,7 @@ class SimpleAC(Algorithm):
         next_value = next_values.values()[0]
         reward = rewards.values()[0]
 
+        next_value = next_value * use_next_value["use_next_value"]
         critic_value = reward + self.discount_factor * next_value
         td_error = critic_value - self._value(policy_states).values()[0]
         value_cost = layers.square(td_error)
@@ -119,7 +121,8 @@ class SimpleQ(Algorithm):
         policy = comf.sum_to_one_norm_layer(prob + self.min_exploration)
         return dict(action=comf.discrete_random(policy))
 
-    def _learn(self, policy_states, next_values, actions, rewards):
+    def _learn(self, policy_states, next_values, use_next_value, actions,
+               rewards):
         assert len(actions) == 1
         assert len(policy_states) == 1
         assert len(next_values) == 1
@@ -128,6 +131,7 @@ class SimpleQ(Algorithm):
         next_q_values = next_values.values()[0]
         reward = rewards.values()[0]
 
+        next_q_values = next_q_values * use_next_value["use_next_value"]
         next_value = layers.reduce_max(next_q_values, dim=-1)
 
         q_values = self._value(policy_states).values()[0]

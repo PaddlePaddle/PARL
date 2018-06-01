@@ -71,7 +71,7 @@ class TestComputationTask(unittest.TestCase):
             action_counter = [0] * ct.alg.num_actions
             total = 1000
             for i in range(total):
-                actions, states = ct.predict(inputs=input, states=dict())
+                actions, states = ct.predict(inputs=input)
                 assert not states, "states should be empty"
                 ## actions["action"] is a batch of actions
                 for a in actions["action"]:
@@ -139,8 +139,8 @@ class TestComputationTask(unittest.TestCase):
         sensor = np.random.uniform(
             0, 1, [batch_size, alg.model.dims]).astype("float32")
 
-        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor), states=dict())
-        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor), states=dict())
+        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor))
+        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor))
         self.assertEqual(
             np.sum(outputs0["continuous_action"].flatten()),
             np.sum(outputs1["continuous_action"].flatten()))
@@ -159,16 +159,16 @@ class TestComputationTask(unittest.TestCase):
         sensor = np.random.uniform(
             0, 1, [batch_size, ct0.alg.model.dims]).astype("float32")
 
-        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor), states=dict())
-        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor), states=dict())
+        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor))
+        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor))
         self.assertNotEqual(
             np.sum(outputs0["continuous_action"].flatten()),
             np.sum(outputs1["continuous_action"].flatten()))
 
         ct0.alg.sync_paras_to(ct1.alg, ct1.alg.gpu_id)
 
-        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor), states=dict())
-        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor), states=dict())
+        outputs0, _ = ct0.predict(inputs=dict(sensor=sensor))
+        outputs1, _ = ct1.predict(inputs=dict(sensor=sensor))
         self.assertEqual(
             np.sum(outputs0["continuous_action"].flatten()),
             np.sum(outputs1["continuous_action"].flatten()))
@@ -207,8 +207,7 @@ class TestComputationTask(unittest.TestCase):
 
             for i in range(2000):
                 if on_policy:
-                    outputs, _ = ct.predict(
-                        inputs=dict(sensor=sensor), states=dict())
+                    outputs, _ = ct.predict(inputs=dict(sensor=sensor))
                     actions = outputs["action"]
                 else:
                     ## randomly assemble a batch
@@ -218,16 +217,16 @@ class TestComputationTask(unittest.TestCase):
                 rewards = deepcopy(1 - actions).astype("float32")
                 cost = ct.learn(
                     inputs=dict(sensor=sensor),
-                    next_inputs=dict(next_sensor=sensor),
-                    states=dict(),
-                    next_states=dict(),
+                    next_inputs=dict(next_sensor=next_sensor),
+                    use_next_value=dict(use_next_value=np.ones(
+                        (batch_size, 1)).astype("float32")),
                     actions=dict(action=actions),
                     rewards=dict(reward=rewards))
 
             print("final cost: %f" % cost["cost"])
 
             ### the policy should bias towards the first action
-            outputs, _ = ct.predict(inputs=dict(sensor=sensor), states=dict())
+            outputs, _ = ct.predict(inputs=dict(sensor=sensor))
             for a in outputs["action"]:
                 self.assertEqual(a[0], 0)
 

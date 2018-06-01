@@ -56,7 +56,6 @@ function check_style() {
 }
 
 function run_test() {
-    apt-get install -y cmake
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake ..

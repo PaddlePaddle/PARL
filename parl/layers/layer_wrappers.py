@@ -22,7 +22,6 @@ from paddle.fluid.param_attr import ParamAttr
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
 from copy import deepcopy
-import warnings
 import inspect
 
 
@@ -127,11 +126,12 @@ class LayerFunc(object):
 
 class Network(object):
     """
-    A Network is an unordered set of LayerFunc, Layers, or Networks.
+    A Network is an unordered set of LayerFuncs or Networks.
     """
 
     def sync_paras_to(self, target_net, gpu_id):
         assert not target_net is self, "cannot copy between identical networks"
+        assert isinstance(target_net, Network)
 
         for attr in self.__dict__:
             if not attr in target_net.__dict__:
@@ -159,11 +159,18 @@ class Network(object):
 
 def check_caller_name():
     stack = inspect.stack()
-    the_class = stack[2][0].f_locals["self"].__class__
-    the_method = stack[2][0].f_code.co_name
-    assert issubclass(the_class, Network) \
-        and the_method == "__init__", \
-        "parl.layers can only be called in Network.__init__()!"
+    ## we trace back to the call stack and make sure Network.__init__ is on the path
+    called_by_init = False
+    for s in stack:
+        try:
+            the_class = s[0].f_locals["self"].__class__
+            the_method = s[0].f_code.co_name
+            if issubclass(the_class, Network) and the_method == "__init__":
+                called_by_init = True
+        except:
+            pass
+
+    assert called_by_init, "parl.layers can only be called in Network.__init__()!"
 
 
 def fc(size,

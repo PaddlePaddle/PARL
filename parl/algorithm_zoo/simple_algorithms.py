@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.framework.net import Algorithm
+from parl.framework.algorithm import Algorithm
 import parl.layers as layers
+import parl.framework.model_helpers as mh
 from parl.layers import common_functions as comf
+import paddle.fluid as fluid
 from copy import deepcopy
 
 
@@ -22,129 +24,98 @@ class SimpleAC(Algorithm):
     """
     A simple Actor-Critic that has a feedforward policy network and
     a single discrete action.
+
+    learn() requires keywords: "action", "reward", "v_value"
     """
 
     def __init__(self,
                  model,
-                 num_actions,
-                 mlp_layer_confs,
+                 hyperparas=dict(lr=1e-4),
                  gpu_id=-1,
-                 discount_factor=0.99,
-                 min_exploration=0.01):
+                 discount_factor=0.99):
 
-        super(SimpleAC, self).__init__(model, gpu_id)
-        self.num_actions = num_actions
+        super(SimpleAC, self).__init__(model, hyperparas, gpu_id)
         self.discount_factor = discount_factor
-        self.min_exploration = min_exploration
-        ## create some layers for later use
-        self.mlp = [layers.fc(**c) for c in mlp_layer_confs]
-        self.policy_layer = layers.fc(num_actions, act='softmax')
-        self.value_layer = layers.fc(1)
 
-    def _predict(self, policy_states):
-        assert len(policy_states) == 1
-        policy = self.policy_layer(
-            comf.feedforward(policy_states.values()[0], self.mlp))
-        policy = comf.sum_to_one_norm_layer(policy + self.min_exploration)
-        return dict(action=comf.discrete_random(policy))
+    def learn(self, inputs, next_inputs, states, next_states, episode_end,
+              actions, rewards):
 
-    def _learn(self, policy_states, next_values, use_next_value, actions,
-               rewards):
-        assert len(policy_states) == 1
-        assert len(actions) == 1
-        assert len(next_values) == 1
-        assert len(rewards) == 1
-        action = actions.values()[0]
-        next_value = next_values.values()[0]
-        reward = rewards.values()[0]
+        action = actions["action"]
+        reward = rewards["reward"]
 
-        next_value = next_value * use_next_value["use_next_value"]
+        values = self.model.value(inputs, states)
+        next_values = self.model.value(next_inputs, next_states)
+        value = values["v_value"]
+        next_value = next_values["v_value"] * episode_end["episode_end"]
+        next_value.stop_gradient = True
+        assert value.shape[1] == next_value.shape[1]
+
         critic_value = reward + self.discount_factor * next_value
-        td_error = critic_value - self._value(policy_states).values()[0]
+        td_error = critic_value - value
         value_cost = layers.square(td_error)
 
-        policy_state = policy_states.values()[0]
-        policy = self.policy_layer(comf.feedforward(policy_state, self.mlp))
-        policy = comf.sum_to_one_norm_layer(policy + self.min_exploration)
-        pg_cost = layers.cross_entropy(input=policy, label=action)
-        return dict(cost=value_cost + pg_cost * td_error)
+        dist, _ = self.model.policy(inputs, states)
+        dist = dist["action"]
+        assert isinstance(dist, mh.DiscreteDist)
 
-    def _value(self, policy_states):
-        assert len(policy_states) == 1
-        return dict(value=self.value_layer(
-            comf.feedforward(policy_states.values()[0], self.mlp)))
+        pg_cost = layers.cross_entropy(input=dist.dist, label=action)
+        avg_cost = layers.mean(x=value_cost + pg_cost * td_error)
+        optimizer = fluid.optimizer.SGD(learning_rate=self.hp["lr"])
+        optimizer.minimize(avg_cost)
+        return dict(cost=avg_cost)
 
 
 class SimpleQ(Algorithm):
     """
     A simple Q-learning that has a feedforward policy network and a single discrete action.
+
+    learn() requires keywords: "action", "reward", "q_value"
     """
 
     def __init__(self,
                  model,
-                 num_actions,
-                 mlp_layer_confs,
+                 hyperparas=dict(lr=1e-4),
                  gpu_id=-1,
                  discount_factor=0.99,
-                 min_exploration=0.01,
                  update_ref_interval=100):
 
-        super(SimpleQ, self).__init__(model, gpu_id)
-        self.num_actions = num_actions
+        super(SimpleQ, self).__init__(model, hyperparas, gpu_id)
         self.discount_factor = discount_factor
-        self.min_exploration = min_exploration
         self.gpu_id = gpu_id
         assert update_ref_interval > 0
         self.update_ref_interval = update_ref_interval
         self.total_batches = 0
-        ## create some layers for later use
-        self.mlp = [layers.fc(**c) for c in mlp_layer_confs]
-        ## create a ref alg
-        self.ref_alg = deepcopy(self)
-
-    def get_reference_alg(self):
-        return self.ref_alg
+        ## create a reference model
+        self.ref_model = deepcopy(model)
 
     def before_every_batch(self):
         if self.total_batches % self.update_ref_interval == 0:
-            self.sync_paras_to(self.ref_alg, self.ref_alg.gpu_id)
+            self.model.sync_paras_to(self.ref_model, self.gpu_id)
         self.total_batches += 1
 
-    def _predict(self, policy_states):
-        q_values = self._value(policy_states).values()[0]
+    def learn(self, inputs, next_inputs, states, next_states, episode_end,
+              actions, rewards):
 
-        max_id = comf.maxid_layer(q_values)
-        prob = layers.cast(
-            x=layers.one_hot(
-                input=max_id, depth=self.num_actions),
-            dtype="float32")
-        policy = comf.sum_to_one_norm_layer(prob + self.min_exploration)
-        return dict(action=comf.discrete_random(policy))
+        action = actions["action"]
+        reward = rewards["reward"]
 
-    def _learn(self, policy_states, next_values, use_next_value, actions,
-               rewards):
-        assert len(actions) == 1
-        assert len(policy_states) == 1
-        assert len(next_values) == 1
-        assert len(rewards) == 1
-        action = actions.values()[0]
-        next_q_values = next_values.values()[0]
-        reward = rewards.values()[0]
+        values = self.model.value(inputs, states)
+        next_values = self.ref_model.value(next_inputs, next_states)
+        q_value = values["q_value"]
+        next_q_value = next_values["q_value"] * episode_end["episode_end"]
+        next_q_value.stop_gradient = True
+        next_value = layers.reduce_max(next_q_value, dim=-1)
+        assert q_value.shape[1] == next_q_value.shape[1]
+        num_actions = q_value.shape[1]
 
-        next_q_values = next_q_values * use_next_value["use_next_value"]
-        next_value = layers.reduce_max(next_q_values, dim=-1)
-
-        q_values = self._value(policy_states).values()[0]
         select = layers.cast(
             x=layers.one_hot(
-                input=action, depth=self.num_actions),
-            dtype="float32")
-        value = comf.inner_prod(select, q_values)
+                input=action, depth=num_actions), dtype="float32")
+        value = comf.inner_prod(select, q_value)
         critic_value = reward + self.discount_factor * next_value
         td_error = critic_value - value
-        return dict(cost=layers.square(td_error))
 
-    def _value(self, policy_states):
-        assert len(policy_states) == 1
-        return dict(value=comf.feedforward(policy_states.values()[0],
-                                           self.mlp))
+        avg_cost = layers.mean(x=layers.square(td_error))
+        optimizer = fluid.optimizer.SGD(learning_rate=self.hp["lr"])
+        optimizer.minimize(avg_cost)
+        return dict(cost=avg_cost)

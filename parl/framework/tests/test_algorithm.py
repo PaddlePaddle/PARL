@@ -13,70 +13,51 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-from paddle.fluid.layer_helper import LayerHelper
 import parl.layers as layers
-from parl.framework.net import Model, Algorithm
+from parl.framework.algorithm import Model, Algorithm
+import parl.framework.model_helpers as mh
 from parl.layers import common_functions as comf
+from parl.model_zoo.simple_models import SimpleModelDet
 import numpy as np
 from copy import deepcopy
 import unittest
 
 
-class TestModel1(Model):
-    def __init__(self, dims):
-        super(TestModel1, self).__init__()
-        self.dims = dims
-        self.fc = layers.fc(dims)
-
-    def get_input_specs(self):
-        return [("sensor", dict(shape=[self.dims]))]
-
-    def get_action_specs(self):
-        return [("continuous_action", dict(shape=[self.dims]))]
-
-    def perceive(self, inputs, states):
-        hidden = self.fc(input=inputs.values()[0])
-        return dict(hidden=hidden), states
+class TestAlgorithm(Algorithm):
+    def __init__(self, model):
+        super(TestAlgorithm, self).__init__(
+            model, hyperparas=dict(), gpu_id=-1)
 
 
-class TestAlgorithm1(Algorithm):
-    def __init__(self, model, num_dims):
-        super(TestAlgorithm1, self).__init__(model, gpu_id=-1)
-        self.mlp = [layers.fc(num_dims) for _ in range(1)]
-
-    def _predict(self, policy_states):
-        return dict(continuous_action=comf.feedforward(
-            policy_states.values()[0], self.mlp))
-
-
-class TestAlgorithm(unittest.TestCase):
+class TestAlgorithmParas(unittest.TestCase):
     def test_sync_paras_in_one_program(self):
         """
         Test case for copying parameters
         """
 
-        alg = TestAlgorithm1(model=TestModel1(dims=10), num_dims=20)
-        ref_alg = deepcopy(alg)
+        alg1 = TestAlgorithm(model=SimpleModelDet(
+            dims=10, mlp_layer_confs=[dict(size=10)]))
+        alg2 = deepcopy(alg1)
 
         batch_size = 10
         sensor = np.random.uniform(
-            0, 1, [batch_size, alg.model.dims]).astype("float32")
+            0, 1, [batch_size, alg1.model.dims]).astype("float32")
 
         program = fluid.Program()
         startup_program = fluid.Program()
         with fluid.program_guard(program, startup_program):
-            x = layers.data(name='x', shape=[alg.model.dims], dtype="float32")
+            x = layers.data(name='x', shape=[alg1.model.dims], dtype="float32")
             try:
                 # too eary to sync before the layers are created
-                alg.sync_paras_to(ref_alg)
+                alg1.model.sync_paras_to(alg2.model, alg2.gpu_id)
                 self.assertTrue(False)  # you shouldn't be here
             except:
                 pass
             ## first let the program generates the actual variables by using the
             ## layer functions (before this step the layers haven't been instantiated yet!)
             ## the call of predict() function already covers all the layers
-            y0, _ = alg.predict(inputs=dict(sensor=x), states=dict())
-            y1, _ = ref_alg.predict(inputs=dict(sensor=x), states=dict())
+            y0, _ = alg1.predict(inputs=dict(sensor=x), states=dict())
+            y1, _ = alg2.predict(inputs=dict(sensor=x), states=dict())
 
         ######################
         exe = fluid.Executor(fluid.CPUPlace())
@@ -92,7 +73,7 @@ class TestAlgorithm(unittest.TestCase):
             np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
         ## do the copying
-        alg.sync_paras_to(ref_alg, ref_alg.gpu_id)
+        alg1.model.sync_paras_to(alg2.model, alg2.gpu_id)
 
         outputs = exe.run(
             program,
@@ -107,29 +88,32 @@ class TestAlgorithm(unittest.TestCase):
         """
         Test case for copying parameters between two different programs
         """
-        alg = TestAlgorithm1(model=TestModel1(dims=10), num_dims=20)
-        ref_alg = deepcopy(alg)
+        alg1 = TestAlgorithm(model=SimpleModelDet(
+            dims=10, mlp_layer_confs=[dict(size=10)]))
+        alg2 = deepcopy(alg1)
 
         batch_size = 10
         sensor = np.random.uniform(
-            0, 1, [batch_size, alg.model.dims]).astype("float32")
+            0, 1, [batch_size, alg1.model.dims]).astype("float32")
 
         startup_program = fluid.Program()
         program1 = fluid.Program()
         program2 = fluid.Program()
 
         with fluid.program_guard(program1, startup_program):
-            x1 = layers.data(name='x', shape=[alg.model.dims], dtype="float32")
-            y1, _ = alg.predict(inputs=dict(sensor=x1), states=dict())
+            x1 = layers.data(
+                name='x', shape=[alg1.model.dims], dtype="float32")
+            y1, _ = alg1.predict(inputs=dict(sensor=x1), states=dict())
 
         with fluid.program_guard(program2, startup_program):
-            x2 = layers.data(name='x', shape=[alg.model.dims], dtype="float32")
-            y2, _ = ref_alg.predict(inputs=dict(sensor=x2), states=dict())
+            x2 = layers.data(
+                name='x', shape=[alg1.model.dims], dtype="float32")
+            y2, _ = alg2.predict(inputs=dict(sensor=x2), states=dict())
 
         exe = fluid.Executor(fluid.CPUPlace())
         exe.run(startup_program)
 
-        alg.sync_paras_to(ref_alg, ref_alg.gpu_id)
+        alg1.model.sync_paras_to(alg2.model, alg2.gpu_id)
 
         outputs1 = exe.run(program1,
                            feed={'x': sensor},

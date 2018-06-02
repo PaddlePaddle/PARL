@@ -14,36 +14,29 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.net import Model, Algorithm
+from parl.framework.algorithm import Model, Algorithm
 from parl.framework.computation_task import ComputationTask
+import parl.framework.model_helpers as mh
+from parl.layers import common_functions as comf
 from parl.algorithm_zoo.simple_algorithms import SimpleAC, SimpleQ
-from test_algorithm import TestModel1, TestAlgorithm1
+from parl.model_zoo.simple_models import SimpleModelDet, SimpleModelAC, SimpleModelQ
+from test_algorithm import TestAlgorithm
 import numpy as np
 from copy import deepcopy
 import unittest
 import math
 
 
-class TestModel2(Model):
-    def __init__(self, dims):
-        super(TestModel2, self).__init__()
-        self.dims = dims
-
-    def get_input_specs(self):
-        return [("sensor", dict(shape=[self.dims]))]
-
-    def get_action_specs(self):
-        return [("action", dict(shape=[1], dtype="int64"))]
-
-    def perceive(self, inputs, states):
-        return inputs, states
-
-
 class TestModelCNN(Model):
-    def __init__(self, width, height):
+    def __init__(self, width, height, num_actions):
         super(TestModelCNN, self).__init__()
         self.conv = layers.conv2d(
             num_filters=1, filter_size=3, bias_attr=False)
+        self.mlp = [
+            layers.fc(size=32, act="relu", bias_attr=False),
+            layers.fc(size=16, act="relu", bias_attr=False),
+            layers.fc(size=num_actions, act="softmax", bias_attr=False)
+        ]
         self.height = height
         self.width = width
 
@@ -54,11 +47,15 @@ class TestModelCNN(Model):
     def get_action_specs(self):
         return [("action", dict(shape=[1], dtype="int64"))]
 
-    def perceive(self, inputs, states):
-        ### TODO: model.perceive has to consider the "next_" prefix
-        assert "image" in inputs or "next_image" in inputs
+    def policy(self, inputs, states):
         conv = self.conv(input=inputs.values()[0])
-        return dict(conv=conv), states
+        dist = mh.discrete_dist(conv, self.mlp)
+        return dict(action=dist), states
+
+    def value(self, inputs, states):
+        v_value = layers.fill_constant(
+            shape=[inputs.values()[0].shape[0], 1], dtype="float32", value=0)
+        return dict(v_value=v_value)
 
 
 class TestComputationTask(unittest.TestCase):
@@ -66,10 +63,11 @@ class TestComputationTask(unittest.TestCase):
         """
         Test case for AC-learning and Q-learning predictions
         """
+        num_actions = 4
 
         def test(input, ct, max):
-            action_counter = [0] * ct.alg.num_actions
-            total = 1000
+            action_counter = [0] * num_actions
+            total = 2000
             for i in range(total):
                 actions, states = ct.predict(inputs=input)
                 assert not states, "states should be empty"
@@ -79,40 +77,40 @@ class TestComputationTask(unittest.TestCase):
 
             if max:
                 ### if max, the first action will always be chosen
-                for i in range(ct.alg.num_actions):
+                for i in range(num_actions):
                     prob = action_counter[i] / float(sum(action_counter))
                     self.assertAlmostEqual(
                         prob, 1.0 if i == 0 else 0.0, places=1)
             else:
-                ### the actions should be almost uniform
-                for i in range(ct.alg.num_actions):
+                ### the actions should be uniform
+                for i in range(num_actions):
                     prob = action_counter[i] / float(sum(action_counter))
-                    self.assertAlmostEqual(
-                        prob, 1.0 / ct.alg.num_actions, places=1)
+                    self.assertAlmostEqual(prob, 1.0 / num_actions, places=1)
 
-        num_actions = 4
         dims = 100
-        mlp_layer_confs = [
-            dict(
-                size=32, act="relu", bias_attr=False), dict(
-                    size=16, act="relu", bias_attr=False)
-        ]
 
-        ac = SimpleAC(
-            model=TestModel2(dims=dims),
+        ac = SimpleAC(model=SimpleModelAC(
+            dims=dims,
             num_actions=num_actions,
-            mlp_layer_confs=mlp_layer_confs)
+            mlp_layer_confs=[
+                dict(
+                    size=32, act="relu", bias_attr=False), dict(
+                        size=16, act="relu", bias_attr=False), dict(
+                            size=num_actions, act="softmax", bias_attr=False)
+            ]))
 
-        ac_cnn = SimpleAC(
-            model=TestModelCNN(
-                width=84, height=84),
+        ac_cnn = SimpleAC(model=TestModelCNN(
+            width=84, height=84, num_actions=num_actions))
+
+        q = SimpleQ(model=SimpleModelQ(
+            dims=dims,
             num_actions=num_actions,
-            mlp_layer_confs=mlp_layer_confs)
-
-        q = SimpleQ(model=TestModel2(dims=dims),
-                    num_actions=num_actions,
-                    mlp_layer_confs=mlp_layer_confs + \
-                    [dict(size=num_actions, bias_attr=False)])
+            mlp_layer_confs=[
+                dict(
+                    size=32, act="relu", bias_attr=False), dict(
+                        size=16, act="relu", bias_attr=False), dict(
+                            size=num_actions, bias_attr=False)
+            ]))
 
         batch_size = 10
         height, width = 84, 84
@@ -131,7 +129,8 @@ class TestComputationTask(unittest.TestCase):
         """
         Test case for two CTs sharing parameters
         """
-        alg = TestAlgorithm1(model=TestModel1(dims=10), num_dims=20)
+        alg = TestAlgorithm(model=SimpleModelDet(
+            dims=10, mlp_layer_confs=[dict(size=10)]))
         ct0 = ComputationTask(algorithm=alg)
         ct1 = ComputationTask(algorithm=alg)
 
@@ -150,7 +149,8 @@ class TestComputationTask(unittest.TestCase):
         Test case for two CTs copying parameters
         """
 
-        alg = TestAlgorithm1(model=TestModel1(dims=10), num_dims=20)
+        alg = TestAlgorithm(model=SimpleModelDet(
+            dims=10, mlp_layer_confs=[dict(size=10)]))
 
         ct0 = ComputationTask(algorithm=alg)
         ct1 = ComputationTask(algorithm=deepcopy(alg))
@@ -165,7 +165,7 @@ class TestComputationTask(unittest.TestCase):
             np.sum(outputs0["continuous_action"].flatten()),
             np.sum(outputs1["continuous_action"].flatten()))
 
-        ct0.alg.sync_paras_to(ct1.alg, ct1.alg.gpu_id)
+        ct0.alg.model.sync_paras_to(ct1.alg.model, ct1.alg.gpu_id)
 
         outputs0, _ = ct0.predict(inputs=dict(sensor=sensor))
         outputs1, _ = ct1.predict(inputs=dict(sensor=sensor))
@@ -183,26 +183,35 @@ class TestComputationTask(unittest.TestCase):
         sensor = np.ones(
             [batch_size, dims]).astype("float32") / dims  # normalize
         next_sensor = np.zeros([batch_size, dims]).astype("float32")
-        mlp_layer_confs = [
-            dict(
-                size=64, act="relu", bias_attr=False), dict(
-                    size=32, act="relu", bias_attr=False),
-            dict(size=num_actions)
-        ]
 
         for on_policy in [True, False]:
             if on_policy:
                 alg = SimpleAC(
-                    model=TestModel2(dims=dims),
-                    num_actions=num_actions,
-                    mlp_layer_confs=mlp_layer_confs)
+                    model=SimpleModelAC(
+                        dims=dims,
+                        num_actions=num_actions,
+                        mlp_layer_confs=[
+                            dict(
+                                size=32, act="relu", bias_attr=False), dict(
+                                    size=16, act="relu", bias_attr=False),
+                            dict(
+                                size=num_actions, act="softmax")
+                        ]),
+                    hyperparas=dict(lr=1e-2))
                 ct = ComputationTask(algorithm=alg)
             else:
                 alg = SimpleQ(
-                    model=TestModel2(dims=dims),
-                    num_actions=num_actions,
-                    mlp_layer_confs=mlp_layer_confs,
-                    update_ref_interval=100)
+                    model=SimpleModelQ(
+                        dims=dims,
+                        num_actions=num_actions,
+                        mlp_layer_confs=[
+                            dict(
+                                size=32, act="relu", bias_attr=False), dict(
+                                    size=16, act="relu", bias_attr=False),
+                            dict(size=num_actions)
+                        ]),
+                    update_ref_interval=100,
+                    hyperparas=dict(lr=1e-2))
                 ct = ComputationTask(algorithm=alg)
 
             for i in range(2000):
@@ -214,11 +223,11 @@ class TestComputationTask(unittest.TestCase):
                     actions = np.random.choice(
                         [0, 1], size=(batch_size, 1),
                         p=[0.5, 0.5]).astype("int")
-                rewards = deepcopy(1 - actions).astype("float32")
+                rewards = (1 - actions).astype("float32")
                 cost = ct.learn(
                     inputs=dict(sensor=sensor),
                     next_inputs=dict(next_sensor=next_sensor),
-                    use_next_value=dict(use_next_value=np.ones(
+                    episode_end=dict(episode_end=np.ones(
                         (batch_size, 1)).astype("float32")),
                     actions=dict(action=actions),
                     rewards=dict(reward=rewards))
@@ -232,4 +241,9 @@ class TestComputationTask(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TestComputationTask("test_predict"))
+    suite.addTest(TestComputationTask("test_ct_para_sharing"))
+    suite.addTest(TestComputationTask("test_ct_para_sync"))
+    suite.addTest(TestComputationTask("test_ct_learning"))
+    unittest.TextTestRunner().run(suite)

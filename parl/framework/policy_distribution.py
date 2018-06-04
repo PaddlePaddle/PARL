@@ -18,7 +18,7 @@ from parl.layers import common_functions as comf
 from paddle.fluid.framework import convert_np_dtype_to_dtype_
 
 
-class PolicyDist(object):
+class PolicyDistribution(object):
     def __init__(self, dist):
         assert len(dist.shape) == 2
         self.dim = dist.shape[1]
@@ -27,16 +27,38 @@ class PolicyDist(object):
     def __call__(self):
         raise NotImplementedError("Implement __call__ to sample an instance!")
 
+    def dim(self):
+        """
+        For discrete policies, this function returns the number of actions.
+        For continuous policies, this function returns the action vector length.
+        For sequential policies (e.g., sentences), this function returns the number
+        of choices at each step.
+        """
+        return self.dim
 
-class DiscreteDist(PolicyDist):
+    def dist(self):
+        return self.dist
+
+    def loglikelihood(self, action):
+        """
+        Given an action, this function returns the log likelihood of this action under
+        the current distribution.
+        """
+        raise NotImplementedError()
+
+
+class DiscreteDistribution(PolicyDistribution):
     def __init__(self, dist):
-        super(DiscreteDist, self).__init__(dist)
+        super(DiscreteDistribution, self).__init__(dist)
 
     def __call__(self):
         return comf.discrete_random(self.dist)
 
+    def loglikelihood(self, action):
+        return 0 - layers.cross_entropy(input=self.dist, label=action)
 
-class Deterministic(PolicyDist):
+
+class Deterministic(PolicyDistribution):
     def __init__(self, dist):
         super(Deterministic, self).__init__(dist)
         ## For deterministic action, we only support continuous ones
@@ -46,27 +68,15 @@ class Deterministic(PolicyDist):
     def __call__(self):
         return self.dist
 
-
-def discrete_dist(input, mlp, exploration_rate=0.0):
-    """
-    Given an input and an MLP (list of layer funcs), this function
-    returns a DiscreteDist object.
-    The exploration_rate can be a number of a Variable.
-    If it's a number, then the exploration rate is always fixed.
-    """
-    assert isinstance(exploration_rate, float) \
-        or isinstance(exploration_rate, Variable)
-    assert isinstance(mlp, list)
-    dist = comf.feedforward(input, mlp)
-    dist = comf.sum_to_one_norm_layer(dist + exploration_rate)
-    return DiscreteDist(dist)
+    def loglikelihood(self, action):
+        assert False, "You cannot compute likelihood for a deterministic action!"
 
 
 def q_discrete_dist(q_value, exploration_rate=0.0):
     """
-    Generate a PolicyDist object given a Q value.
+    Generate a PolicyDistribution object given a Q value.
     We first construct a one-hot distribution according to the Q value,
-    and then call discrete_dist().
+    and then add an exploration rate to get a probability.
     """
     assert len(q_value.shape) == 2, "[batch_size, num_actions]"
     max_id = comf.maxid_layer(q_value)
@@ -74,4 +84,5 @@ def q_discrete_dist(q_value, exploration_rate=0.0):
         x=layers.one_hot(
             input=max_id, depth=q_value.shape[-1]),
         dtype="float32")
-    return discrete_dist(prob, [], exploration_rate)
+    prob = comf.sum_to_one_norm_layer(prob + exploration_rate)
+    return DiscreteDistribution(prob)

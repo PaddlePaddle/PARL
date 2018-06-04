@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.framework.algorithm import Algorithm
+from parl.framework.algorithm import RLAlgorithm
 import parl.layers as layers
-import parl.framework.model_helpers as mh
+import parl.framework.policy_distribution as pd
 from parl.layers import common_functions as comf
 import paddle.fluid as fluid
 from copy import deepcopy
 
 
-class SimpleAC(Algorithm):
+class SimpleAC(RLAlgorithm):
     """
     A simple Actor-Critic that has a feedforward policy network and
     a single discrete action.
@@ -56,16 +56,16 @@ class SimpleAC(Algorithm):
 
         dist, _ = self.model.policy(inputs, states)
         dist = dist["action"]
-        assert isinstance(dist, mh.DiscreteDist)
+        assert isinstance(dist, pd.DiscreteDistribution)
 
-        pg_cost = layers.cross_entropy(input=dist.dist, label=action)
+        pg_cost = 0 - dist.loglikelihood(action)
         avg_cost = layers.mean(x=value_cost + pg_cost * td_error)
         optimizer = fluid.optimizer.SGD(learning_rate=self.hp["lr"])
         optimizer.minimize(avg_cost)
         return dict(cost=avg_cost)
 
 
-class SimpleQ(Algorithm):
+class SimpleQ(RLAlgorithm):
     """
     A simple Q-learning that has a feedforward policy network and a single discrete action.
 
@@ -108,10 +108,7 @@ class SimpleQ(Algorithm):
         assert q_value.shape[1] == next_q_value.shape[1]
         num_actions = q_value.shape[1]
 
-        select = layers.cast(
-            x=layers.one_hot(
-                input=action, depth=num_actions), dtype="float32")
-        value = comf.inner_prod(select, q_value)
+        value = comf.idx_select(input=q_value, idx=action)
         critic_value = reward + self.discount_factor * next_value
         td_error = critic_value - value
 

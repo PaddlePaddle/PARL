@@ -132,6 +132,8 @@ class Network(object):
     def sync_paras_to(self, target_net, gpu_id):
         assert not target_net is self, "cannot copy between identical networks"
         assert isinstance(target_net, Network)
+        assert self.__class__.__name__ == target_net.__class__.__name__, \
+            "must be the same class for para syncing!"
 
         for attr in self.__dict__:
             if not attr in target_net.__dict__:
@@ -140,8 +142,7 @@ class Network(object):
             target_val = getattr(target_net, attr)
 
             assert type(val) == type(target_val)
-            ## only these two types of members will be copied
-            ## the others will be ignorped
+            ### TODO: sync paras recursively
             if isinstance(val, Network) or isinstance(val, LayerFunc):
                 val.sync_paras_to(target_val, gpu_id)
             elif isinstance(val, tuple) or isinstance(val, list) or isinstance(

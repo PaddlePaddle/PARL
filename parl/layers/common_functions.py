@@ -13,6 +13,45 @@
 # limitations under the License.
 
 import parl.layers as layers
+from paddle.fluid.framework import Variable
+
+
+class Feedforward(layers.Network):
+    """
+     A feedforward network can contain a sequence of components,
+     where each component can be either a LayerFunc or a Feedforward.
+     The purpose of this class is to create a collection of LayerFuncs that can
+     be easily copied from one Network to another.
+     Examples of feedforward networks can be MLP and CNN.
+     """
+
+    def __init__(self, components):
+        for i in range(len(components)):
+            setattr(self, "ff%06d" % i, components[i])
+
+    def __call__(self, input):
+        attrs = {
+            attr: getattr(self, attr)
+            for attr in dir(self) if "ff" in attr
+        }
+        for k in sorted(attrs.keys()):
+            input = attrs[k](input)
+        return input
+
+
+class MLP(Feedforward):
+    def __init__(self, multi_fc_layers):
+        super(MLP, self).__init__([layers.fc(**c) for c in multi_fc_layers])
+
+
+class CNN(Feedforward):
+    """
+    Image CNN
+    """
+
+    def __init__(self, multi_conv_layers):
+        super(CNN, self).__init__(
+            [layers.conv2d(**c) for c in multi_conv_layers])
 
 
 def discrete_random(prob):
@@ -48,8 +87,24 @@ def sum_to_one_norm_layer(input):
     return layers.elementwise_div(x=input, y=sum, axis=0)
 
 
-def feedforward(input, sequence_of_layer_funcs):
-    assert isinstance(sequence_of_layer_funcs, list)
-    for lf in sequence_of_layer_funcs:
-        input = lf(input)
-    return input
+def idx_select(input, idx):
+    """
+    Given an input vector (Variable) and an idx (int or Variable),
+    select the entry of the vector according to the idx.
+    """
+    assert isinstance(input, Variable)
+    assert len(input.shape) == 2
+    batch_size, num_entries = input.shape
+
+    if isinstance(idx, int):
+        ## if idx is a constant int, then we create a variable
+        idx = layers.fill_constant(
+            shape=[batch_size, 1], dtype="int64", value=idx)
+    else:
+        assert isinstance(idx, Variable)
+
+    assert input.shape
+    select = layers.cast(
+        x=layers.one_hot(
+            input=idx, depth=num_entries), dtype="float32")
+    return inner_prod(select, input)

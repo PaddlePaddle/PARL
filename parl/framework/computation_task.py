@@ -58,6 +58,7 @@ class ComputationTask(object):
 
     def _define_program(self):
         self.learn_program = fluid.Program()
+        self.predict_program = fluid.Program()
 
         def _get_next_specs(specs):
             return [("next_" + spec[0], spec[1]) for spec in specs]
@@ -76,11 +77,21 @@ class ComputationTask(object):
         self.action_names = sorted([name for name, _ in action_specs])
         self.state_names = sorted([name for name, _ in state_specs])
 
-        with fluid.program_guard(self.learn_program):
+        with fluid.program_guard(self.predict_program):
             data_layer_dict = self._create_data_layers(input_specs)
             data_layer_dict.update(self._create_data_layers(state_specs))
             self.predict_feed_names = sorted(data_layer_dict.keys())
 
+            inputs = _select_data(data_layer_dict, input_specs)
+            states = _select_data(data_layer_dict, state_specs)
+
+            ### call alg predict()
+            pred_actions, pred_states = self.alg.predict(inputs, states)
+            self.predict_fetch = [pred_actions, pred_states]
+
+        with fluid.program_guard(self.learn_program):
+            data_layer_dict = self._create_data_layers(input_specs)
+            data_layer_dict.update(self._create_data_layers(state_specs))
             data_layer_dict.update(self._create_data_layers(next_input_specs))
             data_layer_dict.update(self._create_data_layers(next_state_specs))
             data_layer_dict.update(self._create_data_layers(action_specs))
@@ -95,13 +106,6 @@ class ComputationTask(object):
             actions = _select_data(data_layer_dict, action_specs)
             rewards = _select_data(data_layer_dict, reward_specs)
             episode_end = _select_data(data_layer_dict, episode_end_specs)
-
-            ### call alg predict()
-            pred_actions, pred_states = self.alg.predict(inputs, states)
-            self.predict_fetch = [pred_actions, pred_states]
-
-            ## up to this point is the predict program
-            self.predict_program = self.learn_program.clone()
 
             ## call alg learn()
             ### TODO: implement a recurrent layer to strip the sequence information

@@ -14,16 +14,15 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.algorithm import Model, Algorithm
-import parl.framework.model_helpers as mh
+from parl.framework.algorithm import Model, RLAlgorithm
 from parl.layers import common_functions as comf
-from parl.model_zoo.simple_models import SimpleModelDet
+from parl.model_zoo.simple_models import SimpleModelDeterministic
 import numpy as np
 from copy import deepcopy
 import unittest
 
 
-class TestAlgorithm(Algorithm):
+class TestAlgorithm(RLAlgorithm):
     def __init__(self, model):
         super(TestAlgorithm, self).__init__(
             model, hyperparas=dict(), gpu_id=-1)
@@ -35,7 +34,7 @@ class TestAlgorithmParas(unittest.TestCase):
         Test case for copying parameters
         """
 
-        alg1 = TestAlgorithm(model=SimpleModelDet(
+        alg1 = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
         alg2 = deepcopy(alg1)
 
@@ -88,7 +87,7 @@ class TestAlgorithmParas(unittest.TestCase):
         """
         Test case for copying parameters between two different programs
         """
-        alg1 = TestAlgorithm(model=SimpleModelDet(
+        alg1 = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
         alg2 = deepcopy(alg1)
 

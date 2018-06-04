@@ -15,7 +15,7 @@
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.layers import Network
-import parl.framework.model_helpers as mh
+import parl.framework.policy_distribution as pd
 
 
 def check_duplicate_spec_names(model):
@@ -71,6 +71,9 @@ class Model(Network):
         """
         Return: action_dists: a dict of action distribution objects
                 states
+                An action distribution object can be created with
+                PolicyDistribution().
+        Optional: a model might not always have to implement policy()
         """
         raise NotImplementedError()
 
@@ -78,6 +81,7 @@ class Model(Network):
         """
         Return: values: a dict of estimated values for the current observations and states
                         For example, "q_value" and "v_value"
+        Optional: a model might not always have to implement value()
         """
         raise NotImplementedError()
 
@@ -85,7 +89,7 @@ class Model(Network):
 class Algorithm(object):
     """
     An Algorithm implements two functions:
-    1. predict() computes actions
+    1. predict() computes forward
     2. learn() computes a cost for optimization
 
     An algorithm should be only part of a network. The user only needs to
@@ -99,9 +103,6 @@ class Algorithm(object):
         self.hp = hyperparas
         self.gpu_id = gpu_id
 
-    def get_behavior_model(self):
-        return self.model
-
     def get_input_specs(self):
         return self.model.get_input_specs()
 
@@ -109,9 +110,15 @@ class Algorithm(object):
         return self.model.get_state_specs()
 
     def get_action_specs(self):
+        """
+        For non-RL algortihms, this can return []
+        """
         return self.model.get_action_specs()
 
     def get_reward_specs(self):
+        """
+        For non-RL algortihms, this can return []
+        """
         return self.model.get_reward_specs()
 
     def before_every_batch(self):
@@ -130,19 +137,9 @@ class Algorithm(object):
 
     def predict(self, inputs, states):
         """
-        Given the inputs and states, this function predicts actions and updates states.
-        Input: inputs(dict), states(dict)
-        Output: actions(dict), states(dict)
+        Given the inputs and states, this function does forward prediction and updates states.
         """
-        behavior_model = self.get_behavior_model()
-        distributions, states = behavior_model.policy(inputs, states)
-        actions = {}
-        for key, dist in distributions.iteritems():
-            assert isinstance(
-                dist,
-                mh.PolicyDist), "behavior_model.policy must return PolicyDist!"
-            actions[key] = dist()
-        return actions, states
+        raise NotImplementedError()
 
     def learn(self, inputs, next_inputs, states, next_states, episode_end,
               actions, rewards):
@@ -152,3 +149,40 @@ class Algorithm(object):
         Output: cost(dict)
         """
         pass
+
+
+class RLAlgorithm(Algorithm):
+    """
+    A derived Algorithm class specially for RL problems.
+    """
+
+    def __init__(self, model, hyperparas, gpu_id):
+        super(RLAlgorithm, self).__init__(model, hyperparas, gpu_id)
+
+    def get_behavior_model(self):
+        """
+        Return the behavior model to compute actions. The behavior model could be different
+        from the training model, which is common in off-policy RL algorithms.
+
+        The default behavior model is set to the training model. The user can override this
+        function to specify another different model.
+        """
+        return self.model
+
+    def predict(self, inputs, states):
+        """
+        Implementation of Algorithm.predict()
+
+        Given the inputs and states, this function predicts actions and updates states.
+        Input: inputs(dict), states(dict)
+        Output: actions(dict), states(dict)
+        """
+        behavior_model = self.get_behavior_model()
+        distributions, states = behavior_model.policy(inputs, states)
+        actions = {}
+        for key, dist in distributions.iteritems():
+            assert isinstance(
+                dist, pd.PolicyDistribution
+            ), "behavior_model.policy must return PolicyDist!"
+            actions[key] = dist()
+        return actions, states

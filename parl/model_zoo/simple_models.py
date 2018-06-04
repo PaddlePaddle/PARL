@@ -14,15 +14,15 @@
 
 import parl.layers as layers
 from parl.framework.algorithm import Model
-import parl.framework.model_helpers as mh
+import parl.framework.policy_distribution as pd
 from parl.layers import common_functions as comf
 
 
-class SimpleModelDet(Model):
+class SimpleModelDeterministic(Model):
     def __init__(self, dims, mlp_layer_confs):
-        super(SimpleModelDet, self).__init__()
+        super(SimpleModelDeterministic, self).__init__()
         self.dims = dims
-        self.mlp = [layers.fc(**c) for c in mlp_layer_confs]
+        self.mlp = comf.MLP(mlp_layer_confs)
 
     def get_input_specs(self):
         return [("sensor", dict(shape=[self.dims]))]
@@ -31,18 +31,18 @@ class SimpleModelDet(Model):
         return [("continuous_action", dict(shape=[self.dims]))]
 
     def policy(self, inputs, states):
-        hidden = comf.feedforward(inputs.values()[0], self.mlp)
-        return dict(continuous_action=mh.Deterministic(hidden)), states
+        hidden = self.mlp(inputs.values()[0])
+        return dict(continuous_action=pd.Deterministic(hidden)), states
 
 
 class SimpleModelAC(Model):
     def __init__(self, dims, num_actions, mlp_layer_confs):
         super(SimpleModelAC, self).__init__()
         self.dims = dims
-        self.mlp = [layers.fc(**c) for c in mlp_layer_confs]
         assert mlp_layer_confs[-1]["act"] == "softmax"
+        self.mlp = comf.MLP(mlp_layer_confs[:-1])
+        self.policy_mlp = comf.MLP(mlp_layer_confs[-1:])
         self.value_layer = layers.fc(size=1)
-        self.exploration = 0.01
 
     def get_input_specs(self):
         return [("sensor", dict(shape=[self.dims]))]
@@ -51,11 +51,11 @@ class SimpleModelAC(Model):
         return [("action", dict(shape=[1], dtype="int64"))]
 
     def _perceive(self, inputs, states):
-        return comf.feedforward(inputs.values()[0], self.mlp[:-1])
+        return self.mlp(inputs.values()[0])
 
     def policy(self, inputs, states):
-        dist = mh.discrete_dist(
-            self._perceive(inputs, states), self.mlp[-1:], self.exploration)
+        dist = pd.DiscreteDistribution(
+            self.policy_mlp(self._perceive(inputs, states)))
         return dict(action=dist), states
 
     def value(self, inputs, states):
@@ -63,13 +63,17 @@ class SimpleModelAC(Model):
 
 
 class SimpleModelQ(Model):
-    def __init__(self, dims, num_actions, mlp_layer_confs):
+    def __init__(self,
+                 dims,
+                 num_actions,
+                 mlp_layer_confs,
+                 estimated_total_num_batches=0):
         super(SimpleModelQ, self).__init__()
         self.dims = dims
         self.num_actions = num_actions
-        self.mlp = [layers.fc(**c) for c in mlp_layer_confs]
         assert "act" not in mlp_layer_confs[-1], "should be linear act"
-        self.exploration = 0.2
+        self.mlp = comf.MLP(mlp_layer_confs)
+        self.estimated_total_num_batches = estimated_total_num_batches
 
     def get_input_specs(self):
         return [("sensor", dict(shape=[self.dims]))]
@@ -80,8 +84,7 @@ class SimpleModelQ(Model):
     def policy(self, inputs, states):
         values = self.value(inputs, states)
         q_value = values["q_value"]
-        return dict(action=mh.q_discrete_dist(q_value,
-                                              self.exploration)), states
+        return dict(action=pd.q_discrete_dist(q_value, )), states
 
     def value(self, inputs, states):
-        return dict(q_value=comf.feedforward(inputs.values()[0], self.mlp))
+        return dict(q_value=self.mlp(inputs.values()[0]))

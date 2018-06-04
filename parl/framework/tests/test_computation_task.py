@@ -14,12 +14,12 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.algorithm import Model, Algorithm
+from parl.framework.algorithm import Model
 from parl.framework.computation_task import ComputationTask
-import parl.framework.model_helpers as mh
+import parl.framework.policy_distribution as pd
 from parl.layers import common_functions as comf
 from parl.algorithm_zoo.simple_algorithms import SimpleAC, SimpleQ
-from parl.model_zoo.simple_models import SimpleModelDet, SimpleModelAC, SimpleModelQ
+from parl.model_zoo.simple_models import SimpleModelDeterministic, SimpleModelAC, SimpleModelQ
 from test_algorithm import TestAlgorithm
 import numpy as np
 from copy import deepcopy
@@ -32,11 +32,12 @@ class TestModelCNN(Model):
         super(TestModelCNN, self).__init__()
         self.conv = layers.conv2d(
             num_filters=1, filter_size=3, bias_attr=False)
-        self.mlp = [
-            layers.fc(size=32, act="relu", bias_attr=False),
-            layers.fc(size=16, act="relu", bias_attr=False),
-            layers.fc(size=num_actions, act="softmax", bias_attr=False)
-        ]
+        self.mlp = comf.MLP([
+            dict(
+                size=32, act="relu", bias_attr=False), dict(
+                    size=16, act="relu", bias_attr=False), dict(
+                        size=num_actions, act="softmax", bias_attr=False)
+        ])
         self.height = height
         self.width = width
 
@@ -49,7 +50,7 @@ class TestModelCNN(Model):
 
     def policy(self, inputs, states):
         conv = self.conv(input=inputs.values()[0])
-        dist = mh.discrete_dist(conv, self.mlp)
+        dist = pd.DiscreteDistribution(self.mlp(conv))
         return dict(action=dist), states
 
     def value(self, inputs, states):
@@ -129,7 +130,7 @@ class TestComputationTask(unittest.TestCase):
         """
         Test case for two CTs sharing parameters
         """
-        alg = TestAlgorithm(model=SimpleModelDet(
+        alg = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
         ct0 = ComputationTask(algorithm=alg)
         ct1 = ComputationTask(algorithm=alg)
@@ -149,7 +150,7 @@ class TestComputationTask(unittest.TestCase):
         Test case for two CTs copying parameters
         """
 
-        alg = TestAlgorithm(model=SimpleModelDet(
+        alg = TestAlgorithm(model=SimpleModelDeterministic(
             dims=10, mlp_layer_confs=[dict(size=10)]))
 
         ct0 = ComputationTask(algorithm=alg)

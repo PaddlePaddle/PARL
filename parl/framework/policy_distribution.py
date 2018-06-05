@@ -47,12 +47,12 @@ class PolicyDistribution(object):
         raise NotImplementedError()
 
 
-class CategoryDistribution(PolicyDistribution):
+class CategoricalDistribution(PolicyDistribution):
     def __init__(self, dist):
-        super(CategoryDistribution, self).__init__(dist)
+        super(CategoricalDistribution, self).__init__(dist)
 
     def __call__(self):
-        return comf.category_random(self.dist)
+        return comf.categorical_random(self.dist)
 
     def loglikelihood(self, action):
         return 0 - layers.cross_entropy(input=self.dist, label=action)
@@ -72,7 +72,7 @@ class Deterministic(PolicyDistribution):
         assert False, "You cannot compute likelihood for a deterministic action!"
 
 
-def q_category_dist(q_value, exploration_rate=0.0):
+def q_categorical_distribution(q_value, exploration_rate=0.0):
     """
     Generate a PolicyDistribution object given a Q value.
     We first construct a one-hot distribution according to the Q value,
@@ -85,4 +85,4 @@ def q_category_dist(q_value, exploration_rate=0.0):
             input=max_id, depth=q_value.shape[-1]),
         dtype="float32")
     prob = comf.sum_to_one_norm_layer(prob + exploration_rate)
-    return CategoryDistribution(prob)
+    return CategoricalDistribution(prob)

@@ -54,9 +54,9 @@ class CNN(Feedforward):
             [layers.conv2d(**c) for c in multi_conv_layers])
 
 
-def category_random(prob):
+def categorical_random(prob):
     """
-    Sample an id based on category distribution prob
+    Sample an id based on categorical distribution prob
     """
     cumsum = layers.cumsum(x=prob)
     r = layers.uniform_random_batch_size_like(

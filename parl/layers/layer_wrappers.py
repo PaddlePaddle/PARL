@@ -15,32 +15,14 @@
 Wrappers for fluid.layers so that the layers can share parameters conveniently.
 """
 
+from paddle.fluid.executor import fetch_var
+import paddle.fluid as fluid
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
-import warnings
+from copy import deepcopy
 import inspect
-
-
-class LayerFunc(object):
-    def __init__(self, param_attr=False, bias_attr=False):
-        self.param_attr = param_attr
-        self.bias_attr = bias_attr
-
-    @property
-    def param_name(self):
-        if self.param_attr:
-            return self.param_attr.name
-        else:
-            return None
-
-    @property
-    def bias_name(self):
-        if self.bias_attr:
-            return self.bias_attr.name
-        else:
-            return None
 
 
 def update_attr_name(name, default_name, attr, is_bias):
@@ -73,13 +55,131 @@ def update_attr_name(name, default_name, attr, is_bias):
     return check_or_replace_name(new_name, attr)
 
 
+class LayerFunc(object):
+    def __init__(self, param_attr=False, bias_attr=False):
+        self.param_attr = param_attr
+        self.bias_attr = bias_attr
+
+    def sync_paras_to(self, target_layer, gpu_id):
+        """
+        Copy the paras from self to a target layer
+        """
+        ## isinstance can handle subclass
+        assert isinstance(target_layer, LayerFunc)
+        src_attrs = [self.param_attr, self.bias_attr]
+        target_attrs = [target_layer.param_attr, target_layer.bias_attr]
+
+        place = fluid.CPUPlace() if gpu_id < 0 \
+                else fluid.CUDAPlace(gpu_id)
+
+        for i, attrs in enumerate(zip(src_attrs, target_attrs)):
+            src_attr, target_attr = attrs
+            assert (src_attr and target_attr) \
+                or (not src_attr and not target_attr)
+            if not src_attr:
+                continue
+            src_var = fetch_var(src_attr.name)
+            target_var = fetch_var(target_attr.name, return_numpy=False)
+            target_var.set(src_var, place)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        ## __new__ won't init the class, we need to do that ourselves
+        copied = cls.__new__(cls)
+        ## record in the memo that self has been copied to avoid recursive copying
+        memo[id(self)] = copied
+
+        ## first copy all content
+        for k, v in self.__dict__.iteritems():
+            setattr(copied, k, deepcopy(v, memo))
+
+        ## then we need to create new para names for self.param_attr and self.bias_attr
+        def create_new_para_name(attr):
+            if attr:
+                assert attr.name, "attr should have a name already!"
+                ## remove the last number id but keep the name key
+                name_key = "_".join(attr.name.split("_")[:-1])
+                attr.name = unique_name.generate(name_key)
+
+        create_new_para_name(copied.param_attr)
+        create_new_para_name(copied.bias_attr)
+        ## We require the user to sync the parameter values later, because
+        ## this deepcopy is supposed to be called only before the startup
+        ## program. This function will cause the computation graph change, so
+        ## it cannot be called during the execution.
+        return copied
+
+    @property
+    def param_name(self):
+        if self.param_attr:
+            return self.param_attr.name
+        else:
+            return None
+
+    @property
+    def bias_name(self):
+        if self.bias_attr:
+            return self.bias_attr.name
+        else:
+            return None
+
+
+class Network(object):
+    """
+    A Network is an unordered set of LayerFuncs or Networks.
+    """
+
+    def sync_paras_to(self, target_net, gpu_id):
+        assert not target_net is self, "cannot copy between identical networks"
+        assert isinstance(target_net, Network)
+        assert self.__class__.__name__ == target_net.__class__.__name__, \
+            "must be the same class for para syncing!"
+
+        for attr in self.__dict__:
+            if not attr in target_net.__dict__:
+                continue
+            val = getattr(self, attr)
+            target_val = getattr(target_net, attr)
+
+            assert type(val) == type(target_val)
+            ### TODO: sync paras recursively
+            if isinstance(val, Network) or isinstance(val, LayerFunc):
+                val.sync_paras_to(target_val, gpu_id)
+            elif isinstance(val, tuple) or isinstance(val, list) or isinstance(
+                    val, set):
+                for v, tv in zip(val, target_val):
+                    v.sync_paras_to(tv, gpu_id)
+            elif isinstance(val, dict):
+                for k in val.keys():
+                    assert k in target_val
+                    val[k].sync_paras_to(target_val[k], gpu_id)
+            else:
+                # for any other type, we do not copy
+                pass
+
+
+def check_caller_name():
+    stack = inspect.stack()
+    ## we trace back to the call stack and make sure Network.__init__ is on the path
+    called_by_init = False
+    for s in stack:
+        try:
+            the_class = s[0].f_locals["self"].__class__
+            the_method = s[0].f_code.co_name
+            if issubclass(the_class, Network) and the_method == "__init__":
+                called_by_init = True
+        except:
+            pass
+
+    assert called_by_init, "parl.layers can only be called in Network.__init__()!"
+
+
 def fc(size,
        num_flatten_dims=1,
        param_attr=None,
        bias_attr=None,
        use_mkldnn=False,
        act=None,
-       is_test=False,
        name=None):
     """
     Return a function that creates a paddle.fluid.layers.fc.
@@ -87,17 +187,18 @@ def fc(size,
     default_name = "fc"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class FC_(LayerFunc):
         def __init__(self):
             super(FC_, self).__init__(param_attr, bias_attr)
 
-        def __call__(self, input):
+        def __call__(self, input, is_test=False):
             return layers.fc(input=input,
                              size=size,
                              num_flatten_dims=num_flatten_dims,
-                             param_attr=param_attr,
-                             bias_attr=bias_attr,
+                             param_attr=self.param_attr,
+                             bias_attr=self.bias_attr,
                              use_mkldnn=use_mkldnn,
                              act=act,
                              is_test=is_test)
@@ -116,6 +217,7 @@ def embedding(size,
     Return a function that creates a paddle.fluid.layers.embedding.
     """
     param_attr = update_attr_name(name, "embedding", param_attr, False)
+    check_caller_name()
 
     class Embedding_(LayerFunc):
         def __init__(self):
@@ -128,7 +230,7 @@ def embedding(size,
                 is_sparse=is_sparse,
                 is_distributed=is_distributed,
                 padding_idx=padding_idx,
-                param_attr=param_attr,
+                param_attr=self.param_attr,
                 dtype=dtype)
 
     return Embedding_()
@@ -150,6 +252,7 @@ def dynamic_lstm(size,
     default_name = "dynamic_lstm"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class DynamicLstm_(LayerFunc):
         def __init__(self):
@@ -159,8 +262,8 @@ def dynamic_lstm(size,
             return layers.dynamic_lstm(
                 input=input,
                 size=size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_peepholes=use_peepholes,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
@@ -189,6 +292,7 @@ def dynamic_lstmp(size,
     default_name = "dynamic_lstmp"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class DynamicLstmp_(LayerFunc):
         def __init__(self):
@@ -199,8 +303,8 @@ def dynamic_lstmp(size,
                 input=input,
                 size=size,
                 proj_size=proj_size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_peepholes=use_peepholes,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
@@ -226,6 +330,7 @@ def dynamic_gru(size,
     default_name = "dynamic_gru"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class DynamicGru_(LayerFunc):
         def __init__(self):
@@ -235,8 +340,8 @@ def dynamic_gru(size,
             return layers.dynamic_gru(
                 input=input,
                 size=size,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
                 candidate_activation=candidate_activation,
@@ -274,6 +379,7 @@ def sequence_conv(num_filters,
     default_name = "sequence_conv"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class SequenceConv_(LayerFunc):
         def __init__(self):
@@ -286,8 +392,8 @@ def sequence_conv(num_filters,
                 filter_size=filter_size,
                 filter_stride=filter_stride,
                 padding=padding,
-                bias_attr=bias_attr,
-                param_attr=param_attr,
+                bias_attr=self.bias_attr,
+                param_attr=self.param_attr,
                 act=act)
 
     return SequenceConv_()
@@ -311,6 +417,7 @@ def conv2d(num_filters,
     default_name = "conv2d"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class Conv2D_(LayerFunc):
         def __init__(self):
@@ -325,8 +432,8 @@ def conv2d(num_filters,
                 padding=padding,
                 dilation=dilation,
                 groups=groups,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_cudnn=use_cudnn,
                 use_mkldnn=use_mkldnn,
                 act=act)
@@ -351,6 +458,7 @@ def conv2d_transpose(num_filters,
     default_name = "conv2d_transpose"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class Conv2DTranspose_(LayerFunc):
         def __init__(self):
@@ -365,8 +473,8 @@ def conv2d_transpose(num_filters,
                 padding=padding,
                 stride=stride,
                 dilation=dilation,
-                param_attr=param_attr,
-                bias_attr=bias_attr,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
                 use_cudnn=use_cudnn,
                 act=act)
 
@@ -380,6 +488,7 @@ def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
     default_name = "lstm_unit"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
+    check_caller_name()
 
     class LstmUnit_(LayerFunc):
         def __init__(self):
@@ -391,8 +500,8 @@ def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
                 hidden_t_prev=hidden_t_prev,
                 cell_t_prev=cell_t_prev,
                 forget_bias=forget_bias,
-                param_attr=param_attr,
-                bias_attr=bias_attr)
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr)
 
     return LstmUnit_()
 
@@ -406,6 +515,7 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
     Return a function that creates a paddle.fluid.layers.row_conv.
     """
     param_attr = update_attr_name(name, "row_conv", param_attr, False)
+    check_caller_name()
 
     class RowConv_(LayerFunc):
         def __init__(self):
@@ -415,7 +525,7 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
             return layers.row_conv(
                 input=input,
                 future_context_size=future_context_size,
-                param_attr=param_attr,
+                param_attr=self.param_attr,
                 act=act)
 
     return RowConv_()

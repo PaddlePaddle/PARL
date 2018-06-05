@@ -50,7 +50,7 @@ class TestModelCNN(Model):
 
     def policy(self, inputs, states):
         conv = self.conv(input=inputs.values()[0])
-        dist = pd.CategoryDistribution(self.mlp(conv))
+        dist = pd.CategoricalDistribution(self.mlp(conv))
         return dict(action=dist), states
 
     def value(self, inputs, states):
@@ -193,12 +193,12 @@ class TestComputationTask(unittest.TestCase):
                         num_actions=num_actions,
                         mlp_layer_confs=[
                             dict(
-                                size=32, act="relu", bias_attr=False), dict(
-                                    size=16, act="relu", bias_attr=False),
+                                size=64, act="relu", bias_attr=False), dict(
+                                    size=32, act="relu", bias_attr=False),
                             dict(
                                 size=num_actions, act="softmax")
                         ]),
-                    hyperparas=dict(lr=1e-2))
+                    hyperparas=dict(lr=1e-1))
                 ct = ComputationTask(algorithm=alg)
             else:
                 alg = SimpleQ(
@@ -207,15 +207,15 @@ class TestComputationTask(unittest.TestCase):
                         num_actions=num_actions,
                         mlp_layer_confs=[
                             dict(
-                                size=32, act="relu", bias_attr=False), dict(
-                                    size=16, act="relu", bias_attr=False),
+                                size=64, act="relu", bias_attr=False), dict(
+                                    size=32, act="relu", bias_attr=False),
                             dict(size=num_actions)
                         ]),
                     update_ref_interval=100,
-                    hyperparas=dict(lr=1e-2))
+                    hyperparas=dict(lr=1e-1))
                 ct = ComputationTask(algorithm=alg)
 
-            for i in range(2000):
+            for i in range(1000):
                 if on_policy:
                     outputs, _ = ct.predict(inputs=dict(sensor=sensor))
                     actions = outputs["action"]
@@ -242,9 +242,4 @@ class TestComputationTask(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    suite = unittest.TestSuite()
-    suite.addTest(TestComputationTask("test_predict"))
-    suite.addTest(TestComputationTask("test_ct_para_sharing"))
-    suite.addTest(TestComputationTask("test_ct_para_sync"))
-    suite.addTest(TestComputationTask("test_ct_learning"))
-    unittest.TextTestRunner().run(suite)
+    unittest.main()

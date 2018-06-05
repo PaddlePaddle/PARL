@@ -16,16 +16,23 @@ import parl.layers as layers
 from paddle.fluid.framework import Variable
 from parl.layers import common_functions as comf
 from paddle.fluid.framework import convert_np_dtype_to_dtype_
+from abc import ABCMeta, abstractmethod
 
 
 class PolicyDistribution(object):
+    __metaclass__ = ABCMeta
+
     def __init__(self, dist):
         assert len(dist.shape) == 2
         self.dim = dist.shape[1]
         self.dist = dist
 
+    @abstractmethod
     def __call__(self):
-        raise NotImplementedError("Implement __call__ to sample an instance!")
+        """
+        Implement __call__ to sample an instance.
+        """
+        pass
 
     def dim(self):
         """
@@ -84,5 +91,8 @@ def q_categorical_distribution(q_value, exploration_rate=0.0):
         x=layers.one_hot(
             input=max_id, depth=q_value.shape[-1]),
         dtype="float32")
-    prob = comf.sum_to_one_norm_layer(prob + exploration_rate)
+    ### exploration_rate could be a Variable
+    if not (isinstance(exploration_rate, float) and exploration_rate == 0):
+        prob = exploration_rate / float(q_value.shape[-1]) \
+               + (1 - exploration_rate) * prob
     return CategoricalDistribution(prob)

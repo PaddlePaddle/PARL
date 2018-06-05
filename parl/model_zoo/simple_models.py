@@ -84,7 +84,7 @@ class SimpleModelQ(Model):
     def policy(self, inputs, states):
         values = self.value(inputs, states)
         q_value = values["q_value"]
-        return dict(action=pd.q_categorical_distribution(q_value, )), states
+        return dict(action=pd.q_categorical_distribution(q_value)), states
 
     def value(self, inputs, states):
         return dict(q_value=self.mlp(inputs.values()[0]))

@@ -16,6 +16,7 @@ import paddle.fluid as fluid
 import parl.layers as layers
 from parl.layers import Network
 import parl.framework.policy_distribution as pd
+from abc import ABCMeta, abstractmethod
 
 
 def check_duplicate_spec_names(model):
@@ -37,15 +38,17 @@ class Model(Network):
     A Model is owned by an Algorithm. It implements all the network model of
     a specific problem.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self):
         super(Model, self).__init__()
 
+    @abstractmethod
     def get_input_specs(self):
         """
         Output: list of tuples
         """
-        raise NotImplementedError()
+        pass
 
     def get_state_specs(self):
         """
@@ -54,11 +57,12 @@ class Model(Network):
         """
         return []
 
+    @abstractmethod
     def get_action_specs(self):
         """
         Output: list of tuples
         """
-        raise NotImplementedError()
+        pass
 
     def get_reward_specs(self):
         """
@@ -138,8 +142,9 @@ class Algorithm(object):
     def predict(self, inputs, states):
         """
         Given the inputs and states, this function does forward prediction and updates states.
+        Optional: an algorithm might not implement predict()
         """
-        raise NotImplementedError()
+        pass
 
     def learn(self, inputs, next_inputs, states, next_states, episode_end,
               actions, rewards):
@@ -147,6 +152,8 @@ class Algorithm(object):
         This function computes a learning cost to be optimized.
         The return should be the cost.
         Output: cost(dict)
+
+        Optional: an algorithm might not implement learn()
         """
         pass
 

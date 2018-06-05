@@ -90,7 +90,7 @@ class LayerFunc(object):
         memo[id(self)] = copied
 
         ## first copy all content
-        for k, v in self.__dict__.items():
+        for k, v in self.__dict__.iteritems():
             setattr(copied, k, deepcopy(v, memo))
 
         ## then we need to create new para names for self.param_attr and self.bias_attr

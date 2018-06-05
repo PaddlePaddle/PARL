@@ -50,7 +50,7 @@ class TestModelCNN(Model):
 
     def policy(self, inputs, states):
         conv = self.conv(input=inputs.values()[0])
-        dist = pd.DiscreteDistribution(self.mlp(conv))
+        dist = pd.CategoryDistribution(self.mlp(conv))
         return dict(action=dist), states
 
     def value(self, inputs, states):

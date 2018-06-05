@@ -56,7 +56,7 @@ class SimpleAC(RLAlgorithm):
 
         dist, _ = self.model.policy(inputs, states)
         dist = dist["action"]
-        assert isinstance(dist, pd.DiscreteDistribution)
+        assert isinstance(dist, pd.CategoryDistribution)
 
         pg_cost = 0 - dist.loglikelihood(action)
         avg_cost = layers.mean(x=value_cost + pg_cost * td_error)

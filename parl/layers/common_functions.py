@@ -66,7 +66,7 @@ def discrete_random(prob):
     return index
 
 
-def maxid_layer(input):
+def argmax_layer(input):
     """
     Get the id of the max val of an input vector
     """

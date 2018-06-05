@@ -79,7 +79,7 @@ def q_discrete_dist(q_value, exploration_rate=0.0):
     and then add an exploration rate to get a probability.
     """
     assert len(q_value.shape) == 2, "[batch_size, num_actions]"
-    max_id = comf.maxid_layer(q_value)
+    max_id = comf.argmax_layer(q_value)
     prob = layers.cast(
         x=layers.one_hot(
             input=max_id, depth=q_value.shape[-1]),

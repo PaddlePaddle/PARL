@@ -39,8 +39,11 @@ class TestGymGame(unittest.TestCase):
         Test games in OpenAI gym.
         """
 
-        games = ["CartPole-v0"]
-        final_rewards_thresholds = [1.5]
+        games = ["MountainCar-v0", "CartPole-v0"]
+        final_rewards_thresholds = [
+            -1.8,  ## drive to the right top in 180 steps (timeout is -2.0)
+            1.5  ## hold the pole for at least 150 steps
+        ]
 
         mlp_layer_confs = [
             dict(
@@ -53,6 +56,10 @@ class TestGymGame(unittest.TestCase):
 
         for game, threshold in zip(games, final_rewards_thresholds):
             for on_policy in [False, True]:
+
+                if on_policy and game != "CartPole-v0":
+                    ## SimpleAC has difficulty training mountain-car and acrobot
+                    continue
 
                 env = gym.make(game)
                 state_shape = env.observation_space.shape[0]
@@ -77,6 +84,8 @@ class TestGymGame(unittest.TestCase):
                         hyperparas=dict(lr=1e-4),
                         exploration_end_batches=25000,
                         update_ref_interval=100)
+
+                print "algorithm: " + alg.__class__.__name__
 
                 ct = ComputationTask(algorithm=alg)
                 batch_size = 16

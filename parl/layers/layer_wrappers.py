@@ -19,6 +19,7 @@ from paddle.fluid.executor import fetch_var
 import paddle.fluid as fluid
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
+from paddle.fluid.framework import Variable
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
 from copy import deepcopy
@@ -533,3 +534,30 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
 
 def layer_norm(**kwargs):
     raise NotImplementedError()
+
+
+def create_persistable_variable(shape,
+                                dtype,
+                                name=None,
+                                attr=None,
+                                is_bias=False,
+                                default_initializer=None):
+    """
+    Return a function that creates a parameter which cannot be synchronized like those of layers
+
+    This function can be called in Algorithm, so we don't check the caller nor require that
+    the variable can be copied.
+    """
+    default_name = "per_var"
+    attr = update_attr_name(name, default_name, attr, is_bias)
+
+    class CreateParameter_(object):
+        def __call__(self):
+            return layers.create_parameter(
+                shape=shape,
+                dtype=dtype,
+                attr=attr,
+                is_bias=is_bias,
+                default_initializer=default_initializer)
+
+    return CreateParameter_()

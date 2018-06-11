@@ -35,7 +35,7 @@ def check_duplicate_spec_names(model):
 
 class Model(Network):
     """
-    A Model is owned by an Algorithm. It implements all the network model of
+    A Model is owned by an Algorithm. It implements the entire network model of
     a specific problem.
     """
     __metaclass__ = ABCMeta
@@ -142,11 +142,28 @@ class Algorithm(object):
     def predict(self, inputs, states):
         """
         Given the inputs and states, this function does forward prediction and updates states.
+        Input: inputs(dict), states(dict)
+        Output: actions(dict), states(dict)
+
         Optional: an algorithm might not implement predict()
         """
         pass
 
-    def learn(self, inputs, next_inputs, states, next_states, episode_end,
+    def _rl_predict(self, behavior_model, inputs, states):
+        """
+        Given a behavior model (not necessarily equal to self.model), this function
+        performs a normal RL prediction according to inputs and states.
+        A behavior model different from self.model indicates off-policy training.
+
+        The user can choose to call this function for convenience.
+        """
+        distributions, states = behavior_model.policy(inputs, states)
+        actions = {}
+        for key, dist in distributions.iteritems():
+            actions[key] = dist()
+        return actions, states
+
+    def learn(self, inputs, next_inputs, states, next_states, next_episode_end,
               actions, rewards):
         """
         This function computes a learning cost to be optimized.
@@ -156,40 +173,3 @@ class Algorithm(object):
         Optional: an algorithm might not implement learn()
         """
         pass
-
-
-class RLAlgorithm(Algorithm):
-    """
-    A derived Algorithm class specially for RL problems.
-    """
-
-    def __init__(self, model, hyperparas, gpu_id):
-        super(RLAlgorithm, self).__init__(model, hyperparas, gpu_id)
-
-    def get_behavior_model(self):
-        """
-        Return the behavior model to compute actions. The behavior model could be different
-        from the training model, which is common in off-policy RL algorithms.
-
-        The default behavior model is set to the training model. The user can override this
-        function to specify another different model.
-        """
-        return self.model
-
-    def predict(self, inputs, states):
-        """
-        Implementation of Algorithm.predict()
-
-        Given the inputs and states, this function predicts actions and updates states.
-        Input: inputs(dict), states(dict)
-        Output: actions(dict), states(dict)
-        """
-        behavior_model = self.get_behavior_model()
-        distributions, states = behavior_model.policy(inputs, states)
-        actions = {}
-        for key, dist in distributions.iteritems():
-            assert isinstance(
-                dist, pd.PolicyDistribution
-            ), "behavior_model.policy must return PolicyDist!"
-            actions[key] = dist()
-        return actions, states

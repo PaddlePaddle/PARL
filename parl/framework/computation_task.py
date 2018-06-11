@@ -72,7 +72,7 @@ class ComputationTask(object):
         next_state_specs = _get_next_specs(state_specs)
         action_specs = self.alg.get_action_specs()
         reward_specs = self.alg.get_reward_specs()
-        episode_end_specs = [("episode_end", dict(shape=[1]))]
+        next_episode_end_specs = [("next_episode_end", dict(shape=[1]))]
 
         self.action_names = sorted([name for name, _ in action_specs])
         self.state_names = sorted([name for name, _ in state_specs])
@@ -96,7 +96,8 @@ class ComputationTask(object):
             data_layer_dict.update(self._create_data_layers(next_state_specs))
             data_layer_dict.update(self._create_data_layers(action_specs))
             data_layer_dict.update(self._create_data_layers(reward_specs))
-            data_layer_dict.update(self._create_data_layers(episode_end_specs))
+            data_layer_dict.update(
+                self._create_data_layers(next_episode_end_specs))
             self.learn_feed_names = sorted(data_layer_dict.keys())
 
             inputs = _select_data(data_layer_dict, input_specs)
@@ -105,12 +106,13 @@ class ComputationTask(object):
             next_states = _select_data(data_layer_dict, next_state_specs)
             actions = _select_data(data_layer_dict, action_specs)
             rewards = _select_data(data_layer_dict, reward_specs)
-            episode_end = _select_data(data_layer_dict, episode_end_specs)
+            next_episode_end = _select_data(data_layer_dict,
+                                            next_episode_end_specs)
 
             ## call alg learn()
             ### TODO: implement a recurrent layer to strip the sequence information
             self.cost = self.alg.learn(inputs, next_inputs, states,
-                                       next_states, episode_end, actions,
+                                       next_states, next_episode_end, actions,
                                        rewards)
 
     def predict(self, inputs, states=dict()):
@@ -149,7 +151,7 @@ class ComputationTask(object):
     def learn(self,
               inputs,
               next_inputs,
-              episode_end,
+              next_episode_end,
               actions,
               rewards,
               states=dict(),
@@ -164,7 +166,7 @@ class ComputationTask(object):
         data.update(next_inputs)
         data.update(states)
         data.update(next_states)
-        data.update(episode_end)
+        data.update(next_episode_end)
         data.update(actions)
         data.update(rewards)
         assert sorted(data.keys()) == self.learn_feed_names, \

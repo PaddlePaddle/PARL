@@ -14,20 +14,10 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
+from parl.common.data_process import DataSpecs
+from parl.common.utils import split_list
 from parl.framework.algorithm import Model, Algorithm
 from parl.framework.computation_wrapper import ComputationWrapper
-
-
-def split_list(l, sizes):
-    """
-    Split a list into several chunks, each chunk with a size in sizes
-    """
-    chunks = []
-    offset = 0
-    for size in sizes:
-        chunks.append(l[offset:offset + size])
-        offset += size
-    return chunks
 
 
 class ComputationTask(object):
@@ -55,6 +45,11 @@ class ComputationTask(object):
         self._wrapper = None
 
     @property
+    def specs(self):
+        assert self._specs, ("_specs should've been defined after __init__.")
+        return self._specs
+
+    @property
     def wrapper(self):
         if self._wrapper is None:
             self._wrapper = ComputationWrapper(self.name, self,
@@ -71,54 +66,58 @@ class ComputationTask(object):
         self.learn_program = fluid.Program()
         self.predict_program = fluid.Program()
 
-        def _get_next_specs(specs):
-            return [("next_" + spec[0], spec[1]) for spec in specs]
-
         def _select_data(data_layer_dict, specs):
             return {name: data_layer_dict[name] for name, _ in specs}
 
-        input_specs = self.alg.get_input_specs()
-        state_specs = self.alg.get_state_specs()
-        next_input_specs = _get_next_specs(input_specs)
-        next_state_specs = _get_next_specs(state_specs)
-        action_specs = self.alg.get_action_specs()
-        reward_specs = self.alg.get_reward_specs()
-        next_episode_end_specs = [("next_episode_end", dict(shape=[1]))]
+        self._specs = DataSpecs(
+            inputs=self.alg.get_input_specs(),
+            states=self.alg.get_state_specs(),
+            actions=self.alg.get_action_specs(),
+            rewards=self.alg.get_reward_specs(),
+            next_episode_end=[("next_episode_end", dict(shape=[1]))])
 
-        self.action_names = sorted([name for name, _ in action_specs])
-        self.state_names = sorted([name for name, _ in state_specs])
+        self.action_names = sorted([name for name, _ in self._specs.actions])
+        self.state_names = sorted([name for name, _ in self._specs.states])
 
         with fluid.program_guard(self.predict_program):
-            data_layer_dict = self._create_data_layers(input_specs)
-            data_layer_dict.update(self._create_data_layers(state_specs))
+            data_layer_dict = self._create_data_layers(self._specs.inputs)
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.states))
             self.predict_feed_names = sorted(data_layer_dict.keys())
 
-            inputs = _select_data(data_layer_dict, input_specs)
-            states = _select_data(data_layer_dict, state_specs)
+            inputs = _select_data(data_layer_dict, self._specs.inputs)
+            states = _select_data(data_layer_dict, self._specs.states)
 
             ### call alg predict()
             pred_actions, pred_states = self.alg.predict(inputs, states)
             self.predict_fetch = [pred_actions, pred_states]
 
         with fluid.program_guard(self.learn_program):
-            data_layer_dict = self._create_data_layers(input_specs)
-            data_layer_dict.update(self._create_data_layers(state_specs))
-            data_layer_dict.update(self._create_data_layers(next_input_specs))
-            data_layer_dict.update(self._create_data_layers(next_state_specs))
-            data_layer_dict.update(self._create_data_layers(action_specs))
-            data_layer_dict.update(self._create_data_layers(reward_specs))
+            data_layer_dict = self._create_data_layers(self._specs.inputs)
             data_layer_dict.update(
-                self._create_data_layers(next_episode_end_specs))
+                self._create_data_layers(self._specs.states))
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.next_inputs))
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.next_states))
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.actions))
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.rewards))
+            data_layer_dict.update(
+                self._create_data_layers(self._specs.next_episode_end))
             self.learn_feed_names = sorted(data_layer_dict.keys())
 
-            inputs = _select_data(data_layer_dict, input_specs)
-            states = _select_data(data_layer_dict, state_specs)
-            next_inputs = _select_data(data_layer_dict, next_input_specs)
-            next_states = _select_data(data_layer_dict, next_state_specs)
-            actions = _select_data(data_layer_dict, action_specs)
-            rewards = _select_data(data_layer_dict, reward_specs)
+            inputs = _select_data(data_layer_dict, self._specs.inputs)
+            states = _select_data(data_layer_dict, self._specs.states)
+            next_inputs = _select_data(data_layer_dict,
+                                       self._specs.next_inputs)
+            next_states = _select_data(data_layer_dict,
+                                       self._specs.next_states)
+            actions = _select_data(data_layer_dict, self._specs.actions)
+            rewards = _select_data(data_layer_dict, self._specs.rewards)
             next_episode_end = _select_data(data_layer_dict,
-                                            next_episode_end_specs)
+                                            self._specs.next_episode_end)
 
             ## call alg learn()
             ### TODO: implement a recurrent layer to strip the sequence information
@@ -181,7 +180,6 @@ class ComputationTask(object):
         data.update(next_episode_end)
         data.update(actions)
         data.update(rewards)
-        #print ('training', data)
         assert sorted(data.keys()) == self.learn_feed_names, \
             "field names mismatch: %s %s" % ()
         feed = {n: data[n] for n in self.learn_feed_names}

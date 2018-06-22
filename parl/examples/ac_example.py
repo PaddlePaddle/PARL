@@ -12,8 +12,8 @@
 # limitations under the License.
 
 from random import randint
-from parl.agent_zoo.agents import SimpleRLAgent
-from parl.agent_zoo.agent_helpers import OnPolicyHelper
+from parl.agent_zoo.simple_rl_agents import SimpleRLAgent
+from parl.agent_zoo.simple_rl_agents import OnPolicyHelper
 from parl.algorithm_zoo.simple_algorithms import SimpleAC
 from parl.framework.manager import Manager
 from parl.model_zoo.simple_models import SimpleModelAC
@@ -25,8 +25,8 @@ if __name__ == '__main__':
     """
     game = "CartPole-v0"
 
-    num_agent = 4
-    num_games = 2000
+    num_agent = 1
+    num_games = 1500
     # 1. Create environments
     envs = []
     for _ in range(num_agent):
@@ -53,24 +53,15 @@ if __name__ == '__main__':
                 size=num_actions, act="softmax")]),
         hyperparas=dict(lr=1e-4))
 
-    # 3. Specify the settings for learning:
-    # 3-1. Specify the name of data required by the model
-    specs = {
-        "inputs": ["sensor"],
-        "next_inputs": ["next_sensor"],
-        "actions": ["action"],
-        "rewards": ["reward"],
-        "next_episode_end": ["next_episode_end"]
-    }
-    # 3-2. Specify the algorithm to use (SimpleAC in this case), data sampling
-    # strategy (OnPolicyHelper here) and other settings used by ComputationTask.
+    # 3. Specify the settings for learning: the algorithm to use (SimpleAC 
+    # in this case), data sampling strategy (OnPolicyHelper here) and other 
+    # settings used by ComputationTask.
     ct_settings = {
         "RL": dict(
             algorithm=alg,
             # sampling
             sample_method=OnPolicyHelper,
             sample_interval=16,
-            specs=specs,
             # ct
             min_batchsize=1,
             max_batchsize=16,
@@ -89,4 +80,4 @@ if __name__ == '__main__':
         # interact with environment and collect data
         manager.add_agent(agent)
 
-    manager.run()
+    manager.start()

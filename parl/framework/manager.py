@@ -38,7 +38,7 @@ class Manager(object):
         self.agents[-1].join()
         self.agents.pop()
 
-    def run(self):
+    def start(self):
         # TODO: logger thread
         for wrapper in self.wrappers.values():
             wrapper.run()

@@ -61,6 +61,9 @@ class SimpleAC(Algorithm):
         assert isinstance(dist, pd.CategoricalDistribution)
 
         pg_cost = 0 - dist.loglikelihood(action)
+        # Adding zero here to detach `td_error_no_grad` from 'td_error_no_grad`
+        # so that setting its stop_gradient to True won't affect 
+        # `td_error_no_grad`'s.
         td_error_no_grad = td_error + 0
         td_error_no_grad.stop_gradient = True
         avg_cost = layers.mean(x=value_cost + pg_cost * td_error_no_grad)
@@ -144,8 +147,8 @@ class SimpleQ(Algorithm):
         values = self.model.value(inputs, states)
         next_values = self.ref_model.value(next_inputs, next_states)
         q_value = values["q_value"]
-        next_q_value = next_values["q_value"] * next_episode_end[
-            "next_episode_end"]
+        next_q_value = next_values["q_value"] * (
+            1 - next_episode_end["next_episode_end"])
         next_q_value.stop_gradient = True
         next_value = layers.reduce_max(next_q_value, dim=-1)
         assert q_value.shape[1] == next_q_value.shape[1]

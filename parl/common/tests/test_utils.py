@@ -23,18 +23,18 @@ class TestUtils(unittest.TestCase):
         d1 = dict(
             sensors=np.random.rand(3, 10),
             states=np.random.rand(3, 20),
-            actions=[[1, 2, 3], [4, 5], [6]],
-            rewards=np.random.rand(3, 1))
+            actions=[[1, 2, 3], [4, 5], [6]])
         d2 = dict(
             sensors=np.random.rand(2, 10),
             states=np.random.rand(2, 20),
-            actions=[[7, 8, 9, 10], [11, 12]],
-            rewards=np.random.rand(2, 1))
+            actions=[[7, 8, 9, 10], [11, 12]])
         D, starts = concat_dicts([d1, d2])
         self.assertEqual(starts, [0, 3, 5])
-        for k in ["sensors", "states", "rewards", "actions"]:
+        for k in ["sensors", "actions"]:
             self.assertTrue(np.array_equal(D[k][0:3], d1[k]))
             self.assertTrue(np.array_equal(D[k][3:], d2[k]))
+        self.assertTrue(np.array_equal(D["states"][0:3], d1["states"]))
+        self.assertTrue(np.array_equal(D["states"][3:], d2["states"]))
 
         dd1, dd2 = split_dict(D, starts)
         self.assertEqual(dd1.viewkeys(), dd2.viewkeys())
@@ -45,20 +45,17 @@ class TestUtils(unittest.TestCase):
             else:
                 self.assertTrue(np.array_equal(dd1[k], d1[k]))
                 self.assertTrue(np.array_equal(dd2[k], d2[k]))
-
         with self.assertRaises(Exception):
             d3 = dict(
                 sensors=np.random.rand(3, 10),
                 states=np.random.rand(2, 20),
-                actions=[[7, 8, 9, 10], [11, 12]],
-                rewards=np.random.rand(2, 1))
+                actions=[[7, 8, 9, 10], [11, 12]])
             concat_dicts([d1, d3])
         with self.assertRaises(Exception):
             d3 = dict(
                 sensors=np.random.rand(3, 10),
                 states=np.random.rand(3, 20),
-                actions=[[7, 8, 9, 10]],
-                rewards=np.random.rand(2, 1))
+                actions=[[7, 8, 9, 10]])
             concat_dicts([d1, d3])
 
 

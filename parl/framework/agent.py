@@ -14,26 +14,11 @@
 
 from abc import ABCMeta, abstractmethod
 from multiprocessing import Process, Value
-from parl.common.error_handling import check_type_error
+import numpy as np
+from parl.common.communicator import AgentCommunicator
 
 
-class DataProcessorBase(object):
-    __metaclass__ = ABCMeta
-
-    def __init__(self, specs):
-        self.specs = specs
-        pass
-
-    @abstractmethod
-    def process_prediction_inputs(self, inputs, states):
-        pass
-
-    @abstractmethod
-    def process_learning_inputs(self, data):
-        pass
-
-
-class AgentHelperBase(object):
+class AgentHelper(object):
     """
     AgentHelper abstracts some part of Agent's data processing and the I/O 
     communication between Agent and ComputationWrapper. It receives a
@@ -43,14 +28,15 @@ class AgentHelperBase(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, name, communicator):
+        assert isinstance(communicator, AgentCommunicator)
         self.name = name
         self.comm = communicator
 
     @abstractmethod
     def predict(self, inputs, states=dict()):
         """
-        Process the inputs (if necessary), send data to ComputationWrapper for
-        prediction, and receive the outcome.
+        Process the input data (if necessary), send them to `ComputationWrapper`
+        for prediction, and receive the outcome.
 
         Args:
             inputs(dict): data used for prediction. It is caller's job 
@@ -71,8 +57,9 @@ class AgentHelperBase(object):
     @abstractmethod
     def learn(self):
         """
-        Send data to ComputationWrapper for learning and receive learning
-        return (if any). 
+        Sample data from past experiences and send them to `ComputationWrapper`
+        for learning. Optionally, it receives learning outcomes sent back from
+        CW and does some processing.
 
         Depends on users' need, this function can be called in three ways:
         1. In Agent's run_one_episode
@@ -82,7 +69,7 @@ class AgentHelperBase(object):
         pass
 
 
-class AgentBase(Process):
+class Agent(Process):
     """
     Agent implements the control flow and logics of how Robot interacts with 
     the environment and does computation. It is a subclass of Process. The entry
@@ -100,7 +87,7 @@ class AgentBase(Process):
     __metaclass__ = ABCMeta
 
     def __init__(self, env, num_games):
-        super(AgentBase, self).__init__()
+        super(Agent, self).__init__()
         self.id = -1  # just created, not added to the Robot yet
         self.env = env
         self.num_games = num_games
@@ -114,7 +101,7 @@ class AgentBase(Process):
         Add an AgentHelper, with the its name (also the name of its
         correspoding ComputationTask) as key.
         """
-        assert isinstance(helper, AgentHelperBase)
+        assert isinstance(helper, AgentHelper)
         self.helpers[helper.name] = helper
 
     def set_log_queue(log_q):
@@ -134,7 +121,12 @@ class AgentBase(Process):
         """
         Entry function of Agent process.
         """
+        # TODO: use logger to handle statistics
+        episode_reward = []
         for i in range(self.num_games):
-            episode_reward = self._run_one_episode()
+            episode_reward.append(self._run_one_episode())
             if i % 50 == 0:
-                print("%d episode reward: %f" % (self.id, episode_reward))
+                print("%d episode reward: %f" %
+                      (self.id, sum(episode_reward) / len(episode_reward)))
+            if len(episode_reward) == 25:
+                episode_reward.pop(0)

@@ -13,90 +13,121 @@
 # limitations under the License.
 
 from multiprocessing import Queue
-from parl.common.error_handling import check_type_error
 
 
-class CommunicatorBase(object):
+class Communicator(object):
     """
-    A Communicator is responsible for data passing between AgentHelper and
-    ComputationWrapper (CW). Its only members are some Queues, which are the 
-    channels between the Agent processes and computation processes.
+    A communicator is responsible for data passing between the simulation side
+    (i.e., `AgentHelper`) and the computation side (i.e., `ComputationWrapper`).
+    
+    Communicator's only members are some Queues, which are the channels between 
+    the simulation processes and computation processes. 
 
-    Communicator is created by CW and passed to AgentHelper.
+    Communicator has timeout mechanism. When the get/put operation does not
+    return within the specified `timeout`, `Empty`/`Full` exceptions will be
+    thrown and users can catch them for further processing.
 
-    There are two types of Communicator that will be derived from this class:
-    1. CommunicatorCT: the Communicator used by CW
-    2. CommunicatorAgent: the Communicator used by AgentHelper
-    """
+    A communicator is created by CW and passed to `AgentHelper`.
 
-
-class CommunicatorCT(CommunicatorBase):
-    """
-    The Communicator used by ComputationWrapper (CW). It provides the necessary
-    interfaces for CW to get data from and return results to the Agent side .
+    There are two types of communicator that will be derived from this class:
+    1. `CTCommunicator`: the communicator used by CW
+    2. `AgentCommunicator`: the communicator used by 'AgentHelper'
     """
 
     def __init__(self, timeout):
         """
-        Create Communicator.
-
         Args:
             timeout(float): timeout for Queue's get and put operations.
         """
         self.timeout = timeout
+
+
+class CTCommunicator(Communicator):
+    """
+    The communicator used by CW. It provides the necessary interfaces for CW to 
+    get data from and return results to the simulation side .
+    """
+
+    def __init__(self, timeout):
+        """
+        Create `CTCommunicator`.
+
+        """
+        super(CTCommunicator, self).__init__(timeout)
         self.training_q = Queue()
         self.prediction_q = Queue()
 
     def get_training_data(self):
+        """
+        Get data in the training queue, which are put by agents.
+        """
         return self.training_q.get(timeout=self.timeout)
 
     def training_return(self, data, comm):
-        assert isinstance(comm, CommunicatorAgent)
+        """
+        Return the training outcome to the agent through the agent's
+        communicator.
+        """
+        assert isinstance(comm, AgentCommunicator)
         comm.training_return_q.put(data, timeout=self.timeout)
 
     def get_prediction_data(self):
+        """
+        Get data in the prediction queue, which are put by agents.
+        """
         return self.prediction_q.get(timeout=self.timeout)
 
     def prediction_return(self, data, comm):
-        assert isinstance(comm, CommunicatorAgent)
+        """
+        Return the prediction outcome to the agent through the agent's
+        communicator.
+        """
+        assert isinstance(comm, AgentCommunicator)
         comm.prediction_return_q.put(data, timeout=self.timeout)
 
 
-class CommunicatorAgent(CommunicatorBase):
+class AgentCommunicator(Communicator):
     """
-    The Communicator used by AgentHelper. It provides the necessary
+    The communicator used by `AgentHelper`. It provides the necessary
     interfaces for AgentHelper to send data to and get results from the 
-    Agent side .
+    computation side .
     """
 
     def __init__(self, agent_id, training_q, prediction_q, timeout):
         """
-        Create Communicator.
+        Create `AgentCommunicator`.
+
+        `AgentCommunicator` is bound to an agent. It owns the return queues and
+        the references to training and prediction queues from `CTCommunicator`.
 
         Args:
+            agent_id(int): id of the agent.
             training_q(Queue), prediction_q(Queue): references to Queues owned
-            by a ComputationWrapper.
+            by a `ComputationWrapper`.
             timeout(float): timeout for Queue's get and put operations.
         """
+        super(AgentCommunicator, self).__init__(timeout)
+
         self.agent_id = agent_id
-        self.timeout = timeout
         assert not training_q is None
         assert not prediction_q is None
+        # A `AgentCommunicator` does not own `training_q` and `prediction_q`,
+        # but only the references of them.
         self.training_q = training_q
         self.prediction_q = prediction_q
-        # A Communicator owns the returning Queues
+        # A `AgentCommunicator` owns the returning Queues
         self.training_return_q = Queue(1)
         self.prediction_return_q = Queue(1)
 
     def put_training_data(self, exp_seqs):
-        check_type_error(dict, type(exp_seqs))
+        isinstance(exp_seqs, list)
         self.training_q.put((self.agent_id, exp_seqs), timeout=self.timeout)
 
     def get_training_return(self):
         return self.training_return_q.get(timeout=self.timeout)
 
     def put_prediction_data(self, data):
-        check_type_error(dict, type(data))
+        isinstance(data, dict)
         self.prediction_q.put((self.agent_id, data), timeout=self.timeout)
 
     def get_prediction_return(self):

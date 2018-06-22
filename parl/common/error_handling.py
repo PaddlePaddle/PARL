@@ -33,9 +33,3 @@ class LastExpError(Exception):
 def check_last_exp_error(is_last_exp, idx, game_status):
     if is_last_exp:
         raise LastExpError(idx, game_status)
-
-
-def check_type_error(type1, type2):
-    if type2.__name__ != 'NoneType' and type1.__name__ != type2.__name__:
-        raise TypeError('{} expected, but {} given.'
-                        .format(type1.__name__, type2.__name__))

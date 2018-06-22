@@ -35,7 +35,7 @@ class Experience(object):
                     raise TypeError
                 setattr(self, k, v)
 
-        check_type_error(list, type(attrs))
+        assert isinstance(attrs, list)
         cls_attrs = dict((attr, None) for attr in attrs)
         cls_attrs['next_exp'] = None  # add attribute "next_exp"
         # __init__ of the new Experience class

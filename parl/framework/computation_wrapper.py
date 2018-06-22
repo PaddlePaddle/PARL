@@ -15,8 +15,7 @@
 from multiprocessing import Queue
 from Queue import Empty, Full
 from threading import Thread, Lock
-from parl.common.communicator import CommunicatorCT, CommunicatorAgent
-from parl.common.error_handling import check_type_error
+from parl.common.communicator import CTCommunicator, AgentCommunicator
 from parl.common.utils import concat_dicts, split_dict
 
 
@@ -35,14 +34,13 @@ class ComputationWrapper(object):
         self.max_batchsize = max_batchsize
         self.timeout = timeout
         self.helper_creator = (
-            lambda comm: sample_method(name, comm, **kwargs))
-        self.comm = CommunicatorCT(self.timeout)
+            lambda comm: sample_method(name, comm, ct.specs, **kwargs))
+        self.comm = CTCommunicator(self.timeout)
         self.comms = {}
         self.prediction_thread = Thread(target=self._prediction_loop)
         self.training_thread = Thread(target=self._training_loop)
         self.lock = Lock()
         self.exit_flag = True
-        # TODO: get a parser of model specs 
 
     def _pack_data(self, data):
         """
@@ -51,15 +49,15 @@ class ComputationWrapper(object):
         Args:
             data(list of dict): a list of data collected from Agents.
         """
-        check_type_error(list, type(data))
+        assert isinstance(data, list)
         starts = []
         batch = {}
         for k in data[0].iterkeys():
             batch[k], t = concat_dicts((d[k] for d in data))
-            if not starts:
+            if not starts and not "states" in k:
                 starts = t
-            else:
-                assert starts == t
+            elif not "states" in k:
+                assert (t == starts)
 
         return batch, starts
 
@@ -84,13 +82,13 @@ class ComputationWrapper(object):
 
     def __create_communicator(self, agent_id):
         """
-        Creates a CommunicatorAgent (CA) with this ComputationWrapper (CW)'s
+        Creates a `AgentCommunicator` with this `ComputationWrapper`'s
         data communication channels (training and prediction Queues). Once an
-        AgentHelper of some Agent accepts this CA (i.e., the AgentHelper is
-        created with it), the Agent can exchange data with this CW through
-        this CA.
+        `AgentHelper` of some `Agent` accepts this communicator (i.e., the 
+        `AgentHelper` is created with it), the `Agent` can exchange data with 
+        this CW through the communicator.
         """
-        self.comms[agent_id] = CommunicatorAgent(
+        self.comms[agent_id] = AgentCommunicator(
             agent_id, self.comm.training_q, self.comm.prediction_q,
             self.timeout)
         return self.comms[agent_id]

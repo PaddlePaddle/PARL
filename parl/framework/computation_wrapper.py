@@ -50,14 +50,15 @@ class ComputationWrapper(object):
             data(list of dict): a list of data collected from Agents.
         """
         assert isinstance(data, list)
-        starts = []
+        data, sizes = zip(*data)
+        starts = [0]
+        for size in sizes:
+            starts.append(size + starts[-1])
         batch = {}
         for k in data[0].iterkeys():
-            batch[k], t = concat_dicts((d[k] for d in data))
-            if not starts and not "states" in k:
-                starts = t
-            elif not "states" in k:
-                assert (t == starts)
+            batch[k] = concat_dicts((d[k] for d in data))
+            for v in batch[k].itervalues():
+                assert v.shape[0] == starts[-1]
 
         return batch, starts
 

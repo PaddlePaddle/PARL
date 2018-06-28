@@ -48,7 +48,9 @@ class TestDataProcess(unittest.TestCase):
         self.assertEqual(
             specs.next_states, [("next_state", dict(
                 shape=[20], dtype="float32"))])
-        self.assertEqual(specs.actions, [("action", dict(shape=[]))])
+        self.assertEqual(
+            specs.actions, [("action", dict(
+                shape=[1], dtype="float32"))])
         self.assertEqual(specs.rewards, [])
         self.assertEqual(
             specs.next_episode_end, [("next_episode_end", dict(
@@ -82,35 +84,35 @@ class TestDataProcess(unittest.TestCase):
             sensor=np.random.randint(0, 255, 10),
             sensor2=np.random.randint(0, 255, 5),
             state=np.random.rand(20),
-            action=[1, 2, 3],
+            action=[1],
             reward=np.array([0]),
             episode_end=np.array([0]).astype('uint8'))
         e1 = exp_cls(
             sensor=np.random.randint(0, 255, 10),
             sensor2=np.random.randint(0, 255, 5),
             state=np.random.rand(20),
-            action=[4, 5],
+            action=[2],
             reward=np.array([1]),
             episode_end=np.array([0]).astype('uint8'))
         e2 = exp_cls(
             sensor=np.random.randint(0, 255, 10),
             sensor2=np.random.randint(0, 255, 5),
             state=np.random.rand(20),
-            action=[7, 8, 9, 10],
+            action=[3],
             reward=np.array([2]),
             episode_end=np.array([1]).astype('uint8'))
         e3 = exp_cls(
             sensor=np.random.randint(0, 255, 10),
             sensor2=np.random.randint(0, 255, 5),
             state=np.random.rand(20),
-            action=[11],
+            action=[4],
             reward=np.array([3]),
             episode_end=np.array([0]).astype('uint8'))
         e4 = exp_cls(
             sensor=np.random.randint(0, 255, 10),
             sensor2=np.random.randint(0, 255, 5),
             state=np.random.rand(20),
-            action=[12, 13],
+            action=[5],
             reward=np.array([4]),
             episode_end=np.array([0]).astype('uint8'))
         e0.next_exp = e1
@@ -130,43 +132,40 @@ class TestDataProcess(unittest.TestCase):
                 # there should be no `reward` in `data
                 self.assertNotEqual(spec[0], "reward")
                 d = data[k][spec[0]]
-                if spec[0] == "action":
-                    # Check list concatenation
-                    self.assertEqual(type(d), list)
-                    self.assertEqual(len(d), 3)
-                    self.assertEqual(d[0], e0.action)
-                    self.assertEqual(d[1], e1.action)
-                    self.assertEqual(d[2], e3.action)
-                else:
-                    self.assertEqual(type(d), np.ndarray)
-                    if spec[0] == "next_episode_end":
-                        self.assertEqual(d.shape, (3, 1))
-                        self.assertEqual(d[0, :], e1.episode_end)
-                        self.assertEqual(d[1, :], e2.episode_end)
-                        self.assertEqual(d[2, :], e4.episode_end)
-                    elif spec[0] == "state":
-                        self.assertEqual(d.shape, (2, 20))
-                        # For `states` data, we only extract the initial state 
-                        # for each sequence.
-                        # We don't specify the dtype for 'state`, so by default
-                        # it is `float32`
-                        self.assertTrue(
-                            np.array_equal(d[0], e0.state.astype("float32")))
-                        self.assertTrue(
-                            np.array_equal(d[1], e3.state.astype("float32")))
-                    elif spec[0] == "sensor":
-                        self.assertEqual(d.shape, (3, 10))
-                        self.assertTrue(np.array_equal(d[0], e0.sensor))
-                        self.assertTrue(np.array_equal(d[1], e1.sensor))
-                        self.assertTrue(np.array_equal(d[2], e3.sensor))
-                    elif spec[0] == "next_sensor2":
-                        self.assertEqual(d.shape, (3, 5))
-                        self.assertTrue(
-                            np.array_equal(d[0], e1.sensor2.astype("float32")))
-                        self.assertTrue(
-                            np.array_equal(d[1], e2.sensor2.astype("float32")))
-                        self.assertTrue(
-                            np.array_equal(d[2], e4.sensor2.astype("float32")))
+                self.assertEqual(type(d), np.ndarray)
+                if spec[0] == "next_episode_end":
+                    self.assertEqual(d.shape, (3, 1))
+                    self.assertEqual(d[0, :], e1.episode_end)
+                    self.assertEqual(d[1, :], e2.episode_end)
+                    self.assertEqual(d[2, :], e4.episode_end)
+                elif spec[0] == "action":
+                    self.assertEqual(d.shape, (3, 1))
+                    self.assertTrue(np.array_equal(d[0], e0.action))
+                    self.assertTrue(np.array_equal(d[1], e1.action))
+                    self.assertTrue(np.array_equal(d[2], e3.action))
+                elif spec[0] == "state":
+                    self.assertEqual(d.shape, (2, 20))
+                    # For `states` data, we only extract the initial state 
+                    # for each sequence.
+                    # We don't specify the dtype for 'state`, so by default
+                    # it is `float32`
+                    self.assertTrue(
+                        np.array_equal(d[0], e0.state.astype("float32")))
+                    self.assertTrue(
+                        np.array_equal(d[1], e3.state.astype("float32")))
+                elif spec[0] == "sensor":
+                    self.assertEqual(d.shape, (3, 10))
+                    self.assertTrue(np.array_equal(d[0], e0.sensor))
+                    self.assertTrue(np.array_equal(d[1], e1.sensor))
+                    self.assertTrue(np.array_equal(d[2], e3.sensor))
+                elif spec[0] == "next_sensor2":
+                    self.assertEqual(d.shape, (3, 5))
+                    self.assertTrue(
+                        np.array_equal(d[0], e1.sensor2.astype("float32")))
+                    self.assertTrue(
+                        np.array_equal(d[1], e2.sensor2.astype("float32")))
+                    self.assertTrue(
+                        np.array_equal(d[2], e4.sensor2.astype("float32")))
 
 
 if __name__ == '__main__':

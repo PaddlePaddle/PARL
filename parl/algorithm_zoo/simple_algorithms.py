@@ -61,9 +61,9 @@ class SimpleAC(Algorithm):
         assert isinstance(dist, pd.CategoricalDistribution)
 
         pg_cost = 0 - dist.loglikelihood(action)
-        # Adding zero here to detach `td_error_no_grad` from 'td_error_no_grad`
+        # Adding zero here to detach `td_error_no_grad` from 'td_error`
         # so that setting its stop_gradient to True won't affect 
-        # `td_error_no_grad`'s.
+        # `td_error`'s.
         td_error_no_grad = td_error + 0
         td_error_no_grad.stop_gradient = True
         avg_cost = layers.mean(x=value_cost + pg_cost * td_error_no_grad)

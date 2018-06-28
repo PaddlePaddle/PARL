@@ -48,11 +48,11 @@ class DataSpecs(object):
         for specs in specs_list:
             assert isinstance(specs, tuple) and len(specs) == 2
             assert isinstance(specs[0], str) and isinstance(specs[1], dict)
-            assert "shape" in specs[1] and isinstance(specs[1]["shape"], list)
-            if not specs[1]["shape"]:
-                # if no `shape` is given, we don't want `dtype`
-                specs[1].pop("dtype", None)
-            elif not "dtype" in specs[1]:
+            if not "shape" in specs[1] or not specs[1]["shape"]:
+                specs[1]["shape"] = [1]
+            else:
+                assert isinstance(specs[1]["shape"], list)
+            if not "dtype" in specs[1]:
                 specs[1]["dtype"] = "float32"
         return specs_list
 
@@ -92,8 +92,8 @@ class DataProcessor(object):
 
     def __assemble_data(self, E, spec):
         """
-        Assemble a list of `Experience` into a batch, according to the given
-        `spec`. 
+        Assemble a certain type of data (specified in 'spec') from a
+        `Experience` list into a batch.
 
         Args:
             E(list of `Experience`): a list of `Experience`.
@@ -102,7 +102,7 @@ class DataProcessor(object):
             shape and data type, of the resulting batch (`spec[1]`).
 
         Return:
-            a list of data or a numpy array representing the resulting batch.
+            A numpy array representing the resulting batch.
         """
 
         attr = spec[0]
@@ -111,12 +111,10 @@ class DataProcessor(object):
             L = [getattr(e.next_exp, attr[5:]) for e in E]
         else:
             L = [getattr(e, attr) for e in E]
-        if not spec[1]["shape"]:
-            # no shape specified means the data has variable shapes and we
-            # should just return the list
-            return L
-        else:
-            return np.array(L).astype(spec[1]["dtype"])
+        N = np.array(L).astype(spec[1]["dtype"])
+        # check the shape (except the batch size dim) should match the spec
+        assert list(N.shape[1:]) == spec[1]["shape"]
+        return N
 
     def __prepare_data(self, exp_seqs, specs):
         # flatten the experience sequence into one list

@@ -32,40 +32,25 @@ def concat_dicts(dict_list):
     """
     Concatenate values of each key from a list of dictionary. 
     
-    The type of values should be either `list` or `numpy.ndarray`. For `list`,
-    the result is a list of list; for `numpy.ndarray`, the result is
-    concatenated at axis=0.
-
-    Besides the concatenated dictionary, this function also returns the starting
-    positions for each value.
+    The type of values should be `numpy.ndarray`, and the result is
+    the concatenation of these values at axis=0.
     """
     D = {}
-    starts = [0]
     for d in dict_list:
-        if not d:
-            starts.append(starts[-1])
+        if not D:
+            D = deepcopy(d)
         else:
-            if not D:
-                D = deepcopy(d)
-            else:
-                assert (d.viewkeys() == D.viewkeys())
-                for k in D:
-                    assert isinstance(d[k], type(D[k]))
-                    if type(d[k]) == list:
-                        D[k] += d[k]
-                    elif type(d[k] == np.ndarray):
-                        D[k] = np.concatenate([D[k], d[k]])
-                    else:
-                        raise TypeError(
-                            "only numpy.ndarray or list is accepted")
-            L = [
-                len(v) if type(v) == list else v.shape[0]
-                for v in D.itervalues()
-            ]
-            assert all((l == L[0] for l in L))
-            starts.append(L[0])
+            assert (d.viewkeys() == D.viewkeys())
+            for k in D:
+                assert isinstance(d[k], type(D[k]))
+                if type(d[k]) == list:
+                    D[k] += d[k]
+                elif type(d[k] == np.ndarray):
+                    D[k] = np.concatenate([D[k], d[k]])
+                else:
+                    raise TypeError("only numpy.ndarray or list is accepted")
 
-    return D, starts
+    return D
 
 
 def split_dict(D, starts):

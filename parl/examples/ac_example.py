@@ -13,8 +13,8 @@
 
 from random import randint
 from parl.agent_zoo.simple_rl_agents import SimpleRLAgent
-from parl.agent_zoo.simple_rl_agents import OnPolicyHelper
 from parl.algorithm_zoo.simple_algorithms import SimpleAC
+from parl.framework.agent import OnPolicyHelper
 from parl.framework.manager import Manager
 from parl.model_zoo.simple_models import SimpleModelAC
 import gym
@@ -25,8 +25,8 @@ if __name__ == '__main__':
     """
     game = "CartPole-v0"
 
-    num_agent = 1
-    num_games = 1500
+    num_agent = 4
+    num_games = 1000
     # 1. Create environments
     envs = []
     for _ in range(num_agent):
@@ -61,7 +61,7 @@ if __name__ == '__main__':
             algorithm=alg,
             # sampling
             sample_method=OnPolicyHelper,
-            sample_interval=16,
+            sample_interval=8,
             # ct
             min_batchsize=1,
             max_batchsize=16,

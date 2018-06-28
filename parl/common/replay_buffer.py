@@ -184,10 +184,12 @@ class NoReplacementQueue(ExperienceQueueBase):
 
     def sample(self):
         exp_seqs = []
+        size = 0
         while len(self.q) > 1:
             exps = []
             while not self.q[0].episode_end and len(self.q) > 1:
                 exps.append(self.q.popleft())
+                size += 1
             if len(exps) > 0:
                 for i in xrange(len(exps) - 1):
                     exps[i].next_exp = deepcopy(exps[i + 1])
@@ -199,4 +201,4 @@ class NoReplacementQueue(ExperienceQueueBase):
                         exp_seqs.append([e])
             if self.q[0].episode_end:
                 self.q.popleft()
-        return exp_seqs
+        return exp_seqs, size

@@ -34,7 +34,7 @@ class ComputationWrapper(object):
         self.max_batchsize = max_batchsize
         self.timeout = timeout
         self.helper_creator = (
-            lambda comm: sample_method(name, comm, ct.specs, **kwargs))
+            lambda comm: sample_method(name, comm, **kwargs))
         self.comm = CTCommunicator(self.timeout)
         self.comms = {}
         self.prediction_thread = Thread(target=self._prediction_loop)
@@ -57,8 +57,6 @@ class ComputationWrapper(object):
         batch = {}
         for k in data[0].iterkeys():
             batch[k] = concat_dicts((d[k] for d in data))
-            for v in batch[k].itervalues():
-                assert v.shape[0] == starts[-1]
 
         return batch, starts
 

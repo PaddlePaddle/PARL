@@ -14,7 +14,7 @@
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from Queue import deque
+from collections import deque
 import random
 from parl.common.error_handling import *
 
@@ -143,62 +143,35 @@ class ReplayBuffer(object):
             e.set_next_exp(self.buffer[p])
             exps.append(e)
 
-        return exps
+        return exps, sample.n
 
 
-class ExperienceQueueBase(object):
-    __metaclass__ = ABCMeta
-
+class NoReplacementQueue(object):
     def __init__(self, sample_seq):
         self.sample_seq = sample_seq
-        self.exp_cls = None
-
-    def __pre_add(self, **kwargs):
-        if not self.exp_cls:
-            self.exp_cls = Experience.define("Experience", kwargs.keys())
-        return self.exp_cls(**kwargs)
-
-    def add(self, **kwargs):
-        exp = self.__pre_add(**kwargs)
-        self._add(exp)
-
-    @abstractmethod
-    def _add(self, exp):
-        pass
-
-    @abstractmethod
-    def sample(self):
-        pass
-
-
-class NoReplacementQueue(ExperienceQueueBase):
-    def __init__(self, sample_seq):
-        super(NoReplacementQueue, self).__init__(sample_seq)
         self.q = deque()
 
     def __len__(self):
         return len(self.q)
 
-    def _add(self, exp):
-        self.q.append(exp)
+    def __repr__(self):
+        print '[len={0},'.format(len(self))
+        for e in self.q:
+            print '\t{0},'.format(e)
+        print ']'
 
-    def sample(self):
+    def add(self, t):
+        self.q.append(t)
+
+    def sample(self, is_episode_end_f):
         exp_seqs = []
-        size = 0
         while len(self.q) > 1:
             exps = []
-            while not self.q[0].episode_end and len(self.q) > 1:
+            while len(self.q) > 1 and not is_episode_end_f(self.q[0]):
                 exps.append(self.q.popleft())
-                size += 1
-            if len(exps) > 0:
-                for i in xrange(len(exps) - 1):
-                    exps[i].next_exp = deepcopy(exps[i + 1])
-                exps[-1].next_exp = deepcopy(self.q[0])
-                if self.sample_seq:
-                    exp_seqs.append(exps)
-                else:
-                    for e in exps:
-                        exp_seqs.append([e])
-            if self.q[0].episode_end:
+            if (exps):
+                exps.append(deepcopy(self.q[0]))
+                exp_seqs.append(exps)
+            if is_episode_end_f(self.q[0]):
                 self.q.popleft()
-        return exp_seqs, size
+        return exp_seqs

@@ -31,7 +31,9 @@ class Manager(object):
         agent.id = len(self.agents)
         self.agents.append(agent)
         for name, wrapper in self.wrappers.iteritems():
-            agent.add_helper(wrapper.create_helper(agent.id))
+            agent.add_helper(
+                wrapper.create_helper(agent.id), agent.pack_exps,
+                agent.unpack_exps, agent.is_episode_end)
 
     def remove_agent(self):
         self.agents[-1].exit_flag.value = 1

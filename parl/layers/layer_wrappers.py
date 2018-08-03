@@ -259,9 +259,11 @@ def dynamic_lstm(size,
         def __init__(self):
             super(DynamicLstm_, self).__init__(param_attr, bias_attr)
 
-        def __call__(self, input):
+        def __call__(self, input, h_0=None, c_0=None):
             return layers.dynamic_lstm(
                 input=input,
+                h_0=h_0,
+                c_0=c_0,
                 size=size,
                 param_attr=self.param_attr,
                 bias_attr=self.bias_attr,
@@ -323,7 +325,6 @@ def dynamic_gru(size,
                 is_reverse=False,
                 gate_activation='sigmoid',
                 candidate_activation='tanh',
-                h_0=None,
                 name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_gru.
@@ -337,7 +338,7 @@ def dynamic_gru(size,
         def __init__(self):
             super(DynamicGru_, self).__init__(param_attr, bias_attr)
 
-        def __call__(self, input):
+        def __call__(self, input, h_0=None):
             return layers.dynamic_gru(
                 input=input,
                 size=size,

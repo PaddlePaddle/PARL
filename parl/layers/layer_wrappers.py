@@ -15,7 +15,7 @@
 Wrappers for fluid.layers so that the layers can share parameters conveniently.
 """
 
-from paddle.fluid.executor import fetch_var
+from paddle.fluid.executor import _fetch_var
 import paddle.fluid as fluid
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
@@ -79,8 +79,8 @@ class LayerFunc(object):
                 or (not src_attr and not target_attr)
             if not src_attr:
                 continue
-            src_var = fetch_var(src_attr.name)
-            target_var = fetch_var(target_attr.name, return_numpy=False)
+            src_var = _fetch_var(src_attr.name)
+            target_var = _fetch_var(target_attr.name, return_numpy=False)
             target_var.set(src_var, place)
 
     def __deepcopy__(self, memo):

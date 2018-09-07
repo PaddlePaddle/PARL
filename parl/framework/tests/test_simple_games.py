@@ -104,7 +104,7 @@ class TestGymGame(unittest.TestCase):
                     for t in range(max_steps):
                         res, _ = ct.predict(inputs=dict(sensor=np.array(
                             [ob]).astype("float32")))
-                        pred_action = res["action"][0][0]
+                        pred_action = res["action"][0]
 
                         next_ob, reward, next_is_over, _ = env.step(
                             pred_action)

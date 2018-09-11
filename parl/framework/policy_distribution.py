@@ -69,7 +69,7 @@ class CategoricalDistribution(PolicyDistribution):
         assert isinstance(dist, Variable)
 
     def __call__(self):
-        return comf.categorical_random(self.dist)
+        return layers.sampling_id(self.dist)
 
     @property
     def dim(self):

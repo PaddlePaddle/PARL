@@ -54,18 +54,6 @@ class CNN(Feedforward):
             [layers.conv2d(**c) for c in multi_conv_layers])
 
 
-def categorical_random(prob):
-    """
-    Sample an id based on categorical distribution prob
-    """
-    cumsum = layers.cumsum(x=prob)
-    r = layers.uniform_random_batch_size_like(
-        input=prob, min=0., max=1., shape=[-1])
-    index = layers.reduce_sum(layers.cast(cumsum < r, 'int'), dim=-1)
-    index = layers.reshape(index, index.shape + (1, ))
-    return index
-
-
 def argmax_layer(input):
     """
     Get the id of the max val of an input vector

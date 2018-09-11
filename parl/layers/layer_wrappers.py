@@ -15,7 +15,7 @@
 Wrappers for fluid.layers so that the layers can share parameters conveniently.
 """
 
-from paddle.fluid.executor import fetch_var
+from paddle.fluid.executor import _fetch_var
 import paddle.fluid as fluid
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
@@ -79,8 +79,8 @@ class LayerFunc(object):
                 or (not src_attr and not target_attr)
             if not src_attr:
                 continue
-            src_var = fetch_var(src_attr.name)
-            target_var = fetch_var(target_attr.name, return_numpy=False)
+            src_var = _fetch_var(src_attr.name)
+            target_var = _fetch_var(target_attr.name, return_numpy=False)
             target_var.set(src_var, place)
 
     def __deepcopy__(self, memo):
@@ -259,9 +259,11 @@ def dynamic_lstm(size,
         def __init__(self):
             super(DynamicLstm_, self).__init__(param_attr, bias_attr)
 
-        def __call__(self, input):
+        def __call__(self, input, h_0=None, c_0=None):
             return layers.dynamic_lstm(
                 input=input,
+                h_0=h_0,
+                c_0=c_0,
                 size=size,
                 param_attr=self.param_attr,
                 bias_attr=self.bias_attr,
@@ -323,7 +325,6 @@ def dynamic_gru(size,
                 is_reverse=False,
                 gate_activation='sigmoid',
                 candidate_activation='tanh',
-                h_0=None,
                 name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_gru.
@@ -337,7 +338,7 @@ def dynamic_gru(size,
         def __init__(self):
             super(DynamicGru_, self).__init__(param_attr, bias_attr)
 
-        def __call__(self, input):
+        def __call__(self, input, h_0=None):
             return layers.dynamic_gru(
                 input=input,
                 size=size,

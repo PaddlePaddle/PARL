@@ -74,7 +74,7 @@ class TestComputationTask(unittest.TestCase):
                 assert not states, "states should be empty"
                 ## actions["action"] is a batch of actions
                 for a in actions["action"]:
-                    action_counter[a[0]] += 1
+                    action_counter[a] += 1
 
             if max:
                 ### if max, the first action will always be chosen
@@ -219,6 +219,7 @@ class TestComputationTask(unittest.TestCase):
                 if on_policy:
                     outputs, _ = ct.predict(inputs=dict(sensor=sensor))
                     actions = outputs["action"]
+                    actions = np.expand_dims(actions, 1)
                 else:
                     ## randomly assemble a batch
                     actions = np.random.choice(
@@ -238,7 +239,7 @@ class TestComputationTask(unittest.TestCase):
             ### the policy should bias towards the first action
             outputs, _ = ct.predict(inputs=dict(sensor=sensor))
             for a in outputs["action"]:
-                self.assertEqual(a[0], 0)
+                self.assertEqual(a, 0)
 
 
 if __name__ == "__main__":

@@ -63,12 +63,17 @@ class SimpleModelAC(Model):
 
 
 class SimpleModelQ(Model):
-    def __init__(self, dims, num_actions, mlp_layer_confs):
+    def __init__(self,
+                 dims,
+                 num_actions,
+                 mlp_layer_confs,
+                 estimated_total_num_batches=0):
         super(SimpleModelQ, self).__init__()
         self.dims = dims
         self.num_actions = num_actions
         assert "act" not in mlp_layer_confs[-1], "should be linear act"
         self.mlp = comf.MLP(mlp_layer_confs)
+        self.estimated_total_num_batches = estimated_total_num_batches
 
     def get_input_specs(self):
         return [("sensor", dict(shape=[self.dims]))]

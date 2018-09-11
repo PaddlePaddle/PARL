@@ -14,7 +14,7 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.algorithm import Model, Algorithm
+from parl.framework.algorithm import Model, RLAlgorithm
 from parl.layers import common_functions as comf
 from parl.model_zoo.simple_models import SimpleModelDeterministic
 import numpy as np
@@ -22,13 +22,10 @@ from copy import deepcopy
 import unittest
 
 
-class TestAlgorithm(Algorithm):
+class TestAlgorithm(RLAlgorithm):
     def __init__(self, model):
         super(TestAlgorithm, self).__init__(
             model, hyperparas=dict(), gpu_id=-1)
-
-    def predict(self, inputs, states):
-        return self._rl_predict(self.model, inputs, states)
 
 
 class TestAlgorithmParas(unittest.TestCase):

@@ -18,5 +18,5 @@
 FROM paddlepaddle/paddle:latest-gpu
 
 RUN apt-get install -y cmake
-RUN pip install gym
-RUN pip install details
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gym
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple details

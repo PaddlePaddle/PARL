@@ -179,7 +179,6 @@ def fc(size,
        num_flatten_dims=1,
        param_attr=None,
        bias_attr=None,
-       use_mkldnn=False,
        act=None,
        name=None):
     """
@@ -200,7 +199,6 @@ def fc(size,
                              num_flatten_dims=num_flatten_dims,
                              param_attr=self.param_attr,
                              bias_attr=self.bias_attr,
-                             use_mkldnn=use_mkldnn,
                              act=act,
                              is_test=is_test)
 
@@ -410,7 +408,6 @@ def conv2d(num_filters,
            param_attr=None,
            bias_attr=None,
            use_cudnn=True,
-           use_mkldnn=False,
            act=None,
            name=None):
     """
@@ -437,7 +434,6 @@ def conv2d(num_filters,
                 param_attr=self.param_attr,
                 bias_attr=self.bias_attr,
                 use_cudnn=use_cudnn,
-                use_mkldnn=use_mkldnn,
                 act=act)
 
     return Conv2D_()

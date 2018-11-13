@@ -15,7 +15,7 @@
 
 # A dev image based on paddle production image
 
-FROM paddlepaddle/paddle:latest-gpu
+FROM paddlepaddle/paddle:1.1.0-gpu-cuda9.0-cudnn7
 
 RUN apt-get install -y cmake
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gym

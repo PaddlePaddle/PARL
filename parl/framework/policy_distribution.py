@@ -113,7 +113,6 @@ def q_categorical_distribution(q_value):
     assert len(q_value.shape) == 2, "[batch_size, num_actions]"
     max_id = comf.argmax_layer(q_value)
     prob = layers.cast(
-        x=layers.one_hot(
-            input=max_id, depth=q_value.shape[-1]),
+        x=layers.one_hot(input=max_id, depth=q_value.shape[-1]),
         dtype="float32")
     return CategoricalDistribution(prob)

@@ -19,6 +19,7 @@ from abc import ABCMeta, abstractmethod
 
 __all__ = ['Algorithm']
 
+
 class Algorithm(object):
     """
     Algorithm defines the way how we update the model. For example,
@@ -39,7 +40,7 @@ class Algorithm(object):
         assert isinstance(model, Model)
         self.model = model
         self.hp = hyperparas
-    
+
     def define_predict(self, obs):
         """
         describe process for building predcition program

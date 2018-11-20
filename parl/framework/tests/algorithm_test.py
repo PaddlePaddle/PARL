@@ -21,20 +21,22 @@ import numpy as np
 import unittest
 import sys
 
+
 class Value(Model):
     def __init__(self, obs_dim, act_dim):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-        
+
         self.fc1 = layers.fc(size=256, act='relu')
         self.fc2 = layers.fc(size=128, act='relu')
         self.fc3 = layers.fc(size=self.act_dim)
-    
+
     def value(self, obs):
         out = self.fc1(obs)
         out = self.fc2(out)
         value = self.fc3(out)
         return value
+
 
 class QLearning(Algorithm):
     def __init__(self, critic_model):
@@ -45,8 +47,8 @@ class QLearning(Algorithm):
         self.q_value = self.critic_model.value(obs)
         self.q_target_value = self.target_model.value(obs)
 
-class AlgorithmBaseTest(unittest.TestCase):
 
+class AlgorithmBaseTest(unittest.TestCase):
     def test_sync_paras_in_one_program(self):
         critic_model = Value(obs_dim=4, act_dim=1)
         dqn = QLearning(critic_model)
@@ -57,23 +59,25 @@ class AlgorithmBaseTest(unittest.TestCase):
         place = fluid.CUDAPlace(0)
         executor = fluid.Executor(place)
         executor.run(fluid.default_startup_program())
-        
+
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
             x = np.expand_dims(random_obs[i], axis=0)
-            outputs = executor.run(pred_program,
-                    feed={'obs': x},
-                    fetch_list=[dqn.q_value, dqn.q_target_value])
+            outputs = executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[dqn.q_value, dqn.q_target_value])
             self.assertNotEqual(outputs[0].flatten(), outputs[1].flatten())
         critic_model.sync_paras_to(dqn.target_model)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
             x = np.expand_dims(random_obs[i], axis=0)
-            outputs = executor.run(pred_program,
-                    feed={'obs': x},
-                    fetch_list=[dqn.q_value, dqn.q_target_value])
+            outputs = executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[dqn.q_value, dqn.q_target_value])
             self.assertEqual(outputs[0].flatten(), outputs[1].flatten())
 
     def test_sync_paras_among_programs(self):
@@ -94,32 +98,29 @@ class AlgorithmBaseTest(unittest.TestCase):
         place = fluid.CUDAPlace(0)
         executor = fluid.Executor(place)
         executor.run(fluid.default_startup_program())
-        
+
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
             x = np.expand_dims(random_obs[i], axis=0)
-            outputs = executor.run(pred_program,
-                    feed={'obs': x},
-                    fetch_list=[dqn.q_value])
+            outputs = executor.run(
+                pred_program, feed={'obs': x}, fetch_list=[dqn.q_value])
 
-            outputs_2 = executor.run(pred_program_2,
-                    feed={'obs_2': x},
-                    fetch_list=[dqn_2.q_value])
+            outputs_2 = executor.run(
+                pred_program_2, feed={'obs_2': x}, fetch_list=[dqn_2.q_value])
             self.assertNotEqual(outputs[0].flatten(), outputs_2[0].flatten())
         dqn.critic_model.sync_paras_to(dqn_2.critic_model)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
             x = np.expand_dims(random_obs[i], axis=0)
-            outputs = executor.run(pred_program,
-                    feed={'obs': x},
-                    fetch_list=[dqn.q_value])
+            outputs = executor.run(
+                pred_program, feed={'obs': x}, fetch_list=[dqn.q_value])
 
-            outputs_2 = executor.run(pred_program_2,
-                    feed={'obs_2': x},
-                    fetch_list=[dqn_2.q_value])
+            outputs_2 = executor.run(
+                pred_program_2, feed={'obs_2': x}, fetch_list=[dqn_2.q_value])
             self.assertEqual(outputs[0].flatten(), outputs_2[0].flatten())
+
 
 if __name__ == '__main__':
     unittest.main()

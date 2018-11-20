@@ -38,8 +38,9 @@ class TestAlgorithmParas(unittest.TestCase):
         Test case for copying parameters
         """
 
-        alg1 = TestAlgorithm(model=SimpleModelDeterministic(
-            dims=10, mlp_layer_confs=[dict(size=10)]))
+        alg1 = TestAlgorithm(
+            model=SimpleModelDeterministic(
+                dims=10, mlp_layer_confs=[dict(size=10)]))
         alg2 = deepcopy(alg1)
 
         batch_size = 10
@@ -91,8 +92,9 @@ class TestAlgorithmParas(unittest.TestCase):
         """
         Test case for copying parameters between two different programs
         """
-        alg1 = TestAlgorithm(model=SimpleModelDeterministic(
-            dims=10, mlp_layer_confs=[dict(size=10)]))
+        alg1 = TestAlgorithm(
+            model=SimpleModelDeterministic(
+                dims=10, mlp_layer_confs=[dict(size=10)]))
         alg2 = deepcopy(alg1)
 
         batch_size = 10
@@ -118,12 +120,10 @@ class TestAlgorithmParas(unittest.TestCase):
 
         alg1.model.sync_paras_to(alg2.model, alg2.gpu_id)
 
-        outputs1 = exe.run(program1,
-                           feed={'x': sensor},
-                           fetch_list=y1.values())
-        outputs2 = exe.run(program2,
-                           feed={'x': sensor},
-                           fetch_list=y2.values())
+        outputs1 = exe.run(
+            program1, feed={'x': sensor}, fetch_list=y1.values())
+        outputs2 = exe.run(
+            program2, feed={'x': sensor}, fetch_list=y2.values())
         self.assertEqual(
             np.sum(outputs1[0].flatten()), np.sum(outputs2[0].flatten()))
 

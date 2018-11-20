@@ -20,6 +20,7 @@ from parl.utils.utils import has_fun
 
 __all__ = ['Network', 'Model']
 
+
 class Network(object):
     """
     A Network is an unordered set of LayerFuncs or Networks.

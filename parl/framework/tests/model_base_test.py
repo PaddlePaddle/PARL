@@ -18,13 +18,15 @@ from parl.framework.model_base import Model
 from copy import deepcopy
 import unittest
 
+
 class Value(Model):
     def __init__(self, obs_dim, act_dim):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-        
+
         self.fc1 = layers.fc(size=256, act='relu')
         self.fc2 = layers.fc(size=128, act='relu')
+
 
 class ModelBaseTest(unittest.TestCase):
     def test_network_copy(self):
@@ -35,6 +37,7 @@ class ModelBaseTest(unittest.TestCase):
 
         self.assertNotEqual(value.fc2.param_name, target_value.fc2.param_name)
         self.assertNotEqual(value.fc2.param_name, target_value.fc2.param_name)
+
 
 if __name__ == '__main__':
     unittest.main()

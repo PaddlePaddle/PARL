@@ -17,8 +17,8 @@ import parl.layers as layers
 from parl.framework.algorithm_base import Algorithm
 from parl.framework.base import Model
 
-
 __all__ = ['ComputationTask']
+
 
 class ComputationTask(object):
     """
@@ -58,7 +58,7 @@ class ComputationTask(object):
         In formally, this function is often used in test process.
         """
         raise NotImplementedError
-    
+
     def sample(self, obs):
         """This function will predict the action given current observation of the enviroment.
         Additionaly, action will be added noise here to explore a new trajectory. In formally,

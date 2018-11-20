@@ -32,7 +32,6 @@ endfunction()
 
 if (WITH_TESTING)
     file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
-    #file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "algorithm_test.py")
     string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
     foreach(src ${TEST_OPS})
         py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})

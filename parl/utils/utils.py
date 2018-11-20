@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ['has_fun']
+__all__ = ['has_func']
 
 
-def has_fun(obj, fun):
+def has_func(obj, fun):
     """check if a class has specified function: https://stackoverflow.com/a/5268474
 
     Args:

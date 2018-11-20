@@ -14,7 +14,7 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.algorithm import Model
+from parl.framework.base import Model
 from parl.framework.computation_task import ComputationTask
 import parl.framework.policy_distribution as pd
 from parl.layers import common_functions as comf

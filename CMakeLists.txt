@@ -20,20 +20,21 @@ option(WITH_TESTING "Include unit testing" ON)
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
 function(py_test TARGET_NAME)
-  set(options "")
-  set(oneValueArgs "")
-  set(multiValueArgs SRCS DEPS ARGS ENVS)
-  cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  add_test(NAME ${TARGET_NAME}
-    COMMAND env PYTHONPATH=.:${py_test_ENVS}
-    python -u ${py_test_SRCS} ${py_test_ARGS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs SRCS DEPS ARGS ENVS)
+    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    add_test(NAME ${TARGET_NAME}
+        COMMAND env PYTHONPATH=.:${py_test_ENVS}
+        python -u ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 if (WITH_TESTING)
-  file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "test_*.py")
-  string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
-  foreach(src ${TEST_OPS})
-    py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
-  endforeach()
+    file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
+    #file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "algorithm_test.py")
+    string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
+    foreach(src ${TEST_OPS})
+        py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+    endforeach()
 endif()

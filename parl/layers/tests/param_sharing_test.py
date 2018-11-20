@@ -14,7 +14,7 @@
 
 import unittest
 import parl.layers as layers
-from parl.layers import Network
+from parl.framework.model_base import Network
 import paddle.fluid as fluid
 import numpy as np
 

@@ -24,6 +24,7 @@ import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
 from copy import deepcopy
 import inspect
+from parl.framework.model_base import Network
 
 
 def update_attr_name(name, default_name, attr, is_bias):
@@ -61,7 +62,7 @@ class LayerFunc(object):
         self.param_attr = param_attr
         self.bias_attr = bias_attr
 
-    def sync_paras_to(self, target_layer, gpu_id):
+    def sync_paras_to(self, target_layer, gpu_id=0):
         """
         Copy the paras from self to a target layer
         """
@@ -123,40 +124,6 @@ class LayerFunc(object):
             return self.bias_attr.name
         else:
             return None
-
-
-class Network(object):
-    """
-    A Network is an unordered set of LayerFuncs or Networks.
-    """
-
-    def sync_paras_to(self, target_net, gpu_id):
-        assert not target_net is self, "cannot copy between identical networks"
-        assert isinstance(target_net, Network)
-        assert self.__class__.__name__ == target_net.__class__.__name__, \
-            "must be the same class for para syncing!"
-
-        for attr in self.__dict__:
-            if not attr in target_net.__dict__:
-                continue
-            val = getattr(self, attr)
-            target_val = getattr(target_net, attr)
-
-            assert type(val) == type(target_val)
-            ### TODO: sync paras recursively
-            if isinstance(val, Network) or isinstance(val, LayerFunc):
-                val.sync_paras_to(target_val, gpu_id)
-            elif isinstance(val, tuple) or isinstance(val, list) or isinstance(
-                    val, set):
-                for v, tv in zip(val, target_val):
-                    v.sync_paras_to(tv, gpu_id)
-            elif isinstance(val, dict):
-                for k in val.keys():
-                    assert k in target_val
-                    val[k].sync_paras_to(target_val[k], gpu_id)
-            else:
-                # for any other type, we do not copy
-                pass
 
 
 def check_caller_name():

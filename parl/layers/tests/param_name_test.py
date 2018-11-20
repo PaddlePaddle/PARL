@@ -14,8 +14,7 @@
 
 import unittest
 import parl.layers as layers
-from parl.layers import Network
-
+from parl.framework.model_base import Network
 
 class MyNetWork(Network):
     def __init__(self):

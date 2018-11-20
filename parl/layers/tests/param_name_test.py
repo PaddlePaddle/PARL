@@ -16,6 +16,7 @@ import unittest
 import parl.layers as layers
 from parl.framework.model_base import Network
 
+
 class MyNetWork(Network):
     def __init__(self):
         self.fc1 = layers.fc(100)
@@ -24,8 +25,8 @@ class MyNetWork(Network):
         self.fc4 = layers.fc(100, param_attr=False)
         self.fc5 = layers.fc(100, name="fc", bias_attr=False)
         self.embedding = layers.embedding((100, 128))
-        self.embedding_custom = layers.embedding(
-            (100, 128), name="embedding_custom")
+        self.embedding_custom = layers.embedding((100, 128),
+                                                 name="embedding_custom")
         ## although here self.conv2d shares param with self.embedding,
         ## it might be invalid because the param sizes do not match
         self.conv2d = layers.conv2d(

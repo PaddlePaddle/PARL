@@ -37,8 +37,8 @@ def check_last_exp_error(is_last_exp, idx, game_status):
 
 def check_type_error(type1, type2):
     if type1.__name__ != type2.__name__:
-        raise TypeError('{} expected, but {} given.'
-                        .format(type1.__name__, type2.__name__))
+        raise TypeError('{} expected, but {} given.'.format(
+            type1.__name__, type2.__name__))
 
 
 def check_eq(v1, v2):

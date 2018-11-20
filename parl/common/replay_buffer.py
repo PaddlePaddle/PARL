@@ -107,8 +107,8 @@ class ReplayBuffer(object):
         for _ in xrange(num_samples):
             while True:
                 idx = random.randint(0, len(self.buffer) - 1)
-                if not self.buffer_end(idx) and not self.buffer[
-                        idx].game_status:
+                if not self.buffer_end(
+                        idx) and not self.buffer[idx].game_status:
                     break
             yield Sample(idx, 1)
 

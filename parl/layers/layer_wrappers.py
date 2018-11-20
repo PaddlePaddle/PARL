@@ -161,13 +161,14 @@ def fc(size,
             super(FC_, self).__init__(param_attr, bias_attr)
 
         def __call__(self, input, is_test=False):
-            return layers.fc(input=input,
-                             size=size,
-                             num_flatten_dims=num_flatten_dims,
-                             param_attr=self.param_attr,
-                             bias_attr=self.bias_attr,
-                             act=act,
-                             is_test=is_test)
+            return layers.fc(
+                input=input,
+                size=size,
+                num_flatten_dims=num_flatten_dims,
+                param_attr=self.param_attr,
+                bias_attr=self.bias_attr,
+                act=act,
+                is_test=is_test)
 
     return FC_()
 

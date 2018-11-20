@@ -169,5 +169,6 @@ class SimpleQ(Algorithm):
                 x=(exploration_counter_ > self.total_exploration_batches),
                 dtype="float32")
             ## if the counter already hits the limit, we do not change the counter
-            layers.assign(switch * counter +
-                          (1 - switch) * exploration_counter_, counter)
+            layers.assign(
+                switch * counter + (1 - switch) * exploration_counter_,
+                counter)

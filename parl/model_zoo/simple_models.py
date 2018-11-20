@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import parl.layers as layers
-from parl.framework.algorithm import Model
+from parl.framework.base import Model
 import parl.framework.policy_distribution as pd
 from parl.layers import common_functions as comf
 

@@ -50,8 +50,8 @@ class CNN(Feedforward):
     """
 
     def __init__(self, multi_conv_layers):
-        super(CNN, self).__init__(
-            [layers.conv2d(**c) for c in multi_conv_layers])
+        super(CNN,
+              self).__init__([layers.conv2d(**c) for c in multi_conv_layers])
 
 
 def argmax_layer(input):
@@ -93,6 +93,5 @@ def idx_select(input, idx):
 
     assert input.shape
     select = layers.cast(
-        x=layers.one_hot(
-            input=idx, depth=num_entries), dtype="float32")
+        x=layers.one_hot(input=idx, depth=num_entries), dtype="float32")
     return inner_prod(select, input)

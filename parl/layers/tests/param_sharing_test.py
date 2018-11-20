@@ -14,7 +14,7 @@
 
 import unittest
 import parl.layers as layers
-from parl.layers import Network
+from parl.framework.model_base import Network
 import paddle.fluid as fluid
 import numpy as np
 
@@ -25,8 +25,8 @@ class MyNetWork(Network):
         self.fc2 = layers.fc(64, bias_attr=False)
         self.fc3 = layers.fc(64, name="fc")
         self.fc4 = layers.fc(64, name="fc")
-        self.embedding = layers.embedding(
-            (100, 64), param_attr=self.fc1.param_attr)
+        self.embedding = layers.embedding((100, 64),
+                                          param_attr=self.fc1.param_attr)
 
 
 class TestParamSharing(unittest.TestCase):
@@ -56,8 +56,7 @@ class TestParamSharing(unittest.TestCase):
         with fluid.program_guard(main_program2):
             x_ = layers.data(name='x', shape=[1], dtype="int")
             cx_ = layers.cast(
-                x=layers.one_hot(
-                    input=x_, depth=dict_size), dtype="float32")
+                x=layers.one_hot(input=x_, depth=dict_size), dtype="float32")
             y1_ = net.fc1(input=cx_)
             y2_ = net.embedding(input=x_)
 
@@ -71,9 +70,10 @@ class TestParamSharing(unittest.TestCase):
         exe.run(fluid.default_startup_program())
         ######################################################
 
-        outputs = exe.run(main_program1,
-                          feed={"x": input_cx},
-                          fetch_list=[y1, y11, y2, y3, y4])
+        outputs = exe.run(
+            main_program1,
+            feed={"x": input_cx},
+            fetch_list=[y1, y11, y2, y3, y4])
         old_y1 = outputs[0]
         self.assertEqual(
             np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
@@ -82,10 +82,13 @@ class TestParamSharing(unittest.TestCase):
         self.assertNotEqual(
             np.sum(outputs[3].flatten()), np.sum(outputs[4].flatten()))
 
-        outputs = exe.run(main_program2,
-                          feed={'x': input_x,
-                                'x1': input_cx},
-                          fetch_list=[y1_, y2_, y3_])
+        outputs = exe.run(
+            main_program2,
+            feed={
+                'x': input_x,
+                'x1': input_cx
+            },
+            fetch_list=[y1_, y2_, y3_])
 
         ### test two different layers sharing the same para matrix
         self.assertEqual(

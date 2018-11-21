@@ -12,27 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from parl.utils import logger
 import threading as th
 
-logger.set_level(logger.INFO)
-logger.set_dir('./test_dir')
+class TestLogger(unittest.TestCase):
+    def test_set_level(self):
+        logger.set_level(logger.INFO)
+        logger.set_dir('./test_dir')
 
-logger.debug('debug')
-logger.info('info')
-logger.warn('warn')
-logger.error('error')
+        logger.debug('debug')
+        logger.info('info')
+        logger.warning('warn')
+        logger.error('error')
 
+    def test_thread_info(self):
+        def thread_func():
+            logger.info('test thread')
+    
+        th_list = []
+        for i in range(10):
+            t = th.Thread(target=thread_func)
+            t.start()
+            th_list.append(t)
 
-def thread_func():
-    logger.info('test thread')
+        for t in th_list:
+            t.join()
 
-
-th_list = []
-for i in range(10):
-    t = th.Thread(target=thread_func)
-    t.start()
-    th_list.append(t)
-
-for t in th_list:
-    t.join()
+if __name__ == '__main__':
+    unittest.main()

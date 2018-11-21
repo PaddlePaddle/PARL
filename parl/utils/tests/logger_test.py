@@ -16,6 +16,7 @@ import unittest
 from parl.utils import logger
 import threading as th
 
+
 class TestLogger(unittest.TestCase):
     def test_set_level(self):
         logger.set_level(logger.INFO)
@@ -29,7 +30,7 @@ class TestLogger(unittest.TestCase):
     def test_thread_info(self):
         def thread_func():
             logger.info('test thread')
-    
+
         th_list = []
         for i in range(10):
             t = th.Thread(target=thread_func)
@@ -38,6 +39,7 @@ class TestLogger(unittest.TestCase):
 
         for t in th_list:
             t.join()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -86,10 +86,16 @@ _LOGGING_METHOD = [
     'info', 'warning', 'error', 'critical', 'warn', 'exception', 'debug',
     'setLevel'
 ]
+
 # export logger functions
 for func in _LOGGING_METHOD:
     locals()[func] = getattr(_logger, func)
     __all__.append(func)
+# export Level information
+_LOGGING_LEVEL = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+for level in _LOGGING_LEVEL:
+    locals()[level] = getattr(logging, level)
+    __all__.append(level)
 
 
 def _set_file(path):
@@ -106,21 +112,7 @@ def _set_file(path):
 def set_level(level):
     # To set level, need create new handler
     set_dir(get_dir())
-
-    assert isinstance(level, str)
-    level = level.lower()
-    if level == 'debug':
-        _logger.setLevel(logging.DEBUG)
-    elif level == 'info':
-        _logger.setLevel(logging.INFO)
-    elif level == 'warn' or level == 'warning':
-        _logger.setLevel(logging.WARNING)
-    elif level == 'error':
-        _logger.setLevel(logging.ERROR)
-    elif level == 'critical':
-        _logger.setLevel(logging.CRITICAL)
-    else:
-        assert False, "only support: 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'"
+    _logger.setLevel(level)
 
 
 def set_dir(dirname):

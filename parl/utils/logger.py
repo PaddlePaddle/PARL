@@ -120,7 +120,7 @@ def set_level(level):
     elif level == 'critical':
         _logger.setLevel(logging.CRITICAL)
     else:
-        assert False, "only support: DEBUG, INFO, WARN, ERROR, CRITIC"
+        assert False, "only support: 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'"
 
 
 def set_dir(dirname):

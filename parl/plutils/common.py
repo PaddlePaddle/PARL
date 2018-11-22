@@ -92,7 +92,7 @@ def get_parameter_names(obj):
     Args:
         obj: parl.Network/parl.LayerFunc/list/tuple/set/dict
     Returns:
-        parameter_names: list of all parameter names in obj
+        parameter_names: list of string, all parameter names in obj
     """
 
     parameter_names = []

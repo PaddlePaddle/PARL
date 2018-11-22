@@ -35,7 +35,7 @@ class Network(object):
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
         """
 
-        # Avoid Circular Imports
+        # Resolve Circular Imports
         from parl.plutils import get_parameter_pairs, fetch_framework_var
 
         assert not target_net is self, "cannot copy between identical networks"
@@ -63,9 +63,12 @@ class Network(object):
     def parameter_names(self):
         """ param_attr names of all parameters in Network,
             only parameter created by parl.layers included
+
+        Returns:
+            list of string, param_attr names of all parameters
         """
 
-        # Avoid Circular Imports
+        # Resolve Circular Imports
         from parl.plutils import get_parameter_names
         return get_parameter_names(self)
 

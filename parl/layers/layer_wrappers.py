@@ -78,7 +78,6 @@ class LayerFunc(object):
         def create_new_para_name(attr):
             if attr:
                 assert attr.name, "attr should have a name already!"
-                ## remove the last number id but keep the name key
                 name_key = 'PARL_target_' + attr.name
                 attr.name = unique_name.generate(name_key)
 

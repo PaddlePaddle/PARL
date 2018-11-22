@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
+from paddle.fluid import ParamAttr
 import parl.layers as layers
 from parl.framework.model_base import Model
 from copy import deepcopy
@@ -24,8 +25,16 @@ class Value(Model):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
 
-        self.fc1 = layers.fc(size=256, act='relu')
-        self.fc2 = layers.fc(size=128, act='relu')
+        self.fc1 = layers.fc(
+            size=256,
+            act='relu',
+            param_attr=ParamAttr(name='fc1.w'),
+            bias_attr=ParamAttr(name='fc1.b'))
+        self.fc2 = layers.fc(
+            size=128,
+            act='relu',
+            param_attr=ParamAttr(name='fc2.w'),
+            bias_attr=ParamAttr(name='fc2.b'))
 
 
 class ModelBaseTest(unittest.TestCase):
@@ -37,6 +46,26 @@ class ModelBaseTest(unittest.TestCase):
 
         self.assertNotEqual(value.fc2.param_name, target_value.fc2.param_name)
         self.assertNotEqual(value.fc2.param_name, target_value.fc2.param_name)
+
+    def test_network_copy_with_multi_copy(self):
+        value = Value(obs_dim=2, act_dim=1)
+        target_value1 = deepcopy(value)
+        target_value2 = deepcopy(value)
+        self.assertNotEqual(target_value1.fc1.param_name,
+                            target_value2.fc1.param_name)
+        self.assertNotEqual(target_value1.fc1.bias_name,
+                            target_value2.fc1.bias_name)
+
+        self.assertNotEqual(target_value1.fc2.param_name,
+                            target_value2.fc2.param_name)
+        self.assertNotEqual(target_value1.fc2.param_name,
+                            target_value2.fc2.param_name)
+
+    def test_get_parameter_names(self):
+        value = Value(obs_dim=2, act_dim=2)
+        parameter_names = value.get_parameter_names()
+        self.assertSetEqual(
+            set(parameter_names), set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b']))
 
 
 if __name__ == '__main__':

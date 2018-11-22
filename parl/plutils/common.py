@@ -19,10 +19,7 @@ import paddle.fluid as fluid
 from parl.layers.layer_wrappers import LayerFunc
 from parl.framework.model_base import Network
 
-__all__ = ['fetch_framework_var',
-        'get_parameter_pairs',
-        'get_parameter_names'
-        ]
+__all__ = ['fetch_framework_var', 'get_parameter_pairs', 'get_parameter_names']
 
 
 def fetch_framework_var(attr_name, is_bias):
@@ -67,10 +64,11 @@ def get_parameter_pairs(src, target):
             target_var = getattr(target, attr)
             param_pairs.extend(get_parameter_pairs(src_var, target_var))
     elif isinstance(src, LayerFunc):
-        param_pairs.append((src.param_attr.name, target.param_attr.name, False))
+        param_pairs.append((src.param_attr.name, target.param_attr.name,
+                            False))
         if src.bias_attr:
             param_pairs.append((src.bias_attr.name, target.bias_attr.name,
-                               True))
+                                True))
     elif isinstance(src, tuple) or isinstance(src, list) or isinstance(
             src, set):
         for src_var, target_var in zip(src, target):

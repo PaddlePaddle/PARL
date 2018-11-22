@@ -14,8 +14,8 @@
 
 import paddle.fluid as fluid
 import parl.layers as layers
-from parl.framework.model_base import Network, Model
 from abc import ABCMeta, abstractmethod
+from parl.framework.model_base import Network, Model
 
 __all__ = ['Algorithm']
 

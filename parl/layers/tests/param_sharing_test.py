@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import parl.layers as layers
-from parl.framework.model_base import Network
-import paddle.fluid as fluid
 import numpy as np
+import paddle.fluid as fluid
+import parl.layers as layers
+import unittest
+from parl.framework.model_base import Network
 
 
 class MyNetWork(Network):

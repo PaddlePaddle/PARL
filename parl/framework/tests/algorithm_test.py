@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
-from paddle.fluid.executor import global_scope
-from paddle.fluid import ParamAttr
-import parl.layers as layers
-from parl.framework.model_base import Model
-from parl.framework.algorithm_base import Algorithm
-from copy import deepcopy
 import numpy as np
-import unittest
+import paddle.fluid as fluid
+import parl.layers as layers
 import sys
+import unittest
+from copy import deepcopy
+from paddle.fluid import ParamAttr
+from paddle.fluid.executor import global_scope
+from parl.framework.algorithm_base import Algorithm
+from parl.framework.model_base import Model
 
 
 class Value(Model):
@@ -153,7 +153,7 @@ class AlgorithmBaseTest(unittest.TestCase):
         model_fc3_w = np.array(global_scope().find_var('fc3.w').get_tensor())
         model_fc3_b = np.array(global_scope().find_var('fc3.b').get_tensor())
 
-        unique_id = dqn.target_model.get_parameter_names()[0].split('_')[-1]
+        unique_id = dqn.target_model.parameter_names[0].split('_')[-1]
         target_model_fc1_w = np.array(global_scope().find_var(
             'PARL_target_fc1.w_{}'.format(unique_id)).get_tensor())
         target_model_fc1_b = np.array(global_scope().find_var(
@@ -197,7 +197,7 @@ class AlgorithmBaseTest(unittest.TestCase):
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
 
-            self.assertLess(float(real_target_outputs) - float(out_np), 1e-5)
+            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
 
 
 if __name__ == '__main__':

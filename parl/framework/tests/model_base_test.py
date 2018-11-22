@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-from paddle.fluid import ParamAttr
 import parl.layers as layers
-from parl.framework.model_base import Model
-from copy import deepcopy
 import unittest
+from copy import deepcopy
+from paddle.fluid import ParamAttr
+from parl.framework.model_base import Model
 
 
 class Value(Model):
@@ -61,9 +61,9 @@ class ModelBaseTest(unittest.TestCase):
         self.assertNotEqual(target_value1.fc2.param_name,
                             target_value2.fc2.param_name)
 
-    def test_get_parameter_names(self):
+    def test_network_parameter_names(self):
         value = Value(obs_dim=2, act_dim=2)
-        parameter_names = value.get_parameter_names()
+        parameter_names = value.parameter_names
         self.assertSetEqual(
             set(parameter_names), set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b']))
 

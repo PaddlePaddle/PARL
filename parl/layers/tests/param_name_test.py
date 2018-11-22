@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import parl.layers as layers
+import unittest
 from parl.framework.model_base import Network
 
 

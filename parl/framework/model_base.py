@@ -17,75 +17,8 @@ Base class to define an Algorithm.
 
 import paddle.fluid as fluid
 from abc import ABCMeta, abstractmethod
-from parl.utils.utils import has_func
-from parl.layers.layer_wrappers import LayerFunc
 
 __all__ = ['Network', 'Model']
-
-
-def _fetch_framework_var(attr_name, is_bias):
-    scope = fluid.executor.global_scope()
-    core_var = scope.find_var(attr_name)
-    shape = core_var.get_tensor().shape()
-    framework_var = fluid.layers.create_parameter(
-        shape=shape,
-        dtype='float32',
-        attr=fluid.ParamAttr(name=attr_name),
-        is_bias=is_bias)
-    return framework_var
-
-
-def _gen_paras_pair(src, target):
-    """ Recursively iterate parameters
-    """
-    paras_pair = []
-    if isinstance(src, Network):
-        for attr in src.__dict__:
-            if not attr in target.__dict__:
-                continue
-            src_var = getattr(src, attr)
-            target_var = getattr(target, attr)
-            paras_pair.extend(_gen_paras_pair(src_var, target_var))
-    elif isinstance(src, LayerFunc):
-        paras_pair.append((src.param_attr.name, target.param_attr.name, False))
-        if src.bias_attr:
-            paras_pair.append((src.bias_attr.name, target.bias_attr.name,
-                               True))
-    elif isinstance(src, tuple) or isinstance(src, list) or isinstance(
-            src, set):
-        for src_var, target_var in zip(src, target):
-            paras_pair.extend(_gen_paras_pair(src_var, target_var))
-    elif isinstance(src, dict):
-        for k in src.keys():
-            assert k in target
-            paras_pair.extend(_gen_paras_pair(src[k], target[k]))
-    else:
-        # for any other type, won't be handled
-        pass
-    return paras_pair
-
-
-def _get_parameter_names(obj):
-    parameter_names = []
-    for attr in obj.__dict__:
-        val = getattr(obj, attr)
-        if isinstance(val, Network):
-            parameter_names.extend(get_parameter_names(val))
-        elif isinstance(val, LayerFunc):
-            parameter_names.append(val.param_name)
-            if val.bias_name is not None:
-                parameter_names.append(val.bias_name)
-        elif isinstance(val, tuple) or isinstance(val, list) or isinstance(
-                val, set):
-            for x in val:
-                parameter_names.extend(get_parameter_names(x))
-        elif isinstance(val, dict):
-            for x in list(val.values()):
-                parameter_names.extend(get_parameter_names(x))
-        else:
-            # for any other type, won't be handled
-            pass
-    return parameter_names
 
 
 class Network(object):
@@ -101,13 +34,17 @@ class Network(object):
             decay: Float. The decay to use. 
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
         """
+
+        # Avoid Circular Imports
+        from parl.plutils import get_parameter_pairs, fetch_framework_var
+
         assert not target_net is self, "cannot copy between identical networks"
         assert isinstance(target_net, Network)
         assert self.__class__.__name__ == target_net.__class__.__name__, \
             "must be the same class for para syncing!"
         assert (decay >= 0 and decay <= 1)
 
-        paras_pair = _gen_paras_pair(self, target_net)
+        param_pairs = get_parameter_pairs(self, target_net)
 
         place = fluid.CPUPlace() if gpu_id < 0 \
                 else fluid.CUDAPlace(gpu_id)
@@ -115,15 +52,22 @@ class Network(object):
         sync_paras_program = fluid.Program()
 
         with fluid.program_guard(sync_paras_program):
-            for (src_var_name, target_var_name, is_bias) in paras_pair:
-                src_var = _fetch_framework_var(src_var_name, is_bias)
-                target_var = _fetch_framework_var(target_var_name, is_bias)
+            for (src_var_name, target_var_name, is_bias) in param_pairs:
+                src_var = fetch_framework_var(src_var_name, is_bias)
+                target_var = fetch_framework_var(target_var_name, is_bias)
                 fluid.layers.assign(decay * target_var + (1 - decay) * src_var,
                                     target_var)
         fluid_executor.run(sync_paras_program)
 
-    def get_parameter_names(self):
-        return _get_parameter_names(self)
+    @property
+    def parameter_names(self):
+        """ param_attr names of all parameters in Network,
+            only parameter created by parl.layers included
+        """
+
+        # Avoid Circular Imports
+        from parl.plutils import get_parameter_names
+        return get_parameter_names(self)
 
 
 class Model(Network):

@@ -15,16 +15,17 @@
 Wrappers for fluid.layers so that the layers can share parameters conveniently.
 """
 
-from paddle.fluid.executor import _fetch_var
-import paddle.fluid as fluid
-from paddle.fluid.layers import *
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
+import inspect
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
-from copy import deepcopy
-import inspect
+import paddle.fluid as fluid
 import six
+from copy import deepcopy
+from paddle.fluid.executor import _fetch_var
+from paddle.fluid.framework import Variable
+from paddle.fluid.layers import *
+from paddle.fluid.param_attr import ParamAttr
+from parl.framework.model_base import Network
 
 
 def update_attr_name(name, default_name, attr, is_bias):
@@ -102,9 +103,6 @@ class LayerFunc(object):
             return self.bias_attr.name
         else:
             return None
-
-
-from parl.framework.model_base import Network
 
 
 def check_caller_name():

@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from parl.utils.utils import *
+from parl.utils.gputils import *

@@ -25,8 +25,13 @@ class Network(object):
     """
     A Network is an unordered set of LayerFuncs or Networks.
     """
+    cached_target_net_id = None
+    cached_gpu_id = None
+    cached_decay = None
+    cached_sync_params_program = None
+    cached_fluid_executor = None
 
-    def sync_paras_to(self, target_net, gpu_id=0, decay=0.0):
+    def sync_params_to(self, target_net, gpu_id=0, decay=0.0):
         """
         Args:
             target_net: Network object deepcopy from source network
@@ -34,30 +39,38 @@ class Network(object):
             decay: Float. The decay to use. 
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
         """
+        if (self.cached_target_net_id == None
+                or self.cached_target_net_id != id(target_net)
+                or self.cached_gpu_id != gpu_id or self.cached_decay != decay):
+            # Can not run cached program, need create a new program
+            self.cached_target_net_id = id(target_net)
+            self.cached_gpu_id = gpu_id
+            self.cached_decay = decay
 
-        # Resolve Circular Imports
-        from parl.plutils import get_parameter_pairs, fetch_framework_var
+            assert not target_net is self, "cannot copy between identical networks"
+            assert isinstance(target_net, Network)
+            assert self.__class__.__name__ == target_net.__class__.__name__, \
+                "must be the same class for para syncing!"
+            assert (decay >= 0 and decay <= 1)
 
-        assert not target_net is self, "cannot copy between identical networks"
-        assert isinstance(target_net, Network)
-        assert self.__class__.__name__ == target_net.__class__.__name__, \
-            "must be the same class for para syncing!"
-        assert (decay >= 0 and decay <= 1)
+            # Resolve Circular Imports
+            from parl.plutils import get_parameter_pairs, fetch_framework_var
 
-        param_pairs = get_parameter_pairs(self, target_net)
+            param_pairs = get_parameter_pairs(self, target_net)
 
-        place = fluid.CPUPlace() if gpu_id < 0 \
-                else fluid.CUDAPlace(gpu_id)
-        fluid_executor = fluid.Executor(place)
-        sync_paras_program = fluid.Program()
+            place = fluid.CPUPlace() if gpu_id < 0 \
+                    else fluid.CUDAPlace(gpu_id)
+            self.cached_fluid_executor = fluid.Executor(place)
+            self.cached_sync_params_program = fluid.Program()
 
-        with fluid.program_guard(sync_paras_program):
-            for (src_var_name, target_var_name, is_bias) in param_pairs:
-                src_var = fetch_framework_var(src_var_name, is_bias)
-                target_var = fetch_framework_var(target_var_name, is_bias)
-                fluid.layers.assign(decay * target_var + (1 - decay) * src_var,
-                                    target_var)
-        fluid_executor.run(sync_paras_program)
+            with fluid.program_guard(self.cached_sync_params_program):
+                for (src_var_name, target_var_name, is_bias) in param_pairs:
+                    src_var = fetch_framework_var(src_var_name, is_bias)
+                    target_var = fetch_framework_var(target_var_name, is_bias)
+                    fluid.layers.assign(
+                        decay * target_var + (1 - decay) * src_var, target_var)
+
+        self.cached_fluid_executor.run(self.cached_sync_params_program)
 
     @property
     def parameter_names(self):
@@ -95,7 +108,7 @@ class Model(Network):
 
     Note that it's the model structure that is copied from initial actor,
     parameters in initial model havn't been copied to target model.
-    To copy parameters, you must explicitly use sync_paras_to function after the program is initialized.
+    To copy parameters, you must explicitly use sync_params_to function after the program is initialized.
 
     """
     __metaclass__ = ABCMeta

@@ -25,11 +25,11 @@ class Network(object):
     """
     A Network is an unordered set of LayerFuncs or Networks.
     """
-    cached_target_net_id = None
-    cached_gpu_id = None
-    cached_decay = None
-    cached_sync_params_program = None
-    cached_fluid_executor = None
+    _cached_target_net_id = None
+    _cached_gpu_id = None
+    _cached_decay = None
+    _cached_sync_params_program = None
+    _cached_fluid_executor = None
 
     def sync_params_to(self, target_net, gpu_id=0, decay=0.0):
         """
@@ -39,13 +39,14 @@ class Network(object):
             decay: Float. The decay to use. 
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
         """
-        if (self.cached_target_net_id == None
-                or self.cached_target_net_id != id(target_net)
-                or self.cached_gpu_id != gpu_id or self.cached_decay != decay):
-            # Can not run cached program, need create a new program
-            self.cached_target_net_id = id(target_net)
-            self.cached_gpu_id = gpu_id
-            self.cached_decay = decay
+        if (self._cached_target_net_id == None
+                or self._cached_target_net_id != id(target_net)
+                or self._cached_gpu_id != gpu_id
+                or self._cached_decay != decay):
+            # Can not run _cached program, need create a new program
+            self._cached_target_net_id = id(target_net)
+            self._cached_gpu_id = gpu_id
+            self._cached_decay = decay
 
             assert not target_net is self, "cannot copy between identical networks"
             assert isinstance(target_net, Network)
@@ -60,17 +61,17 @@ class Network(object):
 
             place = fluid.CPUPlace() if gpu_id < 0 \
                     else fluid.CUDAPlace(gpu_id)
-            self.cached_fluid_executor = fluid.Executor(place)
-            self.cached_sync_params_program = fluid.Program()
+            self._cached_fluid_executor = fluid.Executor(place)
+            self._cached_sync_params_program = fluid.Program()
 
-            with fluid.program_guard(self.cached_sync_params_program):
+            with fluid.program_guard(self._cached_sync_params_program):
                 for (src_var_name, target_var_name, is_bias) in param_pairs:
                     src_var = fetch_framework_var(src_var_name, is_bias)
                     target_var = fetch_framework_var(target_var_name, is_bias)
                     fluid.layers.assign(
                         decay * target_var + (1 - decay) * src_var, target_var)
 
-        self.cached_fluid_executor.run(self.cached_sync_params_program)
+        self._cached_fluid_executor.run(self._cached_sync_params_program)
 
     @property
     def parameter_names(self):

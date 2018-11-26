@@ -134,7 +134,8 @@ def get_dir():
 
 # Will save log to log_dir/main_file_name/log.log by default
 mod = sys.modules['__main__']
-basename = os.path.basename(mod.__file__)
-auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
-set_dir(auto_dirname)
-_logger.info("Argv: " + ' '.join(sys.argv))
+if hasattr(mod, '__file__'):
+    basename = os.path.basename(mod.__file__)
+    auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
+    set_dir(auto_dirname)
+    _logger.info("Argv: " + ' '.join(sys.argv))

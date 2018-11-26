@@ -15,15 +15,16 @@
 Wrappers for fluid.layers so that the layers can share parameters conveniently.
 """
 
-from paddle.fluid.executor import _fetch_var
-import paddle.fluid as fluid
-from paddle.fluid.layers import *
-from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.framework import Variable
+import inspect
 import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
+import paddle.fluid as fluid
+import six
 from copy import deepcopy
-import inspect
+from paddle.fluid.executor import _fetch_var
+from paddle.fluid.framework import Variable
+from paddle.fluid.layers import *
+from paddle.fluid.param_attr import ParamAttr
 from parl.framework.model_base import Network
 
 
@@ -62,28 +63,6 @@ class LayerFunc(object):
         self.param_attr = param_attr
         self.bias_attr = bias_attr
 
-    def sync_paras_to(self, target_layer, gpu_id=0):
-        """
-        Copy the paras from self to a target layer
-        """
-        ## isinstance can handle subclass
-        assert isinstance(target_layer, LayerFunc)
-        src_attrs = [self.param_attr, self.bias_attr]
-        target_attrs = [target_layer.param_attr, target_layer.bias_attr]
-
-        place = fluid.CPUPlace() if gpu_id < 0 \
-                else fluid.CUDAPlace(gpu_id)
-
-        for i, attrs in enumerate(zip(src_attrs, target_attrs)):
-            src_attr, target_attr = attrs
-            assert (src_attr and target_attr) \
-                or (not src_attr and not target_attr)
-            if not src_attr:
-                continue
-            src_var = _fetch_var(src_attr.name)
-            target_var = _fetch_var(target_attr.name, return_numpy=False)
-            target_var.set(src_var, place)
-
     def __deepcopy__(self, memo):
         cls = self.__class__
         ## __new__ won't init the class, we need to do that ourselves
@@ -92,15 +71,14 @@ class LayerFunc(object):
         memo[id(self)] = copied
 
         ## first copy all content
-        for k, v in self.__dict__.iteritems():
+        for k, v in six.iteritems(self.__dict__):
             setattr(copied, k, deepcopy(v, memo))
 
         ## then we need to create new para names for self.param_attr and self.bias_attr
         def create_new_para_name(attr):
             if attr:
                 assert attr.name, "attr should have a name already!"
-                ## remove the last number id but keep the name key
-                name_key = "_".join(attr.name.split("_")[:-1])
+                name_key = 'PARL_target_' + attr.name
                 attr.name = unique_name.generate(name_key)
 
         create_new_para_name(copied.param_attr)

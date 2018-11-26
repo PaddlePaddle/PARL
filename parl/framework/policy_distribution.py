@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import parl.layers as layers
+from abc import ABCMeta, abstractmethod
 from paddle.fluid.framework import Variable
 from parl.layers import common_functions as comf
 from paddle.fluid.framework import convert_np_dtype_to_dtype_
-from abc import ABCMeta, abstractmethod
 
 
 class PolicyDistribution(object):

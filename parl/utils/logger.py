@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import errno
 import logging
 import os
-import errno
 import os.path
-from termcolor import colored
 import sys
+from termcolor import colored
 
 __all__ = ['set_dir', 'get_dir', 'set_level']
 

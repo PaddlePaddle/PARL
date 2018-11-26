@@ -15,6 +15,7 @@
 Base class to define an Algorithm.
 """
 
+import hashlib
 import paddle.fluid as fluid
 from abc import ABCMeta, abstractmethod
 
@@ -25,11 +26,6 @@ class Network(object):
     """
     A Network is an unordered set of LayerFuncs or Networks.
     """
-    _cached_target_net_id = None
-    _cached_gpu_id = None
-    _cached_decay = None
-    _cached_sync_params_program = None
-    _cached_fluid_executor = None
 
     def sync_params_to(self, target_net, gpu_id=0, decay=0.0):
         """
@@ -39,14 +35,18 @@ class Network(object):
             decay: Float. The decay to use. 
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
         """
-        if (self._cached_target_net_id == None
-                or self._cached_target_net_id != id(target_net)
-                or self._cached_gpu_id != gpu_id
-                or self._cached_decay != decay):
+        args_hash_id = hashlib.md5('{}_{}_{}'.format(
+            id(target_net), gpu_id, decay).encode('utf-8')).hexdigest()
+        has_cached = False
+        try:
+            if self._cached_id == args_hash_id:
+                has_cached = True
+        except AttributeError:
+            has_cached = False
+
+        if not has_cached:
             # Can not run _cached program, need create a new program
-            self._cached_target_net_id = id(target_net)
-            self._cached_gpu_id = gpu_id
-            self._cached_decay = decay
+            self._cached_id = args_hash_id
 
             assert not target_net is self, "cannot copy between identical networks"
             assert isinstance(target_net, Network)

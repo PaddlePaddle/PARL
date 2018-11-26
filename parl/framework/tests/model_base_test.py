@@ -18,9 +18,9 @@ import parl.layers as layers
 import unittest
 from copy import deepcopy
 from paddle.fluid import ParamAttr
-from paddle.fluid.executor import global_scope
 from parl.framework.model_base import Model
 from parl.utils import get_gpu_count
+from parl.plutils import fetch_value
 
 
 class TestModel(Model):
@@ -169,26 +169,26 @@ class ModelBaseTest(unittest.TestCase):
             self.assertEqual(outputs[0].flatten(), outputs_2[0].flatten())
 
     def _numpy_update(self, target_model, decay):
-        model_fc1_w = np.array(global_scope().find_var('fc1.w').get_tensor())
-        model_fc1_b = np.array(global_scope().find_var('fc1.b').get_tensor())
-        model_fc2_w = np.array(global_scope().find_var('fc2.w').get_tensor())
-        model_fc2_b = np.array(global_scope().find_var('fc2.b').get_tensor())
-        model_fc3_w = np.array(global_scope().find_var('fc3.w').get_tensor())
-        model_fc3_b = np.array(global_scope().find_var('fc3.b').get_tensor())
+        model_fc1_w = fetch_value('fc1.w')
+        model_fc1_b = fetch_value('fc1.b')
+        model_fc2_w = fetch_value('fc2.w')
+        model_fc2_b = fetch_value('fc2.b')
+        model_fc3_w = fetch_value('fc3.w')
+        model_fc3_b = fetch_value('fc3.b')
 
         unique_id = target_model.parameter_names[0].split('_')[-1]
-        target_model_fc1_w = np.array(global_scope().find_var(
-            'PARL_target_fc1.w_{}'.format(unique_id)).get_tensor())
-        target_model_fc1_b = np.array(global_scope().find_var(
-            'PARL_target_fc1.b_{}'.format(unique_id)).get_tensor())
-        target_model_fc2_w = np.array(global_scope().find_var(
-            'PARL_target_fc2.w_{}'.format(unique_id)).get_tensor())
-        target_model_fc2_b = np.array(global_scope().find_var(
-            'PARL_target_fc2.b_{}'.format(unique_id)).get_tensor())
-        target_model_fc3_w = np.array(global_scope().find_var(
-            'PARL_target_fc3.w_{}'.format(unique_id)).get_tensor())
-        target_model_fc3_b = np.array(global_scope().find_var(
-            'PARL_target_fc3.b_{}'.format(unique_id)).get_tensor())
+        target_model_fc1_w = fetch_value(
+            'PARL_target_fc1.w_{}'.format(unique_id))
+        target_model_fc1_b = fetch_value(
+            'PARL_target_fc1.b_{}'.format(unique_id))
+        target_model_fc2_w = fetch_value(
+            'PARL_target_fc2.w_{}'.format(unique_id))
+        target_model_fc2_b = fetch_value(
+            'PARL_target_fc2.b_{}'.format(unique_id))
+        target_model_fc3_w = fetch_value(
+            'PARL_target_fc3.w_{}'.format(unique_id))
+        target_model_fc3_b = fetch_value(
+            'PARL_target_fc3.b_{}'.format(unique_id))
 
         # updated self.target_model parameters value in numpy way
         target_model_fc1_w = decay * target_model_fc1_w + (

@@ -16,10 +16,14 @@ Common functions of PARL framework
 """
 
 import paddle.fluid as fluid
+from paddle.fluid.executor import _fetch_var
 from parl.layers.layer_wrappers import LayerFunc
 from parl.framework.model_base import Network
 
-__all__ = ['fetch_framework_var', 'get_parameter_pairs', 'get_parameter_names']
+__all__ = [
+    'fetch_framework_var', 'fetch_value', 'get_parameter_pairs',
+    'get_parameter_names'
+]
 
 
 def fetch_framework_var(attr_name, is_bias):
@@ -29,6 +33,7 @@ def fetch_framework_var(attr_name, is_bias):
     Args:
         attr_name: string, attr name of parameter
         is_bias: bool, decide whether the parameter is bias
+
     Returns:
         framework_var: framework.Varialbe
     """
@@ -44,12 +49,25 @@ def fetch_framework_var(attr_name, is_bias):
     return framework_var
 
 
+def fetch_value(attr_name):
+    """ Given name of ParamAttr, fetch numpy value of the parameter in global_scope
+    
+    Args:
+        attr_name: ParamAttr name of parameter
+
+    Returns:
+        numpy.ndarray
+    """
+    return _fetch_var(attr_name, return_numpy=True)
+
+
 def get_parameter_pairs(src, target):
     """ Recursively get pairs of parameter names between src and target
 
     Args:
         src: parl.Network/parl.LayerFunc/list/tuple/set/dict
         target: parl.Network/parl.LayerFunc/list/tuple/set/dict
+
     Returns:
         param_pairs: list of all tuple(src_param_name, target_param_name, is_bias)
                      between src and target
@@ -89,6 +107,7 @@ def get_parameter_names(obj):
 
     Args:
         obj: parl.Network/parl.LayerFunc/list/tuple/set/dict
+
     Returns:
         parameter_names: list of string, all parameter names in obj
     """

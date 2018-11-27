@@ -11,6 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from parl.framework.model_base import *
-from parl.framework.algorithm_base import *
-from parl.framework.agent_base import *
+
+import sys
+import os
+import re
+from setuptools import setup, find_packages
+
+
+def _find_packages(prefix=''):
+    packages = []
+    path = '.'
+    prefix = prefix
+    for root, _, files in os.walk(path):
+        if '__init__.py' in files:
+            packages.append(re.sub('^[^A-z0-9_]', '', root.replace('/', '.')))
+    return packages
+
+
+setup(
+    name='parl',
+    version=0.1,
+    packages=_find_packages(),
+    package_data={'': ['*.so']})

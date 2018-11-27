@@ -15,20 +15,20 @@
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.algorithm_base import Algorithm
-from parl.framework.base import Model
+from parl.framework.model_base import Model
 
-__all__ = ['ComputationTask']
+__all__ = ['Agent']
 
 
-class ComputationTask(object):
+class Agent(object):
     """
-    A ComputationTask is responsible for the general data flow
+    A Agent is responsible for the general data flow
     outside the algorithm.
 
-    A ComputationTask is created in a bottom-up way:
+    A Agent is created in a bottom-up way:
     a. create a Model
     b. create an Algorithm with the model as an input
-    c. define a ComputationTask with the algorithm
+    c. define a Agent with the algorithm
     """
 
     def __init__(self, algorithm):
@@ -68,6 +68,6 @@ class ComputationTask(object):
 
     def learn(self, obs, action, reward, next_obs, terminal):
         """pass data to the training program to update model, 
-        this function is the training interface for ComputationTask.
+        this function is the training interface for Agent.
         """
         raise NotImplementedError

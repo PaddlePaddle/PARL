@@ -13,4 +13,4 @@
 # limitations under the License.
 from parl.framework.model_base import *
 from parl.framework.algorithm_base import *
-from parl.framework.agent import *
+from parl.framework.agent_base import *

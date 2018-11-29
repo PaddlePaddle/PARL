@@ -16,6 +16,7 @@
 <img src=".github/abstractions.png" alt="abstractions" width="300"/>  
 PARL aims to build an `agent` for training algorithms to perform complex tasks.   
 The main abstractions introduced by PARL that are used to build an `agent` recursively are the following:
+
 ### Model
 `Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input.
 

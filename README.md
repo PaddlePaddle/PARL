@@ -38,7 +38,7 @@ three steps to build an agent
    1.  define a forward model which is critic_model is this example
    2.  a. to build a DQN algorithm, just pass the critic_model to `DQN`
        b. to build a DDQN algorithm, just replace DQN in following line with DDQN
-   3.  define the I/O part in your AtariAgent so that it could update the algorithm based on the interactive data
+   3.  define the I/O part in AtariAgent so that it could update the algorithm based on the interactive data
 """
 
 critic_model = CriticModel(act_dim=2)
@@ -48,7 +48,7 @@ agent = AtariAgent(aglrotihm)
 
 # Install:
 ### Dependencies
-- Python 2.7 or 3.3+. 
+- Python 2.7 or 3.5+. 
 - PaddlePaddle >=1.0 (We try to make our repository always compatible with newest version PaddlePaddle)  
 
 

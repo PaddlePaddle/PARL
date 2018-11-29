@@ -47,7 +47,7 @@ agent = AtariAgent(aglrotihm)
 - PaddlePaddle >=1.0 (We try to make our repository always compatible with newest version PaddlePaddle)  
 
 
-```python
+```
 pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git
 ```
 

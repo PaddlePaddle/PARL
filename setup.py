@@ -34,6 +34,6 @@ setup(
     packages=_find_packages(),
     package_data={'': ['*.so']},
     install_requires=[
-        "termcolor",
+        "termcolor>=1.1.0",
     ],
 )

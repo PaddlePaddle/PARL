@@ -32,4 +32,8 @@ setup(
     name='parl',
     version=0.1,
     packages=_find_packages(),
-    package_data={'': ['*.so']})
+    package_data={'': ['*.so']},
+    install_requires=[
+        "termcolor>=1.1.0",
+    ],
+)

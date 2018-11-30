@@ -4,7 +4,7 @@ This folder will contains the code used to train the winning models for the [Neu
 
 ### Dependencies
 - python3.6
-- [paddlepaddle==1.1.0](https://github.com/PaddlePaddle/Paddle)
+- [paddlepaddle==1.2.0](https://github.com/PaddlePaddle/Paddle)
 - [PARL](https://github.com/PaddlePaddle/PARL)
 - [osim-rl](https://github.com/stanfordnmbl/osim-rl)
 
@@ -16,7 +16,7 @@ This folder will contains the code used to train the winning models for the [Neu
 tar zxvf saved_model.tar.gz
 python test.py
 ```
-> You can install models file from [here](https://pan.baidu.com/s/1MU5KqeTnjUYo-2P5IzHZ4w)
+> You can install models file from [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3)
 
 - More arguments
 ```bash

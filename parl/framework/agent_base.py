@@ -16,6 +16,7 @@ import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.algorithm_base import Algorithm
 from parl.framework.model_base import Model
+from parl.utils import get_gpu_count
 
 __all__ = ['Agent']
 
@@ -31,10 +32,23 @@ class Agent(object):
     c. define a Agent with the algorithm
     """
 
-    def __init__(self, algorithm):
+    def __init__(self, algorithm, gpu_id=None):
+        """ build program and run initialization for default_startup_program
+        
+        Created object:
+            self.alg: parl.framework.Algorithm
+            self.gpu_id: int
+            self.fluid_executor: fluid.Executor
+        """
         assert isinstance(algorithm, Algorithm)
         self.alg = algorithm
+
         self.build_program()
+
+        if gpu_id is None:
+            gpu_id = 0 if get_gpu_count() > 0 else -1
+        self.gpu_id = gpu_id
+        place = fluid.CUDAPlace(gpu_id) if gpu_id >= 0 else fluid.CPUPlace()
         self.fluid_executor = fluid.Executor(place)
         self.fluid_executor.run(fluid.default_startup_program())
 

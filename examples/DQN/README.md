@@ -21,7 +21,7 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Start Training:
 ```
-# To train a model for Pong game with gpu (use DQN model as default)
+# To train a model for Pong game with CUDA
 python train.py --rom ./rom_files/pong.bin --use_cuda
 ```
 > To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).

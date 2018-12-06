@@ -16,7 +16,6 @@ import numpy as np
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.agent_base import Agent
-from parl.utils import logger
 
 IMAGE_SIZE = (84, 84)
 CONTEXT_LEN = 4
@@ -34,6 +33,7 @@ class AtariAgent(Agent):
     def build_program(self):
         self.pred_program = fluid.Program()
         self.train_program = fluid.Program()
+
         with fluid.program_guard(self.pred_program):
             obs = layers.data(
                 name='obs',

@@ -11,5 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from parl.algorithms.dqn_algorithm import *
-from parl.algorithms.policy_gradient_algorithm import *
+
+import paddle.fluid as fluid
+import parl.layers as layers
+from parl.framework.model_base import Model
+
+
+class CartpoleModel(Model):
+    def __init__(self, act_dim):
+        act_dim = act_dim
+        hid1_size = act_dim * 10
+
+        self.fc1 = layers.fc(size=hid1_size, act='tanh')
+        self.fc2 = layers.fc(size=act_dim, act='softmax')
+
+    def policy(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        return out

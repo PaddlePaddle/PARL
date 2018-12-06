@@ -29,30 +29,32 @@ class DQNAlgorithm(Algorithm):
         self.lr = hyperparas['lr']
 
     def define_predict(self, obs):
+        """ use value model self.model to predict the action value
+        """
         return self.model.value(obs)
 
     def define_learn(self, obs, action, reward, next_obs, terminal):
+        """ update value model self.model with DQN algorithm
+        """
+
         pred_value = self.model.value(obs)
-        #fluid.layers.Print(pred_value, summarize=10, message='pred_value')
         next_pred_value = self.target_model.value(next_obs)
-        #fluid.layers.Print(next_pred_value, summarize=10, message='next_pred_value')
         best_v = layers.reduce_max(next_pred_value, dim=1)
         best_v.stop_gradient = True
-        #fluid.layers.Print(best_v, summarize=10, message='best_v')
         target = reward + (
             1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * best_v
 
-        #fluid.layers.Print(target, summarize=10, message='target')
         action_onehot = layers.one_hot(action, self.action_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
             layers.elementwise_mul(action_onehot, pred_value), dim=1)
-        #fluid.layers.Print(pred_action_value, summarize=10, message='pred_action_value')
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(self.lr * 0.5, epsilon=1e-3)
+        optimizer = fluid.optimizer.Adam(self.lr, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost
 
     def sync_target(self, gpu_id):
+        """ sync parameters of self.target_model with self.model
+        """
         self.model.sync_params_to(self.target_model, gpu_id=gpu_id)

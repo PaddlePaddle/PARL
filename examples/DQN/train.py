@@ -36,7 +36,7 @@ CONTEXT_LEN = 4
 ACTION_REPEAT = 4  # aka FRAME_SKIP
 UPDATE_FREQ = 4
 GAMMA = 0.99
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-3 * 0.5
 
 
 def run_train_episode(agent, env, exp):
@@ -151,8 +151,6 @@ def train_agent():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--rom', help='atari rom', required=True)
-    parser.add_argument(
-        '--use_cuda', action='store_true', help='if set, use cuda')
     parser.add_argument(
         '--batch_size', type=int, default=64, help='batch size for training')
     parser.add_argument(

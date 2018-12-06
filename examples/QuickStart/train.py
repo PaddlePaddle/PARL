@@ -17,7 +17,7 @@ import gym
 import numpy as np
 from cartpole_agent import CartpoleAgent
 from cartpole_model import CartpoleModel
-from parl.algorithms import PolicyGradientAlgorithm
+from parl.algorithms import PolicyGradient
 from parl.utils import logger
 
 OBS_DIM = 4
@@ -72,7 +72,7 @@ def calc_discount_norm_reward(reward_list):
 def main():
     env = gym.make("CartPole-v0")
     model = CartpoleModel(act_dim=ACT_DIM)
-    alg = PolicyGradientAlgorithm(model, hyperparas={'lr': LEARNING_RATE})
+    alg = PolicyGradient(model, hyperparas={'lr': LEARNING_RATE})
     agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
 
     for i in range(500):

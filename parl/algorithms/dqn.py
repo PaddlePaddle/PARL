@@ -17,8 +17,10 @@ from parl.framework.algorithm_base import Algorithm
 import parl.layers as layers
 import copy
 
+__all__ = ['DQN']
 
-class DQNAlgorithm(Algorithm):
+
+class DQN(Algorithm):
     def __init__(self, model, hyperparas):
         Algorithm.__init__(self, model, hyperparas)
         self.model = model

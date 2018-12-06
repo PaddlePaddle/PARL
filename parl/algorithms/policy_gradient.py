@@ -16,8 +16,10 @@ import paddle.fluid as fluid
 from parl.framework.algorithm_base import Algorithm
 import parl.layers as layers
 
+__all__ = ['PolicyGradient']
 
-class PolicyGradientAlgorithm(Algorithm):
+
+class PolicyGradient(Algorithm):
     def __init__(self, model, hyperparas):
         Algorithm.__init__(self, model, hyperparas)
         self.model = model

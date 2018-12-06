@@ -24,3 +24,6 @@ pip install .
 cd examples/QuickStart/
 python train.py  
 # Or visualize when evaluating: python train.py --eval_vis
+
+### Result
+After training, you will see the agent get the best score (200 points).

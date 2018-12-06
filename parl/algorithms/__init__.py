@@ -11,5 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from parl.algorithms.dqn_algorithm import *
-from parl.algorithms.policy_gradient_algorithm import *
+
+from parl.algorithms.dqn import *
+from parl.algorithms.policy_gradient import *

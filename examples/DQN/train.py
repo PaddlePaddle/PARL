@@ -25,7 +25,7 @@ from atari_wrapper import FrameStack, MapState, FireResetEnv, LimitLength
 from collections import deque
 from datetime import datetime
 from expreplay import ReplayMemory, Experience
-from parl.algorithms import DQNAlgorithm
+from parl.algorithms import DQN
 from parl.utils import logger
 from tqdm import tqdm
 
@@ -116,7 +116,7 @@ def train_agent():
         'gamma': GAMMA
     }
     model = AtariModel(IMAGE_SIZE[0], IMAGE_SIZE[1], action_dim)
-    algorithm = DQNAlgorithm(model, hyperparas)
+    algorithm = DQN(model, hyperparas)
     agent = AtariAgent(algorithm, action_dim)
 
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:

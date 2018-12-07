@@ -15,7 +15,6 @@
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.model_base import Model
-from parl.utils import logger
 
 
 class AtariModel(Model):

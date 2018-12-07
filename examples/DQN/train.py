@@ -115,7 +115,7 @@ def train_agent():
         'lr': LEARNING_RATE,
         'gamma': GAMMA
     }
-    model = AtariModel(IMAGE_SIZE[0], IMAGE_SIZE[1], action_dim)
+    model = AtariModel(action_dim)
     algorithm = DQN(model, hyperparas)
     agent = AtariAgent(algorithm, action_dim)
 

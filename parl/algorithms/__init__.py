@@ -14,3 +14,4 @@
 
 from parl.algorithms.dqn import *
 from parl.algorithms.policy_gradient import *
+from parl.algorithms.ddpg import *

@@ -24,6 +24,7 @@ from replay_memory import ReplayMemory
 from ou_strategy import OUStrategy
 
 MAX_EPISODES = 10000
+TEST_EVERY_EPISODES = 50
 MAX_STEPS_EACH_EPISODE = 1000
 ACTOR_LR = 1e-4
 CRITIC_LR = 1e-3
@@ -34,6 +35,55 @@ MIN_LEARN_SIZE = 1e4
 BATCH_SIZE = 128
 REWARD_SCALE = 0.1
 ENV_SEED = 1
+
+
+def run_train_episode(env, agent, rpm, noise_strategy, act_bound):
+    obs = env.reset()
+    noise_strategy.reset()
+    total_reward = 0
+    for j in range(MAX_STEPS_EACH_EPISODE):
+        # Add exploration noise
+        batch_obs = np.expand_dims(obs, axis=0)
+        action = agent.predict(batch_obs.astype('float32'))
+        action = np.squeeze(action)
+
+        ou_state = noise_strategy.evolve_state()
+        action = np.clip(action + ou_state, -act_bound, act_bound)
+
+        next_obs, reward, done, info = env.step(action)
+
+        rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
+
+        if rpm.size() > MIN_LEARN_SIZE:
+            batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
+                BATCH_SIZE)
+            agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
+                        batch_terminal)
+
+        obs = next_obs
+        total_reward += reward
+
+        if done:
+            break
+    return total_reward
+
+
+def run_evaluate_episode(env, agent):
+    obs = env.reset()
+    total_reward = 0
+    for j in range(MAX_STEPS_EACH_EPISODE):
+        batch_obs = np.expand_dims(obs, axis=0)
+        action = agent.predict(batch_obs.astype('float32'))
+        action = np.squeeze(action)
+
+        next_obs, reward, done, info = env.step(action)
+
+        obs = next_obs
+        total_reward += reward
+
+        if done:
+            break
+    return total_reward
 
 
 def main():
@@ -60,34 +110,12 @@ def main():
     noise_strategy = OUStrategy(act_dim)
 
     for i in range(MAX_EPISODES):
-        obs = env.reset()
-        noise_strategy.reset()
-        ep_reward = 0
-        for j in range(MAX_STEPS_EACH_EPISODE):
-            # Add exploration noise
-            batch_obs = np.expand_dims(obs, axis=0)
-            action = agent.predict(batch_obs.astype('float32'))
-            action = np.squeeze(action)
-
-            ou_state = noise_strategy.evolve_state()
-            action = np.clip(action + ou_state, -act_bound, act_bound)
-
-            next_obs, reward, done, info = env.step(action)
-
-            rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
-
-            if rpm.size() > MIN_LEARN_SIZE:
-                batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
-                    BATCH_SIZE)
-                agent.learn(batch_obs, batch_action, batch_reward,
-                            batch_next_obs, batch_terminal)
-
-            obs = next_obs
-            ep_reward += reward
-
-            if done:
-                break
-        logger.info('Episode: {} Reward: {}'.format(i, ep_reward))
+        train_reward = run_train_episode(env, agent, rpm, noise_strategy,
+                                         act_bound)
+        logger.info('Episode: {} Reward: {}'.format(i, train_reward))
+        if i % TEST_EVERY_EPISODES == 0:
+            evaluate_reward = run_evaluate_episode(env, agent)
+            logger.info('Evaluate Reward: {}'.format(evaluate_reward))
 
 
 if __name__ == '__main__':

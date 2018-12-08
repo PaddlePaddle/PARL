@@ -23,7 +23,7 @@ from parl.utils import logger
 from replay_memory import ReplayMemory
 from ou_strategy import OUStrategy
 
-MAX_EPISODES = 5000
+MAX_EPISODES = 10000
 MAX_STEPS_EACH_EPISODE = 1000
 ACTOR_LR = 1e-4
 CRITIC_LR = 1e-3
@@ -32,13 +32,12 @@ TAU = 0.001
 MEMORY_SIZE = int(1e6)
 MIN_LEARN_SIZE = 1e4
 BATCH_SIZE = 128
-REWARD_SCALE = 1.0
+REWARD_SCALE = 0.1
 ENV_SEED = 1
 
 
 def main():
     env = gym.make(args.env)
-    env = env.unwrapped
     env.seed(ENV_SEED)
 
     obs_dim = env.observation_space.shape[0]
@@ -75,10 +74,9 @@ def main():
 
             next_obs, reward, done, info = env.step(action)
 
-            rpm.store_transition(obs, action, REWARD_SCALE * reward, next_obs,
-                                 done)
+            rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
 
-            if rpm.pointer > MIN_LEARN_SIZE:
+            if rpm.size() > MIN_LEARN_SIZE:
                 batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
                     BATCH_SIZE)
                 agent.learn(batch_obs, batch_action, batch_reward,

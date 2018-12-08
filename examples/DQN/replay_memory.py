@@ -88,6 +88,9 @@ class ReplayMemory(object):
     def __len__(self):
         return self._curr_size
 
+    def size(self):
+        return self._curr_size
+
     def _assign(self, pos, exp):
         self.state[pos] = exp.state
         self.reward[pos] = exp.reward

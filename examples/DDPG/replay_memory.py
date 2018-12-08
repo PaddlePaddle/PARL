@@ -16,28 +16,34 @@ import numpy as np
 
 
 class ReplayMemory(object):
-    def __init__(self, size, obs_dim, act_dim):
-        self.size = size
-        self.obs_dim = obs_dim
-        self.act_dim = act_dim
-        self.memory = np.zeros((size, obs_dim * 2 + act_dim + 2),
-                               dtype=np.float32)
-        self.pointer = 0
+    def __init__(self, max_size, obs_dim, act_dim):
+        self.max_size = max_size
+        self.obs_memory = np.zeros((max_size, obs_dim), dtype='float32')
+        self.act_memory = np.zeros((max_size, act_dim), dtype='float32')
+        self.reward_memory = np.zeros((max_size, ), dtype='float32')
+        self.next_obs_memory = np.zeros((max_size, obs_dim), dtype='float32')
+        self.terminal_memory = np.zeros((max_size, ), dtype='bool')
+        self._curr_size = 0
+        self._curr_pos = 0
 
     def sample_batch(self, batch_size):
-        indices = np.random.choice(self.size, size=batch_size)
-        data = self.memory[indices, :]
-        obs = data[:, :self.obs_dim]
-        action = data[:, self.obs_dim:self.obs_dim + self.act_dim]
-        reward = data[:, -self.obs_dim - 2:-self.obs_dim - 1]
-        next_obs = data[:, -self.obs_dim - 1:-1]
-        terminal = data[:, -1:].astype('bool')
-        reward = np.squeeze(reward)
-        terminal = np.squeeze(terminal)
-        return obs, action, reward, next_obs, terminal
+        batch_idx = np.random.choice(self._curr_size, size=batch_size)
+        obs = self.obs_memory[batch_idx, :]
+        act = self.act_memory[batch_idx, :]
+        reward = self.reward_memory[batch_idx]
+        next_obs = self.next_obs_memory[batch_idx, :]
+        terminal = self.terminal_memory[batch_idx]
+        return obs, act, reward, next_obs, terminal
 
-    def store_transition(self, obs, action, reward, next_obs, terminal):
-        transition = np.hstack((obs, action, [reward], next_obs, [terminal]))
-        index = self.pointer % self.size  # replace the old memory with new memory
-        self.memory[index, :] = transition
-        self.pointer += 1
+    def append(self, obs, act, reward, next_obs, terminal):
+        if self._curr_size < self.max_size:
+            self._curr_size += 1
+        self.obs_memory[self._curr_pos] = obs
+        self.act_memory[self._curr_pos] = act
+        self.reward_memory[self._curr_pos] = reward
+        self.next_obs_memory[self._curr_pos] = next_obs
+        self.terminal_memory[self._curr_pos] = terminal
+        self._curr_pos = (self._curr_pos + 1) % self.max_size
+
+    def size(self):
+        return self._curr_size

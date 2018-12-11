@@ -75,7 +75,7 @@ def main():
     alg = PolicyGradient(model, hyperparas={'lr': LEARNING_RATE})
     agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
 
-    for i in range(500):
+    for i in range(501):
         obs_list, action_list, reward_list = run_train_episode(env, agent)
         logger.info("Episode {}, Reward Sum {}.".format(i, sum(reward_list)))
 

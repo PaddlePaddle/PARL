@@ -84,7 +84,7 @@ def main():
         batch_reward = calc_discount_norm_reward(reward_list)
 
         agent.learn(batch_obs, batch_action, batch_reward)
-        if i % 100 == 0:
+        if (i + 1) % 100 == 0:
             all_reward = run_evaluate_episode(env, agent)
             logger.info('Test reward: {}'.format(all_reward))
 

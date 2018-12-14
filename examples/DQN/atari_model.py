@@ -18,9 +18,7 @@ from parl.framework.model_base import Model
 
 
 class AtariModel(Model):
-    def __init__(self, img_height, img_width, act_dim):
-        self.img_height = img_height
-        self.img_width = img_width
+    def __init__(self, act_dim):
         self.act_dim = act_dim
 
         self.conv1 = layers.conv2d(

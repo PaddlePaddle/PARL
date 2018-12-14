@@ -32,19 +32,21 @@ def get_gpu_count():
     if env_cuda_devices is not None:
         assert isinstance(env_cuda_devices, str)
         try:
+            if not env_cuda_devices:
+                return 0
             gpu_count = len(
                 [x for x in env_cuda_devices.split(',') if int(x) >= 0])
             logger.info(
                 'CUDA_VISIBLE_DEVICES found gpu count: {}'.format(gpu_count))
-        except Exception as e:
-            logger.error(e.message)
+        except:
+            logger.warn('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     else:
         try:
             gpu_count = str(subprocess.check_output(["nvidia-smi",
                                                      "-L"])).count('UUID')
             logger.info('nvidia-smi -L found gpu count: {}'.format(gpu_count))
-        except Exception as e:
-            logger.error(e.message)
+        except:
+            logger.warn('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     return gpu_count

@@ -19,11 +19,13 @@ from cartpole_agent import CartpoleAgent
 from cartpole_model import CartpoleModel
 from parl.algorithms import PolicyGradient
 from parl.utils import logger
+from utils import calc_discount_norm_reward
 
 OBS_DIM = 4
 ACT_DIM = 2
 GAMMA = 0.99
 LEARNING_RATE = 1e-3
+SEED = 1
 
 
 def run_train_episode(env, agent):
@@ -56,32 +58,21 @@ def run_evaluate_episode(env, agent):
     return all_reward
 
 
-def calc_discount_norm_reward(reward_list):
-    discount_norm_reward = np.zeros_like(reward_list)
-
-    discount_cumulative_reward = 0
-    for i in reversed(range(0, len(reward_list))):
-        discount_cumulative_reward = (
-            GAMMA * discount_cumulative_reward + reward_list[i])
-        discount_norm_reward[i] = discount_cumulative_reward
-    discount_norm_reward = discount_norm_reward - np.mean(discount_norm_reward)
-    discount_norm_reward = discount_norm_reward / np.std(discount_norm_reward)
-    return discount_norm_reward
-
-
 def main():
     env = gym.make("CartPole-v0")
+    env.seed(SEED)
+    np.random.seed(SEED)
     model = CartpoleModel(act_dim=ACT_DIM)
     alg = PolicyGradient(model, hyperparas={'lr': LEARNING_RATE})
-    agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
+    agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM, seed=SEED)
 
-    for i in range(500):
+    for i in range(1000):
         obs_list, action_list, reward_list = run_train_episode(env, agent)
         logger.info("Episode {}, Reward Sum {}.".format(i, sum(reward_list)))
 
         batch_obs = np.array(obs_list)
         batch_action = np.array(action_list)
-        batch_reward = calc_discount_norm_reward(reward_list)
+        batch_reward = calc_discount_norm_reward(reward_list, GAMMA)
 
         agent.learn(batch_obs, batch_action, batch_reward)
         if (i + 1) % 100 == 0:

@@ -45,7 +45,8 @@ def run_train_episode(env, agent, rpm, act_bound):
         action = np.squeeze(action)
 
         # Add exploration noise
-        action = np.clip(np.random.normal(action, act_bound), -act_bound, act_bound)
+        action = np.clip(
+            np.random.normal(action, act_bound), -act_bound, act_bound)
 
         next_obs, reward, done, info = env.step(action)
 

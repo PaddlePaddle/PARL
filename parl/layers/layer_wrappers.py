@@ -479,27 +479,28 @@ def layer_norm(**kwargs):
     raise NotImplementedError()
 
 
-def create_persistable_variable(shape,
-                                dtype,
-                                name=None,
-                                attr=None,
-                                is_bias=False,
-                                default_initializer=None):
+def create_parameter(shape,
+                     dtype,
+                     name=None,
+                     attr=None,
+                     is_bias=False,
+                     default_initializer=None):
     """
-    Return a function that creates a parameter which cannot be synchronized like those of layers
+    Return a function that creates a paddle.fluid.layers.create_parameter.
 
-    This function can be called in Algorithm, so we don't check the caller nor require that
-    the variable can be copied.
     """
-    default_name = "per_var"
-    attr = update_attr_name(name, default_name, attr, is_bias)
+    param_attr = update_attr_name(name, "create_parameter", attr, False)
+    check_caller_name()
 
-    class CreateParameter_(object):
+    class CreateParameter_(LayerFunc):
+        def __init__(self):
+            super(CreateParameter_, self).__init__(param_attr)
+
         def __call__(self):
             return layers.create_parameter(
                 shape=shape,
                 dtype=dtype,
-                attr=attr,
+                attr=self.param_attr,
                 is_bias=is_bias,
                 default_initializer=default_initializer)
 

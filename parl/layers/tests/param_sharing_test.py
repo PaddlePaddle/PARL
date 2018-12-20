@@ -27,6 +27,10 @@ class MyNetWork(Network):
         self.fc4 = layers.fc(64, name="fc")
         self.embedding = layers.embedding((100, 64),
                                           param_attr=self.fc1.param_attr)
+        self.created_param = layers.create_parameter(
+            shape=[100],
+            dtype='float32',
+            default_initializer=fluid.initializer.Uniform(low=-1.0, high=1.0))
 
 
 class TestParamSharing(unittest.TestCase):
@@ -96,6 +100,33 @@ class TestParamSharing(unittest.TestCase):
         ### test if the same layer can have the same parameters across two different programs
         self.assertEqual(
             np.sum(outputs[2].flatten()), np.sum(old_y1.flatten()))
+
+    def test_param_sharing_with_create_parameter(self):
+        """
+        Test case for parameter sharing of create_parameter op
+        """
+        net = MyNetWork()
+
+        main_program1 = fluid.Program()
+        with fluid.program_guard(main_program1):
+            x = layers.data(name='x', shape=[100], dtype="float32")
+            out1 = x + net.created_param()
+
+        main_program2 = fluid.Program()
+        with fluid.program_guard(main_program2):
+            x = layers.data(name='x', shape=[100], dtype="float32")
+            out2 = x + net.created_param()
+
+        place = fluid.CPUPlace()
+        exe = fluid.Executor(place)
+        exe.run(fluid.default_startup_program())
+
+        input_np = np.random.uniform(0, 1, [1, 100]).astype("float32")
+        out1_np = exe.run(
+            main_program1, feed={"x": input_np}, fetch_list=[out1])[0]
+        out2_np = exe.run(
+            main_program2, feed={"x": input_np}, fetch_list=[out2])[0]
+        self.assertEqual(np.sum(out1_np.flatten()), np.sum(out2_np.flatten()))
 
 
 if __name__ == "__main__":

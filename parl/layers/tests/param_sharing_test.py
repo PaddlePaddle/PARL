@@ -25,12 +25,13 @@ class MyNetWork(Network):
         self.fc2 = layers.fc(64, bias_attr=False)
         self.fc3 = layers.fc(64, name="fc")
         self.fc4 = layers.fc(64, name="fc")
-        self.embedding = layers.embedding((100, 64),
-                                          param_attr=self.fc1.param_attr)
+        self.embedding = layers.embedding(
+            (100, 64), param_attr=self.fc1.attr_holder.param_attr)
         self.created_param = layers.create_parameter(
             shape=[100],
             dtype='float32',
             default_initializer=fluid.initializer.Uniform(low=-1.0, high=1.0))
+        self.batch_norm = layers.batch_norm()
 
 
 class TestParamSharing(unittest.TestCase):
@@ -122,6 +123,35 @@ class TestParamSharing(unittest.TestCase):
         exe.run(fluid.default_startup_program())
 
         input_np = np.random.uniform(0, 1, [1, 100]).astype("float32")
+        out1_np = exe.run(
+            main_program1, feed={"x": input_np}, fetch_list=[out1])[0]
+        out2_np = exe.run(
+            main_program2, feed={"x": input_np}, fetch_list=[out2])[0]
+        self.assertEqual(np.sum(out1_np.flatten()), np.sum(out2_np.flatten()))
+
+    def test_param_sharing_with_batch_norm(self):
+        """
+        Test case for batch_norm layer
+        """
+        net = MyNetWork()
+
+        main_program1 = fluid.Program()
+        with fluid.program_guard(main_program1):
+            x = layers.data(name='x', shape=[32, 128, 128], dtype="float32")
+            hid1 = net.fc1(x)
+            out1 = net.batch_norm(hid1)
+
+        main_program2 = fluid.Program()
+        with fluid.program_guard(main_program2):
+            x = layers.data(name='x', shape=[32, 128, 128], dtype="float32")
+            hid1 = net.fc1(x)
+            out2 = net.batch_norm(hid1)
+
+        place = fluid.CPUPlace()
+        exe = fluid.Executor(place)
+        exe.run(fluid.default_startup_program())
+
+        input_np = np.random.uniform(0, 1, [1, 32, 128, 128]).astype("float32")
         out1_np = exe.run(
             main_program1, feed={"x": input_np}, fetch_list=[out1])[0]
         out2_np = exe.run(

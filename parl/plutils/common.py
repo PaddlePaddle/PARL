@@ -26,13 +26,12 @@ __all__ = [
 ]
 
 
-def fetch_framework_var(attr_name, is_bias):
+def fetch_framework_var(attr_name):
     """ Fetch framework variable according given attr_name.
         Return a new reusing variable through create_parameter way 
 
     Args:
         attr_name: string, attr name of parameter
-        is_bias: bool, decide whether the parameter is bias
 
     Returns:
         framework_var: framework.Varialbe
@@ -42,10 +41,7 @@ def fetch_framework_var(attr_name, is_bias):
     core_var = scope.find_var(attr_name)
     shape = core_var.get_tensor().shape()
     framework_var = fluid.layers.create_parameter(
-        shape=shape,
-        dtype='float32',
-        attr=fluid.ParamAttr(name=attr_name),
-        is_bias=is_bias)
+        shape=shape, dtype='float32', attr=fluid.ParamAttr(name=attr_name))
     return framework_var
 
 
@@ -82,11 +78,10 @@ def get_parameter_pairs(src, target):
             target_var = getattr(target, attr)
             param_pairs.extend(get_parameter_pairs(src_var, target_var))
     elif isinstance(src, LayerFunc):
-        param_pairs.append((src.param_attr.name, target.param_attr.name,
-                            False))
-        if src.bias_attr:
-            param_pairs.append((src.bias_attr.name, target.bias_attr.name,
-                                True))
+        for (src_attr, target_attr) in zip(src.attr_holder.sorted(),
+                                           target.attr_holder.sorted()):
+            if src_attr:
+                param_pairs.append((src_attr.name, target_attr.name))
     elif isinstance(src, tuple) or isinstance(src, list) or isinstance(
             src, set):
         for src_var, target_var in zip(src, target):
@@ -118,9 +113,9 @@ def get_parameter_names(obj):
         if isinstance(val, Network):
             parameter_names.extend(get_parameter_names(val))
         elif isinstance(val, LayerFunc):
-            parameter_names.append(val.param_name)
-            if val.bias_name is not None:
-                parameter_names.append(val.bias_name)
+            for attr in val.attr_holder.tolist():
+                if attr:
+                    parameter_names.append(attr.name)
         elif isinstance(val, tuple) or isinstance(val, list) or isinstance(
                 val, set):
             for x in val:

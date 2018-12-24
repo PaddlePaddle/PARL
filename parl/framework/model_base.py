@@ -65,9 +65,9 @@ class Network(object):
             self._cached_sync_params_program = fluid.Program()
 
             with fluid.program_guard(self._cached_sync_params_program):
-                for (src_var_name, target_var_name, is_bias) in param_pairs:
-                    src_var = fetch_framework_var(src_var_name, is_bias)
-                    target_var = fetch_framework_var(target_var_name, is_bias)
+                for (src_var_name, target_var_name) in param_pairs:
+                    src_var = fetch_framework_var(src_var_name)
+                    target_var = fetch_framework_var(target_var_name)
                     fluid.layers.assign(
                         decay * target_var + (1 - decay) * src_var, target_var)
 

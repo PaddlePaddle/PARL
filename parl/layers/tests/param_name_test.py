@@ -32,7 +32,7 @@ class MyNetWork(Network):
         self.conv2d = layers.conv2d(
             num_filters=64,
             filter_size=3,
-            param_attr=self.embedding.param_attr,
+            param_attr=self.embedding.attr_holder.param_attr,
             name="my_conv2d")
 
 

@@ -19,7 +19,8 @@ __all__ = ['AttrHolder']
 
 
 class AttrHolder(object):
-    """ Maintain a dict of attrs """
+    """ Mainly used for maintaining all ParamAttr in a parl.layers.LayerFunc
+    """
 
     def __init__(self, **kwargs):
         """

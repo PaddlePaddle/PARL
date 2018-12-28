@@ -35,6 +35,8 @@ class MyNetWork(Network):
             param_attr=self.embedding.attr_holder.param_attr,
             name="my_conv2d")
 
+        self.batch_norm = layers.batch_norm()
+
 
 class TestParamName(unittest.TestCase):
     def test_name_number(self):
@@ -64,6 +66,13 @@ class TestParamName(unittest.TestCase):
         ## conv2d shares param with embedding; has a custom bias name
         self.assertEqual(net.conv2d.param_name, "embedding.w_0")
         self.assertEqual(net.conv2d.bias_name, "my_conv2d.b_0")
+
+        self.assertSetEqual(
+            set(net.batch_norm.all_params_names),
+            set([
+                'batch_norm.w_0', 'batch_norm.b_0',
+                'batch_norm_moving_mean.w_0', 'batch_norm_moving_variance.w_0'
+            ]))
 
 
 if __name__ == '__main__':

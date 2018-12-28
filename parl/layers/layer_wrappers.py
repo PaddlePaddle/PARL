@@ -20,13 +20,13 @@ import paddle.fluid.layers as layers
 import paddle.fluid.unique_name as unique_name
 import paddle.fluid as fluid
 import six
-from .utils import AttrHolder
 from copy import deepcopy
 from paddle.fluid.executor import _fetch_var
 from paddle.fluid.framework import Variable
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
 from parl.framework.model_base import Network
+from parl.layers.attr_holder import AttrHolder
 
 
 def update_attr_name(name, default_name, attr, is_bias):
@@ -103,6 +103,14 @@ class LayerFunc(object):
             return self.attr_holder.bias_attr.name
         else:
             return None
+
+    @property
+    def all_params_names(self):
+        all_params_names = []
+        for attr in self.attr_holder.tolist():
+            if attr:
+                all_params_names.append(attr.name)
+        return all_params_names
 
 
 def check_caller_name():

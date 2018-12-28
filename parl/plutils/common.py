@@ -78,9 +78,13 @@ def get_parameter_pairs(src, target):
             target_var = getattr(target, attr)
             param_pairs.extend(get_parameter_pairs(src_var, target_var))
     elif isinstance(src, LayerFunc):
-        for (src_attr, target_attr) in zip(src.attr_holder.sorted(),
-                                           target.attr_holder.sorted()):
+        src_attrs = src.attr_holder.sorted()
+        target_attrs = target.attr_holder.sorted()
+        assert len(src_attrs) == len(target_attrs), \
+                "number of ParamAttr between source layer and target layer should be same."
+        for (src_attr, target_attr) in zip(src_attrs, target_attrs):
             if src_attr:
+                assert target_attr, "ParamAttr between source layer and target layer is inconsistent."
                 param_pairs.append((src_attr.name, target_attr.name))
     elif isinstance(src, tuple) or isinstance(src, list) or isinstance(
             src, set):

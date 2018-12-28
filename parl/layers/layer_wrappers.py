@@ -106,11 +106,11 @@ class LayerFunc(object):
 
     @property
     def all_params_names(self):
-        all_params_names = []
+        params_names = []
         for attr in self.attr_holder.tolist():
             if attr:
-                all_params_names.append(attr.name)
-        return all_params_names
+                params_names.append(attr.name)
+        return params_names
 
 
 def check_caller_name():

@@ -48,6 +48,29 @@ class TestModel(Model):
         return out
 
 
+class TestModel2(Model):
+    def __init__(self):
+        self.created_param = layers.create_parameter(
+            shape=[100],
+            dtype='float32',
+            default_initializer=fluid.initializer.Uniform(low=-1.0, high=1.0))
+
+    def predict(self, obs):
+        out = obs + self.created_param()
+        return out
+
+
+class TestModel3(Model):
+    def __init__(self):
+        self.fc1 = layers.fc(64, bias_attr=False)
+        self.batch_norm = layers.batch_norm()
+
+    def predict(self, obs):
+        hid1 = self.fc1(obs)
+        out = self.batch_norm(hid1)
+        return out
+
+
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
@@ -411,6 +434,91 @@ class ModelBaseTest(unittest.TestCase):
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
 
             self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+
+    def test_sync_params_with_create_parameter(self):
+        model = TestModel2()
+        target_model = deepcopy(model)
+
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[100], dtype='float32')
+            model_output = model.predict(obs)
+            target_model_output = target_model.predict(obs)
+        self.executor.run(fluid.default_startup_program())
+
+        N = 10
+        random_obs = np.random.random(size=(N, 100)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[model_output, target_model_output])
+            self.assertNotEqual(
+                np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
+
+        model.sync_params_to(target_model)
+
+        random_obs = np.random.random(size=(N, 100)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[model_output, target_model_output])
+            self.assertEqual(
+                np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
+
+    def test_sync_params_with_batch_norm(self):
+        model = TestModel3()
+        target_model = deepcopy(model)
+
+        program1 = fluid.Program()
+        program2 = fluid.Program()
+        with fluid.program_guard(program1):
+            obs = layers.data(
+                name='obs', shape=[32, 128, 128], dtype="float32")
+            model_output = model.predict(obs)
+            loss = layers.reduce_mean(model_output)
+            optimizer = fluid.optimizer.AdamOptimizer(1e-3)
+            optimizer.minimize(loss)
+
+        with fluid.program_guard(program2):
+            obs = layers.data(
+                name='obs', shape=[32, 128, 128], dtype="float32")
+            model_output = model.predict(obs)
+            target_model_output = target_model.predict(obs)
+        self.executor.run(fluid.default_startup_program())
+
+        N = 10
+        random_obs = np.random.random(size=(N, 32, 128, 128)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                program2,
+                feed={'obs': x},
+                fetch_list=[model_output, target_model_output])
+            self.assertNotEqual(
+                np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
+
+        # run optimizing to make parameters of batch_norm between model and target_model are different
+        N = 100
+        random_obs = np.random.random(size=(N, 32, 128, 128)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            self.executor.run(program1, feed={'obs': x})
+
+        model.sync_params_to(target_model)
+
+        random_obs = np.random.random(size=(N, 32, 128, 128)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                program2,
+                feed={'obs': x},
+                fetch_list=[model_output, target_model_output])
+            self.assertEqual(
+                np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
 
 if __name__ == '__main__':

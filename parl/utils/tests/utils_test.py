@@ -27,6 +27,9 @@ class TestUtils(unittest.TestCase):
         mapped_act = action_mapping(origin_act, -2.0, 2.0)
         self.assertListEqual(list(mapped_act), [-2.0, 0.0, 2.0])
 
+        mapped_act = action_mapping(origin_act, -5.0, 10.0)
+        self.assertListEqual(list(mapped_act), [-5.0, 2.5, 10.0])
+
 
 if __name__ == '__main__':
     unittest.main()

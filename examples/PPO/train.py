@@ -18,11 +18,11 @@ import numpy as np
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.algorithms import PPO
-from parl.utils import logger
+from parl.utils import logger, action_mapping
 from utils import *
 
 
-def run_train_episode(env, agent, scaler, act_bound):
+def run_train_episode(env, agent, scaler):
     obs = env.reset()
     observes, actions, rewards, unscaled_obs = [], [], [], []
     done = False
@@ -40,11 +40,13 @@ def run_train_episode(env, agent, scaler, act_bound):
 
         action = agent.policy_sample(obs)
         action = np.clip(action, -1.0, 1.0)
-        action = action * act_bound
+        action = action_mapping(action, env.action_space.low[0],
+                                env.action_space.high[0])
+
         action = action.reshape((1, -1)).astype('float32')
         actions.append(action)
 
-        obs, reward, done, _ = env.step(np.squeeze(action, axis=0))
+        obs, reward, done, _ = env.step(np.squeeze(action))
         rewards.append(reward)
         step += 1e-3  # increment time step feature
 
@@ -52,7 +54,7 @@ def run_train_episode(env, agent, scaler, act_bound):
             np.array(rewards, dtype='float32'), np.concatenate(unscaled_obs))
 
 
-def run_evaluate_episode(env, agent, scaler, act_bound):
+def run_evaluate_episode(env, agent, scaler):
     obs = env.reset()
     rewards = []
     step = 0.0
@@ -66,10 +68,10 @@ def run_evaluate_episode(env, agent, scaler, act_bound):
         obs = obs.astype('float32')
 
         action = agent.policy_predict(obs)
-        action = action * act_bound
-        action = action.reshape((1, -1)).astype('float32')
+        action = action_mapping(action, env.action_space.low[0],
+                                env.action_space.high[0])
 
-        obs, reward, done, _ = env.step(np.squeeze(action, axis=0))
+        obs, reward, done, _ = env.step(np.squeeze(action))
         rewards.append(reward)
 
         step += 1e-3  # increment time step feature
@@ -78,11 +80,11 @@ def run_evaluate_episode(env, agent, scaler, act_bound):
     return np.sum(rewards)
 
 
-def collect_trajectories(env, agent, scaler, act_bound, episodes):
+def collect_trajectories(env, agent, scaler, episodes):
     all_obs, all_actions, all_rewards, all_unscaled_obs = [], [], [], []
     for e in range(episodes):
         obs, actions, rewards, unscaled_obs = run_train_episode(
-            env, agent, scaler, act_bound)
+            env, agent, scaler)
         all_obs.append(obs)
         all_actions.append(actions)
         all_rewards.append(rewards)
@@ -99,7 +101,6 @@ def main():
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
     obs_dim += 1  # add 1 to obs dim for time step feature
-    act_bound = env.action_space.high[0]
 
     scaler = Scaler(obs_dim)
 
@@ -114,12 +115,12 @@ def main():
         alg, obs_dim, act_dim, args.kl_targ, loss_type=args.loss_type)
 
     # run a few episodes to initialize scaler
-    collect_trajectories(env, agent, scaler, act_bound, episodes=5)
+    collect_trajectories(env, agent, scaler, episodes=5)
 
     episode = 0
     while episode < args.num_episodes:
         obs, actions, rewards = collect_trajectories(
-            env, agent, scaler, act_bound, episodes=args.episodes_per_batch)
+            env, agent, scaler, episodes=args.episodes_per_batch)
         episode += args.episodes_per_batch
 
         pred_values = agent.value_predict(obs)
@@ -146,7 +147,7 @@ def main():
                     np.sum(rewards) / args.episodes_per_batch, policy_loss, kl,
                     value_loss))
         if episode % (args.episodes_per_batch * 5) == 0:
-            eval_reward = run_evaluate_episode(env, agent, scaler, act_bound)
+            eval_reward = run_evaluate_episode(env, agent, scaler)
             logger.info('Episode {}, Evaluate reward: {}'.format(
                 episode, eval_reward))
 

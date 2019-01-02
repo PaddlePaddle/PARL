@@ -21,7 +21,17 @@ from parl.utils import logger
 
 
 class MujocoAgent(Agent):
-    def __init__(self, algorithm, obs_dim, act_dim, kl_targ, loss_type, beta=1.0, epsilon=0.2, policy_learn_times=20, value_learn_times=10, value_batch_size=256):
+    def __init__(self,
+                 algorithm,
+                 obs_dim,
+                 act_dim,
+                 kl_targ,
+                 loss_type,
+                 beta=1.0,
+                 epsilon=0.2,
+                 policy_learn_times=20,
+                 value_learn_times=10,
+                 value_batch_size=256):
         self.alg = algorithm
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -46,80 +56,93 @@ class MujocoAgent(Agent):
         self.value_learn_program = fluid.Program()
 
         with fluid.program_guard(self.policy_sample_program):
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             sampled_act = self.alg.define_sample(obs)
             self.policy_sample_output = [sampled_act]
 
         with fluid.program_guard(self.policy_predict_program):
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             means = self.alg.define_predict(obs)
             self.policy_predict_output = [means]
 
         with fluid.program_guard(self.policy_learn_program):
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
-            actions = layers.data(name='actions', shape=[self.act_dim], dtype='float32')
-            advantages = layers.data(name='advantages', shape=[1], dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
+            actions = layers.data(
+                name='actions', shape=[self.act_dim], dtype='float32')
+            advantages = layers.data(
+                name='advantages', shape=[1], dtype='float32')
             if self.loss_type == 'KLPEN':
                 beta = layers.data(name='beta', shape=[], dtype='float32')
-                loss, kl = self.alg.define_policy_learn(obs, actions, advantages, beta)
+                loss, kl = self.alg.define_policy_learn(
+                    obs, actions, advantages, beta)
             else:
-                loss, kl = self.alg.define_policy_learn(obs, actions, advantages)
+                loss, kl = self.alg.define_policy_learn(
+                    obs, actions, advantages)
 
             self.policy_learn_output = [loss, kl]
 
         with fluid.program_guard(self.value_predict_program):
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             value = self.alg.define_value_predict(obs)
             self.value_predict_output = [value]
 
         with fluid.program_guard(self.value_learn_program):
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             val = layers.data(name='val', shape=[], dtype='float32')
             value_loss = self.alg.define_value_learn(obs, val)
             self.value_learn_output = [value_loss]
 
     def policy_sample(self, obs):
         feed = {'obs': obs}
-        sampled_act = self.fluid_executor.run(self.policy_sample_program,
-                                              feed=feed,
-                                              fetch_list=self.policy_sample_output)[0]
+        sampled_act = self.fluid_executor.run(
+            self.policy_sample_program,
+            feed=feed,
+            fetch_list=self.policy_sample_output)[0]
         return sampled_act
 
     def policy_predict(self, obs):
         feed = {'obs': obs}
-        means = self.fluid_executor.run(self.policy_predict_program,
-                                                   feed=feed,
-                                                   fetch_list=self.policy_predict_output)[0]
+        means = self.fluid_executor.run(
+            self.policy_predict_program,
+            feed=feed,
+            fetch_list=self.policy_predict_output)[0]
         return means
 
     def value_predict(self, obs):
         feed = {'obs': obs}
-        value = self.fluid_executor.run(self.value_predict_program,
-                                        feed=feed,
-                                        fetch_list=self.value_predict_output)[0]
+        value = self.fluid_executor.run(
+            self.value_predict_program,
+            feed=feed,
+            fetch_list=self.value_predict_output)[0]
         return value
 
     def _batch_policy_learn(self, obs, actions, advantages):
         if self.loss_type == 'KLPEN':
-            feed = {'obs': obs,
-                    'actions': actions,
-                    'advantages': advantages, 
-                    'beta': self.beta}
+            feed = {
+                'obs': obs,
+                'actions': actions,
+                'advantages': advantages,
+                'beta': self.beta
+            }
         else:
-            feed = {'obs': obs,
-                    'actions': actions,
-                    'advantages': advantages}
-        [loss, kl] = self.fluid_executor.run(self.policy_learn_program,
-                                                      feed=feed,
-                                                      fetch_list=self.policy_learn_output)
+            feed = {'obs': obs, 'actions': actions, 'advantages': advantages}
+        [loss, kl] = self.fluid_executor.run(
+            self.policy_learn_program,
+            feed=feed,
+            fetch_list=self.policy_learn_output)
         return loss, kl
-    
+
     def _batch_value_learn(self, obs, val):
-        feed = {'obs': obs, 
-                'val': val}
-        value_loss = self.fluid_executor.run(self.value_learn_program,
-                                             feed=feed,
-                                             fetch_list=self.value_learn_output)[0]
+        feed = {'obs': obs, 'val': val}
+        value_loss = self.fluid_executor.run(
+            self.value_learn_program,
+            feed=feed,
+            fetch_list=self.value_learn_output)[0]
         return value_loss
 
     def policy_learn(self, obs, actions, advantages):
@@ -130,7 +153,7 @@ class MujocoAgent(Agent):
         3. if use KLPEN loss, Adjust kl loss coefficient: beta
         """
         self.alg.sync_old_policy(self.gpu_id)
-        
+
         all_loss, all_kl = [], []
         for _ in range(self.policy_learn_times):
             loss, kl = self._batch_policy_learn(obs, actions, advantages)
@@ -152,19 +175,20 @@ class MujocoAgent(Agent):
         data_size = obs.shape[0]
 
         if self.value_learn_buffer is None:
-            obs_train, value_train = obs, value 
+            obs_train, value_train = obs, value
         else:
             obs_train = np.concatenate([obs, self.value_learn_buffer[0]])
             value_train = np.concatenate([value, self.value_learn_buffer[1]])
         self.value_learn_buffer = (obs, value)
-        
+
         all_loss = []
         for _ in range(self.value_learn_times):
             obs_train, value_train = shuffle(obs_train, value_train)
             start = 0
             while start < data_size:
                 end = start + self.value_batch_size
-                value_loss = self._batch_value_learn(obs_train[start:end, :], value_train[start:end])
+                value_loss = self._batch_value_learn(obs_train[start:end, :],
+                                                     value_train[start:end])
                 all_loss.append(value_loss)
                 start += self.value_batch_size
         return np.mean(all_loss)

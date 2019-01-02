@@ -16,16 +16,17 @@ import numpy as np
 import scipy.signal
 
 __all__ = ['calc_discount_sum_rewards', 'calc_gae', 'Scaler']
-
 """
 The following code are copied or modified from:
     https://github.com/pat-coady/trpo
     Written by Patrick Coady (pat-coady.github.io)
 """
 
+
 def calc_discount_sum_rewards(rewards, gamma):
     """ Calculate discounted forward sum of a sequence at each point """
     return scipy.signal.lfilter([1.0], [1.0, -gamma], rewards[::-1])[::-1]
+
 
 def calc_gae(rewards, values, gamma, lam):
     """ Calculate generalized advantage estimator.
@@ -35,6 +36,7 @@ def calc_gae(rewards, values, gamma, lam):
     tds = rewards - values + np.append(values[1:] * gamma, 0)
     advantages = calc_discount_sum_rewards(tds, gamma * lam)
     return advantages
+
 
 class Scaler(object):
     """ Generate scale and offset based on running mean and stddev along axis=0
@@ -71,14 +73,16 @@ class Scaler(object):
             new_data_var = np.var(x, axis=0)
             new_data_mean = np.mean(x, axis=0)
             new_data_mean_sq = np.square(new_data_mean)
-            new_means = ((self.means * self.cnt) + (new_data_mean * n)) / (self.cnt + n)
+            new_means = (
+                (self.means * self.cnt) + (new_data_mean * n)) / (self.cnt + n)
             self.vars = (((self.cnt * (self.vars + np.square(self.means))) +
-                          (n * (new_data_var + new_data_mean_sq))) / (self.cnt + n) -
-                         np.square(new_means))
-            self.vars = np.maximum(0.0, self.vars)  # occasionally goes negative, clip
+                          (n * (new_data_var + new_data_mean_sq))) /
+                         (self.cnt + n) - np.square(new_means))
+            self.vars = np.maximum(
+                0.0, self.vars)  # occasionally goes negative, clip
             self.means = new_means
             self.cnt += n
 
     def get(self):
         """ returns 2-tuple: (scale, offset) """
-        return 1/(np.sqrt(self.vars) + 0.1)/3, self.means
+        return 1 / (np.sqrt(self.vars) + 0.1) / 3, self.means

@@ -33,7 +33,7 @@ class PPO(Algorithm):
         if 'epsilon' in hyperparas:
             self.epsilon = hyperparas['epsilon']
         else:
-            self.epsilon = 0.2 # default
+            self.epsilon = 0.2  # default
 
     def _calc_logprob(self, actions, means, logvars):
         """ Calculate log probabilities of actions, when given means and logvars
@@ -48,7 +48,8 @@ class PPO(Algorithm):
         Returns:
             logprob: shape (batch_size)
         """
-        result1 = layers.elementwise_div(layers.square(actions - means), layers.exp(logvars), axis=1)
+        result1 = layers.elementwise_div(
+            layers.square(actions - means), layers.exp(logvars), axis=1)
         result1 = -0.5 * layers.reduce_sum(result1, dim=1)
 
         result2 = -0.5 * layers.reduce_sum(logvars)
@@ -71,11 +72,9 @@ class PPO(Algorithm):
         log_det_cov_old = layers.reduce_sum(old_logvars)
         log_det_cov_new = layers.reduce_sum(logvars)
         tr_old_new = layers.reduce_sum(layers.exp(old_logvars - logvars))
-        kl = 0.5 * (layers.reduce_sum(layers.square(means - old_means) / 
-                                      layers.exp(logvars), dim=1)
-                    + (log_det_cov_new - log_det_cov_old)
-                    + tr_old_new
-                    - self.act_dim)
+        kl = 0.5 * (layers.reduce_sum(
+            layers.square(means - old_means) / layers.exp(logvars), dim=1) + (
+                log_det_cov_new - log_det_cov_old) + tr_old_new - self.act_dim)
         return kl
 
     def define_predict(self, obs):
@@ -87,7 +86,7 @@ class PPO(Algorithm):
     def define_sample(self, obs):
         """ Use policy model of self.model to sample actions
         """
-        sampled_act = self.model.policy_sample(obs) 
+        sampled_act = self.model.policy_sample(obs)
         return sampled_act
 
     def define_policy_learn(self, obs, actions, advantages, beta=None):
@@ -99,7 +98,7 @@ class PPO(Algorithm):
         old_means, old_logvars = self.old_policy_model.policy(obs)
         old_means.stop_gradient = True
         old_logvars.stop_gradient = True
-        old_logprob = self._calc_logprob(actions, old_means, old_logvars) 
+        old_logprob = self._calc_logprob(actions, old_means, old_logvars)
 
         means, logvars = self.model.policy(obs)
         logprob = self._calc_logprob(actions, means, logvars)
@@ -107,14 +106,17 @@ class PPO(Algorithm):
         kl = self._calc_kl(means, logvars, old_means, old_logvars)
         kl = layers.reduce_mean(kl)
 
-        if beta is None: # Clipped Surrogate Objective 
+        if beta is None:  # Clipped Surrogate Objective
             pg_ratio = layers.exp(logprob - old_logprob)
-            clipped_pg_ratio = layers.clip(pg_ratio, 1 - self.epsilon, 1 + self.epsilon)
-            surrogate_loss = layers.elementwise_min(advantages * pg_ratio, advantages * clipped_pg_ratio)
+            clipped_pg_ratio = layers.clip(pg_ratio, 1 - self.epsilon,
+                                           1 + self.epsilon)
+            surrogate_loss = layers.elementwise_min(
+                advantages * pg_ratio, advantages * clipped_pg_ratio)
             loss = 0 - layers.reduce_mean(surrogate_loss)
-        else: # Adaptive KL Penalty Objective
+        else:  # Adaptive KL Penalty Objective
             # policy gradient loss
-            loss1 = 0 - layers.reduce_mean(advantages * layers.exp(logprob - old_logprob))
+            loss1 = 0 - layers.reduce_mean(
+                advantages * layers.exp(logprob - old_logprob))
             # adaptive kl loss
             loss2 = kl * beta
             loss = loss1 + loss2
@@ -140,4 +142,5 @@ class PPO(Algorithm):
     def sync_old_policy(self, gpu_id):
         """ Synchronize parameters of self.model.policy_model to self.old_policy_model
         """
-        self.model.policy_model.sync_params_to(self.old_policy_model, gpu_id=gpu_id)
+        self.model.policy_model.sync_params_to(
+            self.old_policy_model, gpu_id=gpu_id)

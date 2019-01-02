@@ -44,9 +44,10 @@ def run_train_episode(env, agent, rpm, act_bound):
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
 
-        # Add exploration noise
+        # Add exploration noise, and clip to [-1.0, 1.0]
         action = np.clip(
-            np.random.normal(action, act_bound), -act_bound, act_bound)
+            np.random.normal(action, 1.0), -1.0, 1.0)
+        action = action * act_bound
 
         next_obs, reward, done, info = env.step(action)
 
@@ -66,13 +67,14 @@ def run_train_episode(env, agent, rpm, act_bound):
     return total_reward
 
 
-def run_evaluate_episode(env, agent):
+def run_evaluate_episode(env, agent, act_bound):
     obs = env.reset()
     total_reward = 0
     for j in range(MAX_STEPS_EACH_EPISODE):
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
+        action = action * act_bound
 
         next_obs, reward, done, info = env.step(action)
 
@@ -92,7 +94,7 @@ def main():
     act_dim = env.action_space.shape[0]
     act_bound = env.action_space.high[0]
 
-    model = MujocoModel(act_dim, act_bound)
+    model = MujocoModel(act_dim)
     algorithm = DDPG(
         model,
         hyperparas={
@@ -109,7 +111,7 @@ def main():
         train_reward = run_train_episode(env, agent, rpm, act_bound)
         logger.info('Episode: {} Reward: {}'.format(i, train_reward))
         if (i + 1) % TEST_EVERY_EPISODES == 0:
-            evaluate_reward = run_evaluate_episode(env, agent)
+            evaluate_reward = run_evaluate_episode(env, agent, act_bound)
             logger.info('Evaluate Reward: {}'.format(evaluate_reward))
 
 

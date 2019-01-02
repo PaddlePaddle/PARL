@@ -18,8 +18,8 @@ from parl.framework.model_base import Model
 
 
 class MujocoModel(Model):
-    def __init__(self, act_dim, act_bound):
-        self.actor_model = ActorModel(act_dim, act_bound)
+    def __init__(self, act_dim):
+        self.actor_model = ActorModel(act_dim)
         self.critic_model = CriticModel()
 
     def policy(self, obs):
@@ -33,8 +33,7 @@ class MujocoModel(Model):
 
 
 class ActorModel(Model):
-    def __init__(self, act_dim, act_bound):
-        self.act_bound = act_bound
+    def __init__(self, act_dim):
         hid1_size = 400
         hid2_size = 300
 
@@ -46,7 +45,7 @@ class ActorModel(Model):
         hid1 = self.fc1(obs)
         hid2 = self.fc2(hid1)
         means = self.fc3(hid2)
-        means = means * self.act_bound
+        means = means
         return means
 
 

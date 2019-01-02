@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from parl.algorithms.ddpg import *
 from parl.algorithms.dqn import *
 from parl.algorithms.policy_gradient import *
-from parl.algorithms.ddpg import *
+from parl.algorithms.ppo import *

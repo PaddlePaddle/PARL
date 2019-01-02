@@ -76,5 +76,5 @@ pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
 - [DDPG](examples/DDPG/)
-- PPO
+- [PPO](examples/PPO/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)

@@ -4,7 +4,7 @@ Include following approach:
 + Clipped Surrogate Objective
 + Adaptive KL Penalty Coefficient
 
-+ PPO in
+> PPO in
 [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
 ### Mujoco games introduction

@@ -46,30 +46,10 @@ class PolicyModel(Model):
 
         self.lr = 9e-4 / np.sqrt(hid2_size)
 
-        self.fc1 = layers.fc(
-            size=hid1_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / obs_dim))))
-        self.fc2 = layers.fc(
-            size=hid2_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid1_size))))
-        self.fc3 = layers.fc(
-            size=hid3_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid2_size))))
-        self.fc4 = layers.fc(
-            size=act_dim,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid3_size))))
+        self.fc1 = layers.fc(size=hid1_size, act='tanh')
+        self.fc2 = layers.fc(size=hid2_size, act='tanh')
+        self.fc3 = layers.fc(size=hid3_size, act='tanh')
+        self.fc4 = layers.fc(size=act_dim, act='tanh')
 
         self.logvars = layers.create_parameter(
             shape=[act_dim],
@@ -102,29 +82,10 @@ class ValueModel(Model):
 
         self.lr = 1e-2 / np.sqrt(hid2_size)
 
-        self.fc1 = layers.fc(
-            size=hid1_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / obs_dim))))
-        self.fc2 = layers.fc(
-            size=hid2_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid1_size))))
-        self.fc3 = layers.fc(
-            size=hid3_size,
-            act='tanh',
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid2_size))))
-        self.fc4 = layers.fc(
-            size=1,
-            param_attr=ParamAttr(
-                initializer=fluid.initializer.Normal(
-                    scale=np.sqrt(1 / hid3_size))))
+        self.fc1 = layers.fc(size=hid1_size, act='tanh')
+        self.fc2 = layers.fc(size=hid2_size, act='tanh')
+        self.fc3 = layers.fc(size=hid3_size, act='tanh')
+        self.fc4 = layers.fc(size=1)
 
     def value(self, obs):
         hid1 = self.fc1(obs)

@@ -24,6 +24,7 @@ __all__ = ['PPO']
 class PPO(Algorithm):
     def __init__(self, model, hyperparas):
         Algorithm.__init__(self, model, hyperparas)
+        # Used to calculate probability of action in old policy
         self.old_policy_model = deepcopy(model.policy_model)
 
         # fetch hyper parameters
@@ -48,12 +49,12 @@ class PPO(Algorithm):
         Returns:
             logprob: shape (batch_size)
         """
-        result1 = layers.elementwise_div(
+        exp_item = layers.elementwise_div(
             layers.square(actions - means), layers.exp(logvars), axis=1)
-        result1 = -0.5 * layers.reduce_sum(result1, dim=1)
+        exp_item = -0.5 * layers.reduce_sum(exp_item, dim=1)
 
-        result2 = -0.5 * layers.reduce_sum(logvars)
-        logprob = result1 + result2
+        vars_item = -0.5 * layers.reduce_sum(logvars)
+        logprob = exp_item + vars_item
         return logprob
 
     def _calc_kl(self, means, logvars, old_means, old_logvars):
@@ -94,6 +95,13 @@ class PPO(Algorithm):
                 1. CLIP loss: Clipped Surrogate Objective 
                 2. KLPEN loss: Adaptive KL Penalty Objective
             See: https://arxiv.org/pdf/1707.02286.pdf
+
+        Args:
+            obs: Tensor, (batch_size, obs_dim)
+            actions: Tensor, (batch_size, act_dim)
+            advantages: Tensor (batch_size, )
+            beta: Tensor (1) or None
+                  if None, use CLIP Loss; else, use KLPEN loss. 
         """
         old_means, old_logvars = self.old_policy_model.policy(obs)
         old_means.stop_gradient = True

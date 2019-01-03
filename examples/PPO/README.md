@@ -10,6 +10,9 @@ Include following approach:
 ### Mujoco games introduction
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco game.
 
+### Benchmark result
+- HalfCheetah-v2
+<img src=".benchmark/PPO_HalfCheetah-v2.png"/>  
 
 ## How to use
 ### Dependencies:

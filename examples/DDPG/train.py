@@ -19,7 +19,7 @@ import time
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.algorithms import DDPG
-from parl.utils import logger
+from parl.utils import logger, action_mapping
 from replay_memory import ReplayMemory
 
 MAX_EPISODES = 5000
@@ -36,7 +36,7 @@ REWARD_SCALE = 0.1
 ENV_SEED = 1
 
 
-def run_train_episode(env, agent, rpm, act_bound):
+def run_train_episode(env, agent, rpm):
     obs = env.reset()
     total_reward = 0
     for j in range(MAX_STEPS_EACH_EPISODE):
@@ -44,9 +44,10 @@ def run_train_episode(env, agent, rpm, act_bound):
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
 
-        # Add exploration noise
-        action = np.clip(
-            np.random.normal(action, act_bound), -act_bound, act_bound)
+        # Add exploration noise, and clip to [-1.0, 1.0]
+        action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
+        action = action_mapping(action, env.action_space.low[0],
+                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 
@@ -73,6 +74,8 @@ def run_evaluate_episode(env, agent):
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
+        action = action_mapping(action, env.action_space.low[0],
+                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 
@@ -90,9 +93,8 @@ def main():
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
-    act_bound = env.action_space.high[0]
 
-    model = MujocoModel(act_dim, act_bound)
+    model = MujocoModel(act_dim)
     algorithm = DDPG(
         model,
         hyperparas={
@@ -106,7 +108,7 @@ def main():
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
 
     for i in range(MAX_EPISODES):
-        train_reward = run_train_episode(env, agent, rpm, act_bound)
+        train_reward = run_train_episode(env, agent, rpm)
         logger.info('Episode: {} Reward: {}'.format(i, train_reward))
         if (i + 1) % TEST_EVERY_EPISODES == 0:
             evaluate_reward = run_evaluate_episode(env, agent)

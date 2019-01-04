@@ -5,7 +5,6 @@ This folder will contains the code used to train the winning models for the [Neu
 ### Dependencies
 - python3.6
 - [paddlepaddle>=1.2.0](https://github.com/PaddlePaddle/Paddle)
-- [PARL](https://github.com/PaddlePaddle/PARL)
 - [osim-rl](https://github.com/stanfordnmbl/osim-rl)
 
 ### Start Testing best models

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ['has_func']
+__all__ = ['has_func', 'action_mapping']
 
 
 def has_func(obj, fun):
@@ -26,3 +26,21 @@ def has_func(obj, fun):
     """
     check_fun = getattr(obj, fun, None)
     return callable(check_fun)
+
+
+def action_mapping(model_output_act, low_bound, high_bound):
+    """ mapping action space [-1, 1] of model output 
+        to new action space [low_bound, high_bound].
+
+    Args:
+        model_output_act: np.array, which value is in [-1, 1]
+        low_bound: float, low bound of env action space
+        high_bound: float, high bound of env action space
+
+    Returns:
+        action: np.array, which value is in [low_bound, high_bound]
+    """
+    assert high_bound > low_bound
+    action = low_bound + (model_output_act - (-1.0)) * (
+        (high_bound - low_bound) / 2.0)
+    return action

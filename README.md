@@ -2,6 +2,8 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
+> PARL is a flexible and high-efficient reinforcement learning framework based on [PaddlePaddle](https://github.com/PaddlePaddle/Paddle).
+
 # Features
 **Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms
 
@@ -76,5 +78,5 @@ pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
 - [DDPG](examples/DDPG/)
-- PPO
+- [PPO](examples/PPO/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)

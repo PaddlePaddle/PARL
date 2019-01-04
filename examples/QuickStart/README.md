@@ -5,7 +5,6 @@ Based on PARL, train a agent to play CartPole game with policy gradient algorith
 ### Dependencies:
 
 + python2.7 or python3.5+
-+ [PARL](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=1.0.0](https://github.com/PaddlePaddle/Paddle)
 + gym
 

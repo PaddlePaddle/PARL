@@ -72,7 +72,7 @@ python simulator_client.py \
 ## one-head model to multi-head model script
 
 ## Round2 
-> Pretrained multi-head 1.25m/s model: model_zoo/12head_1.25_model
+> Pretrained multi-head 1.25m/s model: [link]()
 
 ```
 # server

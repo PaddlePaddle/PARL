@@ -67,7 +67,7 @@ agent = AtariAgent(aglrotihm)
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.0 (We try to make our repository always compatible with newest version PaddlePaddle)  
+- PaddlePaddle >=1.2.1 (We try to make our repository always compatible with newest version PaddlePaddle)  
 
 
 ```

@@ -19,8 +19,7 @@ import time
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.algorithms import DDPG
-from parl.utils import logger, action_mapping
-from replay_memory import ReplayMemory
+from parl.utils import logger, action_mapping, ReplayMemory
 
 MAX_EPISODES = 5000
 TEST_EVERY_EPISODES = 50

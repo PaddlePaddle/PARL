@@ -1,36 +1,95 @@
-## The Winning Solution for the NeurIPS 2018: AI for Prosthetics Challenge
+## Curriculum learning
 
-This folder will contains the code used to train the winning models for the [NeurIPS 2018: AI for Prosthetics Challenge](https://www.crowdai.org/challenges/neurips-2018-ai-for-prosthetics-challenge) along with the resulting models. (Codes of training part is organizing, but the resulting models is available now.)
-
-### Dependencies
-- python3.6
-- [paddlepaddle>=1.2.0](https://github.com/PaddlePaddle/Paddle)
-- [osim-rl](https://github.com/stanfordnmbl/osim-rl)
-
-### Start Testing best models
-- How to Run
-```bash
-# cd current directory
-# install best models file (saved_model.tar.gz) 
-tar zxvf saved_model.tar.gz
-python test.py
+### Run Fastest
 ```
-> You can install models file from [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3)
+# server
+python .simulator_server.py \
+           --port [PORT] \
+           --ensemble_num 1 \
 
-- More arguments
-```bash
-# Run with GPU
-python test.py --use_cuda 
-
-# Visulize the game
-python test.py --vis
-
-# Set the random seed 
-python test.py --seed 1024
-
-# Set the episode number to run
-python test.py --episode_num 2
+# client
+python simulator_client.py \
+           --port [PORT] \
+           --ip [IP] \
+           --reward_type RunFastest \
 ```
 
-### Start Training
-- [ ] To be Done
+### Fixed Target Speed
+#### target speed 3.0 m/s
+```
+# server
+python .simulator_server.py \
+           --port [PORT] \
+           --ensemble_num 1 \
+           --restore_model_path [RunFastest model] \
+           --warm_start_batchs 1000 \
+
+# client
+python simulator_client.py \
+           --port [PORT] \
+           --ip [IP] \
+           --reward_type FixedTargetSpeed \
+           --target_v 3.0 \
+           --act_penalty_lowerbound 1.5 \
+```
+
+#### target speed 2.0 m/s
+```
+# server
+python .simulator_server.py \
+           --port [PORT] \
+           --ensemble_num 1 \
+           --restore_model_path [FixedTargetSpeed 3.0m/s model] \
+           --warm_start_batchs 1000 \
+
+# client
+python simulator_client.py \
+           --port [PORT] \
+           --ip [IP] \
+           --reward_type FixedTargetSpeed \
+           --target_v 2.0 \
+           --act_penalty_lowerbound 0.75 \
+```
+
+#### target speed 1.25 m/s
+```
+# server
+python .simulator_server.py \
+           --port [PORT] \
+           --ensemble_num 1 \
+           --restore_model_path [FixedTargetSpeed 2.0m/s model] \
+           --warm_start_batchs 1000 \
+
+# client
+python simulator_client.py \
+           --port [PORT] \
+           --ip [IP] \
+           --reward_type FixedTargetSpeed \
+           --target_v 1.25 \
+           --act_penalty_lowerbound 0.6 \
+```
+
+## one-head model to multi-head model script
+
+## Round2 
+> Pretrained multi-head 1.25m/s model: model_zoo/12head_1.25_model
+
+```
+# server
+python .simulator_server.py \
+           --port [PORT] \
+           --ensemble_num 12 \
+           --restore_model_path [FixedTargetSpeed 1.25m/s multi-head model] \
+           --warm_start_batchs 1000 \
+
+# client
+python simulator_client.py \
+           --port [PORT] \
+           --ip [IP] \
+           --reward_type Round2 \
+           --act_penalty_lowerbound 0.75 \
+           --act_penalty_coeff 7.0 \
+           --vel_penalty_coeff 20.0 \
+           --discrete_data \
+           --stage 3 \
+```

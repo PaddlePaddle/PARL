@@ -14,3 +14,4 @@
 
 from parl.utils.utils import *
 from parl.utils.gputils import *
+from parl.utils.replay_memory import *

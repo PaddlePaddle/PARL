@@ -46,9 +46,12 @@ class Worker(object):
         if args.reward_type == 'RunFastest':
             env = RunFastestReward(env)
         elif args.reward_type == 'FixedTargetSpeed':
-            env = FixedTargetSpeedReward(env)
+            env = FixedTargetSpeedReward(
+                env, args.target_v, args.act_penalty_lowerbound,
+                args.act_penalty_coeff, args.vel_penalty_coeff)
         elif args.reward_type == 'Round2':
-            env = Round2Reward(env)
+            env = Round2Reward(env, args.act_penalty_lowerbound,
+                               args.act_penalty_coeff, args.vel_penalty_coeff)
         else:
             assert False, 'Not supported reward type!'
 
@@ -92,7 +95,7 @@ class Worker(object):
                     action, project=False)
 
                 # debug info
-                if self.worker_id == 1:
+                if args.debug:
                     logger.info("dim:{} obs:{}   act:{}   reward:{}  done:{}  info:{}".format(\
                         len(observation), np.sum(observation), np.sum(action), reward, done, info))
                 observation = next_observation

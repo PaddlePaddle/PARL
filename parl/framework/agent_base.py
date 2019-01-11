@@ -48,8 +48,9 @@ class Agent(object):
         if gpu_id is None:
             gpu_id = 0 if get_gpu_count() > 0 else -1
         self.gpu_id = gpu_id
-        place = fluid.CUDAPlace(gpu_id) if gpu_id >= 0 else fluid.CPUPlace()
-        self.fluid_executor = fluid.Executor(place)
+        self.place = fluid.CUDAPlace(
+            gpu_id) if gpu_id >= 0 else fluid.CPUPlace()
+        self.fluid_executor = fluid.Executor(self.place)
         self.fluid_executor.run(fluid.default_startup_program())
 
     def build_program(self):

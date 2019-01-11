@@ -282,9 +282,9 @@ class SimulatorServer(simulator_pb2_grpc.SimulatorServicer):
                                  'model_every_100_episodes/step-{}'.format(T))
         self.agent.save_params(save_path)
 
-    def restore(self, model_path):
-        self.agent.load_params(model_path)
-        return
+    def restore(self, model_path, restore_from_one_head):
+        logger.info('restore model from {}'.format(model_path))
+        self.agent.load_params(model_path, restore_from_one_head)
 
     def add_episode_rpm(self, episode_rpm):
         for x in episode_rpm:
@@ -329,7 +329,8 @@ if __name__ == '__main__':
     if args.restore_rpm_path is not None:
         simulator_server.restore_rpm(args.restore_rpm_path)
     if args.restore_model_path is not None:
-        simulator_server.restore(args.restore_model_path)
+        simulator_server.restore(args.restore_model_path,
+                                 args.restore_from_one_head)
 
     simulator_hanlder = SimulatorHandler(simulator_server=simulator_server)
     simulator_hanlder.run()

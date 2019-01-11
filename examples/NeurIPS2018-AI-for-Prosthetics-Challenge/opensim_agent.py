@@ -14,7 +14,9 @@
 
 import numpy as np
 import parl.layers as layers
+import re
 from paddle import fluid
+from paddle.fluid.executor import _fetch_var
 from parl.framework.agent_base import Agent
 from parl.utils import logger
 
@@ -169,10 +171,48 @@ class OpenSimAgent(Agent):
                 dirname=dirname,
                 main_program=self.learn_programs[i])
 
-    def load_params(self, dirname):
-        logger.info('Loading params from {}'.format(dirname))
-        for i in range(self.ensemble_num):
+    def load_params(self, dirname, from_one_head):
+        if from_one_head:
+            logger.info('[From one head, extend to multi head:]')
+            # load model 0
             fluid.io.load_params(
                 executor=self.fluid_executor,
                 dirname=dirname,
-                main_program=self.learn_programs[i])
+                main_program=self.learn_programs[0])
+
+            # sync identity params of model/target_model 0 to other models/target_models
+            for i in range(1, self.ensemble_num):
+                params = list(
+                    filter(
+                        lambda x: 'identity' in x.name and '@GRAD' not in x.name,
+                        self.learn_programs[i].list_vars()))
+                for param in params:
+                    param_var = _fetch_var(param.name, return_numpy=False)
+
+                    model0_name = re.sub(r"identity_\d+", "identity_0",
+                                         param.name)
+                    model0_value = _fetch_var(model0_name, return_numpy=True)
+                    logger.info('{} -> {}'.format(model0_name, param.name))
+                    param_var.set(model0_value, self.place)
+
+            # sync share params of target_model 0 to other target models
+            # After deepcopy, shapre params between target models  is different
+            for i in range(1, self.ensemble_num):
+                params = list(
+                    filter(
+                        lambda x: 'shared' in x.name and 'PARL_target' in x.name and '@GRAD' not in x.name,
+                        self.learn_programs[i].list_vars()))
+                for param in params:
+                    param_var = _fetch_var(param.name, return_numpy=False)
+
+                    model0_name = re.sub(r"_\d+$", "_0", param.name)
+                    model0_value = _fetch_var(model0_name, return_numpy=True)
+                    logger.info('{} -> {}'.format(model0_name, param.name))
+                    param_var.set(model0_value, self.place)
+
+        else:
+            for i in range(self.ensemble_num):
+                fluid.io.load_params(
+                    executor=self.fluid_executor,
+                    dirname=dirname,
+                    main_program=self.learn_programs[i])

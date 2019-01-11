@@ -21,12 +21,10 @@ from collections import OrderedDict
 from osim.env import ProstheticsEnv
 from parl.utils import logger
 from tqdm import tqdm
-from args import get_client_args
 
 MAXTIME_LIMIT = 1000
 ProstheticsEnv.time_limit = MAXTIME_LIMIT
 FRAME_SKIP = None
-args = get_client_args()
 
 
 class CustomR2Env(gym.Wrapper):
@@ -36,7 +34,11 @@ class CustomR2Env(gym.Wrapper):
         3.boundary, e.g. reset(.., boundary=True)
     """
 
-    def __init__(self, env, time_limit=MAXTIME_LIMIT):
+    def __init__(self,
+                 env,
+                 time_limit=MAXTIME_LIMIT,
+                 discrete_data=False,
+                 discrete_bin=10):
         logger.info("[CustomR2Env]type:{}, time_limit:{}".format(
             type(env), time_limit))
         assert isinstance(env, ProstheticsEnv), type(env)
@@ -48,6 +50,9 @@ class CustomR2Env(gym.Wrapper):
 
         # boundary flag
         self._generate_boundary_target_flag = True
+
+        self.discrete_data = discrete_data
+        self.discrete_bin = discrete_bin
 
     def rect(self, row):
         r = row[0]
@@ -99,8 +104,8 @@ class CustomR2Env(gym.Wrapper):
             target_vels = [1.25]
         elif stage == 1:
             assert change_num >= 1
-            interval = 1.0 / args.discrete_bin
-            discrete_id = np.random.randint(args.discrete_bin)
+            interval = 1.0 / self.discrete_bin
+            discrete_id = np.random.randint(self.discrete_bin)
 
             min_vel = 0.75 + discrete_id * interval
             max_vel = 0.75 + (discrete_id + 1) * interval
@@ -114,8 +119,8 @@ class CustomR2Env(gym.Wrapper):
                                        random.uniform(-0.5, 0.5))
         elif stage == 2:
             assert change_num >= 2
-            interval = 2.0 / args.discrete_bin
-            discrete_id = np.random.randint(args.discrete_bin)
+            interval = 2.0 / self.discrete_bin
+            discrete_id = np.random.randint(self.discrete_bin)
             min_vel = 0.25 + discrete_id * interval
             max_vel = 0.25 + (discrete_id + 1) * interval
             while True:
@@ -127,8 +132,8 @@ class CustomR2Env(gym.Wrapper):
                     break
         elif stage == 3:
             assert change_num >= 3
-            interval = 3.0 / args.discrete_bin
-            discrete_id = np.random.randint(args.discrete_bin)
+            interval = 3.0 / self.discrete_bin
+            discrete_id = np.random.randint(self.discrete_bin)
             min_vel = -0.25 + discrete_id * interval
             max_vel = -0.25 + (discrete_id + 1) * interval
             while True:
@@ -167,7 +172,7 @@ class CustomR2Env(gym.Wrapper):
         else:
             raise NotImplemented
 
-        if args.discrete_data:
+        if self.discrete_data:
             target_vels = self._generate_target_vel(
                 stage=stage, change_num=len(change))
 
@@ -178,7 +183,7 @@ class CustomR2Env(gym.Wrapper):
 
             if i in change:
                 change_cnt += 1
-                if args.discrete_data:
+                if self.discrete_data:
                     velocity[i] = target_vels[change_cnt]
                 else:
                     velocity[i] += random.choice([-1, 1]) * random.uniform(
@@ -360,6 +365,16 @@ class RewardShaping(gym.Wrapper):
         return obs
 
 
+class TestReward(RewardShaping):
+    """ Reward shaping wrapper for test"""
+
+    def __init__(self, env):
+        RewardShaping.__init__(self, env)
+
+    def reward_shaping(self, state_desc, r2_reward, done, action):
+        return {}
+
+
 class RunFastestReward(RewardShaping):
     """ Reward shaping wrapper for fixed target speed"""
 
@@ -412,13 +427,21 @@ class RunFastestReward(RewardShaping):
 class FixedTargetSpeedReward(RewardShaping):
     """ Reward shaping wrapper for fixed target speed"""
 
-    def __init__(self, env):
+    def __init__(self, env, target_v, act_penalty_lowerbound,
+                 act_penalty_coeff, vel_penalty_coeff):
         RewardShaping.__init__(self, env)
 
-    def reward_shaping(self, state_desc, r2_reward, done, action):
-        assert args.target_v is not None
-        assert args.act_penalty_coeff is not None
+        assert target_v is not None
+        assert act_penalty_lowerbound is not None
+        assert act_penalty_coeff is not None
+        assert vel_penalty_coeff is not None
 
+        self.target_v = target_v
+        self.act_penalty_lowerbound = act_penalty_lowerbound
+        self.act_penalty_coeff = act_penalty_coeff
+        self.vel_penalty_coeff = vel_penalty_coeff
+
+    def reward_shaping(self, state_desc, r2_reward, done, action):
         if self.pre_state_desc is None:
             x_offset = 0
         else:
@@ -428,14 +451,14 @@ class FixedTargetSpeedReward(RewardShaping):
         # Reward for not falling
         ret_r = 36
 
-        vel_penalty = ((state_desc["body_vel"]["pelvis"][0] - args.target_v)**2
+        vel_penalty = ((state_desc["body_vel"]["pelvis"][0] - self.target_v)**2
                        + (state_desc["body_vel"]["pelvis"][2] - 0)**2)
 
         origin_action_l2_penalty = np.linalg.norm(action)
-        action_l2_penalty = max(args.act_penalty_lowerbound,
+        action_l2_penalty = max(self.act_penalty_lowerbound,
                                 origin_action_l2_penalty)
 
-        ret_r = ret_r - vel_penalty * args.vel_penalty_coeff - action_l2_penalty * args.act_penalty_coeff
+        ret_r = ret_r - vel_penalty * self.vel_penalty_coeff - action_l2_penalty * self.act_penalty_coeff
 
         cur_vel_x = state_desc['body_vel']['pelvis'][0]
         cur_vel_z = state_desc['body_vel']['pelvis'][2]
@@ -454,12 +477,19 @@ class FixedTargetSpeedReward(RewardShaping):
 class Round2Reward(RewardShaping):
     """ Reward shaping wrapper for fixed target speed"""
 
-    def __init__(self, env):
+    def __init__(self, env, act_penalty_lowerbound, act_penalty_coeff,
+                 vel_penalty_coeff):
         RewardShaping.__init__(self, env)
 
-    def reward_shaping(self, state_desc, r2_reward, done, action):
-        assert args.act_penalty_coeff is not None
+        assert act_penalty_lowerbound is not None
+        assert act_penalty_coeff is not None
+        assert vel_penalty_coeff is not None
 
+        self.act_penalty_lowerbound = act_penalty_lowerbound
+        self.act_penalty_coeff = act_penalty_coeff
+        self.vel_penalty_coeff = vel_penalty_coeff
+
+    def reward_shaping(self, state_desc, r2_reward, done, action):
         if self.pre_state_desc is None:
             x_offset = 0
         else:
@@ -481,14 +511,14 @@ class Round2Reward(RewardShaping):
                    state_desc["body_vel"]["pelvis"][2])**2)
 
         origin_action_l2_penalty = np.linalg.norm(action)
-        action_l2_penalty = max(args.act_penalty_lowerbound,
+        action_l2_penalty = max(self.act_penalty_lowerbound,
                                 origin_action_l2_penalty)
 
         if self.step_count < 60 or (
                 self.step_count - self.last_target_change_step < 60):
-            ret_r = ret_r - vel_penalty * args.vel_penalty_coeff
+            ret_r = ret_r - vel_penalty * self.vel_penalty_coeff
         else:
-            ret_r = ret_r - vel_penalty * args.vel_penalty_coeff - action_l2_penalty * args.act_penalty_coeff
+            ret_r = ret_r - vel_penalty * self.vel_penalty_coeff - action_l2_penalty * self.act_penalty_coeff
 
         ret_r -= muscle_penalty
 

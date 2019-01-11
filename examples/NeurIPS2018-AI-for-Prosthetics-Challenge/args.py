@@ -25,6 +25,12 @@ def get_server_args():
         type=str,
         help='restore model path for warm start')
     parser.add_argument(
+        '--restore_from_one_head',
+        action="store_true",
+        help=
+        'If set, will restore model from one head model. If ensemble_num > 1, will assign parameters of model0 to other models.'
+    )
+    parser.add_argument(
         '--restore_rpm_path', type=str, help='restore rpm path for warm start')
     parser.add_argument(
         '--ensemble_num',
@@ -86,6 +92,10 @@ def get_client_args():
         type=str,
         help=
         "Choose reward type, 'RunFastest' or 'FixedTargetSpeed' or 'Round2'")
+    parser.add_argument(
+        '--debug',
+        action="store_true",
+        help='if set, will print debug information')
     args = parser.parse_args()
 
     assert args.reward_type in ['RunFastest', 'FixedTargetSpeed', 'Round2']

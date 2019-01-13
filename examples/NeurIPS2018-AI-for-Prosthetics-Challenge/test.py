@@ -30,7 +30,7 @@ def play_multi_episode(agent, episode_num=2, vis=False, seed=0):
     np.random.seed(seed)
     env = ProstheticsEnv(visualize=vis)
     env.change_model(model='3D', difficulty=1, prosthetic=True, seed=seed)
-    env = ForwardReward(env)
+    env = TestReward(env)
     env = FrameSkip(env, 4)
     env = ActionScale(env)
     env = PelvisBasedObs(env)
@@ -40,12 +40,16 @@ def play_multi_episode(agent, episode_num=2, vis=False, seed=0):
     for e in range(episode_num):
         t = time.time()
         episode_reward = 0.0
-        observation = env.reset(project=False)
+        obs = env.reset(project=False)
         step = 0
         while True:
             step += 1
-            action = agent.ensemble_predict(observation)
-            observation, reward, done, info = env.step(action, project=False)
+
+            batch_obs = np.expand_dims(obs, axis=0)
+
+            action = agent.ensemble_predict(batch_obs)
+            action = np.squeeze(action, axis=0)
+            obs, reward, done, info = env.step(action, project=False)
             episode_reward += reward
             logger.info("[step/{}]reward:{}".format(step, reward))
             if done:
@@ -85,6 +89,8 @@ if __name__ == '__main__':
     }
     alg = MultiHeadDDPG(models, hyperparas)
     agent = OpenSimAgent(alg, OBS_DIM, ACT_DIM, args.ensemble_num)
+
+    agent.load_params(args.restore_model_path)
 
     play_multi_episode(
         agent, episode_num=args.episode_num, vis=args.vis, seed=args.seed)

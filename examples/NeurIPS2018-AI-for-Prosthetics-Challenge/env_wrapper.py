@@ -372,7 +372,7 @@ class TestReward(RewardShaping):
         RewardShaping.__init__(self, env)
 
     def reward_shaping(self, state_desc, r2_reward, done, action):
-        return {}
+        return {'shaping_reward': 0}
 
 
 class RunFastestReward(RewardShaping):

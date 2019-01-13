@@ -17,10 +17,13 @@ from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from parl.framework.model_base import Model
 
+
 class OpenSimModel(Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id=0, shared=True):
-        self.actor_model = ActorModel(obs_dim, vel_obs_dim, act_dim, model_id, shared)
-        self.critic_model = CriticModel(obs_dim, vel_obs_dim, act_dim, model_id, shared)
+        self.actor_model = ActorModel(obs_dim, vel_obs_dim, act_dim, model_id,
+                                      shared)
+        self.critic_model = CriticModel(obs_dim, vel_obs_dim, act_dim,
+                                        model_id, shared)
 
     def policy(self, obs):
         return self.actor_model.policy(obs)
@@ -30,6 +33,7 @@ class OpenSimModel(Model):
 
     def get_actor_params(self):
         return self.actor_model.parameter_names
+
 
 class ActorModel(Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id, shared):
@@ -47,40 +51,48 @@ class ActorModel(Model):
             scope_name = 'policy_shared'
         else:
             scope_name = 'policy_identity_{}'.format(model_id)
-        
-        self.fc0 = layers.fc(size=hid0_size,
-                             act='tanh',
-                             param_attr=ParamAttr(name='{}/h0/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/h0/b'.format(scope_name)))
-        self.fc1 = layers.fc(size=hid1_size,
-                             act='tanh',
-                             param_attr=ParamAttr(name='{}/h1/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/h1/b'.format(scope_name)))
-        self.vel_fc0 = layers.fc(size=vel_hid0_size,
-                                 act='tanh',
-                                 param_attr=ParamAttr(name='{}/vel_h0/W'.format(scope_name)),
-                                 bias_attr=ParamAttr(name='{}/vel_h0/b'.format(scope_name)))
-        self.vel_fc1 = layers.fc(size=vel_hid1_size,
-                                 act='tanh',
-                                 param_attr=ParamAttr(name='{}/vel_h1/W'.format(scope_name)),
-                                 bias_attr=ParamAttr(name='{}/vel_h1/b'.format(scope_name)))
+
+        self.fc0 = layers.fc(
+            size=hid0_size,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/h0/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/h0/b'.format(scope_name)))
+        self.fc1 = layers.fc(
+            size=hid1_size,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/h1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/h1/b'.format(scope_name)))
+        self.vel_fc0 = layers.fc(
+            size=vel_hid0_size,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/vel_h0/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/vel_h0/b'.format(scope_name)))
+        self.vel_fc1 = layers.fc(
+            size=vel_hid1_size,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/vel_h1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/vel_h1/b'.format(scope_name)))
 
         # top layers
         scope_name = 'policy_identity_{}'.format(model_id)
 
-        self.fc2 = layers.fc(size=hid2_size,
-                             act='tanh',
-                             param_attr=ParamAttr(name='{}/h2/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/h2/b'.format(scope_name)))
-        self.fc3 = layers.fc(size=act_dim,
-                             act='tanh',
-                             param_attr=ParamAttr(name='{}/means/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/means/b'.format(scope_name)))
+        self.fc2 = layers.fc(
+            size=hid2_size,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/h2/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/h2/b'.format(scope_name)))
+        self.fc3 = layers.fc(
+            size=act_dim,
+            act='tanh',
+            param_attr=ParamAttr(name='{}/means/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/means/b'.format(scope_name)))
 
     def policy(self, obs):
-        real_obs = layers.slice(obs, axes=[1], starts=[0], ends=[-self.vel_obs_dim])
+        real_obs = layers.slice(
+            obs, axes=[1], starts=[0], ends=[-self.vel_obs_dim])
         # target related fetures
-        vel_obs = layers.slice(obs, axes=[1], starts=[-self.vel_obs_dim], ends=[self.obs_dim])
+        vel_obs = layers.slice(
+            obs, axes=[1], starts=[-self.vel_obs_dim], ends=[self.obs_dim])
 
         hid0 = self.fc0(real_obs)
         hid1 = self.fc1(hid0)
@@ -88,8 +100,9 @@ class ActorModel(Model):
         vel_hid1 = self.vel_fc1(vel_hid0)
         concat = layers.concat([hid1, vel_hid1], axis=1)
         hid2 = self.fc2(concat)
-        means = self.fc3(hid2) 
+        means = self.fc3(hid2)
         return means
+
 
 class CriticModel(Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id, shared):
@@ -107,44 +120,53 @@ class CriticModel(Model):
             scope_name = 'critic_shared'
         else:
             scope_name = 'critic_identity_{}'.format(model_id)
-        
-        self.fc0 = layers.fc(size=hid0_size,
-                             act='selu',
-                             param_attr=ParamAttr(name='{}/w1/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/w1/b'.format(scope_name)))
-        self.fc1 = layers.fc(size=hid1_size,
-                             act='selu',
-                             param_attr=ParamAttr(name='{}/h1/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/h1/b'.format(scope_name)))
-        self.vel_fc0 = layers.fc(size=vel_hid0_size,
-                                 act='selu',
-                                 param_attr=ParamAttr(name='{}/vel_h0/W'.format(scope_name)),
-                                 bias_attr=ParamAttr(name='{}/vel_h0/b'.format(scope_name)))
-        self.vel_fc1 = layers.fc(size=vel_hid1_size,
-                                 act='selu',
-                                 param_attr=ParamAttr(name='{}/vel_h1/W'.format(scope_name)),
-                                 bias_attr=ParamAttr(name='{}/vel_h1/b'.format(scope_name)))
-        self.act_fc0 = layers.fc(size=hid1_size,
-                                 act='selu',
-                                 param_attr=ParamAttr(name='{}/a1/W'.format(scope_name)),
-                                 bias_attr=ParamAttr(name='{}/a1/b'.format(scope_name)))
+
+        self.fc0 = layers.fc(
+            size=hid0_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/w1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/w1/b'.format(scope_name)))
+        self.fc1 = layers.fc(
+            size=hid1_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/h1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/h1/b'.format(scope_name)))
+        self.vel_fc0 = layers.fc(
+            size=vel_hid0_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/vel_h0/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/vel_h0/b'.format(scope_name)))
+        self.vel_fc1 = layers.fc(
+            size=vel_hid1_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/vel_h1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/vel_h1/b'.format(scope_name)))
+        self.act_fc0 = layers.fc(
+            size=hid1_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/a1/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/a1/b'.format(scope_name)))
 
         # top layers
         scope_name = 'critic_identity_{}'.format(model_id)
 
-        self.fc2 = layers.fc(size=hid1_size,
-                             act='selu',
-                             param_attr=ParamAttr(name='{}/h3/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/h3/b'.format(scope_name)))
-        self.fc3 = layers.fc(size=1,
-                             act='selu',
-                             param_attr=ParamAttr(name='{}/value/W'.format(scope_name)),
-                             bias_attr=ParamAttr(name='{}/value/b'.format(scope_name)))
+        self.fc2 = layers.fc(
+            size=hid1_size,
+            act='selu',
+            param_attr=ParamAttr(name='{}/h3/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/h3/b'.format(scope_name)))
+        self.fc3 = layers.fc(
+            size=1,
+            act='selu',
+            param_attr=ParamAttr(name='{}/value/W'.format(scope_name)),
+            bias_attr=ParamAttr(name='{}/value/b'.format(scope_name)))
 
     def value(self, obs, action):
-        real_obs = layers.slice(obs, axes=[1], starts=[0], ends=[-self.vel_obs_dim])
+        real_obs = layers.slice(
+            obs, axes=[1], starts=[0], ends=[-self.vel_obs_dim])
         # target related fetures
-        vel_obs = layers.slice(obs, axes=[1], starts=[-self.vel_obs_dim], ends=[self.obs_dim])
+        vel_obs = layers.slice(
+            obs, axes=[1], starts=[-self.vel_obs_dim], ends=[self.obs_dim])
 
         hid0 = self.fc0(real_obs)
         hid1 = self.fc1(hid0)

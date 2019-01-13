@@ -6,6 +6,7 @@ This folder contains the code used to train the winning models for the [NeurIPS 
 - [paddlepaddle>=1.2.1](https://github.com/PaddlePaddle/Paddle)
 - [osim-rl](https://github.com/stanfordnmbl/osim-rl)
 - grpcio==1.12.1
+- tqdm
 - tensorflow (To use tensorboard)
 
 ## Result

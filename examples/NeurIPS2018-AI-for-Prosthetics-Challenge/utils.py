@@ -299,6 +299,9 @@ class ScalarsManager(object):
             mean_r2_reward = self.r2_reward_counter.mean
             self.summary.log_scalar('performance/recent_r2_reward',
                                     mean_r2_reward, global_step)
+            mean_nofall_r2_reward = self.nofall_r2_reward_counter.mean
+            self.summary.log_scalar('performance/recent_nofall_r2_reward',
+                                    mean_nofall_r2_reward, global_step)
 
             for key in self.vel_keys:
                 self.summary.log_scalar('scalar_vel/{}'.format(key),

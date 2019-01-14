@@ -61,7 +61,7 @@ three steps to build an agent
 
 model = AtariModel(img_shape=(32, 32), action_dim=4)
 algorithm = DQN(model)
-agent = AtariAgent(aglrotihm)
+agent = AtariAgent(algorithm)
 ```
 
 # Install:

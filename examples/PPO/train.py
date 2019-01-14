@@ -25,12 +25,11 @@ from utils import *
 def run_train_episode(env, agent, scaler):
     obs = env.reset()
     observes, actions, rewards, unscaled_obs = [], [], [], []
-    done = False
     step = 0.0
     scale, offset = scaler.get()
     scale[-1] = 1.0  # don't scale time step feature
     offset[-1] = 0.0  # don't offset time step feature
-    while not done:
+    while True:
         obs = obs.reshape((1, -1))
         obs = np.append(obs, [[step]], axis=1)  # add time step feature
         unscaled_obs.append(obs)
@@ -49,6 +48,9 @@ def run_train_episode(env, agent, scaler):
         obs, reward, done, _ = env.step(np.squeeze(action))
         rewards.append(reward)
         step += 1e-3  # increment time step feature
+
+        if done:
+            break
 
     return (np.concatenate(observes), np.concatenate(actions),
             np.array(rewards, dtype='float32'), np.concatenate(unscaled_obs))
@@ -75,6 +77,7 @@ def run_evaluate_episode(env, agent, scaler):
         rewards.append(reward)
 
         step += 1e-3  # increment time step feature
+
         if done:
             break
     return np.sum(rewards)
@@ -153,7 +156,6 @@ def main():
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env',
@@ -186,6 +188,5 @@ if __name__ == "__main__":
         default='CLIP')
 
     args = parser.parse_args()
-    import time
-    logger.set_dir('./log_dir/{}_{}'.format(args.loss_type, time.time()))
+
     main()

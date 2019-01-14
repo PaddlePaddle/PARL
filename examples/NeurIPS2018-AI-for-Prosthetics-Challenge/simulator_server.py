@@ -240,8 +240,8 @@ class SimulatorServer(simulator_pb2_grpc.SimulatorServicer):
         critic_lr = CRITIC_LR * (1.0 + 0.1 * model_idx)
 
         for T in range(TRAIN_TIMES):
-            [states, actions, rewards, dones,
-             new_states] = memory.sample_batch(BATCH_SIZE)
+            [states, actions, rewards, new_states,
+             dones] = memory.sample_batch(BATCH_SIZE)
             lock.acquire()
             critic_loss = self.agent.learn(states, actions, rewards,
                                            new_states, dones, actor_lr,

@@ -38,9 +38,9 @@ class ReplayMemory(object):
         obs = self.obs[batch_idx]
         reward = self.reward[batch_idx]
         action = self.action[batch_idx]
-        terminal = self.terminal[batch_idx]
         next_obs = self.next_obs[batch_idx]
-        return obs, action, reward, terminal, next_obs
+        terminal = self.terminal[batch_idx]
+        return obs, action, reward, next_obs, terminal
 
     def append(self, obs, act, reward, next_obs, terminal):
         if self._curr_size < self.max_size:

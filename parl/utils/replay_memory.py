@@ -34,7 +34,11 @@ class ReplayMemory(object):
         self._curr_pos = 0
 
     def sample_batch(self, batch_size):
-        batch_idx = np.random.choice(self._curr_size, size=batch_size)
+        # index mapping to avoid sampling saving example
+        batch_idx = np.random.randint(
+            self._curr_size - 300 - 1, size=batch_size)
+        batch_idx = (self._curr_pos + 300 + batch_idx) % self._curr_size
+
         obs = self.obs[batch_idx]
         reward = self.reward[batch_idx]
         action = self.action[batch_idx]

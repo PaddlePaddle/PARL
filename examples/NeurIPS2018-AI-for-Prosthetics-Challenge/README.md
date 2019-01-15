@@ -2,7 +2,7 @@
 <p align="center">
 <img src="image/competition.png" alt="PARL" width="800"/>
 </p>
-This folder contains the competitive solution of team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submitted model, a sensible controller that can follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
+This folder contains the competitive solution of our team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submitted model, a sensible controller that can follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
 
 For more technical details about our solution, we provide:
 1. [[Link]](https://youtu.be/RT4JdMsZaTE) An interesting video demonstrating the training process visually.
@@ -21,7 +21,7 @@ For more technical details about our solution, we provide:
 - tqdm
 - tensorflow (To use tensorboard)
 
-## Part1: Final submited model
+## Part1: Final submitted model
 ### Result
 For final submission, we test our model in 500 CPUs, running 10 episodes per CPU with different random seeds.
 
@@ -29,7 +29,7 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 |----------------------------|---------------------------------|------------|-------------------|
 | 9968.5404                  | 9980.3952                       | 0.0026     | 5000              |
 
-### Start test our submit models
+### Test
 - How to Run
 
   1. Enter the sub-folder `final_submit`
@@ -99,7 +99,7 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
            --act_penalty_lowerbound 0.6
 ```
 
-### Part3: Training in random velocity environment for round2 evaluation
+## Part3: Training in random velocity environment for round2 evaluation
 As mentioned before, the selection of model that used to fine-tune influence later training. For those who can not obtain expected performance by former steps, a pre-trained model that walk naturally at 1.25m/s is provided. ([Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7))
 
 ```bash

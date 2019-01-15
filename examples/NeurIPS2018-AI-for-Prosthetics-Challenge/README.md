@@ -38,7 +38,15 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 
 ## Part2: Curriculum learning
 
+<p align="center">
+<img src="image/curriculum-learning.png" alt="PARL" width="500"/>
+</p>
+
 #### 1. Target: Run as fast as possible
+
+<p align="center">
+<img src="image/fastest.png" alt="PARL" width="800"/>
+</p>
 
 ```bash
 # server
@@ -73,6 +81,10 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
 ```
 
 #### 4. target: walk slowly at 1.25 m/s
+
+<p align="center">
+<img src="image/last course.png" alt="PARL" width="800"/>
+</p>
 
 ```bash
 # server

@@ -4,8 +4,10 @@ This folder contains the competitive solution of team `Firework`, who have won t
 
 For more technical details about our solution, we provide:
 1. [[Link]](https://youtu.be/RT4JdMsZaTE) An interesting video demonstrating the training process visually.
-2. [[Link]](https://docs.google.com/presentation/d/1n9nTfn3EAuw2Z7JichqMMHB1VzNKMgExLJHtS4VwMJg/edit?usp=sharing) A PowerPoint Presentation to briefly introduce our solution in NeurIPS2018 competition workshop.
-3. (coming soon)A full academic paper to describe our solution in detail.
+2. [[Link]](https://docs.google.com/presentation/d/1n9nTfn3EAuw2Z7JichqMMHB1VzNKMgExLJHtS4VwMJg/edit?usp=sharing) A PowerPoint Presentation briefly introducing our solution in NeurIPS2018 competition workshop.
+3. (coming soon)A full academic paper detailing our solution, including entire training pipline, related work and experiments that analyze the importance of each key ingredient.
+
+
 
 ## Dependencies
 - python3.6
@@ -15,28 +17,25 @@ For more technical details about our solution, we provide:
 - tqdm
 - tensorflow (To use tensorboard)
 
-## Result
+## Part1: Final submited model
+### Result
+For final submission, we test our model in 500 CPUs, running 10 episodes per CPU with different random seeds.
 
 | Avg reward of all episodes | Avg reward of complete episodes | Falldown % | Evaluate episodes |
 |----------------------------|---------------------------------|------------|-------------------|
-| 9968.5404                  | 9980.3952                       | 0.0026     | 500 CPUs * 10 episodes              |
+| 9968.5404                  | 9980.3952                       | 0.0026     | 5000              |
 
-## Start test our submit models
+### Start test our submit models
 - How to Run
 
-```bash
-# cd current directory
-# cd final_submit/
-# download submit models file (saved_model.tar.gz)
-tar zxvf saved_model.tar.gz
-python test.py
-```
-> You can download models file from [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3)
+  1. enter the sub-folder `final_submit`
+  2. get the model file from online stroage service, [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3) 
+  3. unpack the file by using: 
+           `tar zxvf saved_model.tar.gz`
+  4. launch test scription: 
+           `python test.py`
 
-
-## Start train
-
-### Stage I: Curriculum learning
+## Part2: Curriculum learning
 
 #### 1. Run Fastest
 
@@ -84,9 +83,9 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
            --act_penalty_lowerbound 0.6
 ```
 
-### Stage II: Round2
+### Part3: Training in random velocity environment in round2
 
-> You can download resulting 1.25m/s model in Stage I from [Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7)
+> You can download 1.25m/s model in Stage I from [Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7)
 
 ```bash
 # server

@@ -1,6 +1,12 @@
 # The Winning Solution for the NeurIPS 2018: AI for Prosthetics Challenge
 
-This folder contains the code used to train the winning models for the [NeurIPS 2018: AI for Prosthetics Challenge](https://www.crowdai.org/challenges/neurips-2018-ai-for-prosthetics-challenge) along with the resulting models.
+This folder contains the competitive solution of team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submited model, a sensible controller that is able to follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
+
+For more technical details about our solution, we provide:
+1. [[Link]](https://youtu.be/RT4JdMsZaTE) An interesting video demonstrating the training process visually.
+2. [[Link]](https://docs.google.com/presentation/d/1n9nTfn3EAuw2Z7JichqMMHB1VzNKMgExLJHtS4VwMJg/edit?usp=sharing) A PowerPoint Presentation to briefly introduce our solution in NeurIPS2018 competition workshop.
+3. (coming soon)A full academic paper to describe our solution in detail.
+
 ## Dependencies
 - python3.6
 - [paddlepaddle>=1.2.1](https://github.com/PaddlePaddle/Paddle)

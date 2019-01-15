@@ -13,218 +13,41 @@
 # limitations under the License.
 
 import abc
+import copy
 import gym
 import math
 import numpy as np
-import random
 from collections import OrderedDict
 from osim.env import ProstheticsEnv
 from parl.utils import logger
-from tqdm import tqdm
 
 MAXTIME_LIMIT = 1000
 ProstheticsEnv.time_limit = MAXTIME_LIMIT
 FRAME_SKIP = None
+FALL_PENALTY = 0
 
 
-class CustomR2Env(gym.Wrapper):
-    """Customized target trajectory here, it support 3 ways currently
-        1.fixed_speed, e.g. reset(.., fixed_speed=1.25)
-        2.stage , e.g. reset(.., stage=1)
-        3.boundary, e.g. reset(.., boundary=True)
-    """
-
-    def __init__(self,
-                 env,
-                 time_limit=MAXTIME_LIMIT,
-                 discrete_data=False,
-                 discrete_bin=10):
-        logger.info("[CustomR2Env]type:{}, time_limit:{}".format(
-            type(env), time_limit))
-        assert isinstance(env, ProstheticsEnv), type(env)
+class RemoteEnv(gym.Wrapper):
+    def __init__(self, env):
+        env.metadata = {}
+        env.action_space = None
+        env.observation_space = None
+        env.reward_range = None
         gym.Wrapper.__init__(self, env)
+        self.remote_env = env
+        self.first_time = True
 
-        self.env.time_limit = time_limit
-        self.env.spec.timestep_limit = time_limit
-        self.time_limit = time_limit
+    def step(self, act):
+        return self.remote_env.env_step(act.tolist())
 
-        # boundary flag
-        self._generate_boundary_target_flag = True
-
-        self.discrete_data = discrete_data
-        self.discrete_bin = discrete_bin
-
-    def rect(self, row):
-        r = row[0]
-        theta = row[1]
-        x = r * math.cos(theta)
-        y = 0
-        z = r * math.sin(theta)
-        return np.array([x, y, z])
-
-    def _generate_boundary_table(self, ):
-        possible_combine = [(math.pi / 8, 0.5), (math.pi / 8, -0.5),
-                            (-math.pi / 8, 0.5), (-math.pi / 8, -0.5)]
-        self._boundary_table = []
-        for a in possible_combine:
-            for b in possible_combine:
-                for c in possible_combine:
-                    self._boundary_table.append([a, b, c])
-        assert len(self._boundary_table) == 64
-
-    def generate_boundary_target(self, poisson_lambda=300):
-        if self._generate_boundary_target_flag == True:
-            self._generate_boundary_target_flag = False
-            self._generate_boundary_table()
-            self._boundary_index = 0
-        nsteps = self.time_limit + 1
-        velocity = np.zeros(nsteps)
-        heading = np.zeros(nsteps)
-
-        velocity[0] = 1.25
-        heading[0] = 0
-        trajectory = self._boundary_table[self._boundary_index]
-
-        change = np.cumsum(np.random.poisson(poisson_lambda, 10))
-        target_change_times = 0
-        for i in range(1, nsteps):
-            velocity[i] = velocity[i - 1]
-            heading[i] = heading[i - 1]
-            if i in change:
-                velocity[i] += trajectory[target_change_times][1]
-                heading[i] += trajectory[target_change_times][0]
-                # trajectory has length 3, the target_change_times should not be large than 2
-                target_change_times = min(2, target_change_times + 1)
-
-        self._boundary_index = (self._boundary_index + 1) % 64
-
-    def _generate_target_vel(self, stage, change_num):
-        target_vels = None
-        if stage == 0:
-            target_vels = [1.25]
-        elif stage == 1:
-            assert change_num >= 1
-            interval = 1.0 / self.discrete_bin
-            discrete_id = np.random.randint(self.discrete_bin)
-
-            min_vel = 0.75 + discrete_id * interval
-            max_vel = 0.75 + (discrete_id + 1) * interval
-
-            target_vels = [1.25]
-            for i in range(change_num):
-                if i == 0:
-                    target_vels.append(random.uniform(min_vel, max_vel))
-                else:
-                    target_vels.append(target_vels[-1] +
-                                       random.uniform(-0.5, 0.5))
-        elif stage == 2:
-            assert change_num >= 2
-            interval = 2.0 / self.discrete_bin
-            discrete_id = np.random.randint(self.discrete_bin)
-            min_vel = 0.25 + discrete_id * interval
-            max_vel = 0.25 + (discrete_id + 1) * interval
-            while True:
-                target_vels = [1.25]
-                for i in range(change_num):
-                    target_vels.append(target_vels[-1] +
-                                       random.uniform(-0.5, 0.5))
-                if target_vels[2] >= min_vel and target_vels[2] <= max_vel:
-                    break
-        elif stage == 3:
-            assert change_num >= 3
-            interval = 3.0 / self.discrete_bin
-            discrete_id = np.random.randint(self.discrete_bin)
-            min_vel = -0.25 + discrete_id * interval
-            max_vel = -0.25 + (discrete_id + 1) * interval
-            while True:
-                target_vels = [1.25]
-                for i in range(change_num):
-                    target_vels.append(target_vels[-1] +
-                                       random.uniform(-0.5, 0.5))
-                if target_vels[3] >= min_vel and target_vels[3] <= max_vel:
-                    break
-        else:
-            raise NotImplemented
-        logger.info('[CustomR2Env] stage: {}, target_vels: {}'.format(
-            stage, target_vels))
-        return target_vels
-
-    def generate_stage_targets(self, poisson_lambda=300, stage=None):
-        nsteps = self.time_limit + 1
-        velocity = np.zeros(nsteps)
-        heading = np.zeros(nsteps)
-
-        velocity[0] = 1.25
-        heading[0] = 0
-
-        change = np.cumsum(np.random.poisson(poisson_lambda, 10))
-        if stage == 0:
-            change = []
-        elif stage == 1:
-            change = change[:1]
-        elif stage == 2:
-            change = change[:2]
-        elif stage == 3:
-            if change[3] <= 1000:
-                change = change[:4]
-            else:
-                change = change[:3]
-        else:
-            raise NotImplemented
-
-        if self.discrete_data:
-            target_vels = self._generate_target_vel(
-                stage=stage, change_num=len(change))
-
-        change_cnt = 0
-        for i in range(1, nsteps):
-            velocity[i] = velocity[i - 1]
-            heading[i] = heading[i - 1]
-
-            if i in change:
-                change_cnt += 1
-                if self.discrete_data:
-                    velocity[i] = target_vels[change_cnt]
-                else:
-                    velocity[i] += random.choice([-1, 1]) * random.uniform(
-                        -0.5, 0.5)
-                heading[i] += random.choice([-1, 1]) * random.uniform(
-                    -math.pi / 8, math.pi / 8)
-
-        trajectory_polar = np.vstack((velocity, heading)).transpose()
-        targets = np.apply_along_axis(self.rect, 1, trajectory_polar)
-        return targets
-
-    def reset(self, **kwargs):
-        fixed_speed = None
-        if 'fixed_speed' in kwargs:
-            fixed_speed = kwargs.pop('fixed_speed', None)
-        stage = None
-        if 'stage' in kwargs:
-            stage = kwargs.pop('stage', None)
-        boundary = None
-        if 'boundary' in kwargs:
-            boundary = kwargs.pop('boundary', None)
-        _ = self.env.reset(**kwargs)
-        if fixed_speed is not None:
-            targets = np.zeros([self.time_limit + 1, 3], dtype=np.float32)
-            targets[:, 0] = fixed_speed
-            self.env.targets = targets
-        elif stage is not None:
-            self.env.targets = self.generate_stage_targets(stage=stage)
-        elif boundary is not None:
-            self.generate_boundary_target()
-        else:
-            # generate new target
-            self.env.generate_new_targets(
-                poisson_lambda=int(self.time_limit * (300 / 1000)))
-        if 'project' in kwargs:
-            if kwargs.get('project') == True:
-                return self.env.get_observation()
-        return self.env.get_state_desc()
-
-    def step(self, action, **kwargs):
-        return self.env.step(action, **kwargs)
+    def reset(self):
+        if self.first_time:
+            self.first_time = False
+            return self.remote_env.env_create()
+        obs = self.remote_env.env_reset()
+        if not obs:
+            return None
+        return obs
 
 
 def calc_vel_diff(state_desc):
@@ -262,7 +85,6 @@ class ActionScale(gym.Wrapper):
 
 class FrameSkip(gym.Wrapper):
     def __init__(self, env, k):
-        logger.info("[FrameSkip]type:{}".format(type(env)))
         gym.Wrapper.__init__(self, env)
         self.frame_skip = k
         global FRAME_SKIP
@@ -281,13 +103,13 @@ class FrameSkip(gym.Wrapper):
                 if 'reward' in key:
                     # to assure that we don't igonre other reward
                     # if new reward was added, consider its logic here
-                    assert (key == 'shaping_reward') or (
-                        key == 'r2_reward') or (key == 'x_offset_reward')
+                    assert (key == 'shaping_reward') or (key == 'r2_reward')
                     merge_info[key] = merge_info.get(key, 0.0) + info[key]
                 else:
                     merge_info[key] = info[key]
 
             if info['target_changed']:
+                #merge_info['shaping_reward'] += info['shaping_reward'] * (self.frame_skip - k - 1)
                 logger.warn("[FrameSkip] early break since target was changed")
                 break
 
@@ -306,8 +128,6 @@ class RewardShaping(gym.Wrapper):
 
     def __init__(self, env):
         logger.info("[RewardShaping]type:{}".format(type(env)))
-        assert (isinstance(env, ProstheticsEnv)
-                or isinstance(env, CustomR2Env)), type(env)
 
         self.step_count = 0
         self.pre_state_desc = None
@@ -330,7 +150,25 @@ class RewardShaping(gym.Wrapper):
         self.step_count += 1
         obs, r, done, info = self.env.step(action, **kwargs)
         info = self.reward_shaping(obs, r, done, action)
-        #logger.info('Step {}: target_vel: {}'.format(self.step_count, obs['target_vel']))
+        if info['target_vel'] > 2.75:
+            rate = math.sqrt((2.75**2) / (info['target_vel']**2))
+            logger.warn('Changing targets, origin targets: {}'.format(
+                obs['target_vel']))
+            obs['target_vel'][0] = obs['target_vel'][0] * rate
+            obs['target_vel'][2] = obs['target_vel'][2] * rate
+            logger.warn('Changing targets, new targets: {}'.format(
+                obs['target_vel']))
+            info['target_vel'] = 2.75
+        if info['target_vel'] < -0.25:
+            rate = math.sqrt(((-0.25)**2) / (info['target_vel']**2))
+            logger.warn('Changing targets, origin targets: {}'.format(
+                obs['target_vel']))
+            obs['target_vel'][0] = obs['target_vel'][0] * rate
+            obs['target_vel'][2] = obs['target_vel'][2] * rate
+            logger.warn('Changing targets, new targets: {}'.format(
+                obs['target_vel']))
+            info['target_vel'] = -0.25
+
         delta = 0
         if self.last_target_vel is not None:
             delta = np.absolute(
@@ -350,7 +188,9 @@ class RewardShaping(gym.Wrapper):
         timeout = False
         if self.step_count >= MAXTIME_LIMIT:
             timeout = True
-
+        if done and not timeout:
+            # penalty for falling down
+            info['shaping_reward'] += FALL_PENALTY
         info['timeout'] = timeout
         self.pre_state_desc = obs
         return obs, r, done, info
@@ -365,182 +205,31 @@ class RewardShaping(gym.Wrapper):
         return obs
 
 
-class TestReward(RewardShaping):
-    """ Reward shaping wrapper for test"""
+class ForwardReward(RewardShaping):
+    """ A reward shaping wraper"""
 
     def __init__(self, env):
         RewardShaping.__init__(self, env)
 
     def reward_shaping(self, state_desc, r2_reward, done, action):
-        return {'shaping_reward': 0}
-
-
-class RunFastestReward(RewardShaping):
-    """ Reward shaping wrapper for fixed target speed"""
-
-    def __init__(self, env):
-        RewardShaping.__init__(self, env)
-
-    def reward_shaping(self, state_desc, r2_reward, done, action):
-        if self.pre_state_desc is None:
-            x_offset = 0
-        else:
-            x_offset = state_desc["body_pos"]["pelvis"][
-                0] - self.pre_state_desc["body_pos"]["pelvis"][0]
-
-        ret_r = 0
-        if self.pre_state_desc is not None:
-            l_foot_reward = state_desc["body_pos"]["tibia_l"][
-                0] - self.pre_state_desc["body_pos"]["tibia_l"][0]
-            r_foot_reward = state_desc["body_pos"]["pros_tibia_r"][
-                0] - self.pre_state_desc["body_pos"]["pros_tibia_r"][0]
-            ret_r = max(l_foot_reward, r_foot_reward)
-
-        # penalty
-        headx = state_desc['body_pos']['head'][0]
-        px = state_desc['body_pos']['pelvis'][0]
-        headz = state_desc['body_pos']['head'][2]
-        pz = state_desc['body_pos']['pelvis'][2]
-        kneer = state_desc['joint_pos']['knee_r'][-1]
-        kneel = state_desc['joint_pos']['knee_l'][-1]
-        lean_x = min(0.3, max(0, px - headx - 0.15)) * 0.05
-        lean_z = min(0.3, max(0, pz - headz - 0.15)) * 0.05
-        joint = sum([max(0, k - 0.1) for k in [kneer, kneel]]) * 0.03
-        penalty = lean_x + lean_z + joint
-
-        ret_r -= penalty * 0.15
-
-        cur_vel_x = state_desc['body_vel']['pelvis'][0]
-        cur_vel_z = state_desc['body_vel']['pelvis'][2]
-        scalar_vel = math.sqrt(cur_vel_z**2 + cur_vel_x**2)
+        target_vel = math.sqrt(state_desc["target_vel"][0]**2 +
+                               state_desc["target_vel"][2]**2)
+        if state_desc["target_vel"][0] < 0:
+            target_vel = -target_vel
 
         info = {
-            'shaping_reward': ret_r,
+            'shaping_reward': r2_reward,
+            'target_vel': target_vel,
             'r2_reward': r2_reward,
-            'x_offset_reward': x_offset,
-            'scalar_vel': scalar_vel,
-            'mean_action_l2_penalty': 0,
-        }
-        return info
-
-
-class FixedTargetSpeedReward(RewardShaping):
-    """ Reward shaping wrapper for fixed target speed"""
-
-    def __init__(self, env, target_v, act_penalty_lowerbound,
-                 act_penalty_coeff, vel_penalty_coeff):
-        RewardShaping.__init__(self, env)
-
-        assert target_v is not None
-        assert act_penalty_lowerbound is not None
-        assert act_penalty_coeff is not None
-        assert vel_penalty_coeff is not None
-
-        self.target_v = target_v
-        self.act_penalty_lowerbound = act_penalty_lowerbound
-        self.act_penalty_coeff = act_penalty_coeff
-        self.vel_penalty_coeff = vel_penalty_coeff
-
-    def reward_shaping(self, state_desc, r2_reward, done, action):
-        if self.pre_state_desc is None:
-            x_offset = 0
-        else:
-            x_offset = state_desc["body_pos"]["pelvis"][
-                0] - self.pre_state_desc["body_pos"]["pelvis"][0]
-
-        # Reward for not falling
-        ret_r = 36
-
-        vel_penalty = ((state_desc["body_vel"]["pelvis"][0] - self.target_v)**2
-                       + (state_desc["body_vel"]["pelvis"][2] - 0)**2)
-
-        origin_action_l2_penalty = np.linalg.norm(action)
-        action_l2_penalty = max(self.act_penalty_lowerbound,
-                                origin_action_l2_penalty)
-
-        ret_r = ret_r - vel_penalty * self.vel_penalty_coeff - action_l2_penalty * self.act_penalty_coeff
-
-        cur_vel_x = state_desc['body_vel']['pelvis'][0]
-        cur_vel_z = state_desc['body_vel']['pelvis'][2]
-        scalar_vel = math.sqrt(cur_vel_z**2 + cur_vel_x**2)
-
-        info = {
-            'shaping_reward': ret_r,
-            'r2_reward': r2_reward,
-            'x_offset_reward': x_offset,
-            'scalar_vel': scalar_vel,
-            'mean_action_l2_penalty': origin_action_l2_penalty,
-        }
-        return info
-
-
-class Round2Reward(RewardShaping):
-    """ Reward shaping wrapper for fixed target speed"""
-
-    def __init__(self, env, act_penalty_lowerbound, act_penalty_coeff,
-                 vel_penalty_coeff):
-        RewardShaping.__init__(self, env)
-
-        assert act_penalty_lowerbound is not None
-        assert act_penalty_coeff is not None
-        assert vel_penalty_coeff is not None
-
-        self.act_penalty_lowerbound = act_penalty_lowerbound
-        self.act_penalty_coeff = act_penalty_coeff
-        self.vel_penalty_coeff = vel_penalty_coeff
-
-    def reward_shaping(self, state_desc, r2_reward, done, action):
-        if self.pre_state_desc is None:
-            x_offset = 0
-        else:
-            x_offset = state_desc["body_pos"]["pelvis"][
-                0] - self.pre_state_desc["body_pos"]["pelvis"][0]
-
-        # Reward for not falling
-        ret_r = 10
-
-        # Small penalty for too much activation (cost of transport)
-        muscle_activations = []
-        for muscle in sorted(state_desc["muscles"].keys()):
-            muscle_activations += [state_desc["muscles"][muscle]["activation"]]
-        muscle_penalty = np.sum(np.array(muscle_activations)**2) * 0.001
-
-        vel_penalty = (
-            (state_desc["target_vel"][0] - state_desc["body_vel"]["pelvis"][0])
-            **2 + (state_desc["target_vel"][2] -
-                   state_desc["body_vel"]["pelvis"][2])**2)
-
-        origin_action_l2_penalty = np.linalg.norm(action)
-        action_l2_penalty = max(self.act_penalty_lowerbound,
-                                origin_action_l2_penalty)
-
-        if self.step_count < 60 or (
-                self.step_count - self.last_target_change_step < 60):
-            ret_r = ret_r - vel_penalty * self.vel_penalty_coeff
-        else:
-            ret_r = ret_r - vel_penalty * self.vel_penalty_coeff - action_l2_penalty * self.act_penalty_coeff
-
-        ret_r -= muscle_penalty
-
-        cur_vel_x = state_desc['body_vel']['pelvis'][0]
-        cur_vel_z = state_desc['body_vel']['pelvis'][2]
-        scalar_vel = math.sqrt(cur_vel_z**2 + cur_vel_x**2)
-
-        info = {
-            'shaping_reward': ret_r,
-            'r2_reward': r2_reward,
-            'x_offset_reward': x_offset,
-            'scalar_vel': scalar_vel,
-            'mean_action_l2_penalty': origin_action_l2_penalty,
         }
         return info
 
 
 class ObsTranformerBase(gym.Wrapper):
     def __init__(self, env):
-        logger.info("[ObsTranformerBase]type:{}".format(type(env)))
         gym.Wrapper.__init__(self, env)
         self.step_fea = MAXTIME_LIMIT
+        self.raw_obs = None
         global FRAME_SKIP
         self.frame_skip = int(FRAME_SKIP)
 
@@ -579,13 +268,19 @@ class ObsTranformerBase(gym.Wrapper):
 
         self.step_fea -= FRAME_SKIP
 
+        self.raw_obs = copy.deepcopy(obs)
         obs = self.get_observation(obs)
+        self.raw_obs['step_count'] = MAXTIME_LIMIT - self.step_fea
         return obs, r, done, info
 
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
+        if obs is None:
+            return None
         self.step_fea = MAXTIME_LIMIT
+        self.raw_obs = copy.deepcopy(obs)
         obs = self.get_observation(obs)
+        self.raw_obs['step_count'] = MAXTIME_LIMIT - self.step_fea
         return obs
 
 
@@ -726,6 +421,7 @@ class PelvisBasedObs(ObsTranformerBase):
         res = np.append(res, feet_dis)
         remaining_time = (self.step_fea -
                           (MAXTIME_LIMIT / 2.0)) / (MAXTIME_LIMIT / 2.0) * -1.0
+        #logger.info('remaining_time fea: {}'.format(remaining_time))
         res = np.append(res, remaining_time)
 
         # target driven
@@ -754,10 +450,9 @@ if __name__ == '__main__':
 
     env = ProstheticsEnv(visualize=False)
     env.change_model(model='3D', difficulty=1, prosthetic=True)
-    env = CustomR2Env(env)
-    env = RunFastestReward(env)
+    env = ForwardReward(env)
     env = FrameSkip(env, 4)
     env = ActionScale(env)
     env = PelvisBasedObs(env)
     for i in range(64):
-        observation = env.reset(project=False, stage=0)
+        observation = env.reset(project=False)

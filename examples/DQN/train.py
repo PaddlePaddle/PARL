@@ -64,8 +64,9 @@ def run_train_episode(env, agent, rpm):
         state = next_state
         if isOver:
             break
-    logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
-        total_reward, np.mean(all_cost)))
+    if all_cost:
+        logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
+            total_reward, np.mean(all_cost)))
     return total_reward, step
 
 
@@ -122,7 +123,7 @@ def main():
         if total_step // args.test_every_steps == test_flag:
             pbar.write("testing")
             eval_rewards = []
-            for _ in tqdm(range(30), desc='eval agent'):
+            for _ in tqdm(range(3), desc='eval agent'):
                 eval_reward = run_evaluate_episode(test_env, agent)
                 eval_rewards.append(eval_reward)
             test_flag += 1

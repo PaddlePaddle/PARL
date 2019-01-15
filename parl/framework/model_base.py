@@ -27,13 +27,19 @@ class Network(object):
     A Network is an unordered set of LayerFuncs or Networks.
     """
 
-    def sync_params_to(self, target_net, gpu_id=0, decay=0.0):
+    def sync_params_to(self,
+                       target_net,
+                       gpu_id=0,
+                       decay=0.0,
+                       share_vars_parallel_executor=None):
         """
         Args:
             target_net: Network object deepcopy from source network
             gpu_id: gpu id of target_net 
             decay: Float. The decay to use. 
                    target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
+            share_vars_parallel_executor: if not None, will use fluid.ParallelExecutor 
+                                          to run program instead of fluid.Executor
         """
         args_hash_id = hashlib.md5('{}_{}_{}'.format(
             id(target_net), gpu_id, decay).encode('utf-8')).hexdigest()
@@ -59,9 +65,6 @@ class Network(object):
 
             param_pairs = get_parameter_pairs(self, target_net)
 
-            place = fluid.CPUPlace() if gpu_id < 0 \
-                    else fluid.CUDAPlace(gpu_id)
-            self._cached_fluid_executor = fluid.Executor(place)
             self._cached_sync_params_program = fluid.Program()
 
             with fluid.program_guard(self._cached_sync_params_program):
@@ -71,7 +74,34 @@ class Network(object):
                     fluid.layers.assign(
                         decay * target_var + (1 - decay) * src_var, target_var)
 
-        self._cached_fluid_executor.run(self._cached_sync_params_program)
+            if share_vars_parallel_executor is None:
+                # use fluid.Executor
+                place = fluid.CPUPlace() if gpu_id < 0 \
+                        else fluid.CUDAPlace(gpu_id)
+                self._cached_fluid_executor = fluid.Executor(place)
+            else:
+                # use fluid.ParallelExecutor
+                use_cuda = True if gpu_id >= 0 else False
+
+                # specify strategy to make ParallelExecutor run faster
+                exec_strategy = fluid.ExecutionStrategy()
+                exec_strategy.use_experimental_executor = True
+                exec_strategy.num_threads = 4
+                build_strategy = fluid.BuildStrategy()
+                build_strategy.remove_unnecessary_lock = True
+
+                with fluid.scope_guard(fluid.global_scope().new_scope()):
+                    self._cached_fluid_executor = fluid.ParallelExecutor(
+                        use_cuda=use_cuda,
+                        main_program=self._cached_sync_params_program,
+                        share_vars_from=share_vars_parallel_executor,
+                        exec_strategy=exec_strategy,
+                        build_strategy=build_strategy,
+                    )
+        if share_vars_parallel_executor is None:
+            self._cached_fluid_executor.run(self._cached_sync_params_program)
+        else:
+            self._cached_fluid_executor.run(fetch_list=[])
 
     @property
     def parameter_names(self):

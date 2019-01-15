@@ -101,7 +101,10 @@ for level in _LOGGING_LEVEL:
 def _set_file(path):
     global _FILE_HANDLER
     if os.path.isfile(path):
-        os.remove(path)
+        try:
+            os.remove(path)
+        except OSError:
+            pass
     hdl = logging.FileHandler(filename=path, encoding='utf-8', mode='w')
     hdl.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
 

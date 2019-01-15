@@ -19,12 +19,10 @@ import time
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.algorithms import DDPG
-from parl.utils import logger, action_mapping
-from replay_memory import ReplayMemory
+from parl.utils import logger, action_mapping, ReplayMemory
 
 MAX_EPISODES = 5000
-TEST_EVERY_EPISODES = 50
-MAX_STEPS_EACH_EPISODE = 1000
+TEST_EVERY_EPISODES = 20
 ACTOR_LR = 1e-4
 CRITIC_LR = 1e-3
 GAMMA = 0.99
@@ -39,7 +37,7 @@ ENV_SEED = 1
 def run_train_episode(env, agent, rpm):
     obs = env.reset()
     total_reward = 0
-    for j in range(MAX_STEPS_EACH_EPISODE):
+    while True:
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
@@ -70,7 +68,7 @@ def run_train_episode(env, agent, rpm):
 def run_evaluate_episode(env, agent):
     obs = env.reset()
     total_reward = 0
-    for j in range(MAX_STEPS_EACH_EPISODE):
+    while True:
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
@@ -112,7 +110,8 @@ def main():
         logger.info('Episode: {} Reward: {}'.format(i, train_reward))
         if (i + 1) % TEST_EVERY_EPISODES == 0:
             evaluate_reward = run_evaluate_episode(env, agent)
-            logger.info('Evaluate Reward: {}'.format(evaluate_reward))
+            logger.info('Episode {}, Evaluate reward: {}'.format(
+                i, evaluate_reward))
 
 
 if __name__ == '__main__':

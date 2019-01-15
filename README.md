@@ -61,13 +61,13 @@ three steps to build an agent
 
 model = AtariModel(img_shape=(32, 32), action_dim=4)
 algorithm = DQN(model)
-agent = AtariAgent(aglrotihm)
+agent = AtariAgent(algorithm)
 ```
 
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.0 (We try to make our repository always compatible with newest version PaddlePaddle)  
+- PaddlePaddle >=1.2.1 (We try to make our repository always compatible with newest version PaddlePaddle)  
 
 
 ```

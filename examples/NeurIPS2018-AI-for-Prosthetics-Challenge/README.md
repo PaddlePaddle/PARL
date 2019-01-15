@@ -1,13 +1,13 @@
 # The Winning Solution for the NeurIPS 2018: AI for Prosthetics Challenge
 
-This folder contains the competitive solution of team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submited model, a sensible controller that is able to follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
+This folder contains the competitive solution of team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submitted model, a sensible controller that can follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
 
 For more technical details about our solution, we provide:
 1. [[Link]](https://youtu.be/RT4JdMsZaTE) An interesting video demonstrating the training process visually.
 2. [[Link]](https://docs.google.com/presentation/d/1n9nTfn3EAuw2Z7JichqMMHB1VzNKMgExLJHtS4VwMJg/edit?usp=sharing) A PowerPoint Presentation briefly introducing our solution in NeurIPS2018 competition workshop.
 3. (coming soon)A full academic paper detailing our solution, including entire training pipline, related work and experiments that analyze the importance of each key ingredient.
 
-**Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each traning sub-task for three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from different people.
+**Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each training sub-task three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from different people.
 
 
 ## Dependencies
@@ -85,8 +85,7 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
 ```
 
 ### Part3: Training in random velocity environment in round2
-
-> You can download 1.25m/s model in Stage I from [Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7)
+As mentioned before, the selection of model that used to fine-tune influence later training. For those who can not obtain expected performance by former steps, a pre-trained model that walk naturally at 1.25m/s is provided. ([Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7))
 
 ```bash
 # server
@@ -98,10 +97,11 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type Round2 --act_pe
            --act_penalty_coeff 7.0 --vel_penalty_coeff 20.0 --discrete_data --stage 3
 ```
 
-> To get a higher score, you need train a seperate model for every stage (target_v change times), and fix trained model of previous stage. It's omitted here.
-
 ### Test trained model
 
 ```bash
 python test.py --restore_model_path [MODEL_PATH] --ensemble_num [ENSEMBLE_NUM]
 ```
+
+### other implementation details
+Following the above steps correctly, you can get an agent that can scores around 9960 in round2. Its performance is slightly poorer than our final submitted model. The score gap results from optimizing launch action. To get better performance, an independent model called launch model, is only trained to walk at 1.25m/s from a standing position. Then we fix the launch model and train a new controller for the subsequent chanllege. We do not provide this part of the code, since it reduces the readability of the code. Feel free to post issue if you have any problem:)

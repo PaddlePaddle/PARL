@@ -5,6 +5,7 @@ This folder contains the competitive solution of team `Firework`, who have won t
 For more technical details about our solution, we provide:
 1. [[Link]](https://youtu.be/RT4JdMsZaTE) An interesting video demonstrating the training process visually.
 2. [[Link]](https://docs.google.com/presentation/d/1n9nTfn3EAuw2Z7JichqMMHB1VzNKMgExLJHtS4VwMJg/edit?usp=sharing) A PowerPoint Presentation briefly introducing our solution in NeurIPS2018 competition workshop.
+3. [[Link]](https://drive.google.com/file/d/1W-FmbJu4_8KmwMIzH0GwaFKZ0z1jg_u0/view?usp=sharing) A poster briefly introducing our solution in NeurIPS2018 competition workshop.
 3. (coming soon)A full academic paper detailing our solution, including entire training pipline, related work and experiments that analyze the importance of each key ingredient.
 
 **Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each training sub-task three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from different people.
@@ -38,7 +39,15 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 
 ## Part2: Curriculum learning
 
+<p align="center">
+<img src="image/curriculum-learning.png" alt="PARL" width="500"/>
+</p>
+
 #### 1. Target: Run as fast as possible
+
+<p align="center">
+<img src="image/fastest.png" alt="PARL" width="800"/>
+</p>
 
 ```bash
 # server
@@ -73,6 +82,10 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
 ```
 
 #### 4. target: walk slowly at 1.25 m/s
+
+<p align="center">
+<img src="image/last course.png" alt="PARL" width="800"/>
+</p>
 
 ```bash
 # server

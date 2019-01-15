@@ -38,7 +38,7 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 
 ## Part2: Curriculum learning
 
-#### 1. Run Fastest
+#### 1. Target: Run as fast as possible
 
 ```bash
 # server
@@ -48,7 +48,7 @@ python simulator_server.py --port [PORT] --ensemble_num 1
 python simulator_client.py --port [PORT] --ip [IP] --reward_type RunFastest
 ```
 
-#### 2. target speed 3.0 m/s
+#### 2. Target: run at 3.0 m/s
 
 ```bash
 # server
@@ -60,7 +60,7 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
            --act_penalty_lowerbound 1.5 
 ```
 
-#### 3. target speed 2.0 m/s
+#### 3. target: walk at 2.0 m/s
 
 ```bash
 # server
@@ -72,7 +72,7 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
            --act_penalty_lowerbound 0.75 
 ```
 
-#### 4. target speed 1.25 m/s
+#### 4. target: walk slowly at 1.25 m/s
 
 ```bash
 # server
@@ -84,7 +84,7 @@ python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpee
            --act_penalty_lowerbound 0.6
 ```
 
-### Part3: Training in random velocity environment in round2
+### Part3: Training in random velocity environment for round2 evaluation
 As mentioned before, the selection of model that used to fine-tune influence later training. For those who can not obtain expected performance by former steps, a pre-trained model that walk naturally at 1.25m/s is provided. ([Baidu Pan](https://pan.baidu.com/s/1PVDgIe3NuLB-4qI5iSxtKA) or [Google Drive](https://drive.google.com/open?id=1jWzs3wvq7_ierIwGZXc-M92bv1X5eqs7))
 
 ```bash

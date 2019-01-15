@@ -104,7 +104,7 @@ python test.py --restore_model_path [MODEL_PATH] --ensemble_num [ENSEMBLE_NUM]
 ```
 
 ### Other implementation details
-Following the above steps correctly, you can get an agent that can scores around 9960 in round2. Its performance is slightly poorer than our final submitted model. The score gap results from optimizing launch action. To get better performance, an independent model called launch model, is only trained to walk at 1.25m/s from a standing position. Then we fix the launch model and train a new controller for the subsequent chanllege. We do not provide this part of the code, since it reduces the readability of the code. Feel free to post issue if you have any problem:)
+Following the above steps correctly, you can get an agent that scores around 9960 in round2. Its performance is slightly poorer than our final submitted model. The score gap results from optimizing launch action. To get better performance, an independent model called launch model, is only trained to walk at 1.25m/s from a standing position. Then we fix the launch model and train a new controller for the subsequent chanllege. We do not provide this part of the code, since it reduces the readability of the code. Feel free to post issue if you have any problem:)
 
 ### Acknowledgments
 We would like to thank Jingzhou He, Kai Zeng for providing stable computation resources and other colleagues on the Online Learning team for insightful discussions. We are grateful to Tingru Hong, Wenxia Zheng and others for creating a vivid and popular demonstration video.

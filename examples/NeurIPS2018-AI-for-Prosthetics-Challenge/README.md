@@ -119,6 +119,11 @@ python test.py --restore_model_path [MODEL_PATH] --ensemble_num [ENSEMBLE_NUM]
 ```
 
 ### Other implementation details
+
+<p align="center">
+<img src="image/velocity_distribution.png" alt="PARL" width="800"/>
+</p>
+
 Following the above steps correctly, you can get an agent that scores around 9960 in round2. Its performance is slightly poorer than our final submitted model. The score gap results from the multi-stage paradigm. As shown in the above Firgure, the target velocity distribution varies after each change of the target velocity. Thus we actually have 4 models for each stage, they are trained for launch stage, first change stage, second change stage, third change stage respectively. These four models are trained successively, this is, the first stage model is trained while the parameters of launch stage are fixed.We do not provide this part of the code, since it reduces the readability of the code. Feel free to post issue if you have any problem:)
 
 ### Acknowledgments

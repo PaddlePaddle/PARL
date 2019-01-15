@@ -1,6 +1,6 @@
 # The Winning Solution for the NeurIPS 2018: AI for Prosthetics Challenge
 <p align="center">
-<img src="image/demo.gif" alt="PARL" width="800"/>
+<img src="image/competition.png" alt="PARL" width="800"/>
 </p>
 This folder contains the competitive solution of our team `Firework`, who have won the NeurIPS 2018: AI for Prosthetics Challenge. It consists of three parts. The first part is our final submitted model, a sensible controller that can follow random target velocity. The second part is used for curriculum learning, to learn a natural and efficient gait at low-speed walking. The last part learns the final agent in the random velocity environment for round2 evaluation.
 
@@ -12,6 +12,9 @@ For more technical details about our solution, we provide:
 
 **Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each training sub-task three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from different people.
 
+<p align="center">
+<img src="image/demo.gif" alt="PARL" width="800"/>
+</p>
 
 ## Dependencies
 - python3.6

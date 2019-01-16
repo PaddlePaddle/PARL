@@ -11,7 +11,7 @@ For more technical details about our solution, we provide:
 3. [[Link]](https://drive.google.com/file/d/1W-FmbJu4_8KmwMIzH0GwaFKZ0z1jg_u0/view?usp=sharing) A poster briefly introducing our solution in NeurIPS2018 competition workshop.
 3. (coming soon)A full academic paper detailing our solution, including entire training pipline, related work and experiments that analyze the importance of each key ingredient.
 
-**Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each training sub-task three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from different people.
+**Note**: Reproducibility is a long-standing issue in reinforcement learning field. We have tried to guarantee that our code is reproducible, testing each training sub-task three times. However, there are still some factors that prevent us from achieving the same performance. One problem is the choice time of a convergence model during curriculum learning. Choosing a sensible and natural gait visually is crucial for subsequent training, but the definition of what is a good gait varies from person to person.
 
 <p align="center">
 <img src="image/demo.gif" alt="PARL" width="500"/>

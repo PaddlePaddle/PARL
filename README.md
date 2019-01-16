@@ -64,6 +64,9 @@ algorithm = DQN(model)
 agent = AtariAgent(algorithm)
 ```
 
+### Parameters Management
+A more convenient parameters management is provided in PARL to implement reinforcement learning algorithms more easily. See more details in [here](./parl/framework/).
+
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
@@ -80,3 +83,4 @@ pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git
 - [DDPG](examples/DDPG/)
 - [PPO](examples/PPO/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
+

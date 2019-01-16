@@ -28,7 +28,7 @@ Here is an example:
 import parl.layers as layers
 
 class MLPModel(Model):
-    def __init__(self, act_dim):
+    def __init__(self):
         self.fc = layers.fc(size=64) # automatically create parameters names "fc_0.w" and "fc_0.b"
 
     def policy1(self, obs):
@@ -62,7 +62,7 @@ class MLPModel(Model):
         out = self.fc(obs)
         return out
         
-model = MLPModel(10) 
+model = MLPModel() 
 target_model = deepcopy(model) # automatically create new unique parameters names for target_model.fc
 
 # build program

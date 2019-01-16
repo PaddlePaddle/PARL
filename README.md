@@ -65,7 +65,7 @@ agent = AtariAgent(algorithm)
 ```
 
 ### Parameters Management
-A more convenient parameters management is provided in PARL to implement reinforcement learning algorithms more easily. See more details in [here](./parl/framework/).
+A more convenient parameters management is provided in PARL, which will help implement reinforcement learning algorithms more easily. See more details in [here](./parl/framework/).
 
 # Install:
 ### Dependencies

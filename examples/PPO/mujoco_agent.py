@@ -15,7 +15,6 @@
 import numpy as np
 import parl.layers as layers
 from paddle import fluid
-from sklearn.utils import shuffle
 from parl.framework.agent_base import Agent
 from parl.utils import logger
 
@@ -183,7 +182,8 @@ class MujocoAgent(Agent):
 
         all_loss = []
         for _ in range(self.value_learn_times):
-            obs_train, value_train = shuffle(obs_train, value_train)
+            np.random.shuffle(obs_train)
+            np.random.shuffle(value_train)
             start = 0
             while start < data_size:
                 end = start + self.value_batch_size

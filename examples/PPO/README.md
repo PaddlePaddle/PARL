@@ -18,9 +18,9 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Dependencies:
 + python3.5+
 + [paddlepaddle>=1.0.0](https://github.com/PaddlePaddle/Paddle)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm
-+ scikit-learn
 + mujoco-py>=1.50.1.0
 
 ### Start Training:

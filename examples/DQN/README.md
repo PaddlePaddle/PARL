@@ -15,6 +15,7 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 ### Dependencies:
 + python2.7 or python3.5+
 + [paddlepaddle>=1.0.0](https://github.com/PaddlePaddle/Paddle)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm
 + opencv-python

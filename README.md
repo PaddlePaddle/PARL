@@ -70,7 +70,7 @@ A more convenient parameter management mechanism is provided in PARL, which will
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.2.1 (We try to make our repository always compatible with newest version PaddlePaddle)  
+- PaddlePaddle >=1.2.1 (We try to make our repository always compatible with latest version PaddlePaddle)  
 
 
 ```

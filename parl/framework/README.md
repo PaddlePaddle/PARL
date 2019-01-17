@@ -42,12 +42,12 @@ class MLPModel(Model):
 
 ### Synchronize parameters between models in PARL
 
-PARL provides an API `sync_paramas_to` in `parl.Model` to synchronize its all parameters to another model. 
+PARL provides an API `sync_params_to` in `parl.Model` to synchronize its all parameters to another model. 
 When you need synchronize parameters bewteen two models, only following steps needed:
 
 1. Construct a model inheriting `parl.Model`, and declare layers needing synchronization with `parl.layers` in the model.
 2. Deepcopy a target model. 
-3. After parameters initialized, Call `sync_paramas_to` API to synchronize all parameters in the model to target model.
+3. After parameters initialized, Call `sync_params_to` API to synchronize all parameters in the model to target model.
 
 Here is an example:
 ```python
@@ -81,4 +81,4 @@ model.sync_params_to(target_model, gpu_id=gpu_id)
 ```
 
 By the way, `parl.Model` also provides a helpful property `parameter_names`, which can return all parameters names 
-in the model.
+declared with `parl.layers` in the model.

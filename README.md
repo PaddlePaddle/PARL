@@ -20,8 +20,7 @@ PARL aims to build an agent for training algorithms to perform complex tasks.
 The main abstractions introduced by PARL that are used to build an agent recursively are the following:
 
 ### Model
-`Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input. `Model` also provides a helpful API 
-`sync_params_to`, which can be used to synchronize parameters between models directly.
+`Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input. PARL also provides a helpful API `sync_params_to` in `Model`, which can be used to synchronize parameters between models directly.
 
 ### Algorithm
 `Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.

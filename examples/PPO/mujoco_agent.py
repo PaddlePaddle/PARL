@@ -182,13 +182,15 @@ class MujocoAgent(Agent):
 
         all_loss = []
         for _ in range(self.value_learn_times):
-            np.random.shuffle(obs_train)
-            np.random.shuffle(value_train)
+            random_ids = np.arange(obs_train.shape[0])
+            np.random.shuffle(random_ids)
+            shuffle_obs_train = obs_train[random_ids]
+            shuffle_value_train = value_train[random_ids]
             start = 0
             while start < data_size:
                 end = start + self.value_batch_size
-                value_loss = self._batch_value_learn(obs_train[start:end, :],
-                                                     value_train[start:end])
+                value_loss = self._batch_value_learn(shuffle_obs_train[start:end, :],
+                                                     shuffle_value_train[start:end])
                 all_loss.append(value_loss)
                 start += self.value_batch_size
         return np.mean(all_loss)

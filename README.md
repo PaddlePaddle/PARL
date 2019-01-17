@@ -20,7 +20,8 @@ PARL aims to build an agent for training algorithms to perform complex tasks.
 The main abstractions introduced by PARL that are used to build an agent recursively are the following:
 
 ### Model
-`Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input.
+`Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input. `Model` also provides a helpful API 
+`sync_params_to`, which can be used to synchronize parameters between models directly.
 
 ### Algorithm
 `Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.
@@ -63,9 +64,6 @@ model = AtariModel(img_shape=(32, 32), action_dim=4)
 algorithm = DQN(model)
 agent = AtariAgent(algorithm)
 ```
-
-### Parameters Management
-A more convenient parameter management mechanism is provided in PARL, which will help implement reinforcement learning algorithms with PaddlePaddle more easily. See more details in [here](./parl/framework/).
 
 # Install:
 ### Dependencies

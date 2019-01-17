@@ -60,7 +60,7 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 python simulator_server.py --port [PORT] --ensemble_num 1 
 
 # client (Suggest: 200+ clients)
-python simulator_client.py --port [PORT] --ip [IP] --reward_type RunFastest
+python simulator_client.py --port [PORT] --ip [SERVER_IP] --reward_type RunFastest
 ```
 
 #### 2. Target: run at 3.0 m/s
@@ -71,7 +71,7 @@ python simulator_server.py --port [PORT] --ensemble_num 1 --warm_start_batchs 10
            --restore_model_path [RunFastest model]
 
 # client (Suggest: 200+ clients)
-python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpeed --target_v 3.0 \
+python simulator_client.py --port [PORT] --ip [SERVER_IP] --reward_type FixedTargetSpeed --target_v 3.0 \
            --act_penalty_lowerbound 1.5 
 ```
 
@@ -83,7 +83,7 @@ python simulator_server.py --port [PORT] --ensemble_num 1 --warm_start_batchs 10
            --restore_model_path [FixedTargetSpeed 3.0m/s model]
 
 # client (Suggest: 200+ clients)
-python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpeed --target_v 2.0 \
+python simulator_client.py --port [PORT] --ip [SERVER_IP] --reward_type FixedTargetSpeed --target_v 2.0 \
            --act_penalty_lowerbound 0.75 
 ```
 
@@ -99,7 +99,7 @@ python simulator_server.py --port [PORT] --ensemble_num 1 --warm_start_batchs 10
            --restore_model_path [FixedTargetSpeed 2.0m/s model]  
 
 # client (Suggest: 200+ clients)
-python simulator_client.py --port [PORT] --ip [IP] --reward_type FixedTargetSpeed --target_v 1.25 \
+python simulator_client.py --port [PORT] --ip [SERVER_IP] --reward_type FixedTargetSpeed --target_v 1.25 \
            --act_penalty_lowerbound 0.6
 ```
 
@@ -109,10 +109,10 @@ As mentioned before, the selection of model that used to fine-tune influence lat
 ```bash
 # server
 python simulator_server.py --port [PORT] --ensemble_num 12 --warm_start_batchs 1000 \
-           --restore_model_path [FixedTargetSpeed 1.25m/s] --restore_from_one_head 
+           --restore_model_path [FixedTargetSpeed 1.25m/s model] --restore_from_one_head 
 
 # client (Suggest: 100+ clients)
-python simulator_client.py --port [PORT] --ip [IP] --reward_type Round2 --act_penalty_lowerbound 0.75 \
+python simulator_client.py --port [PORT] --ip [SERVER_IP] --reward_type Round2 --act_penalty_lowerbound 0.75 \
            --act_penalty_coeff 7.0 --vel_penalty_coeff 20.0 --discrete_data --stage 3
 ```
 

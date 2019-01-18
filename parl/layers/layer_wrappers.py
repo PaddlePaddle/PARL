@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Wrappers for fluid.layers so that the layers can share parameters conveniently.
+Wrappers for fluid.layers. It helps to easily share parameters between layers.
 
 Here is an example:
     ```python

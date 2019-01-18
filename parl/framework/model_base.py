@@ -125,8 +125,8 @@ class Model(Network):
     Algorithm is responsible for backward.
 
     Model can also use deepcopy way to construct target model, which has the same structure as initial model. 
-    Note that parameters in the initial model havn't been copied to target model.
-    To copy parameters, you must explicitly use sync_params_to function after the program is initialized.
+    Note that only the model definition is copied here. To copy the parameters from the current model 
+    to the target model, you must explicitly use sync_params_to function after the program is initialized.
 
     Here is an example:
         ```python

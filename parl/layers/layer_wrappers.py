@@ -12,7 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Wrappers for fluid.layers so that the layers can share parameters conveniently.
+Wrappers for fluid.layers. It helps to easily share parameters between layers.
+
+Here is an example:
+    ```python
+    import parl.layers as layers
+
+    class MLPModel(Model):
+        def __init__(self):
+            self.fc = layers.fc(size=64) # automatically create parameters names "fc_0.w" and "fc_0.b"
+
+        def policy1(self, obs):
+            out = self.fc(obs) # Really create parameters with parameters names "fc_0.w" and "fc_0.b"
+        
+        def policy2(self, obs):
+            out = self.fc(obs) # Reusing parameters
+    ```
 """
 
 import inspect

@@ -7,15 +7,20 @@ Based on PARL, the DQN model of deep reinforcement learning is reproduced, and t
 ### Atari games introduction
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
+### Benchmark result
+- Pong
+<img src=".benchmark/DQN_Pong.png"/>  
 
 ## How to use
 ### Dependencies:
 + python2.7 or python3.5+
 + [paddlepaddle>=1.0.0](https://github.com/PaddlePaddle/Paddle)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm
 + opencv-python
-+ ale_python_interface
++ atari_py
++ [ale_python_interface](https://github.com/mgbellemare/Arcade-Learning-Environment)
 
 
 ### Start Training:

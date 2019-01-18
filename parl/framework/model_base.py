@@ -124,23 +124,39 @@ class Model(Network):
     In conclusion, Model is responsible for forward and 
     Algorithm is responsible for backward.
 
-    Model can also be used to construct target model, which has the same structure as initial model.
+    Model can also use deepcopy way to construct target model, which has the same structure as initial model. 
+    Note that only the model definition is copied here. To copy the parameters from the current model 
+    to the target model, you must explicitly use sync_params_to function after the program is initialized.
+
     Here is an example:
         ```python
-        class Actor(Model):
-            __init__(self, obs_dim, act_dim):
-                self.obs_dim = obs_dim
-                self.act_dim = act_dim
-                self.fc1 = layers.fc(size=128, act='relu')
-                self.fc2 = layers.fc(size=64, act='relu')
-        actor = Actor(obs_dim=12, act_dim=2)
-        target_actor = copy.deepcopy(actor)
+        import parl.layers as layers
+        import parl.Model as Model
+
+        class MLPModel(Model):
+            def __init__(self):
+                self.fc = layers.fc(size=64)
+
+            def policy(self, obs):
+                out = self.fc(obs)
+                return out
+                
+        model = MLPModel() 
+        target_model = deepcopy(model) # automatically create new unique parameters names for target_model.fc
+
+        # build program
+        x = layers.data(name='x', shape=[100], dtype="float32")
+        y1 = model.policy(x) 
+        y2 = target_model.policy(x)  
+
+        ...
+        # Need initialize program before calling sync_params_to
+        fluid_executor.run(fluid.default_startup_program()) 
+        ...
+
+        # synchronize parameters
+        model.sync_params_to(target_model, gpu_id=gpu_id)
         ```
-
-    Note that it's the model structure that is copied from initial actor,
-    parameters in initial model havn't been copied to target model.
-    To copy parameters, you must explicitly use sync_params_to function after the program is initialized.
-
     """
     __metaclass__ = ABCMeta
 

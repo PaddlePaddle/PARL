@@ -30,7 +30,7 @@ def _find_packages(prefix=''):
 
 setup(
     name='parl',
-    version=0.1,
+    version=1.0,
     packages=_find_packages(),
     package_data={'': ['*.so']},
     install_requires=[

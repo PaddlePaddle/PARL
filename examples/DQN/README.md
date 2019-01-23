@@ -9,13 +9,13 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Benchmark result
 - Pong
-<img src=".benchmark/DQN_Pong.png"/>
+<img src=".benchmark/DQN_Pong.png" width = "600" height ="450" alt="DQN_Pong" />
 
 - Breakout
-<img src=".benchmark/DQN_Breakout.png"/>
+<img src=".benchmark/DQN_Breakout.png" width = "600" height ="450" alt="DQN_Breakout"/>
 
 - Beam Rider
-<img src=".benchmark/DQN_BeamRider.png"/>
+<img src=".benchmark/DQN_BeamRider.png" width = "600" height ="450" alt="DQN_BeamRider"/>
 
 ## How to use
 ### Dependencies:

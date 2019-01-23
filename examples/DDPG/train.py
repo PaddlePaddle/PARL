@@ -37,7 +37,9 @@ ENV_SEED = 1
 def run_train_episode(env, agent, rpm):
     obs = env.reset()
     total_reward = 0
+    steps = 0
     while True:
+        steps += 1
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
@@ -62,7 +64,7 @@ def run_train_episode(env, agent, rpm):
 
         if done:
             break
-    return total_reward
+    return total_reward, steps
 
 
 def run_evaluate_episode(env, agent):
@@ -105,18 +107,34 @@ def main():
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
 
-    for i in range(MAX_EPISODES):
-        train_reward = run_train_episode(env, agent, rpm)
-        logger.info('Episode: {} Reward: {}'.format(i, train_reward))
-        if (i + 1) % TEST_EVERY_EPISODES == 0:
+    test_flag = 0
+    total_steps = 0
+    while total_steps < args.train_total_steps:
+        train_reward, steps = run_train_episode(env, agent, rpm)
+        total_steps += steps
+        logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
+
+        if total_steps // args.test_every_steps >= test_flag:
+            while total_steps // args.test_every_steps >= test_flag:
+                test_flag += 1
             evaluate_reward = run_evaluate_episode(env, agent)
-            logger.info('Episode {}, Evaluate reward: {}'.format(
-                i, evaluate_reward))
+            logger.info('Steps {}, Evaluate reward: {}'.format(
+                total_steps, evaluate_reward))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env', help='Mujoco environment name', default='HalfCheetah-v2')
+    parser.add_argument(
+        '--train_total_steps',
+        type=int,
+        default=int(1e7),
+        help='total steps collected to train')
+    parser.add_argument(
+        '--test_every_steps',
+        type=int,
+        default=int(1e4),
+        help='every steps number to run test')
     args = parser.parse_args()
     main()

@@ -41,9 +41,9 @@ def run_train_episode(env, agent, rpm):
     total_reward = 0
     all_cost = []
     state = env.reset()
-    step = 0
+    steps = 0
     while True:
-        step += 1
+        steps += 1
         context = rpm.recent_state()
         context.append(state)
         context = np.stack(context, axis=0)
@@ -52,7 +52,7 @@ def run_train_episode(env, agent, rpm):
         rpm.append(Experience(state, action, reward, isOver))
         # start training
         if rpm.size() > MEMORY_WARMUP_SIZE:
-            if step % UPDATE_FREQ == 0:
+            if steps % UPDATE_FREQ == 0:
                 batch_all_state, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
                     args.batch_size)
                 batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
@@ -67,7 +67,7 @@ def run_train_episode(env, agent, rpm):
     if all_cost:
         logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
             total_reward, np.mean(all_cost)))
-    return total_reward, step
+    return total_reward, steps
 
 
 def run_evaluate_episode(env, agent):
@@ -104,34 +104,33 @@ def main():
 
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
         while rpm.size() < MEMORY_WARMUP_SIZE:
-            total_reward, step = run_train_episode(env, agent, rpm)
-            pbar.update(step)
+            total_reward, steps = run_train_episode(env, agent, rpm)
+            pbar.update(steps)
 
     # train
     test_flag = 0
-    pbar = tqdm(total=1e8)
+    pbar = tqdm(total=args.train_total_steps)
     recent_100_reward = []
-    total_step = 0
+    total_steps = 0
     max_reward = None
-    while True:
+    while total_steps < args.train_total_steps:
         # start epoch
-        total_reward, step = run_train_episode(env, agent, rpm)
-        total_step += step
+        total_reward, steps = run_train_episode(env, agent, rpm)
+        total_steps += steps
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
-        pbar.update(step)
+        pbar.update(steps)
 
-        if total_step // args.test_every_steps == test_flag:
+        if total_steps // args.test_every_steps >= test_flag:
+            while total_steps // args.test_every_steps >= test_flag:
+                test_flag += 1
             pbar.write("testing")
             eval_rewards = []
             for _ in tqdm(range(3), desc='eval agent'):
                 eval_reward = run_evaluate_episode(test_env, agent)
                 eval_rewards.append(eval_reward)
-            test_flag += 1
             logger.info(
                 "eval_agent done, (steps, eval_reward): ({}, {})".format(
-                    total_step, np.mean(eval_rewards)))
-        if total_step > 1e8:
-            break
+                    total_steps, np.mean(eval_rewards)))
 
     pbar.close()
 
@@ -142,9 +141,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch_size', type=int, default=64, help='batch size for training')
     parser.add_argument(
+        '--train_total_steps',
+        type=int,
+        default=int(1e8),
+        help='maximum training steps')
+    parser.add_argument(
         '--test_every_steps',
         type=int,
         default=100000,
-        help='every steps number to run test')
+        help='the step interval between two consecutive evaluations')
+
     args = parser.parse_args()
+
     main()

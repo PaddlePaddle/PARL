@@ -8,12 +8,12 @@ Based on PARL, the DDPG model of deep reinforcement learning is reproduced, and 
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco game.
 
 ### Benchmark result
-- HalfCheetah-v2
-<img src=".benchmark/DDPG_HalfCheetah-v2.png"/>  
+
+<img src=".benchmark/DDPG_HalfCheetah-v2.png" width = "400" height ="300" alt="DDPG_HalfCheetah-v2"/>  
 
 ## How to use
 ### Dependencies:
-+ python2.7 or python3.5+
++ python3.5+
 + [paddlepaddle>=1.0.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym

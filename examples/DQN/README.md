@@ -8,8 +8,10 @@ Based on PARL, the DQN model of deep reinforcement learning is reproduced, and t
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
 ### Benchmark result
-- Pong
-<img src=".benchmark/DQN_Pong.png"/>  
+
+<img src=".benchmark/DQN_Pong.png" width = "400" height ="300" alt="DQN_Pong" /> <img src=".benchmark/DQN_Breakout.png" width = "400" height ="300" alt="DQN_Breakout"/>
+<br>
+<img src=".benchmark/DQN_BeamRider.png" width = "400" height ="300" alt="DQN_BeamRider"/>
 
 ## How to use
 ### Dependencies:

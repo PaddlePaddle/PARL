@@ -11,8 +11,8 @@ Include following approach:
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco game.
 
 ### Benchmark result
-- HalfCheetah-v2
-<img src=".benchmark/PPO_HalfCheetah-v2.png"/>  
+
+<img src=".benchmark/PPO_HalfCheetah-v2.png" width = "400" height ="300" alt="PPO_HalfCheetah-v2" />  
 
 ## How to use
 ### Dependencies:

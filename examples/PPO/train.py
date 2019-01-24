@@ -120,11 +120,12 @@ def main():
     # run a few episodes to initialize scaler
     collect_trajectories(env, agent, scaler, episodes=5)
 
-    episode = 0
-    while episode < args.num_episodes:
+    test_flag = 0
+    total_steps = 0
+    while total_steps < args.train_total_steps:
         obs, actions, rewards = collect_trajectories(
             env, agent, scaler, episodes=args.episodes_per_batch)
-        episode += args.episodes_per_batch
+        total_steps += obs.shape[0]
 
         pred_values = agent.value_predict(obs)
 
@@ -145,14 +146,16 @@ def main():
         value_loss = agent.value_learn(obs, discount_sum_rewards)
 
         logger.info(
-            'Episode {}, Train reward: {}, Policy loss: {}, KL: {}, Value loss: {}'
-            .format(episode,
+            'Steps {}, Train reward: {}, Policy loss: {}, KL: {}, Value loss: {}'
+            .format(total_steps,
                     np.sum(rewards) / args.episodes_per_batch, policy_loss, kl,
                     value_loss))
-        if episode % (args.episodes_per_batch * 5) == 0:
+        if total_steps // args.test_every_steps >= test_flag:
+            while total_steps // args.test_every_steps >= test_flag:
+                test_flag += 1
             eval_reward = run_evaluate_episode(env, agent, scaler)
-            logger.info('Episode {}, Evaluate reward: {}'.format(
-                episode, eval_reward))
+            logger.info('Steps {}, Evaluate reward: {}'.format(
+                total_steps, eval_reward))
 
 
 if __name__ == "__main__":
@@ -162,11 +165,6 @@ if __name__ == "__main__":
         type=str,
         help='Mujoco environment name',
         default='HalfCheetah-v2')
-    parser.add_argument(
-        '--num_episodes',
-        type=int,
-        help='Number of episodes to run',
-        default=10000)
     parser.add_argument(
         '--gamma', type=float, help='Discount factor', default=0.995)
     parser.add_argument(
@@ -186,6 +184,16 @@ if __name__ == "__main__":
         type=str,
         help="Choose loss type of PPO algorithm, 'CLIP' or 'KLPEN'",
         default='CLIP')
+    parser.add_argument(
+        '--train_total_steps',
+        type=int,
+        default=int(1e7),
+        help='maximum training steps')
+    parser.add_argument(
+        '--test_every_steps',
+        type=int,
+        default=int(1e4),
+        help='the step interval between two consecutive evaluations')
 
     args = parser.parse_args()
 

@@ -188,12 +188,12 @@ if __name__ == "__main__":
         '--train_total_steps',
         type=int,
         default=int(1e7),
-        help='total steps collected to train')
+        help='maximum training steps')
     parser.add_argument(
         '--test_every_steps',
         type=int,
         default=int(1e4),
-        help='every steps number to run test')
+        help='the step interval between two consecutive evaluations')
 
     args = parser.parse_args()
 

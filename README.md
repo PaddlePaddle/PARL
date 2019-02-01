@@ -53,7 +53,7 @@ class AtariModel(parl.Model):
 		return Q
 """
 three steps to build an agent
-   1.  define a forward model which is critic_model is this example
+   1.  define a forward model which is critic_model in this example
    2.  a. to build a DQN algorithm, just pass the critic_model to `DQN`
        b. to build a DDQN algorithm, just replace DQN in following line with DDQN
    3.  define the I/O part in AtariAgent so that it could update the algorithm based on the interactive data

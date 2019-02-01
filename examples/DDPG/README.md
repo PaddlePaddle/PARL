@@ -9,7 +9,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/DDPG_HalfCheetah-v2.png" width = "400" height ="300" alt="DDPG_HalfCheetah-v2"/>  
+<img src=".benchmark/DDPG_HalfCheetah-v2.png" width = "400" height ="300" alt="DDPG_HalfCheetah-v2"/> <img src=".benchmark/DDPG_Humanoid-v2.png" width = "400" height ="300" alt="DDPG_Humanoid-v2"/>  
+<img src=".benchmark/DDPG_Hopper-v2.png" width = "400" height ="300" alt="DDPG_Hopper-v2"/>
 
 ## How to use
 ### Dependencies:

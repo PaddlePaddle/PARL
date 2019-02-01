@@ -99,6 +99,31 @@ def collect_trajectories(env, agent, scaler, episodes):
     return trajectories
 
 
+def build_train_data(trajectories, agent):
+    train_obs, train_actions, train_advantages, train_discount_sum_rewards = [], [], [], []
+    for trajectory in trajectories:
+        pred_values = agent.value_predict(trajectory['obs'])
+
+        # scale rewards
+        scale_rewards = trajectory['rewards'] * (1 - args.gamma)
+
+        discount_sum_rewards = calc_discount_sum_rewards(
+            scale_rewards, args.gamma).astype('float32')
+
+        advantages = calc_gae(scale_rewards, pred_values, args.gamma, args.lam)
+
+        # normalize advantages
+        advantages = (advantages - advantages.mean()) / (
+            advantages.std() + 1e-6)
+        advantages = advantages.astype('float32')
+
+        train_obs.append(trajectory['obs'])
+        train_actions.append(trajectory['actions'])
+        train_advantages.append(advantages)
+        train_discount_sum_rewards.append(discount_sum_rewards)
+    return train_obs, train_actions, train_advantages, train_discount_sum_rewards
+
+
 def main():
     env = gym.make(args.env)
 
@@ -129,28 +154,8 @@ def main():
         total_steps += sum([t['obs'].shape[0] for t in trajectories])
         total_train_rewards = sum([np.sum(t['rewards']) for t in trajectories])
 
-        train_obs, train_actions, train_advantages, train_discount_sum_rewards = [], [], [], []
-        for trajectory in trajectories:
-            pred_values = agent.value_predict(trajectory['obs'])
-
-            # scale rewards
-            scale_rewards = trajectory['rewards'] * (1 - args.gamma)
-
-            discount_sum_rewards = calc_discount_sum_rewards(
-                scale_rewards, args.gamma).astype('float32')
-
-            advantages = calc_gae(scale_rewards, pred_values, args.gamma,
-                                  args.lam)
-
-            # normalize advantages
-            advantages = (advantages - advantages.mean()) / (
-                advantages.std() + 1e-6)
-            advantages = advantages.astype('float32')
-
-            train_obs.append(trajectory['obs'])
-            train_actions.append(trajectory['actions'])
-            train_advantages.append(advantages)
-            train_discount_sum_rewards.append(discount_sum_rewards)
+        train_obs, train_actions, train_advantages, train_discount_sum_rewards = build_train_data(
+            trajectories, agent)
 
         policy_loss, kl = agent.policy_learn(
             np.concatenate(train_obs), np.concatenate(train_actions),

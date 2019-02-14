@@ -84,18 +84,50 @@ def run_evaluate_episode(env, agent, scaler):
 
 
 def collect_trajectories(env, agent, scaler, episodes):
-    all_obs, all_actions, all_rewards, all_unscaled_obs = [], [], [], []
+    trajectories, all_unscaled_obs = [], []
     for e in range(episodes):
         obs, actions, rewards, unscaled_obs = run_train_episode(
             env, agent, scaler)
-        all_obs.append(obs)
-        all_actions.append(actions)
-        all_rewards.append(rewards)
+        trajectories.append({
+            'obs': obs,
+            'actions': actions,
+            'rewards': rewards,
+        })
         all_unscaled_obs.append(unscaled_obs)
-    scaler.update(np.concatenate(all_unscaled_obs)
-                  )  # update running statistics for scaling observations
-    return np.concatenate(all_obs), np.concatenate(
-        all_actions), np.concatenate(all_rewards)
+    # update running statistics for scaling observations
+    scaler.update(np.concatenate(all_unscaled_obs))
+    return trajectories
+
+
+def build_train_data(trajectories, agent):
+    train_obs, train_actions, train_advantages, train_discount_sum_rewards = [], [], [], []
+    for trajectory in trajectories:
+        pred_values = agent.value_predict(trajectory['obs'])
+
+        # scale rewards
+        scale_rewards = trajectory['rewards'] * (1 - args.gamma)
+
+        discount_sum_rewards = calc_discount_sum_rewards(
+            scale_rewards, args.gamma).astype('float32')
+
+        advantages = calc_gae(scale_rewards, pred_values, args.gamma, args.lam)
+
+        # normalize advantages
+        advantages = (advantages - advantages.mean()) / (
+            advantages.std() + 1e-6)
+        advantages = advantages.astype('float32')
+
+        train_obs.append(trajectory['obs'])
+        train_actions.append(trajectory['actions'])
+        train_advantages.append(advantages)
+        train_discount_sum_rewards.append(discount_sum_rewards)
+
+    train_obs = np.concatenate(train_obs)
+    train_actions = np.concatenate(train_actions)
+    train_advantages = np.concatenate(train_advantages)
+    train_discount_sum_rewards = np.concatenate(train_discount_sum_rewards)
+
+    return train_obs, train_actions, train_advantages, train_discount_sum_rewards
 
 
 def main():
@@ -123,33 +155,22 @@ def main():
     test_flag = 0
     total_steps = 0
     while total_steps < args.train_total_steps:
-        obs, actions, rewards = collect_trajectories(
+        trajectories = collect_trajectories(
             env, agent, scaler, episodes=args.episodes_per_batch)
-        total_steps += obs.shape[0]
+        total_steps += sum([t['obs'].shape[0] for t in trajectories])
+        total_train_rewards = sum([np.sum(t['rewards']) for t in trajectories])
 
-        pred_values = agent.value_predict(obs)
+        train_obs, train_actions, train_advantages, train_discount_sum_rewards = build_train_data(
+            trajectories, agent)
 
-        # scale rewards
-        scale_rewards = rewards * (1 - args.gamma)
-
-        discount_sum_rewards = calc_discount_sum_rewards(
-            scale_rewards, args.gamma)
-        discount_sum_rewards = discount_sum_rewards.astype('float32')
-
-        advantages = calc_gae(scale_rewards, pred_values, args.gamma, args.lam)
-        # normalize advantages
-        advantages = (advantages - advantages.mean()) / (
-            advantages.std() + 1e-6)
-        advantages = advantages.astype('float32')
-
-        policy_loss, kl = agent.policy_learn(obs, actions, advantages)
-        value_loss = agent.value_learn(obs, discount_sum_rewards)
+        policy_loss, kl = agent.policy_learn(train_obs, train_actions,
+                                             train_advantages)
+        value_loss = agent.value_learn(train_obs, train_discount_sum_rewards)
 
         logger.info(
             'Steps {}, Train reward: {}, Policy loss: {}, KL: {}, Value loss: {}'
-            .format(total_steps,
-                    np.sum(rewards) / args.episodes_per_batch, policy_loss, kl,
-                    value_loss))
+            .format(total_steps, total_train_rewards / args.episodes_per_batch,
+                    policy_loss, kl, value_loss))
         if total_steps // args.test_every_steps >= test_flag:
             while total_steps // args.test_every_steps >= test_flag:
                 test_flag += 1

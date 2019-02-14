@@ -121,6 +121,12 @@ def build_train_data(trajectories, agent):
         train_actions.append(trajectory['actions'])
         train_advantages.append(advantages)
         train_discount_sum_rewards.append(discount_sum_rewards)
+
+    train_obs = np.concatenate(train_obs)
+    train_actions = np.concatenate(train_actions)
+    train_advantages = np.concatenate(train_advantages)
+    train_discount_sum_rewards = np.concatenate(train_discount_sum_rewards)
+
     return train_obs, train_actions, train_advantages, train_discount_sum_rewards
 
 
@@ -157,12 +163,9 @@ def main():
         train_obs, train_actions, train_advantages, train_discount_sum_rewards = build_train_data(
             trajectories, agent)
 
-        policy_loss, kl = agent.policy_learn(
-            np.concatenate(train_obs), np.concatenate(train_actions),
-            np.concatenate(train_advantages))
-        value_loss = agent.value_learn(
-            np.concatenate(train_obs),
-            np.concatenate(train_discount_sum_rewards))
+        policy_loss, kl = agent.policy_learn(train_obs, train_actions,
+                                             train_advantages)
+        value_loss = agent.value_learn(train_obs, train_discount_sum_rewards)
 
         logger.info(
             'Steps {}, Train reward: {}, Policy loss: {}, KL: {}, Value loss: {}'

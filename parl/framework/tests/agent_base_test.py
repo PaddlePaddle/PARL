@@ -19,7 +19,7 @@ from paddle import fluid
 from parl.framework.agent_base import Agent
 from parl.framework.algorithm_base import Algorithm
 from parl.framework.model_base import Model
-from parl.utils import gputils
+from parl.utils.machine_info import get_gpu_count
 
 
 class TestModel(Model):
@@ -66,7 +66,7 @@ class AgentBaseTest(unittest.TestCase):
         self.algorithm = TestAlgorithm(self.model)
 
     def test_agent_with_gpu(self):
-        if gputils.get_gpu_count() > 0:
+        if get_gpu_count() > 0:
             agent = TestAgent(self.algorithm, gpu_id=0)
             obs = np.random.random([3, 10]).astype('float32')
             output_np = agent.predict(obs)

@@ -41,7 +41,7 @@ class AtariModel(parl.Model):
 	def __init__(self, img_shape, action_dim):
 		# define your layers
 		self.cnn1 = layers.conv_2d(num_filters=32, filter_size=5,
-			 			stride=[1, 1], padding=[2, 2], act='relu')
+			 			stride=1, padding=2, act='relu')
 		...
 		self.fc1 = layers.fc(action_dim)
 	def value(self, img):

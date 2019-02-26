@@ -18,6 +18,7 @@ from parl.utils import logger
 
 __all__ = ['get_gpu_count', 'get_ip_address']
 
+
 def get_ip_address():
     """
     get the IP address of the host.

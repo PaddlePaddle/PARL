@@ -16,6 +16,7 @@ import pyarrow
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
+
 def dumps_argument(*args, **kwargs):
     """
 
@@ -28,6 +29,7 @@ def dumps_argument(*args, **kwargs):
         Implementation-dependent object in bytes.
     """
     return pyarrow.serialize([args, kwargs]).to_buffer()
+
 
 def loads_argument(data):
     """
@@ -42,6 +44,7 @@ def loads_argument(data):
     """
     return pyarrow.deserialize(data)
 
+
 def dumps_return(data):
     """
     Serialize the return data of a function.
@@ -53,6 +56,7 @@ def dumps_return(data):
         Implementation-dependent object in bytes.
     """
     return pyarrow.serialize(data).to_buffer()
+
 
 def loads_return(data):
     """

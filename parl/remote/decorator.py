@@ -9,7 +9,6 @@ from parl.utils.communication import dumps_argument, loads_argument
 from parl.utils.communication import dumps_return, loads_return
 from parl.utils.machine_info import get_ip_address
 import pyarrow
-
 """
 Three steps to create a remote class -- 
 1. add a decroator(@virtual) before the definition of the class.
@@ -24,6 +23,7 @@ sim = Simulator()
 sim.remote_run(server_ip='172.18.202.45', port=8001)
 
 """
+
 
 def virtual(cls, location='client'):
     """
@@ -42,6 +42,7 @@ def virtual(cls, location='client'):
         Wrapper for remote class at client side. After the decoration, 
         the initial class is able to be called to run any function at sever side.
         """
+
         def __init__(self, *args):
             """
             Args:
@@ -63,15 +64,19 @@ def virtual(cls, location='client'):
             for port in range(6000, 8000):
                 try:
                     socket.bind("tcp://*:{}".format(port))
-                    logger.info("[create_reply_socket] free_port:{}".format(port))
+                    logger.info(
+                        "[create_reply_socket] free_port:{}".format(port))
                     free_port = port
                     break
                 except zmq.error.ZMQError:
-                    logger.warn("[create_reply_socket]cannot bind port:{}, retry".format(port))
+                    logger.warn(
+                        "[create_reply_socket]cannot bind port:{}, retry".
+                        format(port))
             if free_port is not None:
                 return socket, client_ip, free_port
             else:
-                logger.error("cannot find any available port from 6000 to 8000")
+                logger.error(
+                    "cannot find any available port from 6000 to 8000")
                 sys.exit(1)
 
         def connect_server(self, server_ip, server_port):
@@ -82,7 +87,8 @@ def virtual(cls, location='client'):
                 server_ip(str): the ip of the server.
                 server_port(int): the connection port of the server.
             """
-            self.reply_socket, local_ip, local_port  = self.create_reply_socket()
+            self.reply_socket, local_ip, local_port = self.create_reply_socket(
+            )
 
             logger.info("connecting {}:{}".format(server_ip, server_port))
             context = zmq.Context()
@@ -90,9 +96,11 @@ def virtual(cls, location='client'):
             socket.connect("tcp://{}:{}".format(server_ip, server_port))
             client_id = np.random.randint(int(1e18))
             logger.info("client_id:{}".format(client_id))
-            socket.send_string('{}:{} {}'.format(local_ip, local_port, client_id))
+            socket.send_string('{}:{} {}'.format(local_ip, local_port,
+                                                 client_id))
             message = socket.recv_string()
-            logger.info("[connect_server] done, message from server:{}".format(message))
+            logger.info("[connect_server] done, message from server:{}".format(
+                message))
             self.connect_socket = socket
 
         def __getattr__(self, attr):
@@ -103,11 +111,13 @@ def virtual(cls, location='client'):
             This implementation utilise a function wrapper.
             """
             if hasattr(self.unwrapped, attr):
+
                 def wrapper(*args, **kw):
                     return getattr(self.unwrapped, attr)(*args, **kw)
+
                 return wrapper
             raise AttributeError(attr)
-        
+
         def remote_run(self, server_ip, server_port):
             """
             connect server and wait for requires of running functions from server side.
@@ -126,11 +136,11 @@ def virtual(cls, location='client'):
                 ret = dumps_return(ret)
                 self.reply_socket.send(ret)
 
-
     class ServerWrapper(object):
         """
         Wrapper for remote class at server side. 
         """
+
         def __init__(self, *args):
             """
             Args:
@@ -146,7 +156,8 @@ def virtual(cls, location='client'):
             client_address, client_id = client_info.split(' ')
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
-            logger.info("[connect_client] client_address:{}".format(client_address))
+            logger.info(
+                "[connect_client] client_address:{}".format(client_address))
             socket.connect("tcp://{}".format(client_address))
             self.command_socket = socket
             self.client_id = client_id
@@ -159,6 +170,7 @@ def virtual(cls, location='client'):
                 attr(str): a function name specify which function to run.
             """
             if hasattr(self.unwrapped, attr):
+
                 def wrapper(*args, **kw):
                     self.command_socket.send_string(attr)
                     self.command_socket.recv_string()
@@ -167,6 +179,7 @@ def virtual(cls, location='client'):
                     ret = self.command_socket.recv()
                     ret = loads_return(ret)
                     return ret
+
                 return wrapper
             return ret
 

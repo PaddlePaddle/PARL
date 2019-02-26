@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding=utf8
 # File: server.py
-import zmq 
+import zmq
 import threading
-import queue 
+import queue
 from decorator import virtual
 from parl.utils import logger
 """
@@ -19,6 +19,8 @@ from parl.utils import logger
 ```
 
 """
+
+
 class Server(object):
     """
     Base class for network communcation.
@@ -37,7 +39,7 @@ class Server(object):
         self.cls = None
         t = threading.Thread(target=self.wait_for_connection)
         t.start()
-    
+
     def wait_for_connection(self):
         """
         A never-ending function keeps waiting for the connection for remote client.

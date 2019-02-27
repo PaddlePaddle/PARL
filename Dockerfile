@@ -17,6 +17,7 @@
 
 FROM paddlepaddle/paddle:1.1.0-gpu-cuda9.0-cudnn7
 
+Run apt-get update
 RUN apt-get install -y cmake
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gym
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple details

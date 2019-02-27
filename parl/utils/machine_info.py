@@ -16,11 +16,24 @@ import os
 import subprocess
 from parl.utils import logger
 
-__all__ = ['get_gpu_count']
+__all__ = ['get_gpu_count', 'get_ip_address']
+
+
+def get_ip_address():
+    """
+    get the IP address of the host.
+    """
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    local_ip = s.getsockname()[0]
+    s.close()
+    return local_ip
 
 
 def get_gpu_count():
-    """ get avaliable gpu count
+    """
+    get avaliable gpu count
 
     Returns:
         gpu_count: int    

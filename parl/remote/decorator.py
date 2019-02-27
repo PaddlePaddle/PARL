@@ -195,7 +195,7 @@ def virtual(cls, location='client'):
                     return ret
 
                 return wrapper
-            return ret
+            raise NotImplementedError()
 
     if location == 'client':
         return ClientWrapper

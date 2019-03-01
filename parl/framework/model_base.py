@@ -121,7 +121,7 @@ class Model(Network):
     """
     A Model is owned by an Algorithm. 
     It implements the entire network model(forward part) to solve a specific problem.
-    In conclusion, Model is responsible for forward and 
+    In general, Model is responsible for forward and 
     Algorithm is responsible for backward.
 
     Model can also use deepcopy way to construct target model, which has the same structure as initial model. 

@@ -26,7 +26,7 @@ The main abstractions introduced by PARL that are used to build an agent recursi
 `Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.
 
 ### Agent
-`Agent` is a data bridge between environment and algorithm. It is responsible for data I/O with outside and describes data preprocessing before feeding into the training process.
+`Agent` is a data bridge between environment and algorithm. It is responsible for data I/O with outside and describes data preprocessing before feeding data into the training process.
 
 Here is an example of building an agent with DQN algorithm for atari games.
 ```python

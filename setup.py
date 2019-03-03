@@ -35,5 +35,7 @@ setup(
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
+        "pyzmq>=17.1.2",
+        "pyarrow>=0.12.0",
     ],
 )

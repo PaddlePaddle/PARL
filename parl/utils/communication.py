@@ -28,7 +28,7 @@ def dumps_argument(*args, **kwargs):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return pyarrow.serialize([args, kwargs]).to_buffer()
+    return bytes(pyarrow.serialize([args, kwargs]).to_buffer())
 
 
 def loads_argument(data):
@@ -55,7 +55,7 @@ def dumps_return(data):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return pyarrow.serialize(data).to_buffer()
+    return bytes(pyarrow.serialize(data).to_buffer())
 
 
 def loads_return(data):

@@ -1,0 +1,83 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import threading
+import zmq
+from parl.utils import logger, byte2str, str2byte
+from parl.utils.communication import dumps_argument, loads_return
+from parl.remote.message import *
+
+
+class RemoteObject(object):
+    """
+    Remote object, which provides interface to call functions of object in remote client.
+    """
+
+    def __init__(self, remote_client_address, remote_client_id):
+        """
+        Args:
+            remote_client_address: address(ip:port) of remote client
+            remote_client_id: id of remote client
+
+        """
+        # socket for sending function call to remote object and receiving result
+        self.command_socket = None
+        # lock for thread safety
+        self.internal_lock = threading.Lock()
+        self.client_id = remote_client_id
+        self._connect_remote_client(remote_client_address)
+
+    def _connect_remote_client(self, remote_client_address):
+        """
+        build connection with the remote client to send function call.
+        """
+        context = zmq.Context()
+        socket = context.socket(zmq.REQ)
+        logger.info(
+            "[connect_remote_client] client_address:{}".format(remote_client_address))
+        socket.connect("tcp://{}".format(remote_client_address))
+        self.command_socket = socket
+
+    def __getattr__(self, attr):
+        """
+        Provide interface to call the function of object in remote client.
+            1. send fucntion name and packed auguments to remote client;
+            2. remote clinet execute the function of the object really;
+            3. receive function return from remote client.
+
+        Args:
+            attr(str): a function name specify which function to run.
+        """
+
+        def wrapper(*args, **kwargs):
+            self.internal_lock.acquire()
+
+            data = dumps_argument(*args, **kwargs)
+            self.command_socket.send_multipart([NORMAL_TAG, str2byte(attr), data])
+
+            message = self.command_socket.recv_multipart()
+            tag = message[0]
+            if tag == NORMAL_TAG:
+                ret = loads_return(message[1])
+            elif tag == EXCEPTION_TAG:
+                error_str = byte2str(message[1])
+                logger.error('Exception message from remote: \n{}'.format(error_str))
+                raise Exception('Remote Exception')
+            else:
+                raise NotImplementedError()
+
+            self.internal_lock.release()
+            return ret
+
+        return wrapper

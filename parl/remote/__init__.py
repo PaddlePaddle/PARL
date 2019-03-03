@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-generates new PARL python API
-"""
-from parl.framework import *
-from parl.remote import remote
+
+from parl.remote.remote_decorator import *
+from parl.remote.remote_manager import *
+from parl.remote.remote_object import *
+from parl.remote.message import *

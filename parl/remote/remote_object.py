@@ -44,8 +44,8 @@ class RemoteObject(object):
         """
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
-        logger.info(
-            "[connect_remote_client] client_address:{}".format(remote_client_address))
+        logger.info("[connect_remote_client] client_address:{}".format(
+            remote_client_address))
         socket.connect("tcp://{}".format(remote_client_address))
         self.command_socket = socket
 
@@ -64,7 +64,8 @@ class RemoteObject(object):
             self.internal_lock.acquire()
 
             data = dumps_argument(*args, **kwargs)
-            self.command_socket.send_multipart([NORMAL_TAG, str2byte(attr), data])
+            self.command_socket.send_multipart(
+                [NORMAL_TAG, str2byte(attr), data])
 
             message = self.command_socket.recv_multipart()
             tag = message[0]
@@ -72,7 +73,8 @@ class RemoteObject(object):
                 ret = loads_return(message[1])
             elif tag == EXCEPTION_TAG:
                 error_str = byte2str(message[1])
-                logger.error('Exception message from remote: \n{}'.format(error_str))
+                logger.error(
+                    'Exception message from remote: \n{}'.format(error_str))
                 raise Exception('Remote Exception')
             else:
                 raise NotImplementedError()

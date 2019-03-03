@@ -18,7 +18,6 @@ import zmq
 from parl.utils import logger, str2byte, byte2str
 from parl.remote.remote_object import RemoteObject
 from parl.remote.message import *
-
 """
 2 steps to finish communication with remote clients.
 1. Create a RemoteManager:
@@ -51,7 +50,7 @@ class RemoteManager(object):
         self.remote_pool = queue.Queue()
 
         t = threading.Thread(target=self._wait_for_connection)
-        t.setDaemon(True) # The thread will exit when main thread exited
+        t.setDaemon(True)  # The thread will exit when main thread exited
         t.start()
 
     def _wait_for_connection(self):
@@ -68,23 +67,24 @@ class RemoteManager(object):
                 tag = message[0]
 
                 if tag == CONNECT_TAG:
-                    self.socket.send_multipart([NORMAL_TAG,
-                        b'Connect server success.'])
+                    self.socket.send_multipart(
+                        [NORMAL_TAG, b'Connect server success.'])
                     client_info = byte2str(message[1])
-                    remote_client_address, remote_client_id = client_info.split()
-                    remote_obj = RemoteObject(remote_client_address, 
-                            remote_client_id)
+                    remote_client_address, remote_client_id = client_info.split(
+                    )
+                    remote_obj = RemoteObject(remote_client_address,
+                                              remote_client_id)
                     logger.info('[RemoteManager] Added a new remote object.')
                     self.remote_pool.put(remote_obj)
                 elif tag == HEARTBEAT_TAG:
-                    self.socket.send_multipart([NORMAL_TAG, b'Server is alive.'])
+                    self.socket.send_multipart(
+                        [NORMAL_TAG, b'Server is alive.'])
                 else:
                     raise NotImplementedError()
 
             except zmq.ContextTerminated:
                 logger.warning('Zmq context termnated, exiting server.')
                 break
-
 
     def get_remote(self):
         """
@@ -99,7 +99,7 @@ class RemoteManager(object):
         """
         Close RemoteManager. 
         """
-        
+
         self.socket.close()
 
         self.zmq_context.term()

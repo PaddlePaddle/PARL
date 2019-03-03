@@ -15,6 +15,7 @@
 import parl
 import unittest
 
+
 @parl.remote
 class Simulator:
     def __init__(self, arg1, arg2=None):
@@ -26,12 +27,13 @@ class Simulator:
 
     def get_arg2(self):
         return self.arg2
-    
+
     def set_arg1(self, value):
         self.arg1 = value
 
     def set_arg2(self, value):
         self.arg2 = value
+
 
 class TestRemoteDecorator(unittest.TestCase):
     def test_instance_in_local(self):
@@ -54,7 +56,7 @@ class TestRemoteDecorator(unittest.TestCase):
         except AttributeError:
             return
 
-        assert False # This line should not be executed.
+        assert False  # This line should not be executed.
 
     def test_instance_in_local_with_wrong_getattr_set_variable(self):
         local_sim = Simulator(1, 2)
@@ -64,7 +66,8 @@ class TestRemoteDecorator(unittest.TestCase):
         except AttributeError:
             return
 
-        assert False # This line should not be executed.
+        assert False  # This line should not be executed.
+
 
 if __name__ == '__main__':
     unittest.main()

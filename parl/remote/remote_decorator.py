@@ -19,8 +19,7 @@ import time
 import zmq
 from parl.utils import get_ip_address, logger, byte2str, str2byte
 from parl.utils.communication import loads_argument, dumps_return
-from parl.remote.message import * 
-
+from parl.remote.message import *
 """
 Three steps to create a remote class -- 
 1. add a decroator(@parl.remote) before the definition of the class.
@@ -97,7 +96,8 @@ def remote(cls):
                 server_ip(str): the ip of the server.
                 server_port(int): the connection port of the server.
             """
-            self.reply_socket, local_ip, local_port = self._create_reply_socket()
+            self.reply_socket, local_ip, local_port = self._create_reply_socket(
+            )
             self.reply_socket.linger = 0
 
             socket = self.zmq_context.socket(zmq.REQ)
@@ -106,7 +106,7 @@ def remote(cls):
             client_id = np.random.randint(int(1e18))
             logger.info("client_id:{}".format(client_id))
             logger.info("connecting {}:{}".format(server_ip, server_port))
-            
+
             client_info = '{}:{} {}'.format(local_ip, local_port, client_id)
             socket.send_multipart([CONNECT_TAG, str2byte(client_info)])
 
@@ -141,11 +141,12 @@ def remote(cls):
                 if socks.get(self.connect_socket) == zmq.POLLIN:
                     _ = self.connect_socket.recv_multipart()
                 else:
-                    logger.warning('[HeartBeat] Server no response, will exit now!')
-                    self._exit_remote() 
-                    
+                    logger.warning(
+                        '[HeartBeat] Server no response, will exit now!')
+                    self._exit_remote()
+
                     break
-                
+
                 # HeartBeat interval 10s
                 time.sleep(10)
 
@@ -156,6 +157,7 @@ def remote(cls):
             We have to call the function of the function in unwrapped class,
             This implementation utilise a function wrapper.
             """
+
             def wrapper(*args, **kwargs):
                 return getattr(self.unwrapped, attr)(*args, **kwargs)
 
@@ -170,13 +172,15 @@ def remote(cls):
                         function_name = byte2str(message[1])
                         data = message[2]
                         args, kw = loads_argument(data)
-                        ret = getattr(self.unwrapped, function_name)(*args, **kw)
+                        ret = getattr(self.unwrapped, function_name)(*args,
+                                                                     **kw)
                         ret = dumps_return(ret)
                     except Exception as e:
                         error_str = str(e)
                         logger.error(error_str)
 
-                        self.reply_socket.send_multipart([EXCEPTION_TAG, str2byte(error_str)])
+                        self.reply_socket.send_multipart(
+                            [EXCEPTION_TAG, str2byte(error_str)])
 
                         time.sleep(1)
                         self._exit_remote()
@@ -185,7 +189,8 @@ def remote(cls):
                     self.reply_socket.send_multipart([NORMAL_TAG, ret])
 
                 except zmq.ContextTerminated:
-                    logger.warning('Zmq context termnated, exiting reply loop thread.')
+                    logger.warning(
+                        'Zmq context termnated, exiting reply loop thread.')
                     break
 
         def as_remote(self, server_ip, server_port):
@@ -204,7 +209,6 @@ def remote(cls):
 
             self._heartbeat_loop()
 
-            
         def remote_closed(self):
             """
             Check whether as_remote mode is closed
@@ -213,5 +217,4 @@ def remote(cls):
             assert self.connect_socket is not None, 'as_remote function should be called first!'
             return self.reply_socket.closed and self.connect_socket.closed
 
-    
     return ClientWrapper

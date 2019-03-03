@@ -17,6 +17,7 @@ import threading
 import unittest
 from parl.remote import *
 
+
 @parl.remote
 class Simulator:
     def __init__(self, arg1, arg2=None):
@@ -28,20 +29,24 @@ class Simulator:
 
     def get_arg2(self):
         return self.arg2
-    
+
     def set_arg1(self, value):
         self.arg1 = value
 
     def set_arg2(self, value):
         self.arg2 = value
 
+
 class TestRemote(unittest.TestCase):
     def setUp(self):
         self.sim = Simulator(1, arg2=2)
 
         # run client in a new thread to fake a remote client
-        self.client_thread = threading.Thread(target=self.sim.as_remote,
-                args=('localhost', '8008',))
+        self.client_thread = threading.Thread(
+            target=self.sim.as_remote, args=(
+                'localhost',
+                '8008',
+            ))
         self.client_thread.setDaemon(True)
         self.client_thread.start()
 
@@ -63,7 +68,7 @@ class TestRemote(unittest.TestCase):
 
         self.assertEqual(remote_sim.get_arg1(), 3)
         self.assertEqual(remote_sim.get_arg2(), 4)
-    
+
     def test_remote_object_with_wrong_getattr_get_variable(self):
         remote_sim = self.remote_manager.get_remote()
 
@@ -97,8 +102,11 @@ class TestRemote(unittest.TestCase):
     def test_mutli_remote_object(self):
         # run second client
         sim2 = Simulator(11, arg2=22)
-        client_thread2 = threading.Thread(target=sim2.as_remote,
-                args=('localhost', '8008',))
+        client_thread2 = threading.Thread(
+            target=sim2.as_remote, args=(
+                'localhost',
+                '8008',
+            ))
         client_thread2.setDaemon(True)
         client_thread2.start()
 
@@ -112,15 +120,18 @@ class TestRemote(unittest.TestCase):
     def test_mutli_remote_object_with_one_failed(self):
         # run second client
         sim2 = Simulator(11, arg2=22)
-        client_thread2 = threading.Thread(target=sim2.as_remote,
-                args=('localhost', '8008',))
+        client_thread2 = threading.Thread(
+            target=sim2.as_remote, args=(
+                'localhost',
+                '8008',
+            ))
         client_thread2.setDaemon(True)
         client_thread2.start()
 
         time.sleep(1)
         remote_sim1 = self.remote_manager.get_remote()
         remote_sim2 = self.remote_manager.get_remote()
-        
+
         try:
             remote_sim1.get_arg3()
         except:
@@ -133,13 +144,12 @@ class TestRemote(unittest.TestCase):
 
         time.sleep(1)
         self.remote_manager.close()
-        
+
         # heartbeat interval (10s) + max waiting reply (10s)
         time.sleep(20)
 
         self.assertTrue(self.sim.remote_closed())
 
 
-        
 if __name__ == '__main__':
     unittest.main()

@@ -36,8 +36,8 @@ def get_ip_address():
         # work in CentOS
         local_ip = socket.gethostbyname(socket.gethostname())
 
-    return local_ip 
-    
+    return local_ip
+
 
 def get_gpu_count():
     """

@@ -45,10 +45,12 @@ def action_mapping(model_output_act, low_bound, high_bound):
         (high_bound - low_bound) / 2.0)
     return action
 
+
 def byte2str(byte):
     """ convert byte to string in pytohn2/3
     """
     return str(byte.decode())
+
 
 def str2byte(string):
     """ convert byte to string in pytohn2/3

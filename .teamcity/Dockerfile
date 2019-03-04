@@ -28,11 +28,11 @@ RUN apt-get install --fix-missing -y make build-essential libssl-dev zlib1g-dev 
 # Install python3.6
 RUN wget -q https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz && \
     tar -xzf Python-3.6.0.tgz && cd Python-3.6.0 && \
-    CFLAGS="-Wformat" ./configure --prefix=/usr/local/ --enable-shared && \
-    make -j8  && make altinstall && \
+    CFLAGS="-Wformat" ./configure --prefix=/usr/local/ --enable-shared > /dev/null && \
+    make -j8 > /dev/null && make altinstall > /dev/null  && \
     cp libpython3.6m.so.1.0 /usr/lib/ && cp libpython3.6m.so.1.0 /usr/local/lib/
 
-COPY ./.teamcity/requirements.txt /root/
+COPY ./requirements.txt /root/
 
 # Requirements for python2
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt

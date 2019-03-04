@@ -31,7 +31,7 @@ RUN wget -q https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz && \
     make -j8  && make altinstall && \
     cp libpython3.6m.so.1.0 /usr/lib/ && cp libpython3.6m.so.1.0 /usr/local/lib/
 
-COPY ./requirements.txt /root/
+COPY ./.teamcity/requirements.txt /root/
 
 # Requirements for python2
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt

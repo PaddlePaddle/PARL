@@ -19,6 +19,23 @@ FROM paddlepaddle/paddle:1.1.0-gpu-cuda9.0-cudnn7
 
 Run apt-get update
 RUN apt-get install -y cmake
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gym
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple details
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple termcolor
+# Prepare packages for Python
+RUN apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+    libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
+    xz-utils tk-dev libffi-dev liblzma-dev
+
+# Install python3.6
+RUN wget -q https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz && \
+    tar -xzf Python-3.6.0.tgz && cd Python-3.6.0 && \
+    CFLAGS="-Wformat" ./configure --prefix=/usr/local/ --enable-shared && \
+    make -j8  && make altinstall && \
+    cp libpython3.6m.so.1.0 /usr/lib/ && cp libpython3.6m.so.1.0 /usr/local/lib/
+
+COPY ./requirements.txt /root/
+
+# Requirements for python2
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
+
+# Requirements for python3
+RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
+RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple paddlepaddle-gpu==1.3.0.post97

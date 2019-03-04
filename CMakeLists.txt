@@ -24,9 +24,13 @@ function(py_test TARGET_NAME)
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    add_test(NAME ${TARGET_NAME}
+    add_test(NAME ${TARGET_NAME}_with_python2
         COMMAND env PYTHONPATH=.:${py_test_ENVS}
         python -u ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(NAME ${TARGET_NAME}_with_python3
+        COMMAND env PYTHONPATH=.:${py_test_ENVS}
+        python3.6 -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 

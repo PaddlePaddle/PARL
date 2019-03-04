@@ -18,7 +18,7 @@
 FROM paddlepaddle/paddle:1.1.0-gpu-cuda9.0-cudnn7
 
 Run apt-get update
-RUN apt-get install -y cmake
+RUN apt-get install --fix-missing -y cmake
 
 # Prepare packages for Python
 RUN apt-get install --fix-missing -y make build-essential libssl-dev zlib1g-dev libbz2-dev \

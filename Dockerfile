@@ -22,3 +22,5 @@ RUN apt-get install -y cmake
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple gym
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple details
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple termcolor
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pyarrow
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple zmq

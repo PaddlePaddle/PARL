@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pyarrow
-from parl.utils import is_PY3
+from parl.utils import is_PY3, SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
@@ -29,11 +29,16 @@ def dumps_argument(*args, **kwargs):
     Returns:
         Implementation-dependent object in bytes.
     """
-    if is_PY3():
-        # Need convert to bytes manually in python3
-        return bytes(pyarrow.serialize([args, kwargs]).to_buffer())
-    else:
-        return pyarrow.serialize([args, kwargs]).to_buffer()
+    try:
+        if is_PY3():
+            # Need convert to bytes manually in python3
+            ret = bytes(pyarrow.serialize([args, kwargs]).to_buffer())
+        else:
+            ret = pyarrow.serialize([args, kwargs]).to_buffer()
+    except Exception as e:
+        raise SerializeError(e)
+
+    return ret
 
 
 def loads_argument(data):
@@ -47,7 +52,12 @@ def loads_argument(data):
         deserialized arguments [args, kwargs]
         like the input of `dumps_argument`, args is a tuple, and kwargs is a dict 
     """
-    return pyarrow.deserialize(data)
+    try:
+        ret = pyarrow.deserialize(data)
+    except Exception as e:
+        raise DeserializeError(e)
+
+    return ret
 
 
 def dumps_return(data):
@@ -60,11 +70,16 @@ def dumps_return(data):
     Returns:
         Implementation-dependent object in bytes.
     """
-    if is_PY3():
-        # Need convert to bytes manually in python3
-        return bytes(pyarrow.serialize(data).to_buffer())
-    else:
-        return pyarrow.serialize(data).to_buffer()
+    try:
+        if is_PY3():
+            # Need convert to bytes manually in python3
+            ret = bytes(pyarrow.serialize(data).to_buffer())
+        else:
+            ret = pyarrow.serialize(data).to_buffer()
+    except Exception as e:
+        raise SerializeError(e)
+
+    return ret
 
 
 def loads_return(data):
@@ -77,4 +92,9 @@ def loads_return(data):
     Returns:
         deserialized data
     """
-    return pyarrow.deserialize(data)
+    try:
+        ret = pyarrow.deserialize(data)
+    except Exception as e:
+        raise DeserializeError(e)
+
+    return ret

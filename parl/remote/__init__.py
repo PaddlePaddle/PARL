@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from parl.remote.exceptions import *
 from parl.remote.remote_decorator import *
 from parl.remote.remote_manager import *
 from parl.remote.remote_object import *

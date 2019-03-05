@@ -24,11 +24,13 @@ def get_ip_address():
     """
     get the IP address of the host.
     """
-    platfrom_sys = platform.system()
+    platform_sys = platform.system()
 
     # Only support Linux and MacOS
-    if platform_sys != 'Linux' or platform_sys != 'Darwin':
-        logger.warning('get_ip_address only support Linux and MacOS, please set ip address manually.')
+    if platform_sys != 'Linux' and platform_sys != 'Darwin':
+        logger.warning(
+            'get_ip_address only support Linux and MacOS, please set ip address manually.'
+        )
         return None
 
     local_ip = None
@@ -47,7 +49,8 @@ def get_ip_address():
             pass
 
     if local_ip == None or local_ip == '127.0.0.1' or local_ip == '127.0.1.1':
-        logger.warning('get_ip_address failed, please set ip address manually.')
+        logger.warning(
+            'get_ip_address failed, please set ip address manually.')
         return None
 
     return local_ip

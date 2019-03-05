@@ -1,3 +1,5 @@
 gym
 details
 termcolor
+pyarrow
+zmq

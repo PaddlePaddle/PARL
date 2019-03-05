@@ -14,14 +14,15 @@
 
 import threading
 import zmq
-from parl.remote import remote_constants
+from parl.remote import remote_constants, RemoteError, RemoteAttributeError, RemoteSerializeError, \
+        RemoteDeserializeError
 from parl.utils import logger, to_str, to_byte
 from parl.utils.communication import dumps_argument, loads_return
 
 
 class RemoteObject(object):
     """
-    Remote object, which provides interface to call functions of object in remote client.
+    Provides interface to call functions of object in remote client.
     """
 
     def __init__(self, remote_client_address, remote_client_id):
@@ -40,7 +41,7 @@ class RemoteObject(object):
 
     def _connect_remote_client(self, remote_client_address):
         """
-        build connection with the remote client to send function call.
+        Build connection with the remote client to send function call.
         """
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
@@ -51,7 +52,7 @@ class RemoteObject(object):
 
     def __getattr__(self, attr):
         """
-        Provide interface to call the function of object in remote client.
+        Provides interface to call functions of object in remote client.
             1. send fucntion name and packed auguments to remote client;
             2. remote clinet execute the function of the object really;
             3. receive function return from remote client.
@@ -66,7 +67,8 @@ class RemoteObject(object):
             data = dumps_argument(*args, **kwargs)
 
             self.command_socket.send_multipart(
-                [remote_constants.NORMAL_TAG, to_byte(attr), data])
+                [remote_constants.NORMAL_TAG,
+                 to_byte(attr), data])
 
             message = self.command_socket.recv_multipart()
             tag = message[0]
@@ -74,9 +76,16 @@ class RemoteObject(object):
                 ret = loads_return(message[1])
             elif tag == remote_constants.EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                logger.error(
-                    'Exception message from remote: \n{}'.format(error_str))
-                raise Exception('Remote Exception')
+                raise RemoteError(error_str)
+            elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
+                error_str = to_str(message[1])
+                raise RemoteAttributeError(error_str)
+            elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
+                error_str = to_str(message[1])
+                raise RemoteSerializeError(error_str)
+            elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
+                error_str = to_str(message[1])
+                raise RemoteDeserializeError(error_str)
             else:
                 raise NotImplementedError()
 

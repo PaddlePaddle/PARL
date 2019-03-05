@@ -18,11 +18,10 @@ import zmq
 from parl.utils import logger, to_byte, to_str
 from parl.remote import remote_constants
 from parl.remote.remote_object import RemoteObject
-
 """
-2 steps to finish communication with remote clients.
-1. Create a RemoteManager:
-2. Get remote object after remote client connect to the RemoteManager
+Two steps to build the communication with remote clients:
+1. Create a RemoteManager;
+2. Get remote objects by calling the function get_remote.
 
 ```python
     remote_manager = RemoteManager(port=[port])
@@ -57,8 +56,8 @@ class RemoteManager(object):
     def _wait_for_connection(self):
         """
         A never-ending function keeps waiting for the connections from remote client.
-        It will put an available remote client into an internel client pool, and clients
-        can be obtained by calling `get_client`.
+        It will put an available remote object in an internel pool, and remote object
+        can be obtained by calling `get_remote`.
 
         Note that this function has been called inside the `__init__` function.
         """
@@ -68,8 +67,9 @@ class RemoteManager(object):
                 tag = message[0]
 
                 if tag == remote_constants.CONNECT_TAG:
-                    self.socket.send_multipart(
-                        [remote_constants.NORMAL_TAG, b'Connect server success.'])
+                    self.socket.send_multipart([
+                        remote_constants.NORMAL_TAG, b'Connect server success.'
+                    ])
                     client_info = to_str(message[1])
                     remote_client_address, remote_client_id = client_info.split(
                     )

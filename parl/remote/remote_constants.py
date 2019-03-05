@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 CONNECT_TAG = b'[CONNECT]'
 HEARTBEAT_TAG = b'[HEARTBEAT]'
 
 EXCEPTION_TAG = b'[EXCEPTION]'
+ATTRIBUTE_EXCEPTION_TAG = b'[ATTRIBUTE_EXCEPTION]'
+SERIALIZE_EXCEPTION_TAG = b'[SERIALIZE_EXCEPTION]'
+DESERIALIZE_EXCEPTION_TAG = b'[DESERIALIZE_EXCEPTION]'
+
 NORMAL_TAG = b'[NORMAL]'

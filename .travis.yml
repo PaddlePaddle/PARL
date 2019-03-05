@@ -8,7 +8,7 @@ os:
 env:
   - JOB=check_style
 script:
-  - docker run -it -v $PWD:/work -w /work paddlepaddle/paddle:latest-dev ./scripts/build.sh ${JOB}
+  - docker run -it -v $PWD:/work -w /work paddlepaddle/paddle:latest-dev ./.teamcity/build.sh ${JOB}
 notifications:
   email:
     on_success: change

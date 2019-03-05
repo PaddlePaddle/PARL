@@ -16,4 +16,3 @@ generates new PARL python API
 """
 from parl.framework import *
 from parl.remote import remote
-from parl.exceptions import ParlError

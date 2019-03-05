@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pyarrow
-from parl.utils import is_PY3, SerializeError, DeserializeError
+from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
@@ -30,11 +30,7 @@ def dumps_argument(*args, **kwargs):
         Implementation-dependent object in bytes.
     """
     try:
-        if is_PY3():
-            # Need convert to bytes manually in python3
-            ret = bytes(pyarrow.serialize([args, kwargs]).to_buffer())
-        else:
-            ret = pyarrow.serialize([args, kwargs]).to_buffer()
+        ret = pyarrow.serialize([args, kwargs]).to_buffer().to_pybytes()
     except Exception as e:
         raise SerializeError(e)
 
@@ -71,11 +67,7 @@ def dumps_return(data):
         Implementation-dependent object in bytes.
     """
     try:
-        if is_PY3():
-            # Need convert to bytes manually in python3
-            ret = bytes(pyarrow.serialize(data).to_buffer())
-        else:
-            ret = pyarrow.serialize(data).to_buffer()
+        ret = pyarrow.serialize(data).to_buffer().to_pybytes()
     except Exception as e:
         raise SerializeError(e)
 

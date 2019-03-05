@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.exceptions import ParlError
 
-
-class RemoteError(ParlError):
+class RemoteError(Exception):
     """
     Super class of exceptions in remote module.
     """

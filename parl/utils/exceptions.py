@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.exceptions import ParlError
 
-
-class UtilsError(ParlError):
+class UtilsError(Exception):
     """
     Super class of exceptions in utils module.
     """

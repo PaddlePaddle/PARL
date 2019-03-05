@@ -14,7 +14,9 @@
 
 import sys
 
-__all__ = ['has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3']
+__all__ = [
+    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3'
+]
 
 
 def has_func(obj, fun):
@@ -59,8 +61,10 @@ def to_byte(string):
     """
     return string.encode()
 
+
 def is_PY2():
     return sys.version_info[0] == 2
+
 
 def is_PY3():
     return sys.version_info[0] == 3

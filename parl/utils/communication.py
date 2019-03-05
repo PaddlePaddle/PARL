@@ -30,7 +30,7 @@ def dumps_argument(*args, **kwargs):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = pyarrow.serialize([args, kwargs]).to_buffer().to_pybytes()
+        ret = pyarrow.serialize([args, kwargs]).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 
@@ -67,7 +67,7 @@ def dumps_return(data):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = pyarrow.serialize(data).to_buffer().to_pybytes()
+        ret = pyarrow.serialize(data).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 

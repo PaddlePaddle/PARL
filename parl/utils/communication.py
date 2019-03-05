@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pyarrow
+from parl.utils import is_PY3
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
@@ -28,7 +29,11 @@ def dumps_argument(*args, **kwargs):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return bytes(pyarrow.serialize([args, kwargs]).to_buffer())
+    if is_PY3():
+        # Need convert to bytes manually in python3
+        return bytes(pyarrow.serialize([args, kwargs]).to_buffer())
+    else:
+        return pyarrow.serialize([args, kwargs]).to_buffer()
 
 
 def loads_argument(data):
@@ -55,7 +60,11 @@ def dumps_return(data):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return bytes(pyarrow.serialize(data).to_buffer())
+    if is_PY3():
+        # Need convert to bytes manually in python3
+        return bytes(pyarrow.serialize(data).to_buffer())
+    else:
+        return pyarrow.serialize(data).to_buffer()
 
 
 def loads_return(data):

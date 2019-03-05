@@ -15,9 +15,10 @@
 import queue
 import threading
 import zmq
-from parl.utils import logger, str2byte, byte2str
+from parl.utils import logger, to_byte, to_str
+from parl.remote import remote_constants
 from parl.remote.remote_object import RemoteObject
-from parl.remote.message import *
+
 """
 2 steps to finish communication with remote clients.
 1. Create a RemoteManager:
@@ -66,19 +67,19 @@ class RemoteManager(object):
                 message = self.socket.recv_multipart()
                 tag = message[0]
 
-                if tag == CONNECT_TAG:
+                if tag == remote_constants.CONNECT_TAG:
                     self.socket.send_multipart(
-                        [NORMAL_TAG, b'Connect server success.'])
-                    client_info = byte2str(message[1])
+                        [remote_constants.NORMAL_TAG, b'Connect server success.'])
+                    client_info = to_str(message[1])
                     remote_client_address, remote_client_id = client_info.split(
                     )
                     remote_obj = RemoteObject(remote_client_address,
                                               remote_client_id)
                     logger.info('[RemoteManager] Added a new remote object.')
                     self.remote_pool.put(remote_obj)
-                elif tag == HEARTBEAT_TAG:
+                elif tag == remote_constants.HEARTBEAT_TAG:
                     self.socket.send_multipart(
-                        [NORMAL_TAG, b'Server is alive.'])
+                        [remote_constants.NORMAL_TAG, b'Server is alive.'])
                 else:
                     raise NotImplementedError()
 

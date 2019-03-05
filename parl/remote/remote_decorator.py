@@ -17,9 +17,10 @@ import pyarrow
 import threading
 import time
 import zmq
-from parl.utils import get_ip_address, logger, byte2str, str2byte
+from parl.remote import remote_constants
+from parl.utils import get_ip_address, logger, to_str, to_byte
 from parl.utils.communication import loads_argument, dumps_return
-from parl.remote.message import *
+
 """
 Three steps to create a remote class -- 
 1. add a decroator(@parl.remote) before the definition of the class.
@@ -108,7 +109,7 @@ def remote(cls):
             logger.info("connecting {}:{}".format(server_ip, server_port))
 
             client_info = '{}:{} {}'.format(local_ip, local_port, client_id)
-            socket.send_multipart([CONNECT_TAG, str2byte(client_info)])
+            socket.send_multipart([remote_constants.CONNECT_TAG, to_byte(client_info)])
 
             message = socket.recv_multipart()
             logger.info("[connect_server] done, message from server:{}".format(
@@ -133,7 +134,7 @@ def remote(cls):
             self.poller.register(self.connect_socket, zmq.POLLIN)
 
             while True:
-                self.connect_socket.send_multipart([HEARTBEAT_TAG])
+                self.connect_socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
                 # wait for at most 10s to receive response
                 socks = dict(self.poller.poll(10000))
@@ -169,7 +170,7 @@ def remote(cls):
                     message = self.reply_socket.recv_multipart()
 
                     try:
-                        function_name = byte2str(message[1])
+                        function_name = to_str(message[1])
                         data = message[2]
                         args, kw = loads_argument(data)
                         ret = getattr(self.unwrapped, function_name)(*args,
@@ -180,13 +181,13 @@ def remote(cls):
                         logger.error(error_str)
 
                         self.reply_socket.send_multipart(
-                            [EXCEPTION_TAG, str2byte(error_str)])
+                            [remote_constants.EXCEPTION_TAG, to_byte(error_str)])
 
                         time.sleep(1)
                         self._exit_remote()
                         break
 
-                    self.reply_socket.send_multipart([NORMAL_TAG, ret])
+                    self.reply_socket.send_multipart([remote_constants.NORMAL_TAG, ret])
 
                 except zmq.ContextTerminated:
                     logger.warning(

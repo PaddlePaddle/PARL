@@ -14,9 +14,9 @@
 
 import threading
 import zmq
-from parl.utils import logger, byte2str, str2byte
+from parl.remote import remote_constants
+from parl.utils import logger, to_str, to_byte
 from parl.utils.communication import dumps_argument, loads_return
-from parl.remote.message import *
 
 
 class RemoteObject(object):
@@ -64,15 +64,16 @@ class RemoteObject(object):
             self.internal_lock.acquire()
 
             data = dumps_argument(*args, **kwargs)
+
             self.command_socket.send_multipart(
-                [NORMAL_TAG, str2byte(attr), data])
+                [remote_constants.NORMAL_TAG, to_byte(attr), data])
 
             message = self.command_socket.recv_multipart()
             tag = message[0]
-            if tag == NORMAL_TAG:
+            if tag == remote_constants.NORMAL_TAG:
                 ret = loads_return(message[1])
-            elif tag == EXCEPTION_TAG:
-                error_str = byte2str(message[1])
+            elif tag == remote_constants.EXCEPTION_TAG:
+                error_str = to_str(message[1])
                 logger.error(
                     'Exception message from remote: \n{}'.format(error_str))
                 raise Exception('Remote Exception')

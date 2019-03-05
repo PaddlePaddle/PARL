@@ -15,4 +15,3 @@
 from parl.remote.remote_decorator import *
 from parl.remote.remote_manager import *
 from parl.remote.remote_object import *
-from parl.remote.message import *

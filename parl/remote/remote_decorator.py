@@ -218,8 +218,7 @@ def remote(cls):
                         [remote_constants.NORMAL_TAG, ret])
 
                 except zmq.ZMQError:
-                    logger.warning(
-                        'Zmq errror, exiting reply loop thread.')
+                    logger.warning('Zmq errror, exiting reply loop thread.')
                     break
 
         def as_remote(self,

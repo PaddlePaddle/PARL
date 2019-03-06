@@ -133,12 +133,13 @@ def remote(cls):
         def _exit_remote(self):
             # Following release order matters
 
-            self.reply_socket.close()
+            #self.reply_socket.close()
 
-            self.connect_socket.close()
+            #self.connect_socket.close()
             self.poller.unregister(self.connect_socket)
 
-            self.zmq_context.term()
+            #self.zmq_context.term()
+            self.zmq_context.destroy()
 
         def _heartbeat_loop(self):
             """

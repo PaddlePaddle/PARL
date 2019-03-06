@@ -84,8 +84,8 @@ class RemoteManager(object):
                 else:
                     raise NotImplementedError()
 
-            except zmq.ContextTerminated:
-                logger.warning('Zmq context termnated, exiting server.')
+            except zmq.ZMQError:
+                logger.warning('Zmq error, exiting server.')
                 break
 
     def get_remote(self):

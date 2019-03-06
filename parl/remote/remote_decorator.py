@@ -217,9 +217,9 @@ def remote(cls):
                     self.reply_socket.send_multipart(
                         [remote_constants.NORMAL_TAG, ret])
 
-                except zmq.ContextTerminated:
+                except zmq.ZMQError:
                     logger.warning(
-                        'Zmq context termnated, exiting reply loop thread.')
+                        'Zmq errror, exiting reply loop thread.')
                     break
 
         def as_remote(self,

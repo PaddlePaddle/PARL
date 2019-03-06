@@ -25,7 +25,10 @@ class RemoteObject(object):
     Provides interface to call functions of object in remote client.
     """
 
-    def __init__(self, remote_client_address, remote_client_id, zmq_context=None):
+    def __init__(self,
+                 remote_client_address,
+                 remote_client_id,
+                 zmq_context=None):
         """
         Args:
             remote_client_address: address(ip:port) of remote client

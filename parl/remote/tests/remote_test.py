@@ -170,9 +170,9 @@ class TestRemote(unittest.TestCase):
             pass
 
         self.assertEqual(remote_sim2.get_arg1(), 11)
-    
-    # Todo(@zenghongsheng): 
-    # zmq will raise unexpected C++ exception when closing context, 
+
+    # Todo(@zenghongsheng):
+    # zmq will raise unexpected C++ exception when closing context,
     # remove this unittest for now.
     #def test_heartbeat_after_server_closed(self):
     #    remote_sim = self.remote_manager.get_remote()

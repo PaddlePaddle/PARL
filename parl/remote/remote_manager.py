@@ -74,7 +74,8 @@ class RemoteManager(object):
                     remote_client_address, remote_client_id = client_info.split(
                     )
                     remote_obj = RemoteObject(remote_client_address,
-                                              remote_client_id)
+                                              remote_client_id,
+                                              self.zmq_context)
                     logger.info('[RemoteManager] Added a new remote object.')
                     self.remote_pool.put(remote_obj)
                 elif tag == remote_constants.HEARTBEAT_TAG:

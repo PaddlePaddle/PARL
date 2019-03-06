@@ -25,13 +25,18 @@ class RemoteObject(object):
     Provides interface to call functions of object in remote client.
     """
 
-    def __init__(self, remote_client_address, remote_client_id):
+    def __init__(self, remote_client_address, remote_client_id, zmq_context=None):
         """
         Args:
             remote_client_address: address(ip:port) of remote client
             remote_client_id: id of remote client
 
         """
+        if zmq_context is None:
+            self.zmq_context = zmq.Context()
+        else:
+            self.zmq_context = zmq_context
+
         # socket for sending function call to remote object and receiving result
         self.command_socket = None
         # lock for thread safety
@@ -43,12 +48,12 @@ class RemoteObject(object):
         """
         Build connection with the remote client to send function call.
         """
-        context = zmq.Context()
-        socket = context.socket(zmq.REQ)
+        socket = self.zmq_context.socket(zmq.REQ)
         logger.info("[connect_remote_client] client_address:{}".format(
             remote_client_address))
         socket.connect("tcp://{}".format(remote_client_address))
         self.command_socket = socket
+        self.command_socket.linger = 0
 
     def __getattr__(self, attr):
         """

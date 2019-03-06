@@ -58,22 +58,22 @@ class TestRemote(unittest.TestCase):
     def tearDown(self):
         self.remote_manager.close()
 
-    def test_remote_object(self):
-        remote_sim = self.remote_manager.get_remote()
-        logger.info('got remote sim')
+    #def test_remote_object(self):
+    #    remote_sim = self.remote_manager.get_remote()
+    #    logger.info('got remote sim')
 
-        logger.info('remote_sim.get_arg1()')
-        self.assertEqual(remote_sim.get_arg1(), 1)
-        self.assertEqual(remote_sim.get_arg2(), 2)
+    #    logger.info('remote_sim.get_arg1()')
+    #    self.assertEqual(remote_sim.get_arg1(), 1)
+    #    self.assertEqual(remote_sim.get_arg2(), 2)
 
-        logger.info('remote_sim.set_arg1()')
-        ret = remote_sim.set_arg1(3)
-        self.assertIsNone(ret)
-        ret = remote_sim.set_arg2(4)
-        self.assertIsNone(ret)
+    #    logger.info('remote_sim.set_arg1()')
+    #    ret = remote_sim.set_arg1(3)
+    #    self.assertIsNone(ret)
+    #    ret = remote_sim.set_arg2(4)
+    #    self.assertIsNone(ret)
 
-        self.assertEqual(remote_sim.get_arg1(), 3)
-        self.assertEqual(remote_sim.get_arg2(), 4)
+    #    self.assertEqual(remote_sim.get_arg1(), 3)
+    #    self.assertEqual(remote_sim.get_arg2(), 4)
 
     #def test_remote_object_with_wrong_getattr_get_variable(self):
     #    remote_sim = self.remote_manager.get_remote()
@@ -173,16 +173,19 @@ class TestRemote(unittest.TestCase):
 
     #    self.assertEqual(remote_sim2.get_arg1(), 11)
 
-    #def test_heartbeat_after_server_closed(self):
-    #    remote_sim = self.remote_manager.get_remote()
+    def test_heartbeat_after_server_closed(self):
+        remote_sim = self.remote_manager.get_remote()
+        logger.info('got remote sim')
 
-    #    time.sleep(1)
-    #    self.remote_manager.close()
+        time.sleep(1)
+        logger.info('closing server')
+        self.remote_manager.close()
 
-    #    # heartbeat interval (10s) + max waiting reply (10s)
-    #    time.sleep(20)
+        # heartbeat interval (10s) + max waiting reply (10s)
+        time.sleep(20)
 
-    #    self.assertTrue(self.sim.remote_closed())
+        logger.info('check self.sim.remote_closed')
+        self.assertTrue(self.sim.remote_closed())
 
     #def test_set_client_ip_port_manually(self):
     #    time.sleep(1)

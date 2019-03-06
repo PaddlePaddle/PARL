@@ -76,16 +76,16 @@ class RemoteObject(object):
                 ret = loads_return(message[1])
             elif tag == remote_constants.EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                raise RemoteError(error_str)
+                raise RemoteError(attr, error_str)
             elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                raise RemoteAttributeError(error_str)
+                raise RemoteAttributeError(attr, error_str)
             elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                raise RemoteSerializeError(error_str)
+                raise RemoteSerializeError(attr, error_str)
             elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                raise RemoteDeserializeError(error_str)
+                raise RemoteDeserializeError(attr, error_str)
             else:
                 raise NotImplementedError()
 

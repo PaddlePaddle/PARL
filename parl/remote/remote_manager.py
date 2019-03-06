@@ -101,6 +101,4 @@ class RemoteManager(object):
         Close RemoteManager. 
         """
 
-        self.socket.close()
-
-        self.zmq_context.term()
+        self.zmq_context.destroy()

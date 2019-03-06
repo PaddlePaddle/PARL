@@ -60,15 +60,11 @@ class TestRemote(unittest.TestCase):
         self.remote_manager.close()
 
     def test_remote_object(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
-        logger.info('got remote sim')
 
-        logger.info('remote_sim.get_arg1()')
         self.assertEqual(remote_sim.get_arg1(), 1)
         self.assertEqual(remote_sim.get_arg2(), 2)
 
-        logger.info('remote_sim.set_arg1()')
         ret = remote_sim.set_arg1(3)
         self.assertIsNone(ret)
         ret = remote_sim.set_arg2(4)
@@ -78,7 +74,6 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim.get_arg2(), 4)
 
     def test_remote_object_with_wrong_getattr_get_variable(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -90,7 +85,6 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_wrong_getattr_set_variable(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -102,7 +96,6 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_wrong_argument(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -114,7 +107,6 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_unable_serialize_argument(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -126,7 +118,6 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_unable_serialize_return(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -138,7 +129,6 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_mutli_remote_object(self):
-        print(inspect.stack()[0][3])
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)
@@ -158,7 +148,6 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim2.get_arg1(), 11)
 
     def test_mutli_remote_object_with_one_failed(self):
-        print(inspect.stack()[0][3])
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)
@@ -183,12 +172,9 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim2.get_arg1(), 11)
 
     def test_heartbeat_after_server_closed(self):
-        print(inspect.stack()[0][3])
         remote_sim = self.remote_manager.get_remote()
-        logger.info('got remote sim')
 
         time.sleep(1)
-        logger.info('closing server')
         self.remote_manager.close()
 
         # heartbeat interval (10s) + max waiting reply (10s)
@@ -198,7 +184,6 @@ class TestRemote(unittest.TestCase):
         self.assertTrue(self.sim.remote_closed())
 
     def test_set_client_ip_port_manually(self):
-        print(inspect.stack()[0][3])
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)

@@ -147,15 +147,19 @@ def remote(cls):
             """
             self.poller = zmq.Poller()
             self.poller.register(self.connect_socket, zmq.POLLIN)
+            logger.info('[debug] poller register connect socket')
 
             while True:
+                logger.info('[debug] connect socket send HEARTBEAT')
                 self.connect_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
 
                 # wait for at most 10s to receive response
+                logger.info('[debug] poller.poll')
                 socks = dict(self.poller.poll(10000))
 
                 if socks.get(self.connect_socket) == zmq.POLLIN:
+                    logger.info('connect socket recv return of heartbeat')
                     _ = self.connect_socket.recv_multipart()
                 else:
                     logger.warning(

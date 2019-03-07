@@ -27,7 +27,7 @@ Three steps to create a remote class:
 2. create an instance of remote class;
 3. call function `as_remote` with server address.
 
-@parl.remote_classs
+@parl.remote_class
 Class Simulator(object):
     ...
 

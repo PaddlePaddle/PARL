@@ -71,7 +71,7 @@ agent = AtariAgent(algorithm)
 
 
 ```
-pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git
+pip install parl
 ```
 
 # Examples

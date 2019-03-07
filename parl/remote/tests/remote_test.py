@@ -42,24 +42,24 @@ class Simulator:
 
 
 class TestRemote(unittest.TestCase):
-    def setUp(self):
+    def _setUp(self, server_port):
         self.sim = Simulator(1, arg2=2)
 
         # run client in a new thread to fake a remote client
         self.client_thread = threading.Thread(
             target=self.sim.as_remote, args=(
                 'localhost',
-                '8008',
+                server_port,
             ))
         self.client_thread.setDaemon(True)
         self.client_thread.start()
 
-        self.remote_manager = RemoteManager(port='8008')
-
-    def tearDown(self):
-        self.remote_manager.close()
+        self.remote_manager = RemoteManager(port=server_port)
 
     def test_remote_object(self):
+        server_port = 17770
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         self.assertEqual(remote_sim.get_arg1(), 1)
@@ -74,6 +74,9 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim.get_arg2(), 4)
 
     def test_remote_object_with_wrong_getattr_get_variable(self):
+        server_port = 17771
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -85,6 +88,9 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_wrong_getattr_set_variable(self):
+        server_port = 17772
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -96,6 +102,9 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_wrong_argument(self):
+        server_port = 17773
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -107,6 +116,9 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_unable_serialize_argument(self):
+        server_port = 17774
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -118,6 +130,9 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_remote_object_with_unable_serialize_return(self):
+        server_port = 17775
+        self._setUp(server_port)
+
         remote_sim = self.remote_manager.get_remote()
 
         try:
@@ -129,13 +144,16 @@ class TestRemote(unittest.TestCase):
         assert False
 
     def test_mutli_remote_object(self):
+        server_port = 17776
+        self._setUp(server_port)
+
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)
         client_thread2 = threading.Thread(
             target=sim2.as_remote, args=(
                 'localhost',
-                '8008',
+                server_port,
             ))
         client_thread2.setDaemon(True)
         client_thread2.start()
@@ -148,13 +166,16 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim2.get_arg1(), 11)
 
     def test_mutli_remote_object_with_one_failed(self):
+        server_port = 17777
+        self._setUp(server_port)
+
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)
         client_thread2 = threading.Thread(
             target=sim2.as_remote, args=(
                 'localhost',
-                '8008',
+                server_port,
             ))
         client_thread2.setDaemon(True)
         client_thread2.start()
@@ -175,6 +196,9 @@ class TestRemote(unittest.TestCase):
     # zmq will raise unexpected C++ exception when closing context,
     # remove this unittest for now.
     #def test_heartbeat_after_server_closed(self):
+    #    server_port = 17778
+    #    self._setUp(server_port)
+
     #    remote_sim = self.remote_manager.get_remote()
 
     #    time.sleep(1)
@@ -187,6 +211,9 @@ class TestRemote(unittest.TestCase):
     #    self.assertTrue(self.sim.remote_closed())
 
     def test_set_client_ip_port_manually(self):
+        server_port = 17779
+        self._setUp(server_port)
+
         time.sleep(1)
         # run second client
         sim2 = Simulator(11, arg2=22)
@@ -194,7 +221,7 @@ class TestRemote(unittest.TestCase):
             target=sim2.as_remote,
             args=(
                 'localhost',
-                8008,
+                server_port,
                 'localhost',
                 6666,
             ))

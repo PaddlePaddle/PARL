@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-generates new PARL python API
-"""
-from parl.framework import *
-from parl.remote import remote_class, RemoteManager
+
+CONNECT_TAG = b'[CONNECT]'
+HEARTBEAT_TAG = b'[HEARTBEAT]'
+
+EXCEPTION_TAG = b'[EXCEPTION]'
+ATTRIBUTE_EXCEPTION_TAG = b'[ATTRIBUTE_EXCEPTION]'
+SERIALIZE_EXCEPTION_TAG = b'[SERIALIZE_EXCEPTION]'
+DESERIALIZE_EXCEPTION_TAG = b'[DESERIALIZE_EXCEPTION]'
+
+NORMAL_TAG = b'[NORMAL]'

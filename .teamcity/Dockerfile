@@ -15,22 +15,7 @@
 
 # A dev image based on paddle production image
 
-FROM paddlepaddle/paddle:1.3.0-gpu-cuda9.0-cudnn7
-
-Run apt-get update
-RUN apt-get install --fix-missing -y cmake
-
-# Prepare packages for Python
-RUN apt-get install --fix-missing -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
-    libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
-    xz-utils tk-dev libffi-dev liblzma-dev
-
-# Install python3.6 and pip3.6
-RUN wget -q https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tgz && \
-    tar -xzf Python-3.6.0.tgz && cd Python-3.6.0 && \
-    CFLAGS="-Wformat" ./configure --prefix=/usr/local/ --enable-shared > /dev/null && \
-    make -j8 > /dev/null && make altinstall > /dev/null  && \
-    cp libpython3.6m.so.1.0 /usr/lib/ && cp libpython3.6m.so.1.0 /usr/local/lib/
+FROM parl/parl-test:cuda9.0-cudnn7
 
 COPY ./requirements.txt /root/
 
@@ -39,4 +24,3 @@ RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirement
 
 # Requirements for python3
 RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
-RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple paddlepaddle-gpu==1.3.0.post97

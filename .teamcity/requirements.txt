@@ -1,3 +1,6 @@
+paddlepaddle-gpu==1.3.0.post97
 gym
 details
 termcolor
+pyarrow
+zmq

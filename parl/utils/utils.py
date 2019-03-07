@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = ['has_func', 'action_mapping']
+import sys
+
+__all__ = [
+    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3'
+]
 
 
 def has_func(obj, fun):
@@ -44,3 +48,23 @@ def action_mapping(model_output_act, low_bound, high_bound):
     action = low_bound + (model_output_act - (-1.0)) * (
         (high_bound - low_bound) / 2.0)
     return action
+
+
+def to_str(byte):
+    """ convert byte to string in pytohn2/3
+    """
+    return str(byte.decode())
+
+
+def to_byte(string):
+    """ convert byte to string in pytohn2/3
+    """
+    return string.encode()
+
+
+def is_PY2():
+    return sys.version_info[0] == 2
+
+
+def is_PY3():
+    return sys.version_info[0] == 3

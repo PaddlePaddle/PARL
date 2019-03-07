@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pyarrow
+from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
@@ -28,7 +29,12 @@ def dumps_argument(*args, **kwargs):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return pyarrow.serialize([args, kwargs]).to_buffer()
+    try:
+        ret = pyarrow.serialize([args, kwargs]).to_buffer()
+    except Exception as e:
+        raise SerializeError(e)
+
+    return ret
 
 
 def loads_argument(data):
@@ -42,7 +48,12 @@ def loads_argument(data):
         deserialized arguments [args, kwargs]
         like the input of `dumps_argument`, args is a tuple, and kwargs is a dict 
     """
-    return pyarrow.deserialize(data)
+    try:
+        ret = pyarrow.deserialize(data)
+    except Exception as e:
+        raise DeserializeError(e)
+
+    return ret
 
 
 def dumps_return(data):
@@ -55,7 +66,12 @@ def dumps_return(data):
     Returns:
         Implementation-dependent object in bytes.
     """
-    return pyarrow.serialize(data).to_buffer()
+    try:
+        ret = pyarrow.serialize(data).to_buffer()
+    except Exception as e:
+        raise SerializeError(e)
+
+    return ret
 
 
 def loads_return(data):
@@ -68,4 +84,9 @@ def loads_return(data):
     Returns:
         deserialized data
     """
-    return pyarrow.deserialize(data)
+    try:
+        ret = pyarrow.deserialize(data)
+    except Exception as e:
+        raise DeserializeError(e)
+
+    return ret

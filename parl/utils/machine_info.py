@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import platform
 import subprocess
 from parl.utils import logger
 
@@ -23,11 +24,35 @@ def get_ip_address():
     """
     get the IP address of the host.
     """
+    platform_sys = platform.system()
+
+    # Only support Linux and MacOS
+    if platform_sys != 'Linux' and platform_sys != 'Darwin':
+        logger.warning(
+            'get_ip_address only support Linux and MacOS, please set ip address manually.'
+        )
+        return None
+
+    local_ip = None
     import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    local_ip = s.getsockname()[0]
-    s.close()
+    try:
+        # First way, tested in Ubuntu and MacOS
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except:
+        # Second way, tested in CentOS
+        try:
+            local_ip = socket.gethostbyname(socket.gethostname())
+        except:
+            pass
+
+    if local_ip == None or local_ip == '127.0.0.1' or local_ip == '127.0.1.1':
+        logger.warning(
+            'get_ip_address failed, please set ip address manually.')
+        return None
+
     return local_ip
 
 

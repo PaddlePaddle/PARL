@@ -175,50 +175,45 @@ def remote_class(cls):
 
         def _reply_loop(self):
             while True:
+                message = self.reply_socket.recv_multipart()
+
                 try:
-                    message = self.reply_socket.recv_multipart()
+                    function_name = to_str(message[1])
+                    data = message[2]
+                    args, kwargs = loads_argument(data)
+                    ret = getattr(self.unwrapped, function_name)(*args,
+                                                                 **kwargs)
+                    ret = dumps_return(ret)
 
-                    try:
-                        function_name = to_str(message[1])
-                        data = message[2]
-                        args, kwargs = loads_argument(data)
-                        ret = getattr(self.unwrapped, function_name)(*args,
-                                                                     **kwargs)
-                        ret = dumps_return(ret)
+                except Exception as e:
+                    error_str = str(e)
+                    logger.error(e)
 
-                    except Exception as e:
-                        error_str = str(e)
-                        logger.error(e)
+                    if type(e) == AttributeError:
+                        self.reply_socket.send_multipart([
+                            remote_constants.ATTRIBUTE_EXCEPTION_TAG,
+                            to_byte(error_str)
+                        ])
+                    elif type(e) == SerializeError:
+                        self.reply_socket.send_multipart([
+                            remote_constants.SERIALIZE_EXCEPTION_TAG,
+                            to_byte(error_str)
+                        ])
+                    elif type(e) == DeserializeError:
+                        self.reply_socket.send_multipart([
+                            remote_constants.DESERIALIZE_EXCEPTION_TAG,
+                            to_byte(error_str)
+                        ])
+                    else:
+                        self.reply_socket.send_multipart([
+                            remote_constants.EXCEPTION_TAG,
+                            to_byte(error_str)
+                        ])
 
-                        if type(e) == AttributeError:
-                            self.reply_socket.send_multipart([
-                                remote_constants.ATTRIBUTE_EXCEPTION_TAG,
-                                to_byte(error_str)
-                            ])
-                        elif type(e) == SerializeError:
-                            self.reply_socket.send_multipart([
-                                remote_constants.SERIALIZE_EXCEPTION_TAG,
-                                to_byte(error_str)
-                            ])
-                        elif type(e) == DeserializeError:
-                            self.reply_socket.send_multipart([
-                                remote_constants.DESERIALIZE_EXCEPTION_TAG,
-                                to_byte(error_str)
-                            ])
-                        else:
-                            self.reply_socket.send_multipart([
-                                remote_constants.EXCEPTION_TAG,
-                                to_byte(error_str)
-                            ])
+                    continue
 
-                        continue
-
-                    self.reply_socket.send_multipart(
-                        [remote_constants.NORMAL_TAG, ret])
-
-                except zmq.ZMQError:
-                    logger.warning('Zmq errror, exiting reply loop thread.')
-                    break
+                self.reply_socket.send_multipart(
+                    [remote_constants.NORMAL_TAG, ret])
 
         def as_remote(self,
                       server_ip,

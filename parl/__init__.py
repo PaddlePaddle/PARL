@@ -15,4 +15,4 @@
 generates new PARL python API
 """
 from parl.framework import *
-from parl.remote import remote_class
+from parl.remote import remote_class, RemoteManager

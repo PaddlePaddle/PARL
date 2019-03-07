@@ -23,9 +23,9 @@ from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.utils.communication import loads_argument, dumps_return
 """
 Three steps to create a remote class:
-1. add a decroator(@parl.remote) before the definition of the class;
-2. create an instance of remote class;
-3. call function `as_remote` with server address.
+1. add a decroator(@parl.remote_class) before the definition of the class;
+2. create an instance of remote class; 
+3. call function `as_remote` with server_ip and server_port.
 
 @parl.remote_class
 Class Simulator(object):

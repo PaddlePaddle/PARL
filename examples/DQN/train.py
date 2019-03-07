@@ -137,7 +137,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rom', help='atari rom', required=True)
+    parser.add_argument('--rom', help='the name of atari game', required=True)
     parser.add_argument(
         '--batch_size', type=int, default=64, help='batch size for training')
     parser.add_argument(

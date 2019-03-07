@@ -14,8 +14,8 @@
 
 import threading
 import zmq
-from parl.remote import remote_constants, RemoteError, RemoteAttributeError, RemoteSerializeError, \
-        RemoteDeserializeError
+from parl.remote import remote_constants
+from parl.remote.exceptions import *
 from parl.utils import logger, to_str, to_byte
 from parl.utils.communication import dumps_argument, loads_return
 

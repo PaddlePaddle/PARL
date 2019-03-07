@@ -19,7 +19,7 @@ import unittest
 from parl.remote import *
 
 
-@parl.remote
+@parl.remote_class
 class Simulator:
     def __init__(self, arg1, arg2=None):
         self.arg1 = arg1

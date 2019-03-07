@@ -18,7 +18,8 @@ import threading
 import time
 import zmq
 from parl.remote import remote_constants
-from parl.utils import get_ip_address, logger, to_str, to_byte, SerializeError, DeserializeError
+from parl.utils import get_ip_address, logger, to_str, to_byte
+from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.utils.communication import loads_argument, dumps_return
 """
 Three steps to create a remote class:
@@ -26,7 +27,7 @@ Three steps to create a remote class:
 2. create an instance of remote class;
 3. call function `as_remote` with server address.
 
-@parl.remote
+@parl.remote_classs
 Class Simulator(object):
     ...
 
@@ -36,7 +37,7 @@ sim.as_remote(server_ip='172.18.202.45', port=8001)
 """
 
 
-def remote(cls):
+def remote_class(cls):
     class ClientWrapper(object):
         """
         Wrapper for remote class in client side.
@@ -210,9 +211,7 @@ def remote(cls):
                                 to_byte(error_str)
                             ])
 
-                        time.sleep(1)
-                        self._exit_remote()
-                        break
+                        continue
 
                     self.reply_socket.send_multipart(
                         [remote_constants.NORMAL_TAG, ret])

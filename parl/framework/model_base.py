@@ -17,19 +17,21 @@ Base class to define an Algorithm.
 
 import hashlib
 import paddle.fluid as fluid
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from parl.framework.interface import NetworkInterface
+from parl.plutils import *
 
 __all__ = ['Network', 'Model']
 
 
-class Network(object):
+class Network(NetworkInterface):
     """
     A Network is an unordered set of LayerFuncs or Networks.
     """
 
     def sync_params_to(self,
                        target_net,
-                       gpu_id=0,
+                       gpu_id,
                        decay=0.0,
                        share_vars_parallel_executor=None):
         """
@@ -57,11 +59,8 @@ class Network(object):
             assert not target_net is self, "cannot copy between identical networks"
             assert isinstance(target_net, Network)
             assert self.__class__.__name__ == target_net.__class__.__name__, \
-                "must be the same class for para syncing!"
+                "must be the same class for params syncing!"
             assert (decay >= 0 and decay <= 1)
-
-            # Resolve Circular Imports
-            from parl.plutils import get_parameter_pairs, fetch_framework_var
 
             param_pairs = get_parameter_pairs(self, target_net)
 
@@ -106,15 +105,43 @@ class Network(object):
     @property
     def parameter_names(self):
         """ param_attr names of all parameters in Network,
-            only parameter created by parl.layers included
+            only parameter created by parl.layers included.
+            The order of parameter names will be consistent between
+            different instances of same parl.Network.
 
         Returns:
             list of string, param_attr names of all parameters
         """
 
-        # Resolve Circular Imports
-        from parl.plutils import get_parameter_names
-        return get_parameter_names(self)
+        try:
+            return self._parameter_names
+        except AttributeError:
+            self._parameter_names = get_parameter_names(self)
+            return self._parameter_names
+
+    def get_params(self):
+        """ Get numpy arrays of parameters in this Network
+        
+        Returns:
+            List of numpy array.
+        """
+        params = []
+        for param_name in self.parameter_names:
+            param = fetch_value(param_name)
+            params.append(param)
+
+        return params
+
+    def set_params(self, params, gpu_id):
+        """ Set parameters in this Network with params
+        
+        Args:
+            params: List of numpy array.
+            gpu_id: gpu id where this Network in. (if gpu_id < 0, means in cpu.)
+        """
+        assert len(params) == len(self.parameter_names)
+        for (param_name, param) in list(zip(self.parameter_names, params)):
+            set_value(param_name, param, gpu_id)
 
 
 class Model(Network):

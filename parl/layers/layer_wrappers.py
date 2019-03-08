@@ -40,8 +40,9 @@ from paddle.fluid.executor import _fetch_var
 from paddle.fluid.framework import Variable
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
-from parl.framework.model_base import Network
+from parl.framework.interface import NetworkInterface
 from parl.layers.attr_holder import AttrHolder
+from parl.layers.interface import LayerFuncInterface
 
 
 def update_attr_name(name, default_name, attr, is_bias):
@@ -74,7 +75,7 @@ def update_attr_name(name, default_name, attr, is_bias):
     return check_or_replace_name(new_name, attr)
 
 
-class LayerFunc(object):
+class LayerFunc(LayerFuncInterface):
     def __init__(self, attr_holder):
         self.attr_holder = attr_holder
 
@@ -136,7 +137,8 @@ def check_caller_name():
         try:
             the_class = s[0].f_locals["self"].__class__
             the_method = s[0].f_code.co_name
-            if issubclass(the_class, Network) and the_method == "__init__":
+            if issubclass(the_class,
+                          NetworkInterface) and the_method == "__init__":
                 called_by_init = True
         except:
             pass

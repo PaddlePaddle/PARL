@@ -57,6 +57,9 @@ class Agent(object):
         """build your training program and prediction program here, 
         using the functions define_learn and define_predict in algorithm.
         
+        Note that it's unnecessary to call this function explictly since 
+        it will be called automatically in the initialization function. 
+        
         To build the program, you may need to do the following:
         a. create a new program in fluid with program guard
         b. define your data layer

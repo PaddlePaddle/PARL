@@ -32,7 +32,7 @@ Class Simulator(object):
     ...
 
 sim = Simulator()
-sim.as_remote(server_ip='172.18.202.45', port=8001)
+sim.as_remote(server_ip='172.18.202.45', server_port=8001)
 
 """
 

@@ -103,6 +103,7 @@ def main(argv=None):
         first_line = fd.readline()
         second_line = fd.readline()
         if "COPYRIGHT (C)" in first_line.upper(): continue
+        if "THIRD PARTY" in first_line.upper(): continue
         original_contents = io.open(filename, encoding="utf-8").read()
         new_contents = generate_copyright(
             COPYRIGHT, lang_type(filename)) + original_contents

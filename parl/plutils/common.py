@@ -17,13 +17,8 @@ Common functions of PARL framework
 
 import paddle.fluid as fluid
 from paddle.fluid.executor import _fetch_var
-from parl.layers.interface import LayerFuncInterface
-from parl.framework.interface import NetworkInterface
 
-__all__ = [
-    'fetch_framework_var', 'fetch_value', 'set_value', 'get_parameter_pairs',
-    'get_parameter_names'
-]
+__all__ = ['fetch_framework_var', 'fetch_value', 'set_value']
 
 
 def fetch_framework_var(attr_name):
@@ -69,79 +64,3 @@ def set_value(attr_name, value, gpu_id):
             else fluid.CUDAPlace(gpu_id)
     var = _fetch_var(attr_name, return_numpy=False)
     var.set(value, place)
-
-
-def get_parameter_pairs(src, target):
-    """ Recursively get pairs of parameter names between src and target
-
-    Args:
-        src: parl.Network/parl.LayerFunc/list/tuple/set/dict
-        target: parl.Network/parl.LayerFunc/list/tuple/set/dict
-
-    Returns:
-        param_pairs: list of all tuple(src_param_name, target_param_name, is_bias)
-                     between src and target
-    """
-
-    param_pairs = []
-    if isinstance(src, NetworkInterface):
-        for attr in src.__dict__:
-            if not attr in target.__dict__:
-                continue
-            src_var = getattr(src, attr)
-            target_var = getattr(target, attr)
-            param_pairs.extend(get_parameter_pairs(src_var, target_var))
-    elif isinstance(src, LayerFuncInterface):
-        src_attrs = src.attr_holder.sorted()
-        target_attrs = target.attr_holder.sorted()
-        assert len(src_attrs) == len(target_attrs), \
-                "number of ParamAttr between source layer and target layer should be same."
-        for (src_attr, target_attr) in zip(src_attrs, target_attrs):
-            if src_attr:
-                assert target_attr, "ParamAttr between source layer and target layer is inconsistent."
-                param_pairs.append((src_attr.name, target_attr.name))
-    elif isinstance(src, tuple) or isinstance(src, list):
-        for src_var, target_var in zip(src, target):
-            param_pairs.extend(get_parameter_pairs(src_var, target_var))
-    elif isinstance(src, dict):
-        for k in src.keys():
-            assert k in target
-            param_pairs.extend(get_parameter_pairs(src[k], target[k]))
-    else:
-        # for any other type, won't be handled. Eg: set
-        pass
-    return param_pairs
-
-
-def get_parameter_names(obj):
-    """ Recursively get parameter names in obj,
-        mainly used to get parameter names of a parl.Network.
-        The order of parameter names will be consistent between
-        different instances of same parl.Network.
-
-    Args:
-        obj: parl.Network/parl.LayerFunc/list/tuple/set/dict
-
-    Returns:
-        parameter_names: list of string, all parameter names in obj
-    """
-
-    parameter_names = []
-    for attr in sorted(obj.__dict__.keys()):
-        val = getattr(obj, attr)
-        if isinstance(val, NetworkInterface):
-            parameter_names.extend(get_parameter_names(val))
-        elif isinstance(val, LayerFuncInterface):
-            for attr in val.attr_holder.sorted():
-                if attr:
-                    parameter_names.append(attr.name)
-        elif isinstance(val, tuple) or isinstance(val, list):
-            for x in val:
-                parameter_names.extend(get_parameter_names(x))
-        elif isinstance(val, dict):
-            for x in list(val.values()):
-                parameter_names.extend(get_parameter_names(x))
-        else:
-            # for any other type, won't be handled. Eg: set
-            pass
-    return parameter_names

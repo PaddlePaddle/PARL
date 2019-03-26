@@ -146,9 +146,6 @@ class Network(object):
 
     def _get_parameter_names(self, obj):
         """ Recursively get parameter names in obj,
-            mainly used to get parameter names of a parl.Network.
-            The order of parameter names will be consistent between
-            different instances of same parl.Network.
 
         Args:
             obj (parl.Network/parl.LayerFunc/list/tuple/dict): input object
@@ -178,15 +175,17 @@ class Network(object):
         return parameter_names
 
     def _get_parameter_pairs(self, src, target):
-        """ Recursively get pairs of parameter names between src and target
+        """ Recursively gets parameters in source network and 
+        corresponding parameters in target network.
 
         Args:
-            src (parl.Network/parl.LayerFunc/list/tuple/set/dict): source object
-            target (parl.Network/parl.LayerFunc/list/tuple/set/dict): target object
+            src (parl.Network/parl.LayerFunc/list/tuple/dict): source object
+            target (parl.Network/parl.LayerFunc/list/tuple/dict): target object
 
         Returns:
-            param_pairs (list of tuple): all string pair of parameter names 
-                                         between src and target.
+            param_pairs (list of tuple): all parameter names in source network
+                                         and corresponding parameter names in 
+                                         target network.
         """
 
         param_pairs = []

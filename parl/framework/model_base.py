@@ -26,7 +26,7 @@ __all__ = ['Network', 'Model']
 
 class Network(object):
     """
-    A Network is an unordered set of LayerFuncs or Networks.
+    A Network is a collection of LayerFuncs or Networks.
     """
 
     def sync_params_to(self,
@@ -139,7 +139,8 @@ class Network(object):
             params: List of numpy array.
             gpu_id: gpu id where this Network in. (if gpu_id < 0, means in cpu.)
         """
-        assert len(params) == len(self.parameter_names)
+        assert len(params) == len(self.parameter_names), \
+                'size of input params should be same as parameters number of current Network'
         for (param_name, param) in list(zip(self.parameter_names, params)):
             set_value(param_name, param, gpu_id)
 
@@ -150,10 +151,10 @@ class Network(object):
             different instances of same parl.Network.
 
         Args:
-            obj: parl.Network/parl.LayerFunc/list/tuple/set/dict
+            obj (parl.Network/parl.LayerFunc/list/tuple/dict): input object
 
         Returns:
-            parameter_names: list of string, all parameter names in obj
+            parameter_names (list of string): all parameter names in obj
         """
 
         parameter_names = []
@@ -172,7 +173,7 @@ class Network(object):
                 for x in list(val.values()):
                     parameter_names.extend(self._get_parameter_names(x))
             else:
-                # for any other type, won't be handled. Eg: set
+                # for any other type, won't be handled. E.g. set
                 pass
         return parameter_names
 
@@ -180,12 +181,12 @@ class Network(object):
         """ Recursively get pairs of parameter names between src and target
 
         Args:
-            src: parl.Network/parl.LayerFunc/list/tuple/set/dict
-            target: parl.Network/parl.LayerFunc/list/tuple/set/dict
+            src (parl.Network/parl.LayerFunc/list/tuple/set/dict): source object
+            target (parl.Network/parl.LayerFunc/list/tuple/set/dict): target object
 
         Returns:
-            param_pairs: list of all tuple(src_param_name, target_param_name, is_bias)
-                         between src and target
+            param_pairs (list of tuple): all string pair of parameter names 
+                                         between src and target.
         """
 
         param_pairs = []
@@ -216,7 +217,7 @@ class Network(object):
                 param_pairs.extend(
                     self._get_parameter_pairs(src[k], target[k]))
         else:
-            # for any other type, won't be handled. Eg: set
+            # for any other type, won't be handled. E.g. set
             pass
         return param_pairs
 

@@ -73,7 +73,7 @@ class AgentBaseTest(unittest.TestCase):
             self.assertIsNotNone(output_np)
 
     def test_agent_with_cpu(self):
-        agent = TestAgent(self.algorithm, gpu_id=0)
+        agent = TestAgent(self.algorithm, gpu_id=-1)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
         self.assertIsNotNone(output_np)

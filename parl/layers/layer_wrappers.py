@@ -40,7 +40,6 @@ from paddle.fluid.executor import _fetch_var
 from paddle.fluid.framework import Variable
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
-from parl.framework.model_base import Network
 from parl.layers.attr_holder import AttrHolder
 
 
@@ -128,22 +127,6 @@ class LayerFunc(object):
         return params_names
 
 
-def check_caller_name():
-    stack = inspect.stack()
-    ## we trace back to the call stack and make sure Network.__init__ is on the path
-    called_by_init = False
-    for s in stack:
-        try:
-            the_class = s[0].f_locals["self"].__class__
-            the_method = s[0].f_code.co_name
-            if issubclass(the_class, Network) and the_method == "__init__":
-                called_by_init = True
-        except:
-            pass
-
-    assert called_by_init, "parl.layers can only be called in Network.__init__()!"
-
-
 def fc(size,
        num_flatten_dims=1,
        param_attr=None,
@@ -156,7 +139,6 @@ def fc(size,
     default_name = "fc"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class FC_(LayerFunc):
         def __init__(self):
@@ -187,7 +169,6 @@ def embedding(size,
     Return a function that creates a paddle.fluid.layers.embedding.
     """
     param_attr = update_attr_name(name, "embedding", param_attr, False)
-    check_caller_name()
 
     class Embedding_(LayerFunc):
         def __init__(self):
@@ -222,7 +203,6 @@ def dynamic_lstm(size,
     default_name = "dynamic_lstm"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class DynamicLstm_(LayerFunc):
         def __init__(self):
@@ -265,7 +245,6 @@ def dynamic_lstmp(size,
     default_name = "dynamic_lstmp"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class DynamicLstmp_(LayerFunc):
         def __init__(self):
@@ -303,7 +282,6 @@ def dynamic_gru(size,
     default_name = "dynamic_gru"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class DynamicGru_(LayerFunc):
         def __init__(self):
@@ -353,7 +331,6 @@ def sequence_conv(num_filters,
     default_name = "sequence_conv"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class SequenceConv_(LayerFunc):
         def __init__(self):
@@ -391,7 +368,6 @@ def conv2d(num_filters,
     default_name = "conv2d"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class Conv2D_(LayerFunc):
         def __init__(self):
@@ -432,7 +408,6 @@ def conv2d_transpose(num_filters,
     default_name = "conv2d_transpose"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class Conv2DTranspose_(LayerFunc):
         def __init__(self):
@@ -463,7 +438,6 @@ def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
     default_name = "lstm_unit"
     param_attr = update_attr_name(name, default_name, param_attr, False)
     bias_attr = update_attr_name(name, default_name, bias_attr, True)
-    check_caller_name()
 
     class LstmUnit_(LayerFunc):
         def __init__(self):
@@ -491,7 +465,6 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
     Return a function that creates a paddle.fluid.layers.row_conv.
     """
     param_attr = update_attr_name(name, "row_conv", param_attr, False)
-    check_caller_name()
 
     class RowConv_(LayerFunc):
         def __init__(self):
@@ -534,7 +507,6 @@ def batch_norm(act=None,
                                         None, False)
     moving_variance_attr = update_attr_name(
         name, default_name + "_moving_variance", None, False)
-    check_caller_name()
 
     class BatchNorm_(LayerFunc):
         def __init__(self):
@@ -578,7 +550,6 @@ def create_parameter(shape,
 
     """
     param_attr = update_attr_name(name, "create_parameter", attr, False)
-    check_caller_name()
 
     class CreateParameter_(LayerFunc):
         def __init__(self):

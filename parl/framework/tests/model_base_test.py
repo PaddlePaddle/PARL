@@ -71,6 +71,19 @@ class TestModel3(Model):
         return out
 
 
+class TestModel4(Model):
+    def __init__(self):
+        self.fc1 = layers.fc(size=256)
+        self.fc2 = layers.fc(size=128)
+        self.fc3 = layers.fc(size=1)
+
+    def predict(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        out = self.fc3(out)
+        return out
+
+
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
@@ -80,8 +93,10 @@ class ModelBaseTest(unittest.TestCase):
         gpu_count = get_gpu_count()
         if gpu_count > 0:
             place = fluid.CUDAPlace(0)
+            self.gpu_id = 0
         else:
-            place = fluid.CPUPlace
+            place = fluid.CPUPlace()
+            self.gpu_id = -1
         self.executor = fluid.Executor(place)
 
     def test_network_copy(self):
@@ -121,6 +136,11 @@ class ModelBaseTest(unittest.TestCase):
             set(self.model.parameter_names),
             set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b']))
 
+        # Second test for cache parameter_names
+        self.assertSetEqual(
+            set(self.model.parameter_names),
+            set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b']))
+
     def test_sync_params_in_one_program(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
@@ -139,7 +159,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[model_output, target_model_output])
             self.assertNotEqual(outputs[0].flatten(), outputs[1].flatten())
 
-        self.model.sync_params_to(self.target_model)
+        self.model.sync_params_to(self.target_model, self.gpu_id)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -177,7 +197,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[target_model_output])
             self.assertNotEqual(outputs[0].flatten(), outputs_2[0].flatten())
 
-        self.model.sync_params_to(self.target_model)
+        self.model.sync_params_to(self.target_model, self.gpu_id)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -245,7 +265,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -278,7 +298,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -302,7 +322,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -335,7 +355,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -359,7 +379,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -393,7 +413,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, decay=decay)
+        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -417,7 +437,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model2, decay)
 
-        self.model.sync_params_to(self.target_model2, decay=decay)
+        self.model.sync_params_to(self.target_model2, self.gpu_id, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -457,7 +477,7 @@ class ModelBaseTest(unittest.TestCase):
             self.assertNotEqual(
                 np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
-        model.sync_params_to(target_model)
+        model.sync_params_to(target_model, self.gpu_id)
 
         random_obs = np.random.random(size=(N, 100)).astype('float32')
         for i in range(N):
@@ -508,7 +528,7 @@ class ModelBaseTest(unittest.TestCase):
             x = np.expand_dims(random_obs[i], axis=0)
             self.executor.run(program1, feed={'obs': x})
 
-        model.sync_params_to(target_model)
+        model.sync_params_to(target_model, self.gpu_id)
 
         random_obs = np.random.random(size=(N, 32, 128, 128)).astype('float32')
         for i in range(N):
@@ -519,6 +539,124 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[model_output, target_model_output])
             self.assertEqual(
                 np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
+
+    def test_get_params(self):
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            model_output = self.model.predict(obs)
+
+        self.executor.run(fluid.default_startup_program())
+
+        expected_params = []
+        for param_name in [
+                'fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b'
+        ]:
+            expected_params.append(fetch_value(param_name))
+
+        params = self.model.get_params()
+        self.assertEqual(len(params), len(expected_params))
+        for param in params:
+            flag = False
+            for expected_param in expected_params:
+                if np.sum(param) - np.sum(expected_param) < 1e-5:
+                    flag = True
+                    break
+            self.assertTrue(flag)
+
+    def test_set_params(self):
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            model_output = self.model.predict(obs)
+
+        self.executor.run(fluid.default_startup_program())
+
+        params = self.model.get_params()
+        new_params = [x + 1.0 for x in params]
+
+        self.model.set_params(new_params, self.gpu_id)
+
+        for x, y in list(zip(new_params, self.model.get_params())):
+            self.assertEqual(np.sum(x), np.sum(y))
+
+    def test_set_params_between_different_models(self):
+        model1 = TestModel4()
+        model2 = TestModel4()
+
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            model1_output = model1.predict(obs)
+            model2_output = model2.predict(obs)
+
+        self.executor.run(fluid.default_startup_program())
+
+        N = 10
+        random_obs = np.random.random(size=(N, 4)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[model1_output, model2_output])
+            self.assertNotEqual(outputs[0].flatten(), outputs[1].flatten())
+
+        # pass parameters of self.model to model2
+        params = model1.get_params()
+        model2.set_params(params, self.gpu_id)
+
+        random_obs = np.random.random(size=(N, 4)).astype('float32')
+        for i in range(N):
+            x = np.expand_dims(random_obs[i], axis=0)
+            outputs = self.executor.run(
+                pred_program,
+                feed={'obs': x},
+                fetch_list=[model1_output, model2_output])
+            self.assertEqual(outputs[0].flatten(), outputs[1].flatten())
+
+    def test_set_params_with_wrong_params_num(self):
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            model_output = self.model.predict(obs)
+
+        self.executor.run(fluid.default_startup_program())
+
+        params = self.model.get_params()
+
+        try:
+            self.model.set_params(params[1:], self.gpu_id)
+        except:
+            # expected
+            return
+
+        assert False
+
+    def test_set_params_with_wrong_params_shape(self):
+        pred_program = fluid.Program()
+        with fluid.program_guard(pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            model_output = self.model.predict(obs)
+
+        self.executor.run(fluid.default_startup_program())
+
+        params = self.model.get_params()
+
+        params.reverse()
+
+        self.model.set_params(params, self.gpu_id)
+
+        x = np.random.random(size=(1, 4)).astype('float32')
+
+        try:
+            outputs = self.executor.run(
+                pred_program, feed={'obs': x}, fetch_list=[model_output])
+        except:
+            # expected
+            return
+
+        assert False
 
 
 if __name__ == '__main__':

@@ -17,19 +17,21 @@ Base class to define an Algorithm.
 
 import hashlib
 import paddle.fluid as fluid
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from parl.layers.layer_wrappers import LayerFunc
+from parl.plutils import *
 
 __all__ = ['Network', 'Model']
 
 
 class Network(object):
     """
-    A Network is an unordered set of LayerFuncs or Networks.
+    A Network is a collection of LayerFuncs or Networks.
     """
 
     def sync_params_to(self,
                        target_net,
-                       gpu_id=0,
+                       gpu_id,
                        decay=0.0,
                        share_vars_parallel_executor=None):
         """
@@ -57,13 +59,10 @@ class Network(object):
             assert not target_net is self, "cannot copy between identical networks"
             assert isinstance(target_net, Network)
             assert self.__class__.__name__ == target_net.__class__.__name__, \
-                "must be the same class for para syncing!"
+                "must be the same class for params syncing!"
             assert (decay >= 0 and decay <= 1)
 
-            # Resolve Circular Imports
-            from parl.plutils import get_parameter_pairs, fetch_framework_var
-
-            param_pairs = get_parameter_pairs(self, target_net)
+            param_pairs = self._get_parameter_pairs(self, target_net)
 
             self._cached_sync_params_program = fluid.Program()
 
@@ -106,15 +105,120 @@ class Network(object):
     @property
     def parameter_names(self):
         """ param_attr names of all parameters in Network,
-            only parameter created by parl.layers included
+            only parameter created by parl.layers included.
+            The order of parameter names will be consistent between
+            different instances of same parl.Network.
 
         Returns:
             list of string, param_attr names of all parameters
         """
 
-        # Resolve Circular Imports
-        from parl.plutils import get_parameter_names
-        return get_parameter_names(self)
+        try:
+            return self._parameter_names
+        except AttributeError:
+            self._parameter_names = self._get_parameter_names(self)
+            return self._parameter_names
+
+    def get_params(self):
+        """ Get numpy arrays of parameters in this Network
+        
+        Returns:
+            List of numpy array.
+        """
+        params = []
+        for param_name in self.parameter_names:
+            param = fetch_value(param_name)
+            params.append(param)
+
+        return params
+
+    def set_params(self, params, gpu_id):
+        """ Set parameters in this Network with params
+        
+        Args:
+            params: List of numpy array.
+            gpu_id: gpu id where this Network in. (if gpu_id < 0, means in cpu.)
+        """
+        assert len(params) == len(self.parameter_names), \
+                'size of input params should be same as parameters number of current Network'
+        for (param_name, param) in list(zip(self.parameter_names, params)):
+            set_value(param_name, param, gpu_id)
+
+    def _get_parameter_names(self, obj):
+        """ Recursively get parameter names in obj,
+
+        Args:
+            obj (parl.Network/parl.LayerFunc/list/tuple/dict): input object
+
+        Returns:
+            parameter_names (list of string): all parameter names in obj
+        """
+
+        parameter_names = []
+        for attr in sorted(obj.__dict__.keys()):
+            val = getattr(obj, attr)
+            if isinstance(val, Network):
+                parameter_names.extend(self._get_parameter_names(val))
+            elif isinstance(val, LayerFunc):
+                for attr in val.attr_holder.sorted():
+                    if attr:
+                        parameter_names.append(attr.name)
+            elif isinstance(val, tuple) or isinstance(val, list):
+                for x in val:
+                    parameter_names.extend(self._get_parameter_names(x))
+            elif isinstance(val, dict):
+                for x in list(val.values()):
+                    parameter_names.extend(self._get_parameter_names(x))
+            else:
+                # for any other type, won't be handled. E.g. set
+                pass
+        return parameter_names
+
+    def _get_parameter_pairs(self, src, target):
+        """ Recursively gets parameters in source network and 
+        corresponding parameters in target network.
+
+        Args:
+            src (parl.Network/parl.LayerFunc/list/tuple/dict): source object
+            target (parl.Network/parl.LayerFunc/list/tuple/dict): target object
+
+        Returns:
+            param_pairs (list of tuple): all parameter names in source network
+                                         and corresponding parameter names in 
+                                         target network.
+        """
+
+        param_pairs = []
+        if isinstance(src, Network):
+            for attr in src.__dict__:
+                if not attr in target.__dict__:
+                    continue
+                src_var = getattr(src, attr)
+                target_var = getattr(target, attr)
+                param_pairs.extend(
+                    self._get_parameter_pairs(src_var, target_var))
+        elif isinstance(src, LayerFunc):
+            src_attrs = src.attr_holder.sorted()
+            target_attrs = target.attr_holder.sorted()
+            assert len(src_attrs) == len(target_attrs), \
+                    "number of ParamAttr between source layer and target layer should be same."
+            for (src_attr, target_attr) in zip(src_attrs, target_attrs):
+                if src_attr:
+                    assert target_attr, "ParamAttr between source layer and target layer is inconsistent."
+                    param_pairs.append((src_attr.name, target_attr.name))
+        elif isinstance(src, tuple) or isinstance(src, list):
+            for src_var, target_var in zip(src, target):
+                param_pairs.extend(
+                    self._get_parameter_pairs(src_var, target_var))
+        elif isinstance(src, dict):
+            for k in src.keys():
+                assert k in target
+                param_pairs.extend(
+                    self._get_parameter_pairs(src[k], target[k]))
+        else:
+            # for any other type, won't be handled. E.g. set
+            pass
+        return param_pairs
 
 
 class Model(Network):

@@ -55,13 +55,27 @@ function check_style() {
     trap : 0
 }
 
-function run_test() {
+function run_test_with_gpu() {
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake ..
     cat <<EOF
     ========================================
-    Running unit tests ...
+    Running unit tests with GPU...
+    ========================================
+EOF
+    ctest --output-on-failure
+}
+
+function run_test_with_cpu() {
+    export CUDA_VISIBLE_DEVICES=""
+
+    mkdir -p ${REPO_ROOT}/build
+    cd ${REPO_ROOT}/build
+    cmake ..
+    cat <<EOF
+    ========================================
+    Running unit tests with CPU...
     ========================================
 EOF
     ctest --output-on-failure
@@ -76,7 +90,8 @@ function main() {
           check_style
           ;;
         test)
-          run_test
+          run_test_with_gpu
+          run_test_with_cpu
           ;;
         *)
           print_usage

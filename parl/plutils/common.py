@@ -18,7 +18,7 @@ Common functions of PARL framework
 import paddle.fluid as fluid
 from paddle.fluid.executor import _fetch_var
 
-__all__ = ['fetch_framework_var', 'fetch_value', 'set_value']
+__all__ = ['fetch_framework_var', 'fetch_value', 'set_value', 'inverse']
 
 
 def fetch_framework_var(attr_name):
@@ -64,3 +64,16 @@ def set_value(attr_name, value, gpu_id):
             else fluid.CUDAPlace(gpu_id)
     var = _fetch_var(attr_name, return_numpy=False)
     var.set(value, place)
+
+
+def inverse(x):
+    """ Inverse 0/1 variable
+
+    Args:
+        x: variable with float32 dtype
+    
+    Returns:
+        inverse_x: variable with float32 dtype
+    """
+    inverse_x = -1.0 * x + 1.0
+    return inverse_x

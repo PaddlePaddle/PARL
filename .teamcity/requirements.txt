@@ -4,3 +4,4 @@ details
 termcolor
 pyarrow
 zmq
+parameterized

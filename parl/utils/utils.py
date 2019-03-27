@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import sys
+import numpy as np
 
 __all__ = [
-    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3'
+    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
+    'MAX_INT32', 'np_softmax', 'np_cross_entropy'
 ]
 
 
@@ -68,3 +70,21 @@ def is_PY2():
 
 def is_PY3():
     return sys.version_info[0] == 3
+
+
+MAX_INT32 = 0x7fffffff
+
+
+def np_softmax(logits):
+    return np.exp(logits) / np.sum(np.exp(logits), axis=-1, keepdims=True)
+
+
+def np_cross_entropy(probs, labels):
+    if labels.shape[-1] == 1:
+        # sparse label
+        n_classes = probs.shape[-1]
+        result_shape = list(labels.shape[:-1]) + [n_classes]
+        labels = np.eye(n_classes)[labels.reshape(-1)]
+        labels = labels.reshape(result_shape)
+
+    return -np.sum(labels * np.log(probs), axis=-1, keepdims=True)

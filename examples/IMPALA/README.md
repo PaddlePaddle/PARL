@@ -1,0 +1,44 @@
+## Reproduce IMPALA with PARL
+Based on PARL, the IMPALA algorithm of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game.
+
++ IMPALA in
+[Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures](https://arxiv.org/abs/1802.01561)
+
+### Atari games introduction
+Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
+
+### Benchmark result
+Result with leaner in P40 GPU and 32 actors in 32 CPUs
++ PongNoFrameskip-v4: mean_episode_rewards can reach 18-19 score in about 7 minutes.
++ BreakoutNoFrameskip-v4: mean_episode_rewards can reach ~390 score in about 30 minutes.
+
+## How to use
+### Dependencies:
++ python2.7 or python3.5+
++ [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
++ [parl](https://github.com/PaddlePaddle/PARL)
++ gym
++ opencv-python
+
+
+### Distributed Training:
+
+#### Learner
+```sh
+python train.py 
+```
+
+#### Actors (Suggest: 32+ actors in 32+ CPUs)
+```sh
+for index in {1..32}; do
+    python actor.py &
+done;
+wait
+```
+
+You can modify config in `impala_config.py` to change training settings (E.g. `env_name`, `server_ip`).
+Training result will be saved in `log_dir/train/result.csv`.
+
+### Reference
++ [deepmind/scalable_agent](https://github.com/deepmind/scalable_agent)
++ [Ray](https://github.com/ray-project/ray)

@@ -12,8 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils.exceptions import *
-from parl.utils.utils import *
-from parl.utils.csv_logger import *
-from parl.utils.machine_info import *
-from parl.utils.replay_memory import *
+import time
+from learner import Learner
+
+
+def main(config):
+    learner = Learner(config)
+
+    try:
+        while True:
+            start = time.time()
+            learner.step()
+            while time.time() - start < config['log_metrics_interval_s']:
+                learner.step()
+            learner.log_metrics()
+
+    except KeyboardInterrupt:
+        learner.close()
+
+
+if __name__ == '__main__':
+    from impala_config import config
+    main(config)

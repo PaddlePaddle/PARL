@@ -19,7 +19,7 @@ import six
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent
-from parl.algorithms.impala import IMPALA
+from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 

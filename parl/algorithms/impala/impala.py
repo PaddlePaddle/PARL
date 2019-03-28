@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-import parl.algorithms.vtrace as vtrace
 import parl.layers as layers
+from parl.algorithms.impala import vtrace
 from parl.framework.algorithm_base import Algorithm
 from parl.framework.policy_distribution import CategoricalDistribution
 from parl.plutils import inverse

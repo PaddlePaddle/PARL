@@ -16,4 +16,5 @@ from parl.utils.exceptions import *
 from parl.utils.utils import *
 from parl.utils.csv_logger import *
 from parl.utils.machine_info import *
+from parl.utils.np_utils import *
 from parl.utils.replay_memory import *

@@ -21,7 +21,7 @@ import threading
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from parl import RemoteManager
-from parl.algorithms.impala import IMPALA
+from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, CSVLogger
 from parl.utils.time_stat import TimeStat

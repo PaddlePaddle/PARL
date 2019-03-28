@@ -20,10 +20,10 @@ https://github.com/deepmind/scalable_agent/blob/master/vtrace_test.py
 import copy
 import numpy as np
 import unittest
-import parl.algorithms.vtrace as vtrace
 import parl.layers as layers
 from paddle import fluid
 from parameterized import parameterized
+from parl.algorithms.impala import vtrace
 from parl.utils import get_gpu_count
 
 

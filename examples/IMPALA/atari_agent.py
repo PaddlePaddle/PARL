@@ -67,16 +67,23 @@ class AtariAgent(Agent):
                 dtype='float32')
             rewards = layers.data(name='rewards', shape=[], dtype='float32')
             dones = layers.data(name='dones', shape=[], dtype='float32')
+            lr = layers.data(
+                name='lr', shape=[1], dtype='float32', append_batch_size=False)
+            entropy_coeff = layers.data(
+                name='entropy_coeff', shape=[], dtype='float32')
 
             self.learn_reader = fluid.layers.create_py_reader_by_data(
                 capacity=self.config['train_batch_size'],
-                feed_list=[obs, actions, behaviour_logits, rewards, dones])
+                feed_list=[
+                    obs, actions, behaviour_logits, rewards, dones, lr,
+                    entropy_coeff
+                ])
 
-            obs, actions, behaviour_logits, rewards, dones = fluid.layers.read_file(
+            obs, actions, behaviour_logits, rewards, dones, lr, entropy_coeff = fluid.layers.read_file(
                 self.learn_reader)
 
             vtrace_loss, kl = self.alg.learn(obs, actions, behaviour_logits,
-                                             rewards, dones)
+                                             rewards, dones, lr, entropy_coeff)
             self.learn_outputs = [
                 vtrace_loss.total_loss.name, vtrace_loss.pi_loss.name,
                 vtrace_loss.vf_loss.name, vtrace_loss.entropy.name, kl.name

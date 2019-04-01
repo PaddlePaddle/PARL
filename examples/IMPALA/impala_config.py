@@ -33,12 +33,13 @@ config = {
     'learner_queue_max_size': 16,
     'sample_queue_max_size': 8,
     'gamma': 0.99,
-    'lr': 0.001,
+
     # steps of optimizer
-    'lr_decay_steps': 15000,
-    'lr_decay_rate': 0.5,
+    'lr_scheduler': [(0, 0.001), (20000, 0.0005), (40000, 0.0001)],
+
+    # steps of optimizer
+    'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
-    'entropy_coeff': -0.01,
     'clip_rho_threshold': 1.0,
     'clip_pg_rho_threshold': 1.0,
     'get_remote_metrics_interval': 10,

@@ -32,8 +32,8 @@ class VTraceLoss(object):
                  rewards,
                  values,
                  bootstrap_value,
-                 vf_loss_coeff=0.5,
                  entropy_coeff=-0.01,
+                 vf_loss_coeff=0.5,
                  clip_rho_threshold=1.0,
                  clip_pg_rho_threshold=1.0):
         """Policy gradient loss with vtrace importance weighting.
@@ -83,7 +83,8 @@ class IMPALA(Algorithm):
     def __init__(self, model, hyperparas):
         super(IMPALA, self).__init__(model, hyperparas)
 
-    def learn(self, obs, actions, behaviour_logits, rewards, dones):
+    def learn(self, obs, actions, behaviour_logits, rewards, dones,
+              learning_rate, entropy_coeff):
         """
         Args:
             obs: An float32 tensor of shape ([B] + observation_space).
@@ -92,6 +93,8 @@ class IMPALA(Algorithm):
             behaviour_logits: A float32 tensor of shape [B, NUM_ACTIONS].
             rewards: A float32 tensor of shape [B].
             dones: A float32 tensor of shape [B].
+            learning_rate: float scalar of learning rate.
+            entropy_coeff: float scalar of entropy coefficient.
         """
 
         values = self.model.value(obs)
@@ -155,20 +158,15 @@ class IMPALA(Algorithm):
             rewards=rewards,
             values=values,
             bootstrap_value=bootstrap_value,
+            entropy_coeff=entropy_coeff,
             vf_loss_coeff=self.hp['vf_loss_coeff'],
-            entropy_coeff=self.hp['entropy_coeff'],
             clip_rho_threshold=self.hp['clip_rho_threshold'],
             clip_pg_rho_threshold=self.hp['clip_pg_rho_threshold'])
 
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=40.0))
 
-        optimizer = fluid.optimizer.AdamOptimizer(
-            learning_rate=layers.exponential_decay(
-                learning_rate=self.hp['lr'],
-                decay_steps=self.hp['lr_decay_steps'],
-                decay_rate=self.hp['lr_decay_rate'],
-                staircase=True))
+        optimizer = fluid.optimizer.AdamOptimizer(learning_rate)
         optimizer.minimize(vtrace_loss.total_loss)
         return vtrace_loss, kl
 

@@ -24,6 +24,7 @@ from parl import RemoteManager
 from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, CSVLogger
+from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 
@@ -59,6 +60,11 @@ class Learner(object):
         self.total_params_sync = 0
 
         #========== Learner ==========
+        self.lr, self.entropy_coeff = None, None
+        self.lr_scheduler = PiecewiseScheduler(config['lr_scheduler'])
+        self.entropy_coeff_scheduler = PiecewiseScheduler(
+            config['entropy_coeff_scheduler'])
+
         self.total_loss_stat = WindowStat(100)
         self.pi_loss_stat = WindowStat(100)
         self.vf_loss_stat = WindowStat(100)
@@ -111,9 +117,12 @@ class Learner(object):
             behaviour_logits_np = behaviour_logits_np.astype('float32')
             rewards_np = rewards_np.astype('float32')
             dones_np = dones_np.astype('float32')
+            self.lr = self.lr_scheduler.step()
+            self.entropy_coeff = self.entropy_coeff_scheduler.step()
 
             yield [
-                obs_np, actions_np, behaviour_logits_np, rewards_np, dones_np
+                obs_np, actions_np, behaviour_logits_np, rewards_np, dones_np,
+                self.lr, self.entropy_coeff
             ]
 
     def run_learn(self):
@@ -135,6 +144,7 @@ class Learner(object):
         """ Accept connection of new remote actor and start sampling of the remote actor.
         """
         remote_manager = RemoteManager(port=self.config['server_port'])
+        logger.info('Waiting for remote actors connecting.')
         while True:
             remote_actor = remote_manager.get_remote()
             self.remote_count += 1
@@ -250,6 +260,8 @@ class Learner(object):
             'kl': self.kl_stat.mean,
             'learn_time_s': self.learn_time_stat.mean,
             'elapsed_time_s': int(time.time() - self.start_time),
+            'lr': self.lr,
+            'entropy_coeff': self.entropy_coeff,
         }
 
         logger.info(metric)

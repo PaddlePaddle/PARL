@@ -16,6 +16,7 @@ import numpy as np
 
 __all__ = ['np_softmax', 'np_cross_entropy']
 
+
 def np_softmax(logits):
     return np.exp(logits) / np.sum(np.exp(logits), axis=-1, keepdims=True)
 

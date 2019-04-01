@@ -26,7 +26,7 @@ class VTraceLoss(object):
     def __init__(self,
                  behaviour_actions_log_probs,
                  target_actions_log_probs,
-                 actions_entropy,
+                 policy_entropy,
                  dones,
                  discount,
                  rewards,
@@ -45,7 +45,7 @@ class VTraceLoss(object):
         Args:
             behaviour_actions_log_probs: A float32 tensor of shape [T, B].
             target_actions_log_probs: A float32 tensor of shape [T, B].
-            actions_entropy: A float32 tensor of shape [T, B].
+            policy_entropy: A float32 tensor of shape [T, B].
             dones: A float32 tensor of shape [T, B].
             discount: A float32 scalar.
             rewards: A float32 tensor of shape [T, B].
@@ -72,7 +72,7 @@ class VTraceLoss(object):
         self.vf_loss = 0.5 * layers.reduce_sum(layers.square(delta))
 
         # The entropy loss (We want to maximize entropy, so entropy_ceoff < 0)
-        self.entropy = layers.reduce_sum(actions_entropy)
+        self.entropy = layers.reduce_sum(policy_entropy)
 
         # The summed weighted loss
         self.total_loss = (self.pi_loss + self.vf_loss * vf_loss_coeff +
@@ -88,7 +88,7 @@ class IMPALA(Algorithm):
         """
         Args:
             obs: An float32 tensor of shape ([B] + observation_space).
-                 Generally should be [B, C, H, W].
+                 E.g. [B, C, H, W] in atari.
             actions: An int64 tensor of shape [B].
             behaviour_logits: A float32 tensor of shape [B, NUM_ACTIONS].
             rewards: A float32 tensor of shape [B].
@@ -104,7 +104,7 @@ class IMPALA(Algorithm):
         behaviour_policy_distribution = CategoricalDistribution(
             behaviour_logits)
 
-        actions_entropy = target_policy_distribution.entropy()
+        policy_entropy = target_policy_distribution.entropy()
         target_actions_log_probs = target_policy_distribution.logp(actions)
         behaviour_actions_log_probs = behaviour_policy_distribution.logp(
             actions)
@@ -129,7 +129,7 @@ class IMPALA(Algorithm):
         behaviour_actions_log_probs = split_batches(
             behaviour_actions_log_probs)
         target_actions_log_probs = split_batches(target_actions_log_probs)
-        actions_entropy = split_batches(actions_entropy)
+        policy_entropy = split_batches(policy_entropy)
         dones = split_batches(dones)
         rewards = split_batches(rewards)
         values = split_batches(values)
@@ -139,8 +139,8 @@ class IMPALA(Algorithm):
             behaviour_actions_log_probs, axes=[0], starts=[0], ends=[-1])
         target_actions_log_probs = layers.slice(
             target_actions_log_probs, axes=[0], starts=[0], ends=[-1])
-        actions_entropy = layers.slice(
-            actions_entropy, axes=[0], starts=[0], ends=[-1])
+        policy_entropy = layers.slice(
+            policy_entropy, axes=[0], starts=[0], ends=[-1])
         dones = layers.slice(dones, axes=[0], starts=[0], ends=[-1])
         rewards = layers.slice(rewards, axes=[0], starts=[0], ends=[-1])
         bootstrap_value = layers.slice(
@@ -152,7 +152,7 @@ class IMPALA(Algorithm):
         vtrace_loss = VTraceLoss(
             behaviour_actions_log_probs=behaviour_actions_log_probs,
             target_actions_log_probs=target_actions_log_probs,
-            actions_entropy=actions_entropy,
+            policy_entropy=policy_entropy,
             dones=dones,
             discount=self.hp['gamma'],
             rewards=rewards,
@@ -174,7 +174,7 @@ class IMPALA(Algorithm):
         """
         Args:
             obs: An float32 tensor of shape ([B] + observation_space).
-                 Generally should be [B, C, H, W].
+                 E.g. [B, C, H, W] in atari.
         """
         logits = self.model.policy(obs)
         policy_dist = CategoricalDistribution(logits)
@@ -185,7 +185,7 @@ class IMPALA(Algorithm):
         """
         Args:
             obs: An float32 tensor of shape ([B] + observation_space).
-                 Generally should be [B, C, H, W].
+                 E.g. [B, C, H, W] in atari.
         """
         logits = self.model.policy(obs)
         probs = layers.softmax(logits)

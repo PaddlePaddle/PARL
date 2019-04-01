@@ -109,9 +109,6 @@ class Learner(object):
                 # 'NHWC' -> 'NCHW'
                 obs_np = np.transpose(obs_np, [0, 3, 1, 2])
 
-            # clip rewards
-            rewards_np = np.sign(rewards_np)
-
             obs_np = obs_np.astype('float32')
             actions_np = actions_np.astype('int64')
             behaviour_logits_np = behaviour_logits_np.astype('float32')

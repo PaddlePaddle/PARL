@@ -38,13 +38,9 @@ class Learner(object):
 
         #=========== Create Agent ==========
         env = gym.make(config['env_name'])
-        env = wrap_deepmind(env, dim=config['env_dim'])
+        env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
         obs_shape = env.observation_space.shape
 
-        # conv layer of fluid only support 'NCHW' input format now,
-        # we will convert 'NHWC' format to 'NCHW' format.
-        if config['obs_format'] == 'NHWC':
-            obs_shape = [obs_shape[2], obs_shape[0], obs_shape[1]]
         act_dim = env.action_space.n
         self.config['obs_shape'] = obs_shape
         self.config['act_dim'] = act_dim
@@ -99,21 +95,12 @@ class Learner(object):
         while True:
             batch = self.learner_queue.get()
 
-            obs_np = batch['obs']
-            actions_np = batch['actions']
-            behaviour_logits_np = batch['behaviour_logits']
-            rewards_np = batch['rewards']
-            dones_np = batch['dones']
+            obs_np = batch['obs'].astype('float32')
+            actions_np = batch['actions'].astype('int64')
+            behaviour_logits_np = batch['behaviour_logits'].astype('float32')
+            rewards_np = batch['rewards'].astype('float32')
+            dones_np = batch['dones'].astype('float32')
 
-            if self.config['obs_format'] == 'NHWC':
-                # 'NHWC' -> 'NCHW'
-                obs_np = np.transpose(obs_np, [0, 3, 1, 2])
-
-            obs_np = obs_np.astype('float32')
-            actions_np = actions_np.astype('int64')
-            behaviour_logits_np = behaviour_logits_np.astype('float32')
-            rewards_np = rewards_np.astype('float32')
-            dones_np = dones_np.astype('float32')
             self.lr = self.lr_scheduler.step()
             self.entropy_coeff = self.entropy_coeff_scheduler.step()
 

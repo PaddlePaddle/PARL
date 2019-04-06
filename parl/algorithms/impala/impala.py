@@ -193,9 +193,3 @@ class IMPALA(Algorithm):
         predict_actions = layers.argmax(probs, 1)
 
         return predict_actions
-
-    def get_params(self):
-        return self.model.get_params()
-
-    def set_params(self, params, gpu_id):
-        self.model.set_params(params, gpu_id=gpu_id)

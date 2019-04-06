@@ -34,10 +34,10 @@ config = {
     'sample_queue_max_size': 8,
     'gamma': 0.99,
 
-    # steps of optimizer
+    # learning rate adjustment schedule: (train_step, learning_rate)
     'lr_scheduler': [(0, 0.001), (20000, 0.0005), (40000, 0.0001)],
 
-    # steps of optimizer
+    # coefficient of policy entropy adjustment schedule: (train_step, coefficient)
     'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
     'clip_rho_threshold': 1.0,

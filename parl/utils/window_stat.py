@@ -18,6 +18,9 @@ import numpy as np
 
 
 class WindowStat(object):
+    """ Tool to maintain statistical data in a window.
+    """
+
     def __init__(self, window_size):
         self.items = [None] * window_size
         self.idx = 0

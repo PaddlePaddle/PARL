@@ -32,17 +32,13 @@ class Actor(object):
         self.envs = []
         for _ in six.moves.range(config['env_num']):
             env = gym.make(config['env_name'])
-            env = wrap_deepmind(env, dim=config['env_dim'])
+            env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
             self.envs.append(env)
         self.vector_env = VectorEnv(self.envs)
 
         self.obs_batch = self.vector_env.reset()
 
         obs_shape = env.observation_space.shape
-        # conv layer of fluid only support 'NCHW' input format now,
-        # we will convert 'NHWC' format to 'NCHW' format.
-        if config['obs_format'] == 'NHWC':
-            obs_shape = [obs_shape[2], obs_shape[0], obs_shape[1]]
         act_dim = env.action_space.n
 
         self.config['obs_shape'] = obs_shape

@@ -92,15 +92,12 @@ class AtariAgent(Agent):
     def sample(self, obs_np):
         """
         Args:
-            obs_np: a numpy float32 array of shape ([B] + observation_space)
+            obs_np: a numpy float32 array of shape ([B] + observation_space).
+            Format of image input should be NCHW format.
 
         Returns:
             sample_ids: a numpy int64 array of shape [B]
         """
-        if self.config['obs_format'] == 'NHWC':
-            # 'NHWC' -> 'NCHW'
-            obs_np = np.transpose(obs_np, [0, 3, 1, 2])
-
         obs_np = obs_np.astype('float32')
 
         sample_actions, behaviour_logits = self.fluid_executor.run(
@@ -113,14 +110,11 @@ class AtariAgent(Agent):
         """
         Args:
             obs_np: a numpy float32 array of shape ([B] + observation_space)
+            Format of image input should be NCHW format.
 
         Returns:
             sample_ids: a numpy int64 array of shape [B]
         """
-        if self.config['obs_format'] == 'NHWC':
-            # 'NHWC' -> 'NCHW'
-            obs_np = np.transpose(obs_np, [0, 3, 1, 2])
-
         obs_np = obs_np.astype('float32')
 
         predict_actions = self.fluid_executor.run(

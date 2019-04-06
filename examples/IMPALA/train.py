@@ -18,11 +18,11 @@ from learner import Learner
 
 def main(config):
     learner = Learner(config)
+    assert config['log_metrics_interval_s'] > 0
 
     try:
         while True:
             start = time.time()
-            learner.step()
             while time.time() - start < config['log_metrics_interval_s']:
                 learner.step()
             learner.log_metrics()

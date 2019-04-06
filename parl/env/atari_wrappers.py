@@ -211,29 +211,33 @@ class WarpFrame(gym.ObservationWrapper):
         self.width = dim
         self.height = dim
         self.observation_space = spaces.Box(
-            low=0,
-            high=255,
-            shape=(self.height, self.width, 1),
-            dtype=np.uint8)
+            low=0, high=255, shape=(self.height, self.width), dtype=np.uint8)
 
     def observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(
             frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        return frame[:, :, None]
+        return frame
 
 
 class FrameStack(gym.Wrapper):
-    def __init__(self, env, k):
+    def __init__(self, env, k, obs_format='NHWC'):
         """Stack k last frames."""
         gym.Wrapper.__init__(self, env)
         self.k = k
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
+        assert obs_format == 'NHWC' or obs_format == 'NCHW'
+        self.obs_format = obs_format
+        if obs_format == 'NHWC':
+            obs_shape = (shp[0], shp[1], k)
+        else:
+            obs_shape = (k, shp[0], shp[1])
+
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(shp[0], shp[1], shp[2] * k),
+            shape=obs_shape,
             dtype=env.observation_space.dtype)
 
     def reset(self):
@@ -249,13 +253,14 @@ class FrameStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.k
-        return np.concatenate(self.frames, axis=2)
+        if self.obs_format == 'NHWC':
+            return np.stack(self.frames, axis=2)
+        else:
+            return np.array(self.frames)
 
 
-def wrap_deepmind(env, dim=84, framestack=True):
+def wrap_deepmind(env, dim=84, framestack=True, obs_format='NHWC'):
     """Configure environment for DeepMind-style Atari.
-
-    Note that we assume reward clipping is done outside the wrapper.
 
     Args:
         dim (int): Dimension to resize observations to (dim x dim).
@@ -271,5 +276,5 @@ def wrap_deepmind(env, dim=84, framestack=True):
     env = WarpFrame(env, dim)
     env = ClipRewardEnv(env)
     if framestack:
-        env = FrameStack(env, 4)
+        env = FrameStack(env, 4, obs_format)
     return env

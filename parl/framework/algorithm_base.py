@@ -54,3 +54,20 @@ class Algorithm(object):
             3. optimize model defined in Model
         """
         raise NotImplementedError()
+
+    def get_params(self):
+        """ Get parameters of self.model
+
+        Returns:
+            List of numpy array. 
+        """
+        return self.model.get_params()
+
+    def set_params(self, params, gpu_id):
+        """ Set parameters of self.model
+
+        Args:
+            params: List of numpy array.
+            gpu_id: gpu id where self.model in. (if gpu_id < 0, means in cpu.)
+        """
+        self.model.set_params(params, gpu_id=gpu_id)

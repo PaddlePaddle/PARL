@@ -15,7 +15,8 @@
 import sys
 
 __all__ = [
-    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3'
+    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
+    'MAX_INT32'
 ]
 
 
@@ -68,3 +69,6 @@ def is_PY2():
 
 def is_PY3():
     return sys.version_info[0] == 3
+
+
+MAX_INT32 = 0x7fffffff

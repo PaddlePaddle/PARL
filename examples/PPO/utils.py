@@ -6,22 +6,7 @@
 import numpy as np
 import scipy.signal
 
-__all__ = ['calc_discount_sum_rewards', 'calc_gae', 'Scaler']
-
-
-def calc_discount_sum_rewards(rewards, gamma):
-    """ Calculate discounted forward sum of a sequence at each point """
-    return scipy.signal.lfilter([1.0], [1.0, -gamma], rewards[::-1])[::-1]
-
-
-def calc_gae(rewards, values, gamma, lam):
-    """ Calculate generalized advantage estimator.
-    See: https://arxiv.org/pdf/1506.02438.pdf
-    """
-    # temporal differences
-    tds = rewards - values + np.append(values[1:] * gamma, 0)
-    advantages = calc_discount_sum_rewards(tds, gamma * lam)
-    return advantages
+__all__ = ['Scaler']
 
 
 class Scaler(object):

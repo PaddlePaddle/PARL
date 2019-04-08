@@ -11,7 +11,9 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 Result with one learner (in P40 GPU) and 32 actors (in 32 CPUs).
 + PongNoFrameskip-v4: mean_episode_rewards can reach 18-19 score in about 7~10 minutes.
 <img src=".benchmark/IMPALA_Pong.jpg" width = "400" height ="300" alt="IMPALA_Pong" />
+
 + Results of other games in an hour.
+
 <img src=".benchmark/IMPALA_Breakout.jpg" width = "400" height ="300" alt="IMPALA_Breakout" /> <img src=".benchmark/IMPALA_BeamRider.jpg" width = "400" height ="300" alt="IMPALA_BeamRider"/>
 <br>
 <img src=".benchmark/IMPALA_Qbert.jpg" width = "400" height ="300" alt="IMPALA_Qbert" /> <img src=".benchmark/IMPALA_SpaceInvaders.jpg" width = "400" height ="300" alt="IMPALA_SpaceInvaders"/>

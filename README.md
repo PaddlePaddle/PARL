@@ -84,14 +84,14 @@ if __main__ == '__main__':
 
 
 #============Server.py=================
-remote_manager = parl.remote_manager()
+remote_manager = parl.RemoteManager()
 agent = remote_manager.get_remote()
 agent.say_hello()
 ans = agent.sum(1,5) # run remotely and not comsume any local computation resources 
 ```
 Two steps to use outer computation resources:
 1. use the `parl.remote_class` to decorate a class at first, after which it is transfered to be a new class that can run in other CPUs or machines.
-2. Get remote objects from the remote_manager, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
+2. Get remote objects from the `RemoteManager`, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
 
 <img src=".github/decorator.png" alt="PARL" width="500"/>
 As shown in the above figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  

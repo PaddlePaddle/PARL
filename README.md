@@ -66,7 +66,7 @@ agent = AtariAgent(algorithm)
 ```
 
 # Parallelization
-PARL provides a compact API for distributed training, allowing one to transfer the code into a parallelized version by simply adding a decorator.
+PARL provides a compact API for distributed training, allowing one to transfer the code into a parallelized version by simply adding a decorator.  
 Here is a `Hello World!` example to demonstrate how easily it is to leverage outer computation resources.
 ```python
 #============Agent.py=================
@@ -78,6 +78,7 @@ class Agent(object):
 
 	def sum(self, a, b):
 		return a+b
+
 # launch `Agent.py` at any computation platforms such as a CPU cluster.
 if __main__ == '__main__':
     agent = Agent()
@@ -95,9 +96,9 @@ Two steps to use outer computation resources:
 2. Get remote objects from the `RemoteManager`, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
 
 <img src=".github/decorator.png" alt="PARL" width="500"/>
-As shown in the above figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  
+As shown in the above figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at a local gpu with several remote actors(yellow circle with dotted edge).  
 
-For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere.We have also provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
+For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere. We have also provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
 
 
 # Install:

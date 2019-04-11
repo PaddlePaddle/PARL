@@ -94,11 +94,9 @@ Two steps to use outer computation resources:
 2. Get remote objects from the remote_manager, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
 
 <img src=".github/decorator.png" alt="PARL" width="500"/>
-As shown in the upper figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  
+As shown in the above figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  
 
-For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere.  
-
-We have provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
+For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere.We have also provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
 
 
 # Install:

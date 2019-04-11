@@ -95,7 +95,9 @@ Two steps to use outer computation resources:
 
 <img src=".github/decorator.png" alt="PARL" width="500"/>
 As shown in the upper figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  
+
 For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere.  
+
 We have provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
 
 

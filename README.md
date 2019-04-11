@@ -5,9 +5,9 @@
 > PARL is a flexible and high-efficient reinforcement learning framework based on [PaddlePaddle](https://github.com/PaddlePaddle/Paddle).
 
 # Features
-**Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms
+**Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms.
 
-**Large Scale**. Ability to support high performance parallelization of training with thousands of CPUs and multi-GPUs 
+**Large Scale**. Ability to support high performance parallelization of training with thousands of CPUs and multi-GPUs.
 
 **Reusable**.  Algorithms provided in repository could be directly adapted to a new task by defining a forward network and training mechanism will be built automatically.
 
@@ -63,6 +63,38 @@ model = AtariModel(img_shape=(32, 32), action_dim=4)
 algorithm = DQN(model)
 agent = AtariAgent(algorithm)
 ```
+
+# Parallelization
+PARL provides a compact API for distributed training, allowing one to transfer the code into a parallelized version by simply adding a decorator.  
+Here is a `Hello World!` example to demonstrate how easily it is to leverage outer computation resources.
+```python
+#============Agent.py=================
+@parl.remote_class
+class Agent(object):
+
+	def say_hello(self):
+		print("Hello World!")
+
+	def sum(self, a, b):
+		return a+b
+# launch `Agent.py` at any computation platforms such as a CPU cluster.
+if __main__ == '__main__':
+    agent = Agent()
+    agent.as_remote(server_address)
+
+
+#============Server.py=================
+remote_manager = parl.remote_manager()
+agent = remote_manager.get_remote()
+agent.say_hello()
+ans = agent.sum(1,5) # run remotely and not comsume any local computation resources 
+```
+Two steps to use outer computation resources:
+1. use the `parl.remote_class` to decorate a class at first, after which it is transfered to be a new class that can run in other CPUs or machines.
+2. Get remote objects from the remote_manager, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
+
+We have provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.
+
 
 # Install:
 ### Dependencies

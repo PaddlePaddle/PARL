@@ -25,7 +25,7 @@ from collections import defaultdict
 from parl import RemoteManager
 from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger
+from parl.utils import logger, CSVLogger, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
@@ -46,6 +46,15 @@ class Learner(object):
         model = AtariModel(act_dim)
         algorithm = A3C(model, hyperparas=config)
         self.agent = AtariAgent(algorithm, config)
+
+        if self.agent.gpu_id >= 0:
+            assert get_gpu_count() == 1, 'Only support training in single GPU,\
+                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
+
+        else:
+            cpu_num = os.environ.get('CPU_NUM')
+            assert cpu_num is not None and cpu_num == '1', 'Only support training in single CPU,\
+                    Please set environment variable:  `export CPU_NUM=1`.'
 
         #========== Learner ==========
 

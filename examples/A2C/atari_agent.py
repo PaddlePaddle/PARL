@@ -13,12 +13,10 @@
 # limitations under the License.
 
 import numpy as np
-import os
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.agent_base import Agent
 from parl.utils.scheduler import PiecewiseScheduler
-from parl.utils import get_gpu_count
 
 
 class AtariAgent(Agent):
@@ -31,15 +29,6 @@ class AtariAgent(Agent):
             config['entropy_coeff_scheduler'])
 
         use_cuda = True if self.gpu_id >= 0 else False
-
-        if use_cuda:
-            assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
-
-        else:
-            cpu_num = os.environ.get('CPU_NUM')
-            assert cpu_num is not None and cpu_num == '1', 'Only support training in single CPU,\
-                    Please set environment variable:  `export CPU_NUM=1`.'
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.use_experimental_executor = True

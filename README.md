@@ -65,7 +65,7 @@ agent = AtariAgent(algorithm)
 ```
 
 # Parallelization
-PARL provides a compact API for distributed training, allowing one to transfer the code into a parallelized version by simply adding a decorator.  
+PARL provides a compact API for distributed training, allowing one to transfer the code into a parallelized version by simply adding a decorator.
 Here is a `Hello World!` example to demonstrate how easily it is to leverage outer computation resources.
 ```python
 #============Agent.py=================
@@ -93,7 +93,10 @@ Two steps to use outer computation resources:
 1. use the `parl.remote_class` to decorate a class at first, after which it is transfered to be a new class that can run in other CPUs or machines.
 2. Get remote objects from the remote_manager, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
 
-We have provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.
+<img src=".github/decorator.png" alt="PARL" width="500"/>
+As shown in the upper figure, real actors(orange circle) are running at cpu clusters, while a learner(bule circle) is running at local gpu with several remote actors(yellow circle with dotted edge).  
+For users, they can write in a simple way as they did in writing stand-alone code, but with actors consumping resources elsewhere.  
+We have provided examples of parallized algorithms like IMPALA and A2C. For more details in usage please refer to these examples.  
 
 
 # Install:

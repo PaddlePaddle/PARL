@@ -44,6 +44,7 @@ class AtariModel(parl.Model):
 			 			stride=1, padding=2, act='relu')
 		...
 		self.fc1 = layers.fc(action_dim)
+		
 	def value(self, img):
 		# define how to estimate the Q value based on the image of atari games.
 		img = img / 255.0

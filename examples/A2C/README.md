@@ -21,7 +21,7 @@ Results with one learner (in P40 GPU) and 5 actors in 10 million sample steps.
 + atari_py
 
 
-### Distributed Training:
+### Distributed Training
 
 #### Learner
 ```sh

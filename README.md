@@ -93,9 +93,9 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 ```
 Two steps to use outer computation resources:
 1. use the `parl.remote_class` to decorate a class at first, after which it is transfered to be a new class that can run in other CPUs or machines.
-2. Get remote objects from the `RemoteManager`, and these objects have same functions as the real ones, however, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
+2. Get remote objects from the `RemoteManager`, and these objects have the same functions as the real ones. However, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
 
-<img src=".github/decorator.png" alt="PARL" width="500"/>
+<img src=".github/decorator.png" alt="PARL" width="450"/>
 As shown in the above figure, real actors(orange circle) are running at the cpu cluster, while the learner(bule circle) is running at the local gpu with several remote actors(yellow circle with dotted edge).  
 
 For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming resources elsewhere. We have also provided examples of parallized algorithms like IMPALA, A2C and GA3C. For more details in usage please refer to these examples.  

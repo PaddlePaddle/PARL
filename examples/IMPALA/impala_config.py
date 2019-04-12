@@ -22,7 +22,6 @@ config = {
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',
     'env_dim': 42,
-    'obs_format': 'NHWC',
 
     #==========  actor config ==========
     'env_num': 5,

@@ -164,9 +164,3 @@ class AtariAgent(Agent):
             },
             fetch_list=self.learn_outputs)
         return total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff
-
-    def get_params(self):
-        return self.alg.get_params()
-
-    def set_params(self, params):
-        self.alg.set_params(params, gpu_id=self.gpu_id)

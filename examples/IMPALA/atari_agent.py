@@ -127,9 +127,3 @@ class AtariAgent(Agent):
         total_loss, pi_loss, vf_loss, entropy, kl = self.learn_exe.run(
             fetch_list=self.learn_outputs)
         return total_loss, pi_loss, vf_loss, entropy, kl
-
-    def get_params(self):
-        return self.alg.get_params()
-
-    def set_params(self, params):
-        self.alg.set_params(params, gpu_id=self.gpu_id)

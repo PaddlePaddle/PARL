@@ -89,3 +89,19 @@ class Agent(object):
         this function is the training interface for Agent.
         """
         raise NotImplementedError
+
+    def get_params(self):
+        """ Get parameters of self.alg
+
+        Returns:
+            List of numpy array. 
+        """
+        return self.alg.get_params()
+
+    def set_params(self, params):
+        """ Set parameters of self.alg
+
+        Args:
+            params: List of numpy array.
+        """
+        self.alg.set_params(params, gpu_id=self.gpu_id)

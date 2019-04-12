@@ -37,7 +37,7 @@ python train.py
 
 #### Actors (Suggest: 32+ actors in 32+ CPUs)
 ```sh
-for index in {1..32}; do
+for i in $(seq 1 32); do
     python actor.py &
 done;
 wait

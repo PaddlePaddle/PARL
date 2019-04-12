@@ -29,7 +29,7 @@ python train.py
 
 #### Actors (Suggest: 5 actors in 5 CPUs)
 ```sh
-for index in {1..5}; do
+for i in $(seq 1 5); do
     python actor.py &
 done;
 wait

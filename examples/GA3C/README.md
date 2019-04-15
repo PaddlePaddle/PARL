@@ -42,6 +42,5 @@ Training result will be saved in `log_dir/train/result.csv`.
 
 Training with CPU may result in bad score, because of the more serious policy lag.
 
-、、、、、、
 ### Reference
 + [tensorpack](https://github.com/tensorpack/tensorpack)

@@ -8,7 +8,7 @@ Based on PARL, the IMPALA algorithm of deep reinforcement learning is reproduced
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
 ### Benchmark result
-Result with one learner (in P40 GPU) and 32 actors (in 32 CPUs).
+Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 + PongNoFrameskip-v4: mean_episode_rewards can reach 18-19 score in about 7~10 minutes.
 <img src=".benchmark/IMPALA_Pong.jpg" width = "400" height ="300" alt="IMPALA_Pong" />
 

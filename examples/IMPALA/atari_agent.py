@@ -31,7 +31,7 @@ class AtariAgent(Agent):
         build_strategy = fluid.BuildStrategy()
         build_strategy.remove_unnecessary_lock = True
 
-        # Use ParallelExecutor to make learn program running faster
+        # Use ParallelExecutor to make learn program run faster
         self.learn_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda,
             main_program=self.learn_program,

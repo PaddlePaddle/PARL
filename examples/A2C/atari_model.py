@@ -43,7 +43,7 @@ class AtariModel(Model):
     def policy(self, obs):
         """
         Args:
-            obs: An float32 tensor of shape [B, C, H, W]
+            obs: A float32 tensor of shape [B, C, H, W]
 
         Returns:
             policy_logits: B * ACT_DIM
@@ -60,7 +60,7 @@ class AtariModel(Model):
     def value(self, obs):
         """
         Args:
-            obs: An float32 tensor of shape [B, C, H, W]
+            obs: A float32 tensor of shape [B, C, H, W]
 
         Returns:
             values: B
@@ -78,7 +78,7 @@ class AtariModel(Model):
     def policy_and_value(self, obs):
         """
         Args:
-            obs: An float32 tensor of shape [B, C, H, W]
+            obs: A float32 tensor of shape [B, C, H, W]
 
         Returns:
             policy_logits: B * ACT_DIM

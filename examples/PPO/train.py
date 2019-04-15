@@ -20,7 +20,7 @@ from mujoco_model import MujocoModel
 from parl.algorithms import PPO
 from parl.utils import logger, action_mapping
 from parl.utils.rl_utils import calc_gae, calc_discount_sum_rewards
-from utils import Scaler
+from scaler import Scaler
 
 
 def run_train_episode(env, agent, scaler):

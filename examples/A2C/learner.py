@@ -126,7 +126,7 @@ class Learner(object):
         """
         1. kick off all actors to synchronize parameters and sample data;
         2. collect sample data of all actors;
-        3. synchronize train and update parameters.
+        3. update parameters. 
         """
 
         latest_params = self.agent.get_params()

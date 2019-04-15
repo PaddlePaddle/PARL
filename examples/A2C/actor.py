@@ -70,7 +70,7 @@ class Actor(object):
                 env_sample_data[env_id]['dones'].append(done_batch[env_id])
                 env_sample_data[env_id]['values'].append(values_batch[env_id])
 
-                # Calculate advantages when episode done or reach max sample steps
+                # Calculate advantages when the episode is done or reach max sample steps.
                 if done_batch[
                         env_id] or i == self.config['sample_batch_steps'] - 1:
                     next_value = 0

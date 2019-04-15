@@ -1,13 +1,14 @@
 ## Reproduce A2C with PARL
-Based on PARL, the A2C algorithm of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game.
+Based on PARL, the A2C algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Atari benchmarks.
 
-A2C is a synchronous, deterministic variant of [Asynchronous Advantage Actor Critic (A3C)](https://arxiv.org/abs/1602.01783)
+A2C is a synchronous, deterministic variant of [Asynchronous Advantage Actor Critic (A3C)](https://arxiv.org/abs/1602.01783). Instead of asynchronous updates in A3C or
+GA3C, A2C use a synchronous way that waits for each actor to finish its sampling before performing an update. Since loss calculation of these A3C variants are same, we use a common a3c algotrithm `parl.algorithms.A3C` in A2C and GA3C examples.
 
 ### Atari games introduction
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
 ### Benchmark result
-Results with one learner (in P40 GPU) and 5 actors in 10 million sample steps.
+Results with one learner (in a P40 GPU) and 5 actors in 10 million sample steps.
 <img src=".benchmark/A2C_Pong.jpg" width = "400" height ="300" alt="A2C_Pong" /> <img src=".benchmark/A2C_Breakout.jpg" width = "400" height ="300" alt="A2C_Breakout"/>
 
 ## How to use
@@ -40,3 +41,4 @@ Training result will be saved in `log_dir/train/result.csv`.
 
 ### Reference
 + [Ray](https://github.com/ray-project/ray)
++ [OpenAI Baselines: ACKTR & A2C](https://openai.com/blog/baselines-acktr-a2c/)

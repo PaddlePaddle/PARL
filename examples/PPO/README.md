@@ -1,5 +1,6 @@
 ## Reproduce PPO with PARL
-Based on PARL, the PPO model of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Mujoco game.
+Based on PARL, the PPO algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Atari benchmarks.
+
 Include following approach:
 + Clipped Surrogate Objective
 + Adaptive KL Penalty Coefficient

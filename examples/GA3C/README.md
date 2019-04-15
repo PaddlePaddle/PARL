@@ -40,7 +40,7 @@ wait
 You can change training settings (e.g. `env_name`, `server_ip`) in `a2c_config.py`.
 Training result will be saved in `log_dir/train/result.csv`.
 
-Training with CPU may result in bad score, because of the more serious policy lag.
+Running learner with CPU may result in bad score, because of the more serious policy lag.
 
 ### Reference
 + [tensorpack](https://github.com/tensorpack/tensorpack)

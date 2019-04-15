@@ -16,12 +16,17 @@ import numpy as np
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.agent_base import Agent
+from parl.utils.scheduler import PiecewiseScheduler
 
 
 class AtariAgent(Agent):
-    def __init__(self, algorithm, config, learn_data_provider=None):
+    def __init__(self, algorithm, config):
         self.config = config
         super(AtariAgent, self).__init__(algorithm)
+
+        self.lr_scheduler = PiecewiseScheduler(config['lr_scheduler'])
+        self.entropy_coeff_scheduler = PiecewiseScheduler(
+            config['entropy_coeff_scheduler'])
 
         use_cuda = True if self.gpu_id >= 0 else False
 
@@ -38,79 +43,70 @@ class AtariAgent(Agent):
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
 
-        if learn_data_provider:
-            self.learn_reader.decorate_tensor_provider(learn_data_provider)
-            self.learn_reader.start()
-
     def build_program(self):
         self.sample_program = fluid.Program()
         self.predict_program = fluid.Program()
+        self.value_program = fluid.Program()
         self.learn_program = fluid.Program()
 
         with fluid.program_guard(self.sample_program):
             obs = layers.data(
                 name='obs', shape=self.config['obs_shape'], dtype='float32')
-            self.sample_actions, self.behaviour_logits = self.alg.sample(obs)
+            sample_actions, values = self.alg.sample(obs)
+            self.sample_outputs = [sample_actions, values]
 
         with fluid.program_guard(self.predict_program):
             obs = layers.data(
                 name='obs', shape=self.config['obs_shape'], dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
+        with fluid.program_guard(self.value_program):
+            obs = layers.data(
+                name='obs', shape=self.config['obs_shape'], dtype='float32')
+            self.values = self.alg.value(obs)
+
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
                 name='obs', shape=self.config['obs_shape'], dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
-            behaviour_logits = layers.data(
-                name='behaviour_logits',
-                shape=[self.config['act_dim']],
-                dtype='float32')
-            rewards = layers.data(name='rewards', shape=[], dtype='float32')
-            dones = layers.data(name='dones', shape=[], dtype='float32')
+            advantages = layers.data(
+                name='advantages', shape=[], dtype='float32')
+            target_values = layers.data(
+                name='target_values', shape=[], dtype='float32')
             lr = layers.data(
                 name='lr', shape=[1], dtype='float32', append_batch_size=False)
             entropy_coeff = layers.data(
                 name='entropy_coeff', shape=[], dtype='float32')
 
-            self.learn_reader = fluid.layers.create_py_reader_by_data(
-                capacity=self.config['train_batch_size'],
-                feed_list=[
-                    obs, actions, behaviour_logits, rewards, dones, lr,
-                    entropy_coeff
-                ])
-
-            obs, actions, behaviour_logits, rewards, dones, lr, entropy_coeff = fluid.layers.read_file(
-                self.learn_reader)
-
-            vtrace_loss, kl = self.alg.learn(obs, actions, behaviour_logits,
-                                             rewards, dones, lr, entropy_coeff)
+            total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
+                obs, actions, advantages, target_values, lr, entropy_coeff)
             self.learn_outputs = [
-                vtrace_loss.total_loss.name, vtrace_loss.pi_loss.name,
-                vtrace_loss.vf_loss.name, vtrace_loss.entropy.name, kl.name
+                total_loss.name, pi_loss.name, vf_loss.name, entropy.name
             ]
 
     def sample(self, obs_np):
         """
         Args:
             obs_np: a numpy float32 array of shape ([B] + observation_space).
-            Format of image input should be NCHW format.
+                    Format of image input should be NCHW format.
 
         Returns:
             sample_ids: a numpy int64 array of shape [B]
+            values: a numpy float32 array of shape [B]
         """
         obs_np = obs_np.astype('float32')
 
-        sample_actions, behaviour_logits = self.fluid_executor.run(
+        sample_actions, values = self.fluid_executor.run(
             self.sample_program,
             feed={'obs': obs_np},
-            fetch_list=[self.sample_actions, self.behaviour_logits])
-        return sample_actions, behaviour_logits
+            fetch_list=self.sample_outputs)
+        return sample_actions, values
 
     def predict(self, obs_np):
         """
         Args:
-            obs_np: a numpy float32 array of shape ([B] + observation_space)
-            Format of image input should be NCHW format.
+            obs_np: a numpy float32 array of shape ([B] + observation_space).
+                    Format of image input should be NCHW format.
 
         Returns:
             sample_ids: a numpy int64 array of shape [B]
@@ -123,7 +119,48 @@ class AtariAgent(Agent):
             fetch_list=[self.predict_actions])[0]
         return predict_actions
 
-    def learn(self):
-        total_loss, pi_loss, vf_loss, entropy, kl = self.learn_exe.run(
+    def value(self, obs_np):
+        """
+        Args:
+            obs_np: a numpy float32 array of shape ([B] + observation_space).
+                    Format of image input should be NCHW format.
+
+        Returns:
+            values: a numpy float32 array of shape [B]
+        """
+        obs_np = obs_np.astype('float32')
+
+        values = self.fluid_executor.run(
+            self.value_program, feed={'obs': obs_np},
+            fetch_list=[self.values])[0]
+        return values
+
+    def learn(self, obs_np, actions_np, advantages_np, target_values_np):
+        """
+        Args:
+            obs_np: a numpy float32 array of shape ([B] + observation_space).
+                    Format of image input should be NCHW format.
+            actions_np: a numpy int64 array of shape [B]
+            advantages_np: a numpy float32 array of shape [B]
+            target_values_np: a numpy float32 array of shape [B]
+        """
+
+        obs_np = obs_np.astype('float32')
+        actions_np = actions_np.astype('int64')
+        advantages_np = advantages_np.astype('float32')
+        target_values_np = target_values_np.astype('float32')
+
+        lr = self.lr_scheduler.step()
+        entropy_coeff = self.entropy_coeff_scheduler.step()
+
+        total_loss, pi_loss, vf_loss, entropy = self.learn_exe.run(
+            feed={
+                'obs': obs_np,
+                'actions': actions_np,
+                'advantages': advantages_np,
+                'target_values': target_values_np,
+                'lr': np.array([lr], dtype='float32'),
+                'entropy_coeff': np.array([entropy_coeff], dtype='float32')
+            },
             fetch_list=self.learn_outputs)
-        return total_loss, pi_loss, vf_loss, entropy, kl
+        return total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff

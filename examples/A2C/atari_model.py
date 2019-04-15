@@ -44,6 +44,7 @@ class AtariModel(Model):
         """
         Args:
             obs: A float32 tensor of shape [B, C, H, W]
+
         Returns:
             policy_logits: B * ACT_DIM
         """
@@ -60,8 +61,9 @@ class AtariModel(Model):
         """
         Args:
             obs: A float32 tensor of shape [B, C, H, W]
+
         Returns:
-            value: B
+            values: B
         """
         obs = obs / 255.0
         conv1 = self.conv1(obs)
@@ -69,6 +71,29 @@ class AtariModel(Model):
         conv3 = self.conv3(conv2)
 
         flatten = layers.flatten(conv3, axis=1)
-        value = self.value_fc(flatten)
-        value = layers.squeeze(value, axes=[1])
-        return value
+        values = self.value_fc(flatten)
+        values = layers.squeeze(values, axes=[1])
+        return values
+
+    def policy_and_value(self, obs):
+        """
+        Args:
+            obs: A float32 tensor of shape [B, C, H, W]
+
+        Returns:
+            policy_logits: B * ACT_DIM
+            values: B
+        """
+        obs = obs / 255.0
+        conv1 = self.conv1(obs)
+        conv2 = self.conv2(conv1)
+        conv3 = self.conv3(conv2)
+
+        policy_conv = self.policy_conv(conv3)
+        policy_logits = layers.flatten(policy_conv, axis=1)
+
+        flatten = layers.flatten(conv3, axis=1)
+        values = self.value_fc(flatten)
+        values = layers.squeeze(values, axes=[1])
+
+        return policy_logits, values

@@ -12,9 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.algorithms.a3c import *
-from parl.algorithms.ddpg import *
-from parl.algorithms.dqn import *
-from parl.algorithms.policy_gradient import *
-from parl.algorithms.ppo import *
-from parl.algorithms.impala.impala import *
+import time
+from learner import Learner
+
+
+def main(config):
+    learner = Learner(config)
+
+    try:
+        while True:
+            start = time.time()
+            while time.time() - start < config['log_metrics_interval_s']:
+                learner.step()
+            learner.log_metrics()
+
+    except KeyboardInterrupt:
+        learner.close()
+
+
+if __name__ == '__main__':
+    from a2c_config import config
+    main(config)

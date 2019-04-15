@@ -13,8 +13,6 @@
 # limitations under the License.
 
 config = {
-    'experiment_name': 'Pong',
-
     #==========  remote config ==========
     'server_ip': 'localhost',
     'server_port': 8037,
@@ -24,14 +22,13 @@ config = {
     'env_dim': 42,
 
     #==========  actor config ==========
+    'actor_num': 5,
     'env_num': 5,
-    'sample_batch_steps': 50,
+    'sample_batch_steps': 20,
 
     #==========  learner config ==========
-    'train_batch_size': 1000,
-    'learner_queue_max_size': 16,
-    'sample_queue_max_size': 8,
     'gamma': 0.99,
+    'lambda': 1.0,  # GAE
 
     # learning rate adjustment schedule: (train_step, learning_rate)
     'lr_scheduler': [(0, 0.001), (20000, 0.0005), (40000, 0.0001)],
@@ -39,9 +36,6 @@ config = {
     # coefficient of policy entropy adjustment schedule: (train_step, coefficient)
     'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
-    'clip_rho_threshold': 1.0,
-    'clip_pg_rho_threshold': 1.0,
     'get_remote_metrics_interval': 10,
     'log_metrics_interval_s': 10,
-    'params_broadcast_interval': 5,
 }

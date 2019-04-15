@@ -19,7 +19,8 @@ from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.algorithms import PPO
 from parl.utils import logger, action_mapping
-from utils import *
+from parl.utils.rl_utils import calc_gae, calc_discount_sum_rewards
+from scaler import Scaler
 
 
 def run_train_episode(env, agent, scaler):
@@ -110,7 +111,8 @@ def build_train_data(trajectories, agent):
         discount_sum_rewards = calc_discount_sum_rewards(
             scale_rewards, args.gamma).astype('float32')
 
-        advantages = calc_gae(scale_rewards, pred_values, args.gamma, args.lam)
+        advantages = calc_gae(scale_rewards, pred_values, 0, args.gamma,
+                              args.lam)
 
         # normalize advantages
         advantages = (advantages - advantages.mean()) / (

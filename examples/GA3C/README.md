@@ -8,7 +8,7 @@ A hybrid CPU/GPU version of the [Asynchronous Advantage Actor-Critic (A3C)](http
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
 
 ### Benchmark result
-Results with one learner (in P40 GPU) and 5 actors in 10 million sample steps.
+Results with one learner (in P40 GPU) and 24 simulators (in 12 CPU) in 10 million sample steps.
 - PongNoFrameskip-v4 (Todo)
 - BreakoutNoFrameskip-v4 (Todo)
 
@@ -40,5 +40,8 @@ wait
 You can change training settings (e.g. `env_name`, `server_ip`) in `a2c_config.py`.
 Training result will be saved in `log_dir/train/result.csv`.
 
+Training with CPU may result in bad score, because of the more serious policy lag.
+
+、、、、、、
 ### Reference
 + [tensorpack](https://github.com/tensorpack/tensorpack)

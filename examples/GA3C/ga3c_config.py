@@ -29,10 +29,10 @@ config = {
     'gamma': 0.99,
     'lambda': 1.0,  # GAE
 
-    # steps of optimizer
-    'lr_scheduler': [(0, 0.0005)],
+    # learning rate adjustment schedule: (train_step, learning_rate)
+    'lr_scheduler': [(0, 0.0005), (100000, 0.0003), (200000, 0.0001)],
 
-    # steps of optimizer
+    # coefficient of policy entropy adjustment schedule: (train_step, coefficient)
     'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
     'log_metrics_interval_s': 10,

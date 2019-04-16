@@ -10,8 +10,7 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Benchmark result
 Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 million sample steps.
-- PongNoFrameskip-v4 (Todo)
-- BreakoutNoFrameskip-v4 (Todo)
+<img src=".benchmark/GA3C_Pong.jpg" width = "400" height ="300" alt="GA3C_Pong" /> <img src=".benchmark/GA3C_Breakout.jpg" width = "400" height ="300" alt="GA3C_Breakout"/>
 
 ## How to use
 ### Dependencies

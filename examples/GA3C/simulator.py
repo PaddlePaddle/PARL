@@ -48,7 +48,7 @@ class Simulator(object):
 
 
 if __name__ == '__main__':
-    from a3c_config import config
+    from ga3c_config import config
 
     simulator = Simulator(config)
     simulator.as_remote(config['server_ip'], config['server_port'])

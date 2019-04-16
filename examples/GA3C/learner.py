@@ -266,7 +266,7 @@ class Learner(object):
                     self.remote_metrics_queue.put(metrics)
 
     def log_metrics(self):
-        """ Log metrics of learner and actors
+        """ Log metrics of learner and simulators
         """
         if self.start_time is None:
             return

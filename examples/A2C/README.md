@@ -16,7 +16,6 @@ Results with one learner (in P40 GPU) and 5 actors in 10 million sample steps.
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ opencv-python
 + atari_py
 
 

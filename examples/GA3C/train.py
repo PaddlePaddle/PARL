@@ -30,5 +30,5 @@ def main(config):
 
 
 if __name__ == '__main__':
-    from a3c_config import config
+    from ga3c_config import config
     main(config)

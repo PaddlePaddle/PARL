@@ -7,9 +7,9 @@
 # Features
 **Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms.
 
-**Large Scale**. Ability to support high performance parallelization of training with thousands of CPUs and multi-GPUs.
+**Large Scale**. Ability to support high-performance parallelization of training with thousands of CPUs and multi-GPUs.
 
-**Reusable**.  Algorithms provided in repository could be directly adapted to a new task by defining a forward network and training mechanism will be built automatically.
+**Reusable**.  Algorithms provided in the repository could be directly adapted to a new task by defining a forward network and training mechanism will be built automatically.
 
 **Extensible**. Build new algorithms quickly by inheriting the abstract class in the framework.
 
@@ -17,7 +17,7 @@
 # Abstractions
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
 PARL aims to build an agent for training algorithms to perform complex tasks.   
-The main abstractions introduced by PARL that are used to build an agent recursively are the following:
+The main abstractions introduced by PARL the that are used to build an agent recursively are the following:
 
 ### Model
 `Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input.
@@ -28,35 +28,35 @@ The main abstractions introduced by PARL that are used to build an agent recursi
 ### Agent
 `Agent` is a data bridge between environment and algorithm. It is responsible for data I/O with outside and describes data preprocessing before feeding data into the training process.
 
-Here is an example of building an agent with DQN algorithm for atari games.
+Here is an example of building an agent with DQN algorithm for Atari games.
 ```python
 import parl
 from parl.algorithms import DQN, DDQN
 
 class AtariModel(parl.Model):
-	"""AtariModel
-	This class defines the forward part for an algorithm,
-	its input is state observed on environment.
-	"""
-	def __init__(self, img_shape, action_dim):
-		# define your layers
-		self.cnn1 = layers.conv_2d(num_filters=32, filter_size=5,
-			 			stride=1, padding=2, act='relu')
-		...
-		self.fc1 = layers.fc(action_dim)
-		
-	def value(self, img):
-		# define how to estimate the Q value based on the image of atari games.
-		img = img / 255.0
-		l = self.cnn1(img)
-		...
-		Q = self.fc1(l)
-		return Q
+    """AtariModel
+    This class defines the forward part for an algorithm,
+    its input is state observed on the environment.
+    """
+    def __init__(self, img_shape, action_dim):
+        # define your layers
+        self.cnn1 = layers.conv_2d(num_filters=32, filter_size=5,
+                         stride=1, padding=2, act='relu')
+        ...
+        self.fc1 = layers.fc(action_dim)
+        
+    def value(self, img):
+        # define how to estimate the Q value based on the image of atari games.
+        img = img / 255.0
+        l = self.cnn1(img)
+        ...
+        Q = self.fc1(l)
+        return Q
 """
 three steps to build an agent
    1.  define a forward model which is critic_model in this example
    2.  a. to build a DQN algorithm, just pass the critic_model to `DQN`
-       b. to build a DDQN algorithm, just replace DQN in following line with DDQN
+       b. to build a DDQN algorithm, just replace DQN in the following line with DDQN
    3.  define the I/O part in AtariAgent so that it could update the algorithm based on the interactive data
 """
 
@@ -73,11 +73,11 @@ Here is a `Hello World!` example to demonstrate how easily it is to leverage out
 @parl.remote_class
 class Agent(object):
 
-	def say_hello(self):
-		print("Hello World!")
+    def say_hello(self):
+        print("Hello World!")
 
-	def sum(self, a, b):
-		return a+b
+    def sum(self, a, b):
+        return a+b
 
 # launch `Agent.py` at any computation platforms such as a CPU cluster.
 if __main__ == '__main__':
@@ -98,7 +98,7 @@ Two steps to use outer computation resources:
 <img src=".github/decorator.png" alt="PARL" width="450"/>
 As shown in the above figure, real actors(orange circle) are running at the cpu cluster, while the learner(blue circle) is running at the local gpu with several remote actors(yellow circle with dotted edge).  
 
-For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallelized algorithms like IMPALA, A2C and GA3C. For more details in usage please refer to these examples.
+For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallelized algorithms like IMPALA, A2C and GA3C. For more details on usage, please refer to these examples.
 
 
 # Install:

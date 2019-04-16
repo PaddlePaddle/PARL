@@ -67,7 +67,7 @@ agent = AtariAgent(algorithm)
 
 # Parallelization
 PARL provides a compact API for distributed training, allowing users to transfer the code into a parallelized version by simply adding a decorator.  
-Here is a `Hello World!` example to demonstrate how easily it is to leverage outer computation resources.
+Here is a `Hello World` example to demonstrate how easily it is to leverage outer computation resources.
 ```python
 #============Agent.py=================
 @parl.remote_class

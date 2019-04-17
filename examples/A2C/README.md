@@ -4,7 +4,7 @@ Based on PARL, the A2C algorithm of deep reinforcement learning has been reprodu
 A2C is a synchronous, deterministic variant of [Asynchronous Advantage Actor Critic (A3C)](https://arxiv.org/abs/1602.01783). Instead of updating asynchronously in A3C or GA3C, A2C uses a synchronous approach that waits for each actor to finish its sampling before performing an update. Since loss definition of these A3C variants are identical, we use a common a3c algotrithm `parl.algorithms.A3C` for A2C and GA3C examples.
 
 ### Atari games introduction
-Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
+Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
 Results with one learner (in a P40 GPU) and 5 actors in 10 million sample steps.
@@ -16,7 +16,6 @@ Results with one learner (in a P40 GPU) and 5 actors in 10 million sample steps.
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ opencv-python
 + atari_py
 
 

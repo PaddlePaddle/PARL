@@ -5,7 +5,7 @@ Based on PARL, the IMPALA algorithm of deep reinforcement learning is reproduced
 [Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures](https://arxiv.org/abs/1802.01561)
 
 ### Atari games introduction
-Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
+Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
 Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
@@ -24,7 +24,6 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ opencv-python
 + atari_py
 
 

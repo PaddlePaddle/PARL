@@ -70,22 +70,31 @@ class CategoricalDistribution(PolicyDistribution):
 
         return entropy
 
-    def logp(self, actions):
+    def logp(self, actions, eps=1e-6):
         """
         Args:
             actions: An int64 tensor with shape [BATCH_SIZE]
+            eps: A small float constant that avoids underflows
 
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
         """
 
         assert len(actions.shape) == 1
+
+        logits = self.logits - layers.reduce_max(self.logits, dim=1)
+        e_logits = layers.exp(logits)
+        z = layers.reduce_sum(e_logits, dim=1)
+        prob = e_logits / z
+
         actions = layers.unsqueeze(actions, axes=[1])
+        actions_onehot = layers.one_hot(actions, prob.shape[1])
+        actions_onehot = layers.cast(actions_onehot, dtype='float32')
+        actions_prob = layers.reduce_sum(prob * actions_onehot, dim=1)
 
-        cross_entropy = layers.softmax_with_cross_entropy(
-            logits=self.logits, label=actions)
+        actions_prob = actions_prob + eps
+        actions_log_prob = layers.log(actions_prob)
 
-        actions_log_prob = -1.0 * layers.squeeze(cross_entropy, axes=[-1])
         return actions_log_prob
 
     def kl(self, other):

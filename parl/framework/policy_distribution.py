@@ -70,11 +70,11 @@ class CategoricalDistribution(PolicyDistribution):
 
         return entropy
 
-    def logp(self, actions, safe_eps=1e-6):
+    def logp(self, actions, eps=1e-6):
         """
         Args:
             actions: An int64 tensor with shape [BATCH_SIZE]
-            safe_eps: A scalar of safe epsilon to avoid returning extremely large value
+            eps: A small float constant that avoids underflows
 
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
@@ -92,7 +92,7 @@ class CategoricalDistribution(PolicyDistribution):
         actions_onehot = layers.cast(actions_onehot, dtype='float32')
         actions_prob = layers.reduce_sum(prob * actions_onehot, dim=1)
 
-        actions_prob = actions_prob + safe_eps
+        actions_prob = actions_prob + eps
         actions_log_prob = layers.log(actions_prob)
 
         return actions_log_prob

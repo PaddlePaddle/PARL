@@ -179,7 +179,7 @@ class Learner(object):
         """ Accept connection of new remote simulator and start simulation.
         """
         remote_manager = RemoteManager(port=self.config['server_port'])
-        logger.info('Waiting for remote simulators connecting.')
+        logger.info("Waiting for the remote simulator's connection.")
 
         ident = 0
         self.predict_output_queues = []

@@ -24,7 +24,7 @@ PARL的目标是构建一个可以完整复杂任务的智能体。以下是用�
 `Algorithm` 定义了具体的算法来更新前向网络(`Model`)，也就是通过定义损失函数来更新`Model`。一个`Algorithm`包含至少一个`Model`。
 
 ### Agent
-`Agent` 负责与环境进行交互，生成数据提供给`Algorithm`来更新模型(`Model`)，数据的预处理流程也一般定义在这里。
+`Agent` 负责算法与环境的交互，在交互过程中把生成的数据提供给`Algorithm`来更新模型(`Model`)，数据的预处理流程也一般定义在这里。
 
 以下是构建一个包含DQN算法的智能体(`Agent`)用来玩雅达利游戏(`Atari Games`)的示例：
 
@@ -54,8 +54,8 @@ class AtariModel(parl.Model):
 """
 三步定义一个智能体：
    1.  定义前向模型，就是上面的值函数网络(Value)，定义了如何针对输入的游戏图像评估Q值。
-   2.  通过DQN算法来更新模型，在这里我们直接import仓库中实现好的DQN算法即可。
-   3.  在AtariAgent中定义I/O部分，通过交互得到的数据来更新模型。
+   2.  通过DQN算法来更新模型(Model)，在这里我们直接import仓库中实现好的DQN算法即可。
+   3.  在AtariAgent中定义数据交互部分，把交互过程中得到的数据用来传给DQN算法以更新模型。
 """
 
 model = AtariModel(img_shape=(32, 32), action_dim=4)

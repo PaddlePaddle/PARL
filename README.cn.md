@@ -15,8 +15,7 @@
 
 # 框架结构
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
-PARL 的目标是构建一个可以完成复杂任务的智能体(`Agent`)。
-以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
+PARL 的目标是构建一个可以完成复杂任务的智能体 (`Agent`)。 以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
 ### Model
 `Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值网络(`Value Function`)，输入是环境的当前状态（`State`)。

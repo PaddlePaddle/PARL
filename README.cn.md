@@ -4,28 +4,28 @@
 
 > PARL 是一个高性能、灵活的强化学习框架。
 # 特点
-**可复现性**。 我们提供了高质量的主流强化学习算法实现，严格地复现了论文对应的指标。
+**可复现性保证**。我们提供了高质量的主流强化学习算法实现，严格地复现了论文对应的指标。
 
-**大规模并行**。 框架最高可支持上万个CPU的同时并发计算，并且支持多GPU强化学习模型的训练。
+**大规模并行**。框架最高可支持上万个CPU的同时并发计算，并且支持多GPU强化学习模型的训练。
 
-**可复用性强**。  用户无需自己重新实现算法，通过复用框架里提供的算法很轻易地把经典强化学习算法应用到具体的场景中。
+**可复用性强**。用户无需自己重新实现算法，通过复用框架里提供的算法可以很轻易地把各类强化学习算法应用到具体的场景中。
 
-**良好扩展性**。 当用户想调研新的算法时，可以通过继承我们提供的基类可以快速实现自己的强化学习算法。
+**良好扩展性**。当用户想调研新的算法时，可以通过继承我们提供的基类可以快速实现自己的强化学习算法。
 
 
 # 框架结构
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
-PARL aims to build an agent for training algorithms to perform complex tasks.   
-The main abstractions introduced by PARL that are used to build an agent recursively are the following:
+PARL 的目标是构建一个可以完成各种复杂任务的智能体。
+以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
 ### Model
-`Model` is abstracted to construct the forward network which defines a policy network or critic network given state as input.
+`Model` 用来定义前向(Forward)网络，这通常是一个策略网络(Policy Network)或者一个值网络(Value Function)，输入一般是环境的当前状态。
 
 ### Algorithm
-`Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.
+`Algorithm` 定义了具体的算法来更新前向网络（`Model`），也就是通过定义损失函数来更新Model。一个Alorithm 通常包含至少一个Model。
 
 ### Agent
-`Agent` is a data bridge between environment and algorithm. It is responsible for data I/O with outside and describes data preprocessing before feeding data into the training process.
+`Agent` 负责与环境进行交互，同时生成数据提供给`Algorithm`来更新模型，数据的预处理流程也一般定义在这里。
 
 Here is an example of building an agent with DQN algorithm for atari games.
 ```python

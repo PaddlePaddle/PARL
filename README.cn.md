@@ -19,14 +19,15 @@ PARL 的目标是构建一个可以完成复杂任务的智能体(`Agent`)。
 以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
 ### Model
-`Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值网络(`Value Function`)，输入一般是环境的当前状态。
+`Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值网络(`Value Function`)，输入是环境的当前状态（`State`)。
 
 ### Algorithm
-`Algorithm` 定义了具体的算法来更新前向网络（`Model`），也就是通过定义损失函数来更新Model。一个Alorithm 通常包含至少一个Model。
+`Algorithm` 定义了具体的算法来更新前向网络(`Model`)，也就是通过定义损失函数来更新Model。一个Alorithm 包含至少一个Model。
 
 ### Agent
-`Agent` 负责与环境进行交互，同时生成数据提供给`Algorithm`来更新模型，数据的预处理流程也一般定义在这里。
+`Agent` 负责与环境进行交互，生成数据提供给`Algorithm`来更新模型（`Model`），数据的预处理流程也一般定义在这里。
 
+以下是构建一个包含DQN算法的智能体(`Agent`)
 Here is an example of building an agent with DQN algorithm for atari games.
 ```python
 import parl

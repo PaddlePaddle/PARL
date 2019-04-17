@@ -42,7 +42,7 @@ class AtariModel(parl.Model):
 		self.cnn1 = layers.conv_2d(num_filters=32, filter_size=5,
 			 			stride=1, padding=2, act='relu')
 		...
-		self.fc1 = layers.fc(size=1)
+		self.fc1 = layers.fc(action_dim)
 		
 	def value(self, img):
 		# define how to estimate the Q value based on the image of atari games.
@@ -52,8 +52,8 @@ class AtariModel(parl.Model):
 		Q = self.fc1(l)
 		return Q
 """
-三个步骤定义一个智能体
-   1.  定义前向模型，就是上面的值函数网络(Value)，定义了如何针对输入的图像中评估Q值。
+三步定义一个智能体：
+   1.  定义前向模型，就是上面的值函数网络(Value)，定义了如何针对输入的游戏图像评估Q值。
    2.  通过DQN算法来更新模型，在这里我们直接import仓库中实现好的DQN算法即可。
    3.  在AtariAgent中定义I/O部分，通过交互得到的数据来更新模型。
 """

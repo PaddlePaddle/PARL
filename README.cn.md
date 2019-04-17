@@ -15,22 +15,22 @@
 
 # 框架结构
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
-PARL 的目标是构建一个可以完成复杂任务的智能体 (`Agent`)。 以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
+PARL的目标是构建一个可以完整复杂任务的智能体。以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
 ### Model
-`Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值网络(`Value Function`)，输入是环境的当前状态（`State`)。
+`Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值网络(`Value Function`)，输入是当前环境状态(`State`)。
 
 ### Algorithm
-`Algorithm` 定义了具体的算法来更新前向网络(`Model`)，也就是通过定义损失函数来更新Model。一个Alorithm 包含至少一个Model。
+`Algorithm` 定义了具体的算法来更新前向网络(`Model`)，也就是通过定义损失函数来更新`Model`。一个`Algorithm`包含至少一个`Model`。
 
 ### Agent
-`Agent` 负责与环境进行交互，生成数据提供给`Algorithm`来更新模型（`Model`），数据的预处理流程也一般定义在这里。
+`Agent` 负责与环境进行交互，生成数据提供给`Algorithm`来更新模型(`Model`)，数据的预处理流程也一般定义在这里。
 
-以下是构建一个包含DQN算法的智能体(`Agent`)
-Here is an example of building an agent with DQN algorithm for atari games.
+以下是构建一个包含DQN算法的智能体(`Agent`)用来玩雅达利游戏(`Atari Games`)的示例：
+
 ```python
 import parl
-from parl.algorithms import DQN, DDQN
+from parl.algorithms import DQN
 
 class AtariModel(parl.Model):
 	"""AtariModel
@@ -42,7 +42,7 @@ class AtariModel(parl.Model):
 		self.cnn1 = layers.conv_2d(num_filters=32, filter_size=5,
 			 			stride=1, padding=2, act='relu')
 		...
-		self.fc1 = layers.fc(action_dim)
+		self.fc1 = layers.fc(size=1)
 		
 	def value(self, img):
 		# define how to estimate the Q value based on the image of atari games.
@@ -52,11 +52,10 @@ class AtariModel(parl.Model):
 		Q = self.fc1(l)
 		return Q
 """
-three steps to build an agent
-   1.  define a forward model which is critic_model in this example
-   2.  a. to build a DQN algorithm, just pass the critic_model to `DQN`
-       b. to build a DDQN algorithm, just replace DQN in following line with DDQN
-   3.  define the I/O part in AtariAgent so that it could update the algorithm based on the interactive data
+三个步骤定义一个智能体
+   1.  定义前向模型，就是上面的值函数网络(Value)，定义了如何针对输入的图像中评估Q值。
+   2.  通过DQN算法来更新模型，在这里我们直接import仓库中实现好的DQN算法即可。
+   3.  在AtariAgent中定义I/O部分，通过交互得到的数据来更新模型。
 """
 
 model = AtariModel(img_shape=(32, 32), action_dim=4)

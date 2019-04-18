@@ -2,6 +2,8 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
+[English](./README.md) | 简体中文
+
 > PARL 是一个高性能、灵活的强化学习框架。
 # 特点
 **可复现性保证**。我们提供了高质量的主流强化学习算法实现，严格地复现了论文对应的指标。

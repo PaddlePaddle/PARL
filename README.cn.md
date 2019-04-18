@@ -63,9 +63,9 @@ algorithm = DQN(model)
 agent = AtariAgent(algorithm)
 ```
 
-# Parallelization
-PARL provides a compact API for distributed training, allowing users to transfer the code into a parallelized version by simply adding a decorator.  
-Here is a `Hello World!` example to demonstrate how easily it is to leverage outer computation resources.
+# 简易高效的并行接口
+在PARL中，一个**修饰符**(parl.remote_class)就可以帮助用户实现自己的并行算法。
+以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。
 ```python
 #============Agent.py=================
 @parl.remote_class
@@ -89,27 +89,26 @@ agent = remote_manager.get_remote()
 agent.say_hello()
 ans = agent.sum(1,5) # run remotely and not comsume any local computation resources 
 ```
-Two steps to use outer computation resources:
-1. use the `parl.remote_class` to decorate a class at first, after which it is transfered to be a new class that can run in other CPUs or machines.
-2. Get remote objects from the `RemoteManager`, and these objects have the same functions as the real ones. However, calling any function of these objects **does not** consume local computation resources since they are executed elsewhere.
+两步调度外部的计算资源：
+1. 使用`parl.remote_class`修饰一个类，之后这个类就被转化为可以运行在其他CPU或者机器上的类。
+2. 通过`RemoteManager`获取远端的类实例，通过这种方式获取到的实例和原来的类是有同样的函数的。由于这些类是在别的计算资源上运行的，执行这些函数**不再消耗当前线程计算资源**。
 
 <img src=".github/decorator.png" alt="PARL" width="450"/>
-As shown in the above figure, real actors(orange circle) are running at the cpu cluster, while the learner(bule circle) is running at the local gpu with several remote actors(yellow circle with dotted edge).  
 
-For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallized algorithms like [IMPALA](examples/IMPALA), [A2C](examples/A2C) and [GA3C](examples/GA3C). For more details in usage please refer to these examples.  
+如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。
 
 
-# Install:
-### Dependencies
+# 安装:
+### 依赖
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.2.1 (We try to make our repository always compatible with latest version PaddlePaddle)  
+- PaddlePaddle >=1.2.1 (这个不是必须的，如果你只用并行部分的接口不需要安装paddle) 
 
 
 ```
 pip install parl
 ```
 
-# Examples
+# 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
 - [DDPG](examples/DDPG/)
@@ -117,7 +116,7 @@ pip install parl
 - [IMPALA](examples/IMPALA/)
 - [A2C](examples/A2C/)
 - [GA3C](examples/GA3C/)
-- [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
+- [NIPS2018强化学习假肢挑战赛冠军解决方案](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 
 <img src=".github/NeurlIPS2018.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>

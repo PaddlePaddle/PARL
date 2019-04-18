@@ -5,7 +5,7 @@ Based on PARL, the DQN algorithm of deep reinforcement learning has been reprodu
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
 
 ### Atari games introduction
-Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari game.
+Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
 
@@ -20,7 +20,6 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm
-+ opencv-python
 + atari_py
 + [ale_python_interface](https://github.com/mgbellemare/Arcade-Learning-Environment)
 

@@ -9,7 +9,7 @@ Include following approach:
 [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco game.
+Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
 

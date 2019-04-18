@@ -67,8 +67,7 @@ class PolicyDistributionTest(unittest.TestCase):
         gt_log_probs = np.log(gt_probs)
         gt_entropy = -1.0 * np.sum(gt_probs * gt_log_probs, axis=1)
 
-        gt_actions_logp = -1.0 * np_cross_entropy(
-            np_softmax(logits_np), actions_np)
+        gt_actions_logp = -1.0 * np_cross_entropy(gt_probs + 1e-6, actions_np)
         gt_actions_logp = np.squeeze(gt_actions_logp, -1)
         gt_kl = np.sum(
             np.where(gt_probs != 0,

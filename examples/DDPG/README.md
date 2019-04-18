@@ -5,7 +5,7 @@ Based on PARL, the DDPG algorithm of deep reinforcement learning has been reprod
 [Continuous control with deep reinforcement learning](https://arxiv.org/abs/1509.02971)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco game.
+Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
 

@@ -16,11 +16,12 @@ generates new PARL python API
 """
 
 from parl.utils.utils import _HAS_FLUID
-from parl.utils import logger
 
 if _HAS_FLUID:
     from parl.framework import *
 else:
-    logger.warning('Can not import fluid.')
+    print(
+        "WARNING:PARL: Failed to import paddle. Only APIs for parallelization are available."
+    )
 
 from parl.remote import remote_class, RemoteManager

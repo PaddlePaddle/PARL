@@ -107,7 +107,7 @@ class RemoteManager(object):
                 if time.time() - self.remote_latest_timestamp[
                         remote_id] > 3 * remote_constants.HEARTBEAT_INTERVAL_S:
                     logger.error(
-                        'Remote object {} is lost, please check if anything wrong in the remote client'
+                        'Remote object {} is lost, please check if anything wrong happens in the remote client'
                         .format(remote_id))
                     self.remote_latest_timestamp.pop(remote_id)
             time.sleep(3 * remote_constants.HEARTBEAT_INTERVAL_S)

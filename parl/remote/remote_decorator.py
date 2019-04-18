@@ -76,7 +76,7 @@ def remote_class(cls):
                     remote_port = socket.bind_to_random_port(addr="tcp://*")
                 except zmq.ZMQBindError:
                     logger.error(
-                        'Can not bind to random port, please set remote_port manually.'
+                        'Can not bind to a random port, please set remote_port manually.'
                     )
                     sys.exit(1)
             else:
@@ -124,8 +124,8 @@ def remote_class(cls):
             self.reply_socket.close()
 
             # The program may hang when destroying zmq context manually.
-            # So we will let it destroyed by garbage collection of python, which may raise
-            # some C++ exception.
+            # It will be destroyed automatically by the garbage collection mechanism of python,
+            # though it may raise some exceptions in C++.
 
             #self.zmq_context.destroy()
 

@@ -118,10 +118,16 @@ def remote_class(cls):
             self.connect_socket.linger = 0
 
         def _exit_remote(self):
-            # Following release order matters
             self.poller.unregister(self.connect_socket)
 
-            self.zmq_context.destroy()
+            self.connect_socket.close()
+            self.reply_socket.close()
+
+            # The program may hang when destroying zmq context manually.
+            # So we will let it destroyed by garbage collection of python, which may raise
+            # some C++ exception.
+
+            #self.zmq_context.destroy()
 
         def _heartbeat_loop(self):
             """

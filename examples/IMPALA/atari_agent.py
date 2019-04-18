@@ -73,7 +73,7 @@ class AtariAgent(Agent):
                 name='entropy_coeff', shape=[], dtype='float32')
 
             self.learn_reader = fluid.layers.create_py_reader_by_data(
-                capacity=self.config['train_batch_size'],
+                capacity=32,
                 feed_list=[
                     obs, actions, behaviour_logits, rewards, dones, lr,
                     entropy_coeff

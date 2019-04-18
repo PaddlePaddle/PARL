@@ -32,9 +32,8 @@ from parl.utils.window_stat import WindowStat
 class Learner(object):
     def __init__(self, config):
         self.config = config
-
-        self.learner_queue = queue.Queue(
-            maxsize=config['learner_queue_max_size'])
+        self.sample_data_queue = queue.Queue(
+            maxsize=config['sample_queue_max_size'])
 
         #=========== Create Agent ==========
         env = gym.make(config['env_name'])
@@ -75,8 +74,7 @@ class Learner(object):
 
         #========== Remote Actor ===========
         self.remote_count = 0
-        self.sample_data_queue = queue.Queue(
-            maxsize=config['sample_queue_max_size'])
+
         self.batch_buffer = []
         self.remote_metrics_queue = queue.Queue()
         self.sample_total_steps = 0
@@ -93,21 +91,33 @@ class Learner(object):
         """ Data generator for fluid.layers.py_reader
         """
         while True:
-            batch = self.learner_queue.get()
+            sample_data = self.sample_data_queue.get()
+            self.sample_total_steps += sample_data['obs'].shape[0]
+            self.batch_buffer.append(sample_data)
 
-            obs_np = batch['obs'].astype('float32')
-            actions_np = batch['actions'].astype('int64')
-            behaviour_logits_np = batch['behaviour_logits'].astype('float32')
-            rewards_np = batch['rewards'].astype('float32')
-            dones_np = batch['dones'].astype('float32')
+            buffer_size = sum(
+                [data['obs'].shape[0] for data in self.batch_buffer])
+            if buffer_size >= self.config['train_batch_size']:
+                batch = {}
+                for key in self.batch_buffer[0].keys():
+                    batch[key] = np.concatenate(
+                        [data[key] for data in self.batch_buffer])
+                self.batch_buffer = []
 
-            self.lr = self.lr_scheduler.step()
-            self.entropy_coeff = self.entropy_coeff_scheduler.step()
+                obs_np = batch['obs'].astype('float32')
+                actions_np = batch['actions'].astype('int64')
+                behaviour_logits_np = batch['behaviour_logits'].astype(
+                    'float32')
+                rewards_np = batch['rewards'].astype('float32')
+                dones_np = batch['dones'].astype('float32')
 
-            yield [
-                obs_np, actions_np, behaviour_logits_np, rewards_np, dones_np,
-                self.lr, self.entropy_coeff
-            ]
+                self.lr = self.lr_scheduler.step()
+                self.entropy_coeff = self.entropy_coeff_scheduler.step()
+
+                yield [
+                    obs_np, actions_np, behaviour_logits_np, rewards_np,
+                    dones_np, self.lr, self.entropy_coeff
+                ]
 
     def run_learn(self):
         """ Learn loop
@@ -170,31 +180,6 @@ class Learner(object):
 
             remote_actor.set_params(self.cache_params)
 
-    def step(self):
-        """ Merge and generate batch learn data from sample_data_queue,
-        and put it in learner_queue.
-        """
-        assert self.learn_thread.is_alive()
-
-        while True:
-            try:
-                sample_data = self.sample_data_queue.get_nowait()
-                self.sample_total_steps += sample_data['obs'].shape[0]
-                self.batch_buffer.append(sample_data)
-
-                buffer_size = sum(
-                    [data['obs'].shape[0] for data in self.batch_buffer])
-                if buffer_size >= self.config['train_batch_size']:
-                    train_batch = {}
-                    for key in self.batch_buffer[0].keys():
-                        train_batch[key] = np.concatenate(
-                            [data[key] for data in self.batch_buffer])
-                    self.learner_queue.put(train_batch)
-                    self.batch_buffer = []
-
-            except queue.Empty:
-                break
-
     def log_metrics(self):
         """ Log metrics of learner and actors
         """
@@ -233,7 +218,6 @@ class Learner(object):
             'max_episode_steps': max_episode_steps,
             'mean_episode_steps': mean_episode_steps,
             'min_episode_steps': min_episode_steps,
-            'learner_queue_size': self.learner_queue.qsize(),
             'sample_queue_size': self.sample_data_queue.qsize(),
             'total_params_sync': self.total_params_sync,
             'cache_params_sent_cnt': self.cache_params_sent_cnt,

@@ -22,9 +22,8 @@ def main(config):
 
     try:
         while True:
-            start = time.time()
-            while time.time() - start < config['log_metrics_interval_s']:
-                learner.step()
+            time.sleep(config['log_metrics_interval_s'])
+
             learner.log_metrics()
 
     except KeyboardInterrupt:

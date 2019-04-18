@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-if sys.version_info >= (3, 0):
-    import queue as Queue
-else:
-    import Queue
+from six.moves import queue
 import threading
 import zmq
 from parl.utils import logger, to_byte, to_str
@@ -51,7 +47,7 @@ class RemoteManager(object):
         self.socket = socket
         self.socket.linger = 0
 
-        self.remote_pool = Queue()
+        self.remote_pool = queue.Queue()
 
         t = threading.Thread(target=self._wait_for_connection)
         t.setDaemon(True)  # The thread will exit when main thread exited

@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
-import parl.layers as layers
 from abc import ABCMeta, abstractmethod
-from parl.framework.model_base import Network, Model
+from parl.framework.model_base import Model
 
 __all__ = ['Algorithm']
 
@@ -23,13 +21,13 @@ __all__ = ['Algorithm']
 class Algorithm(object):
     """
     Algorithm defines the way how we update the model. For example,
-    after defining forward network in `Network` class, you should define how to update the model here.
+    after defining forward network in `Model` class, you should define how to update the model here.
     Before creating a customized algorithm, please do check algorithms of PARL.
-    Most common used algorithms like DQN/DDPG/PPO have been providing in algorithms, go and have a try.
-    It's easy to use them and just try pl.algorithms.DQN.
+    Most common used algorithms like DQN/DDPG/PPO/A3C have been providing in algorithms, go and have a try.
+    It's easy to use them and just try parl.algorithms.DQN.
 
     An Algorithm implements two functions:
-    1. define_predict() build forward process which was defined in Network
+    1. define_predict() build forward process which was defined in `Model`
     2. define_learn() computes a cost for optimization
 
     An algorithm should be updating part of a network. The user only needs to 

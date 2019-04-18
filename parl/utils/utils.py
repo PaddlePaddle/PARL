@@ -72,3 +72,9 @@ def is_PY3():
 
 
 MAX_INT32 = 0x7fffffff
+
+try:
+    from paddle import fluid
+    _HAS_FLUID = True
+except ImportError:
+    _HAS_FLUID = False

@@ -66,36 +66,23 @@ def remote_class(cls):
             and waits for requests (e.g. call a function) from server side.
             """
             if remote_ip is None:
-                client_ip = get_ip_address()
-            else:
-                client_ip = remote_ip
+                remote_ip = get_ip_address()
 
             self.zmq_context = zmq.Context()
             socket = self.zmq_context.socket(zmq.REP)
 
-            free_port = None
             if remote_port is None:
-                for port in range(6000, 8000):
-                    try:
-                        socket.bind("tcp://*:{}".format(port))
-                        logger.info(
-                            "[_create_reply_socket] free_port:{}".format(port))
-                        free_port = port
-                        break
-                    except zmq.error.ZMQError:
-                        logger.warning(
-                            "[_create_reply_socket]cannot bind port:{}, retry".
-                            format(port))
+                try:
+                    remote_port = socket.bind_to_random_port(addr="tcp://*")
+                except zmq.ZMQBindError:
+                    logger.error(
+                        'Can not bind to a random port, please set remote_port manually.'
+                    )
+                    sys.exit(1)
             else:
                 socket.bind("tcp://*:{}".format(remote_port))
-                free_port = remote_port
 
-            if free_port is not None:
-                return socket, client_ip, free_port
-            else:
-                logger.error(
-                    "cannot find any available port from 6000 to 8000")
-                sys.exit(1)
+            return socket, remote_ip, remote_port
 
         def _connect_server(self, server_ip, server_port, remote_ip,
                             remote_port):
@@ -116,26 +103,31 @@ def remote_class(cls):
             socket = self.zmq_context.socket(zmq.REQ)
             socket.connect("tcp://{}:{}".format(server_ip, server_port))
 
-            client_id = np.random.randint(int(1e18))
-            logger.info("client_id:{}".format(client_id))
             logger.info("connecting {}:{}".format(server_ip, server_port))
 
-            client_info = '{}:{} {}'.format(local_ip, local_port, client_id)
+            client_addr = '{}:{}'.format(local_ip, local_port)
             socket.send_multipart(
                 [remote_constants.CONNECT_TAG,
-                 to_byte(client_info)])
+                 to_byte(client_addr)])
 
             message = socket.recv_multipart()
-            logger.info("[connect_server] done, message from server:{}".format(
-                message))
+            self.client_id = message[1]
+            logger.info("connect server done, client_id: {}".format(
+                self.client_id))
             self.connect_socket = socket
             self.connect_socket.linger = 0
 
         def _exit_remote(self):
-            # Following release order matters
             self.poller.unregister(self.connect_socket)
 
-            self.zmq_context.destroy()
+            self.connect_socket.close()
+            self.reply_socket.close()
+
+            # The program may hang when destroying zmq context manually.
+            # It will be destroyed automatically by the garbage collection mechanism of python,
+            # though it may raise some exceptions in C++.
+
+            #self.zmq_context.destroy()
 
         def _heartbeat_loop(self):
             """
@@ -146,7 +138,7 @@ def remote_class(cls):
 
             while True:
                 self.connect_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
+                    [remote_constants.HEARTBEAT_TAG, self.client_id])
 
                 # wait for at most 10s to receive response
                 socks = dict(self.poller.poll(10000))
@@ -161,7 +153,7 @@ def remote_class(cls):
                     break
 
                 # HeartBeat interval 10s
-                time.sleep(10)
+                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
         def __getattr__(self, attr):
             """

@@ -29,7 +29,6 @@ config = {
 
     #==========  learner config ==========
     'train_batch_size': 1000,
-    'learner_queue_max_size': 16,
     'sample_queue_max_size': 8,
     'gamma': 0.99,
 

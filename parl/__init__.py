@@ -14,5 +14,13 @@
 """
 generates new PARL python API
 """
-from parl.framework import *
+
+from parl.utils.utils import _HAS_FLUID
+from parl.utils import logger
+
+if _HAS_FLUID:
+    from parl.framework import *
+else:
+    logger.warning('Can not import fluid.')
+
 from parl.remote import remote_class, RemoteManager

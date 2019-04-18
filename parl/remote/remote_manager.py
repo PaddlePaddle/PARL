@@ -14,6 +14,7 @@
 
 import queue
 import threading
+import time
 import zmq
 from parl.utils import logger, to_byte, to_str
 from parl.remote import remote_constants
@@ -48,8 +49,13 @@ class RemoteManager(object):
         self.socket.linger = 0
 
         self.remote_pool = queue.Queue()
+        self.remote_latest_timestamp = {}
 
         t = threading.Thread(target=self._wait_for_connection)
+        t.setDaemon(True)  # The thread will exit when main thread exited
+        t.start()
+
+        t = threading.Thread(target=self._check_remote_status)
         t.setDaemon(True)  # The thread will exit when main thread exited
         t.start()
 
@@ -61,6 +67,7 @@ class RemoteManager(object):
 
         Note that this function has been called inside the `__init__` function.
         """
+        remote_id = 0
         while True:
             try:
                 message = self.socket.recv_multipart()
@@ -68,17 +75,23 @@ class RemoteManager(object):
 
                 if tag == remote_constants.CONNECT_TAG:
                     self.socket.send_multipart([
-                        remote_constants.NORMAL_TAG, b'Connect server success.'
+                        remote_constants.NORMAL_TAG,
+                        to_byte('{}'.format(remote_id))
                     ])
-                    client_info = to_str(message[1])
-                    remote_client_address, remote_client_id = client_info.split(
-                    )
+                    remote_client_address = to_str(message[1])
                     remote_obj = RemoteObject(remote_client_address,
-                                              remote_client_id,
                                               self.zmq_context)
+
+                    self.remote_latest_timestamp[to_byte(
+                        str(remote_id))] = time.time()
+
                     logger.info('[RemoteManager] Added a new remote object.')
                     self.remote_pool.put(remote_obj)
+
+                    remote_id += 1
+
                 elif tag == remote_constants.HEARTBEAT_TAG:
+                    self.remote_latest_timestamp[message[1]] = time.time()
                     self.socket.send_multipart(
                         [remote_constants.NORMAL_TAG, b'Server is alive.'])
                 else:
@@ -87,6 +100,17 @@ class RemoteManager(object):
             except zmq.ZMQError:
                 logger.warning('Zmq error, exiting server.')
                 break
+
+    def _check_remote_status(self):
+        while True:
+            for remote_id in list(self.remote_latest_timestamp.keys()):
+                if time.time() - self.remote_latest_timestamp[
+                        remote_id] > 3 * remote_constants.HEARTBEAT_INTERVAL_S:
+                    logger.error(
+                        'Remote object {} is lost, please check if anything wrong in the remote client'
+                        .format(remote_id))
+                    self.remote_latest_timestamp.pop(remote_id)
+            time.sleep(3 * remote_constants.HEARTBEAT_INTERVAL_S)
 
     def get_remote(self):
         """

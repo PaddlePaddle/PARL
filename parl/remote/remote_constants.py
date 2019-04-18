@@ -22,5 +22,5 @@ DESERIALIZE_EXCEPTION_TAG = b'[DESERIALIZE_EXCEPTION]'
 
 NORMAL_TAG = b'[NORMAL]'
 
-# seconds interval of heartbeat mechanism
+# interval of heartbeat mechanism in the unit of second
 HEARTBEAT_INTERVAL_S = 10

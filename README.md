@@ -2,6 +2,8 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
+English | [简体中文](./README_cn.md)
+
 > PARL is a flexible and high-efficient reinforcement learning framework based on [PaddlePaddle](https://github.com/PaddlePaddle/Paddle).
 
 # Features

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import queue
+from six.moves import queue
 import threading
 import time
 import zmq

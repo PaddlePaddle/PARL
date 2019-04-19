@@ -17,7 +17,7 @@ English | [简体中文](./README.cn.md)
 
 
 # Abstractions
-<img src=".github/abstractions.png" alt="abstractions" width="400"/>  
+<img src=".github/abstractions.png" alt="abstractions" width="400"/>
 PARL aims to build an agent for training algorithms to perform complex tasks.   
 The main abstractions introduced by PARL that are used to build an agent recursively are the following:
 
@@ -123,6 +123,6 @@ pip install parl
 - [GA3C](examples/GA3C/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 
-<img src=".github/NeurlIPS2018.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
+<img src=".github/NeurlIPS2018.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/>
 <br>
 <img src=".github/Aircraft.gif"  width = "808" height ="300"  alt="NeurlIPS2018"/>

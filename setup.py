@@ -17,6 +17,12 @@ import os
 import re
 from setuptools import setup, find_packages
 
+cur_dir = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_dir, 'README.md'), 'rb') as f:
+    lines = [x.decode('utf-8') for x in f.readlines()]
+    lines = ''.join([re.sub('^<.*>\n$', '', x) for x in lines])
+    long_description = lines
+
 
 def _find_packages(prefix=''):
     packages = []
@@ -31,11 +37,24 @@ def _find_packages(prefix=''):
 setup(
     name='parl',
     version=1.1,
+    description='Reinforcement Learning Framework',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url='https://github.com/PaddlePaddle/PARL',
     packages=_find_packages(),
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
         "pyzmq>=17.1.2",
         "pyarrow>=0.12.0",
+    ],
+    classifiers=[
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 )

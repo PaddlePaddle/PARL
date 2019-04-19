@@ -19,7 +19,9 @@ from setuptools import setup, find_packages
 
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(cur_dir, 'README.md'), 'rb') as f:
-    long_description = f.read().decode('utf-8')
+    lines = [x.decode('utf-8') for x in f.readlines()]
+    lines = ''.join([re.sub('^<.*>\n$', '', x) for x in lines])
+    long_description = lines
 
 
 def _find_packages(prefix=''):

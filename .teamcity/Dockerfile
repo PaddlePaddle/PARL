@@ -15,7 +15,7 @@
 
 # A dev image based on paddle production image
 
-FROM parl/parl-test:cuda9.0-cudnn7
+FROM parl/parl-test:1.1-cuda9.0-cudnn7
 
 COPY ./requirements.txt /root/
 

@@ -4,7 +4,7 @@
 
 English | [简体中文](./README.cn.md)
 
-> PARL is a flexible and high-efficient reinforcement learning framework based on [PaddlePaddle](https://github.com/PaddlePaddle/Paddle).
+> PARL is a flexible and high-efficient reinforcement learning framework.
 
 # Features
 **Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms.

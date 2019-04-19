@@ -56,6 +56,8 @@ function check_style() {
 }
 
 function run_test_with_gpu() {
+    export FLAGS_fraction_of_gpu_memory_to_use=0.5
+    
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake ..

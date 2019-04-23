@@ -47,6 +47,7 @@ setup(
         "termcolor>=1.1.0",
         "pyzmq>=17.1.2",
         "pyarrow>=0.12.0",
+        "scipy>=1.0.0"
     ],
     classifiers=[
         'Intended Audience :: Developers',

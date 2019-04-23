@@ -16,7 +16,7 @@ import sys
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32'
+    'MAX_INT32', '_HAS_FLUID'
 ]
 
 

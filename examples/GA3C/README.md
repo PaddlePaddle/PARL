@@ -11,6 +11,8 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 ### Benchmark result
 Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 million sample steps.
 <img src=".benchmark/GA3C_Pong.jpg" width = "400" height ="300" alt="GA3C_Pong" /> <img src=".benchmark/GA3C_Breakout.jpg" width = "400" height ="300" alt="GA3C_Breakout"/>
+<img src=".benchmark/GA3C_BeamRider.jpg" width = "400" height ="300" alt="GA3C_BeamRider" /> <img src=".benchmark/GA3C_Qbert.jpg" width = "400" height ="300" alt="GA3C_Qbert"/>
+<img src=".benchmark/GA3C_SpaceInvaders.jpg" width = "400" height ="300" alt="GA3C_SpaceInvaders" />
 
 ## How to use
 ### Dependencies

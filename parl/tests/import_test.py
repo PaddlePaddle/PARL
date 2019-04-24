@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 
-# A dev image based on paddle production image
 
-FROM parl/parl-test:1.1-cuda9.0-cudnn7-v2
+class ImportTest(unittest.TestCase):
+    def test_import(self):
+        import parl
 
-COPY ./requirements.txt /root/
 
-# Requirements for python2
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
-
-# Requirements for python3
-RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
+if __name__ == '__main__':
+    unittest.main()

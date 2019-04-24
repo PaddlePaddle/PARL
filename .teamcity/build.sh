@@ -67,6 +67,7 @@ function run_test_with_gpu() {
     ========================================
 EOF
     ctest --output-on-failure
+    rm -rf ${REPO_ROOT}/build
 }
 
 function run_test_with_cpu() {
@@ -81,11 +82,31 @@ function run_test_with_cpu() {
     ========================================
 EOF
     ctest --output-on-failure
+    rm -rf ${REPO_ROOT}/build
+}
+
+function run_import_test {
+    export CUDA_VISIBLE_DEVICES=""
+
+    mkdir -p ${REPO_ROOT}/build
+    cd ${REPO_ROOT}/build
+
+    cmake .. -DIS_TESTING_IMPORT=ON
+
+    cat <<EOF
+    ========================================
+    Running import test...
+    ========================================
+EOF
+    ctest --output-on-failure
+    rm -rf ${REPO_ROOT}/build
 }
 
 function main() {
     set -e
     local CMD=$1
+    /root/miniconda3/envs/empty_env/bin/pip install .
+    /root/miniconda3/envs/paddle1.4.0/bin/pip install .
     init
     case $CMD in
         check_style)
@@ -94,6 +115,7 @@ function main() {
         test)
           run_test_with_gpu
           run_test_with_cpu
+          run_import_test
           ;;
         *)
           print_usage

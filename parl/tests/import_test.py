@@ -16,7 +16,7 @@ import unittest
 
 
 class ImportTest(unittest.TestCase):
-    def test_import(self):
+    def test_import_parl_alone(self):
         import parl
 
 

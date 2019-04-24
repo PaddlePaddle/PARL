@@ -17,6 +17,8 @@ cmake_minimum_required(VERSION 3.0)
 enable_testing()
 
 option(WITH_TESTING "Include unit testing" ON)
+option(IS_TESTING_IMPORT "Whether is testing import parl" OFF)
+
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
 function(py_test TARGET_NAME)
@@ -34,10 +36,30 @@ function(py_test TARGET_NAME)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
+function(import_test TARGET_NAME)
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs SRCS DEPS ARGS ENVS)
+    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    add_test(NAME ${TARGET_NAME}_with_empty_env
+        COMMAND env PYTHONPATH=.:${py_test_ENVS}
+        /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(NAME ${TARGET_NAME}_with_paddle1.4.0
+        COMMAND env PYTHONPATH=.:${py_test_ENVS}
+        /root/miniconda3/envs/paddle1.4.0/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endfunction()
+
 if (WITH_TESTING)
-    file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
-    string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
-    foreach(src ${TEST_OPS})
-        py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
-    endforeach()
+    if (IS_TESTING_IMPORT)
+        set(src "parl/tests/import_test")
+        import_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+    else ()
+        file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
+        string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
+        foreach(src ${TEST_OPS})
+            py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+        endforeach()
+    endif()
 endif()

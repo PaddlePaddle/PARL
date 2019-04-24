@@ -105,14 +105,15 @@ EOF
 function main() {
     set -e
     local CMD=$1
-    /root/miniconda3/envs/empty_env/bin/pip install .
-    /root/miniconda3/envs/paddle1.4.0/bin/pip install .
+    
     init
     case $CMD in
         check_style)
           check_style
           ;;
         test)
+          /root/miniconda3/envs/empty_env/bin/pip install .
+          /root/miniconda3/envs/paddle1.4.0/bin/pip install .
           run_test_with_gpu
           run_test_with_cpu
           run_import_test

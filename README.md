@@ -106,7 +106,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.2.1 (**Optional**, if you only want to use APIs related to parallelization alone)  
+- [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) >=1.2.1 (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 
 ```

@@ -103,7 +103,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 # 安装:
 ### 依赖
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.2.1 (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
+- [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) >=1.2.1 (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 
 ```

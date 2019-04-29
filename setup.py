@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import codecs
 import sys
 import os
 import re
@@ -34,9 +35,28 @@ def _find_packages(prefix=''):
     return packages
 
 
+def read(*parts):
+    with codecs.open(os.path.join(cur_dir, *parts), 'r') as fp:
+        return fp.read()
+
+
+# Reference: https://github.com/pypa/pip/blob/master/setup.py
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]",
+        version_file,
+        re.M,
+    )
+    if version_match:
+        return version_match.group(1)
+
+    raise RuntimeError("Unable to find version string.")
+
+
 setup(
     name='parl',
-    version=1.1,
+    version=find_version("parl", "__init__.py"),
     description='Reinforcement Learning Framework',
     long_description=long_description,
     long_description_content_type='text/markdown',

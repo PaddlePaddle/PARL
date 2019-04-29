@@ -575,7 +575,7 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_params()
         new_params = [x + 1.0 for x in params]
 
-        self.model.set_params(new_params, self.gpu_id)
+        self.model.set_params(new_params)
 
         for x, y in list(zip(new_params, self.model.get_params())):
             self.assertEqual(np.sum(x), np.sum(y))
@@ -604,7 +604,7 @@ class ModelBaseTest(unittest.TestCase):
 
         # pass parameters of self.model to model2
         params = model1.get_params()
-        model2.set_params(params, self.gpu_id)
+        model2.set_params(params)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -626,7 +626,7 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_params()
 
         try:
-            self.model.set_params(params[1:], self.gpu_id)
+            self.model.set_params(params[1:])
         except:
             # expected
             return
@@ -645,7 +645,7 @@ class ModelBaseTest(unittest.TestCase):
 
         params.reverse()
 
-        self.model.set_params(params, self.gpu_id)
+        self.model.set_params(params)
 
         x = np.random.random(size=(1, 4)).astype('float32')
 

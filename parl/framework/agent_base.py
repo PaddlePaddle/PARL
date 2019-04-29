@@ -104,4 +104,4 @@ class Agent(object):
         Args:
             params: List of numpy array.
         """
-        self.alg.set_params(params, gpu_id=self.gpu_id)
+        self.alg.set_params(params)

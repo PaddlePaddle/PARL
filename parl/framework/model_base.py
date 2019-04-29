@@ -132,7 +132,7 @@ class Network(object):
 
         return params
 
-    def set_params(self, params, gpu_id):
+    def set_params(self, params):
         """ Set parameters in this Network with params
         
         Args:
@@ -142,7 +142,7 @@ class Network(object):
         assert len(params) == len(self.parameter_names), \
                 'size of input params should be same as parameters number of current Network'
         for (param_name, param) in list(zip(self.parameter_names, params)):
-            set_value(param_name, param, gpu_id)
+            set_value(param_name, param)
 
     def _get_parameter_names(self, obj):
         """ Recursively get parameter names in obj,

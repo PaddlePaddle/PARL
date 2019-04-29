@@ -17,6 +17,7 @@ Common functions of PARL framework
 
 import paddle.fluid as fluid
 from paddle.fluid.executor import _fetch_var
+from parl.utils import get_gpu_count
 
 __all__ = ['fetch_framework_var', 'fetch_value', 'set_value', 'inverse']
 
@@ -52,7 +53,7 @@ def fetch_value(attr_name):
     return _fetch_var(attr_name, return_numpy=True)
 
 
-def set_value(attr_name, value, gpu_id):
+def set_value(attr_name, value):
     """ Given name of ParamAttr, set numpy value to the parameter in global_scope
     
     Args:
@@ -60,6 +61,7 @@ def set_value(attr_name, value, gpu_id):
         value: numpy array
         gpu_id: gpu id where the parameter in
     """
+    gpu_id = 0 if get_gpu_count() > 0 else -1
     place = fluid.CPUPlace() if gpu_id < 0 \
             else fluid.CUDAPlace(gpu_id)
     var = _fetch_var(attr_name, return_numpy=False)

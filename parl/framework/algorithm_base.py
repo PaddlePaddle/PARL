@@ -61,11 +61,11 @@ class Algorithm(object):
         """
         return self.model.get_params()
 
-    def set_params(self, params, gpu_id):
+    def set_params(self, params):
         """ Set parameters of self.model
 
         Args:
             params: List of numpy array.
             gpu_id: gpu id where self.model in. (if gpu_id < 0, means in cpu.)
         """
-        self.model.set_params(params, gpu_id=gpu_id)
+        self.model.set_params(params)

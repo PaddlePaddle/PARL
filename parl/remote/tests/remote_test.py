@@ -19,6 +19,12 @@ import unittest
 from parl.remote import *
 
 
+class UnableSerializeObject(object):
+    def __init__(self):
+        # threading.Lock() can not be serialized
+        self.lock = threading.Lock()
+
+
 @parl.remote_class
 class Simulator:
     def __init__(self, arg1, arg2=None):
@@ -38,7 +44,7 @@ class Simulator:
         self.arg2 = value
 
     def get_unable_serialize_object(self):
-        return self
+        return UnableSerializeObject()
 
 
 class TestRemote(unittest.TestCase):
@@ -122,7 +128,7 @@ class TestRemote(unittest.TestCase):
         remote_sim = self.remote_manager.get_remote()
 
         try:
-            remote_sim.set_arg1(wrong_arg=remote_sim)
+            remote_sim.set_arg1(UnableSerializeObject())
         except SerializeError:
             # expected
             return

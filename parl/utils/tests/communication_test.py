@@ -15,7 +15,8 @@
 import numpy as np
 import time
 import unittest
-from parl.utils.communication import dumps_return, loads_return
+from parl.utils.communication import dumps_return, loads_return, \
+        dumps_argument, loads_argument
 
 
 class TestCommunication(unittest.TestCase):
@@ -56,10 +57,32 @@ class TestCommunication(unittest.TestCase):
         for i, data in enumerate([data1, data2, data3]):
             start = time.time()
             for _ in range(10):
-                serialize_bytes = dumps_return(data)
-                deserialize_result = loads_return(serialize_bytes)
+                serialize_bytes = dumps_argument(data)
+                deserialize_result = loads_argument(serialize_bytes)
             print('Case {}, Average dump and load argument time:'.format(i),
                   (time.time() - start) / 10)
+
+    def test_dumps_loads_return_with_custom_class(self):
+        class A(object):
+            def __init__(self):
+                self.a = 3
+
+        a = A()
+        serialize_bytes = dumps_return(a)
+        deserialize_result = loads_return(serialize_bytes)
+
+        assert deserialize_result.a == 3
+
+    def test_dumps_loads_argument_with_custom_class(self):
+        class A(object):
+            def __init__(self):
+                self.a = 3
+
+        a = A()
+        serialize_bytes = dumps_argument(a)
+        deserialize_result = loads_argument(serialize_bytes)
+
+        assert deserialize_result[0][0].a == 3
 
 
 if __name__ == '__main__':

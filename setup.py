@@ -65,10 +65,10 @@ setup(
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
-        "pyzmq==17.1.2",
-        "pyarrow==0.12.0",
+        "pyzmq==18.0.1",
+        "pyarrow==0.13.0",
         "scipy>=1.0.0",
-        "cloudpickle==0.8.1",
+        "cloudpickle==1.0.0",
     ],
     classifiers=[
         'Intended Audience :: Developers',

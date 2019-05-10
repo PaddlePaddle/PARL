@@ -14,6 +14,7 @@
 
 import numpy as np
 import time
+import threading
 import unittest
 from parl.utils.communication import dumps_return, loads_return, \
         dumps_argument, loads_argument
@@ -83,6 +84,46 @@ class TestCommunication(unittest.TestCase):
         deserialize_result = loads_argument(serialize_bytes)
 
         assert deserialize_result[0][0].a == 3
+
+    def test_dumps_loads_return_with_multi_thread(self):
+        class A(object):
+            def __init__(self, a):
+                self.a = a
+
+        def run(i):
+            a = A(i)
+            serialize_bytes = dumps_return(a)
+            deserialize_result = loads_return(serialize_bytes)
+            assert deserialize_result.a == i
+
+        threads = []
+        for i in range(50):
+            t = threading.Thread(target=run, args=(i, ))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+    def test_dumps_loads_argument_with_multi_thread(self):
+        class A(object):
+            def __init__(self, a):
+                self.a = a
+
+        def run(i):
+            a = A(i)
+            serialize_bytes = dumps_argument(a)
+            deserialize_result = loads_argument(serialize_bytes)
+            assert deserialize_result[0][0].a == i
+
+        threads = []
+        for i in range(50):
+            t = threading.Thread(target=run, args=(i, ))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
 
 
 if __name__ == '__main__':

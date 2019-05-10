@@ -19,7 +19,7 @@ from parl.utils import SerializeError, DeserializeError
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
 
-# Reference: https://github.com/apache/arrow/blob/142e6ee69bd6a4dc316d00d9efd6d86d119df075/python/pyarrow/tests/test_serialization.py#L442-L484
+# Reference: https://github.com/apache/arrow/blob/f88474c84e7f02e226eb4cc32afef5e2bbc6e5b4/python/pyarrow/tests/test_serialization.py#L658-L682
 def _serialize_serializable(obj):
     return {"type": type(obj), "data": obj.__dict__}
 
@@ -30,13 +30,13 @@ def _deserialize_serializable(obj):
     return val
 
 
-serialization_context = pyarrow.default_serialization_context()
+context = pyarrow.default_serialization_context()
 
 # support deserialize in another environment
-serialization_context.set_pickle(cloudpickle.dumps, cloudpickle.loads)
+context.set_pickle(cloudpickle.dumps, cloudpickle.loads)
 
 # support serialize and deserialize custom class
-serialization_context.register_type(
+context.register_type(
     object,
     "object",
     custom_serializer=_serialize_serializable,
@@ -55,7 +55,7 @@ def dumps_argument(*args, **kwargs):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = serialization_context.serialize([args, kwargs]).to_buffer()
+        ret = pyarrow.serialize([args, kwargs], context=context).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 
@@ -74,7 +74,7 @@ def loads_argument(data):
         like the input of `dumps_argument`, args is a tuple, and kwargs is a dict 
     """
     try:
-        ret = serialization_context.deserialize(data)
+        ret = pyarrow.deserialize(data, context=context)
     except Exception as e:
         raise DeserializeError(e)
 
@@ -92,7 +92,7 @@ def dumps_return(data):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = serialization_context.serialize(data).to_buffer()
+        ret = pyarrow.serialize(data, context=context).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 
@@ -110,7 +110,7 @@ def loads_return(data):
         deserialized data
     """
     try:
-        ret = serialization_context.deserialize(data)
+        ret = pyarrow.deserialize(data, context=context)
     except Exception as e:
         raise DeserializeError(e)
 

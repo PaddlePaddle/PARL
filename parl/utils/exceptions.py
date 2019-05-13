@@ -19,7 +19,7 @@ class UtilsError(Exception):
     """
 
     def __init__(self, error_info):
-        self.error_info = '[PARL Utils Error]:\n{}'.format(error_info)
+        self.error_info = '[PARL Utils Error]: {}'.format(error_info)
 
 
 class SerializeError(UtilsError):
@@ -28,6 +28,9 @@ class SerializeError(UtilsError):
     """
 
     def __init__(self, error_info):
+        error_info = (
+            'Serialize error, you may have provided a pyarrow ' +
+            'non-serializable object. Detailed error:\n{}'.format(error_info))
         super(SerializeError, self).__init__(error_info)
 
     def __str__(self):
@@ -40,6 +43,10 @@ class DeserializeError(UtilsError):
     """
 
     def __init__(self, error_info):
+        error_info = (
+            'Deserialize error, you may have provided a pyarrow' +
+            'non-deserializable object. Detailed error:\n{}'.format(error_info)
+        )
         super(DeserializeError, self).__init__(error_info)
 
     def __str__(self):

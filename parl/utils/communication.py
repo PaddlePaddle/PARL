@@ -12,10 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cloudpickle
 import pyarrow
 from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
+
+
+# Reference: https://github.com/apache/arrow/blob/f88474c84e7f02e226eb4cc32afef5e2bbc6e5b4/python/pyarrow/tests/test_serialization.py#L658-L682
+def _serialize_serializable(obj):
+    return {"type": type(obj), "data": obj.__dict__}
+
+
+def _deserialize_serializable(obj):
+    val = obj["type"].__new__(obj["type"])
+    val.__dict__.update(obj["data"])
+    return val
+
+
+context = pyarrow.default_serialization_context()
+
+# support deserialize in another environment
+context.set_pickle(cloudpickle.dumps, cloudpickle.loads)
+
+# support serialize and deserialize custom class
+context.register_type(
+    object,
+    "object",
+    custom_serializer=_serialize_serializable,
+    custom_deserializer=_deserialize_serializable)
 
 
 def dumps_argument(*args, **kwargs):
@@ -30,7 +55,7 @@ def dumps_argument(*args, **kwargs):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = pyarrow.serialize([args, kwargs]).to_buffer()
+        ret = pyarrow.serialize([args, kwargs], context=context).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 
@@ -49,7 +74,7 @@ def loads_argument(data):
         like the input of `dumps_argument`, args is a tuple, and kwargs is a dict 
     """
     try:
-        ret = pyarrow.deserialize(data)
+        ret = pyarrow.deserialize(data, context=context)
     except Exception as e:
         raise DeserializeError(e)
 
@@ -67,7 +92,7 @@ def dumps_return(data):
         Implementation-dependent object in bytes.
     """
     try:
-        ret = pyarrow.serialize(data).to_buffer()
+        ret = pyarrow.serialize(data, context=context).to_buffer()
     except Exception as e:
         raise SerializeError(e)
 
@@ -85,7 +110,7 @@ def loads_return(data):
         deserialized data
     """
     try:
-        ret = pyarrow.deserialize(data)
+        ret = pyarrow.deserialize(data, context=context)
     except Exception as e:
         raise DeserializeError(e)
 

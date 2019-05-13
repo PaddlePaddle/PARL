@@ -19,6 +19,12 @@ import unittest
 from parl.remote import *
 
 
+class UnableSerializeObject(object):
+    def __init__(self):
+        # threading.Lock() can not be serialized
+        self.lock = threading.Lock()
+
+
 @parl.remote_class
 class Simulator:
     def __init__(self, arg1, arg2=None):
@@ -38,7 +44,11 @@ class Simulator:
         self.arg2 = value
 
     def get_unable_serialize_object(self):
-        return self
+        return UnableSerializeObject()
+
+    def add_one(self, value):
+        value += 1
+        return value
 
 
 class TestRemote(unittest.TestCase):
@@ -122,8 +132,9 @@ class TestRemote(unittest.TestCase):
         remote_sim = self.remote_manager.get_remote()
 
         try:
-            remote_sim.set_arg1(wrong_arg=remote_sim)
-        except SerializeError:
+            remote_sim.set_arg1(UnableSerializeObject())
+        except SerializeError as e:
+            logger.info('Expected exception: {}'.format(e))
             # expected
             return
 
@@ -137,13 +148,14 @@ class TestRemote(unittest.TestCase):
 
         try:
             remote_sim.get_unable_serialize_object()
-        except RemoteSerializeError:
+        except RemoteSerializeError as e:
             # expected
+            logger.info('Expected exception: {}'.format(e))
             return
 
         assert False
 
-    def test_mutli_remote_object(self):
+    def test_multi_remote_object(self):
         server_port = 17776
         self._setUp(server_port)
 
@@ -165,7 +177,7 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote_sim1.get_arg1(), 1)
         self.assertEqual(remote_sim2.get_arg1(), 11)
 
-    def test_mutli_remote_object_with_one_failed(self):
+    def test_multi_remote_object_with_one_failed(self):
         server_port = 17777
         self._setUp(server_port)
 
@@ -234,6 +246,42 @@ class TestRemote(unittest.TestCase):
 
         self.assertEqual(remote_sim1.get_arg1(), 1)
         self.assertEqual(remote_sim2.get_arg1(), 11)
+
+    def test_thread_safe_of_remote_module(self):
+        server_port = 17780
+        self._setUp(server_port)
+
+        time.sleep(1)
+
+        thread_num = 10
+        for _ in range(thread_num):
+            # run clients in backend
+            sim = Simulator(11, arg2=22)
+            client_thread = threading.Thread(
+                target=sim.as_remote, args=(
+                    'localhost',
+                    server_port,
+                ))
+            client_thread.setDaemon(True)
+            client_thread.start()
+
+        time.sleep(1)
+        threads = []
+        for _ in range(thread_num):
+            remote_sim = self.remote_manager.get_remote()
+            t = threading.Thread(
+                target=self._run_remote_add, args=(remote_sim, ))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+    def _run_remote_add(self, remote_sim):
+        value = 0
+        for i in range(1000):
+            value = remote_sim.add_one(value)
+            assert value == i + 1
 
 
 if __name__ == '__main__':

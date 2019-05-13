@@ -29,8 +29,8 @@ class SerializeError(UtilsError):
 
     def __init__(self, error_info):
         error_info = (
-            'Serialize error, you may have provided a pyarrow ' +
-            'non-serializable object. Detailed error:\n{}'.format(error_info))
+            'Serialize error, you may have provided an object that cannot be '
+            + 'serialized by pyarrow. Detailed error:\n{}'.format(error_info))
         super(SerializeError, self).__init__(error_info)
 
     def __str__(self):
@@ -44,9 +44,9 @@ class DeserializeError(UtilsError):
 
     def __init__(self, error_info):
         error_info = (
-            'Deserialize error, you may have provided a pyarrow' +
-            'non-deserializable object. Detailed error:\n{}'.format(error_info)
-        )
+            'Deserialize error, you may have provided an object that cannot be '
+            +
+            'deserialized by pyarrow. Detailed error:\n{}'.format(error_info))
         super(DeserializeError, self).__init__(error_info)
 
     def __str__(self):

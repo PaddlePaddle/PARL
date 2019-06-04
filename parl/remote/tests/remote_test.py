@@ -292,6 +292,7 @@ class TestRemote(unittest.TestCase):
         try:
             remote_sim.will_raise_exeception_func()
         except RemoteError as e:
+            assert 'Traceback (most recent call last)' in str(e)
             logger.info('Expected exception: {}'.format(e))
             # expected
             return

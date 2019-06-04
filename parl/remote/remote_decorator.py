@@ -16,6 +16,7 @@ import numpy as np
 import pyarrow
 import threading
 import time
+import traceback
 import zmq
 from parl.remote import remote_constants
 from parl.utils import get_ip_address, logger, to_str, to_byte
@@ -179,7 +180,7 @@ def remote_class(cls):
 
                 except Exception as e:
                     error_str = str(e)
-                    logger.error(e)
+                    logger.error(error_str)
 
                     if type(e) == AttributeError:
                         self.reply_socket.send_multipart([
@@ -197,9 +198,12 @@ def remote_class(cls):
                             to_byte(error_str)
                         ])
                     else:
+                        traceback_str = str(traceback.format_exc())
+                        logger.error('traceback:\n{}'.format(traceback_str))
                         self.reply_socket.send_multipart([
                             remote_constants.EXCEPTION_TAG,
-                            to_byte(error_str)
+                            to_byte(error_str + '\ntraceback:\n' +
+                                    traceback_str)
                         ])
 
                     continue

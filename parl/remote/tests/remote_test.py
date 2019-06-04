@@ -50,6 +50,9 @@ class Simulator:
         value += 1
         return value
 
+    def will_raise_exeception_func(self):
+        x = 1 / 0
+
 
 class TestRemote(unittest.TestCase):
     def _setUp(self, server_port):
@@ -91,7 +94,8 @@ class TestRemote(unittest.TestCase):
 
         try:
             remote_sim.get_arg3()
-        except RemoteAttributeError:
+        except RemoteAttributeError as e:
+            logger.info('Expected exception: {}'.format(e))
             # expected
             return
 
@@ -105,7 +109,8 @@ class TestRemote(unittest.TestCase):
 
         try:
             remote_sim.set_arg3(3)
-        except RemoteAttributeError:
+        except RemoteAttributeError as e:
+            logger.info('Expected exception: {}'.format(e))
             # expected
             return
 
@@ -119,7 +124,8 @@ class TestRemote(unittest.TestCase):
 
         try:
             remote_sim.set_arg1(wrong_arg=1)
-        except RemoteError:
+        except RemoteError as e:
+            logger.info('Expected exception: {}'.format(e))
             # expected
             return
 
@@ -276,6 +282,21 @@ class TestRemote(unittest.TestCase):
 
         for t in threads:
             t.join()
+
+    def test_remote_object_with_call_raise_exception_function(self):
+        server_port = 17781
+        self._setUp(server_port)
+
+        remote_sim = self.remote_manager.get_remote()
+
+        try:
+            remote_sim.will_raise_exeception_func()
+        except RemoteError as e:
+            logger.info('Expected exception: {}'.format(e))
+            # expected
+            return
+
+        assert False
 
     def _run_remote_add(self, remote_sim):
         value = 0

@@ -21,11 +21,12 @@ def main(config):
     assert config['log_metrics_interval_s'] > 0
 
     try:
-        while True:
+        while not learner.should_stop():
             start = time.time()
             while time.time() - start < config['log_metrics_interval_s']:
                 learner.step()
             learner.log_metrics()
+        learner.close()
 
     except KeyboardInterrupt:
         learner.close()

@@ -16,7 +16,7 @@ import numpy as np
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.agent_base import Agent
-from parl.utils.scheduler import PiecewiseScheduler
+from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
 class AtariAgent(Agent):
@@ -24,7 +24,8 @@ class AtariAgent(Agent):
         self.config = config
         super(AtariAgent, self).__init__(algorithm)
 
-        self.lr_scheduler = PiecewiseScheduler(config['lr_scheduler'])
+        self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
+                                                 config['max_sample_steps'])
         self.entropy_coeff_scheduler = PiecewiseScheduler(
             config['entropy_coeff_scheduler'])
 
@@ -50,33 +51,42 @@ class AtariAgent(Agent):
         self.learn_program = fluid.Program()
 
         with fluid.program_guard(self.sample_program):
-            obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+            obs = layers.data(name='obs',
+                              shape=self.config['obs_shape'],
+                              dtype='float32')
             sample_actions, values = self.alg.sample(obs)
             self.sample_outputs = [sample_actions, values]
 
         with fluid.program_guard(self.predict_program):
-            obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+            obs = layers.data(name='obs',
+                              shape=self.config['obs_shape'],
+                              dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
         with fluid.program_guard(self.value_program):
-            obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+            obs = layers.data(name='obs',
+                              shape=self.config['obs_shape'],
+                              dtype='float32')
             self.values = self.alg.value(obs)
 
         with fluid.program_guard(self.learn_program):
-            obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+            obs = layers.data(name='obs',
+                              shape=self.config['obs_shape'],
+                              dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
-            advantages = layers.data(
-                name='advantages', shape=[], dtype='float32')
-            target_values = layers.data(
-                name='target_values', shape=[], dtype='float32')
-            lr = layers.data(
-                name='lr', shape=[1], dtype='float32', append_batch_size=False)
-            entropy_coeff = layers.data(
-                name='entropy_coeff', shape=[], dtype='float32')
+            advantages = layers.data(name='advantages',
+                                     shape=[],
+                                     dtype='float32')
+            target_values = layers.data(name='target_values',
+                                        shape=[],
+                                        dtype='float32')
+            lr = layers.data(name='lr',
+                             shape=[1],
+                             dtype='float32',
+                             append_batch_size=False)
+            entropy_coeff = layers.data(name='entropy_coeff',
+                                        shape=[],
+                                        dtype='float32')
 
             total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
                 obs, actions, advantages, target_values, lr, entropy_coeff)
@@ -130,9 +140,9 @@ class AtariAgent(Agent):
         """
         obs_np = obs_np.astype('float32')
 
-        values = self.fluid_executor.run(
-            self.value_program, feed={'obs': obs_np},
-            fetch_list=[self.values])[0]
+        values = self.fluid_executor.run(self.value_program,
+                                         feed={'obs': obs_np},
+                                         fetch_list=[self.values])[0]
         return values
 
     def learn(self, obs_np, actions_np, advantages_np, target_values_np):
@@ -150,7 +160,7 @@ class AtariAgent(Agent):
         advantages_np = advantages_np.astype('float32')
         target_values_np = target_values_np.astype('float32')
 
-        lr = self.lr_scheduler.step()
+        lr = self.lr_scheduler.step(step_num=obs_np.shape[0])
         entropy_coeff = self.entropy_coeff_scheduler.step()
 
         total_loss, pi_loss, vf_loss, entropy = self.learn_exe.run(

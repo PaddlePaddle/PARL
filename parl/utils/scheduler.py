@@ -86,6 +86,6 @@ class LinearDecayScheduler(object):
         assert isinstance(step_num, int) and step_num >= 1
         self.cur_step = min(self.cur_step + step_num, self.max_steps)
 
-        value = self.start_value * (1.0 - (self.cur_step / self.max_steps))
+        value = self.start_value * (1.0 - ((self.cur_step * 1.0) / self.max_steps))
 
         return value

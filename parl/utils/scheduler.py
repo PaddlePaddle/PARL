@@ -18,6 +18,9 @@ __all__ = ['PiecewiseScheduler', 'LinearDecayScheduler']
 
 
 class PiecewiseScheduler(object):
+    """Set hyper parameters by a predefined step-based scheduler.
+    """
+
     def __init__(self, scheduler_list):
         """Piecewise scheduler of hyper parameter.
 
@@ -59,6 +62,9 @@ class PiecewiseScheduler(object):
 
 
 class LinearDecayScheduler(object):
+    """Set hyper parameters by a step-based scheduler with linear decay values.
+    """
+
     def __init__(self, start_value, max_steps):
         """Linear decay scheduler of hyper parameter.
 

@@ -16,7 +16,7 @@ import numpy as np
 import paddle.fluid as fluid
 import parl.layers as layers
 from parl.framework.agent_base import Agent
-from parl.utils.scheduler import PiecewiseScheduler
+from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
 class AtariAgent(Agent):
@@ -24,7 +24,8 @@ class AtariAgent(Agent):
         self.config = config
         super(AtariAgent, self).__init__(algorithm)
 
-        self.lr_scheduler = PiecewiseScheduler(config['lr_scheduler'])
+        self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
+                                                 config['max_sample_steps'])
         self.entropy_coeff_scheduler = PiecewiseScheduler(
             config['entropy_coeff_scheduler'])
 
@@ -150,7 +151,7 @@ class AtariAgent(Agent):
         advantages_np = advantages_np.astype('float32')
         target_values_np = target_values_np.astype('float32')
 
-        lr = self.lr_scheduler.step()
+        lr = self.lr_scheduler.step(step_num=obs_np.shape[0])
         entropy_coeff = self.entropy_coeff_scheduler.step()
 
         total_loss, pi_loss, vf_loss, entropy = self.learn_exe.run(

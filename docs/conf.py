@@ -35,6 +35,7 @@ import sphinx_rtd_theme
 import os
 import sys
 import parl
+release = parl.__version__
 project = 'PARL'
 copyright = '2019, nlp-ol@baidu.com'
 author = 'nlp-ol@baidu.com'
@@ -87,7 +88,5 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path = ['_static']
 html_logo = './PARL-logo-2.png'
 
-
-release = '1.1'
 
 master_doc = 'index'

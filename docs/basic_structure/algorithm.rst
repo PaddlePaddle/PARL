@@ -42,4 +42,3 @@ An Example
         optimizer = fluid.optimizer.Adam(self.lr)
         optimizer.minimize(cost)
         return cost
-

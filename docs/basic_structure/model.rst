@@ -6,7 +6,7 @@ Methods
 1. policy(self, *args)
 
     Define the structure of networks here. Algorithm will call this method to predict probabilities of actions. 
-    It is optional. # TODO: why is optional???
+    It is optional. 
 
 2. value(self, *args)
 

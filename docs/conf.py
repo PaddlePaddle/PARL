@@ -1,3 +1,17 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -17,6 +31,10 @@
 
 # -- Project information -----------------------------------------------------
 
+import sphinx_rtd_theme
+import os
+import sys
+import parl
 project = 'PARL'
 copyright = '2019, nlp-ol@baidu.com'
 author = 'nlp-ol@baidu.com'
@@ -59,7 +77,6 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -70,10 +87,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_static_path = ['_static']
 html_logo = './PARL-logo-2.png'
 
-import sys
-import os
-sys.path.insert(0, os.path.abspath('../'))
-import parl
+
 release = '1.1'
 
 master_doc = 'index'

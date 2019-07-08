@@ -9,4 +9,4 @@ Install
 -------------
 PARL is distributed on PyPI and can be installed with pip:
 :: 
-    pip install parl
+   pip install parl

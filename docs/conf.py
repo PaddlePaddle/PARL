@@ -35,8 +35,6 @@ import os
 import sys
 import parl
 autodoc_mock_imports = ['paddle']
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('..'))
 release = parl.__version__
 project = 'PARL'
 copyright = '2019, nlp-ol@baidu.com'

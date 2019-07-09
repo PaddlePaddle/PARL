@@ -3,3 +3,7 @@ paddlepaddle-gpu==1.3.0.post97
 gym
 details
 parameterized
+
+# requirements for compiling the docs
+#sphinx_rtd_theme
+#Sphinx

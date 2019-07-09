@@ -102,6 +102,23 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
+function run_docs_test {
+    #export CUDA_VISIBLE_DEVICES=""
+
+    mkdir -p ${REPO_ROOT}/build
+    cd ${REPO_ROOT}/build
+
+    cmake .. -DIS_TESTING_DOCS=ON 
+
+    cat <<EOF
+    ========================================
+    Running docs test...
+    ========================================
+EOF
+    ctest --output-on-failure
+    rm -rf ${REPO_ROOT}/build
+}
+
 function main() {
     set -e
     local CMD=$1
@@ -119,6 +136,7 @@ function main() {
           run_test_with_gpu
           run_test_with_cpu
           run_import_test
+          run_docs_test
           ;;
         *)
           print_usage

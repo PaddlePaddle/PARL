@@ -25,6 +25,7 @@ ACT_DIM = 2
 GAMMA = 0.99
 LEARNING_RATE = 1e-3
 
+
 def run_episode(env, agent, train_or_test='train'):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
@@ -42,6 +43,7 @@ def run_episode(env, agent, train_or_test='train'):
         if done:
             break
     return obs_list, action_list, reward_list
+
 
 def main():
     env = gym.make("CartPole-v0")
@@ -62,6 +64,7 @@ def main():
             _, _, reward_list = run_episode(env, agent, train_or_test='test')
             total_reward = np.sum(reward_list)
             logger.info('Test reward: {}'.format(total_reward))
+
 
 if __name__ == '__main__':
     main()

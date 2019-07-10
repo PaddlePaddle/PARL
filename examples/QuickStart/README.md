@@ -1,5 +1,5 @@
-## Quick Start Example
-Based on PARL, train a agent to play CartPole game with policy gradient algorithm in a few minutes.
+## Quick Start
+Train an agent with PARL to solve the CartPole problem, a classical benchmark in RL.
 
 ## How to use
 ### Dependencies:
@@ -23,8 +23,9 @@ pip install .
 # Train model
 cd examples/QuickStart/
 python train.py  
-# Or visualize when evaluating: python train.py --eval_vis
 ```
 
-### Result
-After training, you will see the agent get the best score (200 points).
+### Expected Result
+<img src="performance.gif" width = "300" height ="200" alt="result"/>
+
+The agent can get around 200 points in a few minutes.

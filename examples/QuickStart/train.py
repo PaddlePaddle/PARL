@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import gym
 import numpy as np
 from cartpole_agent import CartpoleAgent
@@ -65,11 +64,4 @@ def main():
             logger.info('Test reward: {}'.format(total_reward))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--eval_vis',
-        action='store_true',
-        help='if set, will visualize the game when evaluating')
-    args = parser.parse_args()
-
     main()

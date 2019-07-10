@@ -29,4 +29,3 @@ python train.py
 <img src="performance.gif" width = "300" height ="200" alt="result"/>
 
 The agent can get around 200 points in a few minutes.
-

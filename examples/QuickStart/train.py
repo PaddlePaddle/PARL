@@ -38,8 +38,6 @@ def run_episode(env, agent, train_or_test='train'):
         action_list.append(action)
 
         obs, reward, done, info = env.step(action)
-        if train_or_test == 'test':
-            env.render()
         reward_list.append(reward)
 
         if done:

@@ -27,3 +27,4 @@ python train.py
 
 ### Expected Result
 The agent can get around 200 points in a few minutes.
+<img src="performance.gif" width = "300" height ="200" alt="result"/>

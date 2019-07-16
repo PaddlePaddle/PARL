@@ -26,3 +26,8 @@
 7. **Model-Ensemble Trust-Region Policy Optimization** ICLR2018. [paper](https://arxiv.org/abs/1802.10592)
     
     *Thanard Kurutach, Ignasi Clavera, Yan Duan, Aviv Tamar, Pieter Abbeel*
+
+    
+8. **Deep Reinforcement Learning in a Handful of Trials using Probabilistic Dynamics Models** NIPS2018. [paper](https://arxiv.org/abs/1805.12114)
+    
+    *Kurtland Chua, Roberto Calandra, Rowan McAllister, Sergey Levine*

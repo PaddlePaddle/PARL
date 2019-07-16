@@ -27,7 +27,18 @@
     
     *Thanard Kurutach, Ignasi Clavera, Yan Duan, Aviv Tamar, Pieter Abbeel*
 
-    
 8. **Deep Reinforcement Learning in a Handful of Trials using Probabilistic Dynamics Models** NIPS2018. [paper](https://arxiv.org/abs/1805.12114)
     
     *Kurtland Chua, Roberto Calandra, Rowan McAllister, Sergey Levine*
+
+9. **Dyna, an integrated architecture for learning, planning, and reacting** ACM1991. [paper](https://dl.acm.org/citation.cfm?id=122377)
+    
+    *Sutton, Richard S*
+    
+10. **Dyna, an integrated architecture for learning, planning, and reacting** ACM1991. [paper](https://dl.acm.org/citation.cfm?id=122377)
+    
+    *Sutton, Richard S*
+    
+11. **Learning Continuous Control Policies by Stochastic Value Gradients** NIPS 2015. [paper](https://arxiv.org/abs/1510.09142)
+    
+    *Nicolas Heess, Greg Wayne, David Silver, Timothy Lillicrap, Yuval Tassa, Tom Erez*

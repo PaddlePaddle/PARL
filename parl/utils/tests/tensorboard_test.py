@@ -17,19 +17,19 @@ import numpy as np
 
 
 class TestUtils(unittest.TestCase):
+    def tearDown(self):
+        tensorboard.flush()
 
-  def tearDown(self):
-    tensorboard.flush()
+    def test_add_scalar(self):
+        x = range(100)
+        for i in x:
+            tensorboard.add_scalar('y=2x', i * 2, i)
 
-  def test_add_scalar(self):
-    x = range(100)
-    for i in x:
-      tensorboard.add_scalar('y=2x', i * 2, i)
-    
-  def test_add_histogram(self):
-    for i in range(10):
-      x = np.random.random(1000)
-      tensorboard.add_histogram('distribution centers', x + i, i)
+    def test_add_histogram(self):
+        for i in range(10):
+            x = np.random.random(1000)
+            tensorboard.add_histogram('distribution centers', x + i, i)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -11,22 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import unittest
+from parl.utils import tensorboard
+import numpy as np
 
-__version__ = "1.1"
-"""
-generates new PARL python API
-"""
 
-# trick to solve importing error
-from tensorboardX import SummaryWriter
+class TestUtils(unittest.TestCase):
 
-from parl.utils.utils import _HAS_FLUID
+  def tearDown(self):
+    tensorboard.flush()
 
-if _HAS_FLUID:
-    from parl.framework import *
-else:
-    print(
-        "WARNING:PARL: Failed to import paddle. Only APIs for parallelization are available."
-    )
+  def test_add_scalar(self):
+    x = range(100)
+    for i in x:
+      tensorboard.add_scalar('y=2x', i * 2, i)
+    
+  def test_add_histogram(self):
+    for i in range(10):
+      x = np.random.random(1000)
+      tensorboard.add_histogram('distribution centers', x + i, i)
 
-from parl.remote import remote_class, RemoteManager
+if __name__ == '__main__':
+    unittest.main()

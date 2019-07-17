@@ -69,6 +69,8 @@ setup(
         "pyarrow==0.13.0",
         "scipy>=1.0.0",
         "cloudpickle==1.0.0",
+        "tensorboardX",
+        "tensorboard",
     ],
     classifiers=[
         'Intended Audience :: Developers',

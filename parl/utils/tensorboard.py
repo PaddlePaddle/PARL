@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.1"
-"""
-generates new PARL python API
-"""
-
-# trick to solve importing error
 from tensorboardX import SummaryWriter
+from parl.utils import logger
 
-from parl.utils.utils import _HAS_FLUID
+__all__ = []
 
-if _HAS_FLUID:
-    from parl.framework import *
-else:
-    print(
-        "WARNING:PARL: Failed to import paddle. Only APIs for parallelization are available."
-    )
+_writer = SummaryWriter(logdir=logger.get_dir())
+_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
-from parl.remote import remote_class, RemoteManager
+# export writter functions
+for func in _WRITTER_METHOD:
+    locals()[func] = getattr(_writer, func)
+    __all__.append(func)

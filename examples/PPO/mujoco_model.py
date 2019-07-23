@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import numpy as np
-import parl.layers as layers
+import parl
+from parl import layers
 from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from parl.framework.model_base import Model
 
 
-class MujocoModel(Model):
+class MujocoModel(parl.Model):
     def __init__(self, obs_dim, act_dim, init_logvar=-1.0):
         self.policy_model = PolicyModel(obs_dim, act_dim, init_logvar)
         self.value_model = ValueModel(obs_dim, act_dim)
@@ -36,7 +36,7 @@ class MujocoModel(Model):
         return self.value_model.value(obs)
 
 
-class PolicyModel(Model):
+class PolicyModel(parl.Model):
     def __init__(self, obs_dim, act_dim, init_logvar):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -73,7 +73,7 @@ class PolicyModel(Model):
         return sampled_act
 
 
-class ValueModel(Model):
+class ValueModel(parl.Model):
     def __init__(self, obs_dim, act_dim):
         super(ValueModel, self).__init__()
         hid1_size = obs_dim * 10

@@ -16,9 +16,9 @@ import argparse
 import gym
 import numpy as np
 import time
+import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.algorithms import DDPG
 from parl.utils import logger, action_mapping, ReplayMemory
 
 MAX_EPISODES = 5000
@@ -95,14 +95,8 @@ def main():
     act_dim = env.action_space.shape[0]
 
     model = MujocoModel(act_dim)
-    algorithm = DDPG(
-        model,
-        hyperparas={
-            'gamma': GAMMA,
-            'tau': TAU,
-            'actor_lr': ACTOR_LR,
-            'critic_lr': CRITIC_LR
-        })
+    algorithm = parl.algorithms.DDPG(
+        model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm, obs_dim, act_dim)
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)

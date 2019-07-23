@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.model_base import Model
+import parl
+from parl import layers
 
 
-class MujocoModel(Model):
+class MujocoModel(parl.Model):
     def __init__(self, act_dim):
         self.actor_model = ActorModel(act_dim)
         self.critic_model = CriticModel()
@@ -29,10 +29,10 @@ class MujocoModel(Model):
         return self.critic_model.value(obs, act)
 
     def get_actor_params(self):
-        return self.actor_model.parameter_names
+        return self.actor_model.parameters()
 
 
-class ActorModel(Model):
+class ActorModel(parl.Model):
     def __init__(self, act_dim):
         hid1_size = 400
         hid2_size = 300
@@ -49,7 +49,7 @@ class ActorModel(Model):
         return means
 
 
-class CriticModel(Model):
+class CriticModel(parl.Model):
     def __init__(self):
         hid1_size = 400
         hid2_size = 300

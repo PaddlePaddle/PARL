@@ -17,7 +17,8 @@ import platform
 import subprocess
 from parl.utils import logger
 
-__all__ = ['get_gpu_count', 'get_ip_address']
+__all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
+
 
 
 def get_ip_address():
@@ -57,8 +58,7 @@ def get_ip_address():
 
 
 def get_gpu_count():
-    """
-    get avaliable gpu count
+    """get avaliable gpu count
 
     Returns:
         gpu_count: int    
@@ -88,3 +88,10 @@ def get_gpu_count():
             logger.warn('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     return gpu_count
+
+def is_gpu_available():
+  """ check whether parl can access a GPU
+  Returns:
+      True if a gpu device can be found.
+  """
+  return get_gpu_count() > 0

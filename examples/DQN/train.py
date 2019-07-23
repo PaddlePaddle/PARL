@@ -17,12 +17,12 @@ import gym
 import paddle.fluid as fluid
 import numpy as np
 import os
+import parl
 from atari_agent import AtariAgent
 from atari_model import AtariModel
 from collections import deque
 from datetime import datetime
 from replay_memory import ReplayMemory, Experience
-from parl.algorithms import DQN
 from parl.utils import logger
 from tqdm import tqdm
 from utils import get_player
@@ -91,16 +91,12 @@ def main():
         frame_skip=FRAME_SKIP,
         context_len=CONTEXT_LEN)
     rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
-    action_dim = env.action_space.n
+    act_dim = env.action_space.n
 
-    hyperparas = {
-        'action_dim': action_dim,
-        'lr': LEARNING_RATE,
-        'gamma': GAMMA
-    }
-    model = AtariModel(action_dim)
-    algorithm = DQN(model, hyperparas)
-    agent = AtariAgent(algorithm, action_dim)
+    model = AtariModel(act_dim)
+    algorithm = parl.algorithms.DQN(
+        model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE)
+    agent = AtariAgent(algorithm, act_dim=act_dim)
 
     with tqdm(total=MEMORY_WARMUP_SIZE) as pbar:
         while rpm.size() < MEMORY_WARMUP_SIZE:

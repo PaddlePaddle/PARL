@@ -11,7 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import warnings
 
-from parl.framework.model_base import *
-from parl.framework.algorithm_base import *
-from parl.framework.agent_base import *
+warnings.simplefilter('default')
+
+warnings.warn(
+    "import way `import parl.framework` is deprecated since version 1.2 and will be removed in version 1.3.",
+    DeprecationWarning,
+    stacklevel=2)
+
+from parl.core.fluid.model import *
+from parl.core.fluid.algorithm import *
+from parl.core.fluid.agent import *

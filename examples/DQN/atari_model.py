@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.model_base import Model
+import parl
+from parl import layers
 
 
-class AtariModel(Model):
+class AtariModel(parl.Model):
     def __init__(self, act_dim):
         self.act_dim = act_dim
 

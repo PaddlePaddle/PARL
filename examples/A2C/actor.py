@@ -16,10 +16,10 @@ import gym
 import numpy as np
 import parl
 import six
+import parl
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent
-from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 from parl.utils.rl_utils import calc_gae
@@ -46,8 +46,14 @@ class Actor(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A3C(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config)
+        algorithm = parl.algorithms.A3C(
+            model, vf_loss_coeff=config['vf_loss_coeff'])
+        self.agent = AtariAgent(
+            algorithm,
+            obs_shape=self.config['obs_shape'],
+            lr_scheduler=self.config['lr_scheduler'],
+            entropy_coeff_scheduler=self.config['entropy_coeff_scheduler'],
+        )
 
     def sample(self):
         sample_data = defaultdict(list)
@@ -112,8 +118,8 @@ class Actor(object):
                     metrics['episode_steps'].append(episode_steps)
         return metrics
 
-    def set_params(self, params):
-        self.agent.set_params(params)
+    def set_weights(self, params):
+        self.agent.set_weights(params)
 
 
 if __name__ == '__main__':

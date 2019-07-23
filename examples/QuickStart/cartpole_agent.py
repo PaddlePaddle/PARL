@@ -14,11 +14,11 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
 
 
-class CartpoleAgent(Agent):
+class CartpoleAgent(parl.Agent):
     def __init__(self, algorithm, obs_dim, act_dim, seed=1):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -35,14 +35,14 @@ class CartpoleAgent(Agent):
         with fluid.program_guard(self.pred_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            self.act_prob = self.alg.define_predict(obs)
+            self.act_prob = self.alg.predict(obs)
 
         with fluid.program_guard(self.train_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
             act = layers.data(name='act', shape=[1], dtype='int64')
             reward = layers.data(name='reward', shape=[], dtype='float32')
-            self.cost = self.alg.define_learn(obs, act, reward)
+            self.cost = self.alg.learn(obs, act, reward)
 
     def sample(self, obs):
         obs = np.expand_dims(obs, axis=0)

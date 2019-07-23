@@ -14,16 +14,19 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
+from parl.utils import machine_info
 
 
-class AtariAgent(Agent):
-    def __init__(self, algorithm, config, learn_data_provider=None):
-        self.config = config
+class AtariAgent(parl.Agent):
+    def __init__(self, algorithm, obs_shape, act_dim,
+                 learn_data_provider=None):
+        assert isinstance(obs_shape, (list, tuple))
+        assert isinstance(act_dim, int)
+        self.obs_shape = obs_shape
+        self.act_dim = act_dim
         super(AtariAgent, self).__init__(algorithm)
-
-        use_cuda = True if self.gpu_id >= 0 else False
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.use_experimental_executor = True
@@ -33,7 +36,7 @@ class AtariAgent(Agent):
 
         # Use ParallelExecutor to make learn program run faster
         self.learn_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda,
+            use_cuda=machine_info.is_gpu_available(),
             main_program=self.learn_program,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
@@ -49,22 +52,20 @@ class AtariAgent(Agent):
 
         with fluid.program_guard(self.sample_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.sample_actions, self.behaviour_logits = self.alg.sample(obs)
 
         with fluid.program_guard(self.predict_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
             behaviour_logits = layers.data(
-                name='behaviour_logits',
-                shape=[self.config['act_dim']],
-                dtype='float32')
+                name='behaviour_logits', shape=[self.act_dim], dtype='float32')
             rewards = layers.data(name='rewards', shape=[], dtype='float32')
             dones = layers.data(name='dones', shape=[], dtype='float32')
             lr = layers.data(

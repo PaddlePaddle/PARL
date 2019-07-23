@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-This file wraps Fluid layers that have parameters to support parameter sharing.
-For other layers that don't have parameters, we simply copy them to this namespace.
-"""
-from paddle.fluid.layers import *
-from parl.layers.layer_wrappers import *
+
+import warnings
+
+warnings.simplefilter('default')
+
+warnings.warn(
+    "import way `import parl.layers` is deprecated since version 1.2 and will be removed in version 1.3, please use `from parl import layers` or `import parl; parl.layers` instead.",
+    DeprecationWarning,
+    stacklevel=2)
+
+from parl.core.fluid.layers import *

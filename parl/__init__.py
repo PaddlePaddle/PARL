@@ -20,10 +20,11 @@ generates new PARL python API
 from parl.utils.utils import _HAS_FLUID
 
 if _HAS_FLUID:
-    from parl.framework import *
+    from parl.core.fluid import *
 else:
     print(
         "WARNING:PARL: Failed to import paddle. Only APIs for parallelization are available."
     )
 
 from parl.remote import remote_class, RemoteManager
+from parl import algorithms

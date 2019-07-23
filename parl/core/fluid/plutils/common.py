@@ -60,7 +60,8 @@ def set_value(attr_name, value):
         attr_name: ParamAttr name of parameter
         value: numpy array
     """
-    place = fluid.CUDAPlace(0) if machine_info.is_gpu_available() else fluid.CPUPlace()
+    place = fluid.CUDAPlace(
+        0) if machine_info.is_gpu_available() else fluid.CPUPlace()
     var = _fetch_var(attr_name, return_numpy=False)
     var.set(value, place)
 

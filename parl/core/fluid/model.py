@@ -140,7 +140,8 @@ class Model(ModelBase):
 
             if share_vars_parallel_executor is None:
                 # use fluid.Executor
-                place = fluid.CUDAPlace(0) if machine_info.is_gpu_available() else fluid.CPUPlace()
+                place = fluid.CUDAPlace(0) if machine_info.is_gpu_available(
+                ) else fluid.CPUPlace()
                 self._cached_fluid_executor = fluid.Executor(place)
             else:
                 # use fluid.ParallelExecutor

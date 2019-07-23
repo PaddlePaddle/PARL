@@ -45,8 +45,8 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = parl.algorithms.A3C(model,
-                                        vf_loss_coeff=config['vf_loss_coeff'])
+        algorithm = parl.algorithms.A3C(
+            model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(
             algorithm,
             obs_shape=self.config['obs_shape'],
@@ -103,8 +103,9 @@ class Learner(object):
             self.remote_count += 1
             logger.info('Remote actor count: {}'.format(self.remote_count))
 
-            remote_thread = threading.Thread(target=self.run_remote_sample,
-                                             args=(remote_actor, params_queue))
+            remote_thread = threading.Thread(
+                target=self.run_remote_sample,
+                args=(remote_actor, params_queue))
             remote_thread.setDaemon(True)
             remote_thread.start()
 

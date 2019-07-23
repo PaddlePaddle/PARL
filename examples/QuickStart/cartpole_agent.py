@@ -29,33 +29,33 @@ class CartpoleAgent(Agent):
         self.train_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
-            obs = layers.data(name='obs',
-                              shape=[self.obs_dim],
-                              dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             self.act_prob = self.alg.predict(obs)
 
         with fluid.program_guard(self.train_program):
-            obs = layers.data(name='obs',
-                              shape=[self.obs_dim],
-                              dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             act = layers.data(name='act', shape=[1], dtype='int64')
             reward = layers.data(name='reward', shape=[], dtype='float32')
             self.cost = self.alg.learn(obs, act, reward)
 
     def sample(self, obs):
         obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(self.pred_program,
-                                           feed={'obs': obs.astype('float32')},
-                                           fetch_list=[self.act_prob])[0]
+        act_prob = self.fluid_executor.run(
+            self.pred_program,
+            feed={'obs': obs.astype('float32')},
+            fetch_list=[self.act_prob])[0]
         act_prob = np.squeeze(act_prob, axis=0)
         act = np.random.choice(range(self.act_dim), p=act_prob)
         return act
 
     def predict(self, obs):
         obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(self.pred_program,
-                                           feed={'obs': obs.astype('float32')},
-                                           fetch_list=[self.act_prob])[0]
+        act_prob = self.fluid_executor.run(
+            self.pred_program,
+            feed={'obs': obs.astype('float32')},
+            fetch_list=[self.act_prob])[0]
         act_prob = np.squeeze(act_prob, axis=0)
         act = np.argmax(act_prob)
         return act
@@ -67,7 +67,6 @@ class CartpoleAgent(Agent):
             'act': act.astype('int64'),
             'reward': reward.astype('float32')
         }
-        cost = self.fluid_executor.run(self.train_program,
-                                       feed=feed,
-                                       fetch_list=[self.cost])[0]
+        cost = self.fluid_executor.run(
+            self.train_program, feed=feed, fetch_list=[self.cost])[0]
         return cost

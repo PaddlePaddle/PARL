@@ -20,7 +20,6 @@ from parl.utils import logger
 __all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
 
 
-
 def get_ip_address():
     """
     get the IP address of the host.
@@ -89,9 +88,11 @@ def get_gpu_count():
             gpu_count = 0
     return gpu_count
 
+
 def is_gpu_available():
-  """ check whether parl can access a GPU
-  Returns:
+    """ check whether parl can access a GPU
+
+    Returns:
       True if a gpu device can be found.
-  """
-  return get_gpu_count() > 0
+    """
+    return get_gpu_count() > 0

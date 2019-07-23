@@ -68,9 +68,8 @@ class Agent(AgentBase):
         """
         raise NotImplementedError
 
-    @deprecated(deprecated_in='1.2',
-                removed_in='1.3',
-                replace_function='get_weights')
+    @deprecated(
+        deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
         """ Get parameters of self.algorithm
 
@@ -79,9 +78,8 @@ class Agent(AgentBase):
         """
         return self.algorithm.get_params()
 
-    @deprecated(deprecated_in='1.2',
-                removed_in='1.3',
-                replace_function='set_weights')
+    @deprecated(
+        deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
     def set_params(self, params):
         """Set parameters of self.algorithm
 

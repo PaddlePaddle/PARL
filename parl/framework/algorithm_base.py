@@ -17,8 +17,8 @@ import warnings
 warnings.simplefilter('default')
 
 warnings.warn(
-        "module `parl.framework.algorithm_base.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3, please use `parl.Algorithm` instead.",
-        DeprecationWarning, stacklevel=2)
-
+    "module `parl.framework.algorithm_base.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3, please use `parl.Algorithm` instead.",
+    DeprecationWarning,
+    stacklevel=2)
 
 from parl.core.fluid.algorithm import *

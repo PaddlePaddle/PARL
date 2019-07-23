@@ -72,6 +72,7 @@ class Model(ModelBase):
         replace_function='sync_weights_to')
     def sync_params_to(self,
                        target_net,
+                       gpu_id=None,
                        decay=0.0,
                        share_vars_parallel_executor=None):
         """Synchronize parameters in the model to another model (target_net).
@@ -207,7 +208,7 @@ class Model(ModelBase):
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
-    def set_params(self, params):
+    def set_params(self, params, gpu_id=None):
         """Set parameters in the model with params.
         
         Args:

@@ -12,26 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from learner import Learner
+from tensorboardX import SummaryWriter
+from parl.utils import logger
 
+__all__ = []
 
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
+_writer = SummaryWriter(logdir=logger.get_dir())
+_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
-    try:
-        while not learner.should_stop():
-            start = time.time()
-            while time.time() - start < config['log_metrics_interval_s']:
-                learner.step()
-            learner.log_metrics()
-        learner.close()
-
-    except KeyboardInterrupt:
-        learner.close()
-
-
-if __name__ == '__main__':
-    from a2c_config import config
-    main(config)
+# export writter functions
+for func in _WRITTER_METHOD:
+    locals()[func] = getattr(_writer, func)
+    __all__.append(func)

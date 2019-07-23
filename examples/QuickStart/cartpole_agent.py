@@ -18,19 +18,16 @@ import parl
 from parl import layers
 
 
-class CartpoleAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim, seed=1):
+
+class CartpoleAgent(Agent):
+    def __init__(self, algorithm, obs_dim, act_dim):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-        self.seed = seed
         super(CartpoleAgent, self).__init__(algorithm)
 
     def build_program(self):
         self.pred_program = fluid.Program()
         self.train_program = fluid.Program()
-
-        fluid.default_startup_program().random_seed = self.seed
-        self.train_program.random_seed = self.seed
 
         with fluid.program_guard(self.pred_program):
             obs = layers.data(

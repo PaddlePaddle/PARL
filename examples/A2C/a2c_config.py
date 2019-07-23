@@ -19,7 +19,7 @@ config = {
 
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',
-    'env_dim': 42,
+    'env_dim': 84,
 
     #==========  actor config ==========
     'actor_num': 5,
@@ -27,11 +27,12 @@ config = {
     'sample_batch_steps': 20,
 
     #==========  learner config ==========
+    'max_sample_steps': int(1e7),
     'gamma': 0.99,
     'lambda': 1.0,  # GAE
 
-    # learning rate adjustment schedule: (train_step, learning_rate)
-    'lr_scheduler': [(0, 0.001), (20000, 0.0005), (40000, 0.0001)],
+    # start learning rate
+    'start_lr': 0.001,
 
     # coefficient of policy entropy adjustment schedule: (train_step, coefficient)
     'entropy_coeff_scheduler': [(0, -0.01)],

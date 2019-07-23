@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import unittest
-from parl.utils.scheduler import PiecewiseScheduler
+import numpy as np
+from parl.utils.scheduler import *
 
 
 class TestScheduler(unittest.TestCase):
     def test_PiecewiseScheduler_with_multi_values(self):
         scheduler = PiecewiseScheduler([(0, 0.1), (3, 0.2), (7, 0.3)])
-        for i in range(10):
+        for i in range(1, 11):
             value = scheduler.step()
             if i < 3:
                 assert value == 0.1
@@ -39,6 +40,18 @@ class TestScheduler(unittest.TestCase):
             value = scheduler.step()
             assert value == 0.1
 
+    def test_PiecewiseScheduler_with_step_num(self):
+        scheduler = PiecewiseScheduler([(0, 0.1), (3, 0.2), (7, 0.3)])
+
+        value = scheduler.step()
+        assert value == 0.1
+
+        value = scheduler.step(2)
+        assert value == 0.2
+
+        value = scheduler.step(4)
+        assert value == 0.3
+
     def test_PiecewiseScheduler_with_empty(self):
         try:
             scheduler = PiecewiseScheduler([])
@@ -54,6 +67,24 @@ class TestScheduler(unittest.TestCase):
             # expected
             return
         assert False
+
+    def test_LinearDecayScheduler(self):
+        scheduler = LinearDecayScheduler(start_value=10, max_steps=10)
+        for i in range(10):
+            value = scheduler.step()
+            np.testing.assert_almost_equal(value, 10 - (i + 1), 8)
+
+        for i in range(5):
+            value = scheduler.step()
+            np.testing.assert_almost_equal(value, 0, 8)
+
+    def test_LinearDecayScheduler_with_step_num(self):
+        scheduler = LinearDecayScheduler(start_value=10, max_steps=10)
+        value = scheduler.step(5)
+        np.testing.assert_almost_equal(value, 5, 8)
+
+        value = scheduler.step(3)
+        np.testing.assert_almost_equal(value, 2, 8)
 
 
 if __name__ == '__main__':

@@ -18,6 +18,7 @@ enable_testing()
 
 option(WITH_TESTING "Include unit testing" ON)
 option(IS_TESTING_IMPORT "Whether is testing import parl" OFF)
+option(IS_TESTING_DOCS "Whether is testing compling the docs" OFF)
 
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
@@ -41,13 +42,22 @@ function(import_test TARGET_NAME)
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
     add_test(NAME ${TARGET_NAME}_with_empty_env
         COMMAND env PYTHONPATH=.:${py_test_ENVS}
         /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
     add_test(NAME ${TARGET_NAME}_with_paddle1.4.0
         COMMAND env PYTHONPATH=.:${py_test_ENVS}
         /root/miniconda3/envs/paddle1.4.0/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+endfunction()
+
+function(docs_test)
+    add_test(NAME compling_docs_test
+        COMMAND bash ./docs/test.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
@@ -55,6 +65,8 @@ if (WITH_TESTING)
     if (IS_TESTING_IMPORT)
         set(src "parl/tests/import_test")
         import_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+      elseif (IS_TESTING_DOCS)
+        docs_test()
     else ()
         file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
         string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")

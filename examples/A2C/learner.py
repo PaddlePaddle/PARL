@@ -215,5 +215,8 @@ class Learner(object):
         logger.info(metric)
         self.csv_logger.log_dict(metric)
 
+    def should_stop(self):
+        return self.sample_total_steps >= self.config['max_sample_steps']
+
     def close(self):
         self.csv_logger.close()

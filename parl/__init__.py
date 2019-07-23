@@ -17,6 +17,9 @@ __version__ = "1.1"
 generates new PARL python API
 """
 
+# trick to solve importing error
+from tensorboardX import SummaryWriter
+
 from parl.utils.utils import _HAS_FLUID
 
 if _HAS_FLUID:

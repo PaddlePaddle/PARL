@@ -11,27 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import unittest
+from parl.utils import tensorboard
+import numpy as np
 
-import time
-from learner import Learner
 
+class TestUtils(unittest.TestCase):
+    def tearDown(self):
+        tensorboard.flush()
 
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
+    def test_add_scalar(self):
+        x = range(100)
+        for i in x:
+            tensorboard.add_scalar('y=2x', i * 2, i)
 
-    try:
-        while not learner.should_stop():
-            start = time.time()
-            while time.time() - start < config['log_metrics_interval_s']:
-                learner.step()
-            learner.log_metrics()
-        learner.close()
-
-    except KeyboardInterrupt:
-        learner.close()
+    def test_add_histogram(self):
+        for i in range(10):
+            x = np.random.random(1000)
+            tensorboard.add_histogram('distribution centers', x + i, i)
 
 
 if __name__ == '__main__':
-    from a2c_config import config
-    main(config)
+    unittest.main()

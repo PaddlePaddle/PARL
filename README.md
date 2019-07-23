@@ -4,7 +4,7 @@
 
 English | [简体中文](./README.cn.md)
 
-> PARL is a flexible and high-efficient reinforcement learning framework based on [PaddlePaddle](https://github.com/PaddlePaddle/Paddle).
+> PARL is a flexible and high-efficient reinforcement learning framework.
 
 # Features
 **Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms.
@@ -28,7 +28,7 @@ The main abstractions introduced by PARL that are used to build an agent recursi
 `Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.
 
 ### Agent
-`Agent`, a data bridge between environment and algorithm, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.
+`Agent`, a data bridge between the environment and the algorithm, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.
 
 Here is an example of building an agent with DQN algorithm for Atari games.
 ```python
@@ -106,7 +106,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 # Install:
 ### Dependencies
 - Python 2.7 or 3.5+. 
-- PaddlePaddle >=1.2.1 (**Optional**, if you only want to use APIs related to parallelization alone)  
+- [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) >=1.2.1 (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 
 ```

@@ -7,10 +7,12 @@ A2C is a synchronous, deterministic variant of [Asynchronous Advantage Actor Cri
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
-Results with one learner (in a P40 GPU) and 5 actors in 10 million sample steps.
-<img src=".benchmark/A2C_Pong.jpg" width = "400" height ="300" alt="A2C_Pong" /> <img src=".benchmark/A2C_Breakout.jpg" width = "400" height ="300" alt="A2C_Breakout"/>
-<img src=".benchmark/A2C_BeamRider.jpg" width = "400" height ="300" alt="A2C_BeamRider" /> <img src=".benchmark/A2C_Qbert.jpg" width = "400" height ="300" alt="A2C_Qbert"/>
-<img src=".benchmark/A2C_SpaceInvaders.jpg" width = "400" height ="300" alt="A2C_SpaceInvaders" />
+Mean episode reward in training process after 10 million sample steps.
+
+|              |                |                  |               |                     |
+|--------------|----------------|------------------|---------------|---------------------|
+| Alien (1278) | Amidar (380)   | Assault (4659)   | Aterix (3883) | Atlantis (3040000)  |
+| Pong (20)    | Breakout (405) | Beamrider (3394) | Qbert (14528) | SpaceInvaders (819) |
 
 ## How to use
 ### Dependencies
@@ -18,7 +20,7 @@ Results with one learner (in a P40 GPU) and 5 actors in 10 million sample steps.
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ atari_py
++ atari-py
 
 
 ### Distributed Training

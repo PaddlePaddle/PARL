@@ -20,7 +20,6 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 
 ## How to use
 ### Dependencies
-+ python2.7 or python3.5+
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym

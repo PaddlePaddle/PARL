@@ -20,7 +20,7 @@ Features
 |                                          |      def sum(self, a, b):             |
 |     def forward(self, obs):              |          return a + b                 |
 |       out = self.fc1(obs)                |                                       |
-|       out = self.fc2(out)                |  parl.init('localhost:8003')          |
+|       out = self.fc2(out)                |  parl.connect('localhost:8003')       |
 |       return out                         |  obj = HelloWorld()                   | 
 |                                          |  ans = obj.sum(a, b)                  |
 |   model = MLPModel()                     |                                       |

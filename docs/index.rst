@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-*PARL is a flexible, distributed and eager mode oriented reinforcement learning framework.*
+*PARL is a flexible, distributed and object-oriented programming reinforcement learning framework.*
 
 Features
 ----------------
@@ -18,12 +18,12 @@ Features
 |       self.fc1 = layers.fc(size=10)      |  @parl.remote_class                   |
 |       self.fc2 = layers.fc(size=act_dim) |  class HelloWorld(object):            |
 |                                          |      def sum(self, a, b):             |
-|     def policy(self, obs):               |          return a + b                 |
+|     def forward(self, obs):              |          return a + b                 |
 |       out = self.fc1(obs)                |                                       |
-|       out = self.fc2(out)                |  remote_manager = RemoteManager()     |
-|       return out                         |  obj = remote_manager.get()           |
-|                                          |  obj.sum(a, b)                        |
-|   model = MLPModel()                     |  ans = obj.sum(a, b)                  |
+|       out = self.fc2(out)                |  parl.init('localhost:8003')          |
+|       return out                         |  obj = HelloWorld()                   | 
+|                                          |  ans = obj.sum(a, b)                  |
+|   model = MLPModel()                     |                                       |
 |   target_model = copy.deepcopy(model)    |                                       |
 +------------------------------------------+---------------------------------------+
 

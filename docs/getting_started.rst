@@ -38,14 +38,14 @@ Algorithm
 In this tutorial, we solve the benchmark `Cartpole` using the `Policy Graident` algorithm, which has been implemented in our repository.
 Thus, we can simply use this algorithm by importting it from ``parl.algorithms``.
 
-We have also published various algorithms in PARL, and you can visit this page for more detail. If you want to implement algorithms, please follow this tutorial.
+We have also published various algorithms in PARL, please visit this page for more detail. For those who want to implement a new algorithm, please follow this tutorial.
 
 .. code-block:: python
 
   model = CartpoleModel(act_dim=2)
   algorithm = parl.algorithms.PolicyGradient(model, lr=1e-3)
 
-Note that each ``algorithm`` should have two functions implemented(We don't have to implement these functions here, and we mention it here for readers to know more about ``Algorithm``):
+Note that each ``algorithm`` should have two functions implemented:
 
 - ``learn``
 
@@ -183,7 +183,7 @@ Summary
   :width: 300px
 In this tutorial, we have shown how to build an agent step-by-step to solve the `Cartpole` problem.
 
-The whole training code could be found `here <https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_. You can also have a try quickly by running several commands:
+The whole training code could be found `here <https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_. Have a try quickly by running several commands:
 
 .. code-block:: shell
 

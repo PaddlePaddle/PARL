@@ -16,10 +16,10 @@ import gym
 import numpy as np
 import parl
 import six
+import parl
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent
-from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 
@@ -41,12 +41,15 @@ class Actor(object):
         obs_shape = env.observation_space.shape
         act_dim = env.action_space.n
 
-        self.config['obs_shape'] = obs_shape
-        self.config['act_dim'] = act_dim
-
         model = AtariModel(act_dim)
-        algorithm = IMPALA(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config)
+        algorithm = parl.algorithms.IMPALA(
+            model,
+            sample_batch_steps=self.config['sample_batch_steps'],
+            gamma=self.config['gamma'],
+            vf_loss_coeff=self.config['vf_loss_coeff'],
+            clip_rho_threshold=self.config['clip_rho_threshold'],
+            clip_pg_rho_threshold=self.config['clip_pg_rho_threshold'])
+        self.agent = AtariAgent(algorithm, obs_shape, act_dim)
 
     def sample(self):
         env_sample_data = {}
@@ -95,8 +98,8 @@ class Actor(object):
                     metrics['episode_steps'].append(episode_steps)
         return metrics
 
-    def set_params(self, params):
-        self.agent.set_params(params)
+    def set_weights(self, weights):
+        self.agent.set_weights(weights)
 
 
 if __name__ == '__main__':

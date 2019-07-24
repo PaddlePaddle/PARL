@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parl.layers as layers
+import parl.core.fluid.layers as layers
 import unittest
-from parl.framework.model_base import Network
+from parl.core.fluid.model import Model
 
 
-class MyNetWork(Network):
+class MyNetWork(Model):
     def __init__(self):
         self.fc1 = layers.fc(100)
         self.fc2 = layers.fc(100)

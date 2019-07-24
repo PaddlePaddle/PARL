@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import numpy as np
-import parl.layers as layers
 import unittest
 from paddle import fluid
-from parl.framework.agent_base import Agent
-from parl.framework.algorithm_base import Algorithm
-from parl.framework.model_base import Model
+from parl import layers
+from parl.core.fluid.agent import Agent
+from parl.core.fluid.algorithm import Algorithm
+from parl.core.fluid.model import Model
 from parl.utils.machine_info import get_gpu_count
 
 
@@ -34,10 +34,10 @@ class TestModel(Model):
 
 
 class TestAlgorithm(Algorithm):
-    def __init__(self, model, hyperparas=None):
-        super(TestAlgorithm, self).__init__(model, hyperparas)
+    def __init__(self, model):
+        self.model = model
 
-    def define_predict(self, obs):
+    def predict(self, obs):
         return self.model.policy(obs)
 
 
@@ -49,7 +49,7 @@ class TestAgent(Agent):
         self.predict_program = fluid.Program()
         with fluid.program_guard(self.predict_program):
             obs = layers.data(name='obs', shape=[10], dtype='float32')
-            output = self.alg.define_predict(obs)
+            output = self.algorithm.predict(obs)
         self.predict_output = [output]
 
     def predict(self, obs):
@@ -65,18 +65,12 @@ class AgentBaseTest(unittest.TestCase):
         self.model = TestModel()
         self.algorithm = TestAlgorithm(self.model)
 
-    def test_agent_with_gpu(self):
+    def test_agent(self):
         if get_gpu_count() > 0:
-            agent = TestAgent(self.algorithm, gpu_id=0)
+            agent = TestAgent(self.algorithm)
             obs = np.random.random([3, 10]).astype('float32')
             output_np = agent.predict(obs)
             self.assertIsNotNone(output_np)
-
-    def test_agent_with_cpu(self):
-        agent = TestAgent(self.algorithm, gpu_id=-1)
-        obs = np.random.random([3, 10]).astype('float32')
-        output_np = agent.predict(obs)
-        self.assertIsNotNone(output_np)
 
 
 if __name__ == '__main__':

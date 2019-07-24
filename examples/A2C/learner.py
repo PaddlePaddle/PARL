@@ -19,16 +19,17 @@ import queue
 import six
 import time
 import threading
+import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
 from parl import RemoteManager
-from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, CSVLogger, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
+from parl.utils import machine_info
 
 
 class Learner(object):
@@ -44,10 +45,16 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A3C(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config)
+        algorithm = parl.algorithms.A3C(
+            model, vf_loss_coeff=config['vf_loss_coeff'])
+        self.agent = AtariAgent(
+            algorithm,
+            obs_shape=self.config['obs_shape'],
+            lr_scheduler=self.config['lr_scheduler'],
+            entropy_coeff_scheduler=self.config['entropy_coeff_scheduler'],
+        )
 
-        if self.agent.gpu_id >= 0:
+        if machine_info.is_gpu_available():
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
                     Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
 
@@ -111,7 +118,7 @@ class Learner(object):
         cnt = 0
         while True:
             latest_params = params_queue.get()
-            remote_actor.set_params(latest_params)
+            remote_actor.set_weights(latest_params)
             batch = remote_actor.sample()
 
             self.sample_data_queue.put(batch)
@@ -129,7 +136,7 @@ class Learner(object):
         3. update parameters. 
         """
 
-        latest_params = self.agent.get_params()
+        latest_params = self.agent.get_weights()
         for params_queue in self.params_queues:
             params_queue.put(latest_params)
 

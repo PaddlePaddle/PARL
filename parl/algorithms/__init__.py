@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.algorithms.a3c import *
-from parl.algorithms.ddpg import *
-from parl.algorithms.dqn import *
-from parl.algorithms.policy_gradient import *
-from parl.algorithms.ppo import *
-from parl.algorithms.impala.impala import *
+from parl.utils.utils import _HAS_FLUID
+
+if _HAS_FLUID:
+    from parl.algorithms.fluid import *

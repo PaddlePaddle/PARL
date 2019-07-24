@@ -14,13 +14,13 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
+import parl.core.fluid.layers as layers
 import unittest
 from copy import deepcopy
 from paddle.fluid import ParamAttr
-from parl.framework.model_base import Model
+from parl.core.fluid.model import Model
 from parl.utils import get_gpu_count
-from parl.plutils import fetch_value
+from parl.core.fluid.plutils import fetch_value
 
 
 class TestModel(Model):
@@ -93,13 +93,11 @@ class ModelBaseTest(unittest.TestCase):
         gpu_count = get_gpu_count()
         if gpu_count > 0:
             place = fluid.CUDAPlace(0)
-            self.gpu_id = 0
         else:
             place = fluid.CPUPlace()
-            self.gpu_id = -1
         self.executor = fluid.Executor(place)
 
-    def test_network_copy(self):
+    def test_model_copy(self):
         self.assertNotEqual(self.model.fc1.param_name,
                             self.target_model.fc1.param_name)
         self.assertNotEqual(self.model.fc1.bias_name,
@@ -115,7 +113,7 @@ class ModelBaseTest(unittest.TestCase):
         self.assertNotEqual(self.model.fc3.bias_name,
                             self.target_model.fc3.bias_name)
 
-    def test_network_copy_with_multi_copy(self):
+    def test_model_copy_with_multi_copy(self):
         self.assertNotEqual(self.target_model.fc1.param_name,
                             self.target_model2.fc1.param_name)
         self.assertNotEqual(self.target_model.fc1.bias_name,
@@ -131,17 +129,17 @@ class ModelBaseTest(unittest.TestCase):
         self.assertNotEqual(self.target_model.fc3.bias_name,
                             self.target_model2.fc3.bias_name)
 
-    def test_network_parameter_names(self):
+    def test_model_parameters(self):
         self.assertSetEqual(
-            set(self.model.parameter_names),
+            set(self.model.parameters()),
             set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b']))
 
-        # Second test for cache parameter_names
+        # Second test for cache parameters
         self.assertSetEqual(
-            set(self.model.parameter_names),
+            set(self.model.parameters()),
             set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b']))
 
-    def test_sync_params_in_one_program(self):
+    def test_sync_weights_in_one_program(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -159,7 +157,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[model_output, target_model_output])
             self.assertNotEqual(outputs[0].flatten(), outputs[1].flatten())
 
-        self.model.sync_params_to(self.target_model, self.gpu_id)
+        self.model.sync_weights_to(self.target_model)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -170,7 +168,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[model_output, target_model_output])
             self.assertEqual(outputs[0].flatten(), outputs[1].flatten())
 
-    def test_sync_params_among_programs(self):
+    def test_sync_weights_among_programs(self):
         pred_program = fluid.Program()
         pred_program_2 = fluid.Program()
         with fluid.program_guard(pred_program):
@@ -197,7 +195,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[target_model_output])
             self.assertNotEqual(outputs[0].flatten(), outputs_2[0].flatten())
 
-        self.model.sync_params_to(self.target_model, self.gpu_id)
+        self.model.sync_weights_to(self.target_model)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -219,7 +217,7 @@ class ModelBaseTest(unittest.TestCase):
         model_fc3_w = fetch_value('fc3.w')
         model_fc3_b = fetch_value('fc3.b')
 
-        unique_id = target_model.parameter_names[0].split('_')[-1]
+        unique_id = target_model.parameters()[0].split('_')[-1]
         target_model_fc1_w = fetch_value(
             'PARL_target_fc1.w_{}'.format(unique_id))
         target_model_fc1_b = fetch_value(
@@ -250,7 +248,7 @@ class ModelBaseTest(unittest.TestCase):
         return (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
                 target_model_fc2_b, target_model_fc3_w, target_model_fc3_b)
 
-    def test_sync_params_with_decay(self):
+    def test_sync_weights_with_decay(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -265,7 +263,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -283,7 +281,7 @@ class ModelBaseTest(unittest.TestCase):
 
             self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
 
-    def test_sync_params_with_decay_with_multi_sync(self):
+    def test_sync_weights_with_decay_with_multi_sync(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -298,7 +296,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -322,7 +320,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -340,7 +338,7 @@ class ModelBaseTest(unittest.TestCase):
 
             self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
 
-    def test_sync_params_with_different_decay(self):
+    def test_sync_weights_with_different_decay(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -355,7 +353,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -379,7 +377,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -397,7 +395,7 @@ class ModelBaseTest(unittest.TestCase):
 
             self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
 
-    def test_sync_params_with_multi_target_model(self):
+    def test_sync_weights_with_multi_target_model(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -413,7 +411,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model, decay)
 
-        self.model.sync_params_to(self.target_model, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -437,7 +435,7 @@ class ModelBaseTest(unittest.TestCase):
          target_model_fc2_b, target_model_fc3_w,
          target_model_fc3_b) = self._numpy_update(self.target_model2, decay)
 
-        self.model.sync_params_to(self.target_model2, self.gpu_id, decay=decay)
+        self.model.sync_weights_to(self.target_model2, decay=decay)
 
         N = 10
         random_obs = np.random.random(size=(N, 4)).astype('float32')
@@ -455,7 +453,7 @@ class ModelBaseTest(unittest.TestCase):
 
             self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
 
-    def test_sync_params_with_create_parameter(self):
+    def test_sync_weights_with_create_parameter(self):
         model = TestModel2()
         target_model = deepcopy(model)
 
@@ -477,7 +475,7 @@ class ModelBaseTest(unittest.TestCase):
             self.assertNotEqual(
                 np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
-        model.sync_params_to(target_model, self.gpu_id)
+        model.sync_weights_to(target_model)
 
         random_obs = np.random.random(size=(N, 100)).astype('float32')
         for i in range(N):
@@ -489,7 +487,7 @@ class ModelBaseTest(unittest.TestCase):
             self.assertEqual(
                 np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
-    def test_sync_params_with_batch_norm(self):
+    def test_sync_weights_with_batch_norm(self):
         model = TestModel3()
         target_model = deepcopy(model)
 
@@ -528,7 +526,7 @@ class ModelBaseTest(unittest.TestCase):
             x = np.expand_dims(random_obs[i], axis=0)
             self.executor.run(program1, feed={'obs': x})
 
-        model.sync_params_to(target_model, self.gpu_id)
+        model.sync_weights_to(target_model)
 
         random_obs = np.random.random(size=(N, 32, 128, 128)).astype('float32')
         for i in range(N):
@@ -540,7 +538,7 @@ class ModelBaseTest(unittest.TestCase):
             self.assertEqual(
                 np.sum(outputs[0].flatten()), np.sum(outputs[1].flatten()))
 
-    def test_get_params(self):
+    def test_get_weights(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -554,7 +552,7 @@ class ModelBaseTest(unittest.TestCase):
         ]:
             expected_params.append(fetch_value(param_name))
 
-        params = self.model.get_params()
+        params = self.model.get_weights()
         self.assertEqual(len(params), len(expected_params))
         for param in params:
             flag = False
@@ -564,7 +562,7 @@ class ModelBaseTest(unittest.TestCase):
                     break
             self.assertTrue(flag)
 
-    def test_set_params(self):
+    def test_set_weights(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -572,15 +570,15 @@ class ModelBaseTest(unittest.TestCase):
 
         self.executor.run(fluid.default_startup_program())
 
-        params = self.model.get_params()
+        params = self.model.get_weights()
         new_params = [x + 1.0 for x in params]
 
-        self.model.set_params(new_params, self.gpu_id)
+        self.model.set_weights(new_params)
 
-        for x, y in list(zip(new_params, self.model.get_params())):
+        for x, y in list(zip(new_params, self.model.get_weights())):
             self.assertEqual(np.sum(x), np.sum(y))
 
-    def test_set_params_between_different_models(self):
+    def test_set_weights_between_different_models(self):
         model1 = TestModel4()
         model2 = TestModel4()
 
@@ -603,8 +601,8 @@ class ModelBaseTest(unittest.TestCase):
             self.assertNotEqual(outputs[0].flatten(), outputs[1].flatten())
 
         # pass parameters of self.model to model2
-        params = model1.get_params()
-        model2.set_params(params, self.gpu_id)
+        params = model1.get_weights()
+        model2.set_weights(params)
 
         random_obs = np.random.random(size=(N, 4)).astype('float32')
         for i in range(N):
@@ -615,7 +613,7 @@ class ModelBaseTest(unittest.TestCase):
                 fetch_list=[model1_output, model2_output])
             self.assertEqual(outputs[0].flatten(), outputs[1].flatten())
 
-    def test_set_params_with_wrong_params_num(self):
+    def test_set_weights_with_wrong_params_num(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -623,17 +621,17 @@ class ModelBaseTest(unittest.TestCase):
 
         self.executor.run(fluid.default_startup_program())
 
-        params = self.model.get_params()
+        params = self.model.get_weights()
 
         try:
-            self.model.set_params(params[1:], self.gpu_id)
+            self.model.set_weights(params[1:])
         except:
             # expected
             return
 
         assert False
 
-    def test_set_params_with_wrong_params_shape(self):
+    def test_set_weights_with_wrong_params_shape(self):
         pred_program = fluid.Program()
         with fluid.program_guard(pred_program):
             obs = layers.data(name='obs', shape=[4], dtype='float32')
@@ -641,11 +639,11 @@ class ModelBaseTest(unittest.TestCase):
 
         self.executor.run(fluid.default_startup_program())
 
-        params = self.model.get_params()
+        params = self.model.get_weights()
 
         params.reverse()
 
-        self.model.set_params(params, self.gpu_id)
+        self.model.set_weights(params)
 
         x = np.random.random(size=(1, 4)).astype('float32')
 

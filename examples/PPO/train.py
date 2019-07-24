@@ -15,9 +15,9 @@
 import argparse
 import gym
 import numpy as np
+import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.algorithms import PPO
 from parl.utils import logger, action_mapping
 from parl.utils.rl_utils import calc_gae, calc_discount_sum_rewards
 from scaler import Scaler
@@ -142,12 +142,11 @@ def main():
     scaler = Scaler(obs_dim)
 
     model = MujocoModel(obs_dim, act_dim)
-    hyperparas = {
-        'act_dim': act_dim,
-        'policy_lr': model.policy_lr,
-        'value_lr': model.value_lr
-    }
-    alg = PPO(model, hyperparas)
+    alg = parl.algorithms.PPO(
+        model,
+        act_dim=act_dim,
+        policy_lr=model.policy_lr,
+        value_lr=model.value_lr)
     agent = MujocoAgent(
         alg, obs_dim, act_dim, args.kl_targ, loss_type=args.loss_type)
 

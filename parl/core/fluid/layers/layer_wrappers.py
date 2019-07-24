@@ -40,7 +40,7 @@ from paddle.fluid.executor import _fetch_var
 from paddle.fluid.framework import Variable
 from paddle.fluid.layers import *
 from paddle.fluid.param_attr import ParamAttr
-from parl.layers.attr_holder import AttrHolder
+from parl.core.fluid.layers.attr_holder import AttrHolder
 
 
 def update_attr_name(name, default_name, attr, is_bias):

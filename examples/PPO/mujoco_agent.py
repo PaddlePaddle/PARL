@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import numpy as np
-import parl.layers as layers
+import parl
+from parl import layers
 from paddle import fluid
-from parl.framework.agent_base import Agent
 from parl.utils import logger
 
 
-class MujocoAgent(Agent):
+class MujocoAgent(parl.Agent):
     def __init__(self,
                  algorithm,
                  obs_dim,
@@ -57,13 +57,13 @@ class MujocoAgent(Agent):
         with fluid.program_guard(self.policy_sample_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            sampled_act = self.alg.define_sample(obs)
+            sampled_act = self.alg.sample(obs)
             self.policy_sample_output = [sampled_act]
 
         with fluid.program_guard(self.policy_predict_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            means = self.alg.define_predict(obs)
+            means = self.alg.predict(obs)
             self.policy_predict_output = [means]
 
         with fluid.program_guard(self.policy_learn_program):
@@ -75,25 +75,24 @@ class MujocoAgent(Agent):
                 name='advantages', shape=[1], dtype='float32')
             if self.loss_type == 'KLPEN':
                 beta = layers.data(name='beta', shape=[], dtype='float32')
-                loss, kl = self.alg.define_policy_learn(
-                    obs, actions, advantages, beta)
+                loss, kl = self.alg.policy_learn(obs, actions, advantages,
+                                                 beta)
             else:
-                loss, kl = self.alg.define_policy_learn(
-                    obs, actions, advantages)
+                loss, kl = self.alg.policy_learn(obs, actions, advantages)
 
             self.policy_learn_output = [loss, kl]
 
         with fluid.program_guard(self.value_predict_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            value = self.alg.define_value_predict(obs)
+            value = self.alg.value_predict(obs)
             self.value_predict_output = [value]
 
         with fluid.program_guard(self.value_learn_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
             val = layers.data(name='val', shape=[], dtype='float32')
-            value_loss = self.alg.define_value_learn(obs, val)
+            value_loss = self.alg.value_learn(obs, val)
             self.value_learn_output = [value_loss]
 
     def policy_sample(self, obs):
@@ -151,7 +150,7 @@ class MujocoAgent(Agent):
         2. Fix old policy model, and learn policy model multi times
         3. if use KLPEN loss, Adjust kl loss coefficient: beta
         """
-        self.alg.sync_old_policy(self.gpu_id)
+        self.alg.sync_old_policy()
 
         all_loss, all_kl = [], []
         for _ in range(self.policy_learn_times):

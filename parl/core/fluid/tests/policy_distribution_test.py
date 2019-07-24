@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import numpy as np
-import parl.layers as layers
 import unittest
 from paddle import fluid
+from parl import layers
 from parameterized import parameterized
-from parl.framework.policy_distribution import *
+from parl.core.fluid.policy_distribution import *
 from parl.utils import get_gpu_count, np_softmax, np_cross_entropy
 
 

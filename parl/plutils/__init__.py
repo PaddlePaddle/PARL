@@ -12,4 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.plutils.common import *
+print(
+    "import way `import parl.plutils` is deprecated since version 1.2 and will be removed in version 1.3, please use `from parl import plutils` or `import parl; parl.plutils` instead."
+)
+
+from parl.core.fluid.plutils.common import *

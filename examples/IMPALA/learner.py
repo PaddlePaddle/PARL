@@ -18,10 +18,10 @@ import os
 import queue
 import time
 import threading
+import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from parl import RemoteManager
-from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, CSVLogger
 from parl.utils.scheduler import PiecewiseScheduler
@@ -41,14 +41,19 @@ class Learner(object):
         obs_shape = env.observation_space.shape
 
         act_dim = env.action_space.n
-        self.config['obs_shape'] = obs_shape
-        self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = IMPALA(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config, self.learn_data_provider)
+        algorithm = parl.algorithms.IMPALA(
+            model,
+            sample_batch_steps=self.config['sample_batch_steps'],
+            gamma=self.config['gamma'],
+            vf_loss_coeff=self.config['vf_loss_coeff'],
+            clip_rho_threshold=self.config['clip_rho_threshold'],
+            clip_pg_rho_threshold=self.config['clip_pg_rho_threshold'])
+        self.agent = AtariAgent(algorithm, obs_shape, act_dim,
+                                self.learn_data_provider)
 
-        self.cache_params = self.agent.get_params()
+        self.cache_params = self.agent.get_weights()
         self.params_lock = threading.Lock()
         self.params_updated = False
         self.cache_params_sent_cnt = 0
@@ -155,7 +160,7 @@ class Learner(object):
         """ Sample data from remote actor and update parameters of remote actor.
         """
         cnt = 0
-        remote_actor.set_params(self.cache_params)
+        remote_actor.set_weights(self.cache_params)
         while True:
             batch = remote_actor.sample()
             self.sample_data_queue.put(batch)
@@ -171,14 +176,14 @@ class Learner(object):
             if self.params_updated and self.cache_params_sent_cnt >= self.config[
                     'params_broadcast_interval']:
                 self.params_updated = False
-                self.cache_params = self.agent.get_params()
+                self.cache_params = self.agent.get_weights()
                 self.cache_params_sent_cnt = 0
             self.cache_params_sent_cnt += 1
             self.total_params_sync += 1
 
             self.params_lock.release()
 
-            remote_actor.set_params(self.cache_params)
+            remote_actor.set_weights(self.cache_params)
 
     def log_metrics(self):
         """ Log metrics of learner and actors

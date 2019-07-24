@@ -14,22 +14,37 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
+from parl.utils import machine_info
 from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
-class AtariAgent(Agent):
-    def __init__(self, algorithm, config):
-        self.config = config
+class AtariAgent(parl.Agent):
+    def __init__(self, algorithm, obs_shape, lr_scheduler,
+                 entropy_coeff_scheduler):
+        """
+
+        Args:
+            algorithm (`parl.Algorithm`): a2c algorithm
+            obs_shape (list/tuple): observation shape of atari environment
+            lr_scheduler (list/tuple): learning rate adjustment schedule: (train_step, learning_rate)
+            entropy_coeff_scheduler (list/tuple): coefficient of policy entropy adjustment schedule: (train_step, coefficient)
+        """
+        assert isinstance(obs_shape, (list, tuple))
+        assert isinstance(lr_scheduler, (list, tuple))
+        assert isinstance(entropy_coeff_scheduler, (list, tuple))
+        self.obs_shape = obs_shape
+        self.lr_scheduler = lr_scheduler
+        self.entropy_coeff_scheduler = entropy_coeff_scheduler
+
         super(AtariAgent, self).__init__(algorithm)
 
         self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
                                                  config['max_sample_steps'])
-        self.entropy_coeff_scheduler = PiecewiseScheduler(
-            config['entropy_coeff_scheduler'])
 
-        use_cuda = True if self.gpu_id >= 0 else False
+        self.entropy_coeff_scheduler = PiecewiseScheduler(
+            self.entropy_coeff_scheduler)
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.use_experimental_executor = True
@@ -39,7 +54,7 @@ class AtariAgent(Agent):
 
         # Use ParallelExecutor to make learn program run faster
         self.learn_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda,
+            use_cuda=machine_info.is_gpu_available(),
             main_program=self.learn_program,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
@@ -52,23 +67,23 @@ class AtariAgent(Agent):
 
         with fluid.program_guard(self.sample_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             sample_actions, values = self.alg.sample(obs)
             self.sample_outputs = [sample_actions, values]
 
         with fluid.program_guard(self.predict_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
         with fluid.program_guard(self.value_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.values = self.alg.value(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
             advantages = layers.data(
                 name='advantages', shape=[], dtype='float32')

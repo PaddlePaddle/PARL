@@ -68,11 +68,15 @@ Features
    implementations.rst
 
 .. toctree::
-   :maxdepth: 1
-   :caption: APIs
+   :maxdepth: 3
+   :caption: API
 
-   ./api_docs.utils
-   ./api_docs.index
+   algo_docs/index
+   framework_docs/index
+   layers_docs/index
+   plutils_docs/index
+   remote_docs/index
+   utils_docs/index
 
 Abstractions
 ----------------

@@ -34,6 +34,7 @@ import sphinx_rtd_theme
 import os
 import sys
 import parl
+autodoc_mock_imports = ['paddle']
 release = parl.__version__
 project = 'PARL'
 copyright = '2019, nlp-ol@baidu.com'

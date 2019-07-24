@@ -3,76 +3,29 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PARL
-=====================================
 *PARL is a flexible, distributed and eager mode oriented reinforcement learning framework.*
 
 Features
 ----------------
-+----------------------------------------------+-----------------------------------------------+
-| **Eager Mode**                               | **Distributed Training**                      |
-+----------------------------------------------+-----------------------------------------------+
-|.. code-block:: python                        |.. code-block:: python                         |
-|                                              |                                               |
-|  # Target Network in DQN                     |  # Real multi-thread programming              |
-|                                              |  # witout the GIL limitation                  |
-|                                              |                                               |
-|    target_network = copy.deepcopy(Q_network) |  @parl.remote_class                           |
-|    ...                                       |  class HelloWorld(object):                    |
-|    #reset parameters periodically            |      def sum(self, a, b):                     |
-|    target_network.load(Q_network)            |          return a + b                         |
-|                                              |                                               |
-|                                              |  parl.init()                                  |
-|                                              |  obj = HelloWorld()                           |
-|                                              |  # NOT consume local computation resources    |
-|                                              |  ans = obj.sum(a, b)                          |
-|                                              |                                               |
-+----------------------------------------------+-----------------------------------------------+
-
-
-| PARL is distributed on PyPI and can be installed with pip:
-
-.. centered:: ``pip install parl``
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Installation
-
-   installation.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Features
-
-   features.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Basic_structure
-
-   ./basic_structure/overview
-   ./basic_structure/model
-   ./basic_structure/algorithm
-   ./basic_structure/agent
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorial
-
-   tutorial.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: High-quality Implementations
-
-   implementations.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: APIs
-
-   ./api_docs.utils
-   ./api_docs.index
++------------------------------------------+---------------------------------------+
+| **Object Oriented Programming**          | **Distributed Training**              |
++------------------------------------------+---------------------------------------+
+|.. code-block:: python                    |.. code-block:: python                 |
+|                                          |                                       |
+|                                          |  # Absolute multi-thread programming  |
+|   class MLPModel(parl.Model):            |  # witout the GIL limitation          |
+|     def __init__(self, act_dim):         |                                       |
+|       self.fc1 = layers.fc(size=10)      |  @parl.remote_class                   |
+|       self.fc2 = layers.fc(size=act_dim) |  class HelloWorld(object):            |
+|                                          |      def sum(self, a, b):             |
+|     def policy(self, obs):               |          return a + b                 |
+|       out = self.fc1(obs)                |                                       |
+|       out = self.fc2(out)                |  remote_manager = RemoteManager()     |
+|       return out                         |  obj = remote_manager.get()           |
+|                                          |  obj.sum(a, b)                        |
+|   model = MLPModel()                     |  ans = obj.sum(a, b)                  |
+|   target_model = copy.deepcopy(model)    |                                       |
++------------------------------------------+---------------------------------------+
 
 Abstractions
 ----------------
@@ -88,3 +41,35 @@ Abstractions
 * **Algorithm** describes the mechanism to update parameters in the *model* and often contains at least one model.
 
 * **Agent**, a data bridge between the *environment* and the *algorithm*, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Installation
+
+   installation.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Features
+
+   features.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorial
+
+   getting_started.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: High-quality Implementations
+
+   implementations.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: APIs
+
+   ./api_docs.utils
+   ./api_docs.index
+

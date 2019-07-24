@@ -10,3 +10,6 @@ Install
 PARL is distributed on PyPI and can be installed with pip:
 :: 
     pip install parl
+or install from source:
+:: 
+    pip install --upgrade git+https://github.com/PaddlePaddle/PARL.git

@@ -92,4 +92,4 @@ class ModelBase(object):
     def __call__(self, *args, **kwargs):
         """Call forward function.
         """
-        self.forward(*args, **kwargs)
+        return self.forward(*args, **kwargs)

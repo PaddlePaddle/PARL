@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
 import parl
 from parl import layers
 
@@ -25,7 +24,7 @@ class CartpoleModel(parl.Model):
         self.fc1 = layers.fc(size=hid1_size, act='tanh')
         self.fc2 = layers.fc(size=act_dim, act='softmax')
 
-    def policy(self, obs):
+    def forward(self, obs):
         out = self.fc1(obs)
         out = self.fc2(out)
         return out

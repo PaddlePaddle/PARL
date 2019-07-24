@@ -54,7 +54,8 @@ def main():
     for i in range(1000):
         obs_list, action_list, reward_list = run_episode(env, agent)
         if i % 10 == 0:
-            logger.info("Episode {}, Reward Sum {}.".format(i, sum(reward_list)))
+            logger.info("Episode {}, Reward Sum {}.".format(
+                i, sum(reward_list)))
 
         batch_obs = np.array(obs_list)
         batch_action = np.array(action_list)

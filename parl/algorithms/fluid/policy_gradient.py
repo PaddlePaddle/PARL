@@ -54,7 +54,7 @@ class PolicyGradient(Algorithm):
     def predict(self, obs):
         """ use policy model self.model to predict the action probability
         """
-        return self.model.policy(obs)
+        return self.model(obs)
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='learn')
@@ -66,7 +66,7 @@ class PolicyGradient(Algorithm):
     def learn(self, obs, action, reward):
         """ update policy model self.model with policy gradient algorithm
         """
-        act_prob = self.model.policy(obs)
+        act_prob = self.model(obs)
         log_prob = layers.cross_entropy(act_prob, action)
         cost = log_prob * reward
         cost = layers.reduce_mean(cost)

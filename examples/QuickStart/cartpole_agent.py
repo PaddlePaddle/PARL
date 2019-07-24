@@ -18,7 +18,7 @@ import parl
 from parl import layers
 
 
-class CartpoleAgent(Agent):
+class CartpoleAgent(parl.Agent):
     def __init__(self, algorithm, obs_dim, act_dim):
         self.obs_dim = obs_dim
         self.act_dim = act_dim

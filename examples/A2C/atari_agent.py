@@ -21,30 +21,22 @@ from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
 class AtariAgent(parl.Agent):
-    def __init__(self, algorithm, obs_shape, lr_scheduler,
-                 entropy_coeff_scheduler):
+    def __init__(self, algorithm, config):
         """
 
         Args:
             algorithm (`parl.Algorithm`): a2c algorithm
             obs_shape (list/tuple): observation shape of atari environment
-            lr_scheduler (list/tuple): learning rate adjustment schedule: (train_step, learning_rate)
-            entropy_coeff_scheduler (list/tuple): coefficient of policy entropy adjustment schedule: (train_step, coefficient)
         """
-        assert isinstance(obs_shape, (list, tuple))
-        assert isinstance(lr_scheduler, (list, tuple))
-        assert isinstance(entropy_coeff_scheduler, (list, tuple))
-        self.obs_shape = obs_shape
-        self.lr_scheduler = lr_scheduler
-        self.entropy_coeff_scheduler = entropy_coeff_scheduler
 
+        self.obs_shape = config['obs_shape']
         super(AtariAgent, self).__init__(algorithm)
 
         self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
                                                  config['max_sample_steps'])
 
         self.entropy_coeff_scheduler = PiecewiseScheduler(
-            self.entropy_coeff_scheduler)
+            config['entropy_coeff_scheduler'])
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.use_experimental_executor = True

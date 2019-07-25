@@ -47,12 +47,7 @@ class Learner(object):
         model = AtariModel(act_dim)
         algorithm = parl.algorithms.A3C(
             model, vf_loss_coeff=config['vf_loss_coeff'])
-        self.agent = AtariAgent(
-            algorithm,
-            obs_shape=self.config['obs_shape'],
-            lr_scheduler=self.config['lr_scheduler'],
-            entropy_coeff_scheduler=self.config['entropy_coeff_scheduler'],
-        )
+        self.agent = AtariAgent(algorithm, config)
 
         if machine_info.is_gpu_available():
             assert get_gpu_count() == 1, 'Only support training in single GPU,\

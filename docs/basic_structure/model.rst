@@ -1,14 +1,16 @@
 Model (*Forward Part*)
 =======================
+A Model is owned by an Algorithm. Model is responsible for the entire network model (**forward part**) for the specific problems.
+
 
 Methods
 ----------
-1. policy(self, *args)
+1. policy(self, obs)
 
     Define the structure of networks here. Algorithm will call this method to predict probabilities of actions. 
     It is optional. 
 
-2. value(self, *args)
+2. value(self, obs)
 
     Return: values: a dict of estimated values for the current observations and states. 
     For example, "q_value" and "v_value".

@@ -25,8 +25,8 @@ class AtariAgent(parl.Agent):
         """
 
         Args:
-            algorithm (`parl.Algorithm`): a2c algorithm
-            obs_shape (list/tuple): observation shape of atari environment
+            algorithm (`parl.Algorithm`): algorithm to be used in this agent.
+            config (dict): config file describing the training hyper-parameters(see a2c_config.py)
         """
 
         self.obs_shape = config['obs_shape']

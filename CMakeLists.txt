@@ -48,11 +48,6 @@ function(import_test TARGET_NAME)
         /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    add_test(NAME ${TARGET_NAME}_with_paddle1.4.0
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        /root/miniconda3/envs/paddle1.4.0/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 endfunction()
 
 function(docs_test)

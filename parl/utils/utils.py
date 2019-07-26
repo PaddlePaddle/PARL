@@ -70,6 +70,7 @@ def is_PY2():
 def is_PY3():
     return sys.version_info[0] == 3
 
+
 def get_fluid_version():
     import paddle
     fluid_version = int(paddle.__version__.replace('.', ''))

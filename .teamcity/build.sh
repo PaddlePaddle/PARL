@@ -132,7 +132,6 @@ function main() {
           pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
           pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple .
           /root/miniconda3/envs/empty_env/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
-          /root/miniconda3/envs/paddle1.4.0/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
           run_test_with_gpu
           run_test_with_cpu
           run_import_test

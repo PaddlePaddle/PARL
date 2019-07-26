@@ -70,11 +70,18 @@ def is_PY2():
 def is_PY3():
     return sys.version_info[0] == 3
 
+def get_fluid_version():
+    import paddle
+    fluid_version = int(paddle.__version__.replace('.', ''))
+    return fluid_version
+
 
 MAX_INT32 = 0x7fffffff
 
 try:
     from paddle import fluid
+    fluid_version = get_fluid_version()
+    assert fluid_version >= 151, "PARL requires paddle>=1.5.1"
     _HAS_FLUID = True
 except ImportError:
     _HAS_FLUID = False

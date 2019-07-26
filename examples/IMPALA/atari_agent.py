@@ -28,19 +28,6 @@ class AtariAgent(parl.Agent):
         self.act_dim = act_dim
         super(AtariAgent, self).__init__(algorithm)
 
-        exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.use_experimental_executor = True
-        exec_strategy.num_threads = 4
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.remove_unnecessary_lock = True
-
-        # Use ParallelExecutor to make learn program run faster
-        self.learn_exe = fluid.ParallelExecutor(
-            use_cuda=machine_info.is_gpu_available(),
-            main_program=self.learn_program,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
-
         if learn_data_provider:
             self.learn_reader.decorate_tensor_provider(learn_data_provider)
             self.learn_reader.start()
@@ -86,8 +73,8 @@ class AtariAgent(parl.Agent):
             vtrace_loss, kl = self.alg.learn(obs, actions, behaviour_logits,
                                              rewards, dones, lr, entropy_coeff)
             self.learn_outputs = [
-                vtrace_loss.total_loss.name, vtrace_loss.pi_loss.name,
-                vtrace_loss.vf_loss.name, vtrace_loss.entropy.name, kl.name
+                vtrace_loss.total_loss, vtrace_loss.pi_loss,
+                vtrace_loss.vf_loss, vtrace_loss.entropy, kl
             ]
 
     def sample(self, obs_np):
@@ -125,6 +112,6 @@ class AtariAgent(parl.Agent):
         return predict_actions
 
     def learn(self):
-        total_loss, pi_loss, vf_loss, entropy, kl = self.learn_exe.run(
+        total_loss, pi_loss, vf_loss, entropy, kl = self.fluid_executor.run(self.learn_program,
             fetch_list=self.learn_outputs)
         return total_loss, pi_loss, vf_loss, entropy, kl

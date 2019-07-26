@@ -19,7 +19,7 @@ For more technical details about our solution, we provide:
 
 ## Dependencies
 - python3.6
-- [paddlepaddle>=1.2.1](https://github.com/PaddlePaddle/Paddle)
+- [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 - [osim-rl](https://github.com/stanfordnmbl/osim-rl)
 - [grpcio==1.12.1](https://grpc.io/docs/quickstart/python.html)
 - tqdm

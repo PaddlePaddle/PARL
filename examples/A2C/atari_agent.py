@@ -75,9 +75,7 @@ class AtariAgent(parl.Agent):
 
             total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
                 obs, actions, advantages, target_values, lr, entropy_coeff)
-            self.learn_outputs = [
-                total_loss, pi_loss, vf_loss, entropy
-            ]
+            self.learn_outputs = [total_loss, pi_loss, vf_loss, entropy]
             self.learn_program = parl.compile(self.learn_program, total_loss)
 
     def sample(self, obs_np):

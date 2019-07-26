@@ -112,6 +112,6 @@ class AtariAgent(parl.Agent):
         return predict_actions
 
     def learn(self):
-        total_loss, pi_loss, vf_loss, entropy, kl = self.fluid_executor.run(self.learn_program,
-            fetch_list=self.learn_outputs)
+        total_loss, pi_loss, vf_loss, entropy, kl = self.fluid_executor.run(
+            self.learn_program, fetch_list=self.learn_outputs)
         return total_loss, pi_loss, vf_loss, entropy, kl

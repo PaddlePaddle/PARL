@@ -20,6 +20,7 @@ __all__ = []
 _writer = None
 _WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
+
 def create_file_after_first_call(func_name):
     def call(*args, **kwargs):
         global _writer
@@ -28,6 +29,7 @@ def create_file_after_first_call(func_name):
         func = getattr(_writer, func_name)
         func(*args, **kwargs)
         _writer.flush()
+
     return call
 
 

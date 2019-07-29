@@ -70,7 +70,7 @@ Abstractions
    :maxdepth: 1
    :caption: APIs
 
-   agent.rst
    model.rst
    algorithm.rst
+   agent.rst
 

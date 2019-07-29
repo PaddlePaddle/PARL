@@ -62,6 +62,7 @@ class Agent(AgentBase):
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
           
     """
+
     def __init__(self, algorithm, gpu_id=None):
         """Build programs by calling the method ``self.build_program()`` and run initialization function of ``fluid.default_startup_program()``.
 

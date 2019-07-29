@@ -57,7 +57,6 @@ class Algorithm(AlgorithmBase):
         
     """
 
-
     def __init__(self, model=None, hyperparas=None):
         """
         Args:

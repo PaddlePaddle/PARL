@@ -28,7 +28,7 @@ class Model(ModelBase):
     | `alias`: ``parl.Model``
     | `alias`: ``parl.core.fluid.agent.Model``
 
-    | ``Model`` is a base class of PARL for the neural network. A ``Model`` is usually a policy or Q-value function, and predicts an action or an estimate according to the environmental observation.
+    | ``Model`` is a base class of PARL for the neural network. A ``Model`` is usually a policy or Q-value function, which predicts an action or an estimate according to the environmental observation.
 
     | To track all the layers , users are required to implement neural networks with the layers from ``parl.layers`` (e.g., parl.layers.fc). These layers has the same APIs as fluid.layers.
 
@@ -57,7 +57,7 @@ class Model(ModelBase):
         model_id(str): each model instance has its uniqe model_id.
 
     Public Functions:
-        - ``sync_weights_to``: Synchronize parameters of the current model to another model.
+        - ``sync_weights_to``: synchronize parameters of the current model to another model.
         - ``get_weights``: return a list containing all the parameters of the current model.
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
         - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
@@ -226,7 +226,7 @@ class Model(ModelBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ returns a list containing all the parameters of current model.
+        """ Return a list containing all the parameters of current model.
         
         Returns:
             parameters: a list containing all the parameters of the current model.
@@ -244,7 +244,7 @@ class Model(ModelBase):
         self.set_weights(weights=params)
 
     def get_weights(self):
-        """returns a list containing all the parameters of current model.
+        """Returns a list containing all the parameters of current model.
 
         Returns: a list containing the parameters.
         """
@@ -256,7 +256,7 @@ class Model(ModelBase):
         return weights
 
     def set_weights(self, weights):
-        """copy parameters from ``set_weights()`` to the model.
+        """Copy parameters from ``set_weights()`` to the model.
         
         Args:
             weights (list): a list containing the parameters.

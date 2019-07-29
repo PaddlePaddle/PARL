@@ -87,6 +87,7 @@ html_logo = './images/PARL-logo-2.png'
 master_doc = 'index'
 napoleon_use_ivar = True
 
+
 # do not skip documentation of the __init__ function of a class
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__":
@@ -94,20 +95,22 @@ def skip(app, what, name, obj, would_skip, options):
     return would_skip
 
 
-
 aliases = dict()
 aliases['parl.core.fluid.agent.Agent'] = ['parl.agent']
 
-def parl_class_docstring(app, what, name, obj, options, lines):
-  if what != 'class':
-    return 
-  obj = parl.Agent
-  name = parl.Agent
 
-  #lines[0] = ['wohenhao']
+def parl_class_docstring(app, what, name, obj, options, lines):
+    if what != 'class':
+        return
+    obj = parl.Agent
+    name = parl.Agent
+
+    #lines[0] = ['wohenhao']
+
 
 def setup(app):
     app.connect("autodoc-skip-member", skip)
     app.connect("autodoc-process-docstring", parl_class_docstring)
+
 
 add_module_names = False

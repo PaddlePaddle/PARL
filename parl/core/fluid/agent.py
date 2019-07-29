@@ -30,7 +30,7 @@ class Agent(AgentBase):
     | `alias`: ``parl.Agent``
     | `alias`: ``parl.core.fluid.agent.Agent``
 
-    | Agent is one of three basic classes of PARL. 
+    | Agent is one of the three basic classes of PARL. 
 
     | It is responsible for interacting with the environment and collecting data for training the policy.
     | To implement a customized ``Agent``, users can:
@@ -43,7 +43,7 @@ class Agent(AgentBase):
             def __init__(self, algorithm, act_dim):
                 super(MyAgent, self).__init__(algorithm)
                 self.act_dim = act_dim
-      This class will automatically initialize all the parameters of neural network, and provides an executor for users to run programs(self.fluid_executor).
+      This class will initialize the neural network parameters automatically, and provides an executor for users to run the programs (self.fluid_executor).
 
     Attributes:
         gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
@@ -55,7 +55,7 @@ class Agent(AgentBase):
         - ``set_weights``: returns a list containing all the parameters of self.alg.
         - ``get_weights``: copy parameters from ``set_weights()`` to this agent.
         - ``sample``: return a noisy action to perform exploration according to the policy.
-        - ``predict``: return a action given current observation.
+        - ``predict``: return an action given current observation.
         - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
 
     Todo:
@@ -119,7 +119,7 @@ class Agent(AgentBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ returns a list containing the whole parameters of self.alg.
+        """ Returns a list containing the whole parameters of self.alg.
 
         Returns:
             a list containing the whole parameters of self.alg.
@@ -150,7 +150,7 @@ class Agent(AgentBase):
         raise NotImplementedError
 
     def sample(self, *args, **kwargs):
-        """return an action with noise when given the observation of the environment.
+        """Return an action with noise when given the observation of the environment.
             
         In general, this function is used in train process as noise is added to the action to preform exploration.
 

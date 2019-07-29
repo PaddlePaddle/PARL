@@ -27,7 +27,7 @@ class Algorithm(AlgorithmBase):
     | `alias`: ``parl.Algorithm``
     | `alias`: ``parl.core.fluid.algorithm.Algorithm``
 
-    | ``Algorithm`` defines the way how to update the parameters of the ``Model``. That is, we define loss functions and the optimizer of the neural network. An ``Algorithm`` has at least a model.
+    | ``Algorithm`` defines the way how to update the parameters of the ``Model``. This is where we define loss functions and the optimizer of the neural network. An ``Algorithm`` has at least a model.
 
     | PARL has implemented various algorithms(DQN/DDPG/PPO/A3C/IMPALA) that can be reused quickly, which can be accessed with ``parl.algorithms``.
 
@@ -43,11 +43,11 @@ class Algorithm(AlgorithmBase):
     Attributes:
         model(``parl.Model``): a neural network that represents a policy or a Q-value function.
 
-    Pulich Functions:
+    Pulish Functions:
         - ``get_weights``: return a list containing all the parameters of the current model.
         - ``set_weights``: copy parameters from ``get_weights()`` to the model.
         - ``sample``: return a noisy action to perform exploration according to the policy.
-        - ``predict``: return a action given current observation.
+        - ``predict``: return an action given current observation.
         - ``learn``: define the loss function and create an optimizer to minized the loss.
 
     Note:
@@ -83,7 +83,7 @@ class Algorithm(AlgorithmBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ get parameters of self.model.
+        """ Get parameters of self.model.
 
         Returns:
             params(list): a list containing the parameters.
@@ -93,7 +93,7 @@ class Algorithm(AlgorithmBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
     def set_params(self, params):
-        """ set parameters from ``get_params`` to the model.
+        """ Set parameters from ``get_params`` to the model.
 
         Args:
             params: a list of numpy array containing the parameters.
@@ -101,16 +101,16 @@ class Algorithm(AlgorithmBase):
         self.model.set_params(params)
 
     def learn(self, *args, **kwargs):
-        """ define the loss function and create an optimizer to minize the loss.
+        """ Define the loss function and create an optimizer to minize the loss.
         """
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
-        """ define the predicting process, e.g,. use the policy model to predict actions.
+        """ Refine the predicting process, e.g,. use the policy model to predict actions.
         """
         raise NotImplementedError
 
     def sample(self, *args, **kwargs):
-        """ define sampling process. This function returns an action with noise to perform exploration.
+        """ Define the sampling process. This function returns an action with noise to perform exploration.
         """
         raise NotImplementedError

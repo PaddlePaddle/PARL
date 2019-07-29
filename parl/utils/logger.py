@@ -18,6 +18,7 @@ import os
 import os.path
 import sys
 from termcolor import colored
+import shutil
 
 __all__ = ['set_dir', 'get_dir', 'set_level']
 
@@ -140,5 +141,6 @@ mod = sys.modules['__main__']
 if hasattr(mod, '__file__'):
     basename = os.path.basename(mod.__file__)
     auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
+    shutil.rmtree(auto_dirname, ignore_errors=True)
     set_dir(auto_dirname)
     _logger.info("Argv: " + ' '.join(sys.argv))

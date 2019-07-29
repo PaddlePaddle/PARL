@@ -14,7 +14,6 @@
 
 import parl
 import paddle.fluid as fluid
-from paddle.fluid.param_attr import ParamAttr
 from parl import layers
 
 

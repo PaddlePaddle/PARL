@@ -17,10 +17,23 @@ from parl.utils import logger
 
 __all__ = []
 
-_writer = SummaryWriter(logdir=logger.get_dir())
+_writer = None
 _WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
+
+def create_file_after_first_call(func_name):
+    def call(*args, **kwargs):
+        global _writer
+        if _writer is None:
+            _writer = SummaryWriter(logdir=logger.get_dir())
+        func = getattr(_writer, func_name)
+        func(*args, **kwargs)
+        _writer.flush()
+
+    return call
+
+
 # export writter functions
-for func in _WRITTER_METHOD:
-    locals()[func] = getattr(_writer, func)
-    __all__.append(func)
+for func_name in _WRITTER_METHOD:
+    locals()[func_name] = create_file_after_first_call(func_name)
+    __all__.append(func_name)

@@ -70,6 +70,7 @@ Abstractions
    :maxdepth: 1
    :caption: APIs
 
-   ./api_docs.utils
-   ./api_docs.index
+   agent.rst
+   model.rst
+   algorithm.rst
 

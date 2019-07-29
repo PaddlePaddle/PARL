@@ -26,11 +26,48 @@ __all__ = ['Agent']
 
 
 class Agent(AgentBase):
+    """
+    | `alias`: ``parl.Agent``
+    | `alias`: ``parl.core.fluid.agent.Agent``
+
+    | Agent is one of three basic classes of PARL. 
+
+    | It is responsible for interacting with the environment and collecting data for training the policy.
+    | To implement a customized ``Agent``, users can:
+
+      .. code-block:: python
+
+        import parl
+
+        class MyAgent(parl.Agent):
+            def __init__(self, algorithm, act_dim):
+                super(MyAgent, self).__init__(algorithm)
+                self.act_dim = act_dim
+      This class will automatically initialize all the parameters of neural network, and provides an executor for users to run programs(self.fluid_executor).
+
+    Attributes:
+        gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
+        fluid_executor (fluid.Executor): executor for running programs of the agent.
+        alg (parl.algorithm): algorithm of this agent.
+
+    Public Functions:
+        - ``build_program`` (**abstract function**): build various programs for the agent to interact with outer environment.
+        - ``set_weights``: returns a list containing all the parameters of self.alg.
+        - ``get_weights``: copy parameters from ``set_weights()`` to this agent.
+        - ``sample``: return a noisy action to perform exploration according to the policy.
+        - ``predict``: return a action given current observation.
+        - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
+
+    Todo:
+        - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
+          
+    """
     def __init__(self, algorithm, gpu_id=None):
-        """Build program and run initialization for default_startup_program
+        """Build programs by calling the method ``self.build_program()`` and run initialization function of ``fluid.default_startup_program()``.
 
         Args:
-            algorithm (parl.Algorithm): instance of `parl.core.fluid.algorithm.Algorithm`
+            algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.alg`.
+            gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
         """
         if gpu_id is not None:
             warnings.warn(
@@ -41,8 +78,6 @@ class Agent(AgentBase):
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
 
-        # alias for self.algorithm
-        # use self.algorithm is suggested
         self.alg = algorithm
         self.gpu_id = 0 if machine_info.is_gpu_available() else -1
 
@@ -54,71 +89,70 @@ class Agent(AgentBase):
         self.fluid_executor.run(fluid.default_startup_program())
 
     def build_program(self):
-        """Build leran/predict/sample program here with the 
-        learn/predict/sample function defined in algorithm.
+        """Build various programs here with the 
+        learn, predict, sample functions of the algorithm.
         
         Note:
-            It's unnecessary to call this function explictly since 
-            it will be called automatically in the initialization function. 
+            | Users **must** implement this function in an ``Agent``.
+            | This function will be called automatically in the initialization function.
         
-        To build the program, you may need to do the following:
-            a. Create a new program of fluid with program guard;
-            b. Define data input layers;
-            c. Pass the data variable defined in step b to learn/predict/sample of algorithm;
+        To build a program, you must do the following:
+            a. Create a fluid program with ``fluid.program_guard()``;
+            b. Define data layers for feeding the data;
+            c. build various programs(e.g., learn_program, predict_program) with data layers defined in step b.
+
+        Example:
+
+        .. code-block:: python
+
+	    self.pred_program = fluid.Program()
+
+            with fluid.program_guard(self.pred_program):
+                obs = layers.data(
+                    name='obs', shape=[self.obs_dim], dtype='float32')
+                self.act_prob = self.alg.predict(obs)
+          
+
         """
         raise NotImplementedError
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ Get parameters of self.algorithm
+        """ returns a list containing the whole parameters of self.alg.
 
         Returns:
-            List of numpy array. 
+            a list containing the whole parameters of self.alg.
         """
         return self.algorithm.get_params()
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
     def set_params(self, params):
-        """Set parameters of self.algorithm
+        """Copy parameters from ``get_params()`` into this agent.
 
         Args:
-            params: List of numpy array.
+            params(list): a list containing the parameters.
         """
         self.algorithm.set_params(params)
 
     def learn(self, *args, **kwargs):
-        """The training interface for Agent.
-        
-        This function will usually do the following things:
-            1. Accept numpy data as input;
-            2. Feed numpy data;
-            3. Run learn program defined in `build_program`.
+        """The training interface for ``Agent``.
+        This function feeds the training data into the learn_program defined in ``build_program()``.
         """
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
-        """Predict the action when given the observation of the enviroment.
+        """Predict an action when given the observation of the environment.
 
-        In general, this function is used in test process.
-
-        This function will usually do the following things:
-           1. Accept numpy data as input;
-           2. Feed numpy data;
-           3. Run predict program defined in `build_program`.
+        This function feeds the observation into the prediction program defined in ``build_program()``. It is often used in the evaluation stage.
         """
         raise NotImplementedError
 
     def sample(self, *args, **kwargs):
-        """Sample the action when given the observation of the enviroment.
+        """return an action with noise when given the observation of the environment.
             
-        In general, this function is used in train process.
+        In general, this function is used in train process as noise is added to the action to preform exploration.
 
-        This function will usually do the following things:
-           1. Accept numpy data as input;
-           2. Feed numpy data;
-           3. Run predict/sample program defined in `build_program`.
-           4. Add sampling operation in numpy level. (unnecessary if sampling operation have done in `Algorithm`).
         """
         raise NotImplementedError

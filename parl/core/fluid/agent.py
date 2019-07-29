@@ -52,7 +52,7 @@ class Agent(AgentBase):
 
     Public Functions:
         - ``build_program`` (**abstract function**): build various programs for the agent to interact with outer environment.
-        - ``set_weights``: returns a list containing all the parameters of self.alg.
+        - ``set_weights``: return a list containing all the parameters of self.alg.
         - ``get_weights``: copy parameters from ``set_weights()`` to this agent.
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
@@ -99,7 +99,7 @@ class Agent(AgentBase):
         To build a program, you must do the following:
             a. Create a fluid program with ``fluid.program_guard()``;
             b. Define data layers for feeding the data;
-            c. build various programs(e.g., learn_program, predict_program) with data layers defined in step b.
+            c. Build various programs(e.g., learn_program, predict_program) with data layers defined in step b.
 
         Example:
 

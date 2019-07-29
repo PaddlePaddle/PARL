@@ -16,7 +16,7 @@ import os
 import platform
 import subprocess
 from parl.utils import logger
-from parl.utils import utils 
+from parl.utils import utils
 
 __all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
 
@@ -101,5 +101,6 @@ def is_gpu_available():
         from paddle import fluid
         if ret is True and not fluid.is_compiled_with_cuda():
             logger.warn("Found non-empty CUDA_VISIBLE_DEVICES. \
-                But PARL found that Paddle was not complied with CUDA, which may cause issues.")
+                But PARL found that Paddle was not complied with CUDA, which may cause issues."
+                        )
     return ret

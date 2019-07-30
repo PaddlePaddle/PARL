@@ -85,7 +85,7 @@ class Algorithm(AlgorithmBase):
         """ Get parameters of self.model.
 
         Returns:
-            params(dict): a Python dictionary containing the parameters. Keys are corresponding model names.
+            params(dict): a Python List containing the parameters of self.model.
         """
         return self.model.get_params()
 
@@ -95,8 +95,7 @@ class Algorithm(AlgorithmBase):
         """ Set parameters from ``get_params`` to the model.
 
         Args:
-            params(dict ): a Python dictionary containing the parameters. Keys are corresponding model names.
-        """
+            params(dict ): a Python List containing the parameters of self.model.
         self.model.set_params(params)
 
     def learn(self, *args, **kwargs):

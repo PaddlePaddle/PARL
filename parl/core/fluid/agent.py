@@ -120,10 +120,10 @@ class Agent(AgentBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ Returns a Python dictionary the whole parameters of self.alg.
+        """ Returns a Python dictionary containing the whole parameters of self.alg.
 
         Returns:
-            a Python dictionary the whole parameters of self.alg. Keys are corresponding parameter names.
+            a Python dictionary containing the whole parameters of self.alg. Keys are corresponding parameter names.
         """
         return self.algorithm.get_params()
 
@@ -133,7 +133,7 @@ class Agent(AgentBase):
         """Copy parameters from ``get_params()`` into this agent.
 
         Args:
-            params(dict): a Python dictionary the parameters. Keys are corresponding parameter names.
+            params(dict): a Python dictionary containing the parameters. Keys are corresponding parameter names.
         """
         self.algorithm.set_params(params)
 

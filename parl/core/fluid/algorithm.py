@@ -96,6 +96,7 @@ class Algorithm(AlgorithmBase):
 
         Args:
             params(dict ): a Python List containing the parameters of self.model.
+        """
         self.model.set_params(params)
 
     def learn(self, *args, **kwargs):

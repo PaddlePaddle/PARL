@@ -23,16 +23,46 @@ __all__ = ['Algorithm']
 
 
 class Algorithm(AlgorithmBase):
-    """Algorithm defines the way how we update the model.
-    
-    To implement a new algorithm, you may need implement the learn/predict/sample functions.
+    """
+    | `alias`: ``parl.Algorithm``
+    | `alias`: ``parl.core.fluid.algorithm.Algorithm``
 
-    Before creating a customized algorithm, please do check algorithms of PARL.
-    Most common used algorithms like DQN/DDPG/PPO/A3C/IMPALA have been provided in `parl.algorithms`,
-    go and have a try.
+    | ``Algorithm`` defines the way how to update the parameters of the ``Model``. This is where we define loss functions and the optimizer of the neural network. An ``Algorithm`` has at least a model.
+
+    | PARL has implemented various algorithms(DQN/DDPG/PPO/A3C/IMPALA) that can be reused quickly, which can be accessed with ``parl.algorithms``.
+
+    Example:
+
+    .. code-block:: python
+
+        import parl
+
+        model = Model()
+        dqn = parl.algorithms.DQN(model, lr=1e-3)
+
+    Attributes:
+        model(``parl.Model``): a neural network that represents a policy or a Q-value function.
+
+    Pulic Functions:
+        - ``get_weights``: return a Python dictionary containing parameters of the current model.
+        - ``set_weights``: copy parameters from ``get_weights()`` to the model.
+        - ``sample``: return a noisy action to perform exploration according to the policy.
+        - ``predict``: return an action given current observation.
+        - ``learn``: define the loss function and create an optimizer to minized the loss.
+
+    Note:
+
+        ``Algorithm`` defines all its computation inside a ``fluid.Program``, such that the returns of functions(`sample`, `predict`, `learn`) are tensors.
+        ``Agent`` also has functions like `sample`, `predict`, and `learn`, but they return numpy array for the agent.
+        
     """
 
     def __init__(self, model=None, hyperparas=None):
+        """
+        Args:
+            model(``parl.Model``): a neural network that represents a policy or a Q-value function.
+            hyperparas(dict): a dict storing the hyper-parameters relative to training.
+        """
         if model is not None:
             warnings.warn(
                 "the `model` argument of `__init__` function in `parl.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3.",
@@ -52,34 +82,34 @@ class Algorithm(AlgorithmBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ Get parameters of self.model
+        """ Get parameters of self.model.
 
         Returns:
-            List of numpy array. 
+            params(dict): a Python List containing the parameters of self.model.
         """
         return self.model.get_params()
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
     def set_params(self, params):
-        """ Set parameters of self.model
+        """ Set parameters from ``get_params`` to the model.
 
         Args:
-            params: List of numpy array.
+            params(dict ): a Python List containing the parameters of self.model.
         """
         self.model.set_params(params)
 
     def learn(self, *args, **kwargs):
-        """ define learning process, such as how to optimize the model.
+        """ Define the loss function and create an optimizer to minize the loss.
         """
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
-        """ define predicting process, such as using policy model to predict actions when given observations.
+        """ Refine the predicting process, e.g,. use the policy model to predict actions.
         """
         raise NotImplementedError
 
     def sample(self, *args, **kwargs):
-        """ define sampling process, such as using policy model to sample actions when given observations.
+        """ Define the sampling process. This function returns an action with noise to perform exploration.
         """
         raise NotImplementedError

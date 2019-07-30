@@ -24,45 +24,46 @@ __all__ = ['Model']
 
 
 class Model(ModelBase):
-    """A `Model`, a collection of `parl.layers`, is owned by an `Algorithm`. 
+    """
+    | `alias`: ``parl.Model``
+    | `alias`: ``parl.core.fluid.agent.Model``
 
-    It implements the entire network (forward part) to solve a specific problem.
+    | ``Model`` is a base class of PARL for the neural network. A ``Model`` is usually a policy or Q-value function, which predicts an action or an estimate according to the environmental observation.
 
-    `Model` can also use deepcopy way to construct target model, which has the same structure as initial model. 
-    Note that only the model definition is copied here. To copy the parameters from the current model 
-    to the target model, you must explicitly use `sync_weights_to` function after the program is initialized.
+    | To track all the layers , users are required to implement neural networks with the layers from ``parl.layers`` (e.g., parl.layers.fc). These layers has the same APIs as fluid.layers.
 
-    NOTE:
-      You need initialize start up program before calling `sync_weights_to` API.
+    | ``Model`` supports duplicating a ``Model`` instance in a pythonic way:
 
-    Here is an example:
+    | ``copied_model = copy.deepcopy(model)``
+
+    Example:
+
     .. code-block:: python
-       import parl.layers as layers
-       import parl.Model as Model
 
-       class MLPModel(Model):
-           def __init__(self):
-               self.fc = layers.fc(size=64)
+        import parl
 
-           def policy(self, obs):
-               out = self.fc(obs)
-               return out
+        class Policy(parl.Model):
+            def __init__(self):
+                self.fc = parl.layers.fc(size=12, act='softmax')
+
+            def policy(self, obs):
+                out = self.fc(obs)
+                return out
                
-       model = MLPModel() 
-       target_model = deepcopy(model) # automatically create new unique parameters names for target_model.fc
+        policy = Policy() 
+        copied_policy = copy.deepcopy(model)
 
-       # build program
-       x = layers.data(name='x', shape=[100], dtype="float32")
-       y1 = model.policy(x) 
-       y2 = target_model.policy(x)  
+    Attributes:
+        model_id(str): each model instance has its uniqe model_id.
 
-       ...
-       # Need initialize program before calling sync_weights_to
-       fluid_executor.run(fluid.default_startup_program()) 
-       ...
-
-       # synchronize parameters
-       model.sync_weights_to(target_model)
+    Public Functions:
+        - ``sync_weights_to``: synchronize parameters of the current model to another model.
+        - ``get_weights``: return a list containing all the parameters of the current model.
+        - ``set_weights``: copy parameters from ``set_weights()`` to the model.
+        - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
+        - ``parameters``: return a list containting names of parameters of the model. 
+        - ``set_model_id``: set ``model_id`` of current model explicitly.
+        - ``get_model_id``: return the ``model_id`` of current model.
 
     """
 
@@ -80,36 +81,50 @@ class Model(ModelBase):
         target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
 
         Args:
-            target_net (`Model`): `Model` object deepcopy from source `Model`.
-            decay (float): Float. The decay to use. 
+            target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
+            decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
             share_vars_parallel_executor (fluid.ParallelExecutor): if not None, will use fluid.ParallelExecutor 
                                                                    to run program instead of fluid.Executor
         """
         self.sync_weights_to(
-            other_model=target_net,
+            target_model=target_net,
             decay=decay,
             share_vars_parallel_executor=share_vars_parallel_executor)
 
     def sync_weights_to(self,
-                        other_model,
+                        target_model,
                         decay=0.0,
                         share_vars_parallel_executor=None):
-        """Synchronize weights in the model to another model.
+        """Synchronize parameters of current model to another model.
         
-        To speed up the synchronizing process, will create a program implictly to finish the process. And will
+        To speed up the synchronizing process, will create a program implicitly to finish the process. And will
         also cache the program to avoid creating program repeatedly.
 
-        other_model_weights = decay * other_model_weights + (1 - decay) * current_model_weights
+        target_model_weights = decay * target_model_weights + (1 - decay) * current_model_weights
 
         Args:
-            other_model (`parl.Model`): object instanced from the same `parl.Model` class with current model.
-            decay (float): Float. The decay to use. 
-            share_vars_parallel_executor (fluid.ParallelExecutor): if not None, will use fluid.ParallelExecutor 
-                                                                   to run program instead of fluid.Executor
+            target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
+            decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
+            share_vars_parallel_executor (fluid.ParallelExecutor): if not None, will use ``fluid.ParallelExecutor``
+                                                                   to run program instead of ``fluid.Executor``.
+
+        Example:
+
+        .. code-block:: python
+
+            import copy
+            # create a model that has the same neural network structures.
+            target_model = copy.deepcopy(model)
+
+            # after initilizing the parameters ...
+            model.sync_weights_to(target_mdodel)
+
+        Note:
+            Before calling ``sync_weights_to``, parameters of the model must have been initialized.
         """
 
         args_hash_id = hashlib.md5('{}_{}'.format(
-            id(other_model), decay).encode('utf-8')).hexdigest()
+            id(target_model), decay).encode('utf-8')).hexdigest()
         has_cached = False
         try:
             if self._cached_id == args_hash_id:
@@ -121,13 +136,13 @@ class Model(ModelBase):
             # Can not run _cached program, need create a new program
             self._cached_id = args_hash_id
 
-            assert not other_model is self, "cannot copy between identical model"
-            assert isinstance(other_model, Model)
-            assert self.__class__.__name__ == other_model.__class__.__name__, \
+            assert not target_model is self, "cannot copy between identical model"
+            assert isinstance(target_model, Model)
+            assert self.__class__.__name__ == target_model.__class__.__name__, \
                 "must be the same class for params syncing!"
             assert (decay >= 0 and decay <= 1)
 
-            param_pairs = self._get_parameter_pairs(self, other_model)
+            param_pairs = self._get_parameter_pairs(self, target_model)
 
             self._cached_sync_weights_program = fluid.Program()
 
@@ -170,26 +185,37 @@ class Model(ModelBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='parameters')
     def parameter_names(self):
-        """Get param_attr names of all parameters in the Model.
+        """Get names of all parameters in this ``Model``.
 
-        Only parameter created by parl.layers included.
-        The order of parameter names will be consistent between
-        different instances of same `Model`.
+        Only parameters created by ``parl.layers`` are included.
+        The order of parameter names is consistent among
+        different instances of the same `Model`.
 
         Returns:
-            list of string, param_attr names of all parameters
+            param_names(list): list of string containing parameter names of all parameters. 
         """
         return self.parameters()
 
     def parameters(self):
-        """Get param_attr names of all parameters in the Model.
+        """Get names of all parameters in this ``Model``.
 
-        Only parameter created by parl.layers included.
-        The order of parameter names will be consistent between
-        different instances of same `Model`.
+        Only parameters created by ``parl.layers`` are included.
+        The order of parameter names is consistent among
+        different instances of the same `Model`.
 
         Returns:
-            list of string, param_attr names of all parameters
+            param_names(list): list of string containing parameter names of all parameters
+
+        Example:
+
+        .. code-block:: python
+
+            model = Model()
+            model.parameters()
+
+            # output: 
+            ['fc0.w0', 'fc0.bias0']
+            
         """
         try:
             return self._parameter_names
@@ -200,10 +226,10 @@ class Model(ModelBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """Get numpy arrays of parameters in the model.
+        """ Return a Python list containing parameters of current model.
         
         Returns:
-            List of numpy array.
+            parameters: a Python list containing parameters of the current model.
         """
         return self.get_weights()
 
@@ -213,15 +239,14 @@ class Model(ModelBase):
         """Set parameters in the model with params.
         
         Args:
-            params (List): List of numpy array.
+            params (List): List of numpy array .
         """
         self.set_weights(weights=params)
 
     def get_weights(self):
-        """Get numpy arrays of weights in the model.
+        """Returns a Python list containing parameters of current model.
 
-        Returns:
-            List of numpy array.
+        Returns: a Python list containing the parameters of current model.
         """
         weights = []
         for param_name in self.parameters():
@@ -231,10 +256,10 @@ class Model(ModelBase):
         return weights
 
     def set_weights(self, weights):
-        """Set weights in the model with given `weights`.
+        """Copy parameters from ``set_weights()`` to the model.
         
         Args:
-            weights (List): List of numpy array.
+            weights (list): a Python list containing the parameters.
         """
         assert len(weights) == len(self.parameters()), \
                 'size of input weights should be same as weights number of current model'
@@ -242,13 +267,13 @@ class Model(ModelBase):
             set_value(param_name, weight)
 
     def _get_parameter_names(self, obj):
-        """ Recursively get parameter names in obj,
+        """ Recursively get parameter names in a model and its child attributes.
 
         Args:
-            obj (`Model`/`LayerFunc`/list/tuple/dict): input object
+            obj (``parl.Model``): an instance of ``Model``
 
         Returns:
-            parameter_names (List): all parameter names in obj
+            parameter_names (list): all parameter names in this model.
         """
 
         parameter_names = []

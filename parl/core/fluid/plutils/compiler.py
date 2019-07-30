@@ -26,10 +26,12 @@ def compile(program, loss=None):
         program(fluid.Program): a normal fluid program.
         loss_name(str): Optional. The loss tensor of a trainable program. Set it to None if you are transferring a prediction or evaluation program.
     """
+    loss_name = None
     if loss is not None:
         assert isinstance(
             loss, fluid.framework.
             Variable), 'type of loss is expected to be a fluid tensor'
+        loss_name = loss.name
     # TODO: after solving the learning rate issue that occurs in training A2C algorithm, set it to 3.
     os.environ['CPU_NUM'] = '1'
     exec_strategy = fluid.ExecutionStrategy()
@@ -39,6 +41,6 @@ def compile(program, loss=None):
     build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
 
     return fluid.compiler.CompiledProgram(program).with_data_parallel(
-        loss_name=loss.name,
+        loss_name=loss_name,
         exec_strategy=exec_strategy,
         build_strategy=build_strategy)

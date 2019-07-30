@@ -53,15 +53,16 @@ def fetch_value(attr_name):
     return _fetch_var(attr_name, return_numpy=True)
 
 
-def set_value(attr_name, value):
+def set_value(attr_name, value, is_gpu_available):
     """ Given name of ParamAttr, set numpy value to the parameter in global_scope
     
     Args:
-        attr_name: ParamAttr name of parameter
-        value: numpy array
+        attr_name(string): ParamAttr name of parameter
+        value(np.array): numpy value
+        is_gpu_available(bool): whether is gpu available
     """
     place = fluid.CUDAPlace(
-        0) if machine_info.is_gpu_available() else fluid.CPUPlace()
+        0) if is_gpu_available else fluid.CPUPlace()
     var = _fetch_var(attr_name, return_numpy=False)
     var.set(value, place)
 

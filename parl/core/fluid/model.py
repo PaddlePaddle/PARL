@@ -58,10 +58,10 @@ class Model(ModelBase):
 
     Public Functions:
         - ``sync_weights_to``: synchronize parameters of the current model to another model.
-        - ``get_weights``: return a list containing all the parameters of the current model.
+        - ``get_weights``: return a dictionary containing all the parameters of the current model. Keys are corresponding parameter names.
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
         - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
-        - ``parameters``: return a list containing names of parameters of the model.
+        - ``parameters``: return a list containting names of parameters of the model. 
         - ``set_model_id``: set ``model_id`` of current model explicitly.
         - ``get_model_id``: return the ``model_id`` of current model.
 
@@ -192,7 +192,7 @@ class Model(ModelBase):
         different instances of the same `Model`.
 
         Returns:
-            param_names(list): list of string containing parameter names of all parameters
+            param_names(list): list of string containing parameter names of all parameters. 
         """
         return self.parameters()
 
@@ -226,10 +226,10 @@ class Model(ModelBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ Return a list containing all the parameters of current model.
+        """ Return a Python dictionary containing parameters of current model.
         
         Returns:
-            parameters: a list containing all the parameters of the current model.
+            parameters: a Python dictionary containing parameters of the current model. Keys are corresponding parameter names.
         """
         return self.get_weights()
 
@@ -244,9 +244,9 @@ class Model(ModelBase):
         self.set_weights(weights=params)
 
     def get_weights(self):
-        """Returns a list containing all the parameters of current model.
+        """Returns a Python dictionary containing parameters of current model.
 
-        Returns: a list containing the parameters.
+        Returns: a Python dictionary containing the parameters of current model. Keys are corresponding parameter names.
         """
         weights = []
         for param_name in self.parameters():
@@ -259,7 +259,7 @@ class Model(ModelBase):
         """Copy parameters from ``set_weights()`` to the model.
         
         Args:
-            weights (list): a list containing the parameters.
+            weights (list): a Python dictionary containing the parameters. Keys are corresponding parameter names.
         """
         assert len(weights) == len(self.parameters()), \
                 'size of input weights should be same as weights number of current model'

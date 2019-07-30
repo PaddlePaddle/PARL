@@ -44,7 +44,7 @@ class Algorithm(AlgorithmBase):
         model(``parl.Model``): a neural network that represents a policy or a Q-value function.
 
     Pulic Functions:
-        - ``get_weights``: return a Python dictionary containing parameters of the current model. Keys are corresponding parameter names.
+        - ``get_weights``: return a Python dictionary containing parameters of the current model.
         - ``set_weights``: copy parameters from ``get_weights()`` to the model.
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
@@ -85,7 +85,7 @@ class Algorithm(AlgorithmBase):
         """ Get parameters of self.model.
 
         Returns:
-            params(dict): a Python dictionary containing the parameters. Keys are corresponding parameter names.
+            params(dict): a Python dictionary containing the parameters. Keys are corresponding model names.
         """
         return self.model.get_params()
 
@@ -95,7 +95,7 @@ class Algorithm(AlgorithmBase):
         """ Set parameters from ``get_params`` to the model.
 
         Args:
-            params(dict ): a Python dictionary containing the parameters. Keys are corresponding parameter names.
+            params(dict ): a Python dictionary containing the parameters. Keys are corresponding model names.
         """
         self.model.set_params(params)
 

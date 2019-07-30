@@ -58,7 +58,7 @@ class Model(ModelBase):
 
     Public Functions:
         - ``sync_weights_to``: synchronize parameters of the current model to another model.
-        - ``get_weights``: return a dictionary containing all the parameters of the current model. Keys are corresponding parameter names.
+        - ``get_weights``: return a list containing all the parameters of the current model.
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
         - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
         - ``parameters``: return a list containting names of parameters of the model. 
@@ -226,10 +226,10 @@ class Model(ModelBase):
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
     def get_params(self):
-        """ Return a Python dictionary containing parameters of current model.
+        """ Return a Python list containing parameters of current model.
         
         Returns:
-            parameters: a Python dictionary containing parameters of the current model. Keys are corresponding parameter names.
+            parameters: a Python list containing parameters of the current model.
         """
         return self.get_weights()
 
@@ -244,9 +244,9 @@ class Model(ModelBase):
         self.set_weights(weights=params)
 
     def get_weights(self):
-        """Returns a Python dictionary containing parameters of current model.
+        """Returns a Python list containing parameters of current model.
 
-        Returns: a Python dictionary containing the parameters of current model. Keys are corresponding parameter names.
+        Returns: a Python list containing the parameters of current model.
         """
         weights = []
         for param_name in self.parameters():
@@ -259,7 +259,7 @@ class Model(ModelBase):
         """Copy parameters from ``set_weights()`` to the model.
         
         Args:
-            weights (list): a Python dictionary containing the parameters. Keys are corresponding parameter names.
+            weights (list): a Python list containing the parameters.
         """
         assert len(weights) == len(self.parameters()), \
                 'size of input weights should be same as weights number of current model'

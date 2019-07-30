@@ -52,7 +52,7 @@ class Agent(AgentBase):
 
     Public Functions:
         - ``build_program`` (**abstract function**): build various programs for the agent to interact with outer environment.
-        - ``get_weights``: return a Python dictionary containing all the parameters of self.alg. Keys are corresponding parameter names.
+        - ``get_weights``: return a Python dictionary containing all the parameters of self.alg.
         - ``set_weights``: copy parameters from ``set_weights()`` to this agent.
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
@@ -123,7 +123,7 @@ class Agent(AgentBase):
         """ Returns a Python dictionary containing the whole parameters of self.alg.
 
         Returns:
-            a Python dictionary containing the whole parameters of self.alg. Keys are corresponding parameter names.
+            a Python dictionary containing the whole parameters of self.alg.
         """
         return self.algorithm.get_params()
 
@@ -133,7 +133,7 @@ class Agent(AgentBase):
         """Copy parameters from ``get_params()`` into this agent.
 
         Args:
-            params(dict): a Python dictionary containing the parameters. Keys are corresponding parameter names.
+            params(dict): a Python dictionary containing the parameters.
         """
         self.algorithm.set_params(params)
 

@@ -123,7 +123,7 @@ class Agent(AgentBase):
         """ Returns a Python dictionary containing the whole parameters of self.alg.
 
         Returns:
-            a Python dictionary containing the whole parameters of self.alg.
+            a Python List containing the parameters of self.alg.
         """
         return self.algorithm.get_params()
 
@@ -133,7 +133,7 @@ class Agent(AgentBase):
         """Copy parameters from ``get_params()`` into this agent.
 
         Args:
-            params(dict): a Python dictionary containing the parameters.
+            params(dict): a Python List containing the parameters of self.alg.
         """
         self.algorithm.set_params(params)
 

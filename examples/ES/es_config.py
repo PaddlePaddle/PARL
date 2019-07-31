@@ -25,6 +25,7 @@ config = {
     'action_noise_std': 0.01,
     'min_task_runtime': 0.2,
     'eval_prob': 0.003,
+    'filter_update_prob': 0.01,
 
     #==========  learner config ==========
     'stepsize': 0.01,

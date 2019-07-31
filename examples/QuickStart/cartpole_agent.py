@@ -26,14 +26,14 @@ class CartpoleAgent(parl.Agent):
 
     def build_program(self):
         self.pred_program = fluid.Program()
-        self.train_program = fluid.Program()
+        self.learn_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
             self.act_prob = self.alg.predict(obs)
 
-        with fluid.program_guard(self.train_program):
+        with fluid.program_guard(self.learn_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
             act = layers.data(name='act', shape=[1], dtype='int64')
@@ -68,5 +68,5 @@ class CartpoleAgent(parl.Agent):
             'reward': reward.astype('float32')
         }
         cost = self.fluid_executor.run(
-            self.train_program, feed=feed, fetch_list=[self.cost])[0]
+            self.learn_program, feed=feed, fetch_list=[self.cost])[0]
         return cost

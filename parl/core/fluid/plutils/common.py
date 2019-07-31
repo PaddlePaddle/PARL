@@ -61,8 +61,7 @@ def set_value(attr_name, value, is_gpu_available):
         value(np.array): numpy value
         is_gpu_available(bool): whether is gpu available
     """
-    place = fluid.CUDAPlace(
-        0) if is_gpu_available else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if is_gpu_available else fluid.CPUPlace()
     var = _fetch_var(attr_name, return_numpy=False)
     var.set(value, place)
 

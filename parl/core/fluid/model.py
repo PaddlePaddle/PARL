@@ -266,7 +266,7 @@ class Model(ModelBase):
         try:
             is_gpu_available = self._is_gpu_available
         except AttributeError:
-            self._is_gpu_available = machine_info.is_gpu_available() 
+            self._is_gpu_available = machine_info.is_gpu_available()
             is_gpu_available = self._is_gpu_available
 
         for (param_name, weight) in list(zip(self.parameters(), weights)):

@@ -3,7 +3,7 @@ Installation
 Dependencies
 -------------------
 - Python 2.7 or 3.5+.
-- PaddlePaddle >=1.2.1 (**Optional**, if you only want to use APIs related to parallelization alone)
+- PaddlePaddle >=1.5.1 (**Optional**, if you only want to use APIs related to parallelization alone)
 
 Install
 -------------

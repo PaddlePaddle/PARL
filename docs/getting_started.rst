@@ -49,7 +49,7 @@ Note that each ``algorithm`` should have two functions implemented:
 
 - ``learn``
 
-  updates the model's parameters given trainsition data 
+  updates the model's parameters given transition data 
 - ``predict``
 
   predicts an action given current environmental state. 

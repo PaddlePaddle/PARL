@@ -50,7 +50,8 @@ class Actor(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A3C(model, hyperparas=config)
+        algorithm = parl.algorithms.A3C(
+            model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
     def sample(self):
@@ -116,5 +117,5 @@ class Actor(object):
                     metrics['episode_steps'].append(episode_steps)
         return metrics
 
-    def set_params(self, params):
-        self.agent.set_params(params)
+    def set_weights(self, params):
+        self.agent.set_weights(params)

@@ -108,15 +108,13 @@ class AgentBaseTest(unittest.TestCase):
         agent.save(save_path1)
         agent.restore(save_path1)
         current_output = agent.predict(obs)
-        check_equal = (current_output == previous_output).all()
-        self.assertTrue(check_equal)
+        np.testing.assert_equal(current_output, previous_output)
 
         # a new agent instance
         another_agent = TestAgent(self.algorithm)
         another_agent.restore(save_path1)
         current_output = another_agent.predict(obs)
-        check_equal = (current_output == previous_output).all()
-        self.assertTrue(check_equal)
+        np.testing.assert_equal(current_output, previous_output)
 
 
 if __name__ == '__main__':

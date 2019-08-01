@@ -45,10 +45,3 @@ class Simulator(object):
                 metrics['episode_rewards'].append(episode_rewards)
                 metrics['episode_steps'].append(episode_steps)
         return metrics
-
-
-if __name__ == '__main__':
-    from ga3c_config import config
-
-    simulator = Simulator(config)
-    simulator.as_remote(config['server_ip'], config['server_port'])

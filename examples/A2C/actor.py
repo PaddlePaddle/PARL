@@ -16,9 +16,11 @@ import gym
 import numpy as np
 import parl
 import six
-from atari_model import AtariModel
+
 from collections import defaultdict
+from atari_model import AtariModel
 from atari_agent import AtariAgent
+
 from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
@@ -27,14 +29,16 @@ from parl.utils.rl_utils import calc_gae
 
 @parl.remote_class
 class Actor(object):
+
     def __init__(self, config):
         self.config = config
-
         self.envs = []
-        for _ in six.moves.range(config['env_num']):
+
+        for _ in range(config['env_num']):
             env = gym.make(config['env_name'])
             env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
             self.envs.append(env)
+
         self.vector_env = VectorEnv(self.envs)
 
         self.obs_batch = self.vector_env.reset()
@@ -53,16 +57,16 @@ class Actor(object):
         sample_data = defaultdict(list)
 
         env_sample_data = {}
-        for env_id in six.moves.range(self.config['env_num']):
+        for env_id in range(self.config['env_num']):
             env_sample_data[env_id] = defaultdict(list)
 
-        for i in six.moves.range(self.config['sample_batch_steps']):
+        for i in range(self.config['sample_batch_steps']):
             actions_batch, values_batch = self.agent.sample(
                 np.stack(self.obs_batch))
             next_obs_batch, reward_batch, done_batch, info_batch = \
                     self.vector_env.step(actions_batch)
 
-            for env_id in six.moves.range(self.config['env_num']):
+            for env_id in range(self.config['env_num']):
                 env_sample_data[env_id]['obs'].append(self.obs_batch[env_id])
                 env_sample_data[env_id]['actions'].append(
                     actions_batch[env_id])
@@ -114,10 +118,3 @@ class Actor(object):
 
     def set_params(self, params):
         self.agent.set_params(params)
-
-
-if __name__ == '__main__':
-    from a2c_config import config
-
-    actor = Actor(config)
-    actor.as_remote(config['server_ip'], config['server_port'])

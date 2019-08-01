@@ -75,9 +75,10 @@ def _getlogger():
     logger = logging.getLogger('PARL')
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
-    logger.addHandler(handler)
+    if 'XPARL' not in os.environ:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
+        logger.addHandler(handler)
     return logger
 
 

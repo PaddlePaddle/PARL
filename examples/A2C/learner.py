@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import parl
 import gym
 import numpy as np
 import os
@@ -22,20 +24,21 @@ import threading
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
-from parl import RemoteManager
+
 from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger, get_gpu_count
+from parl.utils import logger, CSVLogger, get_gpu_count, tensorboard
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 
+from actor import Actor
 
 class Learner(object):
     def __init__(self, config):
         self.config = config
 
-        #=========== Create Agent ==========
+        # =========== Create Agent ==========
         env = gym.make(config['env_name'])
         env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
         obs_shape = env.observation_space.shape
@@ -56,7 +59,7 @@ class Learner(object):
             assert cpu_num is not None and cpu_num == '1', 'Only support training in single CPU,\
                     Please set environment variable:  `export CPU_NUM=1`.'
 
-        #========== Learner ==========
+        # ========== Learner ==========
 
         self.total_loss_stat = WindowStat(100)
         self.pi_loss_stat = WindowStat(100)
@@ -68,7 +71,7 @@ class Learner(object):
         self.learn_time_stat = TimeStat(100)
         self.start_time = None
 
-        #========== Remote Actor ===========
+        # ========== Remote Actor ===========
         self.remote_count = 0
         self.sample_data_queue = queue.Queue()
 
@@ -84,30 +87,28 @@ class Learner(object):
     def run_remote_manager(self):
         """ Accept connection of new remote actor and start sampling of the remote actor.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
-        logger.info('Waiting for {} remote actors to connect.'.format(
-            self.config['actor_num']))
+        parl.connect(self.config['master_address'])
 
         for i in six.moves.range(self.config['actor_num']):
-            remote_actor = remote_manager.get_remote()
             params_queue = queue.Queue()
             self.params_queues.append(params_queue)
-
             self.remote_count += 1
             logger.info('Remote actor count: {}'.format(self.remote_count))
 
             remote_thread = threading.Thread(
                 target=self.run_remote_sample,
-                args=(remote_actor, params_queue))
+                args=(params_queue,))
             remote_thread.setDaemon(True)
             remote_thread.start()
 
         logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
 
-    def run_remote_sample(self, remote_actor, params_queue):
+    def run_remote_sample(self, params_queue):
         """ Sample data from remote actor and update parameters of remote actor.
         """
+        remote_actor = Actor(self.config)
+
         cnt = 0
         while True:
             latest_params = params_queue.get()
@@ -126,7 +127,7 @@ class Learner(object):
         """
         1. kick off all actors to synchronize parameters and sample data;
         2. collect sample data of all actors;
-        3. update parameters. 
+        3. update parameters.
         """
 
         latest_params = self.agent.get_params()
@@ -176,9 +177,14 @@ class Learner(object):
         for x in metrics:
             episode_rewards.extend(x['episode_rewards'])
             episode_steps.extend(x['episode_steps'])
+        # max_episode_rewards, mean_episode_rewards, min_episode_rewards, \
+        #         max_episode_steps, mean_episode_steps, min_episode_steps =\
+        #         None, None, None, None, None, None
+
         max_episode_rewards, mean_episode_rewards, min_episode_rewards, \
                 max_episode_steps, mean_episode_steps, min_episode_steps =\
-                None, None, None, None, None, None
+                0, 0, 0, 0, 0, 0
+
         if episode_rewards:
             mean_episode_rewards = np.mean(np.array(episode_rewards).flatten())
             max_episode_rewards = np.max(np.array(episode_rewards).flatten())
@@ -187,6 +193,30 @@ class Learner(object):
             mean_episode_steps = np.mean(np.array(episode_steps).flatten())
             max_episode_steps = np.max(np.array(episode_steps).flatten())
             min_episode_steps = np.min(np.array(episode_steps).flatten())
+
+        tensorboard.add_scalar('max_episode_rewards', max_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_rewards', mean_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_rewards', min_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('max_episode_steps', max_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_steps', mean_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_steps', min_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('total_loss', self.total_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('pi_loss', self.pi_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('vf_loss', self.vf_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('entropy', self.entropy_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('Sample_steps(second)',
+                               self.sample_total_steps,
+                               int(time.time() - self.start_time))
 
         metric = {
             'Sample steps': self.sample_total_steps,

@@ -15,18 +15,22 @@
 import gym
 import numpy as np
 import os
+import parl
 import queue
+import six
 import time
 import threading
 from atari_model import AtariModel
 from atari_agent import AtariAgent
-from parl import RemoteManager
+
 from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger
+from parl.utils import logger, CSVLogger, tensorboard
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
+
+from actor import Actor
 
 
 class Learner(object):
@@ -137,23 +141,23 @@ class Learner(object):
     def run_remote_manager(self):
         """ Accept connection of new remote actor and start sampling of the remote actor.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
+        parl.connect(self.config['master_address'])
         logger.info('Waiting for remote actors connecting.')
-        while True:
-            remote_actor = remote_manager.get_remote()
+        for i in six.moves.range(self.config['actor_num']):
+            
             self.remote_count += 1
             logger.info('Remote actor count: {}'.format(self.remote_count))
             if self.start_time is None:
                 self.start_time = time.time()
 
-            remote_thread = threading.Thread(
-                target=self.run_remote_sample, args=(remote_actor, ))
+            remote_thread = threading.Thread(target=self.run_remote_sample)
             remote_thread.setDaemon(True)
             remote_thread.start()
 
-    def run_remote_sample(self, remote_actor):
+    def run_remote_sample(self):
         """ Sample data from remote actor and update parameters of remote actor.
         """
+        remote_actor = Actor(self.config)
         cnt = 0
         remote_actor.set_params(self.cache_params)
         while True:
@@ -200,7 +204,7 @@ class Learner(object):
             episode_steps.extend(x['episode_steps'])
         max_episode_rewards, mean_episode_rewards, min_episode_rewards, \
                 max_episode_steps, mean_episode_steps, min_episode_steps =\
-                None, None, None, None, None, None
+                0, 0, 0, 0, 0, 0
         if episode_rewards:
             mean_episode_rewards = np.mean(np.array(episode_rewards).flatten())
             max_episode_rewards = np.max(np.array(episode_rewards).flatten())
@@ -209,6 +213,33 @@ class Learner(object):
             mean_episode_steps = np.mean(np.array(episode_steps).flatten())
             max_episode_steps = np.max(np.array(episode_steps).flatten())
             min_episode_steps = np.min(np.array(episode_steps).flatten())
+
+        f = lambda x: x if x else 0
+        tensorboard.add_scalar('max_episode_rewards', max_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_rewards', mean_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_rewards', min_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('max_episode_steps', max_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_steps', mean_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_steps', min_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('total_loss', f(self.total_loss_stat.mean),
+                               self.sample_total_steps)
+        tensorboard.add_scalar('pi_loss', f(self.pi_loss_stat.mean),
+                               self.sample_total_steps)
+        tensorboard.add_scalar('vf_loss', f(self.vf_loss_stat.mean),
+                               self.sample_total_steps)
+        tensorboard.add_scalar('entropy', f(self.entropy_stat.mean),
+                               self.sample_total_steps)
+        tensorboard.add_scalar('kl', f(self.kl_stat.mean),
+                               self.sample_total_steps)
+        tensorboard.add_scalar('Sample_steps(second)',
+                               self.sample_total_steps,
+                               int(time.time() - self.start_time))
 
         metric = {
             'Sample steps': self.sample_total_steps,

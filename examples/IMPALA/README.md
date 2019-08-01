@@ -24,7 +24,7 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 + [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ atari-py
++ atari_py
 
 
 ### Distributed Training:

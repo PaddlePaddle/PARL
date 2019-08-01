@@ -13,17 +13,20 @@
 # limitations under the License.
 
 config = {
-    'experiment_name': 'Pong',
+    'experiment_name': 'Breakout',
+
+    'master_address': 'localhost:1234',
 
     #==========  remote config ==========
     'server_ip': 'localhost',
     'server_port': 8037,
 
     #==========  env config ==========
-    'env_name': 'PongNoFrameskip-v4',
+    'env_name': 'BreakoutNoFrameskip-v4',
     'env_dim': 42,
 
     #==========  actor config ==========
+    'actor_num': 32,
     'env_num': 5,
     'sample_batch_steps': 50,
 

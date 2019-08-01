@@ -15,6 +15,7 @@
 import gym
 import numpy as np
 import os
+import parl
 import queue
 import six
 import time
@@ -22,14 +23,17 @@ import threading
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
-from parl import RemoteManager
+
 from parl.algorithms import A3C
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger, get_gpu_count
+from parl.utils import logger, CSVLogger, get_gpu_count, tensorboard
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 from parl.utils.rl_utils import calc_gae
+
+from ga3c_config import config
+from simulator import Simulator
 
 
 class Learner(object):
@@ -178,37 +182,31 @@ class Learner(object):
     def run_remote_manager(self):
         """ Accept connection of new remote simulator and start simulation.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
+        parl.connect(self.config['master_address'])
+
         logger.info("Waiting for the remote simulator's connection.")
 
         ident = 0
         self.predict_output_queues = []
 
-        while True:
-            remote_simulator = remote_manager.get_remote()
-
+        for i in six.moves.range(self.config['actor_num']):
             self.remote_count += 1
             logger.info('Remote simulator count: {}'.format(self.remote_count))
             if self.start_time is None:
                 self.start_time = time.time()
-
             q = queue.Queue()
             self.predict_output_queues.append(q)
-
             remote_thread = threading.Thread(
                 target=self.run_remote_sample,
-                args=(
-                    remote_simulator,
-                    ident,
-                ))
+                args=(ident,))
             remote_thread.setDaemon(True)
             remote_thread.start()
-
             ident += 1
 
-    def run_remote_sample(self, remote_simulator, ident):
+    def run_remote_sample(self, ident):
         """ Interacts with remote simulator.
         """
+        remote_simulator = Simulator(config)
         mem = defaultdict(list)
 
         obs = remote_simulator.reset()
@@ -294,6 +292,31 @@ class Learner(object):
             mean_episode_steps = np.mean(np.array(episode_steps).flatten())
             max_episode_steps = np.max(np.array(episode_steps).flatten())
             min_episode_steps = np.min(np.array(episode_steps).flatten())
+
+        tensorboard.add_scalar('max_episode_rewards', max_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_rewards', mean_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_rewards', min_episode_rewards,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('max_episode_steps', max_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('mean_episode_steps', mean_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('min_episode_steps', min_episode_steps,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('total_loss', self.total_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('pi_loss', self.pi_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('vf_loss', self.vf_loss_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('entropy', self.entropy_stat.mean,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('Sample_steps(second)',
+                               self.sample_total_steps,
+                               int(time.time() - self.start_time))
+
 
         metric = {
             'Sample steps': self.sample_total_steps,

@@ -13,20 +13,23 @@
 # limitations under the License.
 
 config = {
-    #==========  remote config ==========
+
+    'master_address': 'localhost:1234',
+
+    # ==========  remote config ==========
     'server_ip': 'localhost',
     'server_port': 8037,
 
-    #==========  env config ==========
-    'env_name': 'PongNoFrameskip-v4',
+    # ==========  env config ==========
+    'env_name': 'BreakoutNoFrameskip-v4',
     'env_dim': 84,
 
-    #==========  actor config ==========
+    # ==========  actor config ==========
     'actor_num': 5,
     'env_num': 5,
     'sample_batch_steps': 20,
 
-    #==========  learner config ==========
+    # ==========  learner config ==========
     'max_sample_steps': int(1e7),
     'gamma': 0.99,
     'lambda': 1.0,  # GAE

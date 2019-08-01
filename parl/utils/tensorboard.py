@@ -12,26 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import time
-from learner import Learner
+from tensorboardX import SummaryWriter
+from parl.utils import logger
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+__all__ = []
 
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
+_writer = SummaryWriter(logdir=logger.get_dir())
+_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
-    try:
-        while True:
-            time.sleep(config['log_metrics_interval_s'])
-
-            learner.log_metrics()
-
-    except KeyboardInterrupt:
-        learner.close()
-
-
-if __name__ == '__main__':
-    from ga3c_config import config
-    main(config)
+# export writter functions
+for func in _WRITTER_METHOD:
+    locals()[func] = getattr(_writer, func)
+    __all__.append(func)

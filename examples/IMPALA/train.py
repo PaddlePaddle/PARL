@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import time
 from learner import Learner
+
+os.environ['CPU_NUM'] = '1'
 
 
 def main(config):

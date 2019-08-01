@@ -17,13 +17,13 @@ __version__ = "1.1"
 generates new PARL python API
 """
 
-from parl.utils.utils import _HAS_FLUID
+# trick to solve importing error
+import os
 
-if _HAS_FLUID:
-    from parl.framework import *
-else:
-    print(
-        "WARNING:PARL: Failed to import paddle. Only APIs for parallelization are available."
-    )
+if 'XPARL' not in os.environ:
+    from tensorboardX import SummaryWriter
+    from parl.utils.utils import _HAS_FLUID
+    if _HAS_FLUID:
+        from parl.framework import *
 
-from parl.remote import remote_class, RemoteManager
+    from parl.remote import remote_class, connect

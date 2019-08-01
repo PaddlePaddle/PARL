@@ -30,7 +30,7 @@ class Agent(AgentBase):
     | `alias`: ``parl.Agent``
     | `alias`: ``parl.core.fluid.agent.Agent``
 
-    | Agent is one of the three basic classes of PARL. 
+    | Agent is one of the three basic classes of PARL.
 
     | It is responsible for interacting with the environment and collecting data for training the policy.
     | To implement a customized ``Agent``, users can:
@@ -57,10 +57,12 @@ class Agent(AgentBase):
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
         - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
+        - ``save``: save parameters of the ``agent`` to a given path.
+        - ``restore``: restore previous saved parameters from a given path.
 
     Todo:
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
-          
+
     """
 
     def __init__(self, algorithm, gpu_id=None):
@@ -90,13 +92,13 @@ class Agent(AgentBase):
         self.fluid_executor.run(fluid.default_startup_program())
 
     def build_program(self):
-        """Build various programs here with the 
+        """Build various programs here with the
         learn, predict, sample functions of the algorithm.
-        
+
         Note:
             | Users **must** implement this function in an ``Agent``.
             | This function will be called automatically in the initialization function.
-        
+
         To build a program, you must do the following:
             a. Create a fluid program with ``fluid.program_guard()``;
             b. Define data layers for feeding the data;
@@ -112,7 +114,7 @@ class Agent(AgentBase):
                 obs = layers.data(
                     name='obs', shape=[self.obs_dim], dtype='float32')
                 self.act_prob = self.alg.predict(obs)
-          
+
 
         """
         raise NotImplementedError
@@ -152,8 +154,68 @@ class Agent(AgentBase):
 
     def sample(self, *args, **kwargs):
         """Return an action with noise when given the observation of the environment.
-            
+
         In general, this function is used in train process as noise is added to the action to preform exploration.
 
         """
         raise NotImplementedError
+
+    def save(self, save_path, program=None):
+        """Save parameters.
+
+        Args:
+            save_path(str): where to save the parameters.
+            program(fluid.Program): program that describes the neural network structure. If None, will use self.learn_program.
+
+        Raises:
+            ValueError: if program is None and self.learn_program does not exist.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save('./model.ckpt')
+
+        """
+        if program is None:
+            program = self.learn_program
+        dirname = '/'.join(save_path.split('/')[:-1])
+        filename = save_path.split('/')[-1]
+        fluid.io.save_params(
+            executor=self.fluid_executor,
+            dirname=dirname,
+            main_program=program,
+            filename=filename)
+
+    def restore(self, save_path, program=None):
+        """Restore previously saved parameters.
+        This method requires a program that describes the network structure.
+        The save_path argument is typically a value previously passed to ``save_params()``.
+
+        Args:
+            save_path(str): path where parameters were previously saved.
+            program(fluid.Program): program that describes the neural network structure. If None, will use self.learn_program.
+
+        Raises:
+            ValueError: if program is None and self.learn_program does not exist.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save('./model.ckpt')
+            agent.restore('./model.ckpt')
+
+        """
+
+        if program is None:
+            program = self.learn_program
+        dirname = '/'.join(save_path.split('/')[:-1])
+        filename = save_path.split('/')[-1]
+        fluid.io.load_params(
+            executor=self.fluid_executor,
+            dirname=dirname,
+            main_program=program,
+            filename=filename)

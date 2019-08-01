@@ -60,7 +60,7 @@ class TestAgent(parl.Agent):
         with fluid.program_guard(self.learn_program):
             obs = layers.data(name='obs', shape=[10], dtype='float32')
             label = layers.data(name='label', shape=[1], dtype='float32')
-            pred_output = self.algorithm.learn(obs, label)
+            cost = self.algorithm.learn(obs, label)
 
     def learn(self, obs, label):
         output_np = self.fluid_executor.run(

@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parl.layers as layers
+import parl
+from parl import layers
 from copy import deepcopy
 from paddle import fluid
-from parl.framework.algorithm_base import Algorithm
 
 __all__ = ['MultiHeadDDPG']
 
 
-class MultiHeadDDPG(Algorithm):
+class MultiHeadDDPG(parl.Algorithm):
     def __init__(self, models, hyperparas):
         """ model: should implement the function get_actor_params()
         """
@@ -35,12 +35,12 @@ class MultiHeadDDPG(Algorithm):
         self.tau = hyperparas['tau']
         self.ensemble_num = hyperparas['ensemble_num']
 
-    def define_predict(self, obs, model_id):
+    def predict(self, obs, model_id):
         """ use actor model of self.models[model_id] to predict the action
         """
         return self.models[model_id].policy(obs)
 
-    def define_ensemble_predict(self, obs):
+    def ensemble_predict(self, obs):
         """ ensemble predict:
         1. For actions of all actors, each critic will score them
            and normalize its scores;
@@ -75,8 +75,8 @@ class MultiHeadDDPG(Algorithm):
         ensemble_predict_action = layers.gather(batch_actions, best_score_id)
         return ensemble_predict_action
 
-    def define_learn(self, obs, action, reward, next_obs, terminal, actor_lr,
-                     critic_lr, model_id):
+    def learn(self, obs, action, reward, next_obs, terminal, actor_lr,
+              critic_lr, model_id):
         """ update actor and critic model of self.models[model_id] with DDPG algorithm
         """
         actor_cost = self._actor_learn(obs, actor_lr, model_id)
@@ -110,14 +110,12 @@ class MultiHeadDDPG(Algorithm):
         return cost
 
     def sync_target(self,
-                    gpu_id,
                     model_id,
                     decay=None,
                     share_vars_parallel_executor=None):
         if decay is None:
             decay = 1.0 - self.tau
-        self.models[model_id].sync_params_to(
+        self.models[model_id].sync_weights_to(
             self.target_models[model_id],
-            gpu_id=gpu_id,
             decay=decay,
             share_vars_parallel_executor=share_vars_parallel_executor)

@@ -14,35 +14,29 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
+from parl.utils import machine_info
 from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
-class AtariAgent(Agent):
+class AtariAgent(parl.Agent):
     def __init__(self, algorithm, config):
-        self.config = config
+        """
+
+        Args:
+            algorithm (`parl.Algorithm`): algorithm to be used in this agent.
+            config (dict): config file describing the training hyper-parameters(see a2c_config.py)
+        """
+
+        self.obs_shape = config['obs_shape']
         super(AtariAgent, self).__init__(algorithm)
 
         self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
                                                  config['max_sample_steps'])
+
         self.entropy_coeff_scheduler = PiecewiseScheduler(
             config['entropy_coeff_scheduler'])
-
-        use_cuda = True if self.gpu_id >= 0 else False
-
-        exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.use_experimental_executor = True
-        exec_strategy.num_threads = 4
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.remove_unnecessary_lock = True
-
-        # Use ParallelExecutor to make learn program run faster
-        self.learn_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda,
-            main_program=self.learn_program,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
 
     def build_program(self):
         self.sample_program = fluid.Program()
@@ -52,23 +46,23 @@ class AtariAgent(Agent):
 
         with fluid.program_guard(self.sample_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             sample_actions, values = self.alg.sample(obs)
             self.sample_outputs = [sample_actions, values]
 
         with fluid.program_guard(self.predict_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
         with fluid.program_guard(self.value_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.values = self.alg.value(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
             advantages = layers.data(
                 name='advantages', shape=[], dtype='float32')
@@ -81,9 +75,8 @@ class AtariAgent(Agent):
 
             total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
                 obs, actions, advantages, target_values, lr, entropy_coeff)
-            self.learn_outputs = [
-                total_loss.name, pi_loss.name, vf_loss.name, entropy.name
-            ]
+            self.learn_outputs = [total_loss, pi_loss, vf_loss, entropy]
+        self.learn_program = parl.compile(self.learn_program, total_loss)
 
     def sample(self, obs_np):
         """
@@ -154,7 +147,8 @@ class AtariAgent(Agent):
         lr = self.lr_scheduler.step(step_num=obs_np.shape[0])
         entropy_coeff = self.entropy_coeff_scheduler.step()
 
-        total_loss, pi_loss, vf_loss, entropy = self.learn_exe.run(
+        total_loss, pi_loss, vf_loss, entropy = self.fluid_executor.run(
+            self.learn_program,
             feed={
                 'obs': obs_np,
                 'actions': actions_np,

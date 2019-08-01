@@ -16,10 +16,10 @@ import gym
 import numpy as np
 import parl
 import six
+import parl
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent
-from parl.algorithms import IMPALA
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 
@@ -30,7 +30,7 @@ class Actor(object):
         self.config = config
 
         self.envs = []
-        for _ in range(config['env_num']):
+        for _ in six.moves.range(config['env_num']):
             env = gym.make(config['env_name'])
             env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
             self.envs.append(env)
@@ -41,25 +41,28 @@ class Actor(object):
         obs_shape = env.observation_space.shape
         act_dim = env.action_space.n
 
-        self.config['obs_shape'] = obs_shape
-        self.config['act_dim'] = act_dim
-
         model = AtariModel(act_dim)
-        algorithm = IMPALA(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config)
+        algorithm = parl.algorithms.IMPALA(
+            model,
+            sample_batch_steps=self.config['sample_batch_steps'],
+            gamma=self.config['gamma'],
+            vf_loss_coeff=self.config['vf_loss_coeff'],
+            clip_rho_threshold=self.config['clip_rho_threshold'],
+            clip_pg_rho_threshold=self.config['clip_pg_rho_threshold'])
+        self.agent = AtariAgent(algorithm, obs_shape, act_dim)
 
     def sample(self):
         env_sample_data = {}
-        for env_id in range(self.config['env_num']):
+        for env_id in six.moves.range(self.config['env_num']):
             env_sample_data[env_id] = defaultdict(list)
 
-        for i in range(self.config['sample_batch_steps']):
+        for i in six.moves.range(self.config['sample_batch_steps']):
             actions, behaviour_logits = self.agent.sample(
                 np.stack(self.obs_batch))
             next_obs_batch, reward_batch, done_batch, info_batch = \
                     self.vector_env.step(actions)
 
-            for env_id in range(self.config['env_num']):    
+            for env_id in six.moves.range(self.config['env_num']):
                 env_sample_data[env_id]['obs'].append(self.obs_batch[env_id])
                 env_sample_data[env_id]['actions'].append(actions[env_id])
                 env_sample_data[env_id]['behaviour_logits'].append(
@@ -71,7 +74,7 @@ class Actor(object):
 
         # Merge data of envs
         sample_data = defaultdict(list)
-        for env_id in range(self.config['env_num']):
+        for env_id in six.moves.range(self.config['env_num']):
             for data_name in [
                     'obs', 'actions', 'behaviour_logits', 'rewards', 'dones'
             ]:
@@ -95,5 +98,12 @@ class Actor(object):
                     metrics['episode_steps'].append(episode_steps)
         return metrics
 
-    def set_params(self, params):
-        self.agent.set_params(params)
+    def set_weights(self, weights):
+        self.agent.set_weights(weights)
+
+
+if __name__ == '__main__':
+    from impala_config import config
+
+    actor = Actor(config)
+    actor.as_remote(config['server_ip'], config['server_port'])

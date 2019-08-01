@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parl.layers as layers
+import parl
+from parl import layers
 from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
-from parl.framework.model_base import Model
 
 
-class OpenSimModel(Model):
+class OpenSimModel(parl.Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id=0, shared=True):
         self.actor_model = ActorModel(obs_dim, vel_obs_dim, act_dim, model_id,
                                       shared)
@@ -32,10 +32,10 @@ class OpenSimModel(Model):
         return self.critic_model.value(obs, action)
 
     def get_actor_params(self):
-        return self.actor_model.parameter_names
+        return self.actor_model.parameters()
 
 
-class ActorModel(Model):
+class ActorModel(parl.Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id, shared):
         hid0_size = 800
         hid1_size = 400
@@ -104,7 +104,7 @@ class ActorModel(Model):
         return means
 
 
-class CriticModel(Model):
+class CriticModel(parl.Model):
     def __init__(self, obs_dim, vel_obs_dim, act_dim, model_id, shared):
         super(CriticModel, self).__init__()
         hid0_size = 800

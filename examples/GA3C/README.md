@@ -16,11 +16,10 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 
 ## How to use
 ### Dependencies
-+ python2.7 or python3.5+
-+ [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ atari_py
++ atari-py
 
 
 ### Distributed Training

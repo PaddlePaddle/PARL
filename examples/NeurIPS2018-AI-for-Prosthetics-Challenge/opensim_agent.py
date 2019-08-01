@@ -13,15 +13,15 @@
 # limitations under the License.
 
 import numpy as np
-import parl.layers as layers
 import re
+import parl
+from parl import layers
 from paddle import fluid
 from paddle.fluid.executor import _fetch_var
-from parl.framework.agent_base import Agent
 from parl.utils import logger
 
 
-class OpenSimAgent(Agent):
+class OpenSimAgent(parl.Agent):
     def __init__(self, algorithm, obs_dim, act_dim, ensemble_num):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -29,7 +29,7 @@ class OpenSimAgent(Agent):
         super(OpenSimAgent, self).__init__(algorithm)
 
         # Use ParallelExecutor to make program running faster
-        use_cuda = True if self.gpu_id >= 0 else False
+        use_cuda = True if parl.GPU_ID >= 0 else False
         self.learn_pe = []
         self.pred_pe = []
 
@@ -58,16 +58,13 @@ class OpenSimAgent(Agent):
 
             # Attention: In the beginning, sync target model totally.
             self.alg.sync_target(
-                gpu_id=self.gpu_id,
                 model_id=i,
                 decay=1.0,
                 share_vars_parallel_executor=self.learn_pe[i])
             # Do cache, will create ParallelExecutor of sync params in advance
             # If not, there are some issues when ensemble_num > 1
             self.alg.sync_target(
-                gpu_id=self.gpu_id,
-                model_id=i,
-                share_vars_parallel_executor=self.learn_pe[i])
+                model_id=i, share_vars_parallel_executor=self.learn_pe[i])
 
         with fluid.scope_guard(fluid.global_scope().new_scope()):
             self.ensemble_predict_pe = fluid.ParallelExecutor(
@@ -86,7 +83,7 @@ class OpenSimAgent(Agent):
             with fluid.program_guard(predict_program):
                 obs = layers.data(
                     name='obs', shape=[self.obs_dim], dtype='float32')
-                act = self.alg.define_predict(obs, model_id=i)
+                act = self.alg.predict(obs, model_id=i)
             self.predict_programs.append(predict_program)
             self.predict_outputs.append([act.name])
 
@@ -110,7 +107,7 @@ class OpenSimAgent(Agent):
                     shape=[1],
                     dtype='float32',
                     append_batch_size=False)
-                actor_loss, critic_loss = self.alg.define_learn(
+                actor_loss, critic_loss = self.alg.learn(
                     obs,
                     act,
                     reward,
@@ -126,7 +123,7 @@ class OpenSimAgent(Agent):
         with fluid.program_guard(self.ensemble_predict_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            act = self.alg.define_ensemble_predict(obs)
+            act = self.alg.ensemble_predict(obs)
         self.ensemble_predict_output = [act.name]
 
     def predict(self, obs, model_id):
@@ -159,7 +156,6 @@ class OpenSimAgent(Agent):
         critic_loss = self.learn_pe[model_id].run(
             feed=feed, fetch_list=self.learn_programs_output[model_id])[0]
         self.alg.sync_target(
-            gpu_id=self.gpu_id,
             model_id=model_id,
             share_vars_parallel_executor=self.learn_pe[model_id])
         return critic_loss

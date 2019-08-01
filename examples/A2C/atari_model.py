@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import parl
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.model_base import Model
-from paddle.fluid.param_attr import ParamAttr
+from parl import layers
 
 
-class AtariModel(Model):
+class AtariModel(parl.Model):
     def __init__(self, act_dim):
 
         self.conv1 = layers.conv2d(

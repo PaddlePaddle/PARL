@@ -14,35 +14,31 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
 
 
-class CartpoleAgent(Agent):
-    def __init__(self, algorithm, obs_dim, act_dim, seed=1):
+class CartpoleAgent(parl.Agent):
+    def __init__(self, algorithm, obs_dim, act_dim):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-        self.seed = seed
         super(CartpoleAgent, self).__init__(algorithm)
 
     def build_program(self):
         self.pred_program = fluid.Program()
-        self.train_program = fluid.Program()
-
-        fluid.default_startup_program().random_seed = self.seed
-        self.train_program.random_seed = self.seed
+        self.learn_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
-            self.act_prob = self.alg.define_predict(obs)
+            self.act_prob = self.alg.predict(obs)
 
-        with fluid.program_guard(self.train_program):
+        with fluid.program_guard(self.learn_program):
             obs = layers.data(
                 name='obs', shape=[self.obs_dim], dtype='float32')
             act = layers.data(name='act', shape=[1], dtype='int64')
             reward = layers.data(name='reward', shape=[], dtype='float32')
-            self.cost = self.alg.define_learn(obs, act, reward)
+            self.cost = self.alg.learn(obs, act, reward)
 
     def sample(self, obs):
         obs = np.expand_dims(obs, axis=0)
@@ -72,5 +68,5 @@ class CartpoleAgent(Agent):
             'reward': reward.astype('float32')
         }
         cost = self.fluid_executor.run(
-            self.train_program, feed=feed, fetch_list=[self.cost])[0]
+            self.learn_program, feed=feed, fetch_list=[self.cost])[0]
         return cost

@@ -15,25 +15,22 @@
 import gym
 import numpy as np
 import os
-import parl
 import queue
 import six
 import time
 import threading
+import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
-
-from parl.algorithms import A3C
+from parl import RemoteManager
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger, get_gpu_count, tensorboard
+from parl.utils import logger, CSVLogger, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 from parl.utils.rl_utils import calc_gae
-
-from ga3c_config import config
-from simulator import Simulator
+from parl.utils import machine_info
 
 
 class Learner(object):
@@ -53,10 +50,15 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A3C(model, hyperparas=config)
-        self.agent = AtariAgent(algorithm, config, self.learn_data_provider)
+        algorithm = parl.algorithms.A3C(
+            model, vf_loss_coeff=config['vf_loss_coeff'])
+        self.agent = AtariAgent(
+            algorithm,
+            obs_shape=self.config['obs_shape'],
+            predict_thread_num=self.config['predict_thread_num'],
+            learn_data_provider=self.learn_data_provider)
 
-        if self.agent.gpu_id >= 0:
+        if machine_info.is_gpu_available():
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
                     Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
 
@@ -182,31 +184,37 @@ class Learner(object):
     def run_remote_manager(self):
         """ Accept connection of new remote simulator and start simulation.
         """
-        parl.connect(self.config['master_address'])
-
+        remote_manager = RemoteManager(port=self.config['server_port'])
         logger.info("Waiting for the remote simulator's connection.")
 
         ident = 0
         self.predict_output_queues = []
 
-        for i in six.moves.range(self.config['actor_num']):
+        while True:
+            remote_simulator = remote_manager.get_remote()
+
             self.remote_count += 1
             logger.info('Remote simulator count: {}'.format(self.remote_count))
             if self.start_time is None:
                 self.start_time = time.time()
+
             q = queue.Queue()
             self.predict_output_queues.append(q)
+
             remote_thread = threading.Thread(
                 target=self.run_remote_sample,
-                args=(ident,))
+                args=(
+                    remote_simulator,
+                    ident,
+                ))
             remote_thread.setDaemon(True)
             remote_thread.start()
+
             ident += 1
 
-    def run_remote_sample(self, ident):
+    def run_remote_sample(self, remote_simulator, ident):
         """ Interacts with remote simulator.
         """
-        remote_simulator = Simulator(config)
         mem = defaultdict(list)
 
         obs = remote_simulator.reset()
@@ -292,31 +300,6 @@ class Learner(object):
             mean_episode_steps = np.mean(np.array(episode_steps).flatten())
             max_episode_steps = np.max(np.array(episode_steps).flatten())
             min_episode_steps = np.min(np.array(episode_steps).flatten())
-
-        tensorboard.add_scalar('max_episode_rewards', max_episode_rewards,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('mean_episode_rewards', mean_episode_rewards,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('min_episode_rewards', min_episode_rewards,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('max_episode_steps', max_episode_steps,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('mean_episode_steps', mean_episode_steps,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('min_episode_steps', min_episode_steps,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('total_loss', self.total_loss_stat.mean,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('pi_loss', self.pi_loss_stat.mean,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('vf_loss', self.vf_loss_stat.mean,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('entropy', self.entropy_stat.mean,
-                               self.sample_total_steps)
-        tensorboard.add_scalar('Sample_steps(second)',
-                               self.sample_total_steps,
-                               int(time.time() - self.start_time))
-
 
         metric = {
             'Sample steps': self.sample_total_steps,

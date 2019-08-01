@@ -16,11 +16,10 @@ Mean episode reward in training process after 10 million sample steps.
 
 ## How to use
 ### Dependencies
-+ python2.7 or python3.5+
-+ [paddlepaddle>=1.3.0](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ atari_py
++ atari-py
 
 
 ### Distributed Training

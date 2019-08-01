@@ -14,29 +14,19 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.layers as layers
-from parl.framework.agent_base import Agent
+import parl
+from parl import layers
+from parl.utils import machine_info
 
 
-class AtariAgent(Agent):
-    def __init__(self, algorithm, config, learn_data_provider=None):
-        self.config = config
+class AtariAgent(parl.Agent):
+    def __init__(self, algorithm, obs_shape, act_dim,
+                 learn_data_provider=None):
+        assert isinstance(obs_shape, (list, tuple))
+        assert isinstance(act_dim, int)
+        self.obs_shape = obs_shape
+        self.act_dim = act_dim
         super(AtariAgent, self).__init__(algorithm)
-
-        use_cuda = True if self.gpu_id >= 0 else False
-
-        exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.use_experimental_executor = True
-        exec_strategy.num_threads = 4
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.remove_unnecessary_lock = True
-
-        # Use ParallelExecutor to make learn program run faster
-        self.learn_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda,
-            main_program=self.learn_program,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
 
         if learn_data_provider:
             self.learn_reader.decorate_tensor_provider(learn_data_provider)
@@ -49,22 +39,20 @@ class AtariAgent(Agent):
 
         with fluid.program_guard(self.sample_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.sample_actions, self.behaviour_logits = self.alg.sample(obs)
 
         with fluid.program_guard(self.predict_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             self.predict_actions = self.alg.predict(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
-                name='obs', shape=self.config['obs_shape'], dtype='float32')
+                name='obs', shape=self.obs_shape, dtype='float32')
             actions = layers.data(name='actions', shape=[], dtype='int64')
             behaviour_logits = layers.data(
-                name='behaviour_logits',
-                shape=[self.config['act_dim']],
-                dtype='float32')
+                name='behaviour_logits', shape=[self.act_dim], dtype='float32')
             rewards = layers.data(name='rewards', shape=[], dtype='float32')
             dones = layers.data(name='dones', shape=[], dtype='float32')
             lr = layers.data(
@@ -85,9 +73,10 @@ class AtariAgent(Agent):
             vtrace_loss, kl = self.alg.learn(obs, actions, behaviour_logits,
                                              rewards, dones, lr, entropy_coeff)
             self.learn_outputs = [
-                vtrace_loss.total_loss.name, vtrace_loss.pi_loss.name,
-                vtrace_loss.vf_loss.name, vtrace_loss.entropy.name, kl.name
+                vtrace_loss.total_loss, vtrace_loss.pi_loss,
+                vtrace_loss.vf_loss, vtrace_loss.entropy, kl
             ]
+        self.learn_program = parl.compile(self.learn_program, total_loss)
 
     def sample(self, obs_np):
         """
@@ -124,6 +113,6 @@ class AtariAgent(Agent):
         return predict_actions
 
     def learn(self):
-        total_loss, pi_loss, vf_loss, entropy, kl = self.learn_exe.run(
-            fetch_list=self.learn_outputs)
+        total_loss, pi_loss, vf_loss, entropy, kl = self.fluid_executor.run(
+            self.learn_program, fetch_list=self.learn_outputs)
         return total_loss, pi_loss, vf_loss, entropy, kl

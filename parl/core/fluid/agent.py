@@ -182,7 +182,11 @@ class Agent(AgentBase):
             program = self.learn_program
         dirname = '/'.join(save_path.split('/')[:-1])
         filename = save_path.split('/')[-1]
-        fluid.io.save_params(executor=self.fluid_executor, dirname=dirname, main_program=program, filename=filename)
+        fluid.io.save_params(
+            executor=self.fluid_executor,
+            dirname=dirname,
+            main_program=program,
+            filename=filename)
 
     def restore(self, save_path, program=None):
         """Restore previously saved parameters.
@@ -210,4 +214,8 @@ class Agent(AgentBase):
             program = self.learn_program
         dirname = '/'.join(save_path.split('/')[:-1])
         filename = save_path.split('/')[-1]
-        fluid.io.load_params(executor=self.fluid_executor, dirname=dirname, main_program=program, filename=filename)
+        fluid.io.load_params(
+            executor=self.fluid_executor,
+            dirname=dirname,
+            main_program=program,
+            filename=filename)

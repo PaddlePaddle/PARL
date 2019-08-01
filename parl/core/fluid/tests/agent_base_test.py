@@ -64,8 +64,10 @@ class TestAgent(parl.Agent):
 
     def learn(self, obs, label):
         output_np = self.fluid_executor.run(
-            self.learn_program,
-            feed={'obs': obs, 'label': label})
+            self.learn_program, feed={
+                'obs': obs,
+                'label': label
+            })
 
     def predict(self, obs):
         output_np = self.fluid_executor.run(

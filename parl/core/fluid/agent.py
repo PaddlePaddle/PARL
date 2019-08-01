@@ -57,8 +57,8 @@ class Agent(AgentBase):
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
         - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
-        - ``save_params``: save parameters of the ``agent`` to a given path.
-        - ``restore_params``: restore previous saved parameters.
+        - ``save``: save parameters of the ``agent`` to a given path.
+        - ``restore``: restore previous saved parameters from a given path.
 
     Todo:
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
@@ -160,7 +160,7 @@ class Agent(AgentBase):
         """
         raise NotImplementedError
 
-    def save_params(self, save_path, program=None):
+    def save(self, save_path, program=None):
         """Save parameters.
 
         Args:
@@ -176,7 +176,7 @@ class Agent(AgentBase):
         filename = save_path.split('/')[-1]
         fluid.io.save_params(executor=self.fluid_executor, dirname=dirname, main_program=program, filename=filename)
 
-    def restore_params(self, save_path, program=None):
+    def restore(self, save_path, program=None):
         """Restore previously saved parameters.
         This method requires a program that describes the network structure.
         The save_path argument is typically a value previously passed to ``save_params()``.

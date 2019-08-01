@@ -169,6 +169,14 @@ class Agent(AgentBase):
 
         Raises:
             ValueError: if program is None and self.learn_program does not exist.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save('./model.ckpt')
+
         """
         if program is None:
             program = self.learn_program
@@ -187,6 +195,15 @@ class Agent(AgentBase):
 
         Raises:
             ValueError: if program is None and self.learn_program does not exist.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save('./model.ckpt')
+            agent.restore('./model.ckpt')
+
         """
 
         if program is None:

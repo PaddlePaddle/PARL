@@ -1,11 +1,11 @@
-Rrecommened Pratice
+Recommened Practice
 ---------------------
 
 .. image:: ./poster.png
   :width: 200px
   :align: center
 | This tutorial shows how to use ``@parl.remote_class`` to implement parallel computation with **threads**.
-| PYTHON has poor performance in multi-theading because of the `GIL <https://realpython.com/python-gil/>`_ , and we always find that multi-thread programing in PYTHON cannot bring any benefit of the running speed, unlike other program language such as ``C++`` and ``JAVA``. 
+| PYTHON has poor performance in multi-threading because of the `GIL <https://realpython.com/python-gil/>`_ , and we always find that multi-thread programming in PYTHON cannot bring any benefit of the running speed, unlike other program languages such as ``C++`` and ``JAVA``. 
 Here is an example showing the performance of PYTHON threads.
 
 .. code-block:: python

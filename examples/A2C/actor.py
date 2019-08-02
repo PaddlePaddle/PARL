@@ -15,7 +15,6 @@
 import gym
 import numpy as np
 import parl
-import parl
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent

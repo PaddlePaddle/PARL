@@ -65,7 +65,7 @@ Abstractions
     :caption: Parallel Training
 
     parallel_training/setup.rst
-    parallel_training/recommended_pratice.rst
+    parallel_training/recommended_practice.rst
 
 .. toctree::
    :maxdepth: 1

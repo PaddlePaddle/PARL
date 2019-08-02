@@ -61,4 +61,4 @@ Further Reading
 | Now we know how to set up a cluster and use this cluster by simply adding ``@parl.remote_class``. 
 | In `next_tutorial`_, we will show how this decorator help us implement the **real** multi-thread computation in Python, breaking the limitation of Python Global Interpreter Lock(GIL).
 
-.. _`next_tutorial`: https://parl.readthedocs.io/parallel_training/recommended_pratice.html
+.. _`next_tutorial`: https://parl.readthedocs.io/parallel_training/recommended_practice.html

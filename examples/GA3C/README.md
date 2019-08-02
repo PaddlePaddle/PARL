@@ -24,23 +24,51 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 
 ### Distributed Training
 
-#### Learner
-```sh
-python train.py 
+
+#### Training from scratch
+
+To start a distributed training from scratch, we need to start a cluster at
+first. The `xparl start` command will start a local cluster with `cpu_num`
+CPUs.
+
+```bash
+xparl start --port port --cpu_num cpu_num
 ```
 
-#### Simulators (Suggest: 24 simulators in 12+ CPUs)
-```sh
-for i in $(seq 1 24); do
-    python simulator.py &
-done;
-wait
+After the cluster is started, we can add more computation resources to our
+cluster with the `xparl connect` command at any time and on any machine.
+
+```bash
+xparl connect --address master_address
 ```
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `ga3c_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
+Then we can start the distributed training by running `train.py`.
 
-[Tips] The performance can be influenced dramatically in a slower computational environment, especially when training with low-speed CPUs. It may be caused by the policy-lag problem.
+```bash
+python train.py
+```
+
+#### Training with an existing cluster
+
+If we have an existing cluster running at `cluster_address`, we can start a new
+training task with this cluster by setting `'master_address' = cluster_address`
+in the `ga3c_config.py`.
+
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
+
+Training result will be saved in `log_dir/train/log.log` and the cluster logs
+will be saved in `~/.parl_data/`. For more detailed information about the
+usage of the parl cluster, please refer to our official document
+[Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+
+[Tips] The performance can be influenced dramatically in a slower computational
+environment, especially when training with low-speed CPUs. It may be caused by
+the policy-lag problem.
 
 ### Reference
++ [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 + [tensorpack](https://github.com/tensorpack/tensorpack)

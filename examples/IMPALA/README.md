@@ -28,22 +28,47 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 
 ### Distributed Training:
 
-#### Learner
-```sh
-python train.py 
+#### Training from scratch
+
+To start a distributed training from scratch, we need to start a cluster at
+first. The `xparl start` command will start a local cluster with `cpu_num`
+CPUs.
+
+```bash
+xparl start --port port --cpu_num cpu_num
 ```
 
-#### Actors (Suggest: 32+ actors in 32+ CPUs)
-```sh
-for i in $(seq 1 32); do
-    python actor.py &
-done;
-wait
+After the cluster is started, we can add more computation resources to our
+cluster with the `xparl connect` command at any time and on any machine.
+
+```bash
+xparl connect --address master_address
 ```
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `impala_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
+
+#### Training with an existing cluster
+
+If we have an existing cluster running at `cluster_address`, we can start a new
+training task with this cluster by setting `'master_address' = cluster_address`
+in the `impala_config.py`.
+
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
+
+Training result will be saved in `log_dir/train/log.log` and the cluster logs
+will be saved in `~/.parl_data/`. For more detailed information about the
+usage of the parl cluster, please refer to our official document
+[Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ### Reference
++ [Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 + [deepmind/scalable_agent](https://github.com/deepmind/scalable_agent)
 + [Ray](https://github.com/ray-project/ray)

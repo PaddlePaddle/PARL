@@ -24,22 +24,47 @@ Mean episode reward in training process after 10 million sample steps.
 
 ### Distributed Training
 
-#### Learner
-```sh
-python train.py 
+#### Training from scratch
+
+To start a distributed training from scratch, we need to start a cluster at
+first. The `xparl start` command will start a local cluster with `cpu_num`
+CPUs.
+
+```bash
+xparl start --port port --cpu_num cpu_num
 ```
 
-#### Actors (Suggest: 5 actors in 5 CPUs)
-```sh
-for i in $(seq 1 5); do
-    python actor.py &
-done;
-wait
+After the cluster is started, we can add more computation resources to our
+cluster with the `xparl connect` command at any time and on any machine.
+
+```bash
+xparl connect --address master_address
 ```
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `a2c_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
+
+#### Training with an existing cluster
+
+If we have an existing cluster running at `cluster_address`, we can start a new
+training task with this cluster by setting `'master_address' = cluster_address`
+in the `a2c_config.py`.
+
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
+
+Training result will be saved in `log_dir/train/log.log` and the cluster logs
+will be saved in `~/.parl_data/`. For more detailed information about the
+usage of the parl cluster, please refer to our official document
+[Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ### Reference
++ [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 + [Ray](https://github.com/ray-project/ray)
 + [OpenAI Baselines: ACKTR & A2C](https://openai.com/blog/baselines-acktr-a2c/)

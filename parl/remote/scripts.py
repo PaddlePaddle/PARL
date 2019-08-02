@@ -51,10 +51,10 @@ def is_master_started(address):
     try:
         _ = socket.recv_multipart()
         socket.close(0)
-        return 1
+        return True
     except zmq.error.Again as e:
         socket.close(0)
-        return -1
+        return False
 
 
 @click.group()
@@ -64,11 +64,14 @@ def cli():
 
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
-def start_master(port):
+@click.option("--cpu_num", type=int,
+              help="Set number of cpu manually. If not set, it will use all "
+                   "cpus of this machine.")
+def start_master(port, cpu_num):
     if is_port_in_use(port):
         raise Exception(
             "The master address localhost:{} already in use.".format(port))
-
+    cpu_num = str(cpu_num) if cpu_num else ''
     command = ["python",
                "{}/start.py".format(__file__[:-11]),
                "--name", "master", "--port", port]
@@ -77,7 +80,7 @@ def start_master(port):
     command = ["python",
                "{}/start.py".format(__file__[:-11]),
                "--name", "worker", "--address", "localhost:"+str(port),
-               "--cpu_num", ""]
+               "--cpu_num", str(cpu_num)]
     p = subprocess.Popen(command)
 
 
@@ -88,7 +91,7 @@ def start_master(port):
               help="Set number of cpu manually. If not set, it will use all "
                    "cpus of this machine.")
 def start_worker(address, cpu_num):
-    if is_master_started(address) == -1:
+    if not is_master_started(address):
         raise Exception("Worker can not connect to the master node, " +
                         "please check if the input address {} ".format(
                         address) + "is correct.")

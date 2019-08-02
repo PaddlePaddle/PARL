@@ -43,6 +43,11 @@ def start_master(port):
                "--name", "master", "--port", port]
     p = subprocess.Popen(command)
 
+    command = ["python",
+               "{}/start.py".format(__file__[:-11]),
+               "--name", "worker", "--address", "localhost:"+str(port),
+               "--cpu_num", ""]
+    p = subprocess.Popen(command)
 
 
 @click.command("connect", short_help="Start a worker node.")

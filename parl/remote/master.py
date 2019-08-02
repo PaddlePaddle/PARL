@@ -37,6 +37,9 @@ class Master(object):
 
         xparl start --port localhost:1234
 
+    At the same time, a local worker will be started and connect to the
+    master node.
+
     Attributes:
         cpu_num (int): The available cpu numbers of the cluster, when this
                        number is 0, the master will refuse to create new

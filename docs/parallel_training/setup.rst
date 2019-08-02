@@ -13,7 +13,12 @@ To start a PARL cluster, we can execute the following two ``xparl`` commands:
 This command starts a master node to manage computation resources and adds the local CPUs to the cluster.
 We use the port `6006` for demonstration, and it can be any available port.
 
-**Adding More Resources**
+Adding More Resources
+###################
+
+.. note::
+    If you have only one machine, you can ignore this part.
+
 If you would like to add more CPUs(computation resources) to the cluster, run the following command on other machines.
 
 .. code-block:: bash
@@ -24,6 +29,8 @@ It starts a worker node that provides CPUs of the machine for the master. A work
 
 Note that the command ``xparl connect`` can be run at any time, at any machine to add more CPUs to the cluster.
 
+Example
+###################
 Here we give an example demonstrating how to use ``@parl.remote_class`` for parallel computation.
 
 .. code-block:: python

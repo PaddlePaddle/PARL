@@ -6,7 +6,7 @@ Recommended Practice
   :align: center
 | This tutorial shows how to use ``@parl.remote_class`` to implement parallel computation with **multi-threads**.
 
-| Python has poor performance in multi-threading because of the `GIL <https://realpython.com/python-gil/>`_ , and we always find that multi-thread programming in Python cannot bring any benefit of the running speed, unlike other program languages such as ``C++`` and ``JAVA``. 
+| Python has poor performance in multi-threading because of the `GIL <https://realpython.com/python-gil/>`_ , and we always find that multi-thread programming in Python cannot bring any benefits of the running speed, unlike other program languages such as ``C++`` and ``JAVA``. 
 
 Here we reveal the performance of Python threads. At first, let's run the following code:
 
@@ -72,4 +72,4 @@ Here we reveal the performance of Python threads. At first, let's run the follow
   :width: 400px
   :align: center
 
-| Only **3.74** seconds is needed !!! As you can see from the code above, it is the ``@parl.remote_class`` that makes the change happen. By simply adding this decorator, we achieved real multi-thread computation.
+| Only **3.74** seconds are needed !!! As you can see from the code above, it is the ``@parl.remote_class`` that makes the change happen. By simply adding this decorator, we achieved real multi-thread computation.

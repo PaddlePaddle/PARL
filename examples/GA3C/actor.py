@@ -15,13 +15,12 @@
 import gym
 import numpy as np
 import parl
-import six
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from collections import defaultdict
 
 
 @parl.remote_class
-class Simulator(object):
+class Actor(object):
     def __init__(self, config):
         self.config = config
 
@@ -45,10 +44,3 @@ class Simulator(object):
                 metrics['episode_rewards'].append(episode_rewards)
                 metrics['episode_steps'].append(episode_steps)
         return metrics
-
-
-if __name__ == '__main__':
-    from ga3c_config import config
-
-    simulator = Simulator(config)
-    simulator.as_remote(config['server_ip'], config['server_port'])

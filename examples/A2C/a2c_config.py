@@ -13,9 +13,9 @@
 # limitations under the License.
 
 config = {
+
     #==========  remote config ==========
-    'server_ip': 'localhost',
-    'server_port': 8037,
+    'master_address': 'localhost:8010',
 
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',

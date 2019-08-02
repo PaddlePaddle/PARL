@@ -21,26 +21,28 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 + gym
 + atari-py
 
-
 ### Distributed Training
 
-#### Learner
-```sh
-python train.py 
+At first, We can start a local cluster with 24 CPUs:
+
+```bash
+xparl start --port 8010 --cpu_num 24
 ```
 
-#### Simulators (Suggest: 24 simulators in 12+ CPUs)
-```sh
-for i in $(seq 1 24); do
-    python simulator.py &
-done;
-wait
+Note that if you have started a master before, you don't have to run the above
+command. For more information about the cluster, please refer to our
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
+
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
 ```
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `ga3c_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
-
-[Tips] The performance can be influenced dramatically in a slower computational environment, especially when training with low-speed CPUs. It may be caused by the policy-lag problem.
+[Tips] The performance can be influenced dramatically in a slower computational
+environment, especially when training with low-speed CPUs. It may be caused by
+the policy-lag problem.
 
 ### Reference
++ [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 + [tensorpack](https://github.com/tensorpack/tensorpack)

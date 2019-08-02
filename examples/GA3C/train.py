@@ -20,14 +20,10 @@ def main(config):
     learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0
 
-    try:
-        while True:
-            time.sleep(config['log_metrics_interval_s'])
+    while True:
+        time.sleep(config['log_metrics_interval_s'])
 
-            learner.log_metrics()
-
-    except KeyboardInterrupt:
-        learner.close()
+        learner.log_metrics()
 
 
 if __name__ == '__main__':

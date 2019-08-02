@@ -14,14 +14,14 @@
 
 config = {
     #==========  remote config ==========
-    'server_ip': 'localhost',
-    'server_port': 8037,
+    'master_address': 'localhost:8010',
 
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',
     'env_dim': 42,
 
     #==========  learner config ==========
+    'actor_num': 24,
     'train_batch_size': 128,
     'max_predict_batch_size': 16,
     'predict_thread_num': 2,

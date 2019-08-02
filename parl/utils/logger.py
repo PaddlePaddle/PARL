@@ -76,10 +76,32 @@ def _getlogger():
     logger = logging.getLogger('PARL')
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
-    logger.addHandler(handler)
+    if 'XPARL' not in os.environ:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
+        logger.addHandler(handler)
     return logger
+
+
+def create_file_after_first_call(func_name):
+    def call(*args, **kwargs):
+        global _logger
+        if LOG_DIR is None:
+
+            basename = os.path.basename(mod.__file__)
+            if basename.rfind('.') == -1:
+                basename = basename
+            else:
+                basename = basename[:basename.rfind('.')]
+                auto_dirname = os.path.join('log_dir', basename)
+
+            shutil.rmtree(auto_dirname, ignore_errors=True)
+            set_dir(auto_dirname)
+
+        func = getattr(_logger, func_name)
+        func(*args, **kwargs)
+
+    return call
 
 
 _logger = _getlogger()
@@ -90,8 +112,9 @@ _LOGGING_METHOD = [
 
 # export logger functions
 for func in _LOGGING_METHOD:
-    locals()[func] = getattr(_logger, func)
+    locals()[func] = create_file_after_first_call(func)
     __all__.append(func)
+
 # export Level information
 _LOGGING_LEVEL = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 for level in _LOGGING_LEVEL:
@@ -100,7 +123,7 @@ for level in _LOGGING_LEVEL:
 
 
 def _set_file(path):
-    global _FILE_HANDLER
+    global _FILE_HANDLER, _logger
     if os.path.isfile(path):
         try:
             os.remove(path)
@@ -114,16 +137,19 @@ def _set_file(path):
 
 
 def set_level(level):
+    global _logger, LOG_DIR
     # To set level, need create new handler
-    set_dir(get_dir())
+    if LOG_DIR is not None:
+        set_dir(get_dir())
     _logger.setLevel(level)
 
 
 def set_dir(dirname):
-    global LOG_DIR, _FILE_HANDLER
+    global LOG_DIR, _FILE_HANDLER, _logger
     if _FILE_HANDLER:
         # unload and close the old file handler, so that we may safely delete the logger directory
         _logger.removeHandler(_FILE_HANDLER)
+        _FILE_HANDLER.close()
         del _FILE_HANDLER
 
     if not os.path.isdir(dirname):
@@ -137,10 +163,6 @@ def get_dir():
 
 
 # Will save log to log_dir/main_file_name/log.log by default
+
 mod = sys.modules['__main__']
-if hasattr(mod, '__file__'):
-    basename = os.path.basename(mod.__file__)
-    auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
-    shutil.rmtree(auto_dirname, ignore_errors=True)
-    set_dir(auto_dirname)
-    _logger.info("Argv: " + ' '.join(sys.argv))
+_logger.info("Argv: " + ' '.join(sys.argv))

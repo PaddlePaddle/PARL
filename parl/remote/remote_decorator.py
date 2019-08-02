@@ -12,235 +12,174 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import pyarrow
+import cloudpickle
+import os
 import threading
 import time
-import traceback
 import zmq
-from parl.remote import remote_constants
+import numpy as np
+
 from parl.utils import get_ip_address, logger, to_str, to_byte
-from parl.utils.exceptions import SerializeError, DeserializeError
-from parl.utils.communication import loads_argument, dumps_return
-"""
-Three steps to create a remote class:
-1. add a decroator(@parl.remote_class) before the definition of the class;
-2. create an instance of remote class; 
-3. call function `as_remote` with server_ip and server_port.
-
-@parl.remote_class
-Class Simulator(object):
-    ...
-
-sim = Simulator()
-sim.as_remote(server_ip='172.18.202.45', server_port=8001)
-
-"""
+from parl.utils.communication import loads_argument, loads_return,\
+    dumps_argument, dumps_return
+from parl.remote import remote_constants
+from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
+    RemoteDeserializeError, RemoteSerializeError, ResourceError
+from parl.remote.client import get_global_client
 
 
 def remote_class(cls):
-    class ClientWrapper(object):
+    """A Python decorator that enables a class to run all its functions
+    remotely.
+
+    Each instance of the remote class can be seemed as a task submitted
+    to the cluster by the global client, which is created automatically
+    when we call parl.connect(master_address). After global client
+    submits the task, the master node will send an available job address
+    to this remote instance. Then the remote object will send local python
+    files, class definition and initialization arguments to the related job.
+
+    In this way, we can run distributed applications easily and efficiently.
+
+    .. code-block:: python
+
+        @remote_class
+        class Actor(object):
+            def __init__(self, x):
+                self.x = x
+
+            def step(self):
+                self.x += 1
+                return self.x
+
+        actor = Actor()
+        actor.step()
+
+    Returns:
+        A remote wrapper for the remote class.
+
+    Raises:
+        Exception: An exception is raised if the client is not created
+                   by `parl.connect(master_address)` beforehand.
+    """
+
+    class RemoteWrapper(object):
         """
         Wrapper for remote class in client side.
-        when as_remote function called, the object initialized in the client can 
-        handle function call from server.
         """
 
         def __init__(self, *args, **kwargs):
             """
             Args:
-                args, kwargs: arguments for the initialisation of the unwrapped class.
+                args, kwargs: arguments for the initialization of the unwrapped
+                class.
             """
-            self.unwrapped = cls(*args, **kwargs)
+            self.GLOBAL_CLIENT = get_global_client()
 
-            self.zmq_context = None
-            self.poller = None
+            self.ctx = self.GLOBAL_CLIENT.ctx
 
-            # socket for connecting server and telling ip and port of client to server
-            self.connect_socket = None
-            # socket for handle function call from server side
-            self.reply_socket = None
-
-        def _create_reply_socket(self, remote_ip, remote_port):
-            """
-            In fact, we also have a socket server in client side. This server keeps running 
-            and waits for requests (e.g. call a function) from server side.
-            """
-            if remote_ip is None:
-                remote_ip = get_ip_address()
-
-            self.zmq_context = zmq.Context()
-            socket = self.zmq_context.socket(zmq.REP)
-
-            if remote_port is None:
-                try:
-                    remote_port = socket.bind_to_random_port(addr="tcp://*")
-                except zmq.ZMQBindError:
-                    logger.error(
-                        'Can not bind to a random port, please set remote_port manually.'
-                    )
-                    sys.exit(1)
+            # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
+            # finds the master is dead.
+            if self.GLOBAL_CLIENT.master_is_alive:
+                job_address = self.request_cpu_resource(self.GLOBAL_CLIENT)
             else:
-                socket.bind("tcp://*:{}".format(remote_port))
+                raise Exception("Can not submit job to the master. "
+                                "Please check if master is still alive.")
 
-            return socket, remote_ip, remote_port
+            if job_address is None:
+                raise ResourceError("Cannot submit the job to the master. "
+                                    "Please add more CPU resources to the "
+                                    "master or try again later.")
 
-        def _connect_server(self, server_ip, server_port, remote_ip,
-                            remote_port):
-            """
-            Create the connection between client side and server side.
+            self.internal_lock = threading.Lock()
 
-            Args:
-                server_ip(str): the ip of the server.
-                server_port(int): the connection port of the server.
-                remote_ip: the ip of the client itself.
-                remote_port: the port of the client itself, 
-                           which used to create reply socket.
-            """
-            self.reply_socket, local_ip, local_port = self._create_reply_socket(
-                remote_ip, remote_port)
-            self.reply_socket.linger = 0
+            # Send actor commands like `init` and `call` to the job.
+            self.job_socket = self.ctx.socket(zmq.REQ)
+            self.job_socket.linger = 0
+            self.job_socket.connect("tcp://{}".format(job_address))
+            self.job_address = job_address
 
-            socket = self.zmq_context.socket(zmq.REQ)
-            socket.connect("tcp://{}:{}".format(server_ip, server_port))
+            self.send_file(self.job_socket)
 
-            logger.info("connecting {}:{}".format(server_ip, server_port))
+            try:
+                self.job_socket.send_multipart([
+                    remote_constants.INIT_OBJECT_TAG,
+                    cloudpickle.dumps(cls),
+                    cloudpickle.dumps([args, kwargs])
+                ])
+                _ = self.job_socket.recv_multipart()
+            except zmq.error.Again as e:
+                logger.error("Job socket failed.")
+            logger.info("[connect_job] job_address:{}".format(job_address))
 
-            client_addr = '{}:{}'.format(local_ip, local_port)
-            socket.send_multipart(
-                [remote_constants.CONNECT_TAG,
-                 to_byte(client_addr)])
+        def __del__(self):
+            """Delete the remote class object and release remote resources."""
+            self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
+            _ = self.job_socket.recv_multipart()
+            self.job_socket.close(0)
 
-            message = socket.recv_multipart()
-            self.client_id = message[1]
-            logger.info("connect server done, client_id: {}".format(
-                self.client_id))
-            self.connect_socket = socket
-            self.connect_socket.linger = 0
+        def send_file(self, socket):
+            try:
+                socket.send_multipart([
+                    remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles
+                ])
+                _ = socket.recv_multipart()
+            except zmq.error.Again as e:
+                logger.error("Send python files failed.")
 
-        def _exit_remote(self):
-            self.poller.unregister(self.connect_socket)
-
-            self.connect_socket.close()
-            self.reply_socket.close()
-
-            # The program may hang when destroying zmq context manually.
-            # It will be destroyed automatically by the garbage collection mechanism of python,
-            # though it may raise some exceptions in C++.
-
-            #self.zmq_context.destroy()
-
-        def _heartbeat_loop(self):
-            """
-            Periodically detect whether the server is alive or not
-            """
-            self.poller = zmq.Poller()
-            self.poller.register(self.connect_socket, zmq.POLLIN)
-
-            while True:
-                self.connect_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG, self.client_id])
-
-                # wait for at most 10s to receive response
-                socks = dict(self.poller.poll(10000))
-
-                if socks.get(self.connect_socket) == zmq.POLLIN:
-                    _ = self.connect_socket.recv_multipart()
-                else:
-                    logger.warning(
-                        '[HeartBeat] Server no response, will exit now!')
-                    self._exit_remote()
-
-                    break
-
-                # HeartBeat interval 10s
-                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+        def request_cpu_resource(self, global_client):
+            """Try to request cpu resource for 1 second/time for 300 times."""
+            cnt = 300
+            while cnt > 0:
+                job_address = global_client.submit_job()
+                if job_address is not None:
+                    return job_address
+                if cnt % 30 == 0:
+                    logger.warning("No vacant cpu resources at present, "
+                                   "will try {} times later.".format(cnt))
+                cnt -= 1
+                time.sleep(1)
+            return None
 
         def __getattr__(self, attr):
-            """
-            Call the function of the unwrapped class.
-            """
+            """Call the function of the unwrapped class."""
 
             def wrapper(*args, **kwargs):
-                return getattr(self.unwrapped, attr)(*args, **kwargs)
+                self.internal_lock.acquire()
+                data = dumps_argument(*args, **kwargs)
+
+                self.job_socket.send_multipart(
+                    [remote_constants.CALL_TAG,
+                     to_byte(attr), data])
+
+                message = self.job_socket.recv_multipart()
+                tag = message[0]
+
+                if tag == remote_constants.NORMAL_TAG:
+                    ret = loads_return(message[1])
+
+                elif tag == remote_constants.EXCEPTION_TAG:
+                    error_str = to_str(message[1])
+                    raise RemoteError(attr, error_str)
+
+                elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
+                    error_str = to_str(message[1])
+                    raise RemoteAttributeError(attr, error_str)
+
+                elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
+                    error_str = to_str(message[1])
+                    raise RemoteSerializeError(attr, error_str)
+
+                elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
+                    error_str = to_str(message[1])
+                    raise RemoteDeserializeError(attr, error_str)
+
+                else:
+                    raise NotImplementedError()
+
+                self.internal_lock.release()
+                return ret
 
             return wrapper
 
-        def _reply_loop(self):
-            while True:
-                message = self.reply_socket.recv_multipart()
-
-                try:
-                    function_name = to_str(message[1])
-                    data = message[2]
-                    args, kwargs = loads_argument(data)
-                    ret = getattr(self.unwrapped, function_name)(*args,
-                                                                 **kwargs)
-                    ret = dumps_return(ret)
-
-                except Exception as e:
-                    error_str = str(e)
-                    logger.error(error_str)
-
-                    if type(e) == AttributeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.ATTRIBUTE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-                    elif type(e) == SerializeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.SERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-                    elif type(e) == DeserializeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.DESERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-                    else:
-                        traceback_str = str(traceback.format_exc())
-                        logger.error('traceback:\n{}'.format(traceback_str))
-                        self.reply_socket.send_multipart([
-                            remote_constants.EXCEPTION_TAG,
-                            to_byte(error_str + '\ntraceback:\n' +
-                                    traceback_str)
-                        ])
-
-                    continue
-
-                self.reply_socket.send_multipart(
-                    [remote_constants.NORMAL_TAG, ret])
-
-        def as_remote(self,
-                      server_ip,
-                      server_port,
-                      remote_ip=None,
-                      remote_port=None):
-            """
-            Client will connect server and wait for function calls from server side.
-
-            Args:
-                server_ip(str): server's ip
-                server_port(int): server's port
-                remote_ip: the ip of the client itself.
-                remote_port: the port of the client itself, 
-                           which used to create reply socket.
-            """
-            self._connect_server(server_ip, server_port, remote_ip,
-                                 remote_port)
-
-            reply_thread = threading.Thread(target=self._reply_loop)
-            reply_thread.setDaemon(True)
-            reply_thread.start()
-
-            self._heartbeat_loop()
-
-        def remote_closed(self):
-            """
-            Check whether as_remote mode is closed
-            """
-            assert self.reply_socket is not None, 'as_remote function should be called first!'
-            assert self.connect_socket is not None, 'as_remote function should be called first!'
-            return self.reply_socket.closed and self.connect_socket.closed
-
-    return ClientWrapper
+    return RemoteWrapper

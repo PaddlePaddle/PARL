@@ -61,7 +61,7 @@ def get_gpu_count():
     """get avaliable gpu count
 
     Returns:
-        gpu_count: int    
+        gpu_count: int
     """
 
     gpu_count = 0
@@ -77,7 +77,7 @@ def get_gpu_count():
             logger.info(
                 'CUDA_VISIBLE_DEVICES found gpu count: {}'.format(gpu_count))
         except:
-            logger.warn('Cannot find available GPU devices, using CPU now.')
+            logger.warning('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     else:
         try:
@@ -85,7 +85,7 @@ def get_gpu_count():
                                                      "-L"])).count('UUID')
             logger.info('nvidia-smi -L found gpu count: {}'.format(gpu_count))
         except:
-            logger.warn('Cannot find available GPU devices, using CPU now.')
+            logger.warning('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     return gpu_count
 
@@ -100,7 +100,7 @@ def is_gpu_available():
     if utils._HAS_FLUID:
         from paddle import fluid
         if ret is True and not fluid.is_compiled_with_cuda():
-            logger.warn("Found non-empty CUDA_VISIBLE_DEVICES. \
+            logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues."
-                        )
+                           )
     return ret

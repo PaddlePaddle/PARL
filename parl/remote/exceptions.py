@@ -13,14 +13,26 @@
 # limitations under the License.
 
 
+class ResourceError(Exception):
+    """
+    No available cpu resources error.
+    """
+
+    def __init__(self, error_info):
+        self.error_info = error_info
+
+    def __str__(self):
+        return self.error_info
+
+
 class RemoteError(Exception):
     """
     Super class of exceptions in remote module.
     """
 
     def __init__(self, func_name, error_info):
-        self.error_info = "[PARL remote error when calling function `{}`]:\n{}".format(
-            func_name, error_info)
+        self.error_info = "[PARL remote error when calling " +\
+            "function `{}`]:\n{}".format(func_name, error_info)
 
     def __str__(self):
         return self.error_info
@@ -52,7 +64,7 @@ class RemoteDeserializeError(RemoteError):
 
 class RemoteAttributeError(RemoteError):
     """
-    Attribute error from remote 
+    Attribute error from remote
     """
 
     def __init__(self, func_name, error_info):

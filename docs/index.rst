@@ -43,22 +43,29 @@ Abstractions
 * **Agent**, a data bridge between the *environment* and the *algorithm*, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Installation
+    :maxdepth: 1
+    :caption: Installation
 
    installation.rst
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Features
+    :maxdepth: 1
+    :caption: Features
 
-   features.rst
+    features.rst
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Tutorial
+    :maxdepth: 1
+    :caption: Tutorial
 
-   getting_started.rst
+    getting_started.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Parallel Training
+
+    parallel_training/setup.rst
+    parallel_training/recommended_practice.rst
 
 .. toctree::
    :maxdepth: 1

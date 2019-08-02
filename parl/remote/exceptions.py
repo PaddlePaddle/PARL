@@ -15,8 +15,9 @@
 
 class ResourceError(Exception):
     """
-    No more cpu resources error.
+    No available cpu resources error.
     """
+
     def __init__(self, error_info):
         self.error_info = error_info
 

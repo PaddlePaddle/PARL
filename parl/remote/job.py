@@ -68,7 +68,7 @@ class Job(object):
 
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
-            args=("worker {}".format(self.worker_address),),
+            args=("worker {}".format(self.worker_address), ),
             daemon=True)
         reply_thread.start()
         self.heartbeat_socket_initialized.wait()
@@ -78,15 +78,16 @@ class Job(object):
         self.job_socket.send_multipart([
             remote_constants.NORMAL_TAG,
             to_byte(self.job_address),
-            to_byte(self.heartbeat_worker_address)])
+            to_byte(self.heartbeat_worker_address)
+        ])
         _ = self.job_socket.recv_multipart()
 
     def _reply_heartbeat(self, target):
         """reply heartbeat signals to the target"""
 
         socket = self.ctx.socket(zmq.REP)
-        socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S*1000)
+        socket.setsockopt(zmq.RCVTIMEO,
+                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         socket.linger = 0
         heartbeat_worker_port = socket.bind_to_random_port(addr="tcp://*")
         self.heartbeat_worker_address = "{}:{}".format(self.job_ip,
@@ -100,8 +101,8 @@ class Job(object):
                 socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
             except zmq.error.Again as e:
-                logger.warning("[Job] Cannot connect to {}. ".format(
-                                target) + "Job will quit.")
+                logger.warning("[Job] Cannot connect to {}. ".format(target) +
+                               "Job will quit.")
                 self.worker_is_alive = False
                 self.job_is_alive = False
 
@@ -189,8 +190,8 @@ class Job(object):
                     ret = getattr(obj, function_name)(*args, **kwargs)
                     ret = dumps_return(ret)
 
-                    self.reply_socket.send_multipart([
-                        remote_constants.NORMAL_TAG, ret])
+                    self.reply_socket.send_multipart(
+                        [remote_constants.NORMAL_TAG, ret])
 
                 except Exception as e:
                     error_str = str(e)
@@ -200,26 +201,31 @@ class Job(object):
                     if type(e) == AttributeError:
                         self.reply_socket.send_multipart([
                             remote_constants.ATTRIBUTE_EXCEPTION_TAG,
-                            to_byte(error_str)])
+                            to_byte(error_str)
+                        ])
                         raise AttributeError
 
                     elif type(e) == SerializeError:
                         self.reply_socket.send_multipart([
                             remote_constants.SERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)])
+                            to_byte(error_str)
+                        ])
                         raise SerializeError
 
                     elif type(e) == DeserializeError:
                         self.reply_socket.send_multipart([
                             remote_constants.DESERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)])
+                            to_byte(error_str)
+                        ])
 
                     else:
                         traceback_str = str(traceback.format_exc())
                         logger.error("traceback:\n{}".format(traceback_str))
                         self.reply_socket.send_multipart([
                             remote_constants.EXCEPTION_TAG,
-                            to_byte(error_str+"\ntraceback:\n"+traceback_str)])
+                            to_byte(error_str + "\ntraceback:\n" +
+                                    traceback_str)
+                        ])
 
             # receive DELETE_TAG from actor, and stop replying worker heartbeat
             elif tag == remote_constants.KILLJOB_TAG:
@@ -234,8 +240,8 @@ class Job(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--worker_address", required=True, type=str,
-                        help="worker_address")
+    parser.add_argument(
+        "--worker_address", required=True, type=str, help="worker_address")
     args = parser.parse_args()
     job = Job(args.worker_address)
     job.run()

@@ -29,6 +29,7 @@ from parl.utils.window_stat import WindowStat
 
 from actor import Actor
 
+
 class Learner(object):
     def __init__(self, config):
         self.config = config
@@ -85,7 +86,7 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.remote_manager_thread = threading.Thread(
-            target=self.run_remote_manager)
+            target=self.create_actors)
         self.remote_manager_thread.setDaemon(True)
         self.remote_manager_thread.start()
 
@@ -136,8 +137,8 @@ class Learner(object):
             self.entropy_stat.add(entropy)
             self.kl_stat.add(kl)
 
-    def run_remote_manager(self):
-        """ Accept connection of new remote actor and start sampling of the remote actor.
+    def create_actors(self):
+        """ Connect to the cluster and start sampling of the remote actor.
         """
         parl.connect(self.config['master_address'])
 

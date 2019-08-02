@@ -102,5 +102,5 @@ def is_gpu_available():
         if ret is True and not fluid.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues."
-                        )
+                           )
     return ret

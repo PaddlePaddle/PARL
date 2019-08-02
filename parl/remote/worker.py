@@ -28,6 +28,7 @@ from parl.remote import remote_constants
 class WorkerInfo(object):
     """A WorkerInfo object records the computation resources of a worker.
     """
+
     def __init__(self, address, cpu_num, job_pool):
         self.address = address
         self.cpu_num = cpu_num
@@ -115,8 +116,9 @@ class Worker(object):
             "tcp://*")
         self.reply_master_address = "{}:{}".format(self.worker_ip,
                                                    reply_master_port)
-        logger.set_dir(os.path.expanduser('~/.parl_data/worker/{}'.format(
-            self.reply_master_address)))
+        logger.set_dir(
+            os.path.expanduser('~/.parl_data/worker/{}'.format(
+                self.reply_master_address)))
         # reply_job_socket: receives job_address from subprocess
         self.reply_job_socket = self.ctx.socket(zmq.REP)
         self.reply_job_socket.linger = 0
@@ -126,8 +128,8 @@ class Worker(object):
     def _create_worker(self):
         """create a WorkerInfo instance and send it to the master."""
         try:
-            self.request_master_socket.send_multipart([
-                remote_constants.WORKER_CONNECT_TAG])
+            self.request_master_socket.send_multipart(
+                [remote_constants.WORKER_CONNECT_TAG])
             _ = self.request_master_socket.recv_multipart()
         except zmq.error.Again as e:
             logger.error("Can not connect to the master, "
@@ -137,13 +139,13 @@ class Worker(object):
 
         self._init_jobs()
         self.request_master_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S*1000)
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
         self.worker = WorkerInfo(self.reply_master_address, self.cpu_num,
                                  list(self.job_pid.keys()))
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
-            args=("master {}".format(self.master_address),),
+            args=("master {}".format(self.master_address), ),
             daemon=True)
         reply_thread.start()
         self.heartbeat_socket_initialized.wait()
@@ -151,13 +153,16 @@ class Worker(object):
         self.request_master_socket.send_multipart([
             remote_constants.WORKER_INITIALIZED_TAG,
             cloudpickle.dumps(self.worker),
-            to_byte(self.heartbeat_master_address)])
+            to_byte(self.heartbeat_master_address)
+        ])
         _ = self.request_master_socket.recv_multipart()
 
     def _init_job(self):
         """Create one job."""
-        command = ["python", "{}/job.py".format(__file__[:-10]),
-                   "--worker_address", self.reply_job_address]
+        command = [
+            "python", "{}/job.py".format(__file__[:-10]), "--worker_address",
+            self.reply_job_address
+        ]
 
         with open(os.devnull, "w") as null:
             pid = subprocess.Popen(command, stdout=null, stderr=null)
@@ -173,7 +178,10 @@ class Worker(object):
         # a thread for sending heartbeat signals to job
         thread = threading.Thread(
             target=self._create_job_monitor,
-            args=(job_address, heartbeat_job_address,),
+            args=(
+                job_address,
+                heartbeat_job_address,
+            ),
             daemon=True)
         thread.start()
         return job_address
@@ -204,7 +212,8 @@ class Worker(object):
                     remote_constants.NEW_JOB_TAG,
                     to_byte(self.reply_master_address),
                     to_byte(new_job_address),
-                    to_byte(job_address)])
+                    to_byte(job_address)
+                ])
                 _ = self.request_master_socket.recv_multipart()
                 self.lock.release()
 
@@ -215,14 +224,14 @@ class Worker(object):
         job_heartbeat_socket = self.ctx.socket(zmq.REQ)
         job_heartbeat_socket.linger = 0
         job_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S*1000)
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         job_heartbeat_socket.connect("tcp://" + heartbeat_job_address)
 
         job_is_alive = True
         while job_is_alive and self.master_is_alive:
             try:
-                job_heartbeat_socket.send_multipart([
-                    remote_constants.HEARTBEAT_TAG])
+                job_heartbeat_socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG])
                 _ = job_heartbeat_socket.recv_multipart()
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
@@ -244,8 +253,8 @@ class Worker(object):
 
         socket = self.ctx.socket(zmq.REP)
         socket.linger = 0
-        socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S*1000)
+        socket.setsockopt(zmq.RCVTIMEO,
+                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         heartbeat_master_port =\
             socket.bind_to_random_port("tcp://*")
         self.heartbeat_master_address = "{}:{}".format(self.worker_ip,
@@ -291,8 +300,8 @@ class Worker(object):
 
                 if tag == remote_constants.KILLJOB_TAG:
                     job_address = to_str(message[1])
-                    self.reply_master_socket.send_multipart([
-                        remote_constants.NORMAL_TAG])
+                    self.reply_master_socket.send_multipart(
+                        [remote_constants.NORMAL_TAG])
                     self._kill_job(job_address)
 
                 else:

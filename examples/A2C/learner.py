@@ -80,10 +80,10 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.params_queues = []
-        self.run_remote_manager()
+        self.create_actors()
 
-    def run_remote_manager(self):
-        """ Accept connection of new remote actor and start sampling of the remote actor.
+    def create_actors(self):
+        """ Connect to the cluster and start sampling of the remote actor.
         """
         parl.connect(self.config['master_address'])
 

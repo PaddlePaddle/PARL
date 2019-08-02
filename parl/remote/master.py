@@ -24,8 +24,7 @@ from parl.remote import remote_constants
 
 
 class Master(object):
-    """Represents a master node, the control center for our cluster
-    framework which provides connections to workers and clients.
+    """Base class for a master node, the control center for our cluster, which provides connections to workers and clients.
 
     There is only one master node in each cluster, and it is responsible for
     receiving jobs from the clients and allocating computation resources to
@@ -86,14 +85,14 @@ class Master(object):
         worker_heartbeat_socket = self.ctx.socket(zmq.REQ)
         worker_heartbeat_socket.linger = 0
         worker_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S*1000)
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         worker_heartbeat_socket.connect("tcp://" + worker_heartbeat_address)
 
         connected = True
         while connected and self.master_is_alive:
             try:
-                worker_heartbeat_socket.send_multipart([
-                    remote_constants.HEARTBEAT_TAG])
+                worker_heartbeat_socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG])
                 _ = worker_heartbeat_socket.recv_multipart()
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
             except zmq.error.Again as e:
@@ -122,14 +121,14 @@ class Master(object):
         client_heartbeat_socket = self.ctx.socket(zmq.REQ)
         client_heartbeat_socket.linger = 0
         client_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S*1000)
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         client_heartbeat_socket.connect("tcp://" + client_heartbeat_address)
 
         self.client_is_alive = True
         while self.client_is_alive and self.master_is_alive:
             try:
-                client_heartbeat_socket.send_multipart([
-                    remote_constants.HEARTBEAT_TAG])
+                client_heartbeat_socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG])
                 _ = client_heartbeat_socket.recv_multipart()
             except zmq.error.Again as e:
                 self.client_is_alive = False
@@ -139,7 +138,7 @@ class Master(object):
                 self._kill_client_jobs(client_heartbeat_address)
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
         logger.warning("Master exits client monitor for {}.\n".format(
-                    client_heartbeat_address))
+            client_heartbeat_address))
         logger.info(
             "Master connects to {} workers and have {} vacant CPUs.\n".format(
                 len(self.worker_pool), len(self.job_pool)))
@@ -155,8 +154,9 @@ class Master(object):
                 worker_address = self.job_worker_dict[job_address]
                 worker_socket = self.worker_pool[worker_address].worker_socket
                 self.worker_locks[worker_address].acquire()
-                worker_socket.send_multipart([remote_constants.KILLJOB_TAG,
-                                              to_byte(job_address)])
+                worker_socket.send_multipart(
+                    [remote_constants.KILLJOB_TAG,
+                     to_byte(job_address)])
                 try:
                     _ = worker_socket.recv_multipart()
                 except zmq.error.Again as e:
@@ -208,7 +208,10 @@ class Master(object):
             # a thread for sending heartbeat signals to `worker.address`
             thread = threading.Thread(
                 target=self._create_worker_monitor,
-                args=(worker_heartbeat_address, worker.address,),
+                args=(
+                    worker_heartbeat_address,
+                    worker.address,
+                ),
                 daemon=True)
             thread.start()
 
@@ -217,12 +220,12 @@ class Master(object):
         # a client connects to the master
         elif tag == remote_constants.CLIENT_CONNECT_TAG:
             client_heartbeat_address = to_str(message[1])
-            logger.info("Client {} is connected.".format(
-                client_heartbeat_address))
+            logger.info(
+                "Client {} is connected.".format(client_heartbeat_address))
 
             thread = threading.Thread(
                 target=self._create_client_monitor,
-                args=(client_heartbeat_address,),
+                args=(client_heartbeat_address, ),
                 daemon=True)
             thread.start()
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -238,8 +241,9 @@ class Master(object):
                 job_address = self.job_pool.pop(0)
                 worker_address = self.job_worker_dict[job_address]
                 self.worker_job_dict[worker_address].remove(job_address)
-                self.client_socket.send_multipart([
-                    remote_constants.NORMAL_TAG, to_byte(job_address)])
+                self.client_socket.send_multipart(
+                    [remote_constants.NORMAL_TAG,
+                     to_byte(job_address)])
                 self.client_job_dict[client_address].append(job_address)
                 self._print_workers()
             else:

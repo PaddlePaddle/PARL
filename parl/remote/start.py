@@ -19,7 +19,7 @@ from parl.remote import Master, Worker
 
 
 def main(args):
-    """Start master or worker through:
+    """Start a master or a worker through:
 
     1. xparl start --port 1234
     2. xparl connect --address localhost:1234 --cpu_num 8
@@ -43,8 +43,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name', default='master', type=str,
-                        help='master/worker')
+    parser.add_argument(
+        '--name', default='master', type=str, help='master/worker')
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)

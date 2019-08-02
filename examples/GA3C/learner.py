@@ -33,6 +33,7 @@ from parl.utils import machine_info
 
 from actor import Actor
 
+
 class Learner(object):
     def __init__(self, config):
         self.config = config
@@ -104,7 +105,7 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.remote_manager_thread = threading.Thread(
-            target=self.run_remote_manager)
+            target=self.create_actors)
         self.remote_manager_thread.setDaemon(True)
         self.remote_manager_thread.start()
 
@@ -178,8 +179,8 @@ class Learner(object):
             self.vf_loss_stat.add(vf_loss)
             self.entropy_stat.add(entropy)
 
-    def run_remote_manager(self):
-        """ Accept connection of new remote simulator and start simulation.
+    def create_actors(self):
+        """ Connect to the cluster and start sampling of the remote actor.
         """
         parl.connect(self.config['master_address'])
 
@@ -190,7 +191,7 @@ class Learner(object):
         self.predict_output_queues = []
 
         for i in six.moves.range(self.config['actor_num']):
-            
+
             self.remote_count += 1
             logger.info('Remote simulator count: {}'.format(self.remote_count))
             if self.start_time is None:
@@ -200,8 +201,7 @@ class Learner(object):
             self.predict_output_queues.append(q)
 
             remote_thread = threading.Thread(
-                target=self.run_remote_sample,
-                args=(ident,))
+                target=self.run_remote_sample, args=(ident, ))
             remote_thread.setDaemon(True)
             remote_thread.start()
             ident += 1

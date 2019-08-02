@@ -23,6 +23,7 @@ from atari_agent import AtariAgent
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 
+
 @parl.remote_class
 class Actor(object):
     def __init__(self, config):

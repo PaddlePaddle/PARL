@@ -75,7 +75,7 @@ class Client(object):
         self.submit_job_socket = self.ctx.socket(zmq.REQ)
         self.submit_job_socket.linger = 0
         self.submit_job_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S*1000)
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
 
         thread = threading.Thread(target=self._reply_heartbeat, daemon=True)
@@ -86,7 +86,8 @@ class Client(object):
         try:
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
-                to_byte(self.heartbeat_master_address)])
+                to_byte(self.heartbeat_master_address)
+            ])
             _ = self.submit_job_socket.recv_multipart()
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
@@ -102,8 +103,8 @@ class Client(object):
 
         socket = self.ctx.socket(zmq.REP)
         socket.linger = 0
-        socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S*1000)
+        socket.setsockopt(zmq.RCVTIMEO,
+                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         heartbeat_master_port =\
             socket.bind_to_random_port(addr="tcp://*")
         self.heartbeat_master_address = "{}:{}".format(get_ip_address(),
@@ -137,7 +138,8 @@ class Client(object):
             self.lock.acquire()
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_SUBMIT_TAG,
-                to_byte(self.heartbeat_master_address)])
+                to_byte(self.heartbeat_master_address)
+            ])
             message = self.submit_job_socket.recv_multipart()
             self.lock.release()
 
@@ -155,6 +157,7 @@ class Client(object):
             raise Exception("Client can not submit job to the master, "
                             "please check if master is connected.")
         return job_address
+
 
 GLOBAL_CLIENT = None
 

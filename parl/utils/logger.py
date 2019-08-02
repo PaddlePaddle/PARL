@@ -103,6 +103,7 @@ def create_file_after_first_call(func_name):
 
     return call
 
+
 _logger = _getlogger()
 _LOGGING_METHOD = [
     'info', 'warning', 'error', 'critical', 'warn', 'exception', 'debug',
@@ -113,7 +114,6 @@ _LOGGING_METHOD = [
 for func in _LOGGING_METHOD:
     locals()[func] = create_file_after_first_call(func)
     __all__.append(func)
-
 
 # export Level information
 _LOGGING_LEVEL = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
@@ -163,6 +163,5 @@ def get_dir():
 
 # Will save log to log_dir/main_file_name/log.log by default
 
-# print(f"mod is: {mod}\n hasattr: {hasattr(mod, '__file__')}")
 mod = sys.modules['__main__']
 _logger.info("Argv: " + ' '.join(sys.argv))

@@ -67,6 +67,7 @@ def remote_class(cls):
         """
         Wrapper for remote class in client side.
         """
+
         def __init__(self, *args, **kwargs):
             """
             Args:
@@ -102,8 +103,10 @@ def remote_class(cls):
 
             try:
                 self.job_socket.send_multipart([
-                    remote_constants.INIT_OBJECT_TAG, cloudpickle.dumps(cls),
-                    cloudpickle.dumps([args, kwargs])])
+                    remote_constants.INIT_OBJECT_TAG,
+                    cloudpickle.dumps(cls),
+                    cloudpickle.dumps([args, kwargs])
+                ])
                 _ = self.job_socket.recv_multipart()
             except zmq.error.Again as e:
                 logger.error("Job socket failed.")
@@ -118,8 +121,8 @@ def remote_class(cls):
         def send_file(self, socket):
             try:
                 socket.send_multipart([
-                    remote_constants.SEND_FILE_TAG,
-                    self.GLOBAL_CLIENT.pyfiles])
+                    remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles
+                ])
                 _ = socket.recv_multipart()
             except zmq.error.Again as e:
                 logger.error("Send python files failed.")
@@ -145,8 +148,9 @@ def remote_class(cls):
                 self.internal_lock.acquire()
                 data = dumps_argument(*args, **kwargs)
 
-                self.job_socket.send_multipart([
-                    remote_constants.CALL_TAG, to_byte(attr), data])
+                self.job_socket.send_multipart(
+                    [remote_constants.CALL_TAG,
+                     to_byte(attr), data])
 
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
@@ -175,5 +179,7 @@ def remote_class(cls):
 
                 self.internal_lock.release()
                 return ret
+
             return wrapper
+
     return RemoteWrapper

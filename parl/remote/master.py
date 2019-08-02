@@ -40,11 +40,10 @@ class Master(object):
     master node.
 
     Attributes:
-        cpu_num (int): The available cpu numbers of the cluster, when this
-                       number is 0, the master will refuse to create new
-                       remote object.
         worker_pool (dict): A dict to store connected workers.
-        job_pool (list): A list to store the job address of vacant cpu.
+        job_pool (list): A list to store the job address of vacant cpu, when 
+                         this number is 0, the master will refuse to create
+                         new remote object.
         client_job_dict (dict): A dict of list to record the job submitted by
                                 each client.
         job_worker_dict (dict): A dict to record the job and related worker.

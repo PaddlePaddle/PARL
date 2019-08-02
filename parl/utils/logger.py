@@ -137,9 +137,10 @@ def _set_file(path):
 
 
 def set_level(level):
-    global _logger
+    global _logger, LOG_DIR
     # To set level, need create new handler
-    set_dir(get_dir())
+    if LOG_DIR is not None:
+        set_dir(get_dir())
     _logger.setLevel(level)
 
 

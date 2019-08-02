@@ -82,8 +82,9 @@ class Worker(object):
     def _set_cpu_num(self, cpu_num=None):
         """set useable cpu number for worker"""
         if cpu_num is not None:
-            assert isinstance(cpu_num, int), "cpu_num is expected to be an" +\
-                "INT，but you have passed a(n) {}".format(type(cpu_num))
+            assert isinstance(
+                cpu_num, int
+            ), "cpu_num should be INT type, please check the input type."
             self.cpu_num = cpu_num
         else:
             self.cpu_num = multiprocessing.cpu_count()

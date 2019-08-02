@@ -2,26 +2,29 @@ Cluster Setup
 =============
 Setup Command
 ###################
-This tutorial demonstrates how to set up a cluster with ``xparl`` command.
+This tutorial demonstrates how to set up a cluster.
 
-To start a simple PARL cluster, we can execute the following two ``xparl`` commands:
+To start a PARL cluster, we can execute the following two ``xparl`` commands:
 
 .. code-block:: bash
 
   xparl start --port 6006
 
-  xparl connect --address localhost:6006
-
+This command starts a master node to manage computation resources and adds the local CPUs to the cluster.
 We use the port `6006` for demonstration, and it can be any available port.
 
-**Explaination**
+**Adding More Resources**
+If you would like to add more CPUs(computation resources) to the cluster, run the following command on other machines.
 
-1. start a master node to manage computation resources.
-2. start a worker node that provides computation resources for the master. A worker will use all the CPUs by default. If you wish to specify the number of CPUs to be used, run the command with ``--cpu_num <cpu_num>`` (e.g.------cpu_num 10). 
+.. code-block:: bash
+
+  xparl connect --address localhost:6006
+
+It starts a worker node that provides CPUs of the machine for the master. A worker will use all the CPUs by default. If you wish to specify the number of CPUs to be used, run the command with ``--cpu_num <cpu_num>`` (e.g.------cpu_num 10). 
 
 Note that the command ``xparl connect`` can be run at any time, at any machine to add more CPUs to the cluster.
 
-Here we give an example demonstating how to use ``@parl.remote_class`` for parallel computation.
+Here we give an example demonstrating how to use ``@parl.remote_class`` for parallel computation.
 
 .. code-block:: python
 

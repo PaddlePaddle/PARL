@@ -98,8 +98,7 @@ class Learner(object):
             logger.info('Remote actor count: {}'.format(self.remote_count))
 
             remote_thread = threading.Thread(
-                target=self.run_remote_sample,
-                args=(params_queue,))
+                target=self.run_remote_sample, args=(params_queue, ))
             remote_thread.setDaemon(True)
             remote_thread.start()
 

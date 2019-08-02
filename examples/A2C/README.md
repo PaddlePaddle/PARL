@@ -24,34 +24,21 @@ Mean episode reward in training process after 10 million sample steps.
 
 ### Distributed Training
 
-We can start a local cluster with 5 CPUs by executing the `xparl start`
-command:
+At first, We can start a local cluster with 5 CPUs:
 
 ```bash
 xparl start --port 8010 --cpu_num 5
 ```
 
-After the cluster is started, we can add more computation resources to our
-cluster with the `xparl connect` command at any time and on any machine.
-
-```bash
-xparl connect --address master_address
-```
+Note that if you have started a master before, you don't have to run the above
+command. For more information about the cluster, please refer to our
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
 Then we can start the distributed training by running `train.py`.
 
 ```bash
 python train.py
 ```
-
-If we have an existing cluster running at `cluster_address`, we can start a new
-training task with this cluster by setting `'master_address' = cluster_address`
-in the `a2c_config.py`.
-
-Training result will be saved in `log_dir/train/log.log` and the cluster logs
-will be saved in `~/.parl_data/`. For more detailed information about the
-usage of the parl cluster, please refer to our official document
-[Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ### Reference
 + [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)

@@ -14,7 +14,8 @@
 
 import time
 from learner import Learner
-import parl 
+import parl
+
 
 def main(config):
     learner = Learner(config)
@@ -25,6 +26,7 @@ def main(config):
         while time.time() - start < config['log_metrics_interval_s']:
             learner.step()
         learner.log_metrics()
+
 
 if __name__ == '__main__':
     from a2c_config import config

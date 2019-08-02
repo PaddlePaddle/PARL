@@ -68,10 +68,9 @@ setup(
         "pyzmq==18.0.1",
         "pyarrow==0.13.0",
         "scipy>=1.0.0",
-        "cloudpickle==1.2.1",
+        "cloudpickle==1.0.0",
         "tensorboardX==1.8",
-        "tb-nightly==1.15.0a20190801",
-        "click",
+        "tensorboard==1.14.0",
     ],
     classifiers=[
         'Intended Audience :: Developers',
@@ -82,7 +81,4 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    entry_points={
-        "console_scripts": ["xparl=parl.remote.scripts:main"]
-    },
 )

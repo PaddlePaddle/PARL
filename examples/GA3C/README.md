@@ -21,18 +21,13 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 + gym
 + atari-py
 
-
 ### Distributed Training
 
-
-#### Training from scratch
-
-To start a distributed training from scratch, we need to start a cluster at
-first. The `xparl start` command will start a local cluster with `cpu_num`
-CPUs.
+We can start a local cluster with 8 CPUs by executing the `xparl start`
+command:
 
 ```bash
-xparl start --port port --cpu_num cpu_num
+xparl start --port 8010 --cpu_num 8
 ```
 
 After the cluster is started, we can add more computation resources to our
@@ -48,17 +43,9 @@ Then we can start the distributed training by running `train.py`.
 python train.py
 ```
 
-#### Training with an existing cluster
-
 If we have an existing cluster running at `cluster_address`, we can start a new
 training task with this cluster by setting `'master_address' = cluster_address`
 in the `ga3c_config.py`.
-
-Then we can start the distributed training by running `train.py`.
-
-```bash
-python train.py
-```
 
 Training result will be saved in `log_dir/train/log.log` and the cluster logs
 will be saved in `~/.parl_data/`. For more detailed information about the

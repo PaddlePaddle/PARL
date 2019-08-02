@@ -30,6 +30,33 @@ locale.setlocale(locale.LC_ALL,"en_US.UTF-8")
 warnings.simplefilter("ignore", ResourceWarning)
 
 
+def is_port_in_use(port):
+    """ Check if a port is used.
+
+    0: The port is used.
+    else: The port is not used.
+    """
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', int(port))) == 0
+
+def is_master_started(address):
+    import zmq
+    ctx = zmq.Context()
+    socket = ctx.socket(zmq.REQ)
+    socket.linger = 0
+    socket.setsockopt(zmq.RCVTIMEO, 500)
+    socket.connect("tcp://{}".format(address))
+    socket.send_multipart([b'[NORMAL]'])
+    try:
+        _ = socket.recv_multipart()
+        socket.close(0)
+        return 1
+    except zmq.error.Again as e:
+        socket.close(0)
+        return -1
+
+
 @click.group()
 def cli():
     pass
@@ -38,6 +65,10 @@ def cli():
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
 def start_master(port):
+    if is_port_in_use(port):
+        raise Exception(
+            "The master address localhost:{} already in use.".format(port))
+
     command = ["python",
                "{}/start.py".format(__file__[:-11]),
                "--name", "master", "--port", port]
@@ -57,6 +88,10 @@ def start_master(port):
               help="Set number of cpu manually. If not set, it will use all "
                    "cpus of this machine.")
 def start_worker(address, cpu_num):
+    if is_master_started(address) == -1:
+        raise Exception("Worker can not connect to the master node, " +
+                        "please check if the input address {} ".format(
+                        address) + "is correct.")
     cpu_num = str(cpu_num) if cpu_num else ''
     command = ["python",
                "{}/start.py".format(__file__[:-11]),

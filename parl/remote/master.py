@@ -60,9 +60,7 @@ class Master(object):
     """
 
     def __init__(self, port):
-        os.makedirs(os.path.expanduser('~/.parl_data/master/'), exist_ok=True)
         logger.set_dir(os.path.expanduser('~/.parl_data/master/'))
-
         self.lock = threading.Lock()
         self.ctx = zmq.Context()
 
@@ -269,6 +267,10 @@ class Master(object):
             self.worker_job_dict[worker_address].append(new_job_address)
 
             self._print_workers()
+
+        # check before start a worker
+        elif tag == remote_constants.NORMAL_TAG:
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         else:
             raise NotImplementedError()

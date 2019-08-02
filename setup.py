@@ -69,8 +69,8 @@ setup(
         "pyarrow==0.13.0",
         "scipy>=1.0.0",
         "cloudpickle==1.2.1",
-        "tensorboardX",
-        "tensorboard",
+        "tensorboardX==1.8",
+        "tb-nightly==1.15.0a20190801",
         "click",
     ],
     classifiers=[

@@ -67,7 +67,6 @@ class Worker(object):
     """
 
     def __init__(self, master_address, cpu_num=None):
-        os.makedirs(os.path.expanduser('~/.parl_data/worker/'), exist_ok=True)
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
         self.ctx = zmq.Context.instance()
@@ -116,7 +115,8 @@ class Worker(object):
             "tcp://*")
         self.reply_master_address = "{}:{}".format(self.worker_ip,
                                                    reply_master_port)
-
+        logger.set_dir(os.path.expanduser('~/.parl_data/worker/{}'.format(
+            self.reply_master_address)))
         # reply_job_socket: receives job_address from subprocess
         self.reply_job_socket = self.ctx.socket(zmq.REP)
         self.reply_job_socket.linger = 0
@@ -251,8 +251,6 @@ class Worker(object):
         self.heartbeat_master_address = "{}:{}".format(self.worker_ip,
                                                        heartbeat_master_port)
         self.heartbeat_socket_initialized.set()
-        logger.set_dir(os.path.expanduser('~/.parl_data/worker/{}'.format(
-            self.heartbeat_master_address)))
         logger.info("[Worker] Connect to the master node successfully. "
                     "({} CPUs)".format(self.cpu_num))
         while self.master_is_alive:

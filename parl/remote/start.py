@@ -17,6 +17,7 @@ import os
 import threading
 from parl.remote import Master, Worker
 
+
 def main(args):
     """Start master or worker through:
 
@@ -35,6 +36,7 @@ def main(args):
         cpu_num = int(args.cpu_num) if args.cpu_num else None
         worker = Worker(address, cpu_num)
         worker.run()
+
     else:
         raise NotImplementedError
 

@@ -76,9 +76,10 @@ def _getlogger():
     logger = logging.getLogger('PARL')
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
-    logger.addHandler(handler)
+    if 'XPARL' not in os.environ:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
+        logger.addHandler(handler)
     return logger
 
 
@@ -124,6 +125,7 @@ def set_dir(dirname):
     if _FILE_HANDLER:
         # unload and close the old file handler, so that we may safely delete the logger directory
         _logger.removeHandler(_FILE_HANDLER)
+        _FILE_HANDLER.close()
         del _FILE_HANDLER
 
     if not os.path.isdir(dirname):
@@ -140,7 +142,12 @@ def get_dir():
 mod = sys.modules['__main__']
 if hasattr(mod, '__file__'):
     basename = os.path.basename(mod.__file__)
-    auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
+    if basename.rfind('.') == -1:
+        basename = basename
+    else:
+        basename = basename[:basename.rfind('.')]
+    auto_dirname = os.path.join('log_dir', basename)
+
     shutil.rmtree(auto_dirname, ignore_errors=True)
     set_dir(auto_dirname)
     _logger.info("Argv: " + ' '.join(sys.argv))

@@ -18,7 +18,6 @@ generates new PARL python API
 """
 import os
 
-
 from tensorboardX import SummaryWriter
 from parl.utils.utils import _HAS_FLUID
 if _HAS_FLUID:

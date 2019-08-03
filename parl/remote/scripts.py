@@ -14,11 +14,13 @@
 
 import click
 import locale
+import sys
 import os
 import subprocess
 import threading
 import warnings
 from multiprocessing import Process
+from parl.utils import logger
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -27,18 +29,22 @@ os.environ['XPARL'] = 'True'
 # to use ASCII as encoding for the environment` error.
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
-warnings.simplefilter("ignore", ResourceWarning)
+#TODO: this line will cause error in python2/macOS
+if sys.version_info.major == 3:
+    warnings.simplefilter("ignore", ResourceWarning)
 
 
-def is_port_in_use(port):
+def is_port_available(port):
     """ Check if a port is used.
 
-    True if the port is not available. Otherwise, this port can be used for
-    connection.
+    True if the port is available for connection.
     """
+    port = int(port)
     import socket
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', int(port))) == 0
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    available = sock.connect_ex(('localhost', port))
+    sock.close()
+    return available
 
 
 def is_master_started(address):
@@ -71,22 +77,24 @@ def cli():
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 def start_master(port, cpu_num):
-    if is_port_in_use(port):
+    if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} already in use.".format(port))
     cpu_num = str(cpu_num) if cpu_num else ''
-    command = [
-        "python", "{}/start.py".format(__file__[:-11]), "--name", "master",
-        "--port", port
-    ]
+    start_file = __file__.replace('scripts.pyc', 'start.py')
+    start_file = start_file.replace('scripts.py', 'start.py')
+    command = ["python", start_file, "--name", "master", "--port", port]
     p = subprocess.Popen(command)
 
     command = [
-        "python", "{}/start.py".format(__file__[:-11]), "--name", "worker",
-        "--address", "localhost:" + str(port), "--cpu_num",
+        "python", start_file, "--name", "worker", "--address",
+        "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
-    p = subprocess.Popen(command)
+    # Redirect the output to DEVNULL to solve the warning log.
+    FNULL = open(os.devnull, 'w')
+    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+    FNULL.close()
 
 
 @click.command("connect", short_help="Start a worker node.")

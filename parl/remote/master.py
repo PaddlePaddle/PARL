@@ -41,7 +41,7 @@ class Master(object):
 
     Attributes:
         worker_pool (dict): A dict to store connected workers.
-        job_pool (list): A list to store the job address of vacant cpu, when 
+        job_pool (list): A list to store the job address of vacant cpu, when
                          this number is 0, the master will refuse to create
                          new remote object.
         client_job_dict (dict): A dict of list to record the job submitted by
@@ -201,8 +201,9 @@ class Master(object):
             self.worker_pool[worker.address] = worker
             self.worker_locks[worker.address] = threading.Lock()
 
-            logger.info("A new worker {} is added, ".format(worker.address) +
-                        "cluster has {} CPUs.\n".format(len(self.job_pool)))
+            logger.info(
+                "A new worker {} is added, ".format(worker.address) +
+                "the cluster has {} CPUs.\n".format(len(self.job_pool)))
 
             # a thread for sending heartbeat signals to `worker.address`
             thread = threading.Thread(
@@ -210,8 +211,8 @@ class Master(object):
                 args=(
                     worker_heartbeat_address,
                     worker.address,
-                ),
-                daemon=True)
+                ))
+            thread.setDaemon(True)
             thread.start()
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -224,8 +225,8 @@ class Master(object):
 
             thread = threading.Thread(
                 target=self._create_client_monitor,
-                args=(client_heartbeat_address, ),
-                daemon=True)
+                args=(client_heartbeat_address, ))
+            thread.setDaemon(True)
             thread.start()
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 

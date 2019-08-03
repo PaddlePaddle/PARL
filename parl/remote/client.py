@@ -18,6 +18,7 @@ import threading
 import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.remote import remote_constants
+import time
 
 
 class Client(object):
@@ -78,7 +79,8 @@ class Client(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
 
-        thread = threading.Thread(target=self._reply_heartbeat, daemon=True)
+        thread = threading.Thread(target=self._reply_heartbeat)
+        thread.setDaemon(True)
         thread.start()
         self.heartbeat_socket_initialized.wait()
 
@@ -127,7 +129,7 @@ class Client(object):
 
         When a `@parl.remote_class` object is created, the global client
         sends a job to the master node. Then the master node will allocate
-        a vacant job from its job pool to the remote object. 
+        a vacant job from its job pool to the remote object.
 
         Returns:
             IP address of the job.
@@ -151,6 +153,8 @@ class Client(object):
             # no vacant CPU resources, can not submit a new job
             elif tag == remote_constants.CPU_TAG:
                 job_address = None
+                # wait 1 second to avoid requesting in a high frequency.
+                time.sleep(1)
             else:
                 raise NotImplementedError
         else:

@@ -15,14 +15,19 @@
 import cloudpickle
 import multiprocessing
 import os
+import signal
 import subprocess
 import sys
 import time
 import threading
+import warnings
 import zmq
 
 from parl.utils import get_ip_address, to_byte, to_str, logger
 from parl.remote import remote_constants
+
+if sys.version_info.major == 3:
+    warnings.simplefilter("ignore", ResourceWarning)
 
 
 class WorkerInfo(object):
@@ -138,7 +143,7 @@ class Worker(object):
             self.master_is_alive = False
             return
 
-        self._init_jobs()
+        self._init_jobs(job_num=self.cpu_num)
         self.request_master_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
@@ -146,8 +151,8 @@ class Worker(object):
                                  list(self.job_pid.keys()))
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
-            args=("master {}".format(self.master_address), ),
-            daemon=True)
+            args=("master {}".format(self.master_address), ))
+        reply_thread.setDaemon(True)
         reply_thread.start()
         self.heartbeat_socket_initialized.wait()
 
@@ -158,55 +163,66 @@ class Worker(object):
         ])
         _ = self.request_master_socket.recv_multipart()
 
-    def _init_job(self):
-        """Create one job."""
+    def _init_jobs(self, job_num):
+        """Create jobs.
+
+        Args:
+            job_num(int): the number of jobs to create.
+        """
+        job_file = __file__.replace('worker.pyc', 'job.py')
+        job_file = job_file.replace('worker.py', 'job.py')
         command = [
-            "python", "{}/job.py".format(__file__[:-10]), "--worker_address",
-            self.reply_job_address
+            "python", job_file, "--worker_address", self.reply_job_address
         ]
 
-        with open(os.devnull, "w") as null:
-            pid = subprocess.Popen(command, stdout=null, stderr=null)
+        # Redirect the output to DEVNULL
+        FNULL = open(os.devnull, 'w')
+        for _ in range(job_num):
+            pid = subprocess.Popen(
+                command, stdout=FNULL, stderr=subprocess.STDOUT)
+        FNULL.close()
 
-        self.lock.acquire()
-        job_message = self.reply_job_socket.recv_multipart()
-        self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG])
-        job_address = to_str(job_message[1])
-        heartbeat_job_address = to_str(job_message[2])
-        self.job_pid[job_address] = pid
-        self.lock.release()
+        new_job_address = []
+        for _ in range(job_num):
+            job_message = self.reply_job_socket.recv_multipart()
+            self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG])
+            job_address = to_str(job_message[1])
+            new_job_address.append(job_address)
+            heartbeat_job_address = to_str(job_message[2])
+            pid = to_str(job_message[3])
+            self.job_pid[job_address] = int(pid)
 
-        # a thread for sending heartbeat signals to job
-        thread = threading.Thread(
-            target=self._create_job_monitor,
-            args=(
-                job_address,
-                heartbeat_job_address,
-            ),
-            daemon=True)
-        thread.start()
-        return job_address
-
-    def _init_jobs(self):
-        """Create cpu_num jobs when the worker is created."""
-        job_threads = []
-        for _ in range(self.cpu_num):
-            t = threading.Thread(target=self._init_job, daemon=True)
-            t.start()
-            job_threads.append(t)
-        for th in job_threads:
-            th.join()
+            # a thread for sending heartbeat signals to job
+            thread = threading.Thread(
+                target=self._create_job_monitor,
+                args=(
+                    job_address,
+                    heartbeat_job_address,
+                ))
+            thread.setDaemon(True)
+            thread.start()
+        assert len(new_job_address) > 0, "init jobs failed"
+        if len(new_job_address) > 1:
+            return new_job_address
+        else:
+            return new_job_address[0]
 
     def _kill_job(self, job_address):
         """kill problematic job process and update worker information"""
         if job_address in self.job_pid:
-            self.job_pid[job_address].kill()
+            self.lock.acquire()
+            pid = self.job_pid[job_address]
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                logger.warn("job:{} has been killed before".format(pid))
             self.job_pid.pop(job_address)
             logger.warning("Worker kills job process {},".format(job_address))
+            self.lock.release()
 
             # When a old job is killed, the worker will create a new job.
             if self.master_is_alive:
-                new_job_address = self._init_job()
+                new_job_address = self._init_jobs(job_num=1)
 
                 self.lock.acquire()
                 self.request_master_socket.send_multipart([

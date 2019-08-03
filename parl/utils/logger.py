@@ -87,7 +87,8 @@ def create_file_after_first_call(func_name):
         global _logger
         if LOG_DIR is None and hasattr(mod, '__file__'):
             basename = os.path.basename(mod.__file__)
-            auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
+            auto_dirname = os.path.join('log_dir',
+                                        basename[:basename.rfind('.')])
             set_dir(auto_dirname)
 
         func = getattr(_logger, func_name)

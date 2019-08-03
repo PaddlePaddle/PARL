@@ -18,7 +18,6 @@ import os
 import os.path
 import sys
 from termcolor import colored
-import shutil
 
 __all__ = ['set_dir', 'get_dir', 'set_level']
 
@@ -86,16 +85,9 @@ def _getlogger():
 def create_file_after_first_call(func_name):
     def call(*args, **kwargs):
         global _logger
-        if LOG_DIR is None:
-
+        if LOG_DIR is None and hasattr(mod, '__file__'):
             basename = os.path.basename(mod.__file__)
-            if basename.rfind('.') == -1:
-                basename = basename
-            else:
-                basename = basename[:basename.rfind('.')]
-                auto_dirname = os.path.join('log_dir', basename)
-
-            shutil.rmtree(auto_dirname, ignore_errors=True)
+            auto_dirname = os.path.join('log_dir', basename[:basename.rfind('.')])
             set_dir(auto_dirname)
 
         func = getattr(_logger, func_name)
@@ -165,4 +157,5 @@ def get_dir():
 # Will save log to log_dir/main_file_name/log.log by default
 
 mod = sys.modules['__main__']
-_logger.info("Argv: " + ' '.join(sys.argv))
+if hasattr(mod, '__file__') and 'XPARL' not in os.environ:
+    _logger.info("Argv: " + ' '.join(sys.argv))

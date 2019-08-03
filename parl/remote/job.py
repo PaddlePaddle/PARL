@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle
 import pickle
@@ -27,8 +30,6 @@ from parl.utils.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 
 class Job(object):
@@ -41,7 +42,6 @@ class Job(object):
 
     def __init__(self, worker_address):
         self.job_is_alive = True
-        self.heartbeat_socket_initialized = threading.Event()
         self.worker_address = worker_address
         self._create_sockets()
 
@@ -68,19 +68,9 @@ class Job(object):
 
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
-            args=("worker {}".format(self.worker_address), ),
-            daemon=True)
+            args=("worker {}".format(self.worker_address), ))
+        reply_thread.setDaemon(True)
         reply_thread.start()
-        self.heartbeat_socket_initialized.wait()
-        # job_socket: sends job_address and heartbeat_address to worker
-        self.job_socket = self.ctx.socket(zmq.REQ)
-        self.job_socket.connect("tcp://{}".format(self.worker_address))
-        self.job_socket.send_multipart([
-            remote_constants.NORMAL_TAG,
-            to_byte(self.job_address),
-            to_byte(self.heartbeat_worker_address)
-        ])
-        _ = self.job_socket.recv_multipart()
 
     def _reply_heartbeat(self, target):
         """reply heartbeat signals to the target"""
@@ -90,9 +80,20 @@ class Job(object):
                           remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         socket.linger = 0
         heartbeat_worker_port = socket.bind_to_random_port(addr="tcp://*")
-        self.heartbeat_worker_address = "{}:{}".format(self.job_ip,
+        heartbeat_worker_address = "{}:{}".format(self.job_ip,
                                                        heartbeat_worker_port)
-        self.heartbeat_socket_initialized.set()
+
+        # job_socket: sends job_address and heartbeat_address to worker
+        job_socket = self.ctx.socket(zmq.REQ)
+        job_socket.connect("tcp://{}".format(self.worker_address))
+        job_socket.send_multipart([
+            remote_constants.NORMAL_TAG,
+            to_byte(self.job_address),
+            to_byte(heartbeat_worker_address),
+            to_byte(str(os.getpid()))
+        ])
+        _ = job_socket.recv_multipart()
+
         # a flag to decide when to exit heartbeat loop
         self.worker_is_alive = True
         while self.worker_is_alive and self.job_is_alive:

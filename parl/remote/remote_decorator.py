@@ -110,7 +110,6 @@ def remote_class(cls):
                 _ = self.job_socket.recv_multipart()
             except zmq.error.Again as e:
                 logger.error("Job socket failed.")
-            logger.info("[connect_job] job_address:{}".format(job_address))
 
         def __del__(self):
             """Delete the remote class object and release remote resources."""
@@ -138,7 +137,6 @@ def remote_class(cls):
                     logger.warning("No vacant cpu resources at present, "
                                    "will try {} times later.".format(cnt))
                 cnt -= 1
-                time.sleep(1)
             return None
 
         def __getattr__(self, attr):

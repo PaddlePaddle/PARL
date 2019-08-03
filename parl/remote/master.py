@@ -201,8 +201,9 @@ class Master(object):
             self.worker_pool[worker.address] = worker
             self.worker_locks[worker.address] = threading.Lock()
 
-            logger.info("A new worker {} is added, ".format(worker.address) +
-                        "the cluster has {} CPUs.\n".format(len(self.job_pool)))
+            logger.info(
+                "A new worker {} is added, ".format(worker.address) +
+                "the cluster has {} CPUs.\n".format(len(self.job_pool)))
 
             # a thread for sending heartbeat signals to `worker.address`
             thread = threading.Thread(

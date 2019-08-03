@@ -31,7 +31,6 @@ from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 
 
-
 class Job(object):
     """Base class for the job.
 
@@ -81,7 +80,7 @@ class Job(object):
         socket.linger = 0
         heartbeat_worker_port = socket.bind_to_random_port(addr="tcp://*")
         heartbeat_worker_address = "{}:{}".format(self.job_ip,
-                                                       heartbeat_worker_port)
+                                                  heartbeat_worker_port)
 
         # job_socket: sends job_address and heartbeat_address to worker
         job_socket = self.ctx.socket(zmq.REQ)

@@ -14,6 +14,7 @@
 
 import click
 import locale
+import sys
 import os
 import subprocess
 import threading
@@ -29,7 +30,8 @@ os.environ['XPARL'] = 'True'
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
 #TODO: this line will cause error in python2/macOS
-#warnings.simplefilter("ignore", ResourceWarning)
+if sys.version_info.major == 3:
+    warnings.simplefilter("ignore", ResourceWarning)
 
 
 def is_port_available(port):
@@ -81,18 +83,17 @@ def start_master(port, cpu_num):
     cpu_num = str(cpu_num) if cpu_num else ''
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
-    command = [
-        "python", start_file, "--name", "master",
-        "--port", port
-    ]
+    command = ["python", start_file, "--name", "master", "--port", port]
     p = subprocess.Popen(command)
 
     command = [
-        "python", start_file, "--name", "worker",
-        "--address", "localhost:" + str(port), "--cpu_num",
+        "python", start_file, "--name", "worker", "--address",
+        "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
-    p = subprocess.Popen(command)
+    FNULL = open(os.devnull, 'w')
+    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+    FNULL.close()
 
 
 @click.command("connect", short_help="Start a worker node.")

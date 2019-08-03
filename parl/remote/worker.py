@@ -20,10 +20,14 @@ import subprocess
 import sys
 import time
 import threading
+import warnings
 import zmq
 
 from parl.utils import get_ip_address, to_byte, to_str, logger
 from parl.remote import remote_constants
+
+if sys.version_info.major == 3:
+    warnings.simplefilter("ignore", ResourceWarning)
 
 
 class WorkerInfo(object):
@@ -168,14 +172,15 @@ class Worker(object):
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
-            "python", job_file, "--worker_address",
-            self.reply_job_address
+            "python", job_file, "--worker_address", self.reply_job_address
         ]
 
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            pid = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+            pid = subprocess.Popen(
+                command, stdout=FNULL, stderr=subprocess.STDOUT)
+        FNULL.close()
 
         new_job_address = []
         for _ in range(job_num):
@@ -201,7 +206,6 @@ class Worker(object):
             return new_job_address
         else:
             return new_job_address[0]
-
 
     def _kill_job(self, job_address):
         """kill problematic job process and update worker information"""

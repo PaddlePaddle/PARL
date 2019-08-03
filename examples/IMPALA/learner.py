@@ -21,13 +21,12 @@ import threading
 import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
+from parl import RemoteManager
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, tensorboard
+from parl.utils import logger, CSVLogger
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
-
-from actor import Actor
 
 
 class Learner(object):
@@ -86,9 +85,12 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.remote_manager_thread = threading.Thread(
-            target=self.create_actors)
+            target=self.run_remote_manager)
         self.remote_manager_thread.setDaemon(True)
         self.remote_manager_thread.start()
+
+        self.csv_logger = CSVLogger(
+            os.path.join(logger.get_dir(), 'result.csv'))
 
     def learn_data_provider(self):
         """ Data generator for fluid.layers.py_reader
@@ -137,29 +139,26 @@ class Learner(object):
             self.entropy_stat.add(entropy)
             self.kl_stat.add(kl)
 
-    def create_actors(self):
-        """ Connect to the cluster and start sampling of the remote actor.
+    def run_remote_manager(self):
+        """ Accept connection of new remote actor and start sampling of the remote actor.
         """
-        parl.connect(self.config['master_address'])
-
-        logger.info('Waiting for {} remote actors to connect.'.format(
-            self.config['actor_num']))
-
-        for i in range(self.config['actor_num']):
+        remote_manager = RemoteManager(port=self.config['server_port'])
+        logger.info('Waiting for remote actors connecting.')
+        while True:
+            remote_actor = remote_manager.get_remote()
             self.remote_count += 1
             logger.info('Remote actor count: {}'.format(self.remote_count))
             if self.start_time is None:
                 self.start_time = time.time()
 
-            remote_thread = threading.Thread(target=self.run_remote_sample)
+            remote_thread = threading.Thread(
+                target=self.run_remote_sample, args=(remote_actor, ))
             remote_thread.setDaemon(True)
             remote_thread.start()
 
-    def run_remote_sample(self):
+    def run_remote_sample(self, remote_actor):
         """ Sample data from remote actor and update parameters of remote actor.
         """
-        remote_actor = Actor(self.config)
-
         cnt = 0
         remote_actor.set_weights(self.cache_params)
         while True:
@@ -238,8 +237,8 @@ class Learner(object):
             'entropy_coeff': self.entropy_coeff,
         }
 
-        for key, value in metric.items():
-            if value is not None:
-                tensorboard.add_scalar(key, value, self.sample_total_steps)
-
         logger.info(metric)
+        self.csv_logger.log_dict(metric)
+
+    def close(self):
+        self.csv_logger.close()

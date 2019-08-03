@@ -14,18 +14,22 @@
 
 import time
 from learner import Learner
-import parl
 
 
 def main(config):
     learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0
 
-    while not learner.should_stop():
-        start = time.time()
-        while time.time() - start < config['log_metrics_interval_s']:
-            learner.step()
-        learner.log_metrics()
+    try:
+        while not learner.should_stop():
+            start = time.time()
+            while time.time() - start < config['log_metrics_interval_s']:
+                learner.step()
+            learner.log_metrics()
+        learner.close()
+
+    except KeyboardInterrupt:
+        learner.close()
 
 
 if __name__ == '__main__':

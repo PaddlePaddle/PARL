@@ -251,7 +251,6 @@ class Master(object):
 
         # a worker updates
         elif tag == remote_constants.NEW_JOB_TAG:
-            logger.info("new job tag received")
             worker_address = to_str(message[1])
             new_job_address = to_str(message[2])
             killed_job_address = to_str(message[3])

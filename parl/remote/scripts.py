@@ -91,6 +91,7 @@ def start_master(port, cpu_num):
         "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
+    # Redirect the output to DEVNULL to solve the warning log.
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()

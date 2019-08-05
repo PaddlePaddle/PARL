@@ -34,7 +34,6 @@ class RL_dispatcher():
     """
     An RL benchmark for elevator system
     """
-
     def __init__(self, env, max_episode):
         self.env = env
 
@@ -52,8 +51,8 @@ class RL_dispatcher():
         }
 
         self._algorithm = DQN(self._model, hyperparas)
-        self._agent = ElevatorAgent(
-            self._algorithm, self._obs_dim, self._act_dim)
+        self._agent = ElevatorAgent(self._algorithm, self._obs_dim,
+                                    self._act_dim)
         self._warm_up_size = 2000
         self._statistic_freq = 1000
         self._loss_queue = deque()
@@ -73,23 +72,21 @@ class RL_dispatcher():
             acc_reward += reward
             if (isinstance(output_info, dict) and len(output_info) > 0):
                 self.env.log_notice("%s", output_info)
-            if(self._global_step % 3600 == 0):
+            if (self._global_step % 3600 == 0):
                 self.env.log_notice(
-                    "Accumulated Reward: %f, Mansion Status: %s",
-                    acc_reward, self.env.statistics)
+                    "Accumulated Reward: %f, Mansion Status: %s", acc_reward,
+                    self.env.statistics)
                 acc_reward = 0.0
 
         self._agent.save('./model.ckpt')
 
     def learn_step(self, state, action, r):
         self._global_step += 1
-        if(self._global_step > self._warm_up_size):
+        if (self._global_step > self._warm_up_size):
             for i in range(self.env.elevator_num):
-                self._rpm.append(
-                    self._last_observation_array[i],
-                    self._last_action[i],
-                    self._last_reward,
-                    deepcopy(state[i]), False)
+                self._rpm.append(self._last_observation_array[i],
+                                 self._last_action[i], self._last_reward,
+                                 deepcopy(state[i]), False)
         self._last_observation_array = deepcopy(state)
         self._last_action = deepcopy(action)
         self._last_reward = r
@@ -98,16 +95,12 @@ class RL_dispatcher():
         if self._rpm.size() > self._warm_up_size:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = \
                 self._rpm.sample_batch(BATCH_SIZE)
-            cost = self._agent.learn(
-                batch_obs,
-                batch_action,
-                batch_reward,
-                batch_next_obs,
-                batch_terminal)
+            cost = self._agent.learn(batch_obs, batch_action, batch_reward,
+                                     batch_next_obs, batch_terminal)
             self._loss_queue.appendleft(cost)
-            if(len(self._loss_queue) > self._statistic_freq):
+            if (len(self._loss_queue) > self._statistic_freq):
                 self._loss_queue.pop()
-            if(self._global_step % self._statistic_freq == 0):
+            if (self._global_step % self._statistic_freq == 0):
                 ret_dict["Temporal Difference Error(Average)"] = \
                     float(sum(self._loss_queue)) / float(len(self._loss_queue))
 

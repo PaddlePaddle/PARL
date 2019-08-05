@@ -29,7 +29,7 @@ def discretize(value, n_dim, min_val, max_val):
     and the value above max_val being [0, 0, ..., 0, 1]
     """
     assert n_dim > 0
-    if(n_dim == 1):
+    if (n_dim == 1):
         return [1]
     delta = (max_val - min_val) / float(n_dim - 1)
     active_pos = int((value - min_val) / delta + 0.5)
@@ -49,14 +49,14 @@ def linear_discretize(value, n_dim, min_val, max_val):
       if value  = 1.5 returns [0.5, 0.5], if value = 1.8 returns [0.2, 0.8]
     """
     assert n_dim > 0
-    if(n_dim == 1):
+    if (n_dim == 1):
         return [1]
     delta = (max_val - min_val) / float(n_dim - 1)
     active_pos = int((value - min_val) / delta + 0.5)
     active_pos = min(n_dim - 2, active_pos)
     active_pos = max(0, active_pos)
     anchor_pt = active_pos * delta + min_val
-    if(anchor_pt > value and anchor_pt > min_val + 0.5 * delta):
+    if (anchor_pt > value and anchor_pt > min_val + 0.5 * delta):
         anchor_pt -= delta
         active_pos -= 1
     weight = (value - anchor_pt) / delta
@@ -65,6 +65,7 @@ def linear_discretize(value, n_dim, min_val, max_val):
     ret_array[active_pos] = 1.0 - weight
     ret_array[active_pos + 1] = weight
     return ret_array
+
 
 def ele_state_preprocessing(ele_state):
     """Process elevator state, make it usable for network
@@ -77,15 +78,13 @@ def ele_state_preprocessing(ele_state):
 
     # add floor information
     ele_feature.extend(
-        linear_discretize(
-            ele_state.Floor,
-            ele_state.MaximumFloor,
-            1.0,
-            ele_state.MaximumFloor))
+        linear_discretize(ele_state.Floor, ele_state.MaximumFloor, 1.0,
+                          ele_state.MaximumFloor))
 
     # add velocity information
-    ele_feature.extend(linear_discretize(ele_state.Velocity,
-                                         21, - ele_state.MaximumSpeed, ele_state.MaximumSpeed))
+    ele_feature.extend(
+        linear_discretize(ele_state.Velocity, 21, -ele_state.MaximumSpeed,
+                          ele_state.MaximumSpeed))
 
     # add door information
     ele_feature.append(ele_state.DoorState)
@@ -97,12 +96,8 @@ def ele_state_preprocessing(ele_state):
 
     # add load weight information
     ele_feature.extend(
-        linear_discretize(
-            ele_state.LoadWeight /
-            ele_state.MaximumLoad,
-            5,
-            0.0,
-            1.0))
+        linear_discretize(ele_state.LoadWeight / ele_state.MaximumLoad, 5, 0.0,
+                          1.0))
 
     # add other information
     target_floor_binaries = [0.0 for i in range(ele_state.MaximumFloor)]
@@ -171,8 +166,7 @@ def mansion_state_preprocessing(mansion_state):
     man_features = list()
     for idx in range(len(mansion_state.ElevatorStates)):
         elevator_id_vec = discretize(idx + 1,
-                                     len(mansion_state.ElevatorStates),
-                                     1,
+                                     len(mansion_state.ElevatorStates), 1,
                                      len(mansion_state.ElevatorStates))
         idx_array = list(range(len(mansion_state.ElevatorStates)))
         idx_array.remove(idx)
@@ -196,12 +190,12 @@ def action_idx_to_action(action_idx, act_dim):
     assert isinstance(action_idx, int)
     assert isinstance(act_dim, int)
     realdim = act_dim - 2
-    if(action_idx == realdim):
+    if (action_idx == realdim):
         return ElevatorAction(0, 1)
-    elif(action_idx == realdim + 1):
+    elif (action_idx == realdim + 1):
         return ElevatorAction(-1, 1)
     action = action_idx
-    if(action_idx < realdim / 2):
+    if (action_idx < realdim / 2):
         direction = 1
         action += 1
     else:
@@ -209,6 +203,7 @@ def action_idx_to_action(action_idx, act_dim):
         action -= int(realdim / 2)
         action += 1
     return [action, direction]
+
 
 def action_to_action_idx(action, act_dim):
     """Convert action to number according to act_dim. 
@@ -221,12 +216,12 @@ def action_to_action_idx(action, act_dim):
     assert isinstance(action, ElevatorAction)
     assert isinstance(act_dim, int)
     realdim = act_dim - 2
-    if(action.TargetFloor == 0):
+    if (action.TargetFloor == 0):
         return realdim
-    elif(action.TargetFloor < 0):
+    elif (action.TargetFloor < 0):
         return realdim + 1
     action_idx = 0
-    if(action.DirectionIndicator < 0):
+    if (action.DirectionIndicator < 0):
         action_idx += int(realdim / 2)
     action_idx += action.TargetFloor - 1
     return action_idx

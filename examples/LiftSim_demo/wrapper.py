@@ -32,7 +32,8 @@ class Wrapper(LiftSim):
 
     def __getattr__(self, name):
         if name.startswith('_'):
-            raise AttributeError("attempted to get missing private attribute '{}'".format(name))
+            raise AttributeError(
+                "attempted to get missing private attribute '{}'".format(name))
         return getattr(self.env, name)
 
     def seed(self, seed=None):
@@ -50,14 +51,15 @@ class Wrapper(LiftSim):
     def close(self):
         return self.env.close()
 
-    
+
 class RewardWrapper(Wrapper):
     pass
+
 
 class ActionWrapper(Wrapper):
     def reset(self):
         return self.env.reset()
-    
+
     def step(self, action):
         act = []
         for a in action:
@@ -66,6 +68,7 @@ class ActionWrapper(Wrapper):
 
     def action(self, action, action_space):
         return action_idx_to_action(action, action_space)
+
 
 class ObservationWrapper(Wrapper):
     def reset(self):
@@ -77,7 +80,7 @@ class ObservationWrapper(Wrapper):
         return (self.observation(observation), reward, done, info)
 
     def observation(self, observation):
-        return mansion_state_preprocessing(observation) 
+        return mansion_state_preprocessing(observation)
 
     @property
     def state(self):

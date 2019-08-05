@@ -47,11 +47,12 @@ class Master(object):
         client_job_dict (dict): A dict of list to record the job submitted by
                                 each client.
         job_worker_dict (dict): A dict to record the job and related worker.
-        client_socket (zmq.Context.socket): A socket which receives submitted
+        client_socket (zmq.Context.socket): A socket that receives submitted
                                            job from the client, and later sends
                                            job_address back to the client.
-        worker_socket (zmq.Context.socket): A socket which receives job
+        worker_socket (zmq.Context.socket): A socket that receives job
                                             addresses from the worker node.
+        cpu_num(int): the number of available CPUs in the cluster.
 
     Args:
         port: the ip port that the master node binds to.
@@ -101,6 +102,7 @@ class Master(object):
                     self.job_worker_dict.pop(job)
                 self.worker_job_dict.pop(worker_address)
                 self.worker_pool.pop(worker_address)
+                self.worker_locks.pop(worker_address)
                 logger.warning("\n[Master] Cannot connect to the worker " +
                                "{}. ".format(worker_address) +
                                "Worker_pool will drop this worker.")
@@ -151,8 +153,12 @@ class Master(object):
         for job_address in jobs:
             if job_address in self.job_worker_dict:
                 worker_address = self.job_worker_dict[job_address]
+                # ignore this worker if it has been deleted
+                if worker_address not in self.worker_pool:
+                    continue
                 worker_socket = self.worker_pool[worker_address].worker_socket
-                self.worker_locks[worker_address].acquire()
+                lock = self.worker_locks[worker_address]
+                lock.acquire()
                 worker_socket.send_multipart(
                     [remote_constants.KILLJOB_TAG,
                      to_byte(job_address)])
@@ -160,7 +166,7 @@ class Master(object):
                     _ = worker_socket.recv_multipart()
                 except zmq.error.Again as e:
                     logger.warning("Error in recv kill_client_job")
-                self.worker_locks[worker_address].release()
+                lock.release()
                 self.job_worker_dict.pop(job_address)
         self.client_job_dict.pop(client_address)
 
@@ -169,6 +175,10 @@ class Master(object):
         logger.info(
             "Master connects to {} workers and have {} vacant CPUs.\n".format(
                 len(self.worker_pool), len(self.job_pool)))
+
+    @property
+    def cpu_num(self):
+        return len(self.job_pool)
 
     def _receive_message(self):
         """master node will receive four types of message: (1) worker
@@ -281,7 +291,6 @@ class Master(object):
 
     def exit(self):
         self.master_is_alive = False
-        self.ctx.destroy()
 
     def run(self):
         """An infinite loop waiting for messages from the workers and
@@ -295,10 +304,21 @@ class Master(object):
         3. A new client connects to the master node.
         4. A connected client submits a job after a remote object is created.
         """
+        self.client_socket.linger = 0
+        self.client_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
+
         while self.master_is_alive:
             try:
                 self._receive_message()
-            except zmq.error.ContextTerminated as e:
                 pass
+            except zmq.error.Again as e:
+                #detect whether `self.master_is_alive` is True periodically
+                pass
+        for worker_address, worker in self.worker_pool.items():
+            lock = self.worker_locks[worker_address]
+            lock.acquire()
+            worker.socket.close(0)
+            lock.release()
 
         logger.warning("[Master] Exit master.")

@@ -27,6 +27,13 @@ def discretize(value, n_dim, min_val, max_val):
     discretize a value into a vector of n_dim dimension 1-hot representation
     with the value below min_val being [1, 0, 0, ..., 0]
     and the value above max_val being [0, 0, ..., 0, 1]
+    Args:
+        value: the value that needs to be discretized into 1-hot format
+        n_dim: number of dimensions
+        min_val: minimal value in the result
+        man_val: maximum value in the result
+    Returns:
+        the discretized vector
     """
     assert n_dim > 0
     if (n_dim == 1):
@@ -47,6 +54,13 @@ def linear_discretize(value, n_dim, min_val, max_val):
     and the value above max_val being [0, 0, ..., 0, 1]
     e.g. if n_dim = 2, min_val = 1.0, max_val = 2.0
       if value  = 1.5 returns [0.5, 0.5], if value = 1.8 returns [0.2, 0.8]
+    Args:
+        value: the value that needs to be discretized
+        n_dim: number of dimensions
+        min_val: minimal value in the result
+        man_val: maximum value in the result
+    Returns:
+        the discretized vector
     """
     assert n_dim > 0
     if (n_dim == 1):

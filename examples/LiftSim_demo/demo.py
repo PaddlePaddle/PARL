@@ -11,12 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-A running demo of elevators
-
-Authors: wangfan04(wangfan04@baidu.com)
-Date:    2019/05/22 19:30:16
-"""
 
 from rlschool import LiftSim
 from wrapper import Wrapper, ActionWrapper, ObservationWrapper
@@ -29,7 +23,8 @@ import argparse
 def run_main(args):
 
     parser = argparse.ArgumentParser(description='demo configuration')
-    parser.add_argument('--iterations',
+    parser.add_argument(
+        '--iterations',
         type=int,
         default=100000000,
         help='total number of iterations')

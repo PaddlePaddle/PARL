@@ -37,7 +37,6 @@ class RL_dispatcher():
     def __init__(self, env, max_episode):
         self.env = env
 
-        # load_settings( )
         self._obs_dim = env.observation_space
         self._act_dim = env.action_space
         self._global_step = 0
@@ -51,15 +50,13 @@ class RL_dispatcher():
         }
 
         self._algorithm = DQN(self._model, hyperparas)
-        self._agent = ElevatorAgent(self._algorithm, self._obs_dim,
-            self._act_dim)
+        self._agent = ElevatorAgent(
+            self._algorithm, self._obs_dim, self._act_dim)
         self._warm_up_size = 2000
         self._statistic_freq = 1000
         self._loss_queue = deque()
 
     def run_episode(self):
-        # self._agent.restore('./model.ckpt')
-
         self.env.reset()
         acc_reward = 0.0
 

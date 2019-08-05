@@ -18,7 +18,7 @@ import numpy.random as random
 import paddle.fluid as fluid
 from parl import layers
 from parl import Agent
-from parl.utils import get_gpu_count
+from parl.utils import get_gpu_count, machine_info
 
 
 class ElevatorAgent(Agent):
@@ -33,7 +33,7 @@ class ElevatorAgent(Agent):
         self.exploration_min = 0.1
         super(ElevatorAgent, self).__init__(algorithm)
 
-        use_cuda = True if self.gpu_id >= 0 else False
+        use_cuda = machine_info.is_gpu_available()
         if self.gpu_id >= 0:
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
                     Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
@@ -59,20 +59,17 @@ class ElevatorAgent(Agent):
         self.learn_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
-            obs = layers.data(name='obs',
-                shape=[self._obs_dim],
-                dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self._obs_dim], dtype='float32')
             self._value = self.alg.define_predict(obs)
 
         with fluid.program_guard(self.learn_program):
-            obs = layers.data(name='obs',
-                shape=[self._obs_dim],
-                dtype='float32')
+            obs = layers.data(
+                name='obs', shape=[self._obs_dim], dtype='float32')
             action = layers.data(name='act', shape=[1], dtype='int32')
             reward = layers.data(name='reward', shape=[], dtype='float32')
-            next_obs = layers.data(name='next_obs',
-                shape=[self._obs_dim],
-                dtype='float32')
+            next_obs = layers.data(
+                name='next_obs', shape=[self._obs_dim], dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
             self._cost = self.alg.define_learn(obs, action, reward, next_obs,
                 terminal)
@@ -92,9 +89,10 @@ class ElevatorAgent(Agent):
         return ret_actions
 
     def predict(self, obs):
-        pred_Q = self.fluid_executor.run(self.pred_program,
+        pred_Q = self.fluid_executor.run(
+            self.pred_program,
             feed={'obs': obs.astype('float32')},
-            fetch_list=[self._value])  # [0]
+            fetch_list=[self._value])
         return pred_Q[0]
 
     def learn(self, obs, act, reward, next_obs, terminal):

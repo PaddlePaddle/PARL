@@ -6,8 +6,8 @@
 
 ## 依赖库
 
-- paddlepaddle >= 1.2.1
-- parl >= 1.1.1
+- paddlepaddle >= 1.5.1
+- parl >= 1.1.2
 - rlschool >= 0.0.1
 
 Windows版本仅支持Python3.5及以上版本。

@@ -16,12 +16,10 @@ import os
 import paddle.fluid as fluid
 from parl import layers
 import numpy as np
-from parl import Model
-from parl import Agent
-from parl.utils import get_gpu_count
+import parl
 
 
-class RLDispatcherModel(Model):
+class RLDispatcherModel(parl.Model):
     def __init__(self, act_dim):
         self._act_dim = act_dim
         self._fc_1 = layers.fc(size=512, act='relu')
@@ -30,8 +28,8 @@ class RLDispatcherModel(Model):
         self._output = layers.fc(size=act_dim)
 
     def value(self, obs):
-        self._h_1 = self._fc_1(obs)
-        self._h_2 = self._fc_2(self._h_1)
-        self._h_3 = self._fc_3(self._h_2)
-        self._pred = self._output(self._h_3)
+        _h_1 = self._fc_1(obs)
+        _h_2 = self._fc_2(_h_1)
+        _h_3 = self._fc_3(_h_2)
+        self._pred = self._output(_h_3)
         return self._pred

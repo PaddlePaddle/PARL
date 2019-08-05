@@ -34,6 +34,7 @@ class RL_dispatcher():
     """
     An RL benchmark for elevator system
     """
+
     def __init__(self, env, max_episode):
         self.env = env
 

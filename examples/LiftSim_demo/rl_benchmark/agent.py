@@ -72,7 +72,7 @@ class ElevatorAgent(Agent):
                 name='next_obs', shape=[self._obs_dim], dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
             self._cost = self.alg.define_learn(obs, action, reward, next_obs,
-                terminal)
+                                               terminal)
 
     def sample(self, obs):
         if self.exploration_ratio > self.exploration_min:

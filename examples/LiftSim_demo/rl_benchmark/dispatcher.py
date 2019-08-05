@@ -50,8 +50,8 @@ class RL_dispatcher():
         }
 
         self._algorithm = DQN(self._model, hyperparas)
-        self._agent = ElevatorAgent(
-            self._algorithm, self._obs_dim, self._act_dim)
+        self._agent = ElevatorAgent(self._algorithm, self._obs_dim,
+                                    self._act_dim)
         self._warm_up_size = 2000
         self._statistic_freq = 1000
         self._loss_queue = deque()
@@ -82,8 +82,8 @@ class RL_dispatcher():
         if (self._global_step > self._warm_up_size):
             for i in range(self.env.elevator_num):
                 self._rpm.append(self._last_observation_array[i],
-                    self._last_action[i], self._last_reward,
-                    deepcopy(state[i]), False)
+                                 self._last_action[i], self._last_reward,
+                                 deepcopy(state[i]), False)
         self._last_observation_array = deepcopy(state)
         self._last_action = deepcopy(action)
         self._last_reward = r
@@ -93,7 +93,7 @@ class RL_dispatcher():
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = \
                 self._rpm.sample_batch(BATCH_SIZE)
             cost = self._agent.learn(batch_obs, batch_action, batch_reward,
-                batch_next_obs, batch_terminal)
+                                     batch_next_obs, batch_terminal)
             self._loss_queue.appendleft(cost)
             if (len(self._loss_queue) > self._statistic_freq):
                 self._loss_queue.pop()

@@ -79,12 +79,12 @@ def ele_state_preprocessing(ele_state):
     # add floor information
     ele_feature.extend(
         linear_discretize(ele_state.Floor, ele_state.MaximumFloor, 1.0,
-                          ele_state.MaximumFloor))
+            ele_state.MaximumFloor))
 
     # add velocity information
     ele_feature.extend(
         linear_discretize(ele_state.Velocity, 21, -ele_state.MaximumSpeed,
-                          ele_state.MaximumSpeed))
+            ele_state.MaximumSpeed))
 
     # add door information
     ele_feature.append(ele_state.DoorState)
@@ -96,8 +96,8 @@ def ele_state_preprocessing(ele_state):
 
     # add load weight information
     ele_feature.extend(
-        linear_discretize(ele_state.LoadWeight / ele_state.MaximumLoad, 5, 0.0,
-                          1.0))
+        linear_discretize(ele_state.LoadWeight / ele_state.MaximumLoad, 5, 0.0, 
+            1.0))
 
     # add other information
     target_floor_binaries = [0.0 for i in range(ele_state.MaximumFloor)]
@@ -166,8 +166,8 @@ def mansion_state_preprocessing(mansion_state):
     man_features = list()
     for idx in range(len(mansion_state.ElevatorStates)):
         elevator_id_vec = discretize(idx + 1,
-                                     len(mansion_state.ElevatorStates), 1,
-                                     len(mansion_state.ElevatorStates))
+            len(mansion_state.ElevatorStates), 1,
+            len(mansion_state.ElevatorStates))
         idx_array = list(range(len(mansion_state.ElevatorStates)))
         idx_array.remove(idx)
         # random.shuffle(idx_array)

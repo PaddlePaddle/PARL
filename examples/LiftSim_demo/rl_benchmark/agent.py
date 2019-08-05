@@ -60,22 +60,22 @@ class ElevatorAgent(Agent):
 
         with fluid.program_guard(self.pred_program):
             obs = layers.data(name='obs',
-                              shape=[self._obs_dim],
-                              dtype='float32')
+                shape=[self._obs_dim],
+                dtype='float32')
             self._value = self.alg.define_predict(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(name='obs',
-                              shape=[self._obs_dim],
-                              dtype='float32')
+                shape=[self._obs_dim],
+                dtype='float32')
             action = layers.data(name='act', shape=[1], dtype='int32')
             reward = layers.data(name='reward', shape=[], dtype='float32')
             next_obs = layers.data(name='next_obs',
-                                   shape=[self._obs_dim],
-                                   dtype='float32')
+                shape=[self._obs_dim],
+                dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
             self._cost = self.alg.define_learn(obs, action, reward, next_obs,
-                                               terminal)
+                terminal)
 
     def sample(self, obs):
         if self.exploration_ratio > self.exploration_min:
@@ -93,8 +93,8 @@ class ElevatorAgent(Agent):
 
     def predict(self, obs):
         pred_Q = self.fluid_executor.run(self.pred_program,
-                                         feed={'obs': obs.astype('float32')},
-                                         fetch_list=[self._value])  # [0]
+            feed={'obs': obs.astype('float32')},
+            fetch_list=[self._value])  # [0]
         return pred_Q[0]
 
     def learn(self, obs, act, reward, next_obs, terminal):

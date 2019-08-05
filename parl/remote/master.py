@@ -222,7 +222,6 @@ class Master(object):
                     worker_heartbeat_address,
                     worker.address,
                 ))
-            thread.setDaemon(True)
             thread.start()
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -236,7 +235,6 @@ class Master(object):
             thread = threading.Thread(
                 target=self._create_client_monitor,
                 args=(client_heartbeat_address, ))
-            thread.setDaemon(True)
             thread.start()
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 

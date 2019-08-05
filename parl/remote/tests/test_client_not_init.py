@@ -14,16 +14,21 @@
 import unittest
 import parl
 
+
 @parl.remote_class
 class Actor(object):
-  pass
+    pass
+
 
 class TestClient(unittest.TestCase):
-  def test_not_init(self):
-    """client is expected to raise an error and say that the master has not been started"""
-    def create_actor():
-      actor = Actor()
-    self.assertRaises(AssertionError, create_actor)
+    def test_not_init(self):
+        """client is expected to raise an error and say that the master has not been started"""
+
+        def create_actor():
+            actor = Actor()
+
+        self.assertRaises(AssertionError, create_actor)
+
 
 if __name__ == '__main__':
     unittest.main()

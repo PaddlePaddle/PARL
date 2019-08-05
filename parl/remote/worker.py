@@ -152,7 +152,6 @@ class Worker(object):
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
             args=("master {}".format(self.master_address), ))
-        reply_thread.setDaemon(False)
         reply_thread.start()
         self.heartbeat_socket_initialized.wait()
 
@@ -199,7 +198,6 @@ class Worker(object):
                     job_address,
                     heartbeat_job_address,
                 ))
-            thread.setDaemon(False)
             thread.start()
         assert len(new_job_address) > 0, "init jobs failed"
         if len(new_job_address) > 1:

@@ -318,7 +318,7 @@ class Master(object):
         for worker_address, worker in self.worker_pool.items():
             lock = self.worker_locks[worker_address]
             lock.acquire()
-            worker.socket.close(0)
+            worker.worker_socket.close(0)
             lock.release()
 
         logger.warning("[Master] Exit master.")

@@ -113,9 +113,12 @@ def remote_class(cls):
 
         def __del__(self):
             """Delete the remote class object and release remote resources."""
-            self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
-            _ = self.job_socket.recv_multipart()
-            self.job_socket.close(0)
+            try:
+                self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
+                _ = self.job_socket.recv_multipart()
+                self.job_socket.close(0)
+            except AttributeError:
+                pass
 
         def send_file(self, socket):
             try:

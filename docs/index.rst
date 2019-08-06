@@ -59,6 +59,7 @@ Abstractions
     :caption: Tutorial
 
     getting_started.rst
+    new_alg.rst
 
 .. toctree::
     :maxdepth: 2

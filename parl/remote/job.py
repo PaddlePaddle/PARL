@@ -60,6 +60,8 @@ class Job(object):
         # @remote.class and send computed results to the @remote.class.
         self.reply_socket = self.ctx.socket(zmq.REP)
         self.reply_socket.linger = 0
+        self.reply_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
 
         job_port = self.reply_socket.bind_to_random_port(addr="tcp://*")
         self.job_ip = get_ip_address()
@@ -119,21 +121,24 @@ class Job(object):
         """
 
         while True:
-            message = self.reply_socket.recv_multipart()
-            tag = message[0]
-            if tag == remote_constants.SEND_FILE_TAG:
-                pyfiles = pickle.loads(message[1])
-                envdir = tempfile.mkdtemp()
-                for file in pyfiles:
-                    code = pyfiles[file]
-                    file = os.path.join(envdir, file)
-                    with open(file, 'wb') as code_file:
-                        code_file.write(code)
-                self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
-                return envdir
-            else:
-                logger.warning(message)
-                raise NotImplementedError
+            try:
+                message = self.reply_socket.recv_multipart()
+                tag = message[0]
+                if tag == remote_constants.SEND_FILE_TAG:
+                    pyfiles = pickle.loads(message[1])
+                    envdir = tempfile.mkdtemp()
+                    for file in pyfiles:
+                        code = pyfiles[file]
+                        file = os.path.join(envdir, file)
+                        with open(file, 'wb') as code_file:
+                            code_file.write(code)
+                    self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
+                    return envdir
+                else:
+                    logger.warning(message)
+                    raise NotImplementedError
+            except zmq.error.Again as e:
+                pass
 
     def wait_for_connection(self):
         """Wait for connection from the remote object.
@@ -152,9 +157,23 @@ class Job(object):
             if tag == remote_constants.INIT_OBJECT_TAG:
                 cls = cloudpickle.loads(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
-                obj = cls(*args, **kwargs)
-                self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
-                return obj
+                try:
+                    obj = cls(*args, **kwargs)
+                    self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
+                    return obj
+                except Exception as e:
+                    error_str = str(e)
+                    logger.error(error_str)
+                    self.job_is_alive = False
+
+                    traceback_str = str(traceback.format_exc())
+                    logger.error("traceback:\n{}".format(traceback_str))
+                    self.reply_socket.send_multipart([
+                        remote_constants.EXCEPTION_TAG,
+                        to_byte(error_str + "\ntraceback:\n" +
+                                traceback_str)
+                    ])
+                    return None
             else:
                 logger.error("Message from job {}".format(message))
                 raise NotImplementedError
@@ -178,65 +197,69 @@ class Job(object):
         obj = self.wait_for_connection()
 
         while self.job_is_alive:
-            message = self.reply_socket.recv_multipart()
-            tag = message[0]
+            try:
+                message = self.reply_socket.recv_multipart()
+                tag = message[0]
 
-            if tag == remote_constants.CALL_TAG:
-                assert obj is not None
-                try:
-                    function_name = to_str(message[1])
-                    data = message[2]
-                    args, kwargs = loads_argument(data)
-                    ret = getattr(obj, function_name)(*args, **kwargs)
-                    ret = dumps_return(ret)
+                if tag == remote_constants.CALL_TAG:
+                    assert obj is not None
+                    try:
+                        function_name = to_str(message[1])
+                        data = message[2]
+                        args, kwargs = loads_argument(data)
+                        ret = getattr(obj, function_name)(*args, **kwargs)
+                        ret = dumps_return(ret)
 
-                    self.reply_socket.send_multipart(
-                        [remote_constants.NORMAL_TAG, ret])
+                        self.reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG, ret])
 
-                except Exception as e:
-                    error_str = str(e)
-                    logger.error(error_str)
+                    except Exception as e:
+                        error_str = str(e)
+                        logger.error(error_str)
+                        self.job_is_alive = False
+
+                        if type(e) == AttributeError:
+                            self.reply_socket.send_multipart([
+                                remote_constants.ATTRIBUTE_EXCEPTION_TAG,
+                                to_byte(error_str)
+                            ])
+                            raise AttributeError
+
+                        elif type(e) == SerializeError:
+                            self.reply_socket.send_multipart([
+                                remote_constants.SERIALIZE_EXCEPTION_TAG,
+                                to_byte(error_str)
+                            ])
+                            raise SerializeError
+
+                        elif type(e) == DeserializeError:
+                            self.reply_socket.send_multipart([
+                                remote_constants.DESERIALIZE_EXCEPTION_TAG,
+                                to_byte(error_str)
+                            ])
+
+                        else:
+                            traceback_str = str(traceback.format_exc())
+                            logger.error("traceback:\n{}".format(traceback_str))
+                            self.reply_socket.send_multipart([
+                                remote_constants.EXCEPTION_TAG,
+                                to_byte(error_str + "\ntraceback:\n" +
+                                        traceback_str)
+                            ])
+
+                # receive DELETE_TAG from actor, and stop replying worker heartbeat
+                elif tag == remote_constants.KILLJOB_TAG:
+                    self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
                     self.job_is_alive = False
-
-                    if type(e) == AttributeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.ATTRIBUTE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-                        raise AttributeError
-
-                    elif type(e) == SerializeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.SERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-                        raise SerializeError
-
-                    elif type(e) == DeserializeError:
-                        self.reply_socket.send_multipart([
-                            remote_constants.DESERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
-
-                    else:
-                        traceback_str = str(traceback.format_exc())
-                        logger.error("traceback:\n{}".format(traceback_str))
-                        self.reply_socket.send_multipart([
-                            remote_constants.EXCEPTION_TAG,
-                            to_byte(error_str + "\ntraceback:\n" +
-                                    traceback_str)
-                        ])
-
-            # receive DELETE_TAG from actor, and stop replying worker heartbeat
-            elif tag == remote_constants.KILLJOB_TAG:
-                self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
-                self.job_is_alive = False
-                logger.warning("An actor exits and will quit job {}.".format(
-                    self.job_address))
-            else:
-                logger.error("Job message: {}".format(message))
-                raise NotImplementedError
-
+                    logger.warning("An actor exits and will quit job {}.".format(
+                        self.job_address))
+                else:
+                    logger.error("Job message: {}".format(message))
+                    raise NotImplementedError
+            except zmq.error.Again as e:
+                pass
+        self.reply_socket.close(0)
+        self.ctx.destroy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

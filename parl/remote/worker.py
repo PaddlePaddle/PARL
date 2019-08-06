@@ -26,9 +26,6 @@ import zmq
 from parl.utils import get_ip_address, to_byte, to_str, logger
 from parl.remote import remote_constants
 
-if sys.version_info.major == 3:
-    warnings.simplefilter("ignore", ResourceWarning)
-
 
 class WorkerInfo(object):
     """A WorkerInfo object records the computation resources of a worker.
@@ -152,7 +149,7 @@ class Worker(object):
         reply_thread = threading.Thread(
             target=self._reply_heartbeat,
             args=("master {}".format(self.master_address), ))
-        reply_thread.setDaemon(True)
+        reply_thread.setDaemon(False)
         reply_thread.start()
         self.heartbeat_socket_initialized.wait()
 
@@ -175,6 +172,9 @@ class Worker(object):
             "python", job_file, "--worker_address", self.reply_job_address
         ]
 
+        if sys.version_info.major == 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
@@ -186,7 +186,8 @@ class Worker(object):
         for _ in range(job_num):
             job_message = self.reply_job_socket.recv_multipart()
             self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG])
-            job_address = to_str(job_message[1])
+            job_address = '{}_{}'.format(
+                to_str(job_message[1]), time.mktime(time.localtime()))
             new_job_address.append(job_address)
             heartbeat_job_address = to_str(job_message[2])
             pid = to_str(job_message[3])
@@ -199,7 +200,7 @@ class Worker(object):
                     job_address,
                     heartbeat_job_address,
                 ))
-            thread.setDaemon(True)
+            thread.setDaemon(False)
             thread.start()
         assert len(new_job_address) > 0, "init jobs failed"
         if len(new_job_address) > 1:
@@ -244,8 +245,10 @@ class Worker(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         job_heartbeat_socket.connect("tcp://" + heartbeat_job_address)
 
+        job_address = job_address.split('_')[0]
+
         job_is_alive = True
-        while job_is_alive and self.master_is_alive:
+        while job_is_alive and self.master_is_alive and self.worker_is_alive:
             try:
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
@@ -279,7 +282,7 @@ class Worker(object):
         self.heartbeat_socket_initialized.set()
         logger.info("[Worker] Connect to the master node successfully. "
                     "({} CPUs)".format(self.cpu_num))
-        while self.master_is_alive:
+        while self.master_is_alive and self.worker_is_alive:
             try:
                 message = socket.recv_multipart()
                 socket.send_multipart([remote_constants.HEARTBEAT_TAG])
@@ -290,14 +293,15 @@ class Worker(object):
             except zmq.error.ContextTerminated as e:
                 break
         socket.close(0)
-        logger.warning("Worker exit replying heartbeat for master.")
-        if self.worker_is_alive:
-            self.exit()
+        logger.warning(
+            "[Worker] lost connection with the master, will exit replying heartbeat for master."
+        )
+        # exit the worker
+        self.worker_is_alive = False
 
     def exit(self):
-        """Exit all zmq sockets related to the worker."""
+        """close the worker"""
         self.worker_is_alive = False
-        self.ctx.destroy()
 
     def run(self):
         """An infinite loop waiting for killing job commands from
@@ -309,6 +313,10 @@ class Worker(object):
         the worker will kill the jobs related to the dead client and create
         new jobs and update job addresses to the master node.
         """
+
+        self.reply_master_socket.linger = 0
+        self.reply_master_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
 
         while self.master_is_alive and self.worker_is_alive:
             try:
@@ -323,8 +331,13 @@ class Worker(object):
 
                 else:
                     raise NotImplementedError
-            except zmq.error.ZMQError as e:
-                self.worker_is_alive = False
+            except zmq.error.Again as e:
+                #detect whether `self.worker_is_alive` is True periodically
+                pass
+        self.reply_job_socket.close(0)
+        self.request_master_socket.close(0)
+        self.reply_master_socket.close(0)
 
         logger.warning("[Worker] Exit Worker {}.".format(
             self.reply_master_address))
+        self.ctx.destroy()

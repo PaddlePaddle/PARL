@@ -107,15 +107,25 @@ def remote_class(cls):
                     cloudpickle.dumps(cls),
                     cloudpickle.dumps([args, kwargs])
                 ])
-                _ = self.job_socket.recv_multipart()
+                message = self.job_socket.recv_multipart()
+                if len(message) == 2:
+                    error_str = to_str(message[1])
+                    self.job_socket.close(0)
+                    raise RemoteError('__init__', error_str)
+
             except zmq.error.Again as e:
                 logger.error("Job socket failed.")
 
         def __del__(self):
             """Delete the remote class object and release remote resources."""
-            self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
-            _ = self.job_socket.recv_multipart()
-            self.job_socket.close(0)
+            try:
+                self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
+                _ = self.job_socket.recv_multipart()
+                self.job_socket.close(0)
+            except AttributeError:
+                pass
+            except zmq.error.ZMQError as e:
+                pass
 
         def send_file(self, socket):
             try:

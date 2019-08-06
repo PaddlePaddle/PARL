@@ -18,7 +18,7 @@ Methods
 
 - ``__init__``
 
-  As algorithms update weights of the models, this method needs to define some models inherited fromparl.Model, like ``self.model`` in this example.
+  As algorithms update weights of the models, this method needs to define some models inherited from ``parl.Model``, like ``self.model`` in this example.
   You can also set some hyperparameters in this method, like learning_rate, reward_decay and action_dimension,
   which might be used in the following steps.
 

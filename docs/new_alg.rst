@@ -1,5 +1,5 @@
 Create Customized Algorithms
-======================
+===============================
 
 Goal of this tutorial:
 
@@ -9,7 +9,7 @@ Goal of this tutorial:
 Overview
 -----------
 
-To build a new algorithm, you need to inherit class ``Algorithm`` from ``parl.core.fluid.algorithm`` or ``parl``
+To build a new algorithm, you need to inherit class ``parl.Algorithm``
 and implement three basic functions: ``sample``, ``predict`` and ``learn``.
 
 
@@ -18,7 +18,7 @@ Methods
 
 - ``__init__``
 
-  As algorithms update weights of the models, this method needs to define ``self.model``.
+  As algorithms update weights of the models, this method needs to define some models inherited fromparl.Model, like ``self.model`` in this example.
   You can also set some hyperparameters in this method, like learning_rate, reward_decay and action_dimension,
   which might be used in the following steps.
 
@@ -28,7 +28,7 @@ Methods
 
 - ``sample``
 
-  Based on ``predict`` method, ``sample`` generates actions with noises. Use this method to do exploration.
+  Based on ``predict`` method, ``sample`` generates actions with noises. Use this method to do exploration if needed.
 
 - ``learn``
 
@@ -38,14 +38,14 @@ Methods
 Example: DQN
 --------------
 
-This example shows how to implement DQN algorithm based on class ``Algorithm`` according to the steps mentioned above.
+This example shows how to implement DQN algorithm based on class ``parl.Algorithm`` according to the steps mentioned above.
 
 Within class ``DQN(Algorithm)``, we define the following methods:
 
 
 - \_\_init\_\_(self, model, act_dim=None, gamma=None, lr=None)
 
-  We define ``self.model`` and ``self.target_model`` of DQN in this method, which are instances of class ``Model``. 
+  We define ``self.model`` and ``self.target_model`` of DQN in this method, which are instances of class ``parl.Model``. 
   And we also set hyperparameters act_dim, gamma and lr here. We will use these parameters in ``learn`` method.
 
   .. code-block:: python

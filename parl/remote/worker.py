@@ -171,7 +171,8 @@ class Worker(object):
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
-            "python", job_file, "--worker_address", self.reply_job_address
+            sys.executable, job_file, "--worker_address",
+            self.reply_job_address
         ]
 
         # Redirect the output to DEVNULL

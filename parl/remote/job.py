@@ -200,9 +200,8 @@ class Job(object):
                 self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
                 return envdir
             else:
-                logger.error(
-                    "NotImplementedError:{}, received tag:{}".format(
-                        self.job_address, ))
+                logger.error("NotImplementedError:{}, received tag:{}".format(
+                    self.job_address, ))
                 raise NotImplementedError
 
     def wait_for_connection(self):

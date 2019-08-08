@@ -35,5 +35,5 @@ class TestUtils(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logger.auto_set_dir()
+    logger.auto_set_dir(action='d')
     unittest.main()

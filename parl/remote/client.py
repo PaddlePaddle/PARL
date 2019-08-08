@@ -179,12 +179,12 @@ class Client(object):
         a vacant job from its job pool to the remote object.
 
         Returns:
-            IP address of the job.
+            job_address(str): IP address of the job. None if there is no available CPU in the cluster.
         """
         if self.master_is_alive:
 
             while True:
-                # A lock to prevent multiple actor submit job at the same time.
+                # A lock to prevent multiple actors from submitting job at the same time.
                 self.lock.acquire()
                 self.submit_job_socket.send_multipart([
                     remote_constants.CLIENT_SUBMIT_TAG,

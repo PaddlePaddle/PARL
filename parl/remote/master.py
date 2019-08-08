@@ -44,19 +44,15 @@ class Master(object):
     master node.
 
     Attributes:
-        worker_pool (WorkersStatus): A dict to store connected workers.
-        job_center (JobCenter): A thread-safe data structure that stores the job address of vacant cpu. when
-                         this queue is empty, the master will refuse to create
-                         new remote object.
+        job_center (JobCenter): A thread-safe data structure that stores the job address of vacant cpus.
         client_socket (zmq.Context.socket): A socket that receives submitted
                                            job from the client, and later sends
                                            job_address back to the client.
-        worker_socket (zmq.Context.socket): A socket that receives job
-                                            addresses from the worker node.
-        cpu_num(int): the number of available CPUs in the cluster.
+        cpu_num(int): The number of available CPUs in the cluster.
+        worker_num(int): The number of workers connected to this cluster.
 
     Args:
-        port: the ip port that the master node binds to.
+        port: The ip port that the master node binds to.
     """
 
     def __init__(self, port):
@@ -103,7 +99,7 @@ class Master(object):
         logger.warning("Exit worker monitor from master.")
 
     def _create_client_monitor(self, client_heartbeat_address):
-        """when a new client connects to the master, a socket is created to
+        """When a new client connects to the master, a socket is created to
         send heartbeat signals to the client.
         """
 
@@ -147,9 +143,9 @@ class Master(object):
         return self.job_center.worker_num
 
     def _receive_message(self):
-        """master node will receive four types of message: (1) worker
+        """Master node will receive various types of message: (1) worker
         connection; (2) worker update; (3) client connection; (4) job
-        submittion.
+        submittion; (5) reset job.
         """
         message = self.client_socket.recv_multipart()
         tag = message[0]
@@ -232,6 +228,8 @@ class Master(object):
             raise NotImplementedError()
 
     def exit(self):
+        """ Close the master.
+        """
         self.master_is_alive = False
 
     def run(self):

@@ -90,7 +90,6 @@ class JobCenter(object):
         if killed_job_address in self.job_pool:
             self.job_pool.pop(killed_job_address)
         to_del_idx = None
-        print("WWWWWWWWWWWWWWW", worker_address)
         for i, job in enumerate(
                 self.worker_dict[worker_address].initialized_jobs):
             if job.job_address == killed_job_address:

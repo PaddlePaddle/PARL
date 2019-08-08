@@ -172,8 +172,7 @@ class Worker(object):
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(command)
-            #command, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
         FNULL.close()
 
         new_jobs = []
@@ -210,7 +209,7 @@ class Worker(object):
             logger.warning("Worker kills job process {},".format(job_address))
             self.lock.release()
 
-            # When an job exit exceptionally, the worker will create a new job.
+            # When a job ends exceptionally, the worker will create a new job.
             if self.master_is_alive:
                 initialized_job = self._init_jobs(job_num=1)[0]
                 initialized_job.worker_address = self.reply_master_address

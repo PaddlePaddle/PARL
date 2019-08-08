@@ -3,3 +3,4 @@ paddlepaddle-gpu==1.5.1.post97
 gym
 details
 parameterized
+timeout_decorator

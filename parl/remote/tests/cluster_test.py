@@ -21,6 +21,7 @@ import time
 import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
+import timeout_decorator
 
 
 @parl.remote_class
@@ -78,6 +79,7 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
+    @timeout_decorator.timeout(seconds=300)
     def test_actor_exception(self):
         master = Master(port=1235)
         th = threading.Thread(target=master.run)
@@ -92,6 +94,7 @@ class TestCluster(unittest.TestCase):
         except:
             pass
         actor2 = Actor()
+        time.sleep(30)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(0, master.cpu_num)
         del actor

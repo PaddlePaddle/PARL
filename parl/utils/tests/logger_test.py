@@ -40,6 +40,9 @@ class TestLogger(unittest.TestCase):
         for t in th_list:
             t.join()
 
+    def test_auto_set_dir(self):
+        logger.auto_set_dir()
+
 
 if __name__ == '__main__':
     unittest.main()

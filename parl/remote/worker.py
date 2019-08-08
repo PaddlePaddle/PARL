@@ -25,20 +25,10 @@ import zmq
 
 from parl.utils import get_ip_address, to_byte, to_str, logger
 from parl.remote import remote_constants
+from parl.remote.message import InitializedWorker
 
 if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)
-
-
-class WorkerInfo(object):
-    """A WorkerInfo object records the computation resources of a worker.
-    """
-
-    def __init__(self, address, cpu_num, job_pool):
-        self.address = address
-        self.cpu_num = cpu_num
-        self.job_pool = job_pool
-        self.worker_socket = None
 
 
 class Worker(object):
@@ -80,6 +70,7 @@ class Worker(object):
         self.master_address = master_address
         self.master_is_alive = True
         self.worker_is_alive = True
+        self.lock = threading.Lock()
         self._set_cpu_num(cpu_num)
         self._create_sockets()
         self._create_worker()
@@ -132,7 +123,7 @@ class Worker(object):
         self.reply_job_address = "{}:{}".format(self.worker_ip, reply_job_port)
 
     def _create_worker(self):
-        """create a WorkerInfo instance and send it to the master."""
+        """Create jobs and send a instance of ``InitializedWorker`` that contains the worker information to the master."""
         try:
             self.request_master_socket.send_multipart(
                 [remote_constants.WORKER_CONNECT_TAG])
@@ -143,22 +134,22 @@ class Worker(object):
             self.master_is_alive = False
             return
 
-        self._init_jobs(job_num=self.cpu_num)
+        initialized_jobs = self._init_jobs(job_num=self.cpu_num)
         self.request_master_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
-        self.worker = WorkerInfo(self.reply_master_address, self.cpu_num,
-                                 list(self.job_pid.keys()))
-        reply_thread = threading.Thread(
+        self.reply_thread = threading.Thread(
             target=self._reply_heartbeat,
             args=("master {}".format(self.master_address), ))
-        reply_thread.start()
+        self.reply_thread.start()
         self.heartbeat_socket_initialized.wait()
+        initialized_worker = InitializedWorker(self.reply_master_address,
+                                               self.master_heartbeat_address,
+                                               initialized_jobs, self.cpu_num)
 
         self.request_master_socket.send_multipart([
             remote_constants.WORKER_INITIALIZED_TAG,
-            cloudpickle.dumps(self.worker),
-            to_byte(self.heartbeat_master_address)
+            cloudpickle.dumps(initialized_worker)
         ])
         _ = self.request_master_socket.recv_multipart()
 
@@ -172,39 +163,39 @@ class Worker(object):
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
             sys.executable, job_file, "--worker_address",
-            self.reply_job_address
+            self.reply_job_address, "--master_address", self.master_address
         ]
+
+        # avoid that many jobs are killed and restarted at the same time.
+        self.lock.acquire()
 
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            pid = subprocess.Popen(
-                command, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.Popen(command)
+            #command, stdout=FNULL, stderr=subprocess.STDOUT)
         FNULL.close()
 
-        new_job_address = []
+        new_jobs = []
         for _ in range(job_num):
             job_message = self.reply_job_socket.recv_multipart()
             self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG])
-            job_address = to_str(job_message[1])
-            new_job_address.append(job_address)
-            heartbeat_job_address = to_str(job_message[2])
-            pid = to_str(job_message[3])
-            self.job_pid[job_address] = int(pid)
+            initialized_job = cloudpickle.loads(job_message[1])
+            self.job_pid[initialized_job.job_address] = int(
+                initialized_job.pid)
+            new_jobs.append(initialized_job)
 
             # a thread for sending heartbeat signals to job
             thread = threading.Thread(
                 target=self._create_job_monitor,
                 args=(
-                    job_address,
-                    heartbeat_job_address,
+                    initialized_job.job_address,
+                    initialized_job.worker_heartbeat_address,
                 ))
             thread.start()
-        assert len(new_job_address) > 0, "init jobs failed"
-        if len(new_job_address) > 1:
-            return new_job_address
-        else:
-            return new_job_address[0]
+        self.lock.release()
+        assert len(new_jobs) > 0, "init jobs failed"
+        return new_jobs
 
     def _kill_job(self, job_address):
         """kill problematic job process and update worker information"""
@@ -219,22 +210,22 @@ class Worker(object):
             logger.warning("Worker kills job process {},".format(job_address))
             self.lock.release()
 
-            # When a old job is killed, the worker will create a new job.
+            # When an job exit exceptionally, the worker will create a new job.
             if self.master_is_alive:
-                new_job_address = self._init_jobs(job_num=1)
+                initialized_job = self._init_jobs(job_num=1)[0]
+                initialized_job.worker_address = self.reply_master_address
 
                 self.lock.acquire()
                 self.request_master_socket.send_multipart([
                     remote_constants.NEW_JOB_TAG,
-                    to_byte(self.reply_master_address),
-                    to_byte(new_job_address),
+                    cloudpickle.dumps(initialized_job),
                     to_byte(job_address)
                 ])
                 _ = self.request_master_socket.recv_multipart()
                 self.lock.release()
 
     def _create_job_monitor(self, job_address, heartbeat_job_address):
-        """Sending heartbeat signals to check target's status"""
+        """Send heartbeat signals to check target's status"""
 
         # job_heartbeat_socket: sends heartbeat signal to job
         job_heartbeat_socket = self.ctx.socket(zmq.REQ)
@@ -273,7 +264,7 @@ class Worker(object):
                           remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         heartbeat_master_port =\
             socket.bind_to_random_port("tcp://*")
-        self.heartbeat_master_address = "{}:{}".format(self.worker_ip,
+        self.master_heartbeat_address = "{}:{}".format(self.worker_ip,
                                                        heartbeat_master_port)
         self.heartbeat_socket_initialized.set()
         logger.info("[Worker] Connect to the master node successfully. "
@@ -300,40 +291,6 @@ class Worker(object):
         self.worker_is_alive = False
 
     def run(self):
-        """An infinite loop waiting for killing job commands from
-        the mater node.
-
-        After creating `cpu_num` jobs and sending job addresses to the master
-        node, a worker will keep waiting for killing job commands from master
-        node to release computation resources occupied by a dead client. Then
-        the worker will kill the jobs related to the dead client and create
-        new jobs and update job addresses to the master node.
+        """Keep running until it lost connection with the master.
         """
-
-        self.reply_master_socket.linger = 0
-        self.reply_master_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-
-        while self.master_is_alive and self.worker_is_alive:
-            try:
-                message = self.reply_master_socket.recv_multipart()
-                tag = message[0]
-
-                if tag == remote_constants.KILLJOB_TAG:
-                    job_address = to_str(message[1])
-                    self.reply_master_socket.send_multipart(
-                        [remote_constants.NORMAL_TAG])
-                    self._kill_job(job_address)
-
-                else:
-                    raise NotImplementedError
-            except zmq.error.Again as e:
-                #detect whether `self.worker_is_alive` is True periodically
-                pass
-        self.reply_job_socket.close(0)
-        self.request_master_socket.close(0)
-        self.reply_master_socket.close(0)
-
-        logger.warning("[Worker] Exit Worker {}.".format(
-            self.reply_master_address))
-        self.ctx.destroy()
+        self.reply_thread.join()

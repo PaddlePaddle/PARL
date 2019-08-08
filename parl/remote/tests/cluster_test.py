@@ -20,6 +20,7 @@ from parl.remote.worker import Worker
 import time
 import threading
 from parl.remote.client import disconnect
+from parl.remote import exceptions
 
 
 @parl.remote_class
@@ -55,8 +56,50 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestExit(unittest.TestCase):
-    def test_delete_worker(self):
+class TestCluster(unittest.TestCase):
+    def tearDown(self):
+        disconnect()
+
+    def test_actor_exception(self):
+        master = Master(port=1235)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(1)
+        worker1 = Worker('localhost:1235', 1)
+        self.assertEqual(1, master.cpu_num)
+        parl.connect('localhost:1235')
+        with self.assertRaises(exceptions.RemoteError):
+            actor = Actor(abcd='a bug')
+
+        actor2 = Actor()
+        self.assertEqual(actor2.add_one(1), 2)
+        self.assertEqual(0, master.cpu_num)
+
+        master.exit()
+        worker1.exit()
+
+    def test_actor_exception(self):
+        master = Master(port=1235)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(1)
+        worker1 = Worker('localhost:1235', 1)
+        self.assertEqual(1, master.cpu_num)
+        parl.connect('localhost:1235')
+        actor = Actor()
+        try:
+            actor.will_raise_exception_func()
+        except:
+            pass
+        actor2 = Actor()
+        self.assertEqual(actor2.add_one(1), 2)
+        self.assertEqual(0, master.cpu_num)
+        del actor
+        del actor2
+        worker1.exit()
+        master.exit()
+
+    def test_reset_actor(self):
         # start the master
         master = Master(port=1235)
         th = threading.Thread(target=master.run)
@@ -65,15 +108,14 @@ class TestExit(unittest.TestCase):
 
         worker1 = Worker('localhost:1235', 4)
         parl.connect('localhost:1235')
-        for i in range(4):
+        for i in range(10):
             actor = Actor()
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
+        del actor
+        time.sleep(20)
+        self.assertEqual(master.cpu_num, 4)
         worker1.exit()
-        time.sleep(30)
-        disconnect()
-        time.sleep(30)
-
         master.exit()
 
     def test_add_worker(self):

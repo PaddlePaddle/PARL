@@ -123,8 +123,8 @@ def start_worker(address, cpu_num):
 def stop():
     command = ("pkill -f remote/start.py")
     subprocess.call([command], shell=True)
-    command = ("pkill -f job.py")
-    p = subprocess.call([command], shell=True)
+    command = ("pkill -f remote/job.py")
+    subprocess.call([command], shell=True)
 
 
 cli.add_command(start_worker)

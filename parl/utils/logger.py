@@ -19,6 +19,7 @@ import os.path
 import sys
 from termcolor import colored
 import shutil
+from datetime import datetime
 
 __all__ = ['set_dir', 'get_dir', 'set_level', 'auto_set_dir']
 
@@ -36,6 +37,10 @@ def _makedirs(dirname):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise e
+
+
+def _get_time_str():
+    return datetime.now().strftime('%m%d-%H%M%S')
 
 
 class _Formatter(logging.Formatter):

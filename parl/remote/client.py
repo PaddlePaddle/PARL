@@ -139,6 +139,7 @@ class Client(object):
                 [remote_constants.HEARTBEAT_TAG])
             job_heartbeat_socket.recv_multipart()
         except zmq.error.Again:
+            job_heartbeat_socket.close(0)
             return False
         job_heartbeat_socket.disconnect("tcp://" + ping_heartbeat_address)
         job_heartbeat_socket.connect("tcp://" + job_heartbeat_address)

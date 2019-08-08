@@ -41,7 +41,7 @@ class TestLogger(unittest.TestCase):
             t.join()
 
     def test_auto_set_dir(self):
-        logger.auto_set_dir()
+        logger.auto_set_dir(action='d')
 
 
 if __name__ == '__main__':

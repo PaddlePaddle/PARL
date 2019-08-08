@@ -142,7 +142,6 @@ class Job(object):
         If the client has exited, the job will not exit, but reinitialized itself ,
         and let the master know that it is available for the new task. 
         """
-        socket.setsockopt(zmq.RCVTIMEO, 5 * 1000)  # 5 seconds
         self.client_is_alive = True
         while self.client_is_alive:
             try:
@@ -202,8 +201,8 @@ class Job(object):
                 return envdir
             else:
                 logger.error(
-                    "NotImplementedError:{}, received message:{}".format(
-                        self.job_address, message))
+                    "NotImplementedError:{}, received tag:{}".format(
+                        self.job_address, ))
                 raise NotImplementedError
 
     def wait_for_connection(self):

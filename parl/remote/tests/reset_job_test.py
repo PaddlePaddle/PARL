@@ -20,6 +20,7 @@ from parl.utils import logger
 import subprocess
 import time
 import threading
+import timeout_decorator
 
 
 @parl.remote_class
@@ -56,7 +57,7 @@ class Actor(object):
 
 
 class TestJob(unittest.TestCase):
-    def test_reset(self):
+    def test_job_exit_exceptionally(self):
         master = Master(port=1234)
         th = threading.Thread(target=master.run)
         th.start()
@@ -68,13 +69,38 @@ class TestJob(unittest.TestCase):
         command = ("pkill -f remote/job.py")
         subprocess.call([command], shell=True)
         parl.connect('localhost:1234')
-        #time.sleep(10)
-        #print("connect")
         actor = Actor()
         self.assertEqual(actor.add_one(1), 2)
-        print("HHHHHHHHHHHH")
         time.sleep(20)
 
+        master.exit()
+        worker1.exit()
+
+    @timeout_decorator.timeout(seconds=300)
+    def test_acor_extiexceptionally(self):
+        master = Master(port=1235)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(1)
+        worker1 = Worker('localhost:1235', 1)
+        time.sleep(1)
+        parl.connect('localhost:1235')
+
+        def create_actor():
+            actor = Actor()
+            actor.add_one(1)
+            time.sleep(100000)
+
+        def train():
+            th = threading.Thread(target=create_actor)
+            th.setDaemon(True)
+            th.start()
+            print("Train thread exits with an actor being killed")
+
+        train_th = threading.Thread(target=train)
+        train_th.start()
+        train_th.join()
+        actor = Actor()
         master.exit()
         worker1.exit()
         disconnect()

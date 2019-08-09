@@ -302,8 +302,15 @@ class Job(object):
            related computation resources.
         """
 
+        self.reply_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         while self.job_is_alive and self.client_is_alive:
-            message = self.reply_socket.recv_multipart()
+            try:
+                message = self.reply_socket.recv_multipart()
+            # check self.client_is_alive periodically
+            except zmq.error.Again as e:
+                pass
+
             tag = message[0]
 
             if tag == remote_constants.CALL_TAG:

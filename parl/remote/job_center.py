@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import threading
-from collections import defaultdict
 
 
 class JobCenter(object):
@@ -83,7 +82,7 @@ class JobCenter(object):
         """Reset a job and add the job_address to the job_pool.
 
         Args:
-            job(``InitializedJob``): The job informatin of the restarted job.
+            job(``InitializedJob``): The job information of the restarted job.
         """
         self.lock.acquire()
         self.job_pool[job.job_address] = job

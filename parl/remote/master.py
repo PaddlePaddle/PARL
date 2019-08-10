@@ -18,12 +18,10 @@ import threading
 import time
 import zmq
 
-from collections import defaultdict
 from parl.utils import to_str, to_byte, logger
 from parl.remote import remote_constants
 from parl.remote.job_center import JobCenter
 import cloudpickle
-import queue
 import time
 
 

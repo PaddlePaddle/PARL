@@ -17,7 +17,7 @@ class InitializedJob(object):
                  worker_address, pid):
         """
     Args:
-      job_address(str): Job addresss to which the new task connect.
+      job_address(str): Job address to which the new task connect.
       worker_heartbeat_address(str): Optional. The address to which the worker sends heartbeat signals.
       client_heartbeat_address(str): Address to which the client sends heartbeat signals.
       ping_heartbeat_address(str): the server address to which the client sends ping signals. 

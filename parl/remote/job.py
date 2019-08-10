@@ -115,6 +115,8 @@ class Job(object):
         # create the kill_job_socket
         kill_job_address = to_str(message[1])
         self.kill_job_socket = self.ctx.socket(zmq.REQ)
+        self.kill_job_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
 
     def _reply_ping(self, socket):
@@ -160,15 +162,15 @@ class Job(object):
                  to_byte(self.job_address)])
             _ = self.kill_job_socket.recv_multipart()
         logger.warning("[Job]lost connection with the client, will exit")
-        sys.exit(1)
+        os._exit(1)
 
     def _reply_worker_heartbeat(self, socket):
         """create a socket that replies heartbeat signals from the worker.
         If the worker has exited, the job will exit automatically.
         """
 
-        # a flag to decide when to exit heartbeat loop
         self.worker_is_alive = True
+        # a flag to decide when to exit heartbeat loop
         while self.worker_is_alive and self.job_is_alive:
             try:
                 message = socket.recv_multipart()
@@ -180,7 +182,7 @@ class Job(object):
                 self.worker_is_alive = False
                 self.job_is_alive = False
         socket.close(0)
-        sys.exit(1)
+        os._exit(1)
 
     def wait_for_files(self):
         """Wait for python files from remote object.

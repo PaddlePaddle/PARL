@@ -61,6 +61,7 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
+        time.sleep(10)
         command = ("pkill -f remote/job.py")
         subprocess.call([command], shell=True)
 

@@ -62,10 +62,6 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def SetUp(self):
-        command = ("pkill -f remote/job.py")
-        subprocess.call([command], shell=True)
-
     def test_job_exit_exceptionally(self):
         master = Master(port=1334)
         th = threading.Thread(target=master.run)

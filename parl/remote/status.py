@@ -47,7 +47,6 @@ class WorkerStatus(object):
         if killed_job in self.jobs:
             pid = self.jobs[killed_job].pid
             self.jobs.pop(killed_job)
-            print("RRRRRRRRRRRRRRRR size:{}".format(len(self.jobs)))
             ret = True
             try:
                 os.kill(pid, signal.SIGTERM)

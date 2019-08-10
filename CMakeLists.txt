@@ -23,18 +23,25 @@ option(IS_TESTING_GPU "testing GPU environment" OFF)
 
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
-function(py_test TARGET_NAME)
+function(py3_test TARGET_NAME)
     set(options "")
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    add_test(NAME ${TARGET_NAME}_with_python2
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        python -u ${py_test_SRCS} ${py_test_ARGS}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    #TODO: add real python2 env.
     add_test(NAME ${TARGET_NAME}_with_python3
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        python3.6 -u ${py_test_SRCS} ${py_test_ARGS}
+        COMMAND python3.6 ${py_test_SRCS} ${py_test_ARGS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endfunction()
+
+function(py2_test TARGET_NAME)
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs SRCS DEPS ARGS ENVS)
+    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    #TODO: add real python2 env.
+    add_test(NAME ${TARGET_NAME}_with_python2
+        COMMAND python ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
@@ -68,7 +75,7 @@ if (WITH_TESTING)
         foreach(src ${TEST_OPS})
           if (${src} MATCHES ".*remote.*")
               if (NOT IS_TESTING_GPU)
-                  py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+                  py3_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
               endif()
           else()
               py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})

@@ -41,15 +41,14 @@ class Job(object):
 
     """
 
-    def __init__(self, worker_address, master_address):
+    def __init__(self, worker_address):
         """
         Args:
             worker_address(str): worker_address for sending job information(e.g, pid)
-            master_address(str): master_address for letting the master know that the job is ready for the new task.(e.g, pid)
         """
         self.job_is_alive = True
         self.worker_address = worker_address
-        self.master_address = master_address
+        self.lock = threading.Lock()
         self._create_sockets()
 
     def _create_sockets(self):
@@ -59,7 +58,7 @@ class Job(object):
             from the actual class instance, completes the computation, and returns the result of
             the function.
         (2) job_socket(functional socket): sends job_address and heartbeat_address to worker.
-        (3) master_socket(functional socket): lets the master know that this job is ready for a new task.
+        (3) kill_job_socket: sends a command to the corresponding worker to kill the job.
 
         """
 
@@ -75,10 +74,6 @@ class Job(object):
         # create the job_socket
         self.job_socket = self.ctx.socket(zmq.REQ)
         self.job_socket.connect("tcp://{}".format(self.worker_address))
-
-        # create the master_socket
-        self.master_socket = self.ctx.socket(zmq.REQ)
-        self.master_socket.connect("tcp://{}".format(self.master_address))
 
         # a thread that reply ping signals from the client
         ping_heartbeat_socket, ping_heartbeat_address = self._create_heartbeat_server(
@@ -114,7 +109,13 @@ class Job(object):
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
-        _ = self.job_socket.recv_multipart()
+        message = self.job_socket.recv_multipart()
+
+        assert message[0] == remote_constants.NORMAL_TAG
+        # create the kill_job_socket
+        kill_job_address = to_str(message[1])
+        self.kill_job_socket = self.ctx.socket(zmq.REQ)
+        self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
 
     def _reply_ping(self, socket):
         """Create a socket server that reply the ping signal from client.
@@ -139,8 +140,7 @@ class Job(object):
 
     def _reply_client_heartbeat(self, socket):
         """Create a socket that replies heartbeat signals from the client.
-        If the client has exited, the job will not exit, but reinitialized itself ,
-        and let the master know that it is available for the new task. 
+        If the job losts connection with the client, it will exit too.
         """
         self.client_is_alive = True
         while self.client_is_alive:
@@ -150,10 +150,17 @@ class Job(object):
 
             except zmq.error.Again as e:
                 logger.warning(
-                    "[Job] Cannot connect to the client. I am going to reset myself"
+                    "[Job] Cannot connect to the client. This job will exit and inform the worker."
                 )
                 self.client_is_alive = False
         socket.close(0)
+        with self.lock:
+            self.kill_job_socket.send_multipart(
+                [remote_constants.KILLJOB_TAG,
+                 to_byte(self.job_address)])
+            _ = self.kill_job_socket.recv_multipart()
+        logger.warning("[Job]lost connection with the client, will exit")
+        sys.exit(1)
 
     def _reply_worker_heartbeat(self, socket):
         """create a socket that replies heartbeat signals from the worker.
@@ -173,6 +180,7 @@ class Job(object):
                 self.worker_is_alive = False
                 self.job_is_alive = False
         socket.close(0)
+        sys.exit(1)
 
     def wait_for_files(self):
         """Wait for python files from remote object.
@@ -249,46 +257,26 @@ class Job(object):
     def run(self):
         """An infinite loop waiting for a new task.
         """
-        while self.job_is_alive:
-            # receive files
-            envdir = self.wait_for_files()
-            previous_path = sys.path
-            sys.path.append(envdir)
-            self.client_thread.start()
+        # receive source code from the actor and append them to the environment variables.
+        envdir = self.wait_for_files()
+        sys.path.append(envdir)
+        self.client_thread.start()
 
-            try:
-                obj = self.wait_for_connection()
-                assert obj is not None
-                self.single_task(obj)
-            except Exception as e:
-                logger.error(
-                    "Error occurs when running a single task. We will reset this job. Reason:{}"
-                    .format(e))
-
-            logger.warning("Restting the job")
-
-            #restore the environmental variable
-            sys.path = previous_path
-
-            self.client_thread.join()
-            client_heartbeat_socket, client_heartbeat_address = self._create_heartbeat_server(
-            )
-            self.client_thread = threading.Thread(
-                target=self._reply_client_heartbeat,
-                args=(client_heartbeat_socket, ))
-            self.client_thread.setDaemon(True)
-            initialized_job = InitializedJob(
-                self.job_address,
-                worker_heartbeat_address=None,
-                client_heartbeat_address=client_heartbeat_address,
-                ping_heartbeat_address=self.ping_heartbeat_address,
-                worker_address=None,
-                pid=None)
-            self.master_socket.send_multipart([
-                remote_constants.RESET_JOB_TAG,
-                cloudpickle.dumps(initialized_job)
-            ])
-            self.master_socket.recv_multipart()
+        try:
+            obj = self.wait_for_connection()
+            assert obj is not None
+            self.single_task(obj)
+        except Exception as e:
+            logger.error(
+                "Error occurs when running a single task. We will reset this job. Reason:{}"
+                .format(e))
+            traceback_str = str(traceback.format_exc())
+            logger.error("traceback:\n{}".format(traceback_str))
+        with self.lock:
+            self.kill_job_socket.send_multipart(
+                [remote_constants.KILLJOB_TAG,
+                 to_byte(self.job_address)])
+            _ = self.kill_job_socket.recv_multipart()
 
     def single_task(self, obj):
         """An infinite loop waiting for commands from the remote object.
@@ -302,19 +290,12 @@ class Job(object):
            related computation resources.
         """
 
-        self.reply_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         while self.job_is_alive and self.client_is_alive:
-            try:
-                message = self.reply_socket.recv_multipart()
-            # check self.client_is_alive periodically
-            except zmq.error.Again as e:
-                pass
+            message = self.reply_socket.recv_multipart()
 
             tag = message[0]
 
             if tag == remote_constants.CALL_TAG:
-                assert obj is not None
                 try:
                     function_name = to_str(message[1])
                     data = message[2]
@@ -337,18 +318,21 @@ class Job(object):
                             remote_constants.ATTRIBUTE_EXCEPTION_TAG,
                             to_byte(error_str)
                         ])
+                        raise AttributeError
 
                     elif type(e) == SerializeError:
                         self.reply_socket.send_multipart([
                             remote_constants.SERIALIZE_EXCEPTION_TAG,
                             to_byte(error_str)
                         ])
+                        raise SerializeError
 
                     elif type(e) == DeserializeError:
                         self.reply_socket.send_multipart([
                             remote_constants.DESERIALIZE_EXCEPTION_TAG,
                             to_byte(error_str)
                         ])
+                        raise DeserializeError
 
                     else:
                         traceback_str = str(traceback.format_exc())
@@ -358,15 +342,19 @@ class Job(object):
                             to_byte(error_str + "\ntraceback:\n" +
                                     traceback_str)
                         ])
+                        break
 
             # receive DELETE_TAG from actor, and stop replying worker heartbeat
             elif tag == remote_constants.KILLJOB_TAG:
                 self.reply_socket.send_multipart([remote_constants.NORMAL_TAG])
                 self.client_is_alive = False
-                logger.warning("An actor exits and will reset job {}.".format(
-                    self.job_address))
+                logger.warning(
+                    "An actor exits and this job {} will exit.".format(
+                        self.job_address))
+                break
             else:
-                logger.error("Job message: {}".format(message))
+                logger.error(
+                    "The job receives an unknown message: {}".format(message))
                 raise NotImplementedError
 
 
@@ -374,8 +362,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--worker_address", required=True, type=str, help="worker_address")
-    parser.add_argument(
-        "--master_address", required=True, type=str, help="master_address")
     args = parser.parse_args()
-    job = Job(args.worker_address, args.master_address)
+    job = Job(args.worker_address)
     job.run()

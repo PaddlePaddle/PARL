@@ -21,6 +21,8 @@ import subprocess
 import time
 import threading
 import timeout_decorator
+import subprocess
+import sys
 
 
 @parl.remote_class
@@ -57,18 +59,26 @@ class Actor(object):
 
 
 class TestJob(unittest.TestCase):
+    def tearDown(self):
+        disconnect()
+        time.sleep(30)
+        command = ("pkill -f remote/job.py")
+        subprocess.call([command], shell=True)
+
     def test_job_exit_exceptionally(self):
-        master = Master(port=1234)
+        master = Master(port=1334)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:1234', 4)
+        worker1 = Worker('localhost:1334', 4)
+        time.sleep(10)
+        self.assertEqual(worker1.job_buffer.full(), True)
         time.sleep(1)
         self.assertEqual(master.cpu_num, 4)
-        print("We are going to kill all the job.")
+        print("We are going to kill all the jobs.")
         command = ("pkill -f remote/job.py")
         subprocess.call([command], shell=True)
-        parl.connect('localhost:1234')
+        parl.connect('localhost:1334')
         actor = Actor()
         self.assertEqual(actor.add_one(1), 2)
         time.sleep(20)
@@ -77,29 +87,21 @@ class TestJob(unittest.TestCase):
         worker1.exit()
 
     @timeout_decorator.timeout(seconds=300)
-    def test_acor_extiexceptionally(self):
-        master = Master(port=1235)
+    def test_acor_exit_exceptionally(self):
+        master = Master(port=1335)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:1235', 1)
-        time.sleep(1)
-        parl.connect('localhost:1235')
+        worker1 = Worker('localhost:1335', 1)
 
-        def create_actor():
-            actor = Actor()
-            actor.add_one(1)
-            time.sleep(100000)
+        file_path = __file__.replace('reset_job_test', 'simulate_client')
+        command = [sys.executable, file_path]
+        proc = subprocess.Popen(command)
+        time.sleep(10)
+        self.assertEqual(master.cpu_num, 0)
+        proc.kill()
 
-        def train():
-            th = threading.Thread(target=create_actor)
-            th.setDaemon(True)
-            th.start()
-            print("Train thread exits with an actor being killed")
-
-        train_th = threading.Thread(target=train)
-        train_th.start()
-        train_th.join()
+        parl.connect('localhost:1335')
         actor = Actor()
         master.exit()
         worker1.exit()

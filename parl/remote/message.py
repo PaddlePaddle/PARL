@@ -24,6 +24,7 @@ class InitializedJob(object):
                                     The signal is used to check if the job is alive.
       worker_address(str): Worker's server address that receive command from the master.
       pid(int): Optional. Process id of the job.
+      is_alive(True): Optional. This flag is used in worker to make sure that only alive jobs can be added into the worker_status.
     """
         self.job_address = job_address
         self.worker_heartbeat_address = worker_heartbeat_address
@@ -31,6 +32,7 @@ class InitializedJob(object):
         self.ping_heartbeat_address = ping_heartbeat_address
         self.worker_address = worker_address
         self.pid = pid
+        self.is_alive = True
 
 
 class InitializedWorker(object):

@@ -22,6 +22,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 import timeout_decorator
+import subprocess
 
 
 @parl.remote_class
@@ -60,6 +61,8 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
+        command = ("pkill -f remote/job.py")
+        subprocess.call([command], shell=True)
 
     def test_actor_exception(self):
         master = Master(port=1235)
@@ -81,13 +84,13 @@ class TestCluster(unittest.TestCase):
 
     @timeout_decorator.timeout(seconds=300)
     def test_actor_exception(self):
-        master = Master(port=1235)
+        master = Master(port=1236)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:1235', 1)
+        worker1 = Worker('localhost:1236', 1)
         self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:1235')
+        parl.connect('localhost:1236')
         actor = Actor()
         try:
             actor.will_raise_exception_func()
@@ -104,13 +107,13 @@ class TestCluster(unittest.TestCase):
 
     def test_reset_actor(self):
         # start the master
-        master = Master(port=1235)
+        master = Master(port=1237)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
 
-        worker1 = Worker('localhost:1235', 4)
-        parl.connect('localhost:1235')
+        worker1 = Worker('localhost:1237', 4)
+        parl.connect('localhost:1237')
         for i in range(10):
             actor = Actor()
             ret = actor.add_one(1)
@@ -136,6 +139,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 4)
 
         master.exit()
+        worker1.exit()
 
 
 if __name__ == '__main__':

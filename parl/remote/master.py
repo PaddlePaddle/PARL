@@ -217,13 +217,6 @@ class Master(object):
         elif tag == remote_constants.NORMAL_TAG:
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
-        # a job reset itself
-        elif tag == remote_constants.RESET_JOB_TAG:
-            initialized_job = cloudpickle.loads(message[1])
-            self.job_center.reset_job(initialized_job)
-
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
-
         else:
             raise NotImplementedError()
 

@@ -153,7 +153,7 @@ def remote_class(cls):
             def wrapper(*args, **kwargs):
                 if self.job_shutdown:
                     raise RemoteError(
-                        attr, "This actor lost connection with the job.")
+                        attr, "This actor losts connection with the job.")
                 self.internal_lock.acquire()
                 data = dumps_argument(*args, **kwargs)
 

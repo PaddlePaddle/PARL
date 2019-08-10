@@ -140,6 +140,9 @@ class Client(object):
             job_heartbeat_socket.recv_multipart()
         except zmq.error.Again:
             job_heartbeat_socket.close(0)
+            logger.error(
+                "[Client] connects to a finished job, will try again, ping_heartbeat_address:{}"
+                .format(ping_heartbeat_address))
             return False
         job_heartbeat_socket.disconnect("tcp://" + ping_heartbeat_address)
         job_heartbeat_socket.connect("tcp://" + job_heartbeat_address)

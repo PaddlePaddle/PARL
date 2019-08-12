@@ -204,5 +204,5 @@ class Learner(object):
     def log_metrics(self, metrics):
         logger.info(metrics)
         for k, v in metrics.items():
-            if value is not None:
+            if v is not None:
                 tensorboard.add_scalar(k, v, self.sample_total_steps)

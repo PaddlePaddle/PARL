@@ -1,5 +1,5 @@
 ## Reproduce ES with PARL
-Based on PARL, the Evolution Strategies (ES) algorithm has been reproduced, reaching the same level of indicators as the paper in Mujoco benchmarks.
+Based on PARL, we have implemented the Evolution Strategies (ES) algorithm and evaluate it in Mujoco environments. Its performance reaches the same level of indicators as the paper.
 
 + ES in
 [Evolution Strategies as a Scalable Alternative to Reinforcement Learning](https://arxiv.org/abs/1703.03864)
@@ -8,7 +8,7 @@ Based on PARL, the Evolution Strategies (ES) algorithm has been reproduced, reac
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
-TODO
+![learninng_curve](learning_curve.jpg)
 
 ## How to use
 ### Dependencies

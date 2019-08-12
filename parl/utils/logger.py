@@ -18,8 +18,10 @@ import os
 import os.path
 import sys
 from termcolor import colored
+import shutil
+from datetime import datetime
 
-__all__ = ['set_dir', 'get_dir', 'set_level']
+__all__ = ['set_dir', 'get_dir', 'set_level', 'auto_set_dir']
 
 # globals: logger file and directory:
 LOG_DIR = None
@@ -35,6 +37,10 @@ def _makedirs(dirname):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise e
+
+
+def _get_time_str():
+    return datetime.now().strftime('%m%d-%H%M%S')
 
 
 class _Formatter(logging.Formatter):
@@ -82,21 +88,6 @@ def _getlogger():
     return logger
 
 
-def create_file_after_first_call(func_name):
-    def call(*args, **kwargs):
-        global _logger
-        if LOG_DIR is None and hasattr(mod, '__file__'):
-            basename = os.path.basename(mod.__file__)
-            auto_dirname = os.path.join('log_dir',
-                                        basename[:basename.rfind('.')])
-            set_dir(auto_dirname)
-
-        func = getattr(_logger, func_name)
-        func(*args, **kwargs)
-
-    return call
-
-
 _logger = _getlogger()
 _LOGGING_METHOD = [
     'info', 'warning', 'error', 'critical', 'warn', 'exception', 'debug',
@@ -105,7 +96,7 @@ _LOGGING_METHOD = [
 
 # export logger functions
 for func in _LOGGING_METHOD:
-    locals()[func] = create_file_after_first_call(func)
+    locals()[func] = getattr(_logger, func)
     __all__.append(func)
 
 # export Level information
@@ -149,6 +140,70 @@ def set_dir(dirname):
         _makedirs(dirname)
     LOG_DIR = dirname
     _set_file(os.path.join(dirname, 'log.log'))
+
+
+def auto_set_dir(action=None):
+    """Set the global logging directory automatically. The default path is "./train_log/{scriptname}". "scriptname" is the name of the main python file currently running"
+
+    Note: This function references `https://github.com/tensorpack/tensorpack/blob/master/tensorpack/utils/logger.py#L93`
+
+    Args:
+        dir_name(str): log directory
+        action(str): an action of ["k","d","q"] to be performed
+            when the directory exists. Will ask user by default.
+                "d": delete the directory. Note that the deletion may fail when
+                the directory is used by tensorboard.
+                "k": keep the directory. This is useful when you resume from a
+                previous training and want the directory to look as if the
+                training was not interrupted.
+                Note that this option does not load old models or any other
+                old states for you. It simply does nothing.
+
+    Returns:
+        dirname(str): log directory used in the global logging directory.
+    """
+    mod = sys.modules['__main__']
+    basename = os.path.basename(mod.__file__)
+    dirname = os.path.join('train_log', basename[:basename.rfind('.')])
+    dirname = os.path.normpath(dirname)
+
+    global LOG_DIR, _FILE_HANDLER
+    if _FILE_HANDLER:
+        # unload and close the old file handler, so that we may safely delete the logger directory
+        _logger.removeHandler(_FILE_HANDLER)
+        del _FILE_HANDLER
+
+    def dir_nonempty(dirname):
+        # If directory exists and nonempty (ignore hidden files), prompt for action
+        return os.path.isdir(dirname) and len(
+            [x for x in os.listdir(dirname) if x[0] != '.'])
+
+    if dir_nonempty(dirname):
+        if not action:
+            _logger.warning("""\
+Log directory {} exists! Use 'd' to delete it. """.format(dirname))
+            _logger.warning("""\
+If you're resuming from a previous run, you can choose to keep it.
+Press any other key to exit. """)
+        while not action:
+            action = input("Select Action: k (keep) / d (delete) / q (quit):"
+                           ).lower().strip()
+        act = action
+        if act == 'd':
+            shutil.rmtree(dirname, ignore_errors=True)
+            if dir_nonempty(dirname):
+                shutil.rmtree(dirname, ignore_errors=False)
+        elif act == 'n':
+            dirname = dirname + _get_time_str()
+            info("Use a new log directory {}".format(dirname))  # noqa: F821
+        elif act == 'k':
+            pass
+        else:
+            raise OSError("Directory {} exits!".format(dirname))
+    LOG_DIR = dirname
+    _makedirs(dirname)
+    _set_file(os.path.join(dirname, 'log.log'))
+    return dirname
 
 
 def get_dir():

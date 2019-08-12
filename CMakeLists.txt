@@ -17,25 +17,33 @@ cmake_minimum_required(VERSION 3.0)
 enable_testing()
 
 option(WITH_TESTING "Include unit testing" ON)
-option(IS_TESTING_IMPORT "Whether is testing import parl" OFF)
-option(IS_TESTING_DOCS "Whether is testing compling the docs" OFF)
+option(IS_TESTING_IMPORT "testing import parl" OFF)
+option(IS_TESTING_DOCS "testing compling the docs" OFF)
+option(IS_TESTING_GPU "testing GPU environment" OFF)
 
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
-function(py_test TARGET_NAME)
+function(py3_test TARGET_NAME)
     set(options "")
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
-    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    add_test(NAME ${TARGET_NAME}_with_python2
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        python -u ${py_test_SRCS} ${py_test_ARGS}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    cmake_parse_arguments(py3_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    #TODO: add real python2 env.
     add_test(NAME ${TARGET_NAME}_with_python3
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        python3.6 -u ${py_test_SRCS} ${py_test_ARGS}
+        COMMAND python3.6 ${py3_test_SRCS} ${py3_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
+
+#function(py2_test TARGET_NAME)
+#    set(options "")
+#    set(oneValueArgs "")
+#    set(multiValueArgs SRCS DEPS ARGS ENVS)
+#    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+#    #TODO: add real python2 env.
+#    add_test(NAME ${TARGET_NAME}_with_python2
+#        COMMAND python ${py_test_SRCS} ${py_test_ARGS}
+#        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+#endfunction()
 
 function(import_test TARGET_NAME)
     set(options "")
@@ -44,8 +52,7 @@ function(import_test TARGET_NAME)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     add_test(NAME ${TARGET_NAME}_with_empty_env
-        COMMAND env PYTHONPATH=.:${py_test_ENVS}
-        /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
+        COMMAND /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 endfunction()
@@ -66,7 +73,13 @@ if (WITH_TESTING)
         file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
         string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
         foreach(src ${TEST_OPS})
-            py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+          if (${src} MATCHES ".*remote.*")
+              if (NOT IS_TESTING_GPU)
+                  py3_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+              endif()
+          else()
+              py3_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+          endif()
         endforeach()
     endif()
 endif()

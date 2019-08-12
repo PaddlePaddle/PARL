@@ -11,29 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import unittest
-from parl.utils import tensorboard
-import numpy as np
-from parl.utils import logger
-import os
+import time
+import parl
 
 
-class TestUtils(unittest.TestCase):
-    def tearDown(self):
-        tensorboard.flush()
+@parl.remote_class
+class Actor(object):
+    def add_one(self, value):
+        value += 1
+        return value
 
-    def test_add_scalar(self):
-        x = range(100)
-        for i in x:
-            tensorboard.add_scalar('y=2x', i * 2, i)
-        self.assertTrue(os.path.exists('./train_log/tensorboard_test'))
 
-    def test_add_histogram(self):
-        for i in range(10):
-            x = np.random.random(1000)
-            tensorboard.add_histogram('distribution centers', x + i, i)
+def train():
+    parl.connect('localhost:1335')
+    actor = Actor()
+    actor.add_one(1)
+    time.sleep(100000)
 
 
 if __name__ == '__main__':
-    logger.auto_set_dir(action='d')
-    unittest.main()
+    train()

@@ -83,11 +83,11 @@ def start_master(port, cpu_num):
     cpu_num = str(cpu_num) if cpu_num else ''
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
-    command = ["python", start_file, "--name", "master", "--port", port]
+    command = [sys.executable, start_file, "--name", "master", "--port", port]
     p = subprocess.Popen(command)
 
     command = [
-        "python", start_file, "--name", "worker", "--address",
+        sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
@@ -112,8 +112,8 @@ def start_worker(address, cpu_num):
                             address) + "is correct.")
     cpu_num = str(cpu_num) if cpu_num else ''
     command = [
-        "python", "{}/start.py".format(__file__[:-11]), "--name", "worker",
-        "--address", address, "--cpu_num",
+        sys.executable, "{}/start.py".format(__file__[:-11]), "--name",
+        "worker", "--address", address, "--cpu_num",
         str(cpu_num)
     ]
     p = subprocess.Popen(command)
@@ -123,8 +123,8 @@ def start_worker(address, cpu_num):
 def stop():
     command = ("pkill -f remote/start.py")
     subprocess.call([command], shell=True)
-    command = ("pkill -f job.py")
-    p = subprocess.call([command], shell=True)
+    command = ("pkill -f remote/job.py")
+    subprocess.call([command], shell=True)
 
 
 cli.add_command(start_worker)

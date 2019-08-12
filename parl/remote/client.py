@@ -101,7 +101,7 @@ class Client(object):
                             "address {} is correct.".format(master_address))
 
     def _reply_heartbeat(self):
-        """Reply heartbeat signals to the Master node."""
+        """Reply heartbeat signals to the specific node."""
 
         socket = self.ctx.socket(zmq.REP)
         socket.linger = 0
@@ -124,6 +124,57 @@ class Client(object):
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")
 
+    def _check_and_monitor_job(self, job_heartbeat_address,
+                               ping_heartbeat_address):
+        """ Sometimes the client may receive a job that is dead, thus 
+        we have to check if this job is still alive before sending it to the actor.
+        """
+        # job_heartbeat_socket: sends heartbeat signal to job
+        job_heartbeat_socket = self.ctx.socket(zmq.REQ)
+        job_heartbeat_socket.linger = 0
+        job_heartbeat_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
+        job_heartbeat_socket.connect("tcp://" + ping_heartbeat_address)
+        try:
+            job_heartbeat_socket.send_multipart(
+                [remote_constants.HEARTBEAT_TAG])
+            job_heartbeat_socket.recv_multipart()
+        except zmq.error.Again:
+            job_heartbeat_socket.close(0)
+            logger.error(
+                "[Client] connects to a finished job, will try again, ping_heartbeat_address:{}"
+                .format(ping_heartbeat_address))
+            return False
+        job_heartbeat_socket.disconnect("tcp://" + ping_heartbeat_address)
+        job_heartbeat_socket.connect("tcp://" + job_heartbeat_address)
+        job_heartbeat_socket.setsockopt(
+            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
+
+        # a thread for sending heartbeat signals to job
+        thread = threading.Thread(
+            target=self._create_job_monitor, args=(job_heartbeat_socket, ))
+        thread.setDaemon(True)
+        thread.start()
+        return True
+
+    def _create_job_monitor(self, job_heartbeat_socket):
+        """Send heartbeat signals to check target's status"""
+
+        job_is_alive = True
+        while job_is_alive and self.client_is_alive:
+            try:
+                job_heartbeat_socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG])
+                _ = job_heartbeat_socket.recv_multipart()
+                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+
+            except zmq.error.Again as e:
+                job_is_alive = False
+
+            except zmq.error.ZMQError as e:
+                break
+
+        job_heartbeat_socket.close(0)
+
     def submit_job(self):
         """Send a job to the Master node.
 
@@ -132,35 +183,44 @@ class Client(object):
         a vacant job from its job pool to the remote object.
 
         Returns:
-            IP address of the job.
+            job_address(str): IP address of the job. None if there is no available CPU in the cluster.
         """
         if self.master_is_alive:
 
-            # A lock to prevent multiple actor submit job at the same time.
-            self.lock.acquire()
-            self.submit_job_socket.send_multipart([
-                remote_constants.CLIENT_SUBMIT_TAG,
-                to_byte(self.heartbeat_master_address)
-            ])
-            message = self.submit_job_socket.recv_multipart()
-            self.lock.release()
+            while True:
+                # A lock to prevent multiple actors from submitting job at the same time.
+                self.lock.acquire()
+                self.submit_job_socket.send_multipart([
+                    remote_constants.CLIENT_SUBMIT_TAG,
+                    to_byte(self.heartbeat_master_address)
+                ])
+                message = self.submit_job_socket.recv_multipart()
+                self.lock.release()
 
-            tag = message[0]
+                tag = message[0]
 
-            if tag == remote_constants.NORMAL_TAG:
-                job_address = to_str(message[1])
+                if tag == remote_constants.NORMAL_TAG:
+                    job_address = to_str(message[1])
+                    job_heartbeat_address = to_str(message[2])
+                    ping_heartbeat_address = to_str(message[3])
 
-            # no vacant CPU resources, can not submit a new job
-            elif tag == remote_constants.CPU_TAG:
-                job_address = None
-                # wait 1 second to avoid requesting in a high frequency.
-                time.sleep(1)
-            else:
-                raise NotImplementedError
+                    check_result = self._check_and_monitor_job(
+                        job_heartbeat_address, ping_heartbeat_address)
+                    if check_result:
+                        return job_address
+
+                # no vacant CPU resources, cannot submit a new job
+                elif tag == remote_constants.CPU_TAG:
+                    job_address = None
+                    # wait 1 second to avoid requesting in a high frequency.
+                    time.sleep(1)
+                    return job_address
+                else:
+                    raise NotImplementedError
         else:
             raise Exception("Client can not submit job to the master, "
                             "please check if master is connected.")
-        return job_address
+        return None
 
 
 GLOBAL_CLIENT = None
@@ -203,5 +263,10 @@ def get_global_client():
 def disconnect():
     """Disconnect the global client from the master node."""
     global GLOBAL_CLIENT
-    GLOBAL_CLIENT.client_is_alive = False
-    GLOBAL_CLIENT = None
+    if GLOBAL_CLIENT is not None:
+        GLOBAL_CLIENT.client_is_alive = False
+        GLOBAL_CLIENT = None
+    else:
+        logger.info(
+            "No client to be released. Please make sure that you have call `parl.connect`"
+        )

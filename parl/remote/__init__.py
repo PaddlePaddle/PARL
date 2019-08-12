@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from parl.remote.master import *
+from parl.remote.worker import *
+from parl.remote.client import *
 from parl.remote.exceptions import *
 from parl.remote.remote_decorator import *
-from parl.remote.remote_manager import *
-from parl.remote.remote_object import *

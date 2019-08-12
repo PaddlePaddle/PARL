@@ -23,13 +23,15 @@ import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
-from parl import RemoteManager
+
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger, get_gpu_count
+from parl.utils import logger, get_gpu_count, tensorboard
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 from parl.utils import machine_info
+
+from actor import Actor
 
 
 class Learner(object):
@@ -78,20 +80,17 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.params_queues = []
-        self.run_remote_manager()
+        self.create_actors()
 
-        self.csv_logger = CSVLogger(
-            os.path.join(logger.get_dir(), 'result.csv'))
-
-    def run_remote_manager(self):
-        """ Accept connection of new remote actor and start sampling of the remote actor.
+    def create_actors(self):
+        """ Connect to the cluster and start sampling of the remote actor.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
+        parl.connect(self.config['master_address'])
+
         logger.info('Waiting for {} remote actors to connect.'.format(
             self.config['actor_num']))
 
         for i in six.moves.range(self.config['actor_num']):
-            remote_actor = remote_manager.get_remote()
             params_queue = queue.Queue()
             self.params_queues.append(params_queue)
 
@@ -99,17 +98,18 @@ class Learner(object):
             logger.info('Remote actor count: {}'.format(self.remote_count))
 
             remote_thread = threading.Thread(
-                target=self.run_remote_sample,
-                args=(remote_actor, params_queue))
+                target=self.run_remote_sample, args=(params_queue, ))
             remote_thread.setDaemon(True)
             remote_thread.start()
 
         logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
 
-    def run_remote_sample(self, remote_actor, params_queue):
+    def run_remote_sample(self, params_queue):
         """ Sample data from remote actor and update parameters of remote actor.
         """
+        remote_actor = Actor(self.config)
+
         cnt = 0
         while True:
             latest_params = params_queue.get()
@@ -128,7 +128,7 @@ class Learner(object):
         """
         1. kick off all actors to synchronize parameters and sample data;
         2. collect sample data of all actors;
-        3. update parameters. 
+        3. update parameters.
         """
 
         latest_params = self.agent.get_weights()
@@ -208,11 +208,11 @@ class Learner(object):
             'entropy_coeff': self.entropy_coeff,
         }
 
+        for key, value in metric.items():
+            if value is not None:
+                tensorboard.add_scalar(key, value, self.sample_total_steps)
+
         logger.info(metric)
-        self.csv_logger.log_dict(metric)
 
     def should_stop(self):
         return self.sample_total_steps >= self.config['max_sample_steps']
-
-    def close(self):
-        self.csv_logger.close()

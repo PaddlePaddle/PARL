@@ -38,7 +38,8 @@ Algorithm
 In this tutorial, we solve the benchmark `Cartpole` using the `Policy Graident` algorithm, which has been implemented in our repository.
 Thus, we can simply use this algorithm by importting it from ``parl.algorithms``.
 
-We have also published various algorithms in PARL, please visit this page for more detail. For those who want to implement a new algorithm, please follow this tutorial.
+We have also published various algorithms in PARL, please visit this `page <https://parl.readthedocs.io/en/latest/implementations.html>`_ for more detail. 
+For those who want to implement a new algorithm, please follow this `tutorial <https://parl.readthedocs.io/en/latest/new_alg.html>`_.
 
 .. code-block:: python
 
@@ -49,7 +50,7 @@ Note that each ``algorithm`` should have two functions implemented:
 
 - ``learn``
 
-  updates the model's parameters given trainsition data 
+  updates the model's parameters given transition data 
 - ``predict``
 
   predicts an action given current environmental state. 

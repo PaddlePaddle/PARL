@@ -24,22 +24,23 @@ Mean episode reward in training process after 10 million sample steps.
 
 ### Distributed Training
 
-#### Learner
-```sh
-python train.py 
+At first, We can start a local cluster with 5 CPUs:
+
+```bash
+xparl start --port 8010 --cpu_num 5
 ```
 
-#### Actors (Suggest: 5 actors in 5 CPUs)
-```sh
-for i in $(seq 1 5); do
-    python actor.py &
-done;
-wait
-```
+Note that if you have started a master before, you don't have to run the above
+command. For more information about the cluster, please refer to our
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `a2c_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
 
 ### Reference
++ [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 + [Ray](https://github.com/ray-project/ray)
 + [OpenAI Baselines: ACKTR & A2C](https://openai.com/blog/baselines-acktr-a2c/)

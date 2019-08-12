@@ -83,7 +83,7 @@ class Model(ModelBase):
         Args:
             target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
             decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
-            share_vars_parallel_executor (fluid.ParallelExecutor): if not None, will use fluid.ParallelExecutor 
+            share_vars_parallel_executor (fluid.ParallelExecutor): Optional. If not None, will use fluid.ParallelExecutor 
                                                                    to run program instead of fluid.Executor
         """
         self.sync_weights_to(
@@ -97,15 +97,15 @@ class Model(ModelBase):
                         share_vars_parallel_executor=None):
         """Synchronize parameters of current model to another model.
         
-        To speed up the synchronizing process, will create a program implicitly to finish the process. And will
-        also cache the program to avoid creating program repeatedly.
+        To speed up the synchronizing process, it will create a program implicitly to finish the process. It
+        also stores a program as the cache to avoid creating program repeatedly.
 
         target_model_weights = decay * target_model_weights + (1 - decay) * current_model_weights
 
         Args:
             target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
             decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
-            share_vars_parallel_executor (fluid.ParallelExecutor): if not None, will use ``fluid.ParallelExecutor``
+            share_vars_parallel_executor (fluid.ParallelExecutor): Optional. If not None, will use ``fluid.ParallelExecutor``
                                                                    to run program instead of ``fluid.Executor``.
 
         Example:

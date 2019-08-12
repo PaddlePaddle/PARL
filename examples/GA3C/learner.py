@@ -23,14 +23,15 @@ import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
-from parl import RemoteManager
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, CSVLogger, get_gpu_count
+from parl.utils import logger, get_gpu_count, tensorboard
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 from parl.utils.rl_utils import calc_gae
 from parl.utils import machine_info
+
+from actor import Actor
 
 
 class Learner(object):
@@ -104,12 +105,9 @@ class Learner(object):
         self.sample_total_steps = 0
 
         self.remote_manager_thread = threading.Thread(
-            target=self.run_remote_manager)
+            target=self.create_actors)
         self.remote_manager_thread.setDaemon(True)
         self.remote_manager_thread.start()
-
-        self.csv_logger = CSVLogger(
-            os.path.join(logger.get_dir(), 'result.csv'))
 
     def learn_data_provider(self):
         """ Data generator for fluid.layers.py_reader
@@ -181,17 +179,18 @@ class Learner(object):
             self.vf_loss_stat.add(vf_loss)
             self.entropy_stat.add(entropy)
 
-    def run_remote_manager(self):
-        """ Accept connection of new remote simulator and start simulation.
+    def create_actors(self):
+        """ Connect to the cluster and start sampling of the remote actor.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
-        logger.info("Waiting for the remote simulator's connection.")
+        parl.connect(self.config['master_address'])
+
+        logger.info('Waiting for {} remote actors to connect.'.format(
+            self.config['actor_num']))
 
         ident = 0
         self.predict_output_queues = []
 
-        while True:
-            remote_simulator = remote_manager.get_remote()
+        for i in six.moves.range(self.config['actor_num']):
 
             self.remote_count += 1
             logger.info('Remote simulator count: {}'.format(self.remote_count))
@@ -202,27 +201,23 @@ class Learner(object):
             self.predict_output_queues.append(q)
 
             remote_thread = threading.Thread(
-                target=self.run_remote_sample,
-                args=(
-                    remote_simulator,
-                    ident,
-                ))
+                target=self.run_remote_sample, args=(ident, ))
             remote_thread.setDaemon(True)
             remote_thread.start()
-
             ident += 1
 
-    def run_remote_sample(self, remote_simulator, ident):
+    def run_remote_sample(self, ident):
         """ Interacts with remote simulator.
         """
+        remote_actor = Actor(self.config)
         mem = defaultdict(list)
 
-        obs = remote_simulator.reset()
+        obs = remote_actor.reset()
         while True:
             self.predict_input_queue.put((ident, obs))
             action, value = self.predict_output_queues[ident].get()
 
-            next_obs, reward, done = remote_simulator.step(action)
+            next_obs, reward, done = remote_actor.step(action)
 
             mem['obs'].append(obs)
             mem['actions'].append(action)
@@ -245,7 +240,7 @@ class Learner(object):
 
                 mem = defaultdict(list)
 
-                next_obs = remote_simulator.reset()
+                next_obs = remote_actor.reset()
 
             elif len(mem['obs']) == self.config['t_max'] + 1:
                 next_value = mem['values'][-1]
@@ -267,7 +262,7 @@ class Learner(object):
             obs = next_obs
 
             if done:
-                metrics = remote_simulator.get_metrics()
+                metrics = remote_actor.get_metrics()
                 if metrics:
                     self.remote_metrics_queue.put(metrics)
 
@@ -319,8 +314,8 @@ class Learner(object):
             'entropy_coeff': self.entropy_coeff,
         }
 
-        logger.info(metric)
-        self.csv_logger.log_dict(metric)
+        for key, value in metric.items():
+            if value is not None:
+                tensorboard.add_scalar(key, value, self.sample_total_steps)
 
-    def close(self):
-        self.csv_logger.close()
+        logger.info(metric)

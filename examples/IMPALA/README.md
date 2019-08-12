@@ -28,22 +28,23 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 
 ### Distributed Training:
 
-#### Learner
-```sh
-python train.py 
+At first, We can start a local cluster with 32 CPUs:
+
+```bash
+xparl start --port 8010 --cpu_num 32
 ```
 
-#### Actors (Suggest: 32+ actors in 32+ CPUs)
-```sh
-for i in $(seq 1 32); do
-    python actor.py &
-done;
-wait
-```
+Note that if you have started a master before, you don't have to run the above
+command. For more information about the cluster, please refer to our
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `impala_config.py`.
-Training result will be saved in `log_dir/train/result.csv`.
+Then we can start the distributed training by running `train.py`.
+
+```bash
+python train.py
+```
 
 ### Reference
++ [Parl Cluster Setup](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 + [deepmind/scalable_agent](https://github.com/deepmind/scalable_agent)
 + [Ray](https://github.com/ray-project/ray)

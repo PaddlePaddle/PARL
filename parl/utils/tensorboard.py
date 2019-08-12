@@ -25,6 +25,12 @@ def create_file_after_first_call(func_name):
     def call(*args, **kwargs):
         global _writer
         if _writer is None:
+            logdir = logger.get_dir()
+            if logdir is None:
+                logdir = logger.auto_set_dir(action='d')
+                logger.warning(
+                    "[tensorboard] logdir is None, will save tensorboard files to {}"
+                    .format(logdir))
             _writer = SummaryWriter(logdir=logger.get_dir())
         func = getattr(_writer, func_name)
         func(*args, **kwargs)

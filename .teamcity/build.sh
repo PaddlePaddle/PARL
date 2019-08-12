@@ -60,7 +60,7 @@ function run_test_with_gpu() {
     
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
-    cmake ..
+    cmake .. -DIS_TESTING_GPU=ON
     cat <<EOF
     ========================================
     Running unit tests with GPU...

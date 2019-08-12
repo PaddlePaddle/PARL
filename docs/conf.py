@@ -40,6 +40,7 @@ copyright = '2019, nlp-ol@baidu.com'
 author = 'nlp-ol@baidu.com'
 
 # The full version, including alpha/beta/rc tags
+autodoc_mock_imports = ['paddle']
 
 # -- General configuration ---------------------------------------------------
 
@@ -95,22 +96,8 @@ def skip(app, what, name, obj, would_skip, options):
     return would_skip
 
 
-aliases = dict()
-aliases['parl.core.fluid.agent.Agent'] = ['parl.agent']
-
-
-def parl_class_docstring(app, what, name, obj, options, lines):
-    if what != 'class':
-        return
-    obj = parl.Agent
-    name = parl.Agent
-
-    #lines[0] = ['wohenhao']
-
-
 def setup(app):
     app.connect("autodoc-skip-member", skip)
-    app.connect("autodoc-process-docstring", parl_class_docstring)
 
 
 add_module_names = False

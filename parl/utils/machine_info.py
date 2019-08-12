@@ -61,7 +61,7 @@ def get_gpu_count():
     """get avaliable gpu count
 
     Returns:
-        gpu_count: int    
+        gpu_count: int
     """
 
     gpu_count = 0

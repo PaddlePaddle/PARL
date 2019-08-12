@@ -14,6 +14,8 @@
 import unittest
 from parl.utils import tensorboard
 import numpy as np
+from parl.utils import logger
+import os
 
 
 class TestUtils(unittest.TestCase):
@@ -24,6 +26,7 @@ class TestUtils(unittest.TestCase):
         x = range(100)
         for i in x:
             tensorboard.add_scalar('y=2x', i * 2, i)
+        self.assertTrue(os.path.exists('./train_log/tensorboard_test'))
 
     def test_add_histogram(self):
         for i in range(10):
@@ -32,4 +35,5 @@ class TestUtils(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    logger.auto_set_dir(action='d')
     unittest.main()

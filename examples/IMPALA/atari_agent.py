@@ -76,7 +76,8 @@ class AtariAgent(parl.Agent):
                 vtrace_loss.total_loss, vtrace_loss.pi_loss,
                 vtrace_loss.vf_loss, vtrace_loss.entropy, kl
             ]
-        self.learn_program = parl.compile(self.learn_program, total_loss)
+        self.learn_program = parl.compile(self.learn_program,
+                                          vtrace_loss.total_loss)
 
     def sample(self, obs_np):
         """

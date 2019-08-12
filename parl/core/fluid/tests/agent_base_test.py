@@ -16,16 +16,14 @@ import numpy as np
 import unittest
 from paddle import fluid
 from parl import layers
-from parl.core.fluid.agent import Agent
-from parl.core.fluid.algorithm import Algorithm
-from parl.core.fluid.model import Model
-from parl.utils.machine_info import get_gpu_count
+import parl
+import os
 
 
-class TestModel(Model):
+class TestModel(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(size=256)
-        self.fc2 = layers.fc(size=128)
+        self.fc2 = layers.fc(size=1)
 
     def policy(self, obs):
         out = self.fc1(obs)
@@ -33,24 +31,43 @@ class TestModel(Model):
         return out
 
 
-class TestAlgorithm(Algorithm):
+class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
         self.model = model
 
     def predict(self, obs):
         return self.model.policy(obs)
 
+    def learn(self, obs, label):
+        pred_output = self.model.policy(obs)
+        cost = layers.square_error_cost(obs, label)
+        cost = fluid.layers.reduce_mean(cost)
+        return cost
 
-class TestAgent(Agent):
+
+class TestAgent(parl.Agent):
     def __init__(self, algorithm, gpu_id=None):
         super(TestAgent, self).__init__(algorithm, gpu_id)
 
     def build_program(self):
         self.predict_program = fluid.Program()
+        self.learn_program = fluid.Program()
         with fluid.program_guard(self.predict_program):
             obs = layers.data(name='obs', shape=[10], dtype='float32')
             output = self.algorithm.predict(obs)
         self.predict_output = [output]
+
+        with fluid.program_guard(self.learn_program):
+            obs = layers.data(name='obs', shape=[10], dtype='float32')
+            label = layers.data(name='label', shape=[1], dtype='float32')
+            cost = self.algorithm.learn(obs, label)
+
+    def learn(self, obs, label):
+        output_np = self.fluid_executor.run(
+            self.learn_program, feed={
+                'obs': obs,
+                'label': label
+            })
 
     def predict(self, obs):
         output_np = self.fluid_executor.run(
@@ -66,11 +83,38 @@ class AgentBaseTest(unittest.TestCase):
         self.algorithm = TestAlgorithm(self.model)
 
     def test_agent(self):
-        if get_gpu_count() > 0:
-            agent = TestAgent(self.algorithm)
-            obs = np.random.random([3, 10]).astype('float32')
-            output_np = agent.predict(obs)
-            self.assertIsNotNone(output_np)
+        agent = TestAgent(self.algorithm)
+        obs = np.random.random([3, 10]).astype('float32')
+        output_np = agent.predict(obs)
+        self.assertIsNotNone(output_np)
+
+    def test_save(self):
+        agent = TestAgent(self.algorithm)
+        obs = np.random.random([3, 10]).astype('float32')
+        output_np = agent.predict(obs)
+        save_path1 = './model.ckpt'
+        save_path2 = './my_model/model-2.ckpt'
+        agent.save(save_path1)
+        agent.save(save_path2)
+        self.assertTrue(os.path.exists(save_path1))
+        self.assertTrue(os.path.exists(save_path2))
+
+    def test_restore(self):
+        agent = TestAgent(self.algorithm)
+        obs = np.random.random([3, 10]).astype('float32')
+        output_np = agent.predict(obs)
+        save_path1 = './model.ckpt'
+        previous_output = agent.predict(obs)
+        agent.save(save_path1)
+        agent.restore(save_path1)
+        current_output = agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
+
+        # a new agent instance
+        another_agent = TestAgent(self.algorithm)
+        another_agent.restore(save_path1)
+        current_output = another_agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
 
 
 if __name__ == '__main__':

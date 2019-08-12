@@ -12,20 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from learner import Learner
+import paddle.fluid as fluid
+import parl
+from parl import layers
 
 
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
+class MujocoModel(parl.Model):
+    def __init__(self, act_dim):
+        hid1_size = 256
+        hid2_size = 256
 
-    while True:
-        time.sleep(config['log_metrics_interval_s'])
+        self.fc1 = layers.fc(size=hid1_size, act='tanh')
+        self.fc2 = layers.fc(size=hid2_size, act='tanh')
+        self.fc3 = layers.fc(size=act_dim)
 
-        learner.log_metrics()
-
-
-if __name__ == '__main__':
-    from ga3c_config import config
-    main(config)
+    def forward(self, obs):
+        hid1 = self.fc1(obs)
+        hid2 = self.fc2(hid1)
+        means = self.fc3(hid2)
+        return means

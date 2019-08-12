@@ -12,20 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from learner import Learner
+config = {
+    #==========  remote config ==========
+    'server_ip': 'localhost',
+    'server_port': 8037,
 
+    #==========  env config ==========
+    'env_name': 'Humanoid-v1',
 
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
+    #==========  actor config ==========
+    'actor_num': 96,
+    'action_noise_std': 0.01,
+    'min_task_runtime': 0.2,
+    'eval_prob': 0.003,
+    'filter_update_prob': 0.01,
 
-    while True:
-        time.sleep(config['log_metrics_interval_s'])
-
-        learner.log_metrics()
-
-
-if __name__ == '__main__':
-    from impala_config import config
-    main(config)
+    #==========  learner config ==========
+    'stepsize': 0.01,
+    'min_episodes_per_batch': 1000,
+    'min_steps_per_batch': 10000,
+    'noise_size': 200000000,
+    'noise_stdev': 0.02,
+    'l2_coeff': 0.005,
+    'report_window_size': 10,
+}

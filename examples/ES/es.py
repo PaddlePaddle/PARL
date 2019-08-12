@@ -12,22 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-from learner import Learner
 import parl
 
-
-def main(config):
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
-
-    while not learner.should_stop():
-        start = time.time()
-        while time.time() - start < config['log_metrics_interval_s']:
-            learner.step()
-        learner.log_metrics()
+__all__ = ['ES']
 
 
-if __name__ == '__main__':
-    from a2c_config import config
-    main(config)
+class ES(parl.Algorithm):
+    def __init__(self, model):
+        """ES algorithm.
+        
+        Since parameters of the model is updated in the numpy level, `learn` function is not needed
+        in this algorithm.
+
+        Args:
+            model(`parl.Model`): policy model of ES algorithm.
+        """
+        self.model = model
+
+    def predict(self, obs):
+        """Use the policy model to predict actions of observations.
+
+        Args:
+            obs(layers.data):  data layer of observations.
+
+        Returns:
+            tensor of predicted actions.
+        """
+        return self.model(obs)

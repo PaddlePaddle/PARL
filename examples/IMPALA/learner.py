@@ -243,3 +243,15 @@ class Learner(object):
                 tensorboard.add_scalar(key, value, self.sample_total_steps)
 
         logger.info(metric)
+
+
+if __name__ == '__main__':
+    from impala_config import config
+
+    learner = Learner(config)
+    assert config['log_metrics_interval_s'] > 0
+
+    while True:
+        time.sleep(config['log_metrics_interval_s'])
+
+        learner.log_metrics()

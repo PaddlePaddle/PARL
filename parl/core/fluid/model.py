@@ -263,8 +263,14 @@ class Model(ModelBase):
         """
         assert len(weights) == len(self.parameters()), \
                 'size of input weights should be same as weights number of current model'
+        try:
+            is_gpu_available = self._is_gpu_available
+        except AttributeError:
+            self._is_gpu_available = machine_info.is_gpu_available()
+            is_gpu_available = self._is_gpu_available
+
         for (param_name, weight) in list(zip(self.parameters(), weights)):
-            set_value(param_name, weight)
+            set_value(param_name, weight, is_gpu_available)
 
     def _get_parameter_names(self, obj):
         """ Recursively get parameter names in a model and its child attributes.

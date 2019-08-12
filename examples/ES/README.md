@@ -27,6 +27,13 @@ If you haven't created a cluster before, enter the following command to create a
 xparl start --port 8037 --cpu_num 96
 ```
 
+Then we can start the distributed training by running train.py.
+
+
+```bash
+python train.py
+```
+
 Training result will be saved in `train_log` with training curve that can be visualized in tensorboard data.
 
 ### Reference

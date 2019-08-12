@@ -8,7 +8,7 @@ Based on PARL, we have implemented the Evolution Strategies (ES) algorithm and e
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
-![learninng_curve](learning_curve.jpg)
+![learninng_curve](learning_curve.png)
 
 ## How to use
 ### Dependencies

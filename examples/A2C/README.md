@@ -34,10 +34,10 @@ Note that if you have started a master before, you don't have to run the above
 command. For more information about the cluster, please refer to our
 [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
-Then we can start the distributed training by running `learner.py`.
+Then we can start the distributed training by running:
 
 ```bash
-python learner.py
+python train.py
 ```
 
 ### Reference

@@ -29,11 +29,11 @@ PARL的目标是构建一个可以完整复杂任务的智能体。以下是用�
 ### Agent
 `Agent` 负责算法与环境的交互，在交互过程中把生成的数据提供给`Algorithm`来更新模型(`Model`)，数据的预处理流程也一般定义在这里。
 
-提示： 请访问[tutorial](https://parl.readthedocs.io/en/latest/getting_started.html) and [API documentation](https://parl.readthedocs.io/en/latest/model.html)以获取更多关于基础类的信息。
+提示： 请访问[教程](https://parl.readthedocs.io/en/latest/getting_started.html) and [API 文档](https://parl.readthedocs.io/en/latest/model.html)以获取更多关于基础类的信息。
 
 # 简易高效的并行接口
 在PARL中，一个**修饰符**(parl.remote_class)就可以帮助用户实现自己的并行算法。
-以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。
+以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。 请访问我们的[教程文档](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)以获取更多的并行训练信息。
 ```python
 #============Agent.py=================
 @parl.remote_class

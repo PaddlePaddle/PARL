@@ -183,7 +183,6 @@ class Master(object):
 
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
-            client_address = to_str(message[1])
 
             # check available CPU resources
             if self.cpu_num:

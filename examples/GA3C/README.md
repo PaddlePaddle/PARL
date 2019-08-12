@@ -18,8 +18,8 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 ### Dependencies
 + [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym
-+ atari-py
++ gym==0.12.1
++ atari-py==0.1.7
 
 ### Distributed Training
 
@@ -33,10 +33,10 @@ Note that if you have started a master before, you don't have to run the above
 command. For more information about the cluster, please refer to our
 [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
-Then we can start the distributed training by running `train.py`.
+Then we can start the distributed training by running `learner.py`.
 
 ```bash
-python train.py
+python learner.py
 ```
 
 [Tips] The performance can be influenced dramatically in a slower computational

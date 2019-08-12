@@ -22,7 +22,7 @@ TODO
 
 #### Learner
 ```sh
-python train.py 
+python learner.py 
 ```
 
 #### Actors

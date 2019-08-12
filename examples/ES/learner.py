@@ -55,8 +55,8 @@ class Learner(object):
 
         self.run_remote_manager()
 
-        self.eval_rewards_stat = WindowStat(config['report_window_size'])
-        self.eval_lengths_stat = WindowStat(config['report_window_size'])
+        self.eval_rewards_stat = WindowStat(self.config['report_window_size'])
+        self.eval_lengths_stat = WindowStat(self.config['report_window_size'])
 
     def run_remote_manager(self):
         """ Accept connection of new remote actor and start sampling of the remote actor.
@@ -206,3 +206,12 @@ class Learner(object):
         for k, v in metrics.items():
             if v is not None:
                 tensorboard.add_scalar(k, v, self.sample_total_steps)
+
+
+if __name__ == '__main__':
+    from es_config import config
+
+    learner = Learner(config)
+
+    while True:
+        learner.step()

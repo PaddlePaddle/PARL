@@ -216,3 +216,16 @@ class Learner(object):
 
     def should_stop(self):
         return self.sample_total_steps >= self.config['max_sample_steps']
+
+
+if __name__ == '__main__':
+    from a2c_config import config
+
+    learner = Learner(config)
+    assert config['log_metrics_interval_s'] > 0
+
+    while not learner.should_stop():
+        start = time.time()
+        while time.time() - start < config['log_metrics_interval_s']:
+            learner.step()
+        learner.log_metrics()

@@ -7,8 +7,11 @@ import numpy as np
 
 
 class SharedNoiseTable(object):
-    """
-    Will generate same noise table when given seed is same
+    """Shared noise table used by learner and actor.
+
+    Learner and actor will create a same noise table by passing the same seed.
+    With the same noise table, learner and actor can communicate the noises by
+    index of noise table instead of numpy array of noises.
     """
 
     def __init__(self, noise_size, seed=1024):
@@ -26,8 +29,3 @@ class SharedNoiseTable(object):
 
     def sample_index(self, dim):
         return np.random.randint(0, len(self.noise) - dim + 1)
-
-
-if __name__ == '__main__':
-    t = SharedNoiseTable(10)
-    print(t.noise)

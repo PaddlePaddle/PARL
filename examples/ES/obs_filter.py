@@ -104,7 +104,11 @@ class RunningStat(object):
 
 
 class MeanStdFilter(Filter):
-    """Keeps track of a running mean for seen states"""
+    """Keeps track of a running mean for seen states.
+
+    The filter will be used to normalize observations and will be 
+    online updated according to the seen observations of all actors.
+    """
     is_concurrent = False
 
     def __init__(self, shape, demean=True, destd=True, clip=10.0):

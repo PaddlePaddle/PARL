@@ -24,7 +24,7 @@ class MujocoModel(parl.Model):
 
         self.fc1 = layers.fc(size=hid1_size, act='tanh')
         self.fc2 = layers.fc(size=hid2_size, act='tanh')
-        self.fc3 = layers.fc(size=act_dim, act=None)
+        self.fc3 = layers.fc(size=act_dim)
 
     def forward(self, obs):
         hid1 = self.fc1(obs)

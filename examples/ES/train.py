@@ -19,12 +19,8 @@ from learner import Learner
 def main(config):
     learner = Learner(config)
 
-    try:
-        while True:
-            learner.step()
-
-    except KeyboardInterrupt:
-        learner.close()
+    while True:
+        learner.step()
 
 
 if __name__ == '__main__':

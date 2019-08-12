@@ -24,7 +24,7 @@ from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
 from parl import RemoteManager
-from parl.utils import logger, CSVLogger, tensorboard
+from parl.utils import logger, tensorboard
 from parl.utils.window_stat import WindowStat
 from six.moves import queue
 
@@ -57,9 +57,6 @@ class Learner(object):
 
         self.eval_rewards_stat = WindowStat(config['report_window_size'])
         self.eval_lengths_stat = WindowStat(config['report_window_size'])
-
-        self.csv_logger = CSVLogger(
-            os.path.join(logger.get_dir(), 'result.csv'))
 
     def run_remote_manager(self):
         """ Accept connection of new remote actor and start sampling of the remote actor.
@@ -206,9 +203,6 @@ class Learner(object):
 
     def log_metrics(self, metrics):
         logger.info(metrics)
-        self.csv_logger.log_dict(metrics)
         for k, v in metrics.items():
-            tensorboard.add_scalar(k, v, self.sample_total_steps)
-
-    def close(self):
-        self.csv_logger.close()
+            if value is not None:
+                tensorboard.add_scalar(k, v, self.sample_total_steps)

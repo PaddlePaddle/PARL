@@ -20,8 +20,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Distributed Training
 
-To replicate the performance reported above, we encourage training with 96 CPUs. 
-If you haven't created a cluster before, enter the following command to create a cluster with 96 CPUs. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+To replicate the performance reported above, we encourage you to train with 96 CPUs.  
+If you haven't created a cluster before, enter the following command to create a cluster. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ```bash
 xparl start --port 8037 --cpu_num 96

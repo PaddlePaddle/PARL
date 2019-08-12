@@ -2,7 +2,8 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
-English | [简体中文](./README.cn.md)
+English | [简体中文](./README.cn.md)   
+[**Documentation**](https://parl.readthedocs.io)
 
 > PARL is a flexible and high-efficient reinforcement learning framework.
 

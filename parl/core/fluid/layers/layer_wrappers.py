@@ -67,6 +67,7 @@ def update_attr_name(name, default_name, attr, is_bias):
             attr.name = name
         return attr
 
+    attr = ParamAttr._to_attr(attr)
     name = (default_name if name is None else name)
     suffix = "b" if is_bias else "w"
     new_name = unique_name.generate(name + "." + suffix)

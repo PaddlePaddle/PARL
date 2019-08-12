@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from paddle import fluid
 import parl.core.fluid.layers as layers
 import unittest
 from parl.core.fluid.model import Model
@@ -24,6 +25,7 @@ class MyNetWork(Model):
         self.fc3 = layers.fc(100, bias_attr=False)
         self.fc4 = layers.fc(100, param_attr=False)
         self.fc5 = layers.fc(100, name="fc", bias_attr=False)
+        self.fc6 = layers.fc(100, param_attr=fluid.initializer.Xavier())
         self.embedding = layers.embedding((100, 128))
         self.embedding_custom = layers.embedding((100, 128),
                                                  name="embedding_custom")
@@ -54,6 +56,8 @@ class TestParamName(unittest.TestCase):
         ## fc5 has a custom name without a bias
         self.assertEqual(net.fc5.param_name, "fc.w_4")
         self.assertEqual(net.fc5.bias_name, None)
+
+        self.assertEqual(net.fc6.param_name, "fc.w_5")
 
         ## embedding layer has no bias
         self.assertEqual(net.embedding.param_name, "embedding.w_0")

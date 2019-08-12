@@ -20,18 +20,14 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Distributed Training
 
-#### Learner
-```sh
-python learner.py 
+To replicate the performance reported above, we encourage training with 96 CPUs. 
+If you haven't created a cluster before, enter the following command to create a cluster with 96 CPUs. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+
+```bash
+xparl start --port 8037 --cpu_num 96
 ```
 
-#### Actors
-```sh
-sh run_actors.sh
-```
-
-You can change training settings (e.g. `env_name`, `server_ip`) in `es_config.py`. If you want to use different number of actors, please modify `actor_num` in both `es_config.py` and `run_actors.sh`.
-Training result will be saved in `log_dir/train/result.csv`.
+Training result will be saved in `train_log` with training curve that can be visualized in tensorboard data.
 
 ### Reference
 + [Ray](https://github.com/ray-project/ray)

@@ -14,8 +14,7 @@
 
 config = {
     #==========  remote config ==========
-    'server_ip': 'localhost',
-    'server_port': 8037,
+    'master_address': 'localhost:8037',
 
     #==========  env config ==========
     'env_name': 'Humanoid-v1',

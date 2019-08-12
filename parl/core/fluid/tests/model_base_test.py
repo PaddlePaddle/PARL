@@ -14,16 +14,16 @@
 
 import numpy as np
 import paddle.fluid as fluid
-import parl.core.fluid.layers as layers
+import parl
 import unittest
 from copy import deepcopy
 from paddle.fluid import ParamAttr
-from parl.core.fluid.model import Model
+from parl import layers
 from parl.utils import get_gpu_count
 from parl.core.fluid.plutils import fetch_value
 
 
-class TestModel(Model):
+class TestModel(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(
             size=256,
@@ -48,7 +48,7 @@ class TestModel(Model):
         return out
 
 
-class TestModel2(Model):
+class TestModel2(parl.Model):
     def __init__(self):
         self.created_param = layers.create_parameter(
             shape=[100],
@@ -60,7 +60,7 @@ class TestModel2(Model):
         return out
 
 
-class TestModel3(Model):
+class TestModel3(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(64, bias_attr=False)
         self.batch_norm = layers.batch_norm()
@@ -71,7 +71,7 @@ class TestModel3(Model):
         return out
 
 
-class TestModel4(Model):
+class TestModel4(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(size=256)
         self.fc2 = layers.fc(size=128)

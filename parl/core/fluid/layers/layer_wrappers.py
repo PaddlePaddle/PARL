@@ -16,7 +16,7 @@ Wrappers for fluid.layers. It helps to easily share parameters between layers.
 
 Here is an example:
     ```python
-    import parl.layers as layers
+    from parl import layers
 
     class MLPModel(Model):
         def __init__(self):

@@ -14,12 +14,12 @@
 
 import numpy as np
 import paddle.fluid as fluid
+import parl
 import unittest
 from parl import layers
-from parl.core.fluid.model import Model
 
 
-class MyNetWork(Model):
+class MyNetWork(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(64, bias_attr=False)
         self.fc2 = layers.fc(64, bias_attr=False)

@@ -20,7 +20,7 @@ https://github.com/deepmind/scalable_agent/blob/master/vtrace_test.py
 import copy
 import numpy as np
 import unittest
-from parl.core.fluid import layers
+from parl import layers
 from paddle import fluid
 from parameterized import parameterized
 from parl.algorithms.fluid.impala import vtrace

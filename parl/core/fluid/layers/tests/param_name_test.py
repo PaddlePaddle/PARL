@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import parl
 from paddle import fluid
-import parl.core.fluid.layers as layers
+from parl import layers
 import unittest
-from parl.core.fluid.model import Model
 
 
-class MyNetWork(Model):
+class MyNetWork(parl.Model):
     def __init__(self):
         self.fc1 = layers.fc(100)
         self.fc2 = layers.fc(100)

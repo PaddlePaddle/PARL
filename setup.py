@@ -74,6 +74,7 @@ setup(
         "tb-nightly==1.15.0a20190801",
         "click",
         "flask",
+        "psutil",
     ],
     classifiers=[
         'Intended Audience :: Developers',

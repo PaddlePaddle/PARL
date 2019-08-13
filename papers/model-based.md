@@ -46,3 +46,33 @@
 12. **Learning and Policy Search in Stochastic Dynamical Systems with Bayesian Neural Networks** ICLR 2017. [paper](https://arxiv.org/abs/1605.07127)
     
     *Stefan Depeweg, José Miguel Hernández-Lobato, Finale Doshi-Velez, Steffen Udluft*
+    
+    
+### Distributed Training
+1. **Asynchronous Methods for Deep Reinforcement Learning** ICML 2016. [paper](https://arxiv.org/pdf/1602.01783.pdf)
+     
+    *Volodymyr Mnih, Adrià Puigdomènech Badia, Mehdi Mirza, Alex Graves, Timothy P. Lillicrap, Tim Harley, David Silver, Koray Kavukcuoglu*
+
+2. **GA3C: GPU-based A3C for Deep Reinforcement Learning** NIPS 2016. [paper](https://www.researchgate.net/publication/310610848_GA3C_GPU-based_A3C_for_Deep_Reinforcement_Learning)
+
+    *Iuri Frosio, Stephen Tyree Jason Clemons Jan Kautz*
+
+3. **Distributed Prioritized Experience Replay** ICLR 2018. [paper](https://openreview.net/pdf?id=H1Dy---0Z)
+
+    *Dan Horgan, John Quan, David Budden, Gabriel Barth-Maron, Matteo Hessel, Hado van Hasselt, David Silver*
+
+4. **IMPALA: Scalable Distributed Deep-RL with Importance Weighted Actor-Learner Architectures** ICML 2018. [paper](https://arxiv.org/abs/1802.01561)
+     
+    *Lasse Espeholt, Hubert Soyer, Remi Munos, Karen Simonyan, Volodymir Mnih, Tom Ward, Yotam Doron, Vlad Firoiu, Tim Harley, Iain Dunning, Shane Legg, Koray Kavukcuoglu*
+    
+5. **Distributed Distributional Deterministic Policy Gradients** ICLR 2018. [paper](https://arxiv.org/pdf/1804.08617.pdf)
+
+    *Gabriel Barth-Maron, Matthew W. Hoffman, David Budden, Will Dabney, Dan Horgan, Dhruva TB, Alistair Muldal, Nicolas Heess, Timothy Lillicrap*
+
+6. **Emergence of Locomotion Behaviours in Rich Environments** arXiv. [paper](https://arxiv.org/abs/1707.02286)
+
+    *Nicolas Heess, Dhruva TB, Srinivasan Sriram, Jay Lemmon, Josh Merel, Greg Wayne, Yuval Tassa, Tom Erez, Ziyu Wang, S. M. Ali Eslami, Martin Riedmiller, David Silver*
+
+7. **Recurrent Experience Replay in Distributed Reinforcement Learning** ICLR 2019. [paper](https://openreview.net/pdf?id=r1lyTjAqYX)
+
+    *Steven Kapturowski, Georg Ostrovski, John Quan, Remi Munos, Will Dabney*

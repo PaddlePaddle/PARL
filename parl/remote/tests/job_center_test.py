@@ -23,7 +23,8 @@ class InitializedWorker(object):
                  worker_address,
                  master_heartbeat_address='localhost:8010',
                  initialized_jobs=[],
-                 cpu_num=4, hostname=None):
+                 cpu_num=4,
+                 hostname=None):
         self.worker_address = worker_address
         self.master_heartbeat_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
@@ -45,7 +46,8 @@ class ImportTest(unittest.TestCase):
             jobs.append(job)
 
         self.worker1 = InitializedWorker(
-            worker_address='172.18.182.39:8001', initialized_jobs=jobs,
+            worker_address='172.18.182.39:8001',
+            initialized_jobs=jobs,
             hostname=socket.gethostname())
 
         jobs = []
@@ -60,7 +62,8 @@ class ImportTest(unittest.TestCase):
             jobs.append(job)
 
         self.worker2 = InitializedWorker(
-            worker_address='172.18.182.39:8002', initialized_jobs=jobs,
+            worker_address='172.18.182.39:8002',
+            initialized_jobs=jobs,
             hostname=socket.gethostname())
 
     def test_add_worker(self):

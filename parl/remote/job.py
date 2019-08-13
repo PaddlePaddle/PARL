@@ -104,8 +104,8 @@ class Job(object):
         # sends job information to the worker
         initialized_job = InitializedJob(
             self.job_address, worker_heartbeat_address,
-            client_heartbeat_address, self.ping_heartbeat_address,
-            None, os.getpid())
+            client_heartbeat_address, self.ping_heartbeat_address, None,
+            os.getpid())
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])

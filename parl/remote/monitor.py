@@ -69,7 +69,7 @@ class ClusterMonitor(object):
                 if master_idx != 0 and master_idx is not None:
                     master_worker = data['workers'].pop(master_idx)
                     data['workers'] = [master_worker] + data['workers']
-    
+
                 data['clients'] = list(status['clients'].values())
                 self.data = data
                 time.sleep(10)

@@ -164,6 +164,8 @@ def stop():
     subprocess.call([command], shell=True)
     command = ("pkill -f remote/job.py")
     subprocess.call([command], shell=True)
+    command = ("pkill -f remote/monitor.py")
+    subprocess.call([command], shell=True)
 
 
 cli.add_command(start_worker)

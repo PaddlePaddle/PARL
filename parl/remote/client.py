@@ -52,14 +52,24 @@ class Client(object):
         self.master_is_alive = True
         self.client_is_alive = True
 
-        mod = sys.modules['__main__']
-        executable_path = os.path.abspath(mod.__file__)
-        self.executable_path = executable_path[:executable_path.rfind('/')]
+        
+        
+        self.executable_path = self.get_executable_path()
 
         self.actor_num = 0
 
         self._create_sockets(master_address)
         self.pyfiles = self.read_local_files()
+    
+    def get_executable_path(self):
+        """Return current executable path."""
+        mod = sys.modules['__main__']
+        if hasattr(mod, '__file__'): 
+            executable_path = os.path.abspath(mod.__file__)
+        else:
+            executable_path = os.getcwd()
+        executable_path = executable_path[:executable_path.rfind('/')]
+        return executable_path
 
     def read_local_files(self):
         """Read local python code and store them in a dictionary, which will

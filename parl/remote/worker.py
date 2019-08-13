@@ -229,6 +229,7 @@ class Worker(object):
         if success:
             while True:
                 initialized_job = self.job_buffer.get()
+                initialized_job.worker_address = self.master_heartbeat_address
                 if initialized_job.is_alive:
                     self.worker_status.add_job(initialized_job)
                     if not initialized_job.is_alive:  # make sure that the job is still alive.

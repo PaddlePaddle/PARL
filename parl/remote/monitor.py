@@ -42,6 +42,7 @@ class ClusterMonitor(object):
     def __init__(self, master_address):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
+        self.socket.setsockopt(zmq.RCVTIMEO, 10000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
 
@@ -50,25 +51,32 @@ class ClusterMonitor(object):
         thread.start()
 
     def run(self):
-        while True:
-            self.socket.send_multipart([b'[MONITOR]'])
-            msg = self.socket.recv_multipart()
-            status = pickle.loads(msg[1])
-            data = {'workers': [], 'clients': []}
-            master_idx = None
-            for idx, worker in enumerate(status['workers'].values()):
-                worker['load_time'] = list(worker['load_time'])
-                worker['load_value'] = list(worker['load_value'])
-                if worker['hostname'] == 'Master':
-                    master_idx = idx
-                data['workers'].append(worker)
-            if master_idx != 0 and master_idx is not None:
-                master_worker = data['workers'].pop(master_idx)
-                data['workers'] = [master_worker] + data['workers']
+        master_is_alive = True
+        while master_is_alive:
+            try:
+                self.socket.send_multipart([b'[MONITOR]'])
+                msg = self.socket.recv_multipart()
 
-            data['clients'] = list(status['clients'].values())
-            self.data = data
-            time.sleep(10)
+                status = pickle.loads(msg[1])
+                data = {'workers': [], 'clients': []}
+                master_idx = None
+                for idx, worker in enumerate(status['workers'].values()):
+                    worker['load_time'] = list(worker['load_time'])
+                    worker['load_value'] = list(worker['load_value'])
+                    if worker['hostname'] == 'Master':
+                        master_idx = idx
+                    data['workers'].append(worker)
+                if master_idx != 0 and master_idx is not None:
+                    master_worker = data['workers'].pop(master_idx)
+                    data['workers'] = [master_worker] + data['workers']
+    
+                data['clients'] = list(status['clients'].values())
+                self.data = data
+                time.sleep(10)
+
+            except zmq.error.Again as e:
+                master_is_alive = False
+                self.socket.close(0)
 
     def get_data(self):
         assert self.data is not None

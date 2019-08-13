@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import cloudpickle
+import datetime
 import os
+import socket
+import sys
 import threading
 import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
@@ -36,7 +39,7 @@ class Client(object):
 
     """
 
-    def __init__(self, master_address):
+    def __init__(self, master_address, file_path):
         """
         Args:
             master_addr (str): ip address of the master node.
@@ -46,6 +49,9 @@ class Client(object):
         self.heartbeat_socket_initialized = threading.Event()
         self.master_is_alive = True
         self.client_is_alive = True
+
+        self.file_path = file_path
+        self.actor_num = 0
 
         self._create_sockets(master_address)
         self.pyfiles = self.read_local_files()
@@ -78,7 +84,7 @@ class Client(object):
         self.submit_job_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
-
+        self.start_time = time.time()
         thread = threading.Thread(target=self._reply_heartbeat)
         thread.setDaemon(True)
         thread.start()
@@ -88,7 +94,8 @@ class Client(object):
         try:
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
-                to_byte(self.heartbeat_master_address)
+                to_byte(self.heartbeat_master_address),
+                to_byte(socket.gethostname())
             ])
             _ = self.submit_job_socket.recv_multipart()
         except zmq.error.Again as e:
@@ -115,7 +122,14 @@ class Client(object):
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
+                elapsed_time = datetime.timedelta(
+                    seconds=int(time.time() - self.start_time))
+                socket.send_multipart([
+                    remote_constants.HEARTBEAT_TAG,
+                    to_byte(self.file_path),
+                    to_byte(str(self.actor_num)),
+                    to_byte(str(elapsed_time))
+                ])
 
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
@@ -207,6 +221,7 @@ class Client(object):
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address)
                     if check_result:
+                        self.actor_num += 1
                         return job_address
 
                 # no vacant CPU resources, cannot submit a new job
@@ -240,11 +255,15 @@ def connect(master_address):
         Exception: An exception is raised if the master node is not started.
     """
 
+    mod = sys.modules['__main__']
+    file_path = os.path.abspath(mod.__file__)
+    file_path = file_path[:file_path.rfind('/')]
+
     assert len(master_address.split(":")) == 2, "please input address in " +\
         "{ip}:{port} format"
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address)
+        GLOBAL_CLIENT = Client(master_address, file_path)
 
 
 def get_global_client():

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import threading
+from collections import defaultdict
 
 
 class JobCenter(object):
@@ -22,10 +23,13 @@ class JobCenter(object):
         worker_dict (dict): A dict to store connected workers.
     """
 
-    def __init__(self):
+    def __init__(self, master_ip):
         self.job_pool = dict()
         self.worker_dict = {}
+        self.worker_hostname = defaultdict(int)
+        self.worker_vacant_jobs = {}
         self.lock = threading.Lock()
+        self.master_ip = master_ip
 
     @property
     def cpu_num(self):
@@ -47,13 +51,25 @@ class JobCenter(object):
         self.worker_dict[worker.worker_address] = worker
         for job in worker.initialized_jobs:
             self.job_pool[job.job_address] = job
+
+        self.worker_vacant_jobs[worker.worker_address] = len(
+            worker.initialized_jobs)
+
+        if self.master_ip and worker.worker_address.split(
+                ':')[0] == self.master_ip:
+            self.worker_hostname[worker.worker_address] = "Master"
+            self.master_ip = None
+        else:
+            self.worker_hostname[worker.hostname] += 1
+            self.worker_hostname[worker.worker_address] = "{}:{}".format(
+                worker.hostname, self.worker_hostname[worker.hostname])
         self.lock.release()
 
     def drop_worker(self, worker_address):
         """Remove jobs from job_pool when a worker dies.
 
         Args:
-            worker (start): Old worker to be removed from the cluster.        
+            worker (start): Old worker to be removed from the cluster.
         """
         self.lock.acquire()
         worker = self.worker_dict[worker_address]
@@ -61,11 +77,12 @@ class JobCenter(object):
             if job.job_address in self.job_pool:
                 self.job_pool.pop(job.job_address)
         self.worker_dict.pop(worker_address)
+        self.worker_vacant_jobs.pop(worker_address)
         self.lock.release()
 
     def request_job(self):
         """Return a job_address when the client submits a job.
-        
+
         If there is no vacant CPU in the cluster, this will return None.
 
         Return:
@@ -75,6 +92,8 @@ class JobCenter(object):
         job = None
         if len(self.job_pool):
             job_address, job = self.job_pool.popitem()
+            self.worker_vacant_jobs[job.worker_address] -= 1
+            assert self.worker_vacant_jobs[job.worker_address] >= 0
         self.lock.release()
         return job
 
@@ -101,12 +120,15 @@ class JobCenter(object):
 
         if killed_job_address in self.job_pool:
             self.job_pool.pop(killed_job_address)
+
         to_del_idx = None
         for i, job in enumerate(
                 self.worker_dict[worker_address].initialized_jobs):
             if job.job_address == killed_job_address:
                 to_del_idx = i
                 break
+
         del self.worker_dict[worker_address].initialized_jobs[to_del_idx]
         self.worker_dict[worker_address].initialized_jobs.append(new_job)
+        self.worker_vacant_jobs[worker_address] += 1
         self.lock.release()

@@ -15,12 +15,13 @@
 import click
 import locale
 import sys
+import random
 import os
+import multiprocessing
 import subprocess
 import threading
 import warnings
 from multiprocessing import Process
-from parl.utils import logger
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -80,12 +81,12 @@ def start_master(port, cpu_num):
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} already in use.".format(port))
-    cpu_num = str(cpu_num) if cpu_num else ''
+    cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
     command = [sys.executable, start_file, "--name", "master", "--port", port]
-    p = subprocess.Popen(command)
 
+    p = subprocess.Popen(command)
     command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
@@ -94,7 +95,28 @@ def start_master(port, cpu_num):
     # Redirect the output to DEVNULL to solve the warning log.
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    while True:
+        monitor_port = random.randint(9000, 10000)
+        if is_port_available(port):
+            break
+
+    command = [
+        sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
+        "--monitor_port",
+        str(monitor_port), "--address", "localhost:" + str(port)
+    ]
+    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
+
+    click.echo('The Parl cluster is started at localhost:{}.'.format(port))
+    click.echo('A local worker with {} CPUs is connected to the cluster.'.
+               format(cpu_num))
+    click.echo('You can monitor the cluster status at http://localhost:{}.'.
+               format(monitor_port))
+    click.echo(
+        'Use `xparl connect --address localhost:{}` to add more workers to the cluster.'
+        .format(port))
 
 
 @click.command("connect", short_help="Start a worker node.")

@@ -62,6 +62,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/PaddlePaddle/PARL',
     packages=_find_packages(),
+    include_package_data=True,
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
@@ -72,6 +73,7 @@ setup(
         "tensorboardX==1.8",
         "tb-nightly==1.15.0a20190801",
         "click",
+        "flask",
     ],
     classifiers=[
         'Intended Audience :: Developers',

@@ -15,22 +15,22 @@
 import cloudpickle
 import multiprocessing
 import os
+import psutil
 import signal
+import socket
 import subprocess
 import sys
 import time
 import threading
 import warnings
 import zmq
+from datetime import datetime
 
 from parl.utils import get_ip_address, to_byte, to_str, logger
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
 from six.moves import queue
-
-if sys.version_info.major == 3:
-    warnings.simplefilter("ignore", ResourceWarning)
 
 
 class Worker(object):
@@ -53,9 +53,6 @@ class Worker(object):
         master_address (str): Master's ip address.
         request_master_socket (zmq.Context.socket): A socket which sends job
                                                     address to the master node.
-        reply_master_socket (zmq.Context.socket): A socket which accepts
-                                                  submitted job from master
-                                                  node.
         reply_job_socket (zmq.Context.socket): A socket which receives
                                                job_address from the job.
         kill_job_socket (zmq.Context.socket): A socket that receives commands to kill the job from jobs.
@@ -101,17 +98,17 @@ class Worker(object):
             self.cpu_num = multiprocessing.cpu_count()
 
     def _create_sockets(self):
-        """ Each worker has four sockets at start:
+        """ Each worker has three sockets at start:
 
         (1) request_master_socket: sends job address to master node.
-        (2) reply_master_socket: accepts submitted job from master node.
-        (3) reply_job_socket: receives job_address from subprocess.
-        (4) kill_job_socket : receives commands to kill the job from jobs.
+        (2) reply_job_socket: receives job_address from subprocess.
+        (3) kill_job_socket : receives commands to kill the job from jobs.
 
         When a job starts, a new heartbeat socket is created to receive
         heartbeat signals from the job.
 
         """
+        self.worker_ip = get_ip_address()
 
         # request_master_socket: sends job address to master
         self.request_master_socket = self.ctx.socket(zmq.REQ)
@@ -121,17 +118,6 @@ class Worker(object):
         self.request_master_socket.setsockopt(zmq.RCVTIMEO, 500)
         self.request_master_socket.connect("tcp://" + self.master_address)
 
-        # reply_master_socket: receives submitted job from master
-        self.reply_master_socket = self.ctx.socket(zmq.REP)
-        self.reply_master_socket.linger = 0
-        self.worker_ip = get_ip_address()
-        reply_master_port = self.reply_master_socket.bind_to_random_port(
-            "tcp://*")
-        self.reply_master_address = "{}:{}".format(self.worker_ip,
-                                                   reply_master_port)
-        logger.set_dir(
-            os.path.expanduser('~/.parl_data/worker/{}'.format(
-                self.reply_master_address)))
         # reply_job_socket: receives job_address from subprocess
         self.reply_job_socket = self.ctx.socket(zmq.REP)
         self.reply_job_socket.linger = 0
@@ -165,16 +151,20 @@ class Worker(object):
             args=("master {}".format(self.master_address), ))
         self.reply_master_hearbeat_thread.start()
         self.heartbeat_socket_initialized.wait()
-        initialized_worker = InitializedWorker(self.reply_master_address,
-                                               self.master_heartbeat_address,
-                                               initialized_jobs, self.cpu_num)
 
+        for job in initialized_jobs:
+            job.worker_address = self.master_heartbeat_address
+
+        initialized_worker = InitializedWorker(self.master_heartbeat_address,
+                                               initialized_jobs, self.cpu_num,
+                                               socket.gethostname())
         self.request_master_socket.send_multipart([
             remote_constants.WORKER_INITIALIZED_TAG,
             cloudpickle.dumps(initialized_worker)
         ])
+
         _ = self.request_master_socket.recv_multipart()
-        self.worker_status = WorkerStatus(self.reply_master_address,
+        self.worker_status = WorkerStatus(self.master_heartbeat_address,
                                           initialized_jobs, self.cpu_num)
 
     def _fill_job_buffer(self):
@@ -204,6 +194,9 @@ class Worker(object):
             self.reply_job_address
         ]
 
+        if sys.version_info.major == 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
         # avoid that many jobs are killed and restarted at the same time.
         self.lock.acquire()
 
@@ -220,7 +213,7 @@ class Worker(object):
                 [remote_constants.NORMAL_TAG,
                  to_byte(self.kill_job_address)])
             initialized_job = cloudpickle.loads(job_message[1])
-            initialized_job.worker_address = self.reply_master_address
+            # initialized_job.worker_address = self.master_heartbeat_address
             new_jobs.append(initialized_job)
 
             # a thread for sending heartbeat signals to job
@@ -307,6 +300,15 @@ class Worker(object):
                 #detect whether `self.worker_is_alive` is True periodically
                 pass
 
+    def _get_worker_status(self):
+        now = datetime.strftime(datetime.now(), '%H:%M:%S')
+        virtual_memory = psutil.virtual_memory()
+        total_memory = round(virtual_memory[0] / (1024**3), 2)
+        used_memory = round(virtual_memory[3] / (1024**3), 2)
+        vacant_memory = round(total_memory - used_memory, 2)
+        load_average = round(psutil.getloadavg()[0], 2)
+        return (vacant_memory, used_memory, now, load_average)
+
     def _reply_heartbeat(self, target):
         """Worker will kill its jobs when it lost connection with the master.
         """
@@ -319,13 +321,25 @@ class Worker(object):
             socket.bind_to_random_port("tcp://*")
         self.master_heartbeat_address = "{}:{}".format(self.worker_ip,
                                                        heartbeat_master_port)
+
+        logger.set_dir(
+            os.path.expanduser('~/.parl_data/worker/{}'.format(
+                self.master_heartbeat_address)))
+
         self.heartbeat_socket_initialized.set()
         logger.info("[Worker] Connect to the master node successfully. "
                     "({} CPUs)".format(self.cpu_num))
         while self.master_is_alive and self.worker_is_alive:
             try:
                 message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
+                worker_status = self._get_worker_status()
+                socket.send_multipart([
+                    remote_constants.HEARTBEAT_TAG,
+                    to_byte(str(worker_status[0])),
+                    to_byte(str(worker_status[1])),
+                    to_byte(worker_status[2]),
+                    to_byte(str(worker_status[3]))
+                ])
             except zmq.error.Again as e:
                 self.master_is_alive = False
             except zmq.error.ContextTerminated as e:

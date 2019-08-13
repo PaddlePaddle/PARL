@@ -213,7 +213,6 @@ class Worker(object):
                 [remote_constants.NORMAL_TAG,
                  to_byte(self.kill_job_address)])
             initialized_job = cloudpickle.loads(job_message[1])
-            # initialized_job.worker_address = self.master_heartbeat_address
             new_jobs.append(initialized_job)
 
             # a thread for sending heartbeat signals to job

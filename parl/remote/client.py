@@ -36,10 +36,12 @@ class Client(object):
                                                 the master node.
         pyfiles (bytes): A serialized dictionary containing the code of python
                          files in local working directory.
+        executable_path (str): File path of the executable python script.
+        start_time (time): A timestamp to record the start time of the program.
 
     """
 
-    def __init__(self, master_address, file_path):
+    def __init__(self, master_address):
         """
         Args:
             master_addr (str): ip address of the master node.
@@ -50,7 +52,10 @@ class Client(object):
         self.master_is_alive = True
         self.client_is_alive = True
 
-        self.file_path = file_path
+        mod = sys.modules['__main__']
+        executable_path = os.path.abspath(mod.__file__)
+        self.executable_path = executable_path[:executable_path.rfind('/')]
+
         self.actor_num = 0
 
         self._create_sockets(master_address)
@@ -126,7 +131,7 @@ class Client(object):
                     seconds=int(time.time() - self.start_time))
                 socket.send_multipart([
                     remote_constants.HEARTBEAT_TAG,
-                    to_byte(self.file_path),
+                    to_byte(self.executable_path),
                     to_byte(str(self.actor_num)),
                     to_byte(str(elapsed_time))
                 ])
@@ -255,15 +260,11 @@ def connect(master_address):
         Exception: An exception is raised if the master node is not started.
     """
 
-    mod = sys.modules['__main__']
-    file_path = os.path.abspath(mod.__file__)
-    file_path = file_path[:file_path.rfind('/')]
-
     assert len(master_address.split(":")) == 2, "please input address in " +\
         "{ip}:{port} format"
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address, file_path)
+        GLOBAL_CLIENT = Client(master_address)
 
 
 def get_global_client():

@@ -48,7 +48,6 @@ class InitializedWorker(object):
       cpu_num(int): The number of CPUs used in this worker.
     """
         self.worker_address = master_heartbeat_address
-        self.master_heartbeat_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
         self.hostname = hostname

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import click
+import socket
 import locale
 import sys
 import random
@@ -21,7 +22,9 @@ import multiprocessing
 import subprocess
 import threading
 import warnings
+import zmq
 from multiprocessing import Process
+from parl.utils import get_ip_address
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -35,13 +38,20 @@ if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)
 
 
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
+
+
 def is_port_available(port):
     """ Check if a port is used.
 
     True if the port is available for connection.
     """
     port = int(port)
-    import socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     available = sock.connect_ex(('localhost', port))
     sock.close()
@@ -49,7 +59,6 @@ def is_port_available(port):
 
 
 def is_master_started(address):
-    import zmq
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)
     socket.linger = 0
@@ -96,10 +105,7 @@ def start_master(port, cpu_num):
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    while True:
-        monitor_port = random.randint(9000, 10000)
-        if is_port_available(port):
-            break
+    monitor_port = get_free_tcp_port()
 
     command = [
         sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
@@ -109,14 +115,25 @@ def start_master(port, cpu_num):
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
-    click.echo('The Parl cluster is started at localhost:{}.'.format(port))
-    click.echo('A local worker with {} CPUs is connected to the cluster.'.
-               format(cpu_num))
-    click.echo('You can monitor the cluster status at http://localhost:{}.'.
-               format(monitor_port))
-    click.echo(
-        'Use `xparl connect --address localhost:{}` to add more workers to the cluster.'
-        .format(port))
+    cluster_info = """
+        # The Parl cluster is started at localhost:{}.
+
+        # A local worker with {} CPUs is connected to the cluster.
+        
+        ## If you want to check cluster status, visit:
+        
+            http://{}:{}.
+        
+        ## If you want to add more CPU resources, call:
+        
+            xparl connect --address localhost:{}
+        
+        ## If you want to shutdown the cluster, call:
+            
+            xparl stop""".format(port, cpu_num, get_ip_address(), monitor_port,
+                                 port)
+
+    click.echo(cluster_info)
 
 
 @click.command("connect", short_help="Start a worker node.")

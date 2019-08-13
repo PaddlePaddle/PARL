@@ -21,6 +21,7 @@ from collections import deque, defaultdict
 from parl.utils import to_str, to_byte, logger, get_ip_address
 from parl.remote import remote_constants
 from parl.remote.job_center import JobCenter
+from parl.remote.cluster_monitor import ClusterMonitor
 import cloudpickle
 import time
 
@@ -46,8 +47,11 @@ class Master(object):
         client_socket (zmq.Context.socket): A socket that receives submitted
                                            job from the client, and later sends
                                            job_address back to the client.
+        master_ip(str): The ip address of the master node.
         cpu_num(int): The number of available CPUs in the cluster.
         worker_num(int): The number of workers connected to this cluster.
+        cluster_monitor(dict): A dict to record worker status and client status.
+        client_hostname(dict): A dict to store hostname for each client address.
 
     Args:
         port: The ip port that the master node binds to.
@@ -64,30 +68,14 @@ class Master(object):
         self.port = port
 
         self.job_center = JobCenter(self.master_ip)
-        self.cluster_monitor = {'workers': {}, 'clients': {}}
+        self.cluster_monitor = ClusterMonitor()
         self.master_is_alive = True
         self.client_hostname = defaultdict(int)
 
     def _get_status(self):
-        status = {'workers': [], 'clients': []}
-        master_idx = None
-        for idx, worker in enumerate(self.cluster_monitor['workers'].values()):
-            _worker = worker.copy()
-            _worker['load_time'] = list(worker['load_time'])
-            _worker['load_value'] = list(worker['load_value'])
-            _worker['worker_address'] = self.job_center.worker_hostname[
-                _worker['worker_address']]
-            if _worker['worker_address'] == 'Master':
-                master_idx = idx
-            status['workers'].append(_worker)
-        if master_idx != 0 and master_idx is not None:
-            master_worker = status.pop(master_idx)
-            status = [master_worker] + status
+        return self.cluster_monitor.get_status()
 
-        status['clients'] = list(self.cluster_monitor['clients'].values())
-        return cloudpickle.dumps(status)
-
-    def _create_worker_monitor(self, worker_heartbeat_address, worker_address):
+    def _create_worker_monitor(self, worker_address):
         """When a new worker connects to the master, a socket is created to
         send heartbeat signals to the worker.
         """
@@ -95,28 +83,18 @@ class Master(object):
         worker_heartbeat_socket.linger = 0
         worker_heartbeat_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
-        worker_heartbeat_socket.connect("tcp://" + worker_heartbeat_address)
+        worker_heartbeat_socket.connect("tcp://" + worker_address)
 
         connected = True
         while connected and self.master_is_alive:
             try:
                 worker_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
-                status_msg = worker_heartbeat_socket.recv_multipart()
-                worker_status = self.cluster_monitor['workers'][
-                    worker_heartbeat_address]
-
-                worker_status['vacant_memory'] = float(to_str(status_msg[1]))
-                worker_status['used_memory'] = float(to_str(status_msg[2]))
-                worker_status['load_time'].append(to_str(status_msg[3]))
-                worker_status['load_value'].append(float(status_msg[4]))
-                worker_status[
-                    'vacant_cpus'] = self.job_center.worker_vacant_jobs[
-                        worker_address]
-                total_cpus = len(self.job_center.worker_dict[worker_address].
-                                 initialized_jobs)
-                worker_status[
-                    'used_cpus'] = total_cpus - worker_status['vacant_cpus']
+                worker_status = worker_heartbeat_socket.recv_multipart()
+                vacant_cpus = self.job_center.get_vacant_cpu(worker_address)
+                total_cpus = self.job_center.get_total_cpu(worker_address)
+                self.cluster_monitor.update_worker_status(
+                    worker_status, worker_address, vacant_cpus, total_cpus)
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
             except zmq.error.Again as e:
                 self.job_center.drop_worker(worker_address)
@@ -147,17 +125,11 @@ class Master(object):
             try:
                 client_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
-                client_msg = client_heartbeat_socket.recv_multipart()
-                self.cluster_monitor['clients'][client_heartbeat_address] = {
-                    'client_address':
-                    self.client_hostname[client_heartbeat_address],
-                    'file_path':
-                    to_str(client_msg[1]),
-                    'actor_num':
-                    int(to_str(client_msg[2])),
-                    'time':
-                    to_str(client_msg[3])
-                }
+                client_status = client_heartbeat_socket.recv_multipart()
+
+                self.cluster_monitor.update_client_status(
+                    client_status, client_heartbeat_address,
+                    self.client_hostname[client_heartbeat_address])
 
             except zmq.error.Again as e:
                 client_is_alive = False
@@ -207,23 +179,16 @@ class Master(object):
 
             initialized_worker = cloudpickle.loads(message[1])
             worker_address = initialized_worker.worker_address
-            self.cluster_monitor['workers'][worker_address] = {}
-            self.cluster_monitor['workers'][worker_address][
-                'worker_address'] = worker_address
-            logger.info(f'{self.job_center.worker_hostname[worker_address]}')
-            self.cluster_monitor['workers'][worker_address][
-                'load_value'] = deque(maxlen=10)
-            self.cluster_monitor['workers'][worker_address][
-                'load_time'] = deque(maxlen=10)
             self.job_center.add_worker(initialized_worker)
+            hostname = self.job_center.get_hostname(worker_address)
+            self.cluster_monitor.add_worker_status(worker_address, hostname)
             logger.info("A new worker {} is added, ".format(worker_address) +
                         "the cluster has {} CPUs.\n".format(self.cpu_num))
 
             # a thread for sending heartbeat signals to `worker.address`
             thread = threading.Thread(
                 target=self._create_worker_monitor,
-                args=(initialized_worker.master_heartbeat_address,
-                      initialized_worker.worker_address))
+                args=(initialized_worker.worker_address, ))
             thread.start()
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])

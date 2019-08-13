@@ -21,6 +21,10 @@ class JobCenter(object):
     Attributes:
         job_pool (set): A set to store the job address of vacant cpu.
         worker_dict (dict): A dict to store connected workers.
+        worker_hostname (dict): A dict to record worker hostname.
+        worker_vacant_jobs (dict): Record how many vacant jobs does each
+                                   worker has.
+        master_ip (str): IP address of the master node.
     """
 
     def __init__(self, master_ip):
@@ -42,7 +46,7 @@ class JobCenter(object):
         return len(self.worker_dict)
 
     def add_worker(self, worker):
-        """A new worker connects.
+        """When a new worker connects, add its hostname to worker_hostname.
 
         Args:
             worker (InitializedWorker): New worker with initialized jobs.
@@ -69,7 +73,8 @@ class JobCenter(object):
         """Remove jobs from job_pool when a worker dies.
 
         Args:
-            worker (start): Old worker to be removed from the cluster.
+            worker_address (str): the worker_address of a worker to be
+                                  removed from the job center.
         """
         self.lock.acquire()
         worker = self.worker_dict[worker_address]
@@ -135,3 +140,15 @@ class JobCenter(object):
             self.worker_vacant_jobs[worker_address] += 1
 
         self.lock.release()
+
+    def get_vacant_cpu(self, worker_address):
+        """Return vacant cpu number of a worker."""
+        return self.worker_vacant_jobs[worker_address]
+
+    def get_total_cpu(self, worker_address):
+        """Return total cpu number of a worker."""
+        return len(self.worker_dict[worker_address].initialized_jobs)
+
+    def get_hostname(self, worker_address):
+        """Return the hostname of a worker."""
+        return self.worker_hostname[worker_address]

@@ -11,7 +11,7 @@ function createDivs(res, divs) {
       if (i === 0) {
         workerDiv.innerHTML = `<p class="card-header" id="${i}">Master</p>`;
       } else {
-        workerDiv.innerHTML = `<p class="card-header" id="${i}">Worker ${res.workers[i].worker_address}</p>`;
+        workerDiv.innerHTML = `<p class="card-header" id="${i}">Worker ${res.workers[i].hostname}</p>`;
       }
 
       var cardDiv = document.createElement("div");
@@ -148,7 +148,7 @@ function addPlots(res, record, imgHandle, begin, end) {
       imgHandle[`w${i}c2`].setOption(loadOption);      
     } else {
       var workerTitle = document.getElementById(`${i}`);
-      workerTitle.innerText = i===0 ? "Master" : `Worker ${worker.worker_address}`;
+      workerTitle.innerText = i===0 ? "Master" : `Worker ${worker.hostname}`;
       imgHandle[`w${i}c0`].setOption(cpuOption);
       imgHandle[`w${i}c1`].setOption(memoryOption);
       imgHandle[`w${i}c2`].setOption(loadOption);      

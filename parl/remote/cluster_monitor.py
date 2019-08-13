@@ -88,4 +88,7 @@ class ClusterMonitor(object):
 
     def get_status(self):
         """Return a cloudpickled status."""
-        return cloudpickle.dumps(self.status)
+        self.lock.acquire()
+        status = cloudpickle.dumps(self.status)
+        self.lock.release()
+        return status

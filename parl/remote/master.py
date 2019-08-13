@@ -210,7 +210,6 @@ class Master(object):
             self.cluster_monitor['workers'][worker_address] = {}
             self.cluster_monitor['workers'][worker_address][
                 'worker_address'] = worker_address
-            logger.info(f'{self.job_center.worker_hostname[worker_address]}')
             self.cluster_monitor['workers'][worker_address][
                 'load_value'] = deque(maxlen=10)
             self.cluster_monitor['workers'][worker_address][

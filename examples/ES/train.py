@@ -23,10 +23,10 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
-from parl import RemoteManager
 from parl.utils import logger, tensorboard
 from parl.utils.window_stat import WindowStat
 from six.moves import queue
+from actor import Actor
 
 
 class Learner(object):
@@ -53,40 +53,37 @@ class Learner(object):
         self.actors_signal_input_queues = []
         self.actors_output_queues = []
 
-        self.run_remote_manager()
+        self.create_actors()
 
         self.eval_rewards_stat = WindowStat(self.config['report_window_size'])
         self.eval_lengths_stat = WindowStat(self.config['report_window_size'])
 
-    def run_remote_manager(self):
-        """ Accept connection of new remote actor and start sampling of the remote actor.
+    def create_actors(self):
+        """ create actors for parallel training.
         """
-        remote_manager = RemoteManager(port=self.config['server_port'])
-        logger.info('Waiting for {} remote actors to connect.'.format(
-            self.config['actor_num']))
 
+        parl.connect(self.config['master_address'])
         self.remote_count = 0
         for i in range(self.config['actor_num']):
-            remote_actor = remote_manager.get_remote()
             signal_queue = queue.Queue()
             output_queue = queue.Queue()
             self.actors_signal_input_queues.append(signal_queue)
             self.actors_output_queues.append(output_queue)
 
             self.remote_count += 1
-            logger.info('Remote actor count: {}'.format(self.remote_count))
 
             remote_thread = threading.Thread(
                 target=self.run_remote_sample,
-                args=(remote_actor, signal_queue, output_queue))
+                args=(signal_queue, output_queue))
             remote_thread.setDaemon(True)
             remote_thread.start()
 
         logger.info('All remote actors are ready, begin to learn.')
 
-    def run_remote_sample(self, remote_actor, signal_queue, output_queue):
+    def run_remote_sample(self, signal_queue, output_queue):
         """ Sample data from remote actor or get filters of remote actor. 
         """
+        remote_actor = Actor(self.config)
         while True:
             info = signal_queue.get()
             if info['signal'] == 'sample':
@@ -211,6 +208,9 @@ class Learner(object):
 if __name__ == '__main__':
     from es_config import config
 
+    logger.info(
+        "Before training, it takes a few mimutes to initialize a noise table for exploration"
+    )
     learner = Learner(config)
 
     while True:

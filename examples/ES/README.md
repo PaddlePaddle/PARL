@@ -1,5 +1,5 @@
 ## Reproduce ES with PARL
-Based on PARL, the Evolution Strategies (ES) algorithm has been reproduced, reaching the same level of indicators as the paper in Mujoco benchmarks.
+Based on PARL, we have implemented the Evolution Strategies (ES) algorithm and evaluate it in Mujoco environments. Its performance reaches the same level of indicators as the paper.
 
 + ES in
 [Evolution Strategies as a Scalable Alternative to Reinforcement Learning](https://arxiv.org/abs/1703.03864)
@@ -8,7 +8,7 @@ Based on PARL, the Evolution Strategies (ES) algorithm has been reproduced, reac
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
-TODO
+![learninng_curve](learning_curve.png)
 
 ## How to use
 ### Dependencies
@@ -20,18 +20,21 @@ TODO
 
 ### Distributed Training
 
-#### Learner
-```sh
-python learner.py 
+To replicate the performance reported above, we encourage you to train with 96 CPUs.  
+If you haven't created a cluster before, enter the following command to create a cluster. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+
+```bash
+xparl start --port 8037 --cpu_num 96
 ```
 
-#### Actors
-```sh
-sh run_actors.sh
+Then we can start the distributed training by running:
+
+
+```bash
+python train.py
 ```
 
-You can change training settings (e.g. `env_name`, `server_ip`) in `es_config.py`. If you want to use different number of actors, please modify `actor_num` in both `es_config.py` and `run_actors.sh`.
-Training result will be saved in `log_dir/train/result.csv`.
+Training result will be saved in `train_log` with training curve that can be visualized in tensorboard data.
 
 ### Reference
 + [Ray](https://github.com/ray-project/ray)

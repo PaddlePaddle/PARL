@@ -78,9 +78,7 @@ class TestCluster(unittest.TestCase):
         proc2.join()
 
         # make sure that the client of the main process still works
-        actor = Actor()
-        ret = actor.add_one(1)
-        self.assertEqual(ret, 2)
+        self._create_actor()
 
         worker1.exit()
         master.exit()

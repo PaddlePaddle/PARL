@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+import socket
 from parl.remote.job_center import JobCenter
 from parl.remote.message import InitializedWorker, InitializedJob
 
@@ -22,11 +23,12 @@ class InitializedWorker(object):
                  worker_address,
                  master_heartbeat_address='localhost:8010',
                  initialized_jobs=[],
-                 cpu_num=4):
+                 cpu_num=4, hostname=None):
         self.worker_address = worker_address
         self.master_heartbeat_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
+        self.hostname = hostname
 
 
 class ImportTest(unittest.TestCase):
@@ -38,12 +40,13 @@ class ImportTest(unittest.TestCase):
                 worker_heartbeat_address='172.18.182.39:48724',
                 client_heartbeat_address='172.18.182.39:48725',
                 ping_heartbeat_address='172.18.182.39:48726',
-                worker_address='172.18.182.39:478727',
+                worker_address='172.18.182.39:8001',
                 pid=1234)
             jobs.append(job)
 
         self.worker1 = InitializedWorker(
-            worker_address='172.18.182.39:8001', initialized_jobs=jobs)
+            worker_address='172.18.182.39:8001', initialized_jobs=jobs,
+            hostname=socket.gethostname())
 
         jobs = []
         for i in range(5):
@@ -52,16 +55,17 @@ class ImportTest(unittest.TestCase):
                 worker_heartbeat_address='172.18.182.39:48724',
                 client_heartbeat_address='172.18.182.39:48725',
                 ping_heartbeat_address='172.18.182.39:48726',
-                worker_address='172.18.182.39:478727',
+                worker_address='172.18.182.39:8002',
                 pid=1234)
             jobs.append(job)
 
         self.worker2 = InitializedWorker(
-            worker_address='172.18.182.39:8002', initialized_jobs=jobs)
+            worker_address='172.18.182.39:8002', initialized_jobs=jobs,
+            hostname=socket.gethostname())
 
     def test_add_worker(self):
 
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
         job_center.add_worker(self.worker2)
 
@@ -70,7 +74,7 @@ class ImportTest(unittest.TestCase):
                          self.worker1)
 
     def test_drop_worker(self):
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
         job_center.add_worker(self.worker2)
         job_center.drop_worker(self.worker2.worker_address)
@@ -81,7 +85,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(len(job_center.worker_dict), 1)
 
     def test_request_job(self):
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_address1 = job_center.request_job()
         self.assertTrue(job_address1 is None)
 
@@ -91,7 +95,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(len(job_center.job_pool), 4)
 
     def test_reset_job(self):
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
 
         job_address = job_center.request_job()
@@ -103,7 +107,7 @@ class ImportTest(unittest.TestCase):
 
     def test_update_job(self):
 
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
         job_center.add_worker(self.worker2)
 
@@ -142,7 +146,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(5, len(self.worker1.initialized_jobs))
 
     def test_cpu_num(self):
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
         self.assertEqual(job_center.cpu_num, 5)
         job_center.add_worker(self.worker2)
@@ -151,7 +155,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(job_center.cpu_num, 9)
 
     def test_worker_num(self):
-        job_center = JobCenter()
+        job_center = JobCenter('localhost')
         job_center.add_worker(self.worker1)
         self.assertEqual(job_center.worker_num, 1)
         job_center.add_worker(self.worker2)

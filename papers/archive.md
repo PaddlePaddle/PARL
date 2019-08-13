@@ -76,3 +76,11 @@
 7. **Recurrent Experience Replay in Distributed Reinforcement Learning** ICLR 2019. [paper](https://openreview.net/pdf?id=r1lyTjAqYX)
 
     *Steven Kapturowski, Georg Ostrovski, John Quan, Remi Munos, Will Dabney*
+
+8. **GPU-Accelerated Robotic Simulation for Distributed Reinforcement Learning** CoRL 2018. [paper](https://arxiv.org/abs/1810.05762)
+
+    *Jacky Liang, Viktor Makoviychuk, Ankur Handa, Nuttapong Chentanez, Miles Macklin, Dieter Fox*
+    
+9. **SURREAL: Open-Source Reinforcement Learning Framework and Robot Manipulation Benchmark** CoRL 2018. [paper](https://surreal.stanford.edu/img/surreal-corl2018.pdf)
+
+    *Linxi Fan, Yuke Zhu, Jiren Zhu, Zihua Liu, Orien Zeng, Anchit Gupta, Joan Creus-Costa, Silvio Savarese, Li Fei-Fei*

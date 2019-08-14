@@ -92,7 +92,7 @@ def cluster():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--monitor_port', default=1234, type=int)
-    parser.add_argument('--address', default='localhost:1234', type=str)
+    parser.add_argument('--address', default='localhost:8010', type=str)
     args = parser.parse_args()
 
     CLUSTER_MONITOR = ClusterMonitor(args.address)

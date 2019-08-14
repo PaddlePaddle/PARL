@@ -43,7 +43,7 @@ def get_free_tcp_port():
     tcp.bind(('', 0))
     addr, port = tcp.getsockname()
     tcp.close()
-    return port
+    return str(port)
 
 
 def is_port_available(port):
@@ -86,7 +86,9 @@ def cli():
     type=int,
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
-def start_master(port, cpu_num):
+@click.option(
+    "--monitor_port", help="The port to start cluster monitor", type=str)
+def start_master(port, cpu_num, monitor_port):
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} already in use.".format(port))
@@ -105,7 +107,7 @@ def start_master(port, cpu_num):
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    monitor_port = get_free_tcp_port()
+    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
 
     command = [
         sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
@@ -114,7 +116,7 @@ def start_master(port, cpu_num):
     ]
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
-
+    master_ip = get_ip_address()
     cluster_info = """
         # The Parl cluster is started at localhost:{}.
 
@@ -126,12 +128,12 @@ def start_master(port, cpu_num):
         
         ## If you want to add more CPU resources, call:
         
-            xparl connect --address localhost:{}
+            xparl connect --address {}:{}
         
         ## If you want to shutdown the cluster, call:
             
-            xparl stop""".format(port, cpu_num, get_ip_address(), monitor_port,
-                                 port)
+            xparl stop""".format(port, cpu_num, master_ip, monitor_port,
+                                 master_ip, port)
 
     click.echo(cluster_info)
 

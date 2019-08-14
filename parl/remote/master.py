@@ -37,10 +37,11 @@ class Master(object):
 
     .. code-block:: python
 
-        xparl start --port localhost:1234
+        xparl start --port localhost:1234 --monitor_port 5005
 
     At the same time, a local worker will be started and connect to the
-    master node.
+    master node. And a cluster monitor is start at `localhost:5005` to
+    visualize cluster status.
 
     Attributes:
         job_center (JobCenter): A thread-safe data structure that stores the job address of vacant cpus.

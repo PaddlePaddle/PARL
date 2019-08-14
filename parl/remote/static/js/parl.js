@@ -18,7 +18,7 @@ function createDivs(res, divs) {
       cardDiv.className = "row";
       var card = '';
       for (var j = 0; j < 3; j++)
-        card += `<div class="col-lg-4"><div class="card mb-1"><div id="w${i}c${j}" class="card-body" style="height: 110px;"></div></div></div>`;
+        card += `<div class="col-lg-4"><div class="card mb-1"><div id="w${i}c${j}" class="card-body" style="width: 100%;height: 120px;"></div></div></div>`;
       cardDiv.innerHTML = card;
       workerDiv.appendChild(cardDiv);
       elem.appendChild(workerDiv);
@@ -31,7 +31,6 @@ function createDivs(res, divs) {
       delete imgHandle[`w${i}c0`];
       delete imgHandle[`w${i}c1`];
       delete imgHandle[`w${i}c2`];
-
       var workerDiv = document.getElementById(`w${i}`);
       elem.removeChild(workerDiv);
     }
@@ -42,11 +41,9 @@ function createDivs(res, divs) {
 function addPlots(res, record, imgHandle, begin, end) {
   var worker_num = res.workers.length;
   var record_num = Object.keys(record).length;
-
   end = (end < worker_num) ? end : worker_num;
   for (var i = begin; i < end; i++) {
     var worker = res.workers[i];
-
     var cpuOption = {
       color: ["#7B68EE", "#6495ED"],
       legend: {
@@ -126,7 +123,7 @@ function addPlots(res, record, imgHandle, begin, end) {
         name: "Average CPU load (%)",
         splitNumber:3,
         nameTextStyle:{
-          padding: [0, 0, 0, 60],
+          padding: [10, 0, 0, 60],
           fontSize: 10,
       }        
       },
@@ -138,8 +135,8 @@ function addPlots(res, record, imgHandle, begin, end) {
       ]
     };
 
-    if (i < record_num && worker.worker_address === record[i].worker_address) {
-      if (worker.cpu_num !== record[i].cpu_num) {
+    if (i < record_num && worker.hostname === record[i].hostname) {
+      if (worker.used_cpus !== record[i].used_cpus) {
         imgHandle[`w${i}c0`].setOption(cpuOption);
       }
       if (worker.used_memory !== record[i].used_memory) {
@@ -153,13 +150,12 @@ function addPlots(res, record, imgHandle, begin, end) {
       imgHandle[`w${i}c1`].setOption(memoryOption);
       imgHandle[`w${i}c2`].setOption(loadOption);      
     }
-
     record[i] = {
-      worker_address: worker.worker_address,
-      used_cpu: worker.used_cpu,
-      vacant_cpu: worker.vacant_cpu,
-      used_memory: worker.used_cpu,
-      vacant_memory: worker.vacant_memory
+      'hostname': worker.hostname,
+      'used_cpus': worker.used_cpus,
+      'vacant_cpus': worker.vacant_cpus,
+      'used_memory': worker.used_memory,
+      'vacant_memory': worker.vacant_memory
     };
   }
 

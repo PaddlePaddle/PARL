@@ -91,7 +91,13 @@ def cli():
 def start_master(port, cpu_num, monitor_port):
     if not is_port_available(port):
         raise Exception(
-            "The master address localhost:{} already in use.".format(port))
+            "The master address localhost:{} is already in use.".format(port))
+
+    if not is_port_available(monitor_port):
+        raise Exception(
+            "The input monitor port localhost:{} is already in use.".format(
+                monitor_port))
+
     cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')

@@ -38,9 +38,6 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        #time.sleep(20)
-        #command = ("pkill -f remote/job.py")
-        #subprocess.call([command], shell=True)
 
     def _connect_and_create_actor(self, cluster_addr):
         parl.connect(cluster_addr)
@@ -127,6 +124,9 @@ class TestCluster(unittest.TestCase):
 
         proc1.join()
         proc2.join()
+
+        # make sure that the client of the main process still works
+        self._create_actor()
 
         worker1.exit()
         master.exit()

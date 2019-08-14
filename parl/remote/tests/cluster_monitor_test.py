@@ -69,11 +69,11 @@ class TestClusterMonitor(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        worker = Worker('localhost:{}'.format(port), 1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
         time.sleep(1)
         self.assertEqual(1, len(cluster_monitor.data['workers']))
-        worker1.exit()
+        worker.exit()
         time.sleep(40)
         self.assertEqual(0, len(cluster_monitor.data['workers']))
         master.exit()
@@ -111,7 +111,7 @@ class TestClusterMonitor(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        worker = Worker('localhost:{}'.format(port), 1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
         time.sleep(1)
         self.assertEqual(0, len(cluster_monitor.data['clients']))
@@ -125,10 +125,11 @@ class TestClusterMonitor(unittest.TestCase):
         self.assertEqual(1, cluster_monitor.data['workers'][0]['used_cpus'])
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(30)
+        time.sleep(40)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
 
+        worker.exit()
         master.exit()
 
 

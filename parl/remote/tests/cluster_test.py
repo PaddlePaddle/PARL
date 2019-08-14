@@ -61,9 +61,6 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        #time.sleep(20)
-        #command = ("pkill -f remote/job.py")
-        #subprocess.call([command], shell=True)
 
     def test_actor_exception(self):
         master = Master(port=1235)

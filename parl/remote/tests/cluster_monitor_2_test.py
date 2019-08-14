@@ -63,8 +63,8 @@ class TestClusterMonitor(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_one_worker(self):
-        port = 1439
+    def test_add_actor(self):
+        port = 1441
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -72,10 +72,22 @@ class TestClusterMonitor(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
         time.sleep(1)
-        self.assertEqual(1, len(cluster_monitor.data['workers']))
-        worker.exit()
+        self.assertEqual(0, len(cluster_monitor.data['clients']))
+        parl.connect('localhost:{}'.format(port))
+        time.sleep(10)
+        self.assertEqual(1, len(cluster_monitor.data['clients']))
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
+        actor = Actor()
+        time.sleep(20)
+        self.assertEqual(0, cluster_monitor.data['workers'][0]['vacant_cpus'])
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['used_cpus'])
+        self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
+        del actor
         time.sleep(40)
-        self.assertEqual(0, len(cluster_monitor.data['workers']))
+        self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
+
+        worker.exit()
         master.exit()
 
 

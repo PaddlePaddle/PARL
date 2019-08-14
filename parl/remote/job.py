@@ -14,7 +14,7 @@
 
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
-os.environ['XPARL'] = 'True'
+#os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle
 import pickle
@@ -262,6 +262,7 @@ class Job(object):
         # receive source code from the actor and append them to the environment variables.
         envdir = self.wait_for_files()
         sys.path.append(envdir)
+        self.client_is_alive = True
         self.client_thread.start()
 
         try:

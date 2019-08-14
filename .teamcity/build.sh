@@ -21,6 +21,8 @@ function init() {
     NONE='\033[0m'
 
     REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/../" && pwd )"
+    source ~/.bashrc
+    export PATH="/root/miniconda3/bin:$PATH"
 }
 
 function print_usage() {
@@ -56,7 +58,8 @@ function check_style() {
 }
 
 function run_test_with_gpu() {
-    export FLAGS_fraction_of_gpu_memory_to_use=0.5
+    unset CUDA_VISIBLE_DEVICES
+    export FLAGS_fraction_of_gpu_memory_to_use=0.05
     
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
@@ -66,7 +69,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure
+    ctest --output-on-failure -j10
     rm -rf ${REPO_ROOT}/build
 }
 
@@ -75,13 +78,21 @@ function run_test_with_cpu() {
 
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
-    cmake ..
+    if [ $# -eq 1 ];then
+        cmake ..
+    else
+        cmake .. -DIS_TESTING_SERIALLY=ON
+    fi
     cat <<EOF
-    ========================================
-    Running unit tests with CPU...
-    ========================================
+    =====================================================
+    Running unit tests with CPU in the environment: $1
+    =====================================================
 EOF
-    ctest --output-on-failure
+    if [ $# -eq 1 ];then
+      ctest --output-on-failure -j10
+    else
+      ctest --output-on-failure 
+    fi
     rm -rf ${REPO_ROOT}/build
 }
 
@@ -129,11 +140,26 @@ function main() {
           check_style
           ;;
         test)
-          pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
-          pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple .
-          /root/miniconda3/envs/empty_env/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
+          # test code compability in environments with various python versions
+          declare -a envs=("py27" "py36" "py37")
+          for env in "${envs[@]}";do
+              cd /work
+              source ~/.bashrc
+              export PATH="/root/miniconda3/bin:$PATH"
+              source activate $env
+              echo ========================================
+              echo Running tests in $env ..
+              echo `which pip`
+              echo ========================================
+              pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
+              pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r .teamcity/requirements.txt
+              run_test_with_cpu $env
+              run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+          done
           run_test_with_gpu
-          run_test_with_cpu
+
+          #
+          /root/miniconda3/envs/empty_env/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
           run_import_test
           run_docs_test
           ;;

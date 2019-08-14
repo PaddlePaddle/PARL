@@ -40,7 +40,7 @@ class Client(object):
         """
         Args:
             master_addr (str): ip address of the master node.
-            process_id (str): id of process that creating the `Client`.
+            process_id (str): id of the process that created the Client. 
                               Should use os.getpid() to get the process id.
         """
         self.master_address = master_address
@@ -258,8 +258,7 @@ def connect(master_address):
 def get_global_client():
     """Get the global client.
 
-    If the process_id of the global client is not the same with the id of current process,
-    will create a new global client.
+    To support process-based programming, we will create a new global client in the new process.
 
     Returns:
         The global client.

@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import cloudpickle
+import datetime
 import os
+import socket
+import sys
 import threading
 import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
@@ -33,6 +36,8 @@ class Client(object):
                                                 the master node.
         pyfiles (bytes): A serialized dictionary containing the code of python
                          files in local working directory.
+        executable_path (str): File path of the executable python script.
+        start_time (time): A timestamp to record the start time of the program.
 
     """
 
@@ -47,8 +52,22 @@ class Client(object):
         self.master_is_alive = True
         self.client_is_alive = True
 
+        self.executable_path = self.get_executable_path()
+
+        self.actor_num = 0
+
         self._create_sockets(master_address)
         self.pyfiles = self.read_local_files()
+
+    def get_executable_path(self):
+        """Return current executable path."""
+        mod = sys.modules['__main__']
+        if hasattr(mod, '__file__'):
+            executable_path = os.path.abspath(mod.__file__)
+        else:
+            executable_path = os.getcwd()
+        executable_path = executable_path[:executable_path.rfind('/')]
+        return executable_path
 
     def read_local_files(self):
         """Read local python code and store them in a dictionary, which will
@@ -78,7 +97,7 @@ class Client(object):
         self.submit_job_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
-
+        self.start_time = time.time()
         thread = threading.Thread(target=self._reply_heartbeat)
         thread.setDaemon(True)
         thread.start()
@@ -88,7 +107,8 @@ class Client(object):
         try:
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
-                to_byte(self.heartbeat_master_address)
+                to_byte(self.heartbeat_master_address),
+                to_byte(socket.gethostname())
             ])
             _ = self.submit_job_socket.recv_multipart()
         except zmq.error.Again as e:
@@ -115,7 +135,14 @@ class Client(object):
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
+                elapsed_time = datetime.timedelta(
+                    seconds=int(time.time() - self.start_time))
+                socket.send_multipart([
+                    remote_constants.HEARTBEAT_TAG,
+                    to_byte(self.executable_path),
+                    to_byte(str(self.actor_num)),
+                    to_byte(str(elapsed_time))
+                ])
 
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
@@ -169,6 +196,7 @@ class Client(object):
 
             except zmq.error.Again as e:
                 job_is_alive = False
+                self.actor_num -= 1
 
             except zmq.error.ZMQError as e:
                 break
@@ -207,6 +235,7 @@ class Client(object):
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address)
                     if check_result:
+                        self.actor_num += 1
                         return job_address
 
                 # no vacant CPU resources, cannot submit a new job

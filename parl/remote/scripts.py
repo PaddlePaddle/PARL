@@ -13,14 +13,18 @@
 # limitations under the License.
 
 import click
+import socket
 import locale
 import sys
+import random
 import os
+import multiprocessing
 import subprocess
 import threading
 import warnings
+import zmq
 from multiprocessing import Process
-from parl.utils import logger
+from parl.utils import get_ip_address
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -34,13 +38,20 @@ if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)
 
 
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return port
+
+
 def is_port_available(port):
     """ Check if a port is used.
 
     True if the port is available for connection.
     """
     port = int(port)
-    import socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     available = sock.connect_ex(('localhost', port))
     sock.close()
@@ -48,7 +59,6 @@ def is_port_available(port):
 
 
 def is_master_started(address):
-    import zmq
     ctx = zmq.Context()
     socket = ctx.socket(zmq.REQ)
     socket.linger = 0
@@ -80,12 +90,12 @@ def start_master(port, cpu_num):
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} already in use.".format(port))
-    cpu_num = str(cpu_num) if cpu_num else ''
+    cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
     command = [sys.executable, start_file, "--name", "master", "--port", port]
-    p = subprocess.Popen(command)
 
+    p = subprocess.Popen(command)
     command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
@@ -94,7 +104,36 @@ def start_master(port, cpu_num):
     # Redirect the output to DEVNULL to solve the warning log.
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    monitor_port = get_free_tcp_port()
+
+    command = [
+        sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
+        "--monitor_port",
+        str(monitor_port), "--address", "localhost:" + str(port)
+    ]
+    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
+
+    cluster_info = """
+        # The Parl cluster is started at localhost:{}.
+
+        # A local worker with {} CPUs is connected to the cluster.
+        
+        ## If you want to check cluster status, visit:
+        
+            http://{}:{}.
+        
+        ## If you want to add more CPU resources, call:
+        
+            xparl connect --address localhost:{}
+        
+        ## If you want to shutdown the cluster, call:
+            
+            xparl stop""".format(port, cpu_num, get_ip_address(), monitor_port,
+                                 port)
+
+    click.echo(cluster_info)
 
 
 @click.command("connect", short_help="Start a worker node.")
@@ -124,6 +163,8 @@ def stop():
     command = ("pkill -f remote/start.py")
     subprocess.call([command], shell=True)
     command = ("pkill -f remote/job.py")
+    subprocess.call([command], shell=True)
+    command = ("pkill -f remote/monitor.py")
     subprocess.call([command], shell=True)
 
 

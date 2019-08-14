@@ -156,11 +156,14 @@ function main() {
               run_test_with_cpu $env
               run_test_with_cpu $env "DIS_TESTING_SERIALLY"
           done
+          cd /work
           run_test_with_gpu
 
           #
           /root/miniconda3/envs/empty_env/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
+          cd /work
           run_import_test
+          cd /work
           run_docs_test
           ;;
         *)

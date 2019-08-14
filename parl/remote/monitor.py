@@ -47,6 +47,7 @@ class ClusterMonitor(object):
         self.data = None
 
         thread = threading.Thread(target=self.run)
+        thread.setDaemon(True)
         thread.start()
 
     def run(self):

@@ -86,6 +86,26 @@ class ClusterMonitor(object):
         worker_status['used_cpus'] = total_cpus - vacant_cpus
         self.lock.release()
 
+    def drop_worker_status(self, worker_address):
+        """Drop worker status when it exits.
+
+        Args:
+            worker_address (str): IP address of the exited worker.
+        """
+        self.lock.acquire()
+        self.status['workers'].pop(worker_address)
+        self.lock.release()
+
+    def drop_cluster_status(self, client_address):
+        """Drop cluster status when it exits.
+
+        Args:
+            cluster_address (str): IP address of the exited client.
+        """
+        self.lock.acquire()
+        self.status['clients'].pop(client_address)
+        self.lock.release()
+
     def get_status(self):
         """Return a cloudpickled status."""
         self.lock.acquire()

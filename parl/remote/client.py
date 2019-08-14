@@ -196,6 +196,7 @@ class Client(object):
 
             except zmq.error.Again as e:
                 job_is_alive = False
+                self.actor_num -= 1
 
             except zmq.error.ZMQError as e:
                 break

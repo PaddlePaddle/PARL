@@ -98,6 +98,7 @@ class Master(object):
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
             except zmq.error.Again as e:
                 self.job_center.drop_worker(worker_address)
+                self.cluster_monitor.drop_worker_status(worker_address)
                 logger.warning("\n[Master] Cannot connect to the worker " +
                                "{}. ".format(worker_address) +
                                "Worker_pool will drop this worker.")
@@ -133,6 +134,8 @@ class Master(object):
 
             except zmq.error.Again as e:
                 client_is_alive = False
+                self.cluster_monitor.drop_cluster_status(
+                    client_heartbeat_address)
                 logger.warning("[Master] cannot connect to the client " +
                                "{}. ".format(client_heartbeat_address) +
                                "Please check if it is still alive.")

@@ -41,11 +41,15 @@ class Client(object):
 
     """
 
-    def __init__(self, master_address):
+    def __init__(self, master_address, process_id):
         """
         Args:
             master_addr (str): ip address of the master node.
+            process_id (str): id of the process that created the Client. 
+                              Should use os.getpid() to get the process id.
         """
+        self.master_address = master_address
+        self.process_id = process_id
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
@@ -272,12 +276,18 @@ def connect(master_address):
     assert len(master_address.split(":")) == 2, "please input address in " +\
         "{ip}:{port} format"
     global GLOBAL_CLIENT
+    cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address)
+        GLOBAL_CLIENT = Client(master_address, cur_process_id)
+    else:
+        if GLOBAL_CLIENT.process_id != cur_process_id:
+            GLOBAL_CLIENT = Client(master_address, cur_process_id)
 
 
 def get_global_client():
     """Get the global client.
+
+    To support process-based programming, we will create a new global client in the new process.
 
     Returns:
         The global client.
@@ -286,6 +296,10 @@ def get_global_client():
     assert GLOBAL_CLIENT is not None, "Cannot get the client to submit the" +\
         " job, have you connected to the cluster by calling " +\
         "parl.connect(master_ip, master_port)?"
+
+    cur_process_id = os.getpid()
+    if GLOBAL_CLIENT.process_id != cur_process_id:
+        GLOBAL_CLIENT = Client(GLOBAL_CLIENT.master_address, cur_process_id)
     return GLOBAL_CLIENT
 
 

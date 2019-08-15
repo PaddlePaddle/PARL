@@ -19,7 +19,7 @@ Here we reveal the performance of Python threads. At first, let's run the follow
                 ans += i
     a = A()
     for _ in range(5):
-      a.run() 
+        a.run() 
 
 | This code takes **17.46** seconds to finish counting from 1 to 1e8 for five times. 
 | Now let's implement a thread-based code using the Python library, ``threading``, as shown below.

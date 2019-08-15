@@ -65,6 +65,7 @@ Abstractions
     :maxdepth: 2
     :caption: Parallel Training
 
+    parallel_training/features.rst
     parallel_training/setup.rst
     parallel_training/recommended_practice.rst
 

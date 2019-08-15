@@ -37,11 +37,10 @@ class Master(object):
 
     .. code-block:: python
 
-        xparl start --port localhost:1234 --monitor_port 5005
+        xparl start --port localhost:1234
 
     At the same time, a local worker will be started and connect to the
-    master node. And a cluster monitor is start at `localhost:5005` to
-    visualize cluster status.
+    master node.
 
     Attributes:
         job_center (JobCenter): A thread-safe data structure that stores the job address of vacant cpus.
@@ -59,10 +58,12 @@ class Master(object):
     """
 
     def __init__(self, port):
-        logger.set_dir(os.path.expanduser('~/.parl_data/master/'))
-        self.ctx = zmq.Context()
 
+        self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
+        logger.set_dir(
+            os.path.expanduser('~/.parl_data/master/{}:{}'.format(
+                self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
         self.client_socket.bind("tcp://*:{}".format(port))
         self.client_socket.linger = 0

@@ -87,13 +87,13 @@ def cli():
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
-    "--monitor_port", help="The port to start cluster monitor", type=str)
+    "--monitor_port", help="The port to start a cluster monitor.", type=str)
 def start_master(port, cpu_num, monitor_port):
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} is already in use.".format(port))
 
-    if not is_port_available(monitor_port):
+    if monitor_port and not is_port_available(monitor_port):
         raise Exception(
             "The input monitor port localhost:{} is already in use.".format(
                 monitor_port))

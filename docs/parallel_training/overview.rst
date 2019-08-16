@@ -19,12 +19,12 @@ High performance
  of the GIL, while PARL empowers us to realize real parallel computation
  efficiency.
 
-Convenient visualization
-^^^^^^^^^^^^^^^^^^^^^^^^
-| PARL also provides a web monitor to watch the cluster status. We can use
- `xparl status` command to visualize the details of our cluster status,
- including cpu usage, memory usage, average cpu loads and file executable
- paths. When any error happens, user can soon locate the bugs.
+Computation resources monitor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+| PARL provides a web monitor to watch the status of any resources connected
+ to the cluster. We can use ``xparl status`` command to visualize the details
+ of our cluster status, including cpu usage, memory usage, average cpu loads
+ and the path of each task. When any error happens, user can soon locate the bugs.
 
 Board compatibility
 ^^^^^^^^^^^^^^^^^^^
@@ -32,8 +32,8 @@ Board compatibility
  mxnet. By adding `@parl.remote_class` decorator to their code, users can
  easily convert their code to distributed computation.
 
-Advantages
-##########
+Why PARL
+########
 
 High throughput
 ^^^^^^^^^^^^^^^

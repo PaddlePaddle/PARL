@@ -139,7 +139,8 @@ def remote_class(*args, **kwargs):
             def send_file(self, socket):
                 try:
                     socket.send_multipart([
-                        remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles
+                        remote_constants.SEND_FILE_TAG,
+                        self.GLOBAL_CLIENT.pyfiles
                     ])
                     _ = socket.recv_multipart()
                 except zmq.error.Again as e:
@@ -153,8 +154,9 @@ def remote_class(*args, **kwargs):
                     if job_address is not None:
                         return job_address
                     if cnt % 30 == 0:
-                        logger.warning("No vacant cpu resources at the moment, "
-                                    "will try {} times later.".format(cnt))
+                        logger.warning(
+                            "No vacant cpu resources at the moment, "
+                            "will try {} times later.".format(cnt))
                     cnt -= 1
                 return None
 
@@ -170,7 +172,7 @@ def remote_class(*args, **kwargs):
 
                     self.job_socket.send_multipart(
                         [remote_constants.CALL_TAG,
-                        to_byte(attr), data])
+                         to_byte(attr), data])
 
                     message = self.job_socket.recv_multipart()
                     tag = message[0]
@@ -206,6 +208,7 @@ def remote_class(*args, **kwargs):
                     return ret
 
                 return wrapper
+
         return RemoteWrapper
 
     max_memory = kwargs.get('max_memory')

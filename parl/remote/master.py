@@ -182,7 +182,8 @@ class Master(object):
         elif tag == remote_constants.STATUS_TAG:
             status_info = self.cluster_monitor.get_status_info()
             self.client_socket.send_multipart(
-                 [remote_constants.NORMAL_TAG, to_byte(status_info)])
+                [remote_constants.NORMAL_TAG,
+                 to_byte(status_info)])
 
         elif tag == remote_constants.WORKER_INITIALIZED_TAG:
             initialized_worker = cloudpickle.loads(message[1])

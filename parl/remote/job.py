@@ -55,7 +55,7 @@ class Job(object):
         self.job_is_alive = True
         self.worker_address = worker_address
         self.pid = os.getpid()
-        self.max_memory = None        
+        self.max_memory = None
         self.lock = threading.Lock()
         self._create_sockets()
 
@@ -132,7 +132,7 @@ class Job(object):
         stop_job = 'False'
         if self.max_memory is not None:
             process = psutil.Process(self.pid)
-            used_memory = float(process.memory_info()[0]) / (1024 ** 2)
+            used_memory = float(process.memory_info()[0]) / (1024**2)
             if used_memory > self.max_memory:
                 stop_job = 'True'
         return stop_job
@@ -193,8 +193,9 @@ class Job(object):
             try:
                 message = socket.recv_multipart()
                 stop_job = self._check_used_memory()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG,
-                                       to_byte(stop_job)])
+                socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG,
+                     to_byte(stop_job)])
                 if stop_job == 'True':
                     self.job_is_alive = False
             except zmq.error.Again as e:
@@ -253,7 +254,7 @@ class Job(object):
             cls = cloudpickle.loads(message[1])
             args, kwargs = cloudpickle.loads(message[2])
             if to_str(message[3]) != 'None':
-                self.max_memory = float(to_str(message[3]))            
+                self.max_memory = float(to_str(message[3]))
 
             try:
                 obj = cls(*args, **kwargs)

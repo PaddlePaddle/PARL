@@ -23,6 +23,7 @@ from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
 
+
 @parl.remote_class(max_memory=200)
 class Actor(object):
     def __init__(self, x=10):
@@ -30,9 +31,10 @@ class Actor(object):
         self.data = []
 
     def add_100mb(self):
-        self.data.append(os.urandom(100*1024**2))
+        self.data.append(os.urandom(100 * 1024**2))
         self.x += 1
         return self.x
+
 
 class TestMaxMemory(unittest.TestCase):
     def tearDown(self):
@@ -57,6 +59,7 @@ class TestMaxMemory(unittest.TestCase):
         actor.job_socket.close(0)
         worker.exit()
         master.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

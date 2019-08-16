@@ -13,18 +13,20 @@
 # limitations under the License.
 
 import click
-import socket
 import locale
-import sys
-import random
-import os
 import multiprocessing
+import os
+import random
+import re
+import socket
 import subprocess
+import sys
 import threading
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address
+from parl.utils import get_ip_address, to_str
+from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -122,6 +124,7 @@ def start_master(port, cpu_num, monitor_port):
     ]
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
+
     master_ip = get_ip_address()
     cluster_info = """
         # The Parl cluster is started at localhost:{}.
@@ -131,6 +134,10 @@ def start_master(port, cpu_num, monitor_port):
         ## If you want to check cluster status, visit:
         
             http://{}:{}.
+
+        or call:
+
+            xparl status
         
         ## If you want to add more CPU resources, call:
         
@@ -138,8 +145,8 @@ def start_master(port, cpu_num, monitor_port):
         
         ## If you want to shutdown the cluster, call:
             
-            xparl stop""".format(port, cpu_num, master_ip, monitor_port,
-                                 master_ip, port)
+                xparl stop
+        """.format(port, cpu_num, master_ip, monitor_port, master_ip, port)
 
     click.echo(cluster_info)
 
@@ -176,9 +183,40 @@ def stop():
     subprocess.call([command], shell=True)
 
 
+@click.command("status")
+def status():
+    cmd = 'ps -ef | grep remote/monitor.py\ --monitor_port'
+    content = os.popen(cmd).read()
+    pattern = re.compile('--monitor_port (.*?)\n', re.S)
+    monitors = pattern.findall(content)
+    if len(monitors) == 0:
+        click.echo('No active cluster is found.')
+    else:
+        ctx = zmq.Context()
+        status = []
+        for monitor in monitors:
+            monitor_port, _, master_address = monitor.split(' ')
+            master_ip = master_address.split(':')[0]
+            monitor_address = "{}:{}".format(master_ip, monitor_port)
+            socket = ctx.socket(zmq.REQ)
+            socket.connect('tcp://{}'.format(master_address))
+            socket.send_multipart([STATUS_TAG])
+            cluster_info = to_str(socket.recv_multipart()[1])
+            msg = """
+            # Cluster {} {}
+
+            # If you want to monitor cluster status, visit: http://{}
+            """.format(master_address, cluster_info, monitor_address)
+            status.append(msg)
+            socket.close(0)
+        for monitor_status in status:
+            click.echo(monitor_status)
+
+
 cli.add_command(start_worker)
 cli.add_command(start_master)
 cli.add_command(stop)
+cli.add_command(status)
 
 
 def main():

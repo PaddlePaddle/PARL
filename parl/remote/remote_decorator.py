@@ -28,7 +28,7 @@ from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
 from parl.remote.client import get_global_client
 
 
-def remote_class(cls):
+def remote_class(*args, **kwargs):
     """A Python decorator that enables a class to run all its functions
     remotely.
 
@@ -55,6 +55,15 @@ def remote_class(cls):
         actor = Actor()
         actor.step()
 
+        # Set maximum memory usage for each object 
+        @remote_class(max_memory=300)
+        class LimitedActor(object):
+           ...
+
+    Args:
+        max_memory (float): Max memory each job process can use, the unit is in
+                            MB and default value is none.
+
     Returns:
         A remote wrapper for the remote class.
 
@@ -63,137 +72,144 @@ def remote_class(cls):
                    by `parl.connect(master_address)` beforehand.
     """
 
-    class RemoteWrapper(object):
-        """
-        Wrapper for remote class in client side.
-        """
-
-        def __init__(self, *args, **kwargs):
+    def decorator(cls):
+        class RemoteWrapper(object):
             """
-            Args:
-                args, kwargs: arguments for the initialization of the unwrapped
-                class.
+            Wrapper for remote class in client side.
             """
-            self.GLOBAL_CLIENT = get_global_client()
 
-            self.ctx = self.GLOBAL_CLIENT.ctx
+            def __init__(self, *args, **kwargs):
+                """
+                Args:
+                    args, kwargs: arguments for the initialization of the unwrapped
+                    class.
+                """
+                self.GLOBAL_CLIENT = get_global_client()
 
-            # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
-            # finds the master is dead.
-            if self.GLOBAL_CLIENT.master_is_alive:
-                job_address = self.request_cpu_resource(self.GLOBAL_CLIENT)
-            else:
-                raise Exception("Can not submit job to the master. "
-                                "Please check if master is still alive.")
+                self.ctx = self.GLOBAL_CLIENT.ctx
 
-            if job_address is None:
-                raise ResourceError("Cannot submit the job to the master. "
-                                    "Please add more CPU resources to the "
-                                    "master or try again later.")
+                # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
+                # finds the master is dead.
+                if self.GLOBAL_CLIENT.master_is_alive:
+                    job_address = self.request_cpu_resource(self.GLOBAL_CLIENT)
+                else:
+                    raise Exception("Can not submit job to the master. "
+                                    "Please check if master is still alive.")
 
-            self.internal_lock = threading.Lock()
+                if job_address is None:
+                    raise ResourceError("Cannot submit the job to the master. "
+                                        "Please add more CPU resources to the "
+                                        "master or try again later.")
 
-            # Send actor commands like `init` and `call` to the job.
-            self.job_socket = self.ctx.socket(zmq.REQ)
-            self.job_socket.linger = 0
-            self.job_socket.connect("tcp://{}".format(job_address))
-            self.job_address = job_address
-            self.job_shutdown = False
+                self.internal_lock = threading.Lock()
 
-            self.send_file(self.job_socket)
+                # Send actor commands like `init` and `call` to the job.
+                self.job_socket = self.ctx.socket(zmq.REQ)
+                self.job_socket.linger = 0
+                self.job_socket.connect("tcp://{}".format(job_address))
+                self.job_address = job_address
+                self.job_shutdown = False
 
-            self.job_socket.send_multipart([
-                remote_constants.INIT_OBJECT_TAG,
-                cloudpickle.dumps(cls),
-                cloudpickle.dumps([args, kwargs])
-            ])
-            message = self.job_socket.recv_multipart()
-            tag = message[0]
-            if tag == remote_constants.EXCEPTION_TAG:
-                traceback_str = to_str(message[1])
-                self.job_shutdown = True
-                raise RemoteError('__init__', traceback_str)
+                self.send_file(self.job_socket)
 
-        def __del__(self):
-            """Delete the remote class object and release remote resources."""
-            if not self.job_shutdown:
-                try:
-                    self.job_socket.send_multipart(
-                        [remote_constants.KILLJOB_TAG])
-                    _ = self.job_socket.recv_multipart()
-                    self.job_socket.close(0)
-                except AttributeError:
-                    pass
-
-        def send_file(self, socket):
-            try:
-                socket.send_multipart([
-                    remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles
+                self.job_socket.send_multipart([
+                    remote_constants.INIT_OBJECT_TAG,
+                    cloudpickle.dumps(cls),
+                    cloudpickle.dumps([args, kwargs]),
+                    to_byte(str(max_memory))
                 ])
-                _ = socket.recv_multipart()
-            except zmq.error.Again as e:
-                logger.error("Send python files failed.")
-
-        def request_cpu_resource(self, global_client):
-            """Try to request cpu resource for 1 second/time for 300 times."""
-            cnt = 300
-            while cnt > 0:
-                job_address = global_client.submit_job()
-                if job_address is not None:
-                    return job_address
-                if cnt % 30 == 0:
-                    logger.warning("No vacant cpu resources at the moment, "
-                                   "will try {} times later.".format(cnt))
-                cnt -= 1
-            return None
-
-        def __getattr__(self, attr):
-            """Call the function of the unwrapped class."""
-
-            def wrapper(*args, **kwargs):
-                if self.job_shutdown:
-                    raise RemoteError(
-                        attr, "This actor losts connection with the job.")
-                self.internal_lock.acquire()
-                data = dumps_argument(*args, **kwargs)
-
-                self.job_socket.send_multipart(
-                    [remote_constants.CALL_TAG,
-                     to_byte(attr), data])
-
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
-
-                if tag == remote_constants.NORMAL_TAG:
-                    ret = loads_return(message[1])
-
-                elif tag == remote_constants.EXCEPTION_TAG:
-                    error_str = to_str(message[1])
+                if tag == remote_constants.EXCEPTION_TAG:
+                    traceback_str = to_str(message[1])
                     self.job_shutdown = True
-                    raise RemoteError(attr, error_str)
+                    raise RemoteError('__init__', traceback_str)
 
-                elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
-                    error_str = to_str(message[1])
-                    self.job_shutdown = True
-                    raise RemoteAttributeError(attr, error_str)
+            def __del__(self):
+                """Delete the remote class object and release remote resources."""
+                if not self.job_shutdown:
+                    try:
+                        self.job_socket.send_multipart(
+                            [remote_constants.KILLJOB_TAG])
+                        _ = self.job_socket.recv_multipart()
+                        self.job_socket.close(0)
+                    except AttributeError:
+                        pass
 
-                elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
-                    error_str = to_str(message[1])
-                    self.job_shutdown = True
-                    raise RemoteSerializeError(attr, error_str)
+            def send_file(self, socket):
+                try:
+                    socket.send_multipart([
+                        remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles
+                    ])
+                    _ = socket.recv_multipart()
+                except zmq.error.Again as e:
+                    logger.error("Send python files failed.")
 
-                elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
-                    error_str = to_str(message[1])
-                    self.job_shutdown = True
-                    raise RemoteDeserializeError(attr, error_str)
+            def request_cpu_resource(self, global_client):
+                """Try to request cpu resource for 1 second/time for 300 times."""
+                cnt = 300
+                while cnt > 0:
+                    job_address = global_client.submit_job()
+                    if job_address is not None:
+                        return job_address
+                    if cnt % 30 == 0:
+                        logger.warning("No vacant cpu resources at the moment, "
+                                    "will try {} times later.".format(cnt))
+                    cnt -= 1
+                return None
 
-                else:
-                    self.job_shutdown = True
-                    raise NotImplementedError()
+            def __getattr__(self, attr):
+                """Call the function of the unwrapped class."""
 
-                self.internal_lock.release()
-                return ret
+                def wrapper(*args, **kwargs):
+                    if self.job_shutdown:
+                        raise RemoteError(
+                            attr, "This actor losts connection with the job.")
+                    self.internal_lock.acquire()
+                    data = dumps_argument(*args, **kwargs)
 
-            return wrapper
+                    self.job_socket.send_multipart(
+                        [remote_constants.CALL_TAG,
+                        to_byte(attr), data])
 
-    return RemoteWrapper
+                    message = self.job_socket.recv_multipart()
+                    tag = message[0]
+
+                    if tag == remote_constants.NORMAL_TAG:
+                        ret = loads_return(message[1])
+
+                    elif tag == remote_constants.EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteError(attr, error_str)
+
+                    elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteAttributeError(attr, error_str)
+
+                    elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteSerializeError(attr, error_str)
+
+                    elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteDeserializeError(attr, error_str)
+
+                    else:
+                        self.job_shutdown = True
+                        raise NotImplementedError()
+
+                    self.internal_lock.release()
+                    return ret
+
+                return wrapper
+        return RemoteWrapper
+
+    max_memory = kwargs.get('max_memory')
+    if len(args) == 1 and callable(args[0]):
+        max_memory = None
+        return decorator(args[0])
+    return decorator

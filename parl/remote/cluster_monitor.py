@@ -106,6 +106,21 @@ class ClusterMonitor(object):
         self.status['clients'].pop(client_address)
         self.lock.release()
 
+    def get_status_info(self):
+        """Return a message of current cluster status."""
+        self.lock.acquire()
+        worker_num = len(self.status['workers'])
+        clients_num = len(self.status['clients'])
+        used_cpus = 0
+        vacant_cpus = 0
+        for worker in self.status['workers'].values():
+            used_cpus += worker['used_cpus']
+            vacant_cpus += worker['vacant_cpus']
+        self.lock.release()
+        status_info = "has {} used cpus, {} vacant cpus,".format(
+            used_cpus, vacant_cpus)
+        return status_info
+
     def get_status(self):
         """Return a cloudpickled status."""
         self.lock.acquire()

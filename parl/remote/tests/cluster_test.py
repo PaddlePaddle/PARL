@@ -133,7 +133,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 8)
 
         worker2.exit()
-        time.sleep(30)
+        time.sleep(50)
         self.assertEqual(master.cpu_num, 4)
 
         master.exit()

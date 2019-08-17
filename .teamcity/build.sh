@@ -69,7 +69,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j10 -V
+    ctest --output-on-failure -j10
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -90,7 +90,7 @@ function run_test_with_cpu() {
     =====================================================
 EOF
     if [ $# -eq 1 ];then
-      ctest --output-on-failure -j10 -V
+      ctest --output-on-failure -j10
     else
       ctest --output-on-failure 
     fi

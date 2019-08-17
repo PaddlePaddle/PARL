@@ -72,6 +72,7 @@ class TestClusterMonitor(unittest.TestCase):
         workers = []
         for _ in range(20):
             worker = Worker('localhost:{}'.format(port), 1)
+            time.sleep(1)
             workers.append(worker)
 
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))

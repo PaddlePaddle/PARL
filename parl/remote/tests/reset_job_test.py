@@ -62,27 +62,6 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_job_exit_exceptionally(self):
-        master = Master(port=1334)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        worker1 = Worker('localhost:1334', 4)
-        time.sleep(10)
-        self.assertEqual(worker1.job_buffer.full(), True)
-        time.sleep(1)
-        self.assertEqual(master.cpu_num, 4)
-        print("We are going to kill all the jobs.")
-        command = ("pkill -f remote/job.py")
-        subprocess.call([command], shell=True)
-        parl.connect('localhost:1334')
-        actor = Actor()
-        self.assertEqual(actor.add_one(1), 2)
-        time.sleep(20)
-
-        master.exit()
-        worker1.exit()
-
     @timeout_decorator.timeout(seconds=300)
     def test_acor_exit_exceptionally(self):
         master = Master(port=1335)
@@ -94,7 +73,7 @@ class TestJob(unittest.TestCase):
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
         proc = subprocess.Popen(command)
-        time.sleep(10)
+        time.sleep(20)
         self.assertEqual(master.cpu_num, 0)
         proc.kill()
 

@@ -12,36 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import parl
 import unittest
-import time
-import threading
 
+import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
+import time
+import threading
+from parl.remote.client import disconnect
+from parl.remote import exceptions
+import timeout_decorator
+import subprocess
 
 
-@parl.remote_class(max_memory=200)
+@parl.remote_class
 class Actor(object):
-    def __init__(self, x=10):
-        self.x = x
-        self.data = []
+    def __init__(self, arg1=None, arg2=None):
+        self.arg1 = arg1
+        self.arg2 = arg2
 
-    def add_100mb(self):
-        self.data.append(os.urandom(100 * 1024**2))
-        self.x += 1
-        return self.x
+    def get_arg1(self):
+        return self.arg1
+
+    def get_arg2(self):
+        return self.arg2
+
+    def set_arg1(self, value):
+        self.arg1 = value
+
+    def set_arg2(self, value):
+        self.arg2 = value
+
+    def get_unable_serialize_object(self):
+        return UnableSerializeObject()
+
+    def add_one(self, value):
+        value += 1
+        return value
+
+    def add(self, x, y):
+        time.sleep(3)
+        return x + y
+
+    def will_raise_exception_func(self):
+        x = 1 / 0
 
 
-class TestMaxMemory(unittest.TestCase):
+class TestClusterMonitor(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_max_memory(self):
-        port = 3001
+    def test_add_actor(self):
+        port = 1441
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -49,14 +72,21 @@ class TestMaxMemory(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
         time.sleep(1)
+        self.assertEqual(0, len(cluster_monitor.data['clients']))
         parl.connect('localhost:{}'.format(port))
+        time.sleep(10)
+        self.assertEqual(1, len(cluster_monitor.data['clients']))
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
         actor = Actor()
-        time.sleep(30)
+        time.sleep(20)
+        self.assertEqual(0, cluster_monitor.data['workers'][0]['vacant_cpus'])
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['used_cpus'])
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.add_100mb()
-        time.sleep(50)
+        del actor
+        time.sleep(40)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.job_socket.close(0)
+        self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
+
         worker.exit()
         master.exit()
 

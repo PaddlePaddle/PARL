@@ -516,11 +516,6 @@ pre code {
     max-width: 1140px;
   }
 }
-@media (min-width: 1800px) {
-  .container {
-    max-width: 1760px;
-  }
-}
 .container-fluid {
   width: 100%;
   padding-right: 15px;
@@ -5440,11 +5435,6 @@ a.close.disabled {
 @media (min-width: 1200px) {
   .modal-xl {
     max-width: 1140px;
-  }
-}
-@media (min-width: 1800px) {
-  .modal-xl {
-    max-width: 1760px;
   }
 }
 .tooltip {

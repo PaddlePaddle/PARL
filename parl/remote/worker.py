@@ -170,9 +170,10 @@ class Worker(object):
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""
         while self.worker_is_alive:
-            initialized_jobs = self._init_jobs(job_num=self.cpu_num)
-            for job in initialized_jobs:
-                self.job_buffer.put(job)
+            if self.job_buffer.full() is False:
+                initialized_jobs = self._init_jobs(job_num=self.cpu_num)
+                for job in initialized_jobs:
+                    self.job_buffer.put(job)
 
         # release jobs if the worker is not alive
         for job in initialized_jobs:

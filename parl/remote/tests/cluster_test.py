@@ -61,9 +61,6 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        #time.sleep(20)
-        #command = ("pkill -f remote/job.py")
-        #subprocess.call([command], shell=True)
 
     def test_actor_exception(self):
         master = Master(port=1235)
@@ -136,7 +133,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 8)
 
         worker2.exit()
-        time.sleep(30)
+        time.sleep(50)
         self.assertEqual(master.cpu_num, 4)
 
         master.exit()

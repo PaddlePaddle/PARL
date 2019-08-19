@@ -63,19 +63,32 @@ class TestClusterMonitor(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_one_worker(self):
-        port = 1439
+    def test_twenty_worker(self):
+        port = 1440
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
+        workers = []
+        for _ in range(20):
+            worker = Worker('localhost:{}'.format(port), 1)
+            time.sleep(1)
+            workers.append(worker)
+
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
         time.sleep(1)
-        self.assertEqual(1, len(cluster_monitor.data['workers']))
-        worker.exit()
+        self.assertEqual(20, len(cluster_monitor.data['workers']))
+
+        for i in range(10):
+            workers[i].exit()
+        time.sleep(40)
+        self.assertEqual(10, len(cluster_monitor.data['workers']))
+
+        for i in range(10, 20):
+            workers[i].exit()
         time.sleep(40)
         self.assertEqual(0, len(cluster_monitor.data['workers']))
+
         master.exit()
 
 

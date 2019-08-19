@@ -55,7 +55,7 @@ def remote_class(*args, **kwargs):
         actor = Actor()
         actor.step()
 
-        # Set maximum memory usage for each object 
+        # Set maximum memory usage for each object
         @remote_class(max_memory=300)
         class LimitedActor(object):
            ...
@@ -134,6 +134,8 @@ def remote_class(*args, **kwargs):
                         _ = self.job_socket.recv_multipart()
                         self.job_socket.close(0)
                     except AttributeError:
+                        pass
+                    except zmq.error.ZMQError:
                         pass
 
             def send_file(self, socket):

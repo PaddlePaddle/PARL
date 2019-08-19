@@ -45,6 +45,7 @@ class TestCluster(unittest.TestCase):
             actor = Actor()
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
+        disconnect()
 
     def _create_actor(self):
         for _ in range(2):
@@ -52,61 +53,7 @@ class TestCluster(unittest.TestCase):
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
 
-    @timeout_decorator.timeout(seconds=60)
-    def test_connect_and_create_actor_in_multiprocessing_with_connected_in_main_process(
-            self):
-        # start the master
-        master = Master(port=8238)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-
-        worker1 = Worker('localhost:8238', 4)
-        parl.connect('localhost:8238')
-
-        proc1 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8238', ))
-        proc2 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8238', ))
-        proc1.start()
-        proc2.start()
-
-        proc1.join()
-        proc2.join()
-
-        # make sure that the client of the main process still works
-        self._create_actor()
-
-        worker1.exit()
-        master.exit()
-
-    @timeout_decorator.timeout(seconds=60)
-    def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
-            self):
-        # start the master
-        master = Master(port=8239)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-
-        worker1 = Worker('localhost:8239', 4)
-
-        proc1 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8239', ))
-        proc2 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8239', ))
-        proc1.start()
-        proc2.start()
-
-        proc1.join()
-        proc2.join()
-
-        self.assertRaises(AssertionError, self._create_actor)
-
-        worker1.exit()
-        master.exit()
-
-    @timeout_decorator.timeout(seconds=60)
+    @timeout_decorator.timeout(seconds=300)
     def test_create_actor_in_multiprocessing(self):
         # start the master
         master = Master(port=8240)
@@ -124,6 +71,7 @@ class TestCluster(unittest.TestCase):
 
         proc1.join()
         proc2.join()
+        print("[test_create_actor_in_multiprocessing]  Join")
 
         # make sure that the client of the main process still works
         self._create_actor()

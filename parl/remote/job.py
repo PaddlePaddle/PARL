@@ -91,7 +91,6 @@ class Job(object):
             target=self._reply_worker_heartbeat,
             args=(worker_heartbeat_socket, ))
         worker_thread.setDaemon(True)
-        worker_thread.start()
 
         # a thread that reply heartbeat signals from the client
         client_heartbeat_socket, client_heartbeat_address = self._create_heartbeat_server(
@@ -110,6 +109,7 @@ class Job(object):
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
         message = self.job_socket.recv_multipart()
+        worker_thread.start()
 
         assert message[0] == remote_constants.NORMAL_TAG
         # create the kill_job_socket
@@ -160,7 +160,10 @@ class Job(object):
             self.kill_job_socket.send_multipart(
                 [remote_constants.KILLJOB_TAG,
                  to_byte(self.job_address)])
-            _ = self.kill_job_socket.recv_multipart()
+            try:
+                _ = self.kill_job_socket.recv_multipart()
+            except zmq.error.Again as e:
+                pass
         logger.warning("[Job]lost connection with the client, will exit")
         os._exit(1)
 
@@ -262,6 +265,7 @@ class Job(object):
         # receive source code from the actor and append them to the environment variables.
         envdir = self.wait_for_files()
         sys.path.append(envdir)
+        self.client_is_alive = True
         self.client_thread.start()
 
         try:
@@ -278,7 +282,11 @@ class Job(object):
             self.kill_job_socket.send_multipart(
                 [remote_constants.KILLJOB_TAG,
                  to_byte(self.job_address)])
-            _ = self.kill_job_socket.recv_multipart()
+            try:
+                _ = self.kill_job_socket.recv_multipart()
+            except zmq.error.Again as e:
+                pass
+            os._exit(1)
 
     def single_task(self, obj):
         """An infinite loop waiting for commands from the remote object.

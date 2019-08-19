@@ -17,33 +17,22 @@ cmake_minimum_required(VERSION 3.0)
 enable_testing()
 
 option(WITH_TESTING "Include unit testing" ON)
+option(IS_TESTING_SERIALLY "testing scripts that cannot run in parallel" OFF)
 option(IS_TESTING_IMPORT "testing import parl" OFF)
 option(IS_TESTING_DOCS "testing compling the docs" OFF)
 option(IS_TESTING_GPU "testing GPU environment" OFF)
 
 set(PADDLE_PYTHON_PATH "" CACHE STRING "Python path to PaddlePaddle Fluid")
 
-function(py3_test TARGET_NAME)
+function(py_test TARGET_NAME)
     set(options "")
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
-    cmake_parse_arguments(py3_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    #TODO: add real python2 env.
-    add_test(NAME ${TARGET_NAME}_with_python3
-        COMMAND python3.6 ${py3_test_SRCS} ${py3_test_ARGS}
+    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    add_test(NAME ${TARGET_NAME}
+        COMMAND python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
-
-#function(py2_test TARGET_NAME)
-#    set(options "")
-#    set(oneValueArgs "")
-#    set(multiValueArgs SRCS DEPS ARGS ENVS)
-#    cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-#    #TODO: add real python2 env.
-#    add_test(NAME ${TARGET_NAME}_with_python2
-#        COMMAND python ${py_test_SRCS} ${py_test_ARGS}
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-#endfunction()
 
 function(import_test TARGET_NAME)
     set(options "")
@@ -67,18 +56,24 @@ if (WITH_TESTING)
     if (IS_TESTING_IMPORT)
         set(src "parl/tests/import_test")
         import_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
-      elseif (IS_TESTING_DOCS)
+    elseif (IS_TESTING_DOCS)
         docs_test()
+    elseif (IS_TESTING_SERIALLY)
+        file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test_alone.py")
+        string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
+        foreach(src ${TEST_OPS})
+            py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+        endforeach()
     else ()
         file(GLOB_RECURSE TEST_OPS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*_test.py")
         string(REPLACE ".py" "" TEST_OPS "${TEST_OPS}")
         foreach(src ${TEST_OPS})
           if (${src} MATCHES ".*remote.*")
               if (NOT IS_TESTING_GPU)
-                  py3_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+                  py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
               endif()
           else()
-              py3_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
+              py_test(${src} SRCS ${src}.py ENVS ${PADDLE_PYTHON_PATH})
           endif()
         endforeach()
     endif()

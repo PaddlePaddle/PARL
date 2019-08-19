@@ -11,18 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import unittest
-
 import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-from parl.remote.monitor import ClusterMonitor
-import time
-import threading
 from parl.remote.client import disconnect
-from parl.remote import exceptions
-import timeout_decorator
+from parl.utils import logger
+import threading
+import time
 import subprocess
 
 
@@ -59,24 +55,30 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestClusterMonitor(unittest.TestCase):
+class TestJobAlone(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_one_worker(self):
-        port = 1439
-        master = Master(port=port)
+    def test_job_exit_exceptionally(self):
+        master = Master(port=1334)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
+        worker1 = Worker('localhost:1334', 4)
+        time.sleep(10)
+        self.assertEqual(worker1.job_buffer.full(), True)
         time.sleep(1)
-        self.assertEqual(1, len(cluster_monitor.data['workers']))
-        worker.exit()
-        time.sleep(40)
-        self.assertEqual(0, len(cluster_monitor.data['workers']))
+        self.assertEqual(master.cpu_num, 4)
+        print("We are going to kill all the jobs.")
+        command = ("pkill -f remote/job.py")
+        subprocess.call([command], shell=True)
+        parl.connect('localhost:1334')
+        actor = Actor()
+        self.assertEqual(actor.add_one(1), 2)
+        time.sleep(20)
+
         master.exit()
+        worker1.exit()
 
 
 if __name__ == '__main__':

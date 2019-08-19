@@ -15,12 +15,6 @@
 
 # A dev image based on paddle production image
 
-FROM parl/parl-test:1.1-cuda9.0-cudnn7-docs
+FROM parl/parl-test:cuda9.0-cudnn7-v1
 
 COPY ./requirements.txt /root/
-
-# Requirements for python2
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt
-
-# Requirements for python3
-RUN pip3.6 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/requirements.txt

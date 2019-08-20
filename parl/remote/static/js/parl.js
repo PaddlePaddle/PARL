@@ -138,8 +138,8 @@ function addPlots(res, record, imgHandle, begin, end) {
       ]
     };
 
-    if (i < record_num && worker.worker_address === record[i].worker_address) {
-      if (worker.cpu_num !== record[i].cpu_num) {
+    if (i < record_num && worker.hostname === record[i].hostname) {
+      if (worker.used_cpus !== record[i].used_cpus) {
         imgHandle[`w${i}c0`].setOption(cpuOption);
       }
       if (worker.used_memory !== record[i].used_memory) {
@@ -155,10 +155,10 @@ function addPlots(res, record, imgHandle, begin, end) {
     }
 
     record[i] = {
-      worker_address: worker.worker_address,
-      used_cpu: worker.used_cpu,
-      vacant_cpu: worker.vacant_cpu,
-      used_memory: worker.used_cpu,
+      hostname: worker.hostname,
+      used_cpus: worker.used_cpus,
+      vacant_cpus: worker.vacant_cpus,
+      used_memory: worker.used_memory,
       vacant_memory: worker.vacant_memory
     };
   }

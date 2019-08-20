@@ -129,12 +129,12 @@ class Job(object):
 
     def _check_used_memory(self):
         """Check if the memory used by this job exceeds self.max_memory."""
-        stop_job = 'False'
+        stop_job = False
         if self.max_memory is not None:
             process = psutil.Process(self.pid)
             used_memory = float(process.memory_info()[0]) / (1024**2)
             if used_memory > self.max_memory:
-                stop_job = 'True'
+                stop_job = True
         return stop_job
 
     def _reply_ping(self, socket):
@@ -169,10 +169,10 @@ class Job(object):
                 stop_job = self._check_used_memory()
                 socket.send_multipart([
                     remote_constants.HEARTBEAT_TAG,
-                    to_byte(stop_job),
+                    to_byte(str(stop_job)),
                     to_byte(self.job_address)
                 ])
-                if stop_job == 'True':
+                if stop_job == True:
                     socket.close(0)
                     os._exit(1)
             except zmq.error.Again as e:

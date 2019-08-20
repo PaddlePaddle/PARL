@@ -36,28 +36,25 @@ class Actor(object):
         return self.x
 
 
-class TestMaxMemory(unittest.TestCase):
+class TestClusterStatus(unittest.TestCase):
     def tearDown(self):
-        disconnect()
+        disconnect
 
-    def test_max_memory(self):
-        port = 3001
+    def test_cluster_status(self):
+        port = 4321
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
         worker = Worker('localhost:{}'.format(port), 1)
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
-        time.sleep(1)
+        time.sleep(5)
+        status_info = master.cluster_monitor.get_status_info()
+        self.assertEqual(status_info, 'has 0 used cpus, 1 vacant cpus.')
         parl.connect('localhost:{}'.format(port))
         actor = Actor()
         time.sleep(30)
-        self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.add_100mb()
-        time.sleep(50)
-        self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.job_socket.close(0)
-        del actor
+        status_info = master.cluster_monitor.get_status_info()
+        self.assertEqual(status_info, 'has 1 used cpus, 0 vacant cpus.')
         worker.exit()
         master.exit()
 

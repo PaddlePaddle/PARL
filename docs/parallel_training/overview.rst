@@ -7,7 +7,7 @@ Highlights
 Easy-to-use
 ^^^^^^^^^^^
 | With a single @parl.remote_class decorator, users can implement parallel
- training easily, and not having to care about stuff of multi-processes,
+ training easily, and do not have to care about stuff of multi-processes,
  network communication.
 
 High performance
@@ -20,17 +20,19 @@ High performance
 
 Computation resources monitor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 | PARL provides a web monitor to watch the status of any resources connected
- to the cluster. We can use ``xparl status`` command to visualize the details
- of our cluster status, including cpu usage, memory usage, average cpu loads
- and the path of each task. When any error happens, user can soon locate the
- bugs.
+ to the cluster. We can use xparl status command to visualize the details
+ of our cluster status in a WEB UI, including cpu usage, memory usage, average
+ cpu loads and the path of each task. When any error happens, user can soon
+ locate the bugs.
 
 Board compatibility
 ^^^^^^^^^^^^^^^^^^^
-| PARL is compatible with any other frameworks, like tensorflow, pytorch or
- mxnet. By adding `@parl.remote_class` decorator to their code, users can
- easily convert their code to distributed computation.
+| Our framework for distributed training is compatible with any other
+ frameworks, like tensorflow, pytorch or mxnet. By adding `@parl.remote_class`
+ decorator to their codes, users can easily convert their codes to distributed
+ computation.
 
 Why PARL
 ########

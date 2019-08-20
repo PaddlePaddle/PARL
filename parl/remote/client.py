@@ -147,7 +147,6 @@ class Client(object):
                     to_byte(str(self.actor_num)),
                     to_byte(str(elapsed_time))
                 ])
-
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
                                "Please check if it is still alive.")
@@ -168,7 +167,7 @@ class Client(object):
         try:
             job_heartbeat_socket.send_multipart(
                 [remote_constants.HEARTBEAT_TAG])
-            _ = job_heartbeat_socket.recv_multipart()
+            job_heartbeat_socket.recv_multipart()
         except zmq.error.Again:
             job_heartbeat_socket.close(0)
             logger.error(
@@ -198,8 +197,9 @@ class Client(object):
                 job_message = job_heartbeat_socket.recv_multipart()
                 if to_str(job_message[1]) == 'True':
                     logger.error(
-                        'Job {} exceeds max memory usage, will kill it'.format(
-                            to_str(job_message[2])))
+                        'Job {} exceeds max memory usage, will stop this job.'.
+                        format(to_str(job_message[2])))
+                    self.actor_num -= 1
                     job_is_alive = False
                 else:
                     time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)

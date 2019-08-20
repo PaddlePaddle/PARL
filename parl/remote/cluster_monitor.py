@@ -117,7 +117,7 @@ class ClusterMonitor(object):
             used_cpus += worker['used_cpus']
             vacant_cpus += worker['vacant_cpus']
         self.lock.release()
-        status_info = "has {} used cpus, {} vacant cpus,".format(
+        status_info = "has {} used cpus, {} vacant cpus.".format(
             used_cpus, vacant_cpus)
         return status_info
 

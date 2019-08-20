@@ -128,7 +128,7 @@ class Job(object):
         self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
 
     def _check_used_memory(self):
-        """Return current memory usage of the job process."""
+        """Check if the memory used by this job exceeds self.max_memory."""
         stop_job = 'False'
         if self.max_memory is not None:
             process = psutil.Process(self.pid)
@@ -163,11 +163,18 @@ class Job(object):
         If the job losts connection with the client, it will exit too.
         """
         self.client_is_alive = True
-        while self.client_is_alive:
+        while self.client_is_alive and self.job_is_alive:
             try:
                 message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
-
+                stop_job = self._check_used_memory()
+                socket.send_multipart([
+                    remote_constants.HEARTBEAT_TAG,
+                    to_byte(stop_job),
+                    to_byte(self.job_address)
+                ])
+                if stop_job == 'True':
+                    socket.close(0)
+                    os._exit(1)
             except zmq.error.Again as e:
                 logger.warning(
                     "[Job] Cannot connect to the client. This job will exit and inform the worker."
@@ -195,12 +202,7 @@ class Job(object):
         while self.worker_is_alive and self.job_is_alive:
             try:
                 message = socket.recv_multipart()
-                stop_job = self._check_used_memory()
-                socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG,
-                     to_byte(stop_job)])
-                if stop_job == 'True':
-                    self.job_is_alive = False
+                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
             except zmq.error.Again as e:
                 logger.warning("[Job] Cannot connect to the worker{}. ".format(
                     self.worker_address) + "Job will quit.")

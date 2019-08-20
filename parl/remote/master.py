@@ -179,6 +179,7 @@ class Master(object):
             self.client_socket.send_multipart(
                 [remote_constants.NORMAL_TAG, status])
 
+        # `xparl status` command line API
         elif tag == remote_constants.STATUS_TAG:
             status_info = self.cluster_monitor.get_status_info()
             self.client_socket.send_multipart(

@@ -43,7 +43,7 @@ def remote_class(*args, **kwargs):
 
     .. code-block:: python
 
-        @remote_class
+        @parl.remote_class
         class Actor(object):
             def __init__(self, x):
                 self.x = x
@@ -55,14 +55,15 @@ def remote_class(*args, **kwargs):
         actor = Actor()
         actor.step()
 
-        # Set maximum memory usage for each object
-        @remote_class(max_memory=300)
+        # Set maximum memory usage to 300 MB for each object. 
+        @parl.remote_class(max_memory=300)
         class LimitedActor(object):
            ...
 
     Args:
-        max_memory (float): Max memory each job process can use, the unit is in
-                            MB and default value is none.
+        max_memory (float): Maximum memory (MB) can be used by each remote
+                            instance, the unit is in MB and default value is
+                            none(unlimited).
 
     Returns:
         A remote wrapper for the remote class.
@@ -215,6 +216,5 @@ def remote_class(*args, **kwargs):
 
     max_memory = kwargs.get('max_memory')
     if len(args) == 1 and callable(args[0]):
-        max_memory = None
         return decorator(args[0])
     return decorator

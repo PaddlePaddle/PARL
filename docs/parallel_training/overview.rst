@@ -4,12 +4,11 @@ Features
 Highlights
 ##########
 
-Simple usage
-^^^^^^^^^^^^
-| With a single `@parl.remote_class` decorator, we can access cluster's remote
- computation resources to run our jobs easily. We can add any machine at
- anytime to the cluster, and PARL will take care of the network communication
- or resources allocation for us.
+Easy-to-use
+^^^^^^^^^^^
+| With a single @parl.remote_class decorator, users can implement parallel
+ training easily, and not having to care about stuff of multi-processes,
+ network communication.
 
 High performance
 ^^^^^^^^^^^^^^^^
@@ -24,7 +23,8 @@ Computation resources monitor
 | PARL provides a web monitor to watch the status of any resources connected
  to the cluster. We can use ``xparl status`` command to visualize the details
  of our cluster status, including cpu usage, memory usage, average cpu loads
- and the path of each task. When any error happens, user can soon locate the bugs.
+ and the path of each task. When any error happens, user can soon locate the
+ bugs.
 
 Board compatibility
 ^^^^^^^^^^^^^^^^^^^
@@ -40,11 +40,12 @@ High throughput
 | PARL uses a point-to-point connection for network communication in the
  cluster. Unlike other framework like RLlib which replies on redis for
  communication, PARL is able to achieve much higher throughput. The results
- can be found in figure (b).
+ can be found in figure (b). With the same implementation in IMPALA, PARL
+ achieved an increase of 160% on data throughout over Ray(RLlib).
 
 Automatic deployment
 ^^^^^^^^^^^^^^^^^^^^
-| Unlike other parallel framework like Ray, which fails to import modules from
+| Unlike other parallel frameworks which fail to import modules from
  external files. PARL will automatically package all related files and send
  them to remote machines.
 

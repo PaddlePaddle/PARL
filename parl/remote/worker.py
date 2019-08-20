@@ -268,15 +268,8 @@ class Worker(object):
             try:
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
-                job_message = job_heartbeat_socket.recv_multipart()
-                if to_str(job_message[1]) == 'True':
-                    logger.warning(
-                        'Job {} exceeds max memory usage, will kill it'.format(
-                            job.job_address))
-                    self._kill_job(job.job_address)
-                    job.is_alive = False
+                _ = job_heartbeat_socket.recv_multipart()
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-
             except zmq.error.Again as e:
                 job.is_alive = False
                 logger.warning(

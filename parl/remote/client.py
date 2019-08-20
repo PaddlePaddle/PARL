@@ -168,7 +168,7 @@ class Client(object):
         try:
             job_heartbeat_socket.send_multipart(
                 [remote_constants.HEARTBEAT_TAG])
-            job_heartbeat_socket.recv_multipart()
+            _ = job_heartbeat_socket.recv_multipart()
         except zmq.error.Again:
             job_heartbeat_socket.close(0)
             logger.error(
@@ -195,8 +195,14 @@ class Client(object):
             try:
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
-                _ = job_heartbeat_socket.recv_multipart()
-                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+                job_message = job_heartbeat_socket.recv_multipart()
+                if to_str(job_message[1]) == 'True':
+                    logger.error(
+                        'Job {} exceeds max memory usage, will kill it'.format(
+                            to_str(job_message[2])))
+                    job_is_alive = False
+                else:
+                    time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
             except zmq.error.Again as e:
                 job_is_alive = False

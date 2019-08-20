@@ -131,7 +131,7 @@ def start_master(port, cpu_num, monitor_port):
 
         # A local worker with {} CPUs is connected to the cluster.
         
-        ## If you want to check cluster status, visit:
+        ## If you want to check cluster status, please view:
         
             http://{}:{}.
 
@@ -139,11 +139,11 @@ def start_master(port, cpu_num, monitor_port):
 
             xparl status
         
-        ## If you want to add more CPU resources, call:
+        ## If you want to add more CPU resources, please call:
         
             xparl connect --address {}:{}
         
-        ## If you want to shutdown the cluster, call:
+        ## If you want to shutdown the cluster, please call:
             
                 xparl stop
         """.format(port, cpu_num, master_ip, monitor_port, master_ip, port)
@@ -185,7 +185,7 @@ def stop():
 
 @click.command("status")
 def status():
-    cmd = 'ps -ef | grep remote/monitor.py\ --monitor_port'
+    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port'
     content = os.popen(cmd).read()
     pattern = re.compile('--monitor_port (.*?)\n', re.S)
     monitors = pattern.findall(content)
@@ -205,7 +205,7 @@ def status():
             msg = """
             # Cluster {} {}
 
-            # If you want to monitor cluster status, visit: http://{}
+            # If you want to check cluster status, please view: http://{}
             """.format(master_address, cluster_info, monitor_address)
             status.append(msg)
             socket.close(0)

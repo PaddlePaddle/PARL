@@ -1,4 +1,5 @@
 include parl/remote/static/logo.png
+include parl/remote/static/favicon.ico
 recursive-include parl/remote/templates *.html
 recursive-include parl/remote/static/css *.css
 recursive-include parl/remote/static/js *.js

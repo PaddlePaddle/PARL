@@ -133,7 +133,7 @@ def start_master(port, cpu_num, monitor_port):
         
         ## If you want to check cluster status, please view:
         
-            http://{}:{}.
+            http://{}:{}
 
         or call:
 
@@ -196,8 +196,7 @@ def status():
         status = []
         for monitor in monitors:
             monitor_port, _, master_address = monitor.split(' ')
-            master_ip = master_address.split(':')[0]
-            monitor_address = "{}:{}".format(master_ip, monitor_port)
+            monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
             socket = ctx.socket(zmq.REQ)
             socket.connect('tcp://{}'.format(master_address))
             socket.send_multipart([STATUS_TAG])

@@ -18,6 +18,8 @@ os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle
 import pickle
+import psutil
+import re
 import sys
 import tempfile
 import threading
@@ -45,9 +47,15 @@ class Job(object):
         """
         Args:
             worker_address(str): worker_address for sending job information(e.g, pid)
+
+        Attributes:
+            pid (int): Job process ID.
+            max_memory (float): Maximum memory (MB) can be used by each remote instance. 
         """
         self.job_is_alive = True
         self.worker_address = worker_address
+        self.pid = os.getpid()
+        self.max_memory = None
         self.lock = threading.Lock()
         self._create_sockets()
 
@@ -104,20 +112,31 @@ class Job(object):
         initialized_job = InitializedJob(
             self.job_address, worker_heartbeat_address,
             client_heartbeat_address, self.ping_heartbeat_address, None,
-            os.getpid())
+            self.pid)
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
         message = self.job_socket.recv_multipart()
         worker_thread.start()
 
-        assert message[0] == remote_constants.NORMAL_TAG
+        tag = message[0]
+        assert tag == remote_constants.NORMAL_TAG
         # create the kill_job_socket
         kill_job_address = to_str(message[1])
         self.kill_job_socket = self.ctx.socket(zmq.REQ)
         self.kill_job_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
+
+    def _check_used_memory(self):
+        """Check if the memory used by this job exceeds self.max_memory."""
+        stop_job = False
+        if self.max_memory is not None:
+            process = psutil.Process(self.pid)
+            used_memory = float(process.memory_info()[0]) / (1024**2)
+            if used_memory > self.max_memory:
+                stop_job = True
+        return stop_job
 
     def _reply_ping(self, socket):
         """Create a socket server that reply the ping signal from client.
@@ -145,11 +164,18 @@ class Job(object):
         If the job losts connection with the client, it will exit too.
         """
         self.client_is_alive = True
-        while self.client_is_alive:
+        while self.client_is_alive and self.job_is_alive:
             try:
                 message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
-
+                stop_job = self._check_used_memory()
+                socket.send_multipart([
+                    remote_constants.HEARTBEAT_TAG,
+                    to_byte(str(stop_job)),
+                    to_byte(self.job_address)
+                ])
+                if stop_job == True:
+                    socket.close(0)
+                    os._exit(1)
             except zmq.error.Again as e:
                 logger.warning(
                     "[Job] Cannot connect to the client. This job will exit and inform the worker."
@@ -178,7 +204,6 @@ class Job(object):
             try:
                 message = socket.recv_multipart()
                 socket.send_multipart([remote_constants.HEARTBEAT_TAG])
-
             except zmq.error.Again as e:
                 logger.warning("[Job] Cannot connect to the worker{}. ".format(
                     self.worker_address) + "Job will quit.")
@@ -234,6 +259,9 @@ class Job(object):
         if tag == remote_constants.INIT_OBJECT_TAG:
             cls = cloudpickle.loads(message[1])
             args, kwargs = cloudpickle.loads(message[2])
+            max_memory = to_str(message[3])
+            if max_memory != 'None':
+                self.max_memory = float(max_memory)
 
             try:
                 obj = cls(*args, **kwargs)

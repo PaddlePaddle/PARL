@@ -44,10 +44,8 @@
       var delta = 3;
 
       $(document).ready(function() {
-        console.log('After ready.');
         $.get("cluster", function(data, status) {
           res = data;
-          console.log('Get first data.', res);
           createDivs(res, start_num);
           addPlots(res, record, imgHandle, 0, start_num);
         });
@@ -55,7 +53,6 @@
         setInterval(function() {
           $.get("cluster", function(data, status) {
             res = data;
-            console.log('Interval', res);
             createDivs(res, start_num);
             addPlots(res, record, imgHandle, 0, start_num);
           });

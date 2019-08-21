@@ -21,7 +21,7 @@ Features
 |     def forward(self, obs):              |          return a + b                 |
 |       out = self.fc1(obs)                |                                       |
 |       out = self.fc2(out)                |  parl.connect('localhost:8003')       |
-|       return out                         |  obj = HelloWorld()                   | 
+|       return out                         |  obj = HelloWorld()                   |
 |                                          |  ans = obj.sum(a, b)                  |
 |   model = MLPModel()                     |                                       |
 |   target_model = copy.deepcopy(model)    |                                       |
@@ -33,7 +33,7 @@ Abstractions
   :align: center
   :width: 400px
 
-| PARL aims to build an **agent** for training algorithms to perform complex tasks.   
+| PARL aims to build an **agent** for training algorithms to perform complex tasks.
 | The main abstractions introduced by PARL that are used to build an agent recursively are the following:
 
 * **Model** is abstracted to construct the forward network which defines a policy network or critic network given state as input.
@@ -65,6 +65,7 @@ Abstractions
     :maxdepth: 2
     :caption: Parallel Training
 
+    parallel_training/overview.rst
     parallel_training/setup.rst
     parallel_training/recommended_practice.rst
 
@@ -81,4 +82,3 @@ Abstractions
    model.rst
    algorithm.rst
    agent.rst
-

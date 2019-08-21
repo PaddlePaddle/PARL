@@ -58,10 +58,11 @@ class Master(object):
     """
 
     def __init__(self, port):
-        logger.set_dir(os.path.expanduser('~/.parl_data/master/'))
         self.ctx = zmq.Context()
-
         self.master_ip = get_ip_address()
+        logger.set_dir(
+            os.path.expanduser('~/.parl_data/master/{}:{}'.format(
+                self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
         self.client_socket.bind("tcp://*:{}".format(port))
         self.client_socket.linger = 0
@@ -178,8 +179,14 @@ class Master(object):
             self.client_socket.send_multipart(
                 [remote_constants.NORMAL_TAG, status])
 
-        elif tag == remote_constants.WORKER_INITIALIZED_TAG:
+        # `xparl status` command line API
+        elif tag == remote_constants.STATUS_TAG:
+            status_info = self.cluster_monitor.get_status_info()
+            self.client_socket.send_multipart(
+                [remote_constants.NORMAL_TAG,
+                 to_byte(status_info)])
 
+        elif tag == remote_constants.WORKER_INITIALIZED_TAG:
             initialized_worker = cloudpickle.loads(message[1])
             worker_address = initialized_worker.worker_address
             self.job_center.add_worker(initialized_worker)

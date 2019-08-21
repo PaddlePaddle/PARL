@@ -145,7 +145,7 @@ def start_master(port, cpu_num, monitor_port):
         
         ## If you want to shutdown the cluster, please call:
             
-                xparl stop
+            xparl stop
         """.format(port, cpu_num, master_ip, monitor_port, master_ip, port)
 
     click.echo(cluster_info)

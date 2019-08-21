@@ -291,7 +291,8 @@ class Worker(object):
         while self.worker_is_alive and self.master_is_alive:
             try:
                 message = self.kill_job_socket.recv_multipart()
-                assert message[0] == remote_constants.KILLJOB_TAG
+                tag = message[0]
+                assert tag == remote_constants.KILLJOB_TAG
                 to_kill_job_address = to_str(message[1])
                 self._kill_job(to_kill_job_address)
                 self.kill_job_socket.send_multipart(

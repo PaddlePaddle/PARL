@@ -43,7 +43,7 @@ High throughput
 Automatic deployment
 ####################
 | Unlike other parallel frameworks which fail to import modules from
- external files. PARL will automatically package all related files and send
+ external file, PARL will automatically package all related files and send
  them to remote machines.
 
 .. image:: ./comparison.png

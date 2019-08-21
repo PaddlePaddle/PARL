@@ -195,10 +195,13 @@ class Client(object):
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
                 job_message = job_heartbeat_socket.recv_multipart()
-                if to_str(job_message[1]) == 'True':
+                stop_job = to_str(job_message[1])
+                job_address = to_str(job_message[2])
+
+                if stop_job == 'True':
                     logger.error(
                         'Job {} exceeds max memory usage, will stop this job.'.
-                        format(to_str(job_message[2])))
+                        format(job_address))
                     self.actor_num -= 1
                     job_is_alive = False
                 else:

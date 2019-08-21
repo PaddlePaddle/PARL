@@ -50,7 +50,7 @@ class Job(object):
 
         Attributes:
             pid (int): Job process ID.
-            max_memory (float): Max memory (MB) can be used by this job process.            
+            max_memory (float): Maximum memory (MB) can be used by each remote instance. 
         """
         self.job_is_alive = True
         self.worker_address = worker_address
@@ -119,7 +119,8 @@ class Job(object):
         message = self.job_socket.recv_multipart()
         worker_thread.start()
 
-        assert message[0] == remote_constants.NORMAL_TAG
+        tag = message[0]
+        assert tag == remote_constants.NORMAL_TAG
         # create the kill_job_socket
         kill_job_address = to_str(message[1])
         self.kill_job_socket = self.ctx.socket(zmq.REQ)
@@ -258,8 +259,9 @@ class Job(object):
         if tag == remote_constants.INIT_OBJECT_TAG:
             cls = cloudpickle.loads(message[1])
             args, kwargs = cloudpickle.loads(message[2])
-            if to_str(message[3]) != 'None':
-                self.max_memory = float(to_str(message[3]))
+            max_memory = to_str(message[3])
+            if max_memory != 'None':
+                self.max_memory = float(max_memory)
 
             try:
                 obj = cls(*args, **kwargs)

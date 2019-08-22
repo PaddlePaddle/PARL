@@ -50,7 +50,7 @@ class Job(object):
 
         Attributes:
             pid (int): Job process ID.
-            max_memory (float): Maximum memory (MB) can be used by each remote instance. 
+            max_memory (float): Maximum memory (MB) can be used by each remote instance.
         """
         self.job_is_alive = True
         self.worker_address = worker_address
@@ -59,10 +59,13 @@ class Job(object):
         self.lock = threading.Lock()
         self._create_sockets()
 
+        process = psutil.Process(self.pid)
+        self.init_memory = float(process.memory_info()[0]) / (1024**2)
+
     def _create_sockets(self):
         """Create three sockets for each job.
 
-        (1) reply_socket(main socket): receives the command(i.e, the function name and args) 
+        (1) reply_socket(main socket): receives the command(i.e, the function name and args)
             from the actual class instance, completes the computation, and returns the result of
             the function.
         (2) job_socket(functional socket): sends job_address and heartbeat_address to worker.
@@ -134,7 +137,7 @@ class Job(object):
         if self.max_memory is not None:
             process = psutil.Process(self.pid)
             used_memory = float(process.memory_info()[0]) / (1024**2)
-            if used_memory > self.max_memory:
+            if used_memory > self.max_memory + self.init_memory:
                 stop_job = True
         return stop_job
 
@@ -174,6 +177,10 @@ class Job(object):
                     to_byte(self.job_address)
                 ])
                 if stop_job == True:
+                    logger.error(
+                        "Memory used by this job exceeds {}. This job will exist."
+                        .format(self.max_memory))
+                    time.sleep(1)
                     socket.close(0)
                     os._exit(1)
             except zmq.error.Again as e:

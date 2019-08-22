@@ -307,7 +307,7 @@ class Worker(object):
         total_memory = round(virtual_memory[0] / (1024**3), 2)
         used_memory = round(virtual_memory[3] / (1024**3), 2)
         vacant_memory = round(total_memory - used_memory, 2)
-        load_average = round(psutil.getloadavg()[0], 2)
+        load_average = round(os.getloadavg()[0], 2)
         return (vacant_memory, used_memory, now, load_average)
 
     def _reply_heartbeat(self, target):

@@ -23,41 +23,54 @@ from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
 
+from multiprocessing import Process
 
-@parl.remote_class(max_memory=200)
+
+@parl.remote_class(max_memory=300)
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
         self.data = []
 
-    def add_100mb(self):
-        self.data.append(os.urandom(100 * 1024**2))
+    def add_800mb(self):
+        self.data.append(os.urandom(200 * 1024**2))
         self.x += 1
         return self.x
+
+
+from parl.utils import logger
 
 
 class TestMaxMemory(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
+    def actor(self):
+        actor1 = Actor()
+        time.sleep(10)
+        actor1.add_800mb()
+
     def test_max_memory(self):
         port = 3001
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(10)
+        time.sleep(5)
         worker = Worker('localhost:{}'.format(port), 1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
-        time.sleep(10)
+        time.sleep(5)
         parl.connect('localhost:{}'.format(port))
         actor = Actor()
-        time.sleep(60)
+        time.sleep(20)
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.add_100mb()
-        time.sleep(120)
-        self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
-        actor.job_socket.close(0)
         del actor
+        time.sleep(5)
+        p = Process(target=self.actor)
+        p.start()
+        time.sleep(20)
+        self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
+        p.close()
+
         worker.exit()
         master.exit()
 

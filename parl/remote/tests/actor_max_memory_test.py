@@ -32,8 +32,8 @@ class Actor(object):
         self.x = x
         self.data = []
 
-    def add_800mb(self):
-        self.data.append(os.urandom(200 * 1024**2))
+    def add_500mb(self):
+        self.data.append(os.urandom(500 * 1024**2))
         self.x += 1
         return self.x
 
@@ -48,7 +48,7 @@ class TestMaxMemory(unittest.TestCase):
     def actor(self):
         actor1 = Actor()
         time.sleep(10)
-        actor1.add_800mb()
+        actor1.add_500mb()
 
     def test_max_memory(self):
         port = 3001
@@ -67,9 +67,9 @@ class TestMaxMemory(unittest.TestCase):
         time.sleep(5)
         p = Process(target=self.actor)
         p.start()
-        time.sleep(20)
+        time.sleep(30)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
-        p.close()
+        p.terminate()
 
         worker.exit()
         master.exit()

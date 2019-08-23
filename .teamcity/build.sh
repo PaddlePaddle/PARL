@@ -155,8 +155,8 @@ function main() {
               echo Running tests in $env ..
               echo `which pip`
               echo ========================================
-              pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
-              pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r .teamcity/requirements.txt
+              pip install .
+              pip install -r .teamcity/requirements.txt
               run_test_with_cpu $env
               run_test_with_cpu $env "DIS_TESTING_SERIALLY"
           done

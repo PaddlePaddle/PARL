@@ -1,4 +1,4 @@
-Summary
+Overview
 =======
 
 Easy-to-use
@@ -22,10 +22,11 @@ Web UI for computation resources
  to the cluster. Users can view the cluster status at a WEB UI. It shows the
  detailed information for each worker(e.g, memory used) and each task submitted.
 
-Board compatibility
+
+Supporting vairous framework
 ###################
-| Our framework for distributed training is compatible with any other
- frameworks, like tensorflow, pytorch or mxnet. By adding `@parl.remote_class`
+| PARL for distributed training is compatible with any other
+ frameworks, like tensorflow, pytorch and mxnet. By adding `@parl.remote_class`
  decorator to their codes, users can easily convert their codes to distributed
  computation.
 
@@ -33,7 +34,7 @@ Why PARL
 ########
 
 High throughput
-###############
+-------------------------
 | PARL uses a point-to-point connection for network communication in the
  cluster. Unlike other framework like RLlib which replies on redis for
  communication, PARL is able to achieve much higher throughput. The results
@@ -41,7 +42,7 @@ High throughput
  achieved an increase of 160% on data throughout over Ray(RLlib).
 
 Automatic deployment
-####################
+-------------------------
 | Unlike other parallel frameworks which fail to import modules from
  external file, PARL will automatically package all related files and send
  them to remote machines.

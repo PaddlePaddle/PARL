@@ -23,7 +23,7 @@ Web UI for computation resources
  detailed information for each worker(e.g, memory used) and each task submitted.
 
 
-Supporting vairous framework
+Supporting vairous frameworks
 ###################
 | PARL for distributed training is compatible with any other
  frameworks, like tensorflow, pytorch and mxnet. By adding `@parl.remote_class`

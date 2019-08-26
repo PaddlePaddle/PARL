@@ -8,11 +8,9 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Benchmark result
 Mean episode reward in training process after 10 million sample steps.
+![learninng_curve](learning_curve.png)
+![result](result.png)
 
-|              |                |                  |               |                     |
-|--------------|----------------|------------------|---------------|---------------------|
-| Alien (1278) | Amidar (380)   | Assault (4659)   | Aterix (3883) | Atlantis (3040000)  |
-| Pong (20)    | Breakout (405) | Beamrider (3394) | Qbert (14528) | SpaceInvaders (819) |
 
 ## How to use
 ### Dependencies

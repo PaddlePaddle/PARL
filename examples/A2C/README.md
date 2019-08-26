@@ -9,7 +9,12 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 ### Benchmark result
 Mean episode reward in training process after 10 million sample steps.
 ![learninng_curve](learning_curve.png)
-![result](result.png)
+
+Performance of A2C on various envrionments
+
+<p align="center">
+<img src="result.png" alt="result" width="700"/>
+</p>
 
 
 ## How to use

@@ -77,7 +77,7 @@ def get_gpu_count():
             logger.info(
                 'CUDA_VISIBLE_DEVICES found gpu count: {}'.format(gpu_count))
         except:
-            logger.warning('Cannot find available GPU devices, using CPU now.')
+            logger.info('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     else:
         try:
@@ -85,7 +85,7 @@ def get_gpu_count():
                                                      "-L"])).count('UUID')
             logger.info('nvidia-smi -L found gpu count: {}'.format(gpu_count))
         except:
-            logger.warning('Cannot find available GPU devices, using CPU now.')
+            logger.info('Cannot find available GPU devices, using CPU now.')
             gpu_count = 0
     return gpu_count
 

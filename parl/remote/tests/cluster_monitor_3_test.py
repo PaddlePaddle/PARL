@@ -81,12 +81,12 @@ class TestClusterMonitor(unittest.TestCase):
 
         for i in range(10):
             workers[i].exit()
-        time.sleep(40)
+        time.sleep(60)
         self.assertEqual(10, len(cluster_monitor.data['workers']))
 
         for i in range(10, 20):
             workers[i].exit()
-        time.sleep(40)
+        time.sleep(60)
         self.assertEqual(0, len(cluster_monitor.data['workers']))
 
         master.exit()

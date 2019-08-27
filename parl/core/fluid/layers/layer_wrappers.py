@@ -14,6 +14,11 @@
 """
 Wrappers for fluid.layers. It helps to easily share parameters between layers.
 
+NOTE:
+    We only encapsulated some of layers with parameters in the fluid, which are frequently used in RL scene.
+    If you need use some layers with parameters that are not encapsulated, please submit an issue
+    or PR.
+
 Here is an example:
     ```python
     from parl import layers
@@ -146,15 +151,14 @@ def fc(size,
             super(FC_, self).__init__(
                 AttrHolder(param_attr=param_attr, bias_attr=bias_attr))
 
-        def __call__(self, input, is_test=False):
+        def __call__(self, input):
             return layers.fc(
                 input=input,
                 size=size,
                 num_flatten_dims=num_flatten_dims,
                 param_attr=self.attr_holder.param_attr,
                 bias_attr=self.attr_holder.bias_attr,
-                act=act,
-                is_test=is_test)
+                act=act)
 
     return FC_()
 
@@ -239,7 +243,9 @@ def dynamic_lstmp(size,
                   candidate_activation='tanh',
                   proj_activation='tanh',
                   dtype='float32',
-                  name=None):
+                  name=None,
+                  cell_clip=None,
+                  proj_clip=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_lstmp.
     """
@@ -265,7 +271,9 @@ def dynamic_lstmp(size,
                 cell_activation=cell_activation,
                 candidate_activation=candidate_activation,
                 proj_activation=proj_activation,
-                dtype=dtype)
+                dtype=dtype,
+                cell_clip=cell_clip,
+                proj_clip=proj_clip)
 
     return DynamicLstmp_()
 
@@ -276,6 +284,7 @@ def dynamic_gru(size,
                 is_reverse=False,
                 gate_activation='sigmoid',
                 candidate_activation='tanh',
+                origin_mode=False,
                 name=None):
     """
     Return a function that creates a paddle.fluid.layers.dynamic_gru.
@@ -298,7 +307,8 @@ def dynamic_gru(size,
                 is_reverse=is_reverse,
                 gate_activation=gate_activation,
                 candidate_activation=candidate_activation,
-                h_0=h_0)
+                h_0=h_0,
+                origin_mode=origin_mode)
 
     return DynamicGru_()
 
@@ -398,6 +408,7 @@ def conv2d_transpose(num_filters,
                      padding=0,
                      stride=1,
                      dilation=1,
+                     groups=None,
                      param_attr=None,
                      bias_attr=None,
                      use_cudnn=True,
@@ -424,6 +435,7 @@ def conv2d_transpose(num_filters,
                 padding=padding,
                 stride=stride,
                 dilation=dilation,
+                groups=groups,
                 param_attr=self.attr_holder.param_attr,
                 bias_attr=self.attr_holder.bias_attr,
                 use_cudnn=use_cudnn,
@@ -496,7 +508,8 @@ def batch_norm(act=None,
                moving_mean_name=None,
                moving_variance_name=None,
                do_model_average_for_mean_and_var=False,
-               fuse_with_relu=False):
+               fuse_with_relu=False,
+               use_global_stats=False):
     """
     Return a function that creates a paddle.fluid.layers.batch_norm.
 
@@ -535,7 +548,8 @@ def batch_norm(act=None,
                 name,
                 do_model_average_for_mean_and_var=
                 do_model_average_for_mean_and_var,
-                fuse_with_relu=fuse_with_relu)
+                fuse_with_relu=fuse_with_relu,
+                use_global_stats=use_global_stats)
 
     return BatchNorm_()
 

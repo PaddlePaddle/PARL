@@ -26,7 +26,7 @@ from parl.remote.monitor import ClusterMonitor
 from multiprocessing import Process
 
 
-@parl.remote_class(max_memory=300)
+@parl.remote_class(max_memory=400)
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
@@ -64,10 +64,10 @@ class TestMaxMemory(unittest.TestCase):
         time.sleep(20)
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(5)
+        time.sleep(10)
         p = Process(target=self.actor)
         p.start()
-        time.sleep(30)
+        time.sleep(60)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
         p.terminate()
 

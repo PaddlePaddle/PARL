@@ -69,8 +69,8 @@ class ClusterMonitor(object):
                     if worker['hostname'] == 'Master':
                         master_idx = idx
                     data['workers'].append(worker)
-                    total_used_cpus += worker['used_cpus']
-                    total_vacant_cpus += worker['vacant_cpus']
+                    total_used_cpus += worker['used_cpus'] if 'used_cpus' in worker else 0
+                    total_vacant_cpus += worker['vacant_cpus'] if 'vacant_cpus' in worker else 0
 
                 if master_idx != 0 and master_idx is not None:
                     master_worker = data['workers'].pop(master_idx)

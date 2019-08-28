@@ -59,6 +59,9 @@ class ClusterMonitor(object):
 
                 status = pickle.loads(msg[1])
                 data = {'workers': [], 'clients': []}
+                total_vacant_cpus = 0
+                total_used_cpus = 0
+
                 master_idx = None
                 for idx, worker in enumerate(status['workers'].values()):
                     worker['load_time'] = list(worker['load_time'])
@@ -66,10 +69,15 @@ class ClusterMonitor(object):
                     if worker['hostname'] == 'Master':
                         master_idx = idx
                     data['workers'].append(worker)
+                    total_used_cpus += worker['used_cpus']
+                    total_vacant_cpus += worker['vacant_cpus']
+
                 if master_idx != 0 and master_idx is not None:
                     master_worker = data['workers'].pop(master_idx)
                     data['workers'] = [master_worker] + data['workers']
 
+                data['total_vacant_cpus'] = total_vacant_cpus
+                data['total_cpus'] = total_used_cpus + total_vacant_cpus
                 data['clients'] = list(status['clients'].values())
                 self.data = data
                 time.sleep(10)

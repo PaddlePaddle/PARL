@@ -9,7 +9,7 @@ function createDivs(res, divs) {
       var workerDiv = document.createElement("div");
       workerDiv.id = `w${i}`;
       if (i === 0) {
-        workerDiv.innerHTML = `<p class="card-header" id="${i}">Master</p>`;
+        workerDiv.innerHTML = `<div class="card-header" id="${i}"><div style="display:inline;">Master</div><div style="float:right; display:inlene;" id="cpu">[CPU] ${res.total_vacant_cpus}/${res.total_cpus}</div></div>`;
       } else {
         workerDiv.innerHTML = `<p class="card-header" id="${i}">Worker ${res.workers[i].hostname}</p>`;
       }
@@ -138,6 +138,9 @@ function addPlots(res, record, imgHandle, begin, end) {
       ]
     };
 
+    var cpuNum = document.getElementById('cpu');
+    cpu.innerText = `[CPU] ${res.total_vacant_cpus}/${res.total_cpus}`
+
     if (i < record_num && worker.hostname === record[i].hostname) {
       if (worker.used_cpus !== record[i].used_cpus) {
         imgHandle[`w${i}c0`].setOption(cpuOption);
@@ -147,8 +150,10 @@ function addPlots(res, record, imgHandle, begin, end) {
       }
       imgHandle[`w${i}c2`].setOption(loadOption);      
     } else {
-      var workerTitle = document.getElementById(`${i}`);
-      workerTitle.innerText = i===0 ? "Master" : `Worker ${worker.hostname}`;
+      if (i > 0){
+        var workerTitle = document.getElementById(`${i}`);
+        workerTitle.innerText = `Worker ${worker.hostname}`
+      }
       imgHandle[`w${i}c0`].setOption(cpuOption);
       imgHandle[`w${i}c1`].setOption(memoryOption);
       imgHandle[`w${i}c2`].setOption(loadOption);      

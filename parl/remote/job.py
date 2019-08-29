@@ -264,12 +264,23 @@ class Job(object):
         tag = message[0]
         obj = None
         if tag == remote_constants.INIT_OBJECT_TAG:
-            cls = cloudpickle.loads(message[1])
+            try:
+                cls = cloudpickle.loads(message[1])
+            except Exception as e:
+                traceback_str = str(traceback.format_exc())
+                error_str = str(e)
+                logger.error("traceback:\n{}".format(traceback_str))
+                self.reply_socket.send_multipart([
+                    remote_constants.EXCEPTION_TAG,
+                    to_byte(error_str + "\ntraceback:\n" + traceback_str)
+                ])
+                self.client_is_alive = False
+                return None                
+
             args, kwargs = cloudpickle.loads(message[2])
             max_memory = to_str(message[3])
             if max_memory != 'None':
                 self.max_memory = float(max_memory)
-
             try:
                 obj = cls(*args, **kwargs)
             except Exception as e:

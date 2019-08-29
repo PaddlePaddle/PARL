@@ -1,6 +1,7 @@
 Implemented Algorithms
 ========================
 
+
 .. toctree::
    :maxdepth: 1
    :caption: APIs
@@ -11,3 +12,4 @@ Implemented Algorithms
    implementations/ppo.rst
    implementations/impala.rst
    implementations/a3c.rst
+

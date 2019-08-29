@@ -298,10 +298,12 @@ def connect(master_address, distributed_files=[]):
     global GLOBAL_CLIENT
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address, cur_process_id, distributed_files)
+        GLOBAL_CLIENT = Client(master_address, cur_process_id,
+                               distributed_files)
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
-            GLOBAL_CLIENT = Client(master_address, cur_process_id, distributed_files)
+            GLOBAL_CLIENT = Client(master_address, cur_process_id,
+                                   distributed_files)
 
 
 def get_global_client():

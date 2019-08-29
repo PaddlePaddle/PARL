@@ -43,10 +43,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name',
-                        default='master',
-                        type=str,
-                        help='master/worker')
+    parser.add_argument(
+        '--name', default='master', type=str, help='master/worker')
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)

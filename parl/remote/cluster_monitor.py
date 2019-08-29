@@ -24,6 +24,7 @@ class ClusterMonitor(object):
     Attributes:
         status (dict): A dict to store workers status and clients status.
     """
+
     def __init__(self):
         self.status = {
             'workers': defaultdict(dict),

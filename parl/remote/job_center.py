@@ -26,6 +26,7 @@ class JobCenter(object):
                                    worker has.
         master_ip (str): IP address of the master node.
     """
+
     def __init__(self, master_ip):
         self.job_pool = dict()
         self.worker_dict = {}

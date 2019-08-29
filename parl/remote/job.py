@@ -42,6 +42,7 @@ class Job(object):
     waiting for commands from the remote object.
 
     """
+
     def __init__(self, worker_address):
         """
         Args:
@@ -88,8 +89,8 @@ class Job(object):
         # a thread that reply ping signals from the client
         ping_heartbeat_socket, ping_heartbeat_address = self._create_heartbeat_server(
             timeout=False)
-        ping_thread = threading.Thread(target=self._reply_ping,
-                                       args=(ping_heartbeat_socket, ))
+        ping_thread = threading.Thread(
+            target=self._reply_ping, args=(ping_heartbeat_socket, ))
         ping_thread.setDaemon(True)
         ping_thread.start()
         self.ping_heartbeat_address = ping_heartbeat_address
@@ -97,8 +98,9 @@ class Job(object):
         # a thread that reply heartbeat signals from the worker
         worker_heartbeat_socket, worker_heartbeat_address = self._create_heartbeat_server(
         )
-        worker_thread = threading.Thread(target=self._reply_worker_heartbeat,
-                                         args=(worker_heartbeat_socket, ))
+        worker_thread = threading.Thread(
+            target=self._reply_worker_heartbeat,
+            args=(worker_heartbeat_socket, ))
         worker_thread.setDaemon(True)
 
         # a thread that reply heartbeat signals from the client
@@ -110,11 +112,10 @@ class Job(object):
         self.client_thread.setDaemon(True)
 
         # sends job information to the worker
-        initialized_job = InitializedJob(self.job_address,
-                                         worker_heartbeat_address,
-                                         client_heartbeat_address,
-                                         self.ping_heartbeat_address, None,
-                                         self.pid)
+        initialized_job = InitializedJob(
+            self.job_address, worker_heartbeat_address,
+            client_heartbeat_address, self.ping_heartbeat_address, None,
+            self.pid)
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
@@ -404,10 +405,8 @@ class Job(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--worker_address",
-                        required=True,
-                        type=str,
-                        help="worker_address")
+    parser.add_argument(
+        "--worker_address", required=True, type=str, help="worker_address")
     args = parser.parse_args()
     job = Job(args.worker_address)
     job.run()

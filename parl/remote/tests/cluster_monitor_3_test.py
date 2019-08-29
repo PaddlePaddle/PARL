@@ -85,7 +85,7 @@ class TestClusterMonitor(unittest.TestCase):
 
         check_flag = False
         for _ in range(10):
-            if 10 ==  len(cluster_monitor.data['workers']):
+            if 10 == len(cluster_monitor.data['workers']):
                 check_flag = True
                 break
             time.sleep(10)
@@ -97,7 +97,7 @@ class TestClusterMonitor(unittest.TestCase):
         # check if the number of workers drops to 0
         check_flag = False
         for _ in range(10):
-            if 0 ==  len(cluster_monitor.data['workers']):
+            if 0 == len(cluster_monitor.data['workers']):
                 check_flag = True
                 break
             time.sleep(10)

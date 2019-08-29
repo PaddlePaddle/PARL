@@ -180,7 +180,7 @@ class Job(object):
                     logger.error(
                         "Memory used by this job exceeds {}. This job will exist."
                         .format(self.max_memory))
-                    time.sleep(3)
+                    time.sleep(5)
                     socket.close(0)
                     os._exit(1)
             except zmq.error.Again as e:

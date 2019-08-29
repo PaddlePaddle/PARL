@@ -26,7 +26,7 @@ from parl.remote.monitor import ClusterMonitor
 from multiprocessing import Process
 
 
-@parl.remote_class(max_memory=400)
+@parl.remote_class(max_memory=350)
 class Actor(object):
     def __init__(self, x=10):
         self.x = x

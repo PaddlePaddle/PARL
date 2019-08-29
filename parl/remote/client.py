@@ -202,14 +202,18 @@ class Client(object):
                     logger.error(
                         'Job {} exceeds max memory usage, will stop this job.'.
                         format(job_address))
+                    self.lock.acquire()
                     self.actor_num -= 1
+                    self.lock.release()
                     job_is_alive = False
                 else:
                     time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
             except zmq.error.Again as e:
                 job_is_alive = False
+                self.lock.acquire()
                 self.actor_num -= 1
+                self.lock.release()
 
             except zmq.error.ZMQError as e:
                 break
@@ -248,7 +252,9 @@ class Client(object):
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address)
                     if check_result:
+                        self.lock.acquire()
                         self.actor_num += 1
+                        self.lock.release()
                         return job_address
 
                 # no vacant CPU resources, cannot submit a new job

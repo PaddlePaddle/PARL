@@ -79,15 +79,29 @@ class TestClusterMonitor(unittest.TestCase):
         time.sleep(1)
         self.assertEqual(20, len(cluster_monitor.data['workers']))
 
+        # check if the number of workers drops by 10
         for i in range(10):
             workers[i].exit()
-        time.sleep(60)
-        self.assertEqual(10, len(cluster_monitor.data['workers']))
+
+        check_flag = False
+        for _ in range(10):
+            if 10 ==  len(cluster_monitor.data['workers']):
+                check_flag = True
+                break
+            time.sleep(10)
+        self.assertTrue(check_flag)
 
         for i in range(10, 20):
             workers[i].exit()
-        time.sleep(60)
-        self.assertEqual(0, len(cluster_monitor.data['workers']))
+
+        # check if the number of workers drops to 0
+        check_flag = False
+        for _ in range(10):
+            if 0 ==  len(cluster_monitor.data['workers']):
+                check_flag = True
+                break
+            time.sleep(10)
+        self.assertTrue(check_flag)
 
         master.exit()
 

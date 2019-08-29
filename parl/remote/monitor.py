@@ -38,7 +38,6 @@ def clients():
 class ClusterMonitor(object):
     """A monitor which requests the cluster status every 10 seconds.
     """
-
     def __init__(self, master_address):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)

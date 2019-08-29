@@ -25,7 +25,6 @@ class WorkerStatus(object):
         jobs(set): A set that records job addresses provided to the master.
         worker_address(str): Address of the worker.
     """
-
     def __init__(self, worker_address, initialized_jobs, cpu_num):
         self.worker_address = worker_address
         self.jobs = dict()

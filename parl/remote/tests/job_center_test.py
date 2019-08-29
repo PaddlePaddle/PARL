@@ -45,10 +45,9 @@ class ImportTest(unittest.TestCase):
                 pid=1234)
             jobs.append(job)
 
-        self.worker1 = InitializedWorker(
-            worker_address='172.18.182.39:8001',
-            initialized_jobs=jobs,
-            hostname=socket.gethostname())
+        self.worker1 = InitializedWorker(worker_address='172.18.182.39:8001',
+                                         initialized_jobs=jobs,
+                                         hostname=socket.gethostname())
 
         jobs = []
         for i in range(5):
@@ -61,10 +60,9 @@ class ImportTest(unittest.TestCase):
                 pid=1234)
             jobs.append(job)
 
-        self.worker2 = InitializedWorker(
-            worker_address='172.18.182.39:8002',
-            initialized_jobs=jobs,
-            hostname=socket.gethostname())
+        self.worker2 = InitializedWorker(worker_address='172.18.182.39:8002',
+                                         initialized_jobs=jobs,
+                                         hostname=socket.gethostname())
 
     def test_add_worker(self):
 
@@ -82,9 +80,8 @@ class ImportTest(unittest.TestCase):
         job_center.add_worker(self.worker2)
         job_center.drop_worker(self.worker2.worker_address)
 
-        self.assertEqual(
-            set(job_center.job_pool.values()),
-            set(self.worker1.initialized_jobs))
+        self.assertEqual(set(job_center.job_pool.values()),
+                         set(self.worker1.initialized_jobs))
         self.assertEqual(len(job_center.worker_dict), 1)
 
     def test_request_job(self):
@@ -114,18 +111,17 @@ class ImportTest(unittest.TestCase):
         job_center.add_worker(self.worker1)
         job_center.add_worker(self.worker2)
 
-        job = InitializedJob(
-            job_address='172.18.182.39:{}'.format(9245),
-            worker_heartbeat_address='172.18.182.39:48724',
-            client_heartbeat_address='172.18.182.39:48725',
-            ping_heartbeat_address='172.18.182.39:48726',
-            worker_address='172.18.182.39:478727',
-            pid=1234)
+        job = InitializedJob(job_address='172.18.182.39:{}'.format(9245),
+                             worker_heartbeat_address='172.18.182.39:48724',
+                             client_heartbeat_address='172.18.182.39:48725',
+                             ping_heartbeat_address='172.18.182.39:48726',
+                             worker_address='172.18.182.39:478727',
+                             pid=1234)
         job_center.update_job('172.18.182.39:2234', job, '172.18.182.39:8002')
 
         current_job_address = set([
-            job.job_address for job in job_center.
-            worker_dict['172.18.182.39:8002'].initialized_jobs
+            job.job_address for job in
+            job_center.worker_dict['172.18.182.39:8002'].initialized_jobs
         ])
         self.assertEqual(
             current_job_address,

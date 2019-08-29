@@ -40,13 +40,13 @@ class Client(object):
         start_time (time): A timestamp to record the start time of the program.
 
     """
-
-    def __init__(self, master_address, process_id):
+    def __init__(self, master_address, process_id, files=[]):
         """
         Args:
             master_addr (str): ip address of the master node.
             process_id (str): id of the process that created the Client. 
                               Should use os.getpid() to get the process id.
+            files (list): A list of files to be sent to the job.
         """
         self.master_address = master_address
         self.process_id = process_id
@@ -61,7 +61,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
-        self.pyfiles = self.read_local_files()
+        self.pyfiles = self.read_local_files(files)
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -73,17 +73,20 @@ class Client(object):
         executable_path = executable_path[:executable_path.rfind('/')]
         return executable_path
 
-    def read_local_files(self):
+    def read_local_files(self, files=[]):
         """Read local python code and store them in a dictionary, which will
         then be sent to the job.
+
+        Args:
+            files (list): A list of files to be sent to the job.
 
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
         pyfiles = dict()
-        for file in os.listdir('./'):
-            if file.endswith('.py'):
+        for file in os.listdir('./') + files:
+            if file.endswith('.py') or file in files:
                 with open(file, 'rb') as code_file:
                     code = code_file.read()
                     pyfiles[file] = code
@@ -139,8 +142,8 @@ class Client(object):
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
-                elapsed_time = datetime.timedelta(
-                    seconds=int(time.time() - self.start_time))
+                elapsed_time = datetime.timedelta(seconds=int(time.time() -
+                                                              self.start_time))
                 socket.send_multipart([
                     remote_constants.HEARTBEAT_TAG,
                     to_byte(self.executable_path),
@@ -180,8 +183,8 @@ class Client(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
         # a thread for sending heartbeat signals to job
-        thread = threading.Thread(
-            target=self._create_job_monitor, args=(job_heartbeat_socket, ))
+        thread = threading.Thread(target=self._create_job_monitor,
+                                  args=(job_heartbeat_socket, ))
         thread.setDaemon(True)
         thread.start()
         return True
@@ -274,7 +277,7 @@ class Client(object):
 GLOBAL_CLIENT = None
 
 
-def connect(master_address):
+def connect(master_address, files=[]):
     """Create a global client which connects to the master node.
 
     .. code-block:: python
@@ -283,6 +286,7 @@ def connect(master_address):
 
     Args:
         master_address (str): The address of the Master node to connect to.
+        files (list): A list of files to be sent to the job.
 
     Raises:
         Exception: An exception is raised if the master node is not started.
@@ -293,10 +297,10 @@ def connect(master_address):
     global GLOBAL_CLIENT
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address, cur_process_id)
+        GLOBAL_CLIENT = Client(master_address, cur_process_id, files)
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
-            GLOBAL_CLIENT = Client(master_address, cur_process_id)
+            GLOBAL_CLIENT = Client(master_address, cur_process_id, files)
 
 
 def get_global_client():

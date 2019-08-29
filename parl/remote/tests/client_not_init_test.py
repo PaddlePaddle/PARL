@@ -23,7 +23,6 @@ class Actor(object):
 class TestClient(unittest.TestCase):
     def test_not_init(self):
         """client is expected to raise an error and say that the master has not been started"""
-
         def create_actor():
             actor = Actor()
 

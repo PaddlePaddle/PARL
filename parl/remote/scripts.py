@@ -83,13 +83,13 @@ def cli():
 
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
-@click.option(
-    "--cpu_num",
-    type=int,
-    help="Set number of cpu manually. If not set, it will use all "
-    "cpus of this machine.")
-@click.option(
-    "--monitor_port", help="The port to start a cluster monitor.", type=str)
+@click.option("--cpu_num",
+              type=int,
+              help="Set number of cpu manually. If not set, it will use all "
+              "cpus of this machine.")
+@click.option("--monitor_port",
+              help="The port to start a cluster monitor.",
+              type=str)
 def start_master(port, cpu_num, monitor_port):
     if not is_port_available(port):
         raise Exception(
@@ -152,18 +152,19 @@ def start_master(port, cpu_num, monitor_port):
 
 
 @click.command("connect", short_help="Start a worker node.")
-@click.option(
-    "--address", help="IP address of the master node.", required=True)
-@click.option(
-    "--cpu_num",
-    type=int,
-    help="Set number of cpu manually. If not set, it will use all "
-    "cpus of this machine.")
+@click.option("--address",
+              help="IP address of the master node.",
+              required=True)
+@click.option("--cpu_num",
+              type=int,
+              help="Set number of cpu manually. If not set, it will use all "
+              "cpus of this machine.")
 def start_worker(address, cpu_num):
     if not is_master_started(address):
-        raise Exception("Worker can not connect to the master node, " +
-                        "please check if the input address {} ".format(
-                            address) + "is correct.")
+        raise Exception(
+            "Worker can not connect to the master node, " +
+            "please check if the input address {} ".format(address) +
+            "is correct.")
     cpu_num = str(cpu_num) if cpu_num else ''
     command = [
         sys.executable, "{}/start.py".format(__file__[:-11]), "--name",

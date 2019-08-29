@@ -67,7 +67,15 @@ class TestMaxMemory(unittest.TestCase):
         time.sleep(10)
         p = Process(target=self.actor)
         p.start()
-        time.sleep(60)
+
+        for _ in range(6):
+            x = cluster_monitor.data['clients'][0]['actor_num']
+            if x == 0:
+                break
+            else:
+                time.sleep(10)
+        if x == 1:
+            raise ValueError("Actor max memory test failed.")
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
         p.terminate()
 

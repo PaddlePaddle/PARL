@@ -64,11 +64,12 @@ class TestJob(unittest.TestCase):
 
     @timeout_decorator.timeout(seconds=300)
     def test_acor_exit_exceptionally(self):
-        master = Master(port=1335)
+        port = 1337
+        master = Master(port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:1335', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
 
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
@@ -77,7 +78,7 @@ class TestJob(unittest.TestCase):
         self.assertEqual(master.cpu_num, 0)
         proc.kill()
 
-        parl.connect('localhost:1335')
+        parl.connect('localhost:{}'.format(port))
         actor = Actor()
         master.exit()
         worker1.exit()

@@ -72,11 +72,13 @@ def remote_class(*args, **kwargs):
         Exception: An exception is raised if the client is not created
                    by `parl.connect(master_address)` beforehand.
     """
+
     def decorator(cls):
         class RemoteWrapper(object):
             """
             Wrapper for remote class in client side.
             """
+
             def __init__(self, *args, **kwargs):
                 """
                 Args:
@@ -163,6 +165,7 @@ def remote_class(*args, **kwargs):
 
             def __getattr__(self, attr):
                 """Call the function of the unwrapped class."""
+
                 def wrapper(*args, **kwargs):
                     if self.job_shutdown:
                         raise RemoteError(

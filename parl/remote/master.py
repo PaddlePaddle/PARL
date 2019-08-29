@@ -56,6 +56,7 @@ class Master(object):
     Args:
         port: The ip port that the master node binds to.
     """
+
     def __init__(self, port):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
@@ -210,8 +211,9 @@ class Master(object):
             logger.info(
                 "Client {} is connected.".format(client_heartbeat_address))
 
-            thread = threading.Thread(target=self._create_client_monitor,
-                                      args=(client_heartbeat_address, ))
+            thread = threading.Thread(
+                target=self._create_client_monitor,
+                args=(client_heartbeat_address, ))
             thread.start()
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 

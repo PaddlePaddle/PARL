@@ -61,6 +61,7 @@ class Worker(object):
         cpu_num (int): Number of cpu to be used on the worker.
         job_buffer (str): A buffer that stores initialized jobs for providing new jobs in a short time.
     """
+
     def __init__(self, master_address, cpu_num=None):
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
@@ -216,8 +217,8 @@ class Worker(object):
             new_jobs.append(initialized_job)
 
             # a thread for sending heartbeat signals to job
-            thread = threading.Thread(target=self._create_job_monitor,
-                                      args=(initialized_job, ))
+            thread = threading.Thread(
+                target=self._create_job_monitor, args=(initialized_job, ))
             thread.start()
         self.lock.release()
         assert len(new_jobs) > 0, "init jobs failed"

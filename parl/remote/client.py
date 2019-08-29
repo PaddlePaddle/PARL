@@ -92,8 +92,8 @@ class Client(object):
         """
         pyfiles = dict()
 
-        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))  
-        to_distributed_files = list(code_files) + distributed_files  
+        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
+        to_distributed_files = list(code_files) + distributed_files
 
         for file in to_distributed_files:
             with open(file, 'rb') as code_file:

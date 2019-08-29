@@ -275,7 +275,7 @@ class Job(object):
                     to_byte(error_str + "\ntraceback:\n" + traceback_str)
                 ])
                 self.client_is_alive = False
-                return None                
+                return None
 
             args, kwargs = cloudpickle.loads(message[2])
             max_memory = to_str(message[3])

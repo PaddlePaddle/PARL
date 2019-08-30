@@ -71,7 +71,7 @@ class TestCluster(unittest.TestCase):
         for _ in range(3):
             if master.cpu_num == 1:
                 break
-            time.sleep(10)    
+            time.sleep(10)
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:1235')
 

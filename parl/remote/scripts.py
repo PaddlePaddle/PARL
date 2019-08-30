@@ -231,8 +231,15 @@ def status():
                 socket = ctx.socket(zmq.REQ)
                 socket.setsockopt(zmq.RCVTIMEO, 10000)
                 socket.connect('tcp://{}'.format(master_address))
-                socket.send_multipart([STATUS_TAG])
-                monitor_info = to_str(socket.recv_multipart()[1])
+                try:
+                    socket.send_multipart([STATUS_TAG])
+                    monitor_info = to_str(socket.recv_multipart()[1])
+                except zmq.error.Again as e:
+                    click.echo(
+                        'Can not connect to cluster {}, please try later.'.
+                        format(master_address))
+                    socket.close(0)
+                    continue
                 msg = """
             # Cluster {} {}
 

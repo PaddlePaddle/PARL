@@ -68,12 +68,21 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         worker1 = Worker('localhost:1235', 1)
+        for _ in range(3):
+            if master.cpu_num == 1:
+                break
+            time.sleep(10)    
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:1235')
+
         with self.assertRaises(exceptions.RemoteError):
             actor = Actor(abcd='a bug')
 
         actor2 = Actor()
+        for _ in range(3):
+            if master.cpu_num == 0:
+                break
+            time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(0, master.cpu_num)
 
@@ -95,7 +104,7 @@ class TestCluster(unittest.TestCase):
         except:
             pass
         actor2 = Actor()
-        for _ in range(10):
+        for _ in range(5):
             if master.cpu_num == 0:
                 break
             time.sleep(10)
@@ -115,7 +124,7 @@ class TestCluster(unittest.TestCase):
 
         worker1 = Worker('localhost:1237', 4)
         parl.connect('localhost:1237')
-        for i in range(10):
+        for _ in range(10):
             actor = Actor()
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
@@ -135,10 +144,21 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
+
         worker1 = Worker('localhost:1234', 4)
+        for _ in range(3):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
         self.assertEqual(master.cpu_num, 4)
+
         worker2 = Worker('localhost:1234', 4)
+        for _ in range(3):
+            if master.cpu_num == 8:
+                break
+            time.sleep(10)
         self.assertEqual(master.cpu_num, 8)
+
         worker2.exit()
 
         for _ in range(10):

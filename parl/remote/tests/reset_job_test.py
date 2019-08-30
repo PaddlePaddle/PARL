@@ -20,7 +20,6 @@ from parl.utils import logger
 import subprocess
 import time
 import threading
-import timeout_decorator
 import subprocess
 import sys
 
@@ -62,7 +61,6 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    @timeout_decorator.timeout(seconds=300)
     def test_acor_exit_exceptionally(self):
         port = 1337
         master = Master(port)

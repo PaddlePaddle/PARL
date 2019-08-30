@@ -116,7 +116,6 @@ def start_master(port, cpu_num, monitor_port, debug):
     master_command = [
         sys.executable, start_file, "--name", "master", "--port", port
     ]
-
     worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
@@ -129,14 +128,12 @@ def start_master(port, cpu_num, monitor_port, debug):
     ]
 
     FNULL = open(os.devnull, 'w')
-    if debug:
-        _ = subprocess.Popen(master_command)
-        _ = subprocess.Popen(worker_command)
-    else:
-        # Redirect the output to DEVNULL to solve the warning log.
-        _ = subprocess.Popen(
-            worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
 
+    # Redirect the output to DEVNULL to solve the warning log.
+    _ = subprocess.Popen(
+        master_command, stdout=FNULL, stderr=subprocess.STDOUT)
+    _ = subprocess.Popen(
+        worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
     _ = subprocess.Popen(
         monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()

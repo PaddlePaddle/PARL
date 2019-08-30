@@ -85,13 +85,20 @@ def cli():
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
 @click.option(
+    "--debug",
+    help="Start parl in debug mode to show all logs.",
+    default=False)
+@click.option(
     "--cpu_num",
     type=int,
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
     "--monitor_port", help="The port to start a cluster monitor.", type=str)
-def start_master(port, cpu_num, monitor_port):
+def start_master(port, cpu_num, monitor_port, debug):
+    if debug:
+        os.environ['DEBUG'] = 'True'
+
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} is already in use.".format(port))
@@ -104,26 +111,34 @@ def start_master(port, cpu_num, monitor_port):
     cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
-    command = [sys.executable, start_file, "--name", "master", "--port", port]
+    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
 
-    p = subprocess.Popen(command)
-    command = [
+    master_command = [
+        sys.executable, start_file, "--name", "master", "--port", port
+    ]
+
+    worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
-    # Redirect the output to DEVNULL to solve the warning log.
-    FNULL = open(os.devnull, 'w')
-    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
-
-    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
-
-    command = [
+    monitor_command = [
         sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
         "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
-    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    FNULL = open(os.devnull, 'w')
+    if debug:
+        _ = subprocess.Popen(master_command)
+        _ = subprocess.Popen(worker_command)
+    else:
+        # Redirect the output to DEVNULL to solve the warning log.
+        _ = subprocess.Popen(
+            worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    _ = subprocess.Popen(
+        monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
     monitor_info = """
@@ -165,9 +180,9 @@ def start_master(port, cpu_num, monitor_port):
         {}
 
         ## If you want to add more CPU resources, please call:
-        
+
             xparl connect --address {}:{}
-        
+
         ## If you want to shutdown the cluster, please call:
 
             xparl stop        

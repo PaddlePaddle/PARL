@@ -71,6 +71,7 @@ class Worker(object):
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
         self.lock = threading.Lock()
+        self.debug = 'DEBUG' in os.environ
 
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
@@ -204,7 +205,11 @@ class Worker(object):
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+            if self.debug:
+                subprocess.Popen(command)
+            else:
+                subprocess.Popen(
+                    command, stdout=FNULL, stderr=subprocess.STDOUT)
         FNULL.close()
 
         new_jobs = []

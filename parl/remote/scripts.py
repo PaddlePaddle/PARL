@@ -141,26 +141,25 @@ def start_master(port, cpu_num, monitor_port):
     cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
         monitor_port, port)
 
+    monitor_is_started = False
     for i in range(3):
         check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
         if len(check_monitor_is_started) == 2:
+            monitor_is_started = True
             break
-        else:
-            time.sleep(3)
-
+        time.sleep(3)
     master_ip = get_ip_address()
-
-    if i == 2:
-        start_info = "# Fail to start the cluster monitor."
-    else:
+    if monitor_is_started:
         start_info = """
         ## If you want to check cluster status, please view:
-        
+
             http://{}:{}
 
         or call:
 
             xparl status""".format(master_ip, monitor_port)
+    else:
+        start_info = "# Fail to start the cluster monitor."
 
     monitor_info = """
         {}
@@ -230,14 +229,15 @@ def status():
                 monitor_address = "{}:{}".format(get_ip_address(),
                                                  monitor_port)
                 socket = ctx.socket(zmq.REQ)
+                socket.setsockopt(zmq.RCVTIMEO, 10000)
                 socket.connect('tcp://{}'.format(master_address))
                 socket.send_multipart([STATUS_TAG])
-                cluster_info = to_str(socket.recv_multipart()[1])
+                monitor_info = to_str(socket.recv_multipart()[1])
                 msg = """
             # Cluster {} {}
 
             # If you want to check cluster status, please view: http://{}
-            """.format(master_address, cluster_info, monitor_address)
+            """.format(master_address, monitor_info, monitor_address)
                 status.append(msg)
                 socket.close(0)
             else:
@@ -246,8 +246,8 @@ def status():
                 """.format(cluster)
                 status.append(msg)
 
-            for monitor_status in status:
-                click.echo(monitor_status)
+        for monitor_status in status:
+            click.echo(monitor_status)
 
 
 cli.add_command(start_worker)

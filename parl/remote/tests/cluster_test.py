@@ -95,7 +95,10 @@ class TestCluster(unittest.TestCase):
         except:
             pass
         actor2 = Actor()
-        time.sleep(50)
+        for _ in range(10):
+            if master.cpu_num == 0:
+                break
+            time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(0, master.cpu_num)
         del actor
@@ -117,7 +120,12 @@ class TestCluster(unittest.TestCase):
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
         del actor
-        time.sleep(30)
+
+        for _ in range(10):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
+
         self.assertEqual(master.cpu_num, 4)
         worker1.exit()
         master.exit()
@@ -131,9 +139,12 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 4)
         worker2 = Worker('localhost:1234', 4)
         self.assertEqual(master.cpu_num, 8)
-
         worker2.exit()
-        time.sleep(50)
+
+        for _ in range(10):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
         self.assertEqual(master.cpu_num, 4)
 
         master.exit()

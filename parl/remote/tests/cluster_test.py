@@ -66,7 +66,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=1235)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(3)
         worker1 = Worker('localhost:1235', 1)
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:1235')
@@ -80,12 +80,12 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
-    @timeout_decorator.timeout(seconds=300)
+    @timeout_decorator.timeout(seconds=500)
     def test_actor_exception(self):
         master = Master(port=1236)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(3)
         worker1 = Worker('localhost:1236', 1)
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:1236')
@@ -95,7 +95,7 @@ class TestCluster(unittest.TestCase):
         except:
             pass
         actor2 = Actor()
-        time.sleep(30)
+        time.sleep(50)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(0, master.cpu_num)
         del actor
@@ -108,7 +108,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=1237)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(3)
 
         worker1 = Worker('localhost:1237', 4)
         parl.connect('localhost:1237')
@@ -117,7 +117,7 @@ class TestCluster(unittest.TestCase):
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
         del actor
-        time.sleep(20)
+        time.sleep(30)
         self.assertEqual(master.cpu_num, 4)
         worker1.exit()
         master.exit()

@@ -74,7 +74,11 @@ class TestJob(unittest.TestCase):
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
         proc = subprocess.Popen(command)
-        time.sleep(20)
+        for _ in range(6):
+            if master.cpu_num == 0:
+                break
+            else:
+                time.sleep(10)
         self.assertEqual(master.cpu_num, 0)
         proc.kill()
 

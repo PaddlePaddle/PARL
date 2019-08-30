@@ -23,7 +23,7 @@ class Actor(object):
 
 
 def train():
-    parl.connect('localhost:1335')
+    parl.connect('localhost:1337')
     actor = Actor()
     actor.add_one(1)
     time.sleep(100000)

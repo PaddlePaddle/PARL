@@ -126,17 +126,21 @@ def start_master(port, cpu_num, monitor_port):
     p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
-    monitor_info ="""
+    monitor_info = """
         # The Parl cluster is started at localhost:{}.
 
         # A local worker with {} CPUs is connected to the cluster.    
 
-        # Starting the cluster monitor...""".format(port, cpu_num,)
+        # Starting the cluster monitor...""".format(
+        port,
+        cpu_num,
+    )
     click.echo(monitor_info)
 
     # check if monitor is started
-    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(monitor_port, port)
-    
+    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
+        monitor_port, port)
+
     for i in range(3):
         check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
         if len(check_monitor_is_started) == 2:
@@ -158,7 +162,7 @@ def start_master(port, cpu_num, monitor_port):
 
             xparl status""".format(master_ip, monitor_port)
 
-    monitor_info ="""
+    monitor_info = """
         {}
 
         ## If you want to add more CPU resources, please call:
@@ -214,16 +218,17 @@ def status():
         click.echo('No active cluster is found.')
     else:
         ctx = zmq.Context()
-        status = []        
+        status = []
         for cluster in clusters:
             cmd = r'ps -ef | grep address\ {}'.format(cluster)
             content = os.popen(cmd).read()
             pattern = re.compile('--monitor_port (.*?)\n', re.S)
             monitors = pattern.findall(content)
-            
+
             if len(monitors):
                 monitor_port, _, master_address = monitors[0].split(' ')
-                monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
+                monitor_address = "{}:{}".format(get_ip_address(),
+                                                 monitor_port)
                 socket = ctx.socket(zmq.REQ)
                 socket.connect('tcp://{}'.format(master_address))
                 socket.send_multipart([STATUS_TAG])
@@ -242,7 +247,7 @@ def status():
                 status.append(msg)
 
             for monitor_status in status:
-                click.echo(monitor_status)                
+                click.echo(monitor_status)
 
 
 cli.add_command(start_worker)

@@ -41,12 +41,16 @@ class Client(object):
 
     """
 
-    def __init__(self, master_address, process_id):
+    def __init__(self, master_address, process_id, distributed_files=[]):
         """
         Args:
             master_addr (str): ip address of the master node.
             process_id (str): id of the process that created the Client. 
                               Should use os.getpid() to get the process id.
+            distributed_files (list): A list of files to be distributed at all
+                                      remote instances(e,g. the configuration
+                                      file for initialization) .
+
         """
         self.master_address = master_address
         self.process_id = process_id
@@ -61,7 +65,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
-        self.pyfiles = self.read_local_files()
+        self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -73,20 +77,28 @@ class Client(object):
         executable_path = executable_path[:executable_path.rfind('/')]
         return executable_path
 
-    def read_local_files(self):
+    def read_local_files(self, distributed_files=[]):
         """Read local python code and store them in a dictionary, which will
         then be sent to the job.
+
+        Args:
+            distributed_files (list): A list of files to be distributed at all
+                                      remote instances(e,g. the configuration
+                                      file for initialization) .
 
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
         pyfiles = dict()
-        for file in os.listdir('./'):
-            if file.endswith('.py'):
-                with open(file, 'rb') as code_file:
-                    code = code_file.read()
-                    pyfiles[file] = code
+
+        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
+        to_distributed_files = list(code_files) + distributed_files
+
+        for file in to_distributed_files:
+            with open(file, 'rb') as code_file:
+                code = code_file.read()
+                pyfiles[file] = code
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):
@@ -274,7 +286,7 @@ class Client(object):
 GLOBAL_CLIENT = None
 
 
-def connect(master_address):
+def connect(master_address, distributed_files=[]):
     """Create a global client which connects to the master node.
 
     .. code-block:: python
@@ -283,6 +295,9 @@ def connect(master_address):
 
     Args:
         master_address (str): The address of the Master node to connect to.
+        distributed_files (list): A list of files to be distributed at all 
+                                  remote instances(e,g. the configuration
+                                  file for initialization) .
 
     Raises:
         Exception: An exception is raised if the master node is not started.
@@ -293,10 +308,12 @@ def connect(master_address):
     global GLOBAL_CLIENT
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address, cur_process_id)
+        GLOBAL_CLIENT = Client(master_address, cur_process_id,
+                               distributed_files)
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
-            GLOBAL_CLIENT = Client(master_address, cur_process_id)
+            GLOBAL_CLIENT = Client(master_address, cur_process_id,
+                                   distributed_files)
 
 
 def get_global_client():

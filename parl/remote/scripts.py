@@ -21,6 +21,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 import threading
 import warnings
 import zmq
@@ -84,13 +85,20 @@ def cli():
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
 @click.option(
+    "--debug",
+    help="Start parl in debug mode to show all logs.",
+    default=False)
+@click.option(
     "--cpu_num",
     type=int,
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
     "--monitor_port", help="The port to start a cluster monitor.", type=str)
-def start_master(port, cpu_num, monitor_port):
+def start_master(port, cpu_num, monitor_port, debug):
+    if debug:
+        os.environ['DEBUG'] = 'True'
+
     if not is_port_available(port):
         raise Exception(
             "The master address localhost:{} is already in use.".format(port))
@@ -103,52 +111,80 @@ def start_master(port, cpu_num, monitor_port):
     cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
-    command = [sys.executable, start_file, "--name", "master", "--port", port]
+    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
 
-    p = subprocess.Popen(command)
-    command = [
+    master_command = [
+        sys.executable, start_file, "--name", "master", "--port", port
+    ]
+    worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
         str(cpu_num)
     ]
-    # Redirect the output to DEVNULL to solve the warning log.
-    FNULL = open(os.devnull, 'w')
-    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
-
-    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
-
-    command = [
+    monitor_command = [
         sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
         "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
-    p = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+    FNULL = open(os.devnull, 'w')
+
+    # Redirect the output to DEVNULL to solve the warning log.
+    _ = subprocess.Popen(
+        master_command, stdout=FNULL, stderr=subprocess.STDOUT)
+    _ = subprocess.Popen(
+        worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
+    _ = subprocess.Popen(
+        monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
-    master_ip = get_ip_address()
-    cluster_info = """
+    monitor_info = """
         # The Parl cluster is started at localhost:{}.
 
-        # A local worker with {} CPUs is connected to the cluster.
-        
+        # A local worker with {} CPUs is connected to the cluster.    
+
+        # Starting the cluster monitor...""".format(
+        port,
+        cpu_num,
+    )
+    click.echo(monitor_info)
+
+    # check if monitor is started
+    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
+        monitor_port, port)
+
+    monitor_is_started = False
+    for i in range(3):
+        check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
+        if len(check_monitor_is_started) == 2:
+            monitor_is_started = True
+            break
+        time.sleep(3)
+    master_ip = get_ip_address()
+    if monitor_is_started:
+        start_info = """
         ## If you want to check cluster status, please view:
-        
+
             http://{}:{}
 
         or call:
 
-            xparl status
-        
-        ## If you want to add more CPU resources, please call:
-        
-            xparl connect --address {}:{}
-        
-        ## If you want to shutdown the cluster, please call:
-            
-            xparl stop
-        """.format(port, cpu_num, master_ip, monitor_port, master_ip, port)
+            xparl status""".format(master_ip, monitor_port)
+    else:
+        start_info = "# Fail to start the cluster monitor."
 
-    click.echo(cluster_info)
+    monitor_info = """
+        {}
+
+        ## If you want to add more CPU resources, please call:
+
+            xparl connect --address {}:{}
+
+        ## If you want to shutdown the cluster, please call:
+
+            xparl stop        
+        """.format(start_info, master_ip, port)
+    click.echo(monitor_info)
 
 
 @click.command("connect", short_help="Start a worker node.")
@@ -185,29 +221,50 @@ def stop():
 
 @click.command("status")
 def status():
-    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port'
-    content = os.popen(cmd).read()
-    pattern = re.compile('--monitor_port (.*?)\n', re.S)
-    monitors = pattern.findall(content)
-    if len(monitors) == 0:
+    cmd = r'ps -ef | grep remote/start.py\ --name\ worker\ --address'
+    content = os.popen(cmd).read().strip()
+    pattern = re.compile('--address (.*?) --cpu')
+    clusters = set(pattern.findall(content))
+    if len(clusters) == 0:
         click.echo('No active cluster is found.')
     else:
         ctx = zmq.Context()
         status = []
-        for monitor in monitors:
-            monitor_port, _, master_address = monitor.split(' ')
-            monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
-            socket = ctx.socket(zmq.REQ)
-            socket.connect('tcp://{}'.format(master_address))
-            socket.send_multipart([STATUS_TAG])
-            cluster_info = to_str(socket.recv_multipart()[1])
-            msg = """
+        for cluster in clusters:
+            cmd = r'ps -ef | grep address\ {}'.format(cluster)
+            content = os.popen(cmd).read()
+            pattern = re.compile('--monitor_port (.*?)\n', re.S)
+            monitors = pattern.findall(content)
+
+            if len(monitors):
+                monitor_port, _, master_address = monitors[0].split(' ')
+                monitor_address = "{}:{}".format(get_ip_address(),
+                                                 monitor_port)
+                socket = ctx.socket(zmq.REQ)
+                socket.setsockopt(zmq.RCVTIMEO, 10000)
+                socket.connect('tcp://{}'.format(master_address))
+                try:
+                    socket.send_multipart([STATUS_TAG])
+                    monitor_info = to_str(socket.recv_multipart()[1])
+                except zmq.error.Again as e:
+                    click.echo(
+                        'Can not connect to cluster {}, please try later.'.
+                        format(master_address))
+                    socket.close(0)
+                    continue
+                msg = """
             # Cluster {} {}
 
             # If you want to check cluster status, please view: http://{}
-            """.format(master_address, cluster_info, monitor_address)
-            status.append(msg)
-            socket.close(0)
+            """.format(master_address, monitor_info, monitor_address)
+                status.append(msg)
+                socket.close(0)
+            else:
+                msg = """
+            # Cluster {} fails to start the cluster monitor.
+                """.format(cluster)
+                status.append(msg)
+
         for monitor_status in status:
             click.echo(monitor_status)
 

@@ -22,6 +22,7 @@ import time
 import threading
 import subprocess
 import sys
+import timeout_decorator
 
 
 @parl.remote_class
@@ -61,6 +62,7 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
+    @timeout_decorator.timeout(seconds=600)
     def test_acor_exit_exceptionally(self):
         port = 1337
         master = Master(port)

@@ -51,9 +51,9 @@ class TestLogger(unittest.TestCase):
         temp_file = './logger_dir/tmp.file'
         with open(temp_file, 'w') as t_file:
             t_file.write("Are you OK? From Mr.Lei")
-        self.assertTrue(os.path.isfile(temp_file), True)
+        self.assertTrue(os.path.isfile(temp_file))
         logger.set_dir('./logger_dir')
-        self.assertFalse(os.path.isfile(temp_file), True)
+        self.assertFalse(os.path.isfile(temp_file))
 
 
 

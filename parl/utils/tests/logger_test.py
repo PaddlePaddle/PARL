@@ -56,6 +56,5 @@ class TestLogger(unittest.TestCase):
         self.assertFalse(os.path.isfile(temp_file))
 
 
-
 if __name__ == '__main__':
     unittest.main()

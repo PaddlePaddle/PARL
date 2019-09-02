@@ -15,6 +15,7 @@
 import unittest
 from parl.utils import logger
 import threading as th
+import os.path
 
 
 class TestLogger(unittest.TestCase):
@@ -44,6 +45,16 @@ class TestLogger(unittest.TestCase):
         logger.auto_set_dir(action='d')
         logger.auto_set_dir(action='n')
         logger.auto_set_dir(action='k')
+
+    def test_set_dir(self):
+        logger.set_dir('./logger_dir')
+        temp_file = './logger_dir/tmp.file'
+        with open(temp_file, 'w') as t_file:
+            t_file.write("Are you OK? From Mr.Lei")
+        self.assertTrue(os.path.isfile(temp_file), True)
+        logger.set_dir('./logger_dir')
+        self.assertFalse(os.path.isfile(temp_file), True)
+
 
 
 if __name__ == '__main__':

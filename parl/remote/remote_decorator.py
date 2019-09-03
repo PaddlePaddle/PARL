@@ -153,7 +153,7 @@ def remote_class(*args, **kwargs):
                 """Try to request cpu resource for 1 second/time for 300 times."""
                 cnt = 300
                 while cnt > 0:
-                    job_address = global_client.submit_job()
+                    job_address = global_client.submit_task()
                     if job_address is not None:
                         return job_address
                     if cnt % 30 == 0:

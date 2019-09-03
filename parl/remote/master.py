@@ -30,8 +30,8 @@ class Master(object):
     """Base class for a master node, the control center for our cluster, which provides connections to workers and clients.
 
     There is only one master node in each cluster, and it is responsible for
-    receiving jobs from the clients and allocating computation resources to
-    run the jobs.
+    receiving tasks from the clients and allocating computation resources to
+    run these tasks.
 
     To start a master node, we use the following xparl command line api:
 
@@ -44,9 +44,9 @@ class Master(object):
 
     Attributes:
         job_center (JobCenter): A thread-safe data structure that stores the job address of vacant cpus.
-        client_socket (zmq.Context.socket): A socket that receives submitted
-                                           job from the client, and later sends
-                                           job_address back to the client.
+        master_socket (zmq.Context.socket): A socket that receives all kinds of
+                                            messages from workers, clients, and
+                                            cluster monitor.
         master_ip(str): The ip address of the master node.
         cpu_num(int): The number of available CPUs in the cluster.
         worker_num(int): The number of workers connected to this cluster.
@@ -63,9 +63,9 @@ class Master(object):
         logger.set_dir(
             os.path.expanduser('~/.parl_data/master/{}:{}'.format(
                 self.master_ip, port)))
-        self.client_socket = self.ctx.socket(zmq.REP)
-        self.client_socket.bind("tcp://*:{}".format(port))
-        self.client_socket.linger = 0
+        self.master_socket = self.ctx.socket(zmq.REP)
+        self.master_socket.bind("tcp://*:{}".format(port))
+        self.master_socket.linger = 0
         self.port = port
 
         self.job_center = JobCenter(self.master_ip)
@@ -167,22 +167,22 @@ class Master(object):
         connection; (2) worker update; (3) client connection; (4) job
         submittion; (5) reset job.
         """
-        message = self.client_socket.recv_multipart()
+        message = self.master_socket.recv_multipart()
         tag = message[0]
 
         # a new worker connects to the master
         if tag == remote_constants.WORKER_CONNECT_TAG:
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            self.master_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         elif tag == remote_constants.MONITOR_TAG:
             status = self._get_status()
-            self.client_socket.send_multipart(
+            self.master_socket.send_multipart(
                 [remote_constants.NORMAL_TAG, status])
 
         # `xparl status` command line API
         elif tag == remote_constants.STATUS_TAG:
             status_info = self.cluster_monitor.get_status_info()
-            self.client_socket.send_multipart(
+            self.master_socket.send_multipart(
                 [remote_constants.NORMAL_TAG,
                  to_byte(status_info)])
 
@@ -201,7 +201,7 @@ class Master(object):
                 args=(initialized_worker.worker_address, ))
             thread.start()
 
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            self.master_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         # a client connects to the master
         elif tag == remote_constants.CLIENT_CONNECT_TAG:
@@ -215,7 +215,7 @@ class Master(object):
                 target=self._create_client_monitor,
                 args=(client_heartbeat_address, ))
             thread.start()
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            self.master_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
@@ -224,7 +224,7 @@ class Master(object):
             if self.cpu_num:
                 logger.info("Submitting job...")
                 job = self.job_center.request_job()
-                self.client_socket.send_multipart([
+                self.master_socket.send_multipart([
                     remote_constants.NORMAL_TAG,
                     to_byte(job.job_address),
                     to_byte(job.client_heartbeat_address),
@@ -232,14 +232,14 @@ class Master(object):
                 ])
                 self._print_workers()
             else:
-                self.client_socket.send_multipart([remote_constants.CPU_TAG])
+                self.master_socket.send_multipart([remote_constants.CPU_TAG])
 
         # a worker updates
         elif tag == remote_constants.NEW_JOB_TAG:
             initialized_job = cloudpickle.loads(message[1])
             last_job_address = to_str(message[2])
 
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            self.master_socket.send_multipart([remote_constants.NORMAL_TAG])
             self.job_center.update_job(last_job_address, initialized_job,
                                        initialized_job.worker_address)
             logger.info("A worker updated. cpu_num:{}".format(self.cpu_num))
@@ -248,7 +248,7 @@ class Master(object):
 
         # check before start a worker
         elif tag == remote_constants.NORMAL_TAG:
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            self.master_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         else:
             raise NotImplementedError()
@@ -270,8 +270,8 @@ class Master(object):
         3. A new client connects to the master node.
         4. A connected client submits a job after a remote object is created.
         """
-        self.client_socket.linger = 0
-        self.client_socket.setsockopt(
+        self.master_socket.linger = 0
+        self.master_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
 
         while self.master_is_alive:

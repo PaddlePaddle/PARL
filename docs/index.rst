@@ -66,6 +66,7 @@ Abstractions
     :caption: Parallel Training
 
     parallel_training/overview.rst
+    parallel_training/cluster.rst
     parallel_training/setup.rst
     parallel_training/recommended_practice.rst
 

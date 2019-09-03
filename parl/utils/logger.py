@@ -143,8 +143,8 @@ def set_dir(dirname):
         _FILE_HANDLER.close()
         del _FILE_HANDLER
 
-    if not os.path.isdir(dirname):
-        _makedirs(dirname)
+    shutil.rmtree(dirname, ignore_errors=True)
+    _makedirs(dirname)
     LOG_DIR = dirname
     _set_file(os.path.join(dirname, 'log.log'))
 

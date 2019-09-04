@@ -1,11 +1,8 @@
 Parl Cluster
 ============
 
-Get Started
-###########
-
 Cluster Structure Overview
---------------------------
+##########################
 
 | There are three core concepts in a Parl cluster: master, worker and client.
 
@@ -19,12 +16,13 @@ Cluster Structure Overview
 - **Client:** For each training program, there is a unique global client which
   submits tasks to the master node.
 
-.. image:: ./cluster_structure.png
+.. image:: ./parallel_training/cluster_structure.png
   :width: 600px
   :align: center
 
 Master
-------
+######
+
 | There is only one master node in each parl cluster, we can start a master by
   calling ``xparl start --port 1234`` with a assigned port number. This command
   will also simultaneously start a local worker which connects to the new
@@ -43,14 +41,14 @@ Master
   status of the cluster (i.e. total cpu number, used cpu number, load average
   ...) to the monitor.
 
-.. image:: ./master.png
+.. image:: ./parallel_training/master.png
   :width: 600px
   :align: center
 
 Worker
-------
+######
 
-| We can add more computation resources to a existed cluster by calling
+| We can add more computation resources to an existed cluster by calling
   ``xparl --connect master_address`` command. This command will create a local
   **Worker** object and then connect to the cluster.
 
@@ -62,27 +60,27 @@ Worker
   job from the job buffer, start a new job and update worker information to
   the master node.
 
-.. image:: ./worker.png
+.. image:: ./parallel_training/worker.png
   :width: 600px
   :align: center
 
 Client
-------
+######
 
 | We have a global client for each training program, it submits training tasks
   to the master node. User do not need to interact with client object directly.
-  We can create a new global client or get an existed global client by calling
+  We can create a new global client and connect it to the cluster by calling
   ``parl.connect(master_address)``.
 
 | The global client will read local python scripts and configuration files,
   which will later be sent to remote jobs.
 
-.. image:: ./client.png
+.. image:: ./parallel_training/client.png
   :width: 600px
   :align: center
 
 Actor
------
+#####
 
 | **Actor** is an object defined by users which aims to solve a specific task.
   We use ``@parl.remote_class`` decorator to convert an actor to a
@@ -108,6 +106,6 @@ Actor
 | When the actor call a function, the real computation will be executed in the
   job process by job's local actor.
 
-.. image:: ./actor.png
+.. image:: ./parallel_training/actor.png
   :width: 600px
   :align: center

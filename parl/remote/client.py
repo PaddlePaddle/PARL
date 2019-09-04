@@ -32,8 +32,8 @@ class Client(object):
     connect to the same global client in a training task.
 
     Attributes:
-        submit_task_socket (zmq.Context.socket): A socket which submits job to
-                                                the master node.
+        submit_task_socket (zmq.Context.socket): A socket which submits tasks to
+                                                 the master node.
         pyfiles (bytes): A serialized dictionary containing the code of python
                          files in local working directory.
         executable_path (str): File path of the executable python script.

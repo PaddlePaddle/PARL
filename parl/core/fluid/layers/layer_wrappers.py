@@ -464,7 +464,7 @@ def lstm_unit(forget_bias=0.0, param_attr=None, bias_attr=None, name=None):
                 cell_t_prev=cell_t_prev,
                 forget_bias=forget_bias,
                 param_attr=self.attr_holder.param_attr,
-                bias_attr=self.bias_attr)
+                bias_attr=self.attr_holder.bias_attr)
 
     return LstmUnit_()
 

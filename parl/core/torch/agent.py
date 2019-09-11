@@ -67,11 +67,6 @@ class Agent(AgentBase):
             algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.alg`.
             device (torch.device): specify which GPU/CPU to be used.
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `__init__` function in `parl.Agent` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)

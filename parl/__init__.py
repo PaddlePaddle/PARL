@@ -21,12 +21,12 @@ import os
 from tensorboardX import SummaryWriter
 from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
 
-if _HAS_TORCH:
-    from parl.core.torch import *
 
-elif _HAS_FLUID:
+if _HAS_FLUID:
     from parl.core.fluid import *
     from parl.core.fluid.plutils.compiler import compile
+elif _HAS_TORCH:
+    from parl.core.torch import *
 
 from parl.remote import remote_class, connect
 from parl import algorithms

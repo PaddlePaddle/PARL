@@ -45,11 +45,14 @@ class AtariModel(Model):
             self.fc1 = nn.Linear(7744, 512)
             self.fc2 = nn.Linear(512, act_dim)
 
+        self.reset_params()
+
     def reset_params(self):
         for m in self.modules():
-            nn.init.kaiming_normal_(
-                m.weight, mode='fan_out', nonlinearity='relu')
-            nn.init.zero_init_(m.bias)
+            if isinstance(m, (nn.Linear, nn.Conv2d)):
+                nn.init.kaiming_normal_(
+                    m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.zeros_(m.bias)
 
     def forward(self, x):
         x = x / 255.0

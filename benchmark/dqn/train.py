@@ -70,6 +70,18 @@ def run_train_episode(env, agent, rpm):
             return total_reward, steps, mean_loss
 
 
+def run_evaluate_episode(env, agent):
+    state = env.reset()
+    total_reward = 0
+    while True:
+        pred_Q = agent.predict(state)
+        action = pred_Q.max(1)[1].item()
+        state, reward, isOver, _ = env.step(action)
+        total_reward += reward
+        if isOver:
+            return total_reward
+
+
 def get_fixed_states(rpm, batch_size):
     states = []
     for _ in range(3):
@@ -155,21 +167,28 @@ def main():
             total_reward, steps, loss = run_train_episode(env, agent, rpm)
             total_steps += steps
             pbar.update(steps)
-
-            tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-            tensorboard.add_scalar('dqn/loss', loss, total_steps)
-            tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                                   total_steps)
-
             if total_steps // args.test_every_steps >= test_flag:
                 while total_steps // args.test_every_steps >= test_flag:
                     test_flag += 1
-                eval_rewards = []
+
+                # Use parallel eval actors.
                 latest_weights = [
                     weight.detach().cpu().numpy()
                     for weight in agent.alg.get_weights()
                 ]
                 evaluator.weights_queue.put([latest_weights, total_steps])
+
+                # Use a single eval actor.
+                # eval_rewards = []
+                # for _ in range(3):
+                #     eval_rewards.append(run_evaluate_episode(test_env, agent))
+                # tensorboard.add_scalar('dqn/eval', np.mean(eval_rewards),
+                #                        total_steps)
+
+                tensorboard.add_scalar('dqn/score', total_reward, total_steps)
+                tensorboard.add_scalar('dqn/loss', loss, total_steps)
+                tensorboard.add_scalar('dqn/exploration', agent.exploration,
+                                       total_steps)
                 tensorboard.add_scalar('dqn/lr', agent.alg.scheduler.get_lr(),
                                        total_steps)
                 tensorboard.add_scalar('dqn/Q value',
@@ -182,7 +201,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rom', default='rom_files/breakout.bin')
+    parser.add_argument('--rom', default='rom_files/space_invaders.bin')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument('--lr', default=3e-4, help='learning_rate')
@@ -197,7 +216,7 @@ if __name__ == '__main__':
         default=int(1e5),
         help='the step interval between two consecutive evaluations')
     parser.add_argument(
-        '--algo', type=str, default='Dueling', help='Which DQN model to use.')
+        '--algo', type=str, default='DQN', help='Which DQN model to use.')
     parser.add_argument(
         '--eval_nums',
         default=5,

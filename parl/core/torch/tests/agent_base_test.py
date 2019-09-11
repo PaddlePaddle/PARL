@@ -24,6 +24,7 @@ from parl.core.torch.model import Model
 from parl.core.torch.algorithm import Algorithm
 from parl.core.torch.agent import Agent
 
+
 class TestModel(Model):
     def __init__(self):
         super(TestModel, self).__init__()
@@ -35,11 +36,12 @@ class TestModel(Model):
         out = self.fc2(out)
         return out
 
+
 class TestAlgorithm(Algorithm):
     def __init__(self, model):
         self.model = model
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-    
+
     def predict(self, obs):
         return self.model(obs)
 
@@ -51,13 +53,14 @@ class TestAlgorithm(Algorithm):
         self.optimizer.step()
         return cost.item()
 
+
 class TestAgent(Agent):
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
     def learn(self, obs, label):
         cost = self.algorithm.lean(obs, label)
-    
+
     def predict(self, obs):
         return self.algorithm.predict(obs)
 
@@ -93,6 +96,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.restore(save_path1)
         current_output = agent.predict(obs).detach().cpu().numpy()
         np.testing.assert_equal(current_output, previous_output)
+
 
 if __name__ == '__main__':
     unittest.main()

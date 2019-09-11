@@ -56,28 +56,28 @@ class TestAlgorithm(Algorithm):
 
 class TestAgent(Agent):
     def __init__(self, algorithm):
-        self.algorithm = algorithm
+        self.alg = algorithm
 
     def learn(self, obs, label):
-        cost = self.algorithm.lean(obs, label)
+        cost = self.alg.lean(obs, label)
 
     def predict(self, obs):
-        return self.algorithm.predict(obs)
+        return self.alg.predict(obs)
 
 
 class AgentBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
-        self.algorithm = TestAlgorithm(self.model)
+        self.alg = TestAlgorithm(self.model)
 
     def test_agent(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = torch.randn(3, 10)
         output = agent.predict(obs)
         self.assertIsNotNone(output)
 
     def test_save(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = torch.randn(3, 10)
         save_path1 = './model.ckpt'
         save_path2 = './my_model/model-2.ckpt'
@@ -87,7 +87,7 @@ class AgentBaseTest(unittest.TestCase):
         self.assertTrue(os.path.exists(save_path2))
 
     def test_restore(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = torch.randn(3, 10)
         output = agent.predict(obs)
         save_path1 = './model.ckpt'

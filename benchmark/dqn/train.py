@@ -40,6 +40,7 @@ FRAME_SKIP = 4
 UPDATE_FREQ = 4
 GAMMA = 0.99
 
+
 def run_train_episode(env, agent, rpm):
     total_reward = 0
     all_cost = []
@@ -130,8 +131,7 @@ def main():
     agent = AtariAgent(algorithm, act_dim=act_dim)
 
     with tqdm(
-            total=MEMORY_WARMUP_SIZE,
-            desc='[Replay Memory Warm Up]') as pbar:
+            total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
         while rpm.size() < MEMORY_WARMUP_SIZE:
             total_reward, steps, _ = run_train_episode(env, agent, rpm)
             pbar.update(steps)
@@ -166,7 +166,10 @@ def main():
                 while total_steps // args.test_every_steps >= test_flag:
                     test_flag += 1
                 eval_rewards = []
-                latest_weights = [weight.detach().cpu().numpy() for weight in agent.alg.get_weights()]
+                latest_weights = [
+                    weight.detach().cpu().numpy()
+                    for weight in agent.alg.get_weights()
+                ]
                 evaluator.weights_queue.put([latest_weights, total_steps])
                 tensorboard.add_scalar('dqn/Q value',
                                        evaluate_fixed_Q(agent, fixed_states),

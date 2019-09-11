@@ -14,7 +14,7 @@
 
 import os
 # Use gpu to evaluate
-# os.environ['CUDA_VISIBLE_DEVICES'] = ''  
+# os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle
@@ -243,8 +243,10 @@ class Job(object):
 
                     # create directory (i.e. ./rom_files/)
                     if '/' in file:
-                        os.makedirs(os.path.join(
-                            envdir, *file.rsplit('/')[:-1]), exist_ok=True)
+                        os.makedirs(
+                            os.path.join(envdir,
+                                         *file.rsplit('/')[:-1]),
+                            exist_ok=True)
 
                     file = os.path.join(envdir, file)
                     with open(file, 'wb') as code_file:

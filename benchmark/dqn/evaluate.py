@@ -16,12 +16,17 @@ from parl.utils import logger, tensorboard
 class EvalActor(object):
     def __init__(self, config):
         self.env = get_player(
-            config['rom'], config['image_size'],
+            config['rom'],
+            config['image_size'],
             frame_skip=config['frame_skip'],
             context_len=config['context_len'])
-        model = AtariModel(config['context_len'], config['act_dim'], config['algo'])
+        model = AtariModel(config['context_len'], config['act_dim'],
+                           config['algo'])
         algorithm = DQN(
-            model, act_dim=config['act_dim'], gamma=config['gamma'], lr=config['lr'],
+            model,
+            act_dim=config['act_dim'],
+            gamma=config['gamma'],
+            lr=config['lr'],
             algo=config['algo'])
         self.agent = AtariAgent(algorithm, act_dim=config['act_dim'])
         self.eval_nums = config['eval_nums']
@@ -51,7 +56,9 @@ class EvalActor(object):
     def evaluate(self):
         while True:
             eval_weights = self.weights_queue.get()
-            eval_weights = [torch.Tensor(weight).cuda() for weight in eval_weights]
+            eval_weights = [
+                torch.Tensor(weight).cuda() for weight in eval_weights
+            ]
             self.agent.alg.set_weights(eval_weights)
             scores = 0
             for i in range(self.eval_nums):
@@ -67,7 +74,7 @@ class EvalModel(object):
     def __init__(self, config):
         self.weights_queue = Queue(maxsize=1)
         self.actors = [EvalActor(config) for _ in range(config['actor_nums'])]
-        
+
     def run(self):
         for actor in self.actors:
             th = threading.Thread(target=actor.run)

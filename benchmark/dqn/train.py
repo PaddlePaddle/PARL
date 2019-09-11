@@ -154,12 +154,6 @@ def main():
         while total_steps < args.train_total_steps:
             total_reward, steps, loss = run_train_episode(env, agent, rpm)
             total_steps += steps
-            tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-            tensorboard.add_scalar('dqn/loss', loss, total_steps)
-            tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                                   total_steps)
-            tensorboard.add_scalar('dqn/grad_norm',
-                                   get_grad_norm(agent.alg.model), total_steps)
             pbar.update(steps)
 
             if total_steps // args.test_every_steps >= test_flag:
@@ -171,8 +165,17 @@ def main():
                     for weight in agent.alg.get_weights()
                 ]
                 evaluator.weights_queue.put([latest_weights, total_steps])
+                tensorboard.add_scalar('dqn/score', total_reward, total_steps)
+                tensorboard.add_scalar('dqn/loss', loss, total_steps)
+                tensorboard.add_scalar('dqn/exploration', agent.exploration,
+                                       total_steps)
+                tensorboard.add_scalar('dqn/lr', agent.alg.scheduler.get_lr(),
+                                       total_steps)
                 tensorboard.add_scalar('dqn/Q value',
                                        evaluate_fixed_Q(agent, fixed_states),
+                                       total_steps)
+                tensorboard.add_scalar('dqn/grad_norm',
+                                       get_grad_norm(agent.alg.model),
                                        total_steps)
 
 
@@ -194,8 +197,13 @@ if __name__ == '__main__':
         help='the step interval between two consecutive evaluations')
     parser.add_argument(
         '--algo', type=str, default='Dueling', help='Which DQN model to use.')
-    parser.add_argument('--eval_nums', default=5)
-    parser.add_argument('--actor_nums', default=2)
+    parser.add_argument(
+        '--eval_nums',
+        default=5,
+        help='Each eval actor runs  eval_nums episodes.')
+    parser.add_argument(
+        '--actor_nums', default=2, help='Number of eval actors.')
     args = parser.parse_args()
-    logger.set_dir(os.path.join('./train_log', str(args.algo)))
+    rom_name = args.rom.split('/')[-1].split('.')[0]
+    logger.set_dir(os.path.join('./train_log', rom_name, str(args.algo)))
     main()

@@ -54,7 +54,7 @@ class DQN(Algorithm):
         self.algo = algo
 
         self.mse_loss = torch.nn.MSELoss()
-        self.lr_lambda = lambda epoch: (epoch * 4e-7)
+        self.lr_lambda = lambda epoch: (1 - epoch * 4e-7)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.scheduler = optim.lr_scheduler.LambdaLR(self.optimizer,
                                                      self.lr_lambda)

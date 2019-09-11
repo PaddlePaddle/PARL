@@ -16,7 +16,7 @@ import sys
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32', '_HAS_FLUID'
+    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH'
 ]
 
 
@@ -86,3 +86,9 @@ try:
     _HAS_FLUID = True
 except ImportError:
     _HAS_FLUID = False
+
+try:
+    import torch
+    _HAS_TORCH = True
+except ImportError:
+    _HAS_TORCH = False

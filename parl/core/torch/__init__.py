@@ -12,21 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.1.3"
-"""
-generates new PARL python API
-"""
-import os
-
-from tensorboardX import SummaryWriter
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
-
-if _HAS_TORCH:
-    from parl.core.torch import *
-    
-elif _HAS_FLUID:
-    from parl.core.fluid import *
-    from parl.core.fluid.plutils.compiler import compile
-
-from parl.remote import remote_class, connect
-from parl import algorithms
+from parl.core.torch.model import *
+from parl.core.torch.algorithm import *
+from parl.core.torch.agent import *

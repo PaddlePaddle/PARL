@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+# Use gpu to evaluate
+# os.environ['CUDA_VISIBLE_DEVICES'] = ''  
 os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle
@@ -239,6 +240,12 @@ class Job(object):
                 envdir = tempfile.mkdtemp()
                 for file in pyfiles:
                     code = pyfiles[file]
+
+                    # create directory (i.e. ./rom_files/)
+                    if '/' in file:
+                        os.makedirs(os.path.join(
+                            envdir, *file.rsplit('/')[:-1]), exist_ok=True)
+
                     file = os.path.join(envdir, file)
                     with open(file, 'wb') as code_file:
                         code_file.write(code)

@@ -104,5 +104,4 @@ class EvalModel(object):
             for actor in self.actors:
                 score = actor.get_result()
                 results.append(score)
-                logger.info(f'get one result {score} for steps {total_steps}')
             tensorboard.add_scalar('dqn/eval', np.mean(results), total_steps)

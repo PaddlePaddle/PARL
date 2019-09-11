@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import os
-# Use gpu to evaluate
-# os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle

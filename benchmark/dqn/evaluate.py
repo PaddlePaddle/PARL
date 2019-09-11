@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+import os
 import parl
 import time
 import torch
 import threading
+import numpy as np
 from queue import Queue
 from utils import get_player
 from agent import AtariAgent
@@ -29,6 +30,7 @@ from parl.utils import logger, tensorboard
 @parl.remote_class
 class EvalActor(object):
     def __init__(self, config):
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         self.env = get_player(
             config['rom'],
             config['image_size'],

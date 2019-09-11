@@ -156,6 +156,11 @@ def main():
             total_steps += steps
             pbar.update(steps)
 
+            tensorboard.add_scalar('dqn/score', total_reward, total_steps)
+            tensorboard.add_scalar('dqn/loss', loss, total_steps)
+            tensorboard.add_scalar('dqn/exploration', agent.exploration,
+                                   total_steps)
+
             if total_steps // args.test_every_steps >= test_flag:
                 while total_steps // args.test_every_steps >= test_flag:
                     test_flag += 1
@@ -165,10 +170,6 @@ def main():
                     for weight in agent.alg.get_weights()
                 ]
                 evaluator.weights_queue.put([latest_weights, total_steps])
-                tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-                tensorboard.add_scalar('dqn/loss', loss, total_steps)
-                tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                                       total_steps)
                 tensorboard.add_scalar('dqn/lr', agent.alg.scheduler.get_lr(),
                                        total_steps)
                 tensorboard.add_scalar('dqn/Q value',

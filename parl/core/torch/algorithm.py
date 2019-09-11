@@ -107,7 +107,6 @@ class Algorithm(AlgorithmBase):
         """
         self.model.set_weights(params)
 
-
     def learn(self, *args, **kwargs):
         """ Define the loss function and create an optimizer to minimize the loss.
         """
@@ -117,4 +116,3 @@ class Algorithm(AlgorithmBase):
         """ Refine the predicting process, e.g,. use the policy model to predict actions.
         """
         raise NotImplementedError
-

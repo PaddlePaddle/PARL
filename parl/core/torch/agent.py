@@ -77,7 +77,8 @@ class Agent(AgentBase):
         super(Agent, self).__init__(algorithm)
 
         self.alg = algorithm
-        self.device = torc.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torc.device('cuda' if torch.cuda.
+                                  is_available() else 'cpu')
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.

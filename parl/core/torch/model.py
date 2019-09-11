@@ -62,12 +62,11 @@ class Model(nn.Module, ModelBase):
         - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
 
     """
+
     def __init___(self):
         super(Model, self).__init__()
 
-    def sync_weights_to(self,
-                        target_model,
-                        decay=0.0):
+    def sync_weights_to(self, target_model, decay=0.0):
         """Synchronize parameters of current model to another model.
         
         To speed up the synchronizing process, it will create a program implicitly to finish the process. It
@@ -102,8 +101,8 @@ class Model(nn.Module, ModelBase):
 
         target_vars = dict(target_model.named_parameters())
         for name, var in self.named_parameters():
-            target_vars[name].data.copy_(
-                decay * target_vars[name].data + (1 - decay) * var.data)
+            target_vars[name].data.copy_(decay * target_vars[name].data +
+                                         (1 - decay) * var.data)
 
     def get_weights(self):
         """Returns a Python list containing parameters of current model.

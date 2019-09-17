@@ -22,10 +22,11 @@ import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, tensorboard
+from parl.utils import logger, tensorboard, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
+from parl.utils import machine_info
 
 from actor import Actor
 
@@ -53,6 +54,10 @@ class Learner(object):
             clip_pg_rho_threshold=self.config['clip_pg_rho_threshold'])
         self.agent = AtariAgent(algorithm, obs_shape, act_dim,
                                 self.learn_data_provider)
+
+        if machine_info.is_gpu_available():
+            assert get_gpu_count() == 1, 'Only support training in single GPU,\
+                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
 
         self.cache_params = self.agent.get_weights()
         self.params_lock = threading.Lock()

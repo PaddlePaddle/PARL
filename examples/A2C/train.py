@@ -53,7 +53,7 @@ class Learner(object):
 
         if machine_info.is_gpu_available():
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
+                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
         else:
             cpu_num = os.environ.get('CPU_NUM')

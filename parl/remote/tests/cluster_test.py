@@ -89,7 +89,6 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
-    @timeout_decorator.timeout(seconds=500)
     def test_actor_exception(self):
         master = Master(port=1236)
         th = threading.Thread(target=master.run)

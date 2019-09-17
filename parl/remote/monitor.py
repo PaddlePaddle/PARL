@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import os
 import pickle
 import random
 import time
@@ -42,7 +43,7 @@ class ClusterMonitor(object):
     def __init__(self, master_address):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
-        self.socket.setsockopt(zmq.RCVTIMEO, 10000)
+        self.socket.setsockopt(zmq.RCVTIMEO, 30000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
 
@@ -56,7 +57,6 @@ class ClusterMonitor(object):
             try:
                 self.socket.send_multipart([b'[MONITOR]'])
                 msg = self.socket.recv_multipart()
-
                 status = pickle.loads(msg[1])
                 data = {'workers': [], 'clients': []}
                 total_vacant_cpus = 0
@@ -89,6 +89,9 @@ class ClusterMonitor(object):
                 self.socket.close(0)
 
     def get_data(self):
+        for _ in range(3):
+            if self.data is None:
+                time.sleep(3)
         assert self.data is not None
         return self.data
 
@@ -100,6 +103,9 @@ def cluster():
 
 
 if __name__ == "__main__":
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.disabled = True
     parser = argparse.ArgumentParser()
     parser.add_argument('--monitor_port', default=1234, type=int)
     parser.add_argument('--address', default='localhost:8010', type=str)

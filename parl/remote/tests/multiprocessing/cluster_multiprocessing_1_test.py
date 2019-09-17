@@ -83,4 +83,6 @@ class TestCluster(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    from parl.utils import _IS_WINDOWS
+    if not _IS_WINDOWS:
+        unittest.main()

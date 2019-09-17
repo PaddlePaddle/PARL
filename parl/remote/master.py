@@ -61,7 +61,7 @@ class Master(object):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
         logger.set_dir(
-            os.path.expanduser('~/.parl_data/master/{}:{}'.format(
+            os.path.expanduser('~/.parl_data/master/{}_{}'.format(
                 self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
         self.client_socket.bind("tcp://*:{}".format(port))

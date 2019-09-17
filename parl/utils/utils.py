@@ -16,7 +16,7 @@ import sys
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32', '_HAS_FLUID'
+    'MAX_INT32', '_HAS_FLUID', '_IS_WINDOWS'
 ]
 
 
@@ -86,3 +86,9 @@ try:
     _HAS_FLUID = True
 except ImportError:
     _HAS_FLUID = False
+
+import platform
+if platform.system() == 'Windows':
+    _IS_WINDOWS = True
+else:
+    _IS_WINDOWS = False

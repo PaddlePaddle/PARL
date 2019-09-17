@@ -67,7 +67,7 @@ class LinearDecayScheduler(object):
 
     def __init__(self, start_value, max_steps):
         """Linear decay scheduler of hyper parameter.
-
+        Decay value linearly untill 0.
         
         Args:
             start_value (float): start value

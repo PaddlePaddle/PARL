@@ -113,7 +113,7 @@ def start_master(port, cpu_num, monitor_port, debug):
     cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
-    monitor_file =  __file__.replace('scripts.pyc', 'monitor.py')
+    monitor_file = __file__.replace('scripts.pyc', 'monitor.py')
     monitor_file = monitor_file.replace('scripts.py', 'monitor.py')
 
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
@@ -127,8 +127,7 @@ def start_master(port, cpu_num, monitor_port, debug):
         str(cpu_num)
     ]
     monitor_command = [
-        sys.executable, monitor_file,
-        "--monitor_port",
+        sys.executable, monitor_file, "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
 

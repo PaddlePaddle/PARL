@@ -42,7 +42,7 @@ class ClusterMonitor(object):
     def __init__(self, master_address):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
-        self.socket.setsockopt(zmq.RCVTIMEO, 10000)
+        self.socket.setsockopt(zmq.RCVTIMEO, 30000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
 
@@ -100,6 +100,9 @@ def cluster():
 
 
 if __name__ == "__main__":
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.disabled = True
     parser = argparse.ArgumentParser()
     parser.add_argument('--monitor_port', default=1234, type=int)
     parser.add_argument('--address', default='localhost:8010', type=str)

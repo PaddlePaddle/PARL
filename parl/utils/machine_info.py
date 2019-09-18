@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import socket
 import platform
 import subprocess
 from parl.utils import logger
@@ -27,15 +28,13 @@ def get_ip_address():
     """
     platform_sys = platform.system()
 
-    # Only support Linux and MacOS
+    # For Windows.
     if platform_sys != 'Linux' and platform_sys != 'Darwin':
-        logger.warning(
-            'get_ip_address only support Linux and MacOS, please set ip address manually.'
-        )
-        return None
+        host_name = socket.gethostname()
+        local_ip = socket.gethostbyname(host_name)
+        return local_ip
 
     local_ip = None
-    import socket
     try:
         # First way, tested in Ubuntu and MacOS
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

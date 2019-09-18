@@ -30,6 +30,8 @@ _FILE_HANDLER = None
 
 def _makedirs(dirname):
     assert dirname is not None
+    # For Windows compatibility
+    dirname = dirname.replace('\\', '/')
     if dirname == '' or os.path.isdir(dirname):
         return
     try:

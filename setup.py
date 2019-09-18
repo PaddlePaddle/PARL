@@ -17,6 +17,7 @@ import sys
 import os
 import re
 from setuptools import setup, find_packages
+import platform
 
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(cur_dir, 'README.md'), 'rb') as f:
@@ -32,6 +33,8 @@ def _find_packages(prefix=''):
     for root, _, files in os.walk(path):
         if '__init__.py' in files:
             packages.append(re.sub('^[^A-z0-9_]', '', root.replace('/', '.')))
+    if platform.system() == 'Windows':
+        packages = [package.replace('\\', '.')[1:] for package in packages]
     return packages
 
 

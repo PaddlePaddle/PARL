@@ -16,6 +16,7 @@ import click
 import locale
 import multiprocessing
 import os
+import platform
 import random
 import re
 import socket
@@ -26,7 +27,7 @@ import threading
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address, to_str
+from parl.utils import get_ip_address, to_str, _IS_WINDOWS
 from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
@@ -34,7 +35,8 @@ os.environ['XPARL'] = 'True'
 
 # Solve `Click will abort further execution because Python 3 was configured
 # to use ASCII as encoding for the environment` error.
-locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+if not _IS_WINDOWS:
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
 #TODO: this line will cause error in python2/macOS
 if sys.version_info.major == 3:
@@ -111,6 +113,9 @@ def start_master(port, cpu_num, monitor_port, debug):
     cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
+    monitor_file =  __file__.replace('scripts.pyc', 'monitor.py')
+    monitor_file = monitor_file.replace('scripts.py', 'monitor.py')
+
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
 
     master_command = [
@@ -122,7 +127,7 @@ def start_master(port, cpu_num, monitor_port, debug):
         str(cpu_num)
     ]
     monitor_command = [
-        sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
+        sys.executable, monitor_file,
         "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
@@ -134,8 +139,13 @@ def start_master(port, cpu_num, monitor_port, debug):
         master_command, stdout=FNULL, stderr=subprocess.STDOUT)
     _ = subprocess.Popen(
         worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
-    _ = subprocess.Popen(
-        monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
+    if _IS_WINDOWS:
+        monitor_log = open('monitor.log', 'w')
+        _ = subprocess.Popen(monitor_command, stdout=monitor_log)
+        monitor_log.close()
+    else:
+        _ = subprocess.Popen(
+            monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
     monitor_info = """
@@ -149,29 +159,29 @@ def start_master(port, cpu_num, monitor_port, debug):
     )
     click.echo(monitor_info)
 
-    # check if monitor is started
-    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
-        monitor_port, port)
-
-    monitor_is_started = False
-    for i in range(3):
-        check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
-        if len(check_monitor_is_started) == 2:
-            monitor_is_started = True
-            break
-        time.sleep(3)
     master_ip = get_ip_address()
-    if monitor_is_started:
-        start_info = """
-        ## If you want to check cluster status, please view:
+    start_info = """
+    ## If you want to check cluster status, please view:
 
-            http://{}:{}
+        http://{}:{}
 
-        or call:
+    or call:
 
-            xparl status""".format(master_ip, monitor_port)
-    else:
-        start_info = "# Fail to start the cluster monitor."
+        xparl status""".format(master_ip, monitor_port)
+
+    # check if monitor is started
+    if not _IS_WINDOWS:
+        cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
+            monitor_port, port)
+        monitor_is_started = False
+        for i in range(3):
+            check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
+            if len(check_monitor_is_started) == 2:
+                monitor_is_started = True
+                break
+            time.sleep(3)
+        if not monitor_is_started:
+            start_info = "# Fail to start the cluster monitor."
 
     monitor_info = """
         {}
@@ -182,7 +192,7 @@ def start_master(port, cpu_num, monitor_port, debug):
 
         ## If you want to shutdown the cluster, please call:
 
-            xparl stop        
+            xparl stop (Only support Linux and MacOS at present.)
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
@@ -211,12 +221,15 @@ def start_worker(address, cpu_num):
 
 @click.command("stop", help="Exit the cluster.")
 def stop():
-    command = ("pkill -f remote/start.py")
-    subprocess.call([command], shell=True)
-    command = ("pkill -f remote/job.py")
-    subprocess.call([command], shell=True)
-    command = ("pkill -f remote/monitor.py")
-    subprocess.call([command], shell=True)
+    if not _IS_WINDOWS:
+        command = ("pkill -f remote/start.py")
+        subprocess.call([command], shell=True)
+        command = ("pkill -f remote/job.py")
+        subprocess.call([command], shell=True)
+        command = ("pkill -f remote/monitor.py")
+        subprocess.call([command], shell=True)
+    else:
+        click.echo('xparl stop does not support Windows at now.')
 
 
 @click.command("status")

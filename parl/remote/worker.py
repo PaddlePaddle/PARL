@@ -26,7 +26,7 @@ import warnings
 import zmq
 from datetime import datetime
 
-from parl.utils import get_ip_address, to_byte, to_str, logger
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -306,7 +306,10 @@ class Worker(object):
         total_memory = round(virtual_memory[0] / (1024**3), 2)
         used_memory = round(virtual_memory[3] / (1024**3), 2)
         vacant_memory = round(total_memory - used_memory, 2)
-        load_average = round(os.getloadavg()[0], 2)
+        if _IS_WINDOWS:
+            load_average = round(psutil.getloadavg()[0], 2)
+        else:
+            load_average = round(os.getloadavg()[0], 2)
         return (vacant_memory, used_memory, now, load_average)
 
     def _reply_heartbeat(self, target):
@@ -324,7 +327,7 @@ class Worker(object):
 
         logger.set_dir(
             os.path.expanduser('~/.parl_data/worker/{}'.format(
-                self.master_heartbeat_address)))
+                self.master_heartbeat_address).replace(':', '_')))
 
         self.heartbeat_socket_initialized.set()
         logger.info("[Worker] Connect to the master node successfully. "

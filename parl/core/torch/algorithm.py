@@ -17,7 +17,6 @@ warnings.simplefilter('default')
 
 from parl.core.algorithm_base import AlgorithmBase
 from parl.core.torch.model import Model
-from parl.utils.deprecation import deprecated
 
 __all__ = ['Algorithm']
 
@@ -27,9 +26,12 @@ class Algorithm(AlgorithmBase):
     | `alias`: ``parl.Algorithm``
     | `alias`: ``parl.core.torch.algorithm.Algorithm``
 
-    | ``Algorithm`` defines the way how to update the parameters of the ``Model``. This is where we define loss functions and the optimizer of the neural network. An ``Algorithm`` has at least a model.
+    | ``Algorithm`` defines the way how to update the parameters of the
+    ``Model``. This is where we define loss functions and the optimizer of the
+    neural network. An ``Algorithm`` has at least a model.
 
-    | PARL has implemented various algorithms(DQN/DDPG/PPO/A3C/IMPALA) that can be reused quickly, which can be accessed with ``parl.algorithms``.
+    | PARL has implemented various algorithms(DQN/DDPG/PPO/A3C/IMPALA) that can
+    be reused quickly, which can be accessed with ``parl.algorithms``.
 
     Example:
 
@@ -41,61 +43,31 @@ class Algorithm(AlgorithmBase):
         dqn = parl.algorithms.DQN(model, lr=1e-3)
 
     Attributes:
-        model(``parl.Model``): a neural network that represents a policy or a Q-value function.
+        model(``parl.Model``): a neural network that represents a policy or a
+        Q-value function.
 
     Pulic Functions:
         - ``predict``: return an estimate q value given current observation.
-        - ``learn``: define the loss function and create an optimizer to minized the loss.
+        - ``learn``: define the loss function and create an optimizer to
+        minimize the loss.
 
     """
 
-    def __init__(self, model=None, hyperparas=None):
+    def __init__(self, model=None):
         """
         Args:
-            model(``parl.Model``): a neural network that represents a policy or a Q-value function.
-            hyperparas(dict): a dict storing the hyper-parameters relative to training.
+            model(``parl.Model``): a neural network that represents a policy or
+            a Q-value function.
         """
-        if model is not None:
-            warnings.warn(
-                "the `model` argument of `__init__` function in `parl.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            assert isinstance(model, Model)
-            self.model = model
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            self.hp = hyperparas
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
-    def get_params(self):
-        """ Get parameters of self.model.
-
-        Returns:
-            params (list): a Python List containing the parameters of self.model.
-        """
-        return self.model.get_params()
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
-    def set_params(self, params):
-        """ Set parameters from ``get_params`` to the model.
-
-        Args:
-            params (list): a Python List containing the parameters of self.model.
-        """
-        self.model.set_params(params)
+        assert isinstance(model, Model)
+        self.model = model
 
     def get_weights(self):
         """ Get weights of self.model.
 
         Returns:
-            weights (list): a Python List containing the parameters of self.model.
+            weights (list): a Python List containing the parameters of
+            self.model.
         """
         return self.model.get_weights()
 
@@ -103,7 +75,8 @@ class Algorithm(AlgorithmBase):
         """ Set weights from ``get_weights`` to the model.
 
         Args:
-            weights (list): a Python List containing the parameters of self.model.
+            weights (list): a Python List containing the parameters of
+            self.model.
         """
         self.model.set_weights(params)
 
@@ -113,6 +86,7 @@ class Algorithm(AlgorithmBase):
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
-        """ Refine the predicting process, e.g,. use the policy model to predict actions.
+        """ Refine the predicting process, e.g,. use the policy model to
+        predict actions.
         """
         raise NotImplementedError

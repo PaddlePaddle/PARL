@@ -23,11 +23,10 @@ import parl
 import numpy as np
 from tqdm import tqdm
 from parl.utils import tensorboard, logger
+from parl.algorithms import DQN, DDQN
 
 from agent import AtariAgent
-from algorithm import DQN
 from atari_wrapper import FireResetEnv, FrameStack, LimitLength, MapState
-from evaluate import EvalModel
 from model import AtariModel
 from replay_memory import ReplayMemory, Experience
 from utils import get_player
@@ -108,24 +107,6 @@ def get_grad_norm(model):
     return total_norm
 
 
-def get_evaluator(args, act_dim):
-    config = {
-        'rom': args.rom,
-        'image_size': IMAGE_SIZE,
-        'frame_skip': FRAME_SKIP,
-        'context_len': CONTEXT_LEN,
-        'gamma': GAMMA,
-        'act_dim': act_dim,
-        'algo': args.algo,
-        'lr': args.lr,
-        'eval_nums': args.eval_nums,
-        'actor_nums': args.actor_nums
-    }
-
-    evaluator = EvalModel(config)
-    return evaluator
-
-
 def main():
     env = get_player(
         args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
@@ -138,8 +119,10 @@ def main():
     act_dim = env.action_space.n
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = AtariModel(CONTEXT_LEN, act_dim, args.algo)
-    algorithm = DQN(
-        model, act_dim=act_dim, gamma=GAMMA, lr=args.lr, algo=args.algo)
+    if args.algo in ['DQN', 'Dueling']:
+        algorithm = DQN(model, gamma=GAMMA, lr=args.lr)
+    elif args.algo is 'Double':
+        algorithm = DDQN(model, gamma=GAMMA, lr=args.lr)
     agent = AtariAgent(algorithm, act_dim=act_dim)
 
     with tqdm(
@@ -156,12 +139,6 @@ def main():
     test_flag = 0
     total_steps = 0
 
-    # run ``xparl start --port 1234`` to start a parl cluster
-    parl.connect('localhost:1234', distributed_files=[args.rom])
-    evaluator = get_evaluator(args, act_dim)
-    th = threading.Thread(target=evaluator.run)
-    th.start()
-
     with tqdm(total=args.train_total_steps, desc='[Training Model]') as pbar:
         while total_steps < args.train_total_steps:
             total_reward, steps, loss = run_train_episode(env, agent, rpm)
@@ -171,25 +148,15 @@ def main():
                 while total_steps // args.test_every_steps >= test_flag:
                     test_flag += 1
 
-                # Use parallel eval actors.
-                latest_weights = [
-                    weight.detach().cpu().numpy()
-                    for weight in agent.alg.get_weights()
-                ]
-                evaluator.weights_queue.put([latest_weights, total_steps])
+                eval_rewards = []
+                for _ in range(3):
+                    eval_rewards.append(run_evaluate_episode(test_env, agent))
 
-                # Use a single eval actor.
-                # eval_rewards = []
-                # for _ in range(3):
-                #     eval_rewards.append(run_evaluate_episode(test_env, agent))
-                # tensorboard.add_scalar('dqn/eval', np.mean(eval_rewards),
-                #                        total_steps)
-
+                tensorboard.add_scalar('dqn/eval', np.mean(eval_rewards),
+                                       total_steps)
                 tensorboard.add_scalar('dqn/score', total_reward, total_steps)
                 tensorboard.add_scalar('dqn/loss', loss, total_steps)
                 tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                                       total_steps)
-                tensorboard.add_scalar('dqn/lr', agent.alg.scheduler.get_lr(),
                                        total_steps)
                 tensorboard.add_scalar('dqn/Q value',
                                        evaluate_fixed_Q(agent, fixed_states),
@@ -201,10 +168,11 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rom', default='rom_files/space_invaders.bin')
+    parser.add_argument('--rom', default='rom_files/breakout.bin')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument('--lr', default=3e-4, help='learning_rate')
+    parser.add_argument('--algo', default='DQN', help='DQN/Double/Dueling DQN')
     parser.add_argument(
         '--train_total_steps',
         type=int,
@@ -215,15 +183,7 @@ if __name__ == '__main__':
         type=int,
         default=int(1e5),
         help='the step interval between two consecutive evaluations')
-    parser.add_argument(
-        '--algo', type=str, default='DQN', help='Which DQN model to use.')
-    parser.add_argument(
-        '--eval_nums',
-        default=5,
-        help='Each eval actor runs  eval_nums episodes.')
-    parser.add_argument(
-        '--actor_nums', default=2, help='Number of eval actors.')
     args = parser.parse_args()
     rom_name = args.rom.split('/')[-1].split('.')[0]
-    logger.set_dir(os.path.join('./train_log', rom_name, str(args.algo)))
+    logger.set_dir(os.path.join('./train_log', rom_name))
     main()

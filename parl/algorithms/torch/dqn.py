@@ -19,23 +19,18 @@ import copy
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.nn.utils import clip_grad_norm_
 from parl.core.torch.algorithm import Algorithm
-from parl.utils.deprecation import deprecated
 import numpy as np
 
 __all__ = ['DQN']
 
 
 class DQN(Algorithm):
-    def __init__(self, model, algo='DQN', act_dim=None, gamma=None, lr=None):
+    def __init__(self, model, gamma=None, lr=None):
         """ DQN algorithm
-        
+
         Args:
             model (parl.Model): model defining forward network of Q function.
-            algo (str): which dqn model to use.
-            hyperparas (dict): (deprecated) dict of hyper parameters.
-            act_dim (int): dimension of the action space
             gamma (float): discounted factor for reward computation.
             lr (float): learning rate.
         """
@@ -45,19 +40,13 @@ class DQN(Algorithm):
         self.model.to(device)
         self.target_model.to(device)
 
-        assert isinstance(act_dim, int)
         assert isinstance(gamma, float)
         assert isinstance(lr, float)
-        self.act_dim = act_dim
         self.gamma = gamma
         self.lr = lr
-        self.algo = algo
 
         self.mse_loss = torch.nn.MSELoss()
-        self.lr_lambda = lambda epoch: (1 - epoch * 4e-7)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-        self.scheduler = optim.lr_scheduler.LambdaLR(self.optimizer,
-                                                     self.lr_lambda)
 
     def predict(self, obs):
         """ use value model self.model to predict the action value
@@ -70,18 +59,13 @@ class DQN(Algorithm):
         """ update value model self.model with DQN algorithm
         """
         pred_value = self.model(obs).gather(1, action)
-        greedy_action = self.model(next_obs).max(dim=1, keepdim=True)[1]
         with torch.no_grad():
-            if self.algo == 'Double':
-                max_v = self.target_model(next_obs).gather(1, greedy_action)
-            else:
-                max_v = self.target_model(next_obs).max(1, keepdim=True)[0]
+            max_v = self.target_model(next_obs).max(1, keepdim=True)[0]
             target = reward + (1 - terminal) * self.gamma * max_v
         self.optimizer.zero_grad()
         loss = self.mse_loss(pred_value, target)
         loss.backward()
         self.optimizer.step()
-        self.scheduler.step()
         return loss.item()
 
     def sync_target(self):

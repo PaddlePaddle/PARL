@@ -140,19 +140,19 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_add_worker(self):
-        master = Master(port=1238)
+        master = Master(port=1234)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
 
-        worker1 = Worker('localhost:1238', 4)
+        worker1 = Worker('localhost:1234', 4)
         for _ in range(3):
             if master.cpu_num == 4:
                 break
             time.sleep(10)
         self.assertEqual(master.cpu_num, 4)
 
-        worker2 = Worker('localhost:1238', 4)
+        worker2 = Worker('localhost:1234', 4)
         for _ in range(3):
             if master.cpu_num == 8:
                 break

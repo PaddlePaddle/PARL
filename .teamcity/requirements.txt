@@ -4,4 +4,4 @@ gym
 details
 parameterized
 timeout_decorator
-torch
+torch==1.2.0

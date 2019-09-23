@@ -15,7 +15,6 @@
 import torch.nn as nn
 
 from parl.core.model_base import ModelBase
-from parl.utils.deprecation import deprecated
 from parl.utils import machine_info
 
 __all__ = ['Model']
@@ -26,9 +25,12 @@ class Model(nn.Module, ModelBase):
     | `alias`: ``parl.Model``
     | `alias`: ``parl.core.torch.agent.Model``
 
-    | ``Model`` is a base class of PARL for the neural network. A ``Model`` is usually a policy or Q-value function, which predicts an action or an estimate according to the environmental observation.
+    | ``Model`` is a base class of PARL for the neural network. A ``Model`` is
+    usually a policy or Q-value function, which predicts an action or an
+    estimate according to the environmental observation.
 
-    | To use the ``PyTorch`` backend model, user needs to call ``super(Model, self).__init__()`` at the beginning of ``__init__`` function.
+    | To use the ``PyTorch`` backend model, user needs to call ``super(Model,
+    self).__init__()`` at the beginning of ``__init__`` function.
 
     | ``Model`` supports duplicating a ``Model`` instance in a pythonic way:
 
@@ -39,27 +41,31 @@ class Model(nn.Module, ModelBase):
     .. code-block:: python
 
         import parl
+        import torch.nn as nn
 
         class Policy(parl.Model):
             def __init__(self):
                 super(Policy, self).__init__()
-                self.fc = parl.layers.fc(size=12, act='softmax')
+                self.fc = nn.Linear(in_features=100, out_features=32)
 
             def policy(self, obs):
                 out = self.fc(obs)
                 return out
-               
-        policy = Policy() 
+
+        policy = Policy()
         copied_policy = copy.deepcopy(model)
 
     Attributes:
         model_id(str): each model instance has its unique model_id.
 
     Public Functions:
-        - ``sync_weights_to``: synchronize parameters of the current model to another model.
-        - ``get_weights``: return a list containing all the parameters of the current model.
+        - ``sync_weights_to``: synchronize parameters of the current model to
+        another model.
+        - ``get_weights``: return a list containing all the parameters of the
+        current model.
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
-        - ``forward``: define the computations of a neural network. **Should** be overridden by all subclasses.
+        - ``forward``: define the computations of a neural network. **Should**
+        be overridden by all subclasses.
 
     """
 
@@ -68,15 +74,15 @@ class Model(nn.Module, ModelBase):
 
     def sync_weights_to(self, target_model, decay=0.0):
         """Synchronize parameters of current model to another model.
-        
-        To speed up the synchronizing process, it will create a program implicitly to finish the process. It
-        also stores a program as the cache to avoid creating program repeatedly.
 
-        target_model_weights = decay * target_model_weights + (1 - decay) * current_model_weights
+        target_model_weights = decay * target_model_weights + (1 - decay) *
+        current_model_weights
 
         Args:
-            target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
-            decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
+            target_model (`parl.Model`): an instance of ``Model`` that has the
+            same neural network architecture as the current model.
+            decay (float):  the rate of decline in copying parameters. 0 if no
+            parameters decay when synchronizing the parameters.
 
         Example:
 
@@ -90,7 +96,8 @@ class Model(nn.Module, ModelBase):
             model.sync_weights_to(target_model)
 
         Note:
-            Before calling ``sync_weights_to``, parameters of the model must have been initialized.
+            Before calling ``sync_weights_to``, parameters of the model must
+            have been initialized.
         """
 
         assert not target_model is self, "cannot copy between identical model"

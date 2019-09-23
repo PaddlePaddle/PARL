@@ -23,7 +23,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from parl.core.torch.agent import Agent
-torch.set_num_threads(1)
 
 
 class AtariAgent(Agent):

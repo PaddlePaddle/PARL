@@ -18,12 +18,12 @@ warnings.simplefilter('default')
 import os
 import torch
 
-from parl.utils.deprecation import deprecated
 from parl.core.agent_base import AgentBase
 from parl.core.torch.algorithm import Algorithm
 from parl.utils import machine_info
 
 __all__ = ['Agent']
+torch.set_num_threads(1)
 
 
 class Agent(AgentBase):
@@ -77,14 +77,15 @@ class Agent(AgentBase):
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
-        This function feeds the training data into the learn_program defined in ``build_program()``.
+
+        It is often used in the training stage.
         """
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
         """Predict an estimated Q value when given the observation of the environment.
 
-        This function feeds the observation into the prediction program defined in `algorithm.model``. It is often used in the evaluation stage.
+        It is often used in the evaluation stage.
         """
         raise NotImplementedError
 
@@ -96,15 +97,15 @@ class Agent(AgentBase):
         """
         raise NotImplementedError
 
-    def save(self, save_path, program=None):
+    def save(self, save_path, model=None):
         """Save parameters.
 
         Args:
             save_path(str): where to save the parameters.
-            program(fluid.Program): program that describes the neural network structure. If None, will use self.learn_program.
+            model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
 
         Raises:
-            ValueError: if program is None and self.learn_program does not exist.
+            ValueError: if model is None and self.alg.model does not exist.
 
         Example:
 
@@ -114,24 +115,24 @@ class Agent(AgentBase):
             agent.save('./model.ckpt')
 
         """
-        if program is None:
-            program = self.alg.model
+        if model is None:
+            model = self.alg.model
         dirname = '/'.join(save_path.split('/')[:-1])
         if not os.path.exists(dirname):
             os.makedirs(dirname)
-        torch.save(program.state_dict(), save_path)
+        torch.save(model.state_dict(), save_path)
 
-    def restore(self, save_path, program=None):
+    def restore(self, save_path, model=None):
         """Restore previously saved parameters.
-        This method requires a program that describes the network structure.
+        This method requires a model that describes the network structure.
         The save_path argument is typically a value previously passed to ``save()``.
 
         Args:
             save_path(str): path where parameters were previously saved.
-            program(parl.Model): program that describes the neural network structure. If None, will use self.alg.model.
+            model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
 
         Raises:
-            ValueError: if program is None and self.alg does not exist.
+            ValueError: if model is None and self.alg does not exist.
 
         Example:
 
@@ -143,7 +144,7 @@ class Agent(AgentBase):
 
         """
 
-        if program is None:
-            program = self.alg.model
+        if model is None:
+            model = self.alg.model
         checkpoint = torch.load(save_path)
-        program.load_state_dict(checkpoint)
+        model.load_state_dict(checkpoint)

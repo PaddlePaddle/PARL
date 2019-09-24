@@ -51,9 +51,10 @@ class TestSendFile(unittest.TestCase):
         parl.connect(
             'localhost:{}'.format(port),
             distributed_files=['./rom_files/pong.bin'])
+        time.sleep(3)
         actor = Actor()
-
         self.assertEqual(True, actor.check_local_file())
+        time.sleep(3)
         del actor
         time.sleep(10)
 

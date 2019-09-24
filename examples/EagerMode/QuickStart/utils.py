@@ -19,9 +19,10 @@ def calc_discount_norm_reward(reward_list, gamma):
     '''
     Calculate the discounted reward list according to the discount factor gamma, and normalize it.
     Args:
-        reward list, gamma
+        reward_list(list): a list containing the rewards along the trajectory.
+        gamma(float): the discounted factor for accumulation reward computation.
     Returns:
-        discounted normalized reward list
+        a list containing the discounted reward
     '''
     discount_norm_reward = np.zeros_like(reward_list)
 

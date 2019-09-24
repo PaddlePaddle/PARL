@@ -242,10 +242,12 @@ class Job(object):
 
                     # create directory (i.e. ./rom_files/)
                     if '/' in file:
-                        os.makedirs(
-                            os.path.join(envdir,
-                                         *file.rsplit('/')[:-1]),
-                            exist_ok=True)
+                        try:
+                            os.makedirs(
+                                os.path.join(envdir,
+                                             *file.rsplit('/')[:-1]))
+                        except OSError as e:
+                            pass
 
                     file = os.path.join(envdir, file)
                     with open(file, 'wb') as code_file:

@@ -16,6 +16,13 @@ import numpy as np
 
 
 def calc_discount_norm_reward(reward_list, gamma):
+    '''
+    Calculate the discounted reward list according to the discount factor gamma, and normalize it.
+    Args:
+        reward list, gamma
+    Returns:
+        discounted normalized reward list
+    '''
     discount_norm_reward = np.zeros_like(reward_list)
 
     discount_cumulative_reward = 0

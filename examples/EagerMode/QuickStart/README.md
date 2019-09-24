@@ -25,7 +25,7 @@ python train.py
 ```
 
 ### Expected Result
-<img src="performance.gif" width = "300" height ="200" alt="result"/>
+<img src="https://github.com/PaddlePaddle/PARL/blob/develop/examples/QuickStart/performance.gif" width = "300" height ="200" alt="result"/>
 
 The agent can get around 200 points in a few minutes.
 

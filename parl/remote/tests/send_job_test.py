@@ -41,7 +41,6 @@ class TestSendFile(unittest.TestCase):
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(2)
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(2)
         parl.connect(
@@ -49,8 +48,11 @@ class TestSendFile(unittest.TestCase):
             distributed_files=['./rom_files/pong.bin'])
         time.sleep(5)
         actor = Actor()
+        for _ in range(10):
+            if actor.check_local_file():
+                break
+            time.sleep(10)
         self.assertEqual(True, actor.check_local_file())
-        time.sleep(10)
         del actor
         time.sleep(10)
         worker.exit()

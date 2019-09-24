@@ -23,7 +23,7 @@ from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 
 
-@parl.remote_class()
+@parl.remote_class
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
@@ -36,10 +36,6 @@ class TestSendFile(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def actor(self):
-        actor = Actor()
-        time.sleep(2)
-
     def test_send_file(self):
         port = 1239
         master = Master(port=port)
@@ -51,13 +47,12 @@ class TestSendFile(unittest.TestCase):
         parl.connect(
             'localhost:{}'.format(port),
             distributed_files=['./rom_files/pong.bin'])
-        time.sleep(3)
+        time.sleep(5)
         actor = Actor()
         self.assertEqual(True, actor.check_local_file())
-        time.sleep(3)
+        time.sleep(10)
         del actor
         time.sleep(10)
-
         worker.exit()
         master.exit()
 

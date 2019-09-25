@@ -62,6 +62,20 @@ class TestSendFile(unittest.TestCase):
         worker.exit()
         master.exit()
 
+    def test_send_file2(self):
+        port = 1240
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        worker = Worker('localhost:{}'.format(port), 1)
+        time.sleep(2)
+
+        self.assertRaises(Exception, parl.connect, 'localhost:{}'.format(port),
+                          ['./rom_files/no_pong.bin'])
+
+        worker.exit()
+        master.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

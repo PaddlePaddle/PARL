@@ -43,6 +43,10 @@ class TestSendFile(unittest.TestCase):
         th.start()
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(2)
+
+        os.system('mkdir ./rom')
+        os.system('touch ./rom/pong.bin')
+
         parl.connect(
             'localhost:{}'.format(port),
             distributed_files=['./rom_files/pong.bin'])

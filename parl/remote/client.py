@@ -96,9 +96,12 @@ class Client(object):
         to_distributed_files = list(code_files) + distributed_files
 
         for file in to_distributed_files:
-            with open(file, 'rb') as code_file:
-                code = code_file.read()
-                pyfiles[file] = code
+            try:
+                with open(file, 'rb') as code_file:
+                    code = code_file.read()
+                    pyfiles[file] = code
+            except OSError as e:
+                raise Exception('File {} does not exist.'.format(file))
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

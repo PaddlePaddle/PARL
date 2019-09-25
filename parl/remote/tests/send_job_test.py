@@ -44,9 +44,9 @@ class TestSendFile(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(2)
 
-        os.system('mkdir ./rom')
-        os.system('touch ./rom/pong.bin')
-
+        os.system('mkdir ./rom_files')
+        os.system('touch ./rom_files/pong.bin')
+        assert os.path.exists('./rom_files/pong.bin')
         parl.connect(
             'localhost:{}'.format(port),
             distributed_files=['./rom_files/pong.bin'])

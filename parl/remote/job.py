@@ -239,6 +239,16 @@ class Job(object):
                 envdir = tempfile.mkdtemp()
                 for file in pyfiles:
                     code = pyfiles[file]
+
+                    # create directory (i.e. ./rom_files/)
+                    if '/' in file:
+                        try:
+                            os.makedirs(
+                                os.path.join(envdir,
+                                             *file.rsplit('/')[:-1]))
+                        except OSError as e:
+                            pass
+
                     file = os.path.join(envdir, file)
                     with open(file, 'wb') as code_file:
                         code_file.write(code)

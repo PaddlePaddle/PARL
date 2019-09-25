@@ -12,9 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
-
-if _HAS_FLUID:
-    from parl.algorithms.fluid import *
-elif _HAS_TORCH:
-    from parl.algorithms.torch import *
+from parl.algorithms.torch.ddqn import *
+from parl.algorithms.torch.dqn import *

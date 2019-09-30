@@ -157,15 +157,16 @@ function main() {
               echo `which pip`
               echo ========================================
               pip install .
-              pip install -r .teamcity/requirements.txt
               if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
               then  
+                pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
               else
                 echo ========================================
                 echo "in torch environment"
                 echo ========================================
+                pip install -r .teamcity/requirements_torch.txt
                 run_test_with_cpu $env "DIS_TESTING_TORCH"
               fi
           done

@@ -20,12 +20,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from parl.core.torch.model import Model
-from parl.core.torch.algorithm import Algorithm
-from parl.core.torch.agent import Agent
+import parl
 
 
-class TestModel(Model):
+class TestModel(parl.Model):
     def __init__(self):
         super(TestModel, self).__init__()
         self.fc1 = nn.Linear(10, 256)
@@ -37,7 +35,7 @@ class TestModel(Model):
         return out
 
 
-class TestAlgorithm(Algorithm):
+class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
         self.model = model
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
@@ -47,19 +45,19 @@ class TestAlgorithm(Algorithm):
 
     def learn(self, obs, label):
         pred_output = self.model(obs)
-        cost = (pre_output - obs).pow(2)
+        cost = (pred_output - obs).pow(2)
         self.optimizer.zero_grad()
         cost.backward()
         self.optimizer.step()
         return cost.item()
 
 
-class TestAgent(Agent):
+class TestAgent(parl.Agent):
     def __init__(self, algorithm):
         self.alg = algorithm
 
     def learn(self, obs, label):
-        cost = self.alg.lean(obs, label)
+        cost = self.alg.learn(obs, label)
 
     def predict(self, obs):
         return self.alg.predict(obs)

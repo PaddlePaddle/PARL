@@ -22,12 +22,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 from parl.utils import get_gpu_count
-from parl.core.torch.model import Model
-from parl.core.torch.algorithm import Algorithm
-from parl.core.torch.agent import Agent
+import parl
 
 
-class TestModel(Model):
+class TestModel(parl.Model):
     def __init__(self):
         super(TestModel, self).__init__()
         self.fc1 = nn.Linear(4, 256)

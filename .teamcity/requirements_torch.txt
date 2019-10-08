@@ -1,0 +1,5 @@
+# requirements for torch unittest
+gym
+details
+parameterized
+timeout_decorator

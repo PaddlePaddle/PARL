@@ -82,7 +82,7 @@ function run_test_with_cpu() {
     if [ $# -eq 1 ];then
         cmake ..
     else
-        cmake .. -DIS_TESTING_SERIALLY=ON
+        cmake .. -$2=ON
     fi
     cat <<EOF
     =====================================================
@@ -145,20 +145,30 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
-          declare -a envs=("py27" "py36" "py37")
+          declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
           for env in "${envs[@]}";do
               cd /work
               source ~/.bashrc
               export PATH="/root/miniconda3/bin:$PATH"
               source activate $env
+              python -m pip install --upgrade pip
               echo ========================================
               echo Running tests in $env ..
               echo `which pip`
               echo ========================================
               pip install .
-              pip install -r .teamcity/requirements.txt
-              run_test_with_cpu $env
-              run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+              if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
+              then  
+                pip install -r .teamcity/requirements.txt
+                run_test_with_cpu $env
+                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+              else
+                echo ========================================
+                echo "in torch environment"
+                echo ========================================
+                pip install -r .teamcity/requirements_torch.txt
+                run_test_with_cpu $env "DIS_TESTING_TORCH"
+              fi
           done
           run_test_with_gpu
 

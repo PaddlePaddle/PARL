@@ -273,33 +273,33 @@ class Model(ModelBase):
             set_value(param_name, weight, is_gpu_available)
 
     def _get_parameter_names(self, obj):
-        """ Recursively get parameter names in a model and its child attributes.
+        """ Recursively get parameter names in an object.
 
         Args:
-            obj (``parl.Model``): an instance of ``Model``
+            obj (Object): any object
 
         Returns:
-            parameter_names (list): all parameter names in this model.
+            parameter_names (list): all parameter names in this object.
         """
 
         parameter_names = []
-        for attr in sorted(obj.__dict__.keys()):
-            val = getattr(obj, attr)
-            if isinstance(val, Model):
+        if isinstance(obj, Model):
+            for attr in sorted(obj.__dict__.keys()):
+                val = getattr(obj, attr)
                 parameter_names.extend(self._get_parameter_names(val))
-            elif isinstance(val, LayerFunc):
-                for attr in val.attr_holder.sorted():
-                    if attr:
-                        parameter_names.append(attr.name)
-            elif isinstance(val, tuple) or isinstance(val, list):
-                for x in val:
-                    parameter_names.extend(self._get_parameter_names(x))
-            elif isinstance(val, dict):
-                for x in list(val.values()):
-                    parameter_names.extend(self._get_parameter_names(x))
-            else:
-                # for any other type, won't be handled. E.g. set
-                pass
+        elif isinstance(obj, LayerFunc):
+            for attr in obj.attr_holder.sorted():
+                if attr:
+                    parameter_names.append(attr.name)
+        elif isinstance(obj, tuple) or isinstance(obj, list):
+            for x in obj:
+                parameter_names.extend(self._get_parameter_names(x))
+        elif isinstance(obj, dict):
+            for x in list(obj.values()):
+                parameter_names.extend(self._get_parameter_names(x))
+        else:
+            # for any other type, won't be handled. E.g. set
+            pass
         return parameter_names
 
     def _get_parameter_pairs(self, src, target):

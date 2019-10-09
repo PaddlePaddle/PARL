@@ -293,10 +293,12 @@ class Model(ModelBase):
                         parameter_names.append(attr.name)
             elif isinstance(val, tuple) or isinstance(val, list):
                 for x in val:
-                    parameter_names.extend(self._get_parameter_names(x))
+                    if hasattr(x, '__dict__'):
+                        parameter_names.extend(self._get_parameter_names(x))
             elif isinstance(val, dict):
                 for x in list(val.values()):
-                    parameter_names.extend(self._get_parameter_names(x))
+                    if hasattr(x, '__dict__'):
+                        parameter_names.extend(self._get_parameter_names(x))
             else:
                 # for any other type, won't be handled. E.g. set
                 pass

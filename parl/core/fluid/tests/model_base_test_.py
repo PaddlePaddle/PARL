@@ -84,6 +84,42 @@ class TestModel4(parl.Model):
         return out
 
 
+class TestModel6(parl.Model):
+    def __init__(self):
+        self.fc1 = layers.fc(
+            size=256,
+            act=None,
+            param_attr=ParamAttr(name='fc1.w'),
+            bias_attr=ParamAttr(name='fc1.b'))
+        self.fc_tuple = (layers.fc(
+            size=128,
+            act=None,
+            param_attr=ParamAttr(name='fc2.w'),
+            bias_attr=ParamAttr(name='fc2.b')), (layers.fc(
+                size=1,
+                act=None,
+                param_attr=ParamAttr(name='fc3.w'),
+                bias_attr=ParamAttr(name='fc3.b')), 10), 10)
+        self.fc_dict = {
+            'k1':
+            layers.fc(
+                size=128,
+                act=None,
+                param_attr=ParamAttr(name='fc4.w'),
+                bias_attr=ParamAttr(name='fc4.b')),
+            'k2': {
+                'k22':
+                layers.fc(
+                    size=1,
+                    act=None,
+                    param_attr=ParamAttr(name='fc5.w'),
+                    bias_attr=ParamAttr(name='fc5.b'))
+            },
+            'k3':
+            1,
+        }
+
+
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
@@ -138,6 +174,14 @@ class ModelBaseTest(unittest.TestCase):
         self.assertSetEqual(
             set(self.model.parameters()),
             set(['fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b']))
+
+        model2 = TestModel6()
+        self.assertSetEqual(
+            set(model2.parameters()),
+            set([
+                'fc1.w', 'fc1.b', 'fc2.w', 'fc2.b', 'fc3.w', 'fc3.b', 'fc4.w',
+                'fc4.b', 'fc5.w', 'fc5.b'
+            ]))
 
     def test_sync_weights_in_one_program(self):
         pred_program = fluid.Program()

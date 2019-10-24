@@ -57,7 +57,7 @@ def run_train_episode(env, agent, rpm):
                 batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
                 batch_next_state = batch_all_state[:, 1:, :, :]
                 cost = agent.learn(batch_state, batch_action, batch_reward,
-                                       batch_next_state, batch_isOver)
+                                   batch_next_state, batch_isOver)
                 all_cost.append(float(cost))
         total_reward += reward
         state = next_state
@@ -149,7 +149,12 @@ if __name__ == '__main__':
         '--rom', help='path of the rom of the atari game', required=True)
     parser.add_argument(
         '--batch_size', type=int, default=64, help='batch size for training')
-    parser.add_argument('--algo', default='DQN', help='DQN/DDQN/Dueling, represent DQN, double DQN, and dueling DQN respectively')
+    parser.add_argument(
+        '--algo',
+        default='DQN',
+        help=
+        'DQN/DDQN/Dueling, represent DQN, double DQN, and dueling DQN respectively',
+    )
     parser.add_argument(
         '--train_total_steps',
         type=int,

@@ -49,7 +49,6 @@ class DDQN(Algorithm):
 
     def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
         pred_value = self.model.value(obs)
-        # layers.Print(action)
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(

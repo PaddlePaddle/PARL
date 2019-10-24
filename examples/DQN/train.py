@@ -41,7 +41,6 @@ def run_train_episode(env, agent, rpm):
     all_cost = []
     state = env.reset()
     steps = 0
-    lr = None
     while True:
         steps += 1
         context = rpm.recent_state()
@@ -57,7 +56,7 @@ def run_train_episode(env, agent, rpm):
                     args.batch_size)
                 batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
                 batch_next_state = batch_all_state[:, 1:, :, :]
-                cost, lr = agent.learn(batch_state, batch_action, batch_reward,
+                cost = agent.learn(batch_state, batch_action, batch_reward,
                                        batch_next_state, batch_isOver)
                 all_cost.append(float(cost))
         total_reward += reward
@@ -67,7 +66,7 @@ def run_train_episode(env, agent, rpm):
     if all_cost:
         logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
             total_reward, np.mean(all_cost)))
-    return total_reward, steps, np.mean(all_cost), lr
+    return total_reward, steps, np.mean(all_cost)
 
 
 def run_evaluate_episode(env, agent):
@@ -107,7 +106,7 @@ def main():
     with tqdm(
             total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
         while rpm.size() < MEMORY_WARMUP_SIZE:
-            total_reward, steps, _, _ = run_train_episode(env, agent, rpm)
+            total_reward, steps, _ = run_train_episode(env, agent, rpm)
             pbar.update(steps)
 
     # train
@@ -117,7 +116,7 @@ def main():
     max_reward = None
     while total_steps < args.train_total_steps:
         # start epoch
-        total_reward, steps, loss, lr = run_train_episode(env, agent, rpm)
+        total_reward, steps, loss = run_train_episode(env, agent, rpm)
         total_steps += steps
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
         tensorboard.add_scalar('dqn/score', total_reward, total_steps)
@@ -125,8 +124,6 @@ def main():
                                total_steps)  # mean of total loss
         tensorboard.add_scalar('dqn/exploration', agent.exploration,
                                total_steps)
-        if lr is not None:
-            tensorboard.add_scalar('dqn/learning_rate', lr, total_steps)
         pbar.update(steps)
 
         if total_steps // args.test_every_steps >= test_flag:
@@ -152,11 +149,11 @@ if __name__ == '__main__':
         '--rom', help='path of the rom of the atari game', required=True)
     parser.add_argument(
         '--batch_size', type=int, default=64, help='batch size for training')
-    parser.add_argument('--algo', default='DQN', help='DQN/Double/Dueling DQN')
+    parser.add_argument('--algo', default='DQN', help='DQN/DDQN/Dueling, represent DQN, double DQN, and dueling DQN respectively')
     parser.add_argument(
         '--train_total_steps',
         type=int,
-        default=int(1e8),
+        default=int(1e7),
         help='maximum environmental steps of games')
     parser.add_argument(
         '--test_every_steps',
@@ -165,6 +162,4 @@ if __name__ == '__main__':
         help='the step interval between two consecutive evaluations')
 
     args = parser.parse_args()
-    rom_name = args.rom.split('/')[-1].split('.')[0]
-    logger.set_dir(os.path.join('./train_log', rom_name, args.algo + '_lr'))
     main()

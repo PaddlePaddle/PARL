@@ -109,4 +109,4 @@ class AtariAgent(parl.Agent):
         }
         cost = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.cost])[0]
-        return cost, lr
+        return cost

@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,75 +16,68 @@ import warnings
 warnings.simplefilter('default')
 
 import copy
+import numpy as np
 import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
-from parl.utils.deprecation import deprecated
-
-__all__ = ['DQN']
 
 
-class DQN(Algorithm):
-    def __init__(self, model, hyperparas=None, act_dim=None, gamma=None):
-        """ DQN algorithm
-        
+class DDQN(Algorithm):
+    def __init__(
+            self,
+            model,
+            act_dim=None,
+            gamma=None,
+    ):
+        """ Double DQN algorithm
+
         Args:
-            model (parl.Model): model defining forward network of Q function
-            hyperparas (dict): (deprecated) dict of hyper parameters.
-            act_dim (int): dimension of the action space
+            model (parl.Model): model defining forward network of Q function.
             gamma (float): discounted factor for reward computation.
-            lr (float): learning rate.
         """
         self.model = model
         self.target_model = copy.deepcopy(model)
 
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.act_dim = hyperparas['action_dim']
-            self.gamma = hyperparas['gamma']
-        else:
-            assert isinstance(act_dim, int)
-            assert isinstance(gamma, float)
-            self.act_dim = act_dim
-            self.gamma = gamma
+        assert isinstance(act_dim, int)
+        assert isinstance(gamma, float)
 
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='predict')
-    def define_predict(self, obs):
-        """ use value model self.model to predict the action value
-        """
-        return self.predict(obs)
+        self.act_dim = act_dim
+        self.gamma = gamma
 
     def predict(self, obs):
-        """ use value model self.model to predict the action value
-        """
         return self.model.value(obs)
 
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='learn')
-    def define_learn(self, obs, action, reward, next_obs, terminal,
-                     learning_rate):
-        return self.learn(obs, action, reward, next_obs, terminal,
-                          learning_rate)
-
     def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
-        """ update value model self.model with DQN algorithm
-        """
-
         pred_value = self.model.value(obs)
-        next_pred_value = self.target_model.value(next_obs)
-        best_v = layers.reduce_max(next_pred_value, dim=1)
-        best_v.stop_gradient = True
-        target = reward + (
-            1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * best_v
-
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
             layers.elementwise_mul(action_onehot, pred_value), dim=1)
+
+        # choose acc. to behavior network
+        next_action_value = self.model.value(next_obs)
+        greedy_action = layers.argmax(next_action_value, axis=-1)
+
+        # calculate the target q value with target network
+        batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int')
+        range_tmp = layers.range(
+            start=0, end=batch_size, step=1, dtype='int64') * self.act_dim
+        a_indices = range_tmp + greedy_action
+        a_indices = layers.cast(a_indices, dtype='int32')
+        next_pred_value = self.target_model.value(next_obs)
+        next_pred_value = layers.reshape(
+            next_pred_value, shape=[
+                -1,
+            ])
+        max_v = layers.gather(next_pred_value, a_indices)
+        max_v = layers.reshape(
+            max_v, shape=[
+                -1,
+            ])
+        max_v.stop_gradient = True
+
+        target = reward + (
+            1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * max_v
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
         optimizer = fluid.optimizer.Adam(

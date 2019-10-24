@@ -17,19 +17,22 @@ import paddle.fluid as fluid
 import parl
 from parl import layers
 
+from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
+
 IMAGE_SIZE = (84, 84)
 CONTEXT_LEN = 4
 
 
 class AtariAgent(parl.Agent):
-    def __init__(self, algorithm, act_dim):
+    def __init__(self, algorithm, act_dim, start_lr, total_step):
         super(AtariAgent, self).__init__(algorithm)
-
         assert isinstance(act_dim, int)
         self.act_dim = act_dim
         self.exploration = 1.1
         self.global_step = 0
         self.update_target_steps = 10000 // 4
+
+        self.lr_scheduler = LinearDecayScheduler(start_lr, total_step)
 
     def build_program(self):
         self.pred_program = fluid.Program()
@@ -53,8 +56,11 @@ class AtariAgent(parl.Agent):
                 name='next_obs',
                 shape=[CONTEXT_LEN, IMAGE_SIZE[0], IMAGE_SIZE[1]],
                 dtype='float32')
+            lr = layers.data(
+                name='lr', shape=[1], dtype='float32', append_batch_size=False)
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
-            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal)
+            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal,
+                                       lr)
 
     def sample(self, obs):
         sample = np.random.random()
@@ -89,6 +95,8 @@ class AtariAgent(parl.Agent):
             self.alg.sync_target()
         self.global_step += 1
 
+        lr = self.lr_scheduler.step(step_num=obs.shape[0])
+
         act = np.expand_dims(act, -1)
         reward = np.clip(reward, -1, 1)
         feed = {
@@ -96,7 +104,8 @@ class AtariAgent(parl.Agent):
             'act': act.astype('int32'),
             'reward': reward,
             'next_obs': next_obs.astype('float32'),
-            'terminal': terminal
+            'terminal': terminal,
+            'lr': lr
         }
         cost = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.cost])[0]

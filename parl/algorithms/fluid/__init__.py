@@ -15,6 +15,7 @@
 from parl.algorithms.fluid.a3c import *
 from parl.algorithms.fluid.ddpg import *
 from parl.algorithms.fluid.dqn import *
+from parl.algorithms.fluid.ddqn import *
 from parl.algorithms.fluid.policy_gradient import *
 from parl.algorithms.fluid.ppo import *
 from parl.algorithms.fluid.impala.impala import *

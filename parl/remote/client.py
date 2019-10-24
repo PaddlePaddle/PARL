@@ -32,8 +32,8 @@ class Client(object):
     connect to the same global client in a training task.
 
     Attributes:
-        submit_job_socket (zmq.Context.socket): A socket which submits job to
-                                                the master node.
+        submit_task_socket (zmq.Context.socket): A socket which submits tasks to
+                                                 the master node.
         pyfiles (bytes): A serialized dictionary containing the code of python
                          files in local working directory.
         executable_path (str): File path of the executable python script.
@@ -110,15 +110,15 @@ class Client(object):
     def _create_sockets(self, master_address):
         """ Each client has 1 sockets as start:
 
-        (1) submit_job_socket: submits jobs to master node.
+        (1) submit_task_socket: submits tasks to master node.
         """
 
-        # submit_job_socket: submits job to master
-        self.submit_job_socket = self.ctx.socket(zmq.REQ)
-        self.submit_job_socket.linger = 0
-        self.submit_job_socket.setsockopt(
+        # submit_task_socket: submits job to master
+        self.submit_task_socket = self.ctx.socket(zmq.REQ)
+        self.submit_task_socket.linger = 0
+        self.submit_task_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
-        self.submit_job_socket.connect("tcp://{}".format(master_address))
+        self.submit_task_socket.connect("tcp://{}".format(master_address))
         self.start_time = time.time()
         thread = threading.Thread(target=self._reply_heartbeat)
         thread.setDaemon(True)
@@ -127,12 +127,12 @@ class Client(object):
 
         # check if the master is connected properly
         try:
-            self.submit_job_socket.send_multipart([
+            self.submit_task_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
                 to_byte(self.heartbeat_master_address),
                 to_byte(socket.gethostname())
             ])
-            _ = self.submit_job_socket.recv_multipart()
+            _ = self.submit_task_socket.recv_multipart()
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
                            "check if master is started and ensure the input "
@@ -238,11 +238,11 @@ class Client(object):
 
         job_heartbeat_socket.close(0)
 
-    def submit_job(self):
-        """Send a job to the Master node.
+    def submit_task(self):
+        """Send a task to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
-        sends a job to the master node. Then the master node will allocate
+        sends a task to the master node. Then the master node will allocate
         a vacant job from its job pool to the remote object.
 
         Returns:
@@ -253,11 +253,11 @@ class Client(object):
             while True:
                 # A lock to prevent multiple actors from submitting job at the same time.
                 self.lock.acquire()
-                self.submit_job_socket.send_multipart([
+                self.submit_task_socket.send_multipart([
                     remote_constants.CLIENT_SUBMIT_TAG,
                     to_byte(self.heartbeat_master_address)
                 ])
-                message = self.submit_job_socket.recv_multipart()
+                message = self.submit_task_socket.recv_multipart()
                 self.lock.release()
 
                 tag = message[0]

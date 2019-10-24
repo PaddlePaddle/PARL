@@ -74,6 +74,7 @@ Abstractions
    :caption: High-quality Implementations
 
    implementations.rst
+   design.rst
 
 .. toctree::
    :maxdepth: 1

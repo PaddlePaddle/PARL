@@ -44,7 +44,7 @@ class AtariAgent(parl.Agent):
                 shape=[CONTEXT_LEN, IMAGE_SIZE[0], IMAGE_SIZE[1]],
                 dtype='float32')
             self.value = self.alg.predict(obs)
-            
+
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
                 name='obs',
@@ -57,12 +57,10 @@ class AtariAgent(parl.Agent):
                 shape=[CONTEXT_LEN, IMAGE_SIZE[0], IMAGE_SIZE[1]],
                 dtype='float32')
             lr = layers.data(
-                name='lr', 
-                shape=[1], 
-                dtype='float32', 
-                append_batch_size=False)
+                name='lr', shape=[1], dtype='float32', append_batch_size=False)
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
-            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal, lr)
+            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal,
+                                       lr)
 
     def sample(self, obs):
         sample = np.random.random()

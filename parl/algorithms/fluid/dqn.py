@@ -25,11 +25,7 @@ __all__ = ['DQN']
 
 
 class DQN(Algorithm):
-    def __init__(self,
-                 model,
-                 hyperparas=None,
-                 act_dim=None,
-                 gamma=None):
+    def __init__(self, model, hyperparas=None, act_dim=None, gamma=None):
         """ DQN algorithm
         
         Args:
@@ -69,8 +65,10 @@ class DQN(Algorithm):
 
     @deprecated(
         deprecated_in='1.2', removed_in='1.3', replace_function='learn')
-    def define_learn(self, obs, action, reward, next_obs, terminal, learning_rate):
-        return self.learn(obs, action, reward, next_obs, terminal, learning_rate)
+    def define_learn(self, obs, action, reward, next_obs, terminal,
+                     learning_rate):
+        return self.learn(obs, action, reward, next_obs, terminal,
+                          learning_rate)
 
     def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
         """ update value model self.model with DQN algorithm
@@ -89,7 +87,8 @@ class DQN(Algorithm):
             layers.elementwise_mul(action_onehot, pred_value), dim=1)
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate, epsilon=1e-3)
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=learning_rate, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost
 

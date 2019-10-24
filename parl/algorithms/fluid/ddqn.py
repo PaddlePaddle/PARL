@@ -21,12 +21,14 @@ import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
 
+
 class DDQN(Algorithm):
-    def __init__(self,
-                 model,
-                 act_dim=None,
-                 gamma=None,
-                 ):
+    def __init__(
+            self,
+            model,
+            act_dim=None,
+            gamma=None,
+    ):
         """ Double DQN algorithm
 
         Args:
@@ -35,7 +37,7 @@ class DDQN(Algorithm):
         """
         self.model = model
         self.target_model = copy.deepcopy(model)
-        
+
         assert isinstance(act_dim, int)
         assert isinstance(gamma, float)
 
@@ -59,19 +61,28 @@ class DDQN(Algorithm):
 
         # calculate the target q value with target network
         batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int')
-        range_tmp = layers.range(start=0, end=batch_size, step=1, dtype='int64') * self.act_dim
+        range_tmp = layers.range(
+            start=0, end=batch_size, step=1, dtype='int64') * self.act_dim
         a_indices = range_tmp + greedy_action
         a_indices = layers.cast(a_indices, dtype='int32')
         next_pred_value = self.target_model.value(next_obs)
-        next_pred_value = layers.reshape(next_pred_value, shape=[-1,])
+        next_pred_value = layers.reshape(
+            next_pred_value, shape=[
+                -1,
+            ])
         max_v = layers.gather(next_pred_value, a_indices)
-        max_v = layers.reshape(max_v, shape=[-1,])
+        max_v = layers.reshape(
+            max_v, shape=[
+                -1,
+            ])
         max_v.stop_gradient = True
 
-        target = reward + (1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * max_v
+        target = reward + (
+            1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * max_v
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate, epsilon=1e-3)
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=learning_rate, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost
 

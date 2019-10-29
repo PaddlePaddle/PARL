@@ -101,7 +101,8 @@ def main():
         algorithm,
         act_dim=act_dim,
         start_lr=LEARNING_RATE,
-        total_step=args.train_total_steps)
+        total_step=args.train_total_steps,
+        update_freq=UPDATE_FREQ)
 
     with tqdm(
             total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:

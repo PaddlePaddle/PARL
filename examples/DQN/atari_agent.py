@@ -24,13 +24,14 @@ CONTEXT_LEN = 4
 
 
 class AtariAgent(parl.Agent):
-    def __init__(self, algorithm, act_dim, start_lr, total_step):
+    def __init__(self, algorithm, act_dim, start_lr, total_step, update_freq):
         super(AtariAgent, self).__init__(algorithm)
         assert isinstance(act_dim, int)
         self.act_dim = act_dim
         self.exploration = 1.1
         self.global_step = 0
         self.update_target_steps = 10000 // 4
+        self.update_freq = update_freq
 
         self.lr_scheduler = LinearDecayScheduler(start_lr, total_step)
 
@@ -95,7 +96,7 @@ class AtariAgent(parl.Agent):
             self.alg.sync_target()
         self.global_step += 1
 
-        lr = self.lr_scheduler.step(step_num=obs.shape[0])
+        lr = self.lr_scheduler.step(step_num=self.update_freq)
 
         act = np.expand_dims(act, -1)
         reward = np.clip(reward, -1, 1)

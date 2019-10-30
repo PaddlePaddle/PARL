@@ -108,7 +108,8 @@ def start_master(port, cpu_num, monitor_port, debug):
             "The input monitor port localhost:{} is already in use.".format(
                 monitor_port))
 
-    cpu_num = cpu_num if cpu_num else multiprocessing.cpu_count()
+    cpu_num = int(
+        cpu_num) if cpu_num is not None else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
@@ -132,21 +133,28 @@ def start_master(port, cpu_num, monitor_port, debug):
     # Redirect the output to DEVNULL to solve the warning log.
     _ = subprocess.Popen(
         master_command, stdout=FNULL, stderr=subprocess.STDOUT)
-    _ = subprocess.Popen(
-        worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
+    if cpu_num > 0:
+        _ = subprocess.Popen(
+            worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
     _ = subprocess.Popen(
         monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
     FNULL.close()
 
-    monitor_info = """
-        # The Parl cluster is started at localhost:{}.
+    if cpu_num > 0:
+        monitor_info = """
+            # The Parl cluster is started at localhost:{}.
 
-        # A local worker with {} CPUs is connected to the cluster.    
+            # A local worker with {} CPUs is connected to the cluster.    
 
-        # Starting the cluster monitor...""".format(
-        port,
-        cpu_num,
-    )
+            # Starting the cluster monitor...""".format(
+            port,
+            cpu_num,
+        )
+    else:
+        monitor_info = """
+            # The Parl cluster is started at localhost:{}.
+
+            # Starting the cluster monitor...""".format(port)
     click.echo(monitor_info)
 
     # check if monitor is started

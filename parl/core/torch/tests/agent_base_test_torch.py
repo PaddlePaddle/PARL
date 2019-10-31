@@ -100,5 +100,6 @@ class AgentBaseTest(unittest.TestCase):
         weight = agent.get_weights()
         agent.set_weights(weight)
 
+
 if __name__ == '__main__':
     unittest.main()

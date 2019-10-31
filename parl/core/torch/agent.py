@@ -52,7 +52,7 @@ class Agent(AgentBase):
     Public Functions:
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an estimate Q function given current observation.
-        - ``learn``: update the parameters of self.alg.
+        - ``learn``: update the parameters of self.algorithm.
         - ``save``: save parameters of the ``agent`` to a given path.
         - ``restore``: restore previous saved parameters from a given path.
 
@@ -64,14 +64,12 @@ class Agent(AgentBase):
         """.
 
         Args:
-            algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.alg`.
+            algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.algorithm`.
             device (torch.device): specify which GPU/CPU to be used.
         """
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
-
-        self.alg = algorithm
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -100,10 +98,10 @@ class Agent(AgentBase):
 
         Args:
             save_path(str): where to save the parameters.
-            model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
+            model(parl.Model): model that describes the neural network structure. If None, will use self.algorithm.model.
 
         Raises:
-            ValueError: if model is None and self.alg.model does not exist.
+            ValueError: if model is None and self.algorithm.model does not exist.
 
         Example:
 
@@ -114,7 +112,7 @@ class Agent(AgentBase):
 
         """
         if model is None:
-            model = self.alg.model
+            model = self.algorithm.model
         dirname = '/'.join(save_path.split('/')[:-1])
         if not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -127,10 +125,10 @@ class Agent(AgentBase):
 
         Args:
             save_path(str): path where parameters were previously saved.
-            model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
+            model(parl.Model): model that describes the neural network structure. If None, will use self.algorithm.model.
 
         Raises:
-            ValueError: if model is None and self.alg does not exist.
+            ValueError: if model is None and self.algorithm does not exist.
 
         Example:
 
@@ -143,6 +141,6 @@ class Agent(AgentBase):
         """
 
         if model is None:
-            model = self.alg.model
+            model = self.algorithm.model
         checkpoint = torch.load(save_path)
         model.load_state_dict(checkpoint)

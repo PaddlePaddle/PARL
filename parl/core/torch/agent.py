@@ -60,7 +60,7 @@ class Agent(AgentBase):
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
     """
 
-    def __init__(self, algorithm, device):
+    def __init__(self, algorithm):
         """.
 
         Args:
@@ -72,8 +72,6 @@ class Agent(AgentBase):
         super(Agent, self).__init__(algorithm)
 
         self.alg = algorithm
-        self.device = torc.device('cuda' if torch.cuda.
-                                  is_available() else 'cpu')
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.

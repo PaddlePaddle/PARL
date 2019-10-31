@@ -14,3 +14,4 @@
 
 from parl.algorithms.torch.ddqn import *
 from parl.algorithms.torch.dqn import *
+from parl.algorithms.torch.a2c import *

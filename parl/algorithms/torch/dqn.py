@@ -19,13 +19,13 @@ import copy
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-from parl.core.torch.algorithm import Algorithm
+import parl
 import numpy as np
 
 __all__ = ['DQN']
 
 
-class DQN(Algorithm):
+class DQN(parl.Algorithm):
     def __init__(self, model, gamma=None, lr=None):
         """ DQN algorithm
 

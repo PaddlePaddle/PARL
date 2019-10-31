@@ -116,7 +116,7 @@ class Model(nn.Module, ModelBase):
 
         Returns: a Python list containing the parameters of current model.
         """
-        return list(self.parameters())
+        return self.state_dict()
 
     def set_weights(self, weights):
         """Copy parameters from ``set_weights()`` to the model.
@@ -124,8 +124,4 @@ class Model(nn.Module, ModelBase):
         Args:
             weights (list): a Python list containing the parameters.
         """
-        assert len(weights) == len(list(self.parameters())), \
-                'size of input weights should be same as weights number of current model'
-
-        for var, weight in zip(self.parameters(), weights):
-            var.data.copy_(weight.data)
+        self.load_state_dict(weights)

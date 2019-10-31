@@ -22,10 +22,10 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from parl.core.torch.agent import Agent
+import parl
 
 
-class AtariAgent(Agent):
+class AtariAgent(parl.Agent):
     """Base class of the Agent.
 
     Args:

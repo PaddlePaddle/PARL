@@ -11,7 +11,7 @@
 - How to Run
 
   1. Enter the sub-folder `final_submit`
-  2. Download the model file from online stroage service: [Baidu Pan](https://pan.baidu.com/s/12LIPspckCT8-Q5U1QX69Fg) password: `b5ck` or [Google Drive](https://drive.google.com/file/d/1jJtOcOVJ6auz3s-TyWgUJvofPXI94yxy/view?usp=sharing) 
+  2. Download the model file from online stroage service: [Baidu Pan](https://pan.baidu.com/s/12LIPspckCT8-Q5U1QX69Fg) (password: `b5ck`) or [Google Drive](https://drive.google.com/file/d/1jJtOcOVJ6auz3s-TyWgUJvofPXI94yxy/view?usp=sharing) 
   3. Unpack the file by using: 
            `tar zxvf saved_models.tar.gz`
   4. Launch test scription: 

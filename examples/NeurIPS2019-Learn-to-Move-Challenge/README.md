@@ -16,4 +16,3 @@
            `tar zxvf saved_models.tar.gz`
   4. Launch test scription: 
            `python test.py`
-

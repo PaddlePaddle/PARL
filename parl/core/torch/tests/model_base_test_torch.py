@@ -16,6 +16,7 @@ import numpy as np
 import unittest
 import os
 from copy import deepcopy
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -282,21 +283,26 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_weights()
         expected_params = list(self.model.parameters())
         self.assertEqual(len(params), len(expected_params))
-        for param in params:
+        for key in params:
             flag = False
             for expected_param in expected_params:
-                if param.sum().item() - expected_param.sum().item() < 1e-5:
+                if params[key].sum().item() - expected_param.sum().item(
+                ) < 1e-5:
                     flag = True
                     break
             self.assertTrue(flag)
 
     def test_set_weights(self):
         params = self.model.get_weights()
-        new_params = [x + 1.0 for x in params]
+        new_params = OrderedDict()
+        for key in params:
+            new_params[key] = params[key] + 1.0
 
         self.model.set_weights(new_params)
 
-        for x, y in list(zip(new_params, self.model.get_weights())):
+        for x, y in list(
+                zip(new_params.values(),
+                    self.model.get_weights().values())):
             self.assertEqual(x.sum().item(), y.sum().item())
 
     def test_set_weights_between_different_models(self):
@@ -331,7 +337,7 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights_wrong_params_shape(self):
         params = self.model.get_weights()
-        params.reverse()
+        params['fc1.weight'] = params['fc2.bias']
         try:
             self.model.set_weights(params)
         except:

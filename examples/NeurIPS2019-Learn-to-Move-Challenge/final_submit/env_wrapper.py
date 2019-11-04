@@ -208,12 +208,7 @@ class OfficialObs(ObsTranformerBase):
         self.duplicate_id = self.duplicate_id.astype(np.int32).tolist()
 
     def _get_observation(self, obs_dict):
-
         res = []
-
-        # target velocity field (in body frame)
-        #v_tgt = np.ndarray.flatten(obs_dict['v_tgt_field'])
-        #res += v_tgt.tolist()
 
         res.append(obs_dict['pelvis']['height'])
         res.append(obs_dict['pelvis']['pitch'])
@@ -277,12 +272,6 @@ class OfficialObs(ObsTranformerBase):
         res = np.append(res, [diff_theta / np.pi])
 
         return res
-
-
-def rotate_frame(x, y, theta):
-    x_rot = np.cos(theta) * x - np.sin(theta) * y
-    y_rot = np.sin(theta) * x + np.cos(theta) * y
-    return x_rot, y_rot
 
 
 if __name__ == '__main__':

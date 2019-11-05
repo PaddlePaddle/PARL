@@ -48,7 +48,7 @@ class ActorCritic(parl.Model):
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
 
-        x = x.view(-1, self.num_flat_features(x))
+        x = torch.flatten(x, start_dim=1)
         x = F.relu(self.fc(x))
 
         logits = self.fc_pi(x)
@@ -62,7 +62,7 @@ class ActorCritic(parl.Model):
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
 
-        x = x.view(-1, self.num_flat_features(x))
+        x = torch.flatten(x, start_dim=1)
         x = F.relu(self.fc(x))
         values = self.fc_v(x)
 
@@ -74,7 +74,7 @@ class ActorCritic(parl.Model):
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
 
-        x = x.view(-1, self.num_flat_features(x))
+        x = torch.flatten(x, start_dim=1)
         x = F.relu(self.fc(x))
 
         values = self.fc_v(x)
@@ -82,10 +82,3 @@ class ActorCritic(parl.Model):
         prob = F.softmax(logits, dim=softmax_dim)
 
         return prob, values
-
-    def num_flat_features(self, x):
-        size = x.size()[1:]  # all dimensions except the batch dimension
-        num_features = 1
-        for s in size:
-            num_features *= s
-        return num_features

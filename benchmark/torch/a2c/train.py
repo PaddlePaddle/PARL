@@ -29,17 +29,17 @@ from parl.utils.window_stat import WindowStat
 from parl.utils.time_stat import TimeStat
 from parl.utils import machine_info
 from parl.utils import logger, get_gpu_count, tensorboard
-
-from model import ActorCritic
 from parl.algorithms import A2C
-from agent import Agent
+
+from atari_model import ActorCritic
+from atari_agent import Agent
 from actor import Actor
 
 import time
 from statistics import mean
 
 
-class Learner:
+class Learner(object):
     def __init__(self, config, cuda):
         self.cuda = cuda
 
@@ -128,10 +128,6 @@ class Learner:
         # to deal with passing parameters by zmq
         # tensor cannot be passed by zmq, thus convert tensors to numpy arrays first
 
-        # print(type(latest_params))
-        # for key in latest_params.keys():
-        #     print(key)
-        #     print(type(latest_params[key]))
         for key in latest_params:
             latest_params[key] = latest_params[key].cpu().numpy()
 
@@ -237,7 +233,20 @@ class Learner:
                                    self.sample_total_steps)
 
         logger.info(metric)
-        print("total_loss", metric['total_loss'])
 
     def should_stop(self):
         return self.sample_total_steps >= self.config['max_sample_steps']
+
+
+if __name__ == '__main__':
+    from a2c_config import config
+
+    cuda = torch.cuda.is_available()
+    learner = Learner(config, cuda)
+    assert config['log_metrics_interval_s'] > 0
+
+    while not learner.should_stop():
+        start = time.time()
+        while time.time() - start < config['log_metrics_interval_s']:
+            learner.step()
+        learner.log_metrics()

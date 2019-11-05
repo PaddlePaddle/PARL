@@ -22,13 +22,13 @@ from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cl
 from parl.env.vector_env import VectorEnv
 from parl.utils.rl_utils import calc_gae
 
-from model import ActorCritic
+from atari_model import ActorCritic
 from parl.algorithms import A2C
-from agent import Agent
+from atari_agent import Agent
 
 
 @parl.remote_class
-class Actor:
+class Actor(object):
     def __init__(self, config):
         # the cluster may not have gpu
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'

@@ -53,20 +53,12 @@ class TestScheduler(unittest.TestCase):
         assert value == 0.3
 
     def test_PiecewiseScheduler_with_empty(self):
-        try:
+        with self.assertRaises(AssertionError):
             scheduler = PiecewiseScheduler([])
-        except AssertionError:
-            # expected
-            return
-        assert False
 
     def test_PiecewiseScheduler_with_incorrect_steps(self):
-        try:
-            scheduler = PiecewiseScheduler([(10, 0.1), (1, 0.2)])
-        except AssertionError:
-            # expected
-            return
-        assert False
+        with self.assertRaises(AssertionError):
+            tscheduler = PiecewiseScheduler([(10, 0.1), (1, 0.2)])
 
     def test_LinearDecayScheduler(self):
         scheduler = LinearDecayScheduler(start_value=10, max_steps=10)

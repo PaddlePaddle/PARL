@@ -283,14 +283,12 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_weights()
         expected_params = list(self.model.parameters())
         self.assertEqual(len(params), len(expected_params))
+        i = 0
         for key in params:
-            flag = False
-            for expected_param in expected_params:
-                if params[key].sum().item() - expected_param.sum().item(
-                ) < 1e-5:
-                    flag = True
-                    break
-            self.assertTrue(flag)
+            self.assertLess(
+                (params[key].sum().item() - expected_params[i].sum().item()),
+                1e-5)
+            i += 1
 
     def test_set_weights(self):
         params = self.model.get_weights()
@@ -329,20 +327,14 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights_wrong_params_num(self):
         params = self.model.get_weights()
-        try:
+        with self.assertRaises(TypeError):
             self.model.set_weights(params[1:])
-        except:
-            return
-        assert False
 
     def test_set_weights_wrong_params_shape(self):
         params = self.model.get_weights()
         params['fc1.weight'] = params['fc2.bias']
-        try:
+        with self.assertRaises(RuntimeError):
             self.model.set_weights(params)
-        except:
-            return
-        assert False
 
 
 if __name__ == '__main__':

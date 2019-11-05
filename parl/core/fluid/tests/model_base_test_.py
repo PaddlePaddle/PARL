@@ -667,13 +667,8 @@ class ModelBaseTest(unittest.TestCase):
 
         params = self.model.get_weights()
 
-        try:
+        with self.assertRaises(AssertionError):
             self.model.set_weights(params[1:])
-        except:
-            # expected
-            return
-
-        assert False
 
     def test_set_weights_with_wrong_params_shape(self):
         pred_program = fluid.Program()
@@ -691,14 +686,9 @@ class ModelBaseTest(unittest.TestCase):
 
         x = np.random.random(size=(1, 4)).astype('float32')
 
-        try:
-            outputs = self.executor.run(
+        with self.assertRaises(fluid.core_avx.EnforceNotMet):
+            self.executor.run(
                 pred_program, feed={'obs': x}, fetch_list=[model_output])
-        except:
-            # expected
-            return
-
-        assert False
 
 
 if __name__ == '__main__':

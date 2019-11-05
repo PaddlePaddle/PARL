@@ -128,7 +128,6 @@ class Model(nn.Module, ModelBase):
         Args:
             weights (list): a Python list containing the parameters.
         """
-        print("in torch model", type(weights))
         for key in weights.keys():
             weights[key] = torch.from_numpy(weights[key])
         self.load_state_dict(weights)

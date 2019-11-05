@@ -139,6 +139,4 @@ class Actor(object):
         return metrics
 
     def set_weights(self, params):
-        for key in params:
-            params[key] = torch.from_numpy(params[key])
         self.agent.set_weights(params)

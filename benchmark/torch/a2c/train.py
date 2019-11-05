@@ -23,7 +23,6 @@ import threading
 import numpy as np
 
 from collections import defaultdict
-from collections import OrderedDict
 from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils.window_stat import WindowStat
 from parl.utils.time_stat import TimeStat
@@ -125,21 +124,9 @@ class Learner(object):
 
     def step(self):
         latest_params = self.agent.get_weights()
-        # to deal with passing parameters by zmq
-        # tensor cannot be passed by zmq, thus convert tensors to numpy arrays first
 
-        for key in latest_params:
-            latest_params[key] = latest_params[key].cpu().numpy()
-
-        # if pass the latest_params to paras_queue directly, the remote actors will share the same OrderedDict (network in torch)
-        # after the first actor convert numpy arrays to tensors, the following actors also get tensors instead of numpy arrays
-        # which will lead to bugs
-        # thus, we need to allocate new memory for new OrderedDict's (network in torch) to pass to actors
         for params_queue in self.params_queues:
-            temp = OrderedDict()
-            for key in latest_params:
-                temp[key] = latest_params[key]
-            params_queue.put(temp)
+            params_queue.put(latest_params)
 
         train_batch = defaultdict(list)
         for i in range(self.config['actor_num']):

@@ -283,12 +283,10 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_weights()
         expected_params = list(self.model.parameters())
         self.assertEqual(len(params), len(expected_params))
-        i = 0
-        for key in params:
+        for i, key in enumerate(params):
             self.assertLess(
                 (params[key].sum().item() - expected_params[i].sum().item()),
                 1e-5)
-            i += 1
 
     def test_set_weights(self):
         params = self.model.get_weights()

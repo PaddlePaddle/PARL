@@ -91,20 +91,27 @@ class Client(object):
             working directory.
         """
         pyfiles = dict()
+        pyfiles['python_files'] = {}
+        pyfiles['other_files'] = {}
 
         code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
-        to_distributed_files = list(code_files) + distributed_files
 
-        for file in to_distributed_files:
-            try:
+        try:
+            for file in code_files:
                 assert os.path.exists(file)
                 with open(file, 'rb') as code_file:
                     code = code_file.read()
-                    pyfiles[file] = code
-            except AssertionError as e:
-                raise Exception(
-                    'Failed to create the client, the file {} does not exist.'.
-                    format(file))
+                    pyfiles['python_files'][file] = code
+
+            for file in distributed_files:
+                assert os.path.exists(file)
+                with open(file, 'rb') as code_file:
+                    code = code_file.read()
+                    pyfiles['other_files'][file] = code
+        except AssertionError as e:
+            raise Exception(
+                'Failed to create the client, the file {} does not exist.'.
+                format(file))
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

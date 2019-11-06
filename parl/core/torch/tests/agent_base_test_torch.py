@@ -37,7 +37,7 @@ class TestModel(parl.Model):
 
 class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
-        self.model = model
+        super(TestAlgorithm, self).__init__(model)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
     def predict(self, obs):
@@ -54,7 +54,7 @@ class TestAlgorithm(parl.Algorithm):
 
 class TestAgent(parl.Agent):
     def __init__(self, algorithm):
-        self.algorithm = algorithm
+        super(TestAgent, self).__init__(algorithm)
 
     def learn(self, obs, label):
         cost = self.algorithm.learn(obs, label)

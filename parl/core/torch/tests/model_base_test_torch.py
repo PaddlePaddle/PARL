@@ -45,6 +45,7 @@ class ModelBaseTest(unittest.TestCase):
         self.model = TestModel()
         self.target_model = TestModel()
         self.target_model2 = TestModel()
+        self.target_model3 = TestModel()
 
         gpu_count = get_gpu_count()
         device = torch.device('cuda' if gpu_count else 'cpu')
@@ -290,16 +291,10 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights(self):
         params = self.model.get_weights()
-        new_params = OrderedDict()
-        for key in params:
-            new_params[key] = params[key] + 1.0
+        self.target_model3.set_weights(params)
 
-        self.model.set_weights(new_params)
-
-        for x, y in list(
-                zip(new_params.values(),
-                    self.model.get_weights().values())):
-            self.assertEqual(x.sum().item(), y.sum().item())
+        for i, j in zip(params.values(), self.target_model3.get_weights().values()):
+            self.assertLessEqual(abs(i.sum().item()-j.sum().item()), 1e-3)
 
     def test_set_weights_between_different_models(self):
         model1 = TestModel()

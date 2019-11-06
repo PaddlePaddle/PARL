@@ -293,8 +293,9 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_weights()
         self.target_model3.set_weights(params)
 
-        for i, j in zip(params.values(), self.target_model3.get_weights().values()):
-            self.assertLessEqual(abs(i.sum().item()-j.sum().item()), 1e-3)
+        for i, j in zip(params.values(),
+                        self.target_model3.get_weights().values()):
+            self.assertLessEqual(abs(i.sum().item() - j.sum().item()), 1e-3)
 
     def test_set_weights_between_different_models(self):
         model1 = TestModel()

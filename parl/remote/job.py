@@ -40,7 +40,7 @@ class Job(object):
 
     After establishing connection with the remote object, the job will
     create a remote class instance locally and enter an infinite loop
-    in a seperate process, waiting for commands from the remote object.
+    in a separate process, waiting for commands from the remote object.
 
     """
 

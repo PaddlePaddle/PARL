@@ -16,10 +16,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from parl.core.torch.model import Model
+import parl
 
 
-class AtariModel(Model):
+class AtariModel(parl.Model):
     """CNN network used in TensorPack examples.
 
     Args:

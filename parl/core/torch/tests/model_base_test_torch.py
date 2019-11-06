@@ -16,6 +16,7 @@ import numpy as np
 import unittest
 import os
 from copy import deepcopy
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -44,6 +45,7 @@ class ModelBaseTest(unittest.TestCase):
         self.model = TestModel()
         self.target_model = TestModel()
         self.target_model2 = TestModel()
+        self.target_model3 = TestModel()
 
         gpu_count = get_gpu_count()
         device = torch.device('cuda' if gpu_count else 'cpu')
@@ -282,22 +284,18 @@ class ModelBaseTest(unittest.TestCase):
         params = self.model.get_weights()
         expected_params = list(self.model.parameters())
         self.assertEqual(len(params), len(expected_params))
-        for param in params:
-            flag = False
-            for expected_param in expected_params:
-                if param.sum().item() - expected_param.sum().item() < 1e-5:
-                    flag = True
-                    break
-            self.assertTrue(flag)
+        for i, key in enumerate(params):
+            self.assertLess(
+                (params[key].sum().item() - expected_params[i].sum().item()),
+                1e-5)
 
     def test_set_weights(self):
         params = self.model.get_weights()
-        new_params = [x + 1.0 for x in params]
+        self.target_model3.set_weights(params)
 
-        self.model.set_weights(new_params)
-
-        for x, y in list(zip(new_params, self.model.get_weights())):
-            self.assertEqual(x.sum().item(), y.sum().item())
+        for i, j in zip(params.values(),
+                        self.target_model3.get_weights().values()):
+            self.assertLessEqual(abs(i.sum().item() - j.sum().item()), 1e-3)
 
     def test_set_weights_between_different_models(self):
         model1 = TestModel()
@@ -323,20 +321,14 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights_wrong_params_num(self):
         params = self.model.get_weights()
-        try:
+        with self.assertRaises(TypeError):
             self.model.set_weights(params[1:])
-        except:
-            return
-        assert False
 
     def test_set_weights_wrong_params_shape(self):
         params = self.model.get_weights()
-        params.reverse()
-        try:
+        params['fc1.weight'] = params['fc2.bias']
+        with self.assertRaises(RuntimeError):
             self.model.set_weights(params)
-        except:
-            return
-        assert False
 
 
 if __name__ == '__main__':

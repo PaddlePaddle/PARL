@@ -37,7 +37,7 @@ class TestModel(parl.Model):
 
 class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
-        self.model = model
+        super(TestAlgorithm, self).__init__(model)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
     def predict(self, obs):
@@ -54,13 +54,13 @@ class TestAlgorithm(parl.Algorithm):
 
 class TestAgent(parl.Agent):
     def __init__(self, algorithm):
-        self.alg = algorithm
+        super(TestAgent, self).__init__(algorithm)
 
     def learn(self, obs, label):
-        cost = self.alg.learn(obs, label)
+        cost = self.algorithm.learn(obs, label)
 
     def predict(self, obs):
-        return self.alg.predict(obs)
+        return self.algorithm.predict(obs)
 
 
 class AgentBaseTest(unittest.TestCase):
@@ -94,6 +94,11 @@ class AgentBaseTest(unittest.TestCase):
         agent.restore(save_path1)
         current_output = agent.predict(obs).detach().cpu().numpy()
         np.testing.assert_equal(current_output, previous_output)
+
+    def test_weights(self):
+        agent = TestAgent(self.alg)
+        weight = agent.get_weights()
+        agent.set_weights(weight)
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import torch
 import torch.nn as nn
 
 from parl.core.model_base import ModelBase
@@ -116,7 +117,10 @@ class Model(nn.Module, ModelBase):
 
         Returns: a Python list containing the parameters of current model.
         """
-        return list(self.parameters())
+        weights = self.state_dict()
+        for key in weights.keys():
+            weights[key] = weights[key].cpu().numpy()
+        return weights
 
     def set_weights(self, weights):
         """Copy parameters from ``set_weights()`` to the model.
@@ -124,8 +128,6 @@ class Model(nn.Module, ModelBase):
         Args:
             weights (list): a Python list containing the parameters.
         """
-        assert len(weights) == len(list(self.parameters())), \
-                'size of input weights should be same as weights number of current model'
-
-        for var, weight in zip(self.parameters(), weights):
-            var.data.copy_(weight.data)
+        for key in weights.keys():
+            weights[key] = torch.from_numpy(weights[key])
+        self.load_state_dict(weights)

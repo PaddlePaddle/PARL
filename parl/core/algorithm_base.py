@@ -39,7 +39,7 @@ class AlgorithmBase(object):
 
         Args:
             model_ids (List/Set): list/set of model_id, will only return weights of models
-                              whiose model_id in the `model_ids`.
+                              whose model_id in the `model_ids`.
 
         Returns:
             Dict of weights ({attribute name: numpy array/List/Dict})

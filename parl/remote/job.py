@@ -26,7 +26,7 @@ import threading
 import time
 import traceback
 import zmq
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, Event
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.utils.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
@@ -51,6 +51,9 @@ class Job(object):
 
         Attributes:
             process_dict (multiprocessing.Manager.dict): shared variables of different processes.
+            reply_socket_ready_event (multiprocessing.Event): cross-process signal of whether reply socket is ready.
+            job_ready_event (multiprocessing.Event): cross-process signal of whether job is ready.
+            client_connected_event (multiprocessing.Event): cross-process signal of whether job has been connected by client.
             pid (int): Job process ID.
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
         """
@@ -61,16 +64,27 @@ class Job(object):
         self.process_dict['job_address'] = None
         self.process_dict['max_memory'] = None
 
+        self.reply_socket_ready_event = Event()
+        self.job_ready_event = Event()
+        self.client_connected_event = Event()
+
         self.worker_address = worker_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
         self.lock = threading.Lock()
 
         self.run_job_process = Process(
-            target=self.run, args=(self.process_dict, ))
+            target=self.run, args=(self.process_dict, self.reply_socket_ready_event,
+                self.job_ready_event, self.client_connected_event))
         self.run_job_process.start()
 
         self._create_sockets()
+
+        self.job_ready_event.set()
+
+        self.client_connected_event.wait()
+        self.client_thread.start()
+        
 
         process = psutil.Process(self.pid)
         self.init_memory = float(process.memory_info()[0]) / (1024**2)
@@ -97,8 +111,9 @@ class Job(object):
         (5) kill_job_socket: sends a command to the corresponding worker to kill the job.
 
         """
-        while self.process_dict['job_address'] is None:
-            time.sleep(0.02)
+        self.reply_socket_ready_event.wait()
+        # address of reply_socket
+        assert self.process_dict['job_address'] is not None
         self.job_address = self.process_dict['job_address']
 
         self.ctx = zmq.Context()
@@ -125,10 +140,10 @@ class Job(object):
         # a thread that reply heartbeat signals from the client
         client_heartbeat_socket, client_heartbeat_address = self._create_heartbeat_server(
         )
-        client_thread = threading.Thread(
+        self.client_thread = threading.Thread(
             target=self._reply_client_heartbeat,
             args=(client_heartbeat_socket, ))
-        client_thread.setDaemon(True)
+        self.client_thread.setDaemon(True)
 
         # sends job information to the worker
         initialized_job = InitializedJob(
@@ -149,10 +164,7 @@ class Job(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
 
-        while not self.process_dict['client_is_alive']:
-            time.sleep(0.02)
-        client_thread.start()
-
+        
     def _check_used_memory(self):
         """Check if the memory used by this job exceeds self.max_memory."""
         stop_job = False
@@ -334,11 +346,14 @@ class Job(object):
 
         return obj
 
-    def run(self, process_dict):
+    def run(self, process_dict, reply_socket_ready_event, job_ready_event, client_connected_event):
         """An infinite loop waiting for a new task.
 
         Args:
             process_dict (multiprocessing.Manager.dict): shared variables of different processes.
+            reply_socket_ready_event (multiprocessing.Event): cross-process signal of whether reply socket is ready.
+            job_ready_event (multiprocessing.Event): cross-process signal of whether job is ready.
+            client_connected_event (multiprocessing.Event): cross-process signal of whether job has been connected by client.
         """
         ctx = zmq.Context()
 
@@ -349,12 +364,16 @@ class Job(object):
         job_ip = get_ip_address()
         job_address = "{}:{}".format(job_ip, job_port)
         process_dict['job_address'] = job_address
+        reply_socket_ready_event.set()
+        
+        job_ready_event.wait()
 
         try:
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
             sys.path.append(envdir)
             process_dict['client_is_alive'] = True
+            client_connected_event.set()
 
             obj = self.wait_for_connection(reply_socket, process_dict)
             assert obj is not None

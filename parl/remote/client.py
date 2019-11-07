@@ -238,6 +238,9 @@ class Client(object):
                 job_is_alive = False
                 self.lock.acquire()
                 self.actor_num -= 1
+                logger.error(
+                    '[xparl client] lost connection with a job, current actor num: {}'
+                    .format(self.actor_num))
                 self.lock.release()
 
             except zmq.error.ZMQError as e:

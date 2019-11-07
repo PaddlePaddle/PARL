@@ -74,8 +74,9 @@ class Job(object):
         self.lock = threading.Lock()
 
         self.run_job_process = Process(
-            target=self.run, args=(self.process_dict, self.reply_socket_ready_event,
-                self.job_ready_event, self.client_connected_event))
+            target=self.run,
+            args=(self.process_dict, self.reply_socket_ready_event,
+                  self.job_ready_event, self.client_connected_event))
         self.run_job_process.start()
 
         self._create_sockets()
@@ -84,7 +85,6 @@ class Job(object):
 
         self.client_connected_event.wait()
         self.client_thread.start()
-        
 
         process = psutil.Process(self.pid)
         self.init_memory = float(process.memory_info()[0]) / (1024**2)
@@ -164,7 +164,6 @@ class Job(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.kill_job_socket.connect("tcp://{}".format(kill_job_address))
 
-        
     def _check_used_memory(self):
         """Check if the memory used by this job exceeds self.max_memory."""
         stop_job = False
@@ -346,7 +345,8 @@ class Job(object):
 
         return obj
 
-    def run(self, process_dict, reply_socket_ready_event, job_ready_event, client_connected_event):
+    def run(self, process_dict, reply_socket_ready_event, job_ready_event,
+            client_connected_event):
         """An infinite loop waiting for a new task.
 
         Args:
@@ -365,7 +365,7 @@ class Job(object):
         job_address = "{}:{}".format(job_ip, job_port)
         process_dict['job_address'] = job_address
         reply_socket_ready_event.set()
-        
+
         job_ready_event.wait()
 
         try:

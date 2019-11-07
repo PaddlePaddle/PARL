@@ -4,5 +4,5 @@ source ~/.bashrc
 export PATH="/root/miniconda3/bin:$PATH"
 source deactivate
 source activate docs
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple /work/
+pip install /work/
 make html

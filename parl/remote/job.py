@@ -26,7 +26,7 @@ import threading
 import time
 import traceback
 import zmq
-from multiprocessing import Process, Manager, Event
+from multiprocessing import Process, Pipe
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.utils.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
@@ -50,23 +50,12 @@ class Job(object):
             worker_address(str): worker_address for sending job information(e.g, pid)
 
         Attributes:
-            process_dict (multiprocessing.Manager.dict): shared variables of different processes.
-            reply_socket_ready_event (multiprocessing.Event): cross-process signal of whether reply socket is ready.
-            job_ready_event (multiprocessing.Event): cross-process signal of whether job is ready.
-            client_connected_event (multiprocessing.Event): cross-process signal of whether job has been connected by client.
             pid (int): Job process ID.
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
         """
-        manager = Manager()
-        self.process_dict = manager.dict()
-        self.process_dict['job_is_alive'] = True
-        self.process_dict['client_is_alive'] = False
-        self.process_dict['job_address'] = None
-        self.process_dict['max_memory'] = None
+        self.max_memory = None
 
-        self.reply_socket_ready_event = Event()
-        self.job_ready_event = Event()
-        self.client_connected_event = Event()
+        self.job_address_receiver, job_address_sender = Pipe()
 
         self.worker_address = worker_address
         self.job_ip = get_ip_address()
@@ -74,17 +63,10 @@ class Job(object):
         self.lock = threading.Lock()
 
         self.run_job_process = Process(
-            target=self.run,
-            args=(self.process_dict, self.reply_socket_ready_event,
-                  self.job_ready_event, self.client_connected_event))
+            target=self.run, args=(job_address_sender, ))
         self.run_job_process.start()
 
         self._create_sockets()
-
-        self.job_ready_event.set()
-
-        self.client_connected_event.wait()
-        self.client_thread.start()
 
         process = psutil.Process(self.pid)
         self.init_memory = float(process.memory_info()[0]) / (1024**2)
@@ -111,10 +93,8 @@ class Job(object):
         (5) kill_job_socket: sends a command to the corresponding worker to kill the job.
 
         """
-        self.reply_socket_ready_event.wait()
-        # address of reply_socket
-        assert self.process_dict['job_address'] is not None
-        self.job_address = self.process_dict['job_address']
+        # wait for another process to create reply socket
+        self.job_address = self.job_address_receiver.recv()
 
         self.ctx = zmq.Context()
         # create the job_socket
@@ -167,10 +147,10 @@ class Job(object):
     def _check_used_memory(self):
         """Check if the memory used by this job exceeds self.max_memory."""
         stop_job = False
-        if self.process_dict['max_memory'] is not None:
+        if self.max_memory is not None:
             process = psutil.Process(self.pid)
             used_memory = float(process.memory_info()[0]) / (1024**2)
-            if used_memory > self.process_dict['max_memory'] + self.init_memory:
+            if used_memory > self.max_memory + self.init_memory:
                 stop_job = True
         return stop_job
 
@@ -178,9 +158,12 @@ class Job(object):
         """Create a socket server that reply the ping signal from client.
         This signal is used to make sure that the job is still alive.
         """
-        while self.process_dict['job_is_alive']:
-            message = socket.recv_multipart()
-            socket.send_multipart([remote_constants.HEARTBEAT_TAG])
+        message = socket.recv_multipart()
+        max_memory = to_str(message[1])
+        if max_memory != 'None':
+            self.max_memory = float(max_memory)
+        socket.send_multipart([remote_constants.HEARTBEAT_TAG])
+        self.client_thread.start()
         socket.close(0)
 
     def _create_heartbeat_server(self, timeout=True):
@@ -199,8 +182,7 @@ class Job(object):
         """Create a socket that replies heartbeat signals from the client.
         If the job losts connection with the client, it will exit too.
         """
-        while self.process_dict['client_is_alive'] and self.process_dict[
-                'job_is_alive']:
+        while True:
             try:
                 message = socket.recv_multipart()
                 stop_job = self._check_used_memory()
@@ -212,7 +194,7 @@ class Job(object):
                 if stop_job == True:
                     logger.error(
                         "Memory used by this job exceeds {}. This job will exist."
-                        .format(self.process_dict['max_memory']))
+                        .format(self.max_memory))
                     time.sleep(5)
                     socket.close(0)
                     os._exit(1)
@@ -220,7 +202,7 @@ class Job(object):
                 logger.warning(
                     "[Job] Cannot connect to the client. This job will exit and inform the worker."
                 )
-                self.process_dict['client_is_alive'] = False
+                break
         socket.close(0)
         with self.lock:
             self.kill_job_socket.send_multipart(
@@ -237,18 +219,14 @@ class Job(object):
         """create a socket that replies heartbeat signals from the worker.
         If the worker has exited, the job will exit automatically.
         """
-
-        self.worker_is_alive = True
-        # a flag to decide when to exit heartbeat loop
-        while self.worker_is_alive and self.process_dict['job_is_alive']:
+        while True:
             try:
                 message = socket.recv_multipart()
                 socket.send_multipart([remote_constants.HEARTBEAT_TAG])
             except zmq.error.Again as e:
                 logger.warning("[Job] Cannot connect to the worker{}. ".format(
                     self.worker_address) + "Job will quit.")
-                self.worker_is_alive = False
-                self.process_dict['job_is_alive'] = False
+                break
         socket.close(0)
         os._exit(1)
 
@@ -297,7 +275,7 @@ class Job(object):
                 job_address, ))
             raise NotImplementedError
 
-    def wait_for_connection(self, reply_socket, process_dict):
+    def wait_for_connection(self, reply_socket):
         """Wait for connection from the remote object.
 
         The remote object will send its class information and initialization
@@ -306,7 +284,6 @@ class Job(object):
 
         Args:
             reply_socket (sockert): main socket to accept commands of remote object.
-            process_dict (multiprocessing.Manager.dict): shared variables of different processes.
 
         Returns:
             A local instance of the remote class object.
@@ -320,9 +297,6 @@ class Job(object):
             try:
                 cls = cloudpickle.loads(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
-                max_memory = to_str(message[3])
-                if max_memory != 'None':
-                    process_dict['max_memory'] = float(max_memory)
                 obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())
@@ -332,7 +306,6 @@ class Job(object):
                     remote_constants.EXCEPTION_TAG,
                     to_byte(error_str + "\ntraceback:\n" + traceback_str)
                 ])
-                process_dict['client_is_alive'] = False
                 return None
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
         else:
@@ -345,15 +318,11 @@ class Job(object):
 
         return obj
 
-    def run(self, process_dict, reply_socket_ready_event, job_ready_event,
-            client_connected_event):
+    def run(self, job_address_sender):
         """An infinite loop waiting for a new task.
 
         Args:
-            process_dict (multiprocessing.Manager.dict): shared variables of different processes.
-            reply_socket_ready_event (multiprocessing.Event): cross-process signal of whether reply socket is ready.
-            job_ready_event (multiprocessing.Event): cross-process signal of whether job is ready.
-            client_connected_event (multiprocessing.Event): cross-process signal of whether job has been connected by client.
+            job_address_sender(sending end of multiprocessing.Pipe): send job address of reply_socket to main process.
         """
         ctx = zmq.Context()
 
@@ -363,21 +332,17 @@ class Job(object):
         reply_socket.linger = 0
         job_ip = get_ip_address()
         job_address = "{}:{}".format(job_ip, job_port)
-        process_dict['job_address'] = job_address
-        reply_socket_ready_event.set()
 
-        job_ready_event.wait()
+        job_address_sender.send(job_address)
 
         try:
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
             sys.path.append(envdir)
-            process_dict['client_is_alive'] = True
-            client_connected_event.set()
 
-            obj = self.wait_for_connection(reply_socket, process_dict)
+            obj = self.wait_for_connection(reply_socket)
             assert obj is not None
-            self.single_task(obj, reply_socket, process_dict, job_address)
+            self.single_task(obj, reply_socket, job_address)
         except Exception as e:
             logger.error(
                 "Error occurs when running a single task. We will reset this job. Reason:{}"
@@ -385,7 +350,7 @@ class Job(object):
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))
 
-    def single_task(self, obj, reply_socket, process_dict, job_address):
+    def single_task(self, obj, reply_socket, job_address):
         """An infinite loop waiting for commands from the remote object.
 
         Each job will receive two kinds of message from the remote object:
@@ -398,11 +363,10 @@ class Job(object):
 
         Args:
             reply_socket (sockert): main socket to accept commands of remote object.
-            process_dict (multiprocessing.Manager.dict): shared variables of different processes.
             job_address (String): address of reply_socket.
         """
 
-        while process_dict['job_is_alive'] and process_dict['client_is_alive']:
+        while True:
             message = reply_socket.recv_multipart()
 
             tag = message[0]
@@ -420,7 +384,6 @@ class Job(object):
 
                 except Exception as e:
                     # reset the job
-                    process_dict['client_is_alive'] = False
 
                     error_str = str(e)
                     logger.error(error_str)
@@ -459,7 +422,6 @@ class Job(object):
             # receive DELETE_TAG from actor, and stop replying worker heartbeat
             elif tag == remote_constants.KILLJOB_TAG:
                 reply_socket.send_multipart([remote_constants.NORMAL_TAG])
-                process_dict['client_is_alive'] = False
                 logger.warning("An actor exits and this job {} will exit.".
                                format(job_address))
                 break

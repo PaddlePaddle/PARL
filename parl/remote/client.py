@@ -180,7 +180,7 @@ class Client(object):
         logger.warning("Client exit replying heartbeat for master.")
 
     def _check_and_monitor_job(self, job_heartbeat_address,
-                               ping_heartbeat_address):
+                               ping_heartbeat_address, max_memory):
         """ Sometimes the client may receive a job that is dead, thus 
         we have to check if this job is still alive before sending it to the actor.
         """
@@ -191,7 +191,8 @@ class Client(object):
         job_heartbeat_socket.connect("tcp://" + ping_heartbeat_address)
         try:
             job_heartbeat_socket.send_multipart(
-                [remote_constants.HEARTBEAT_TAG])
+                [remote_constants.HEARTBEAT_TAG,
+                 to_byte(str(max_memory))])
             job_heartbeat_socket.recv_multipart()
         except zmq.error.Again:
             job_heartbeat_socket.close(0)
@@ -248,12 +249,17 @@ class Client(object):
 
         job_heartbeat_socket.close(0)
 
-    def submit_job(self):
+    def submit_job(self, max_memory):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
         sends a job to the master node. Then the master node will allocate
         a vacant job from its job pool to the remote object.
+
+        Args:
+            max_memory (float): Maximum memory (MB) can be used by each remote
+                                instance, the unit is in MB and default value is
+                                none(unlimited).
 
         Returns:
             job_address(str): IP address of the job. None if there is no available CPU in the cluster.
@@ -278,7 +284,8 @@ class Client(object):
                     ping_heartbeat_address = to_str(message[3])
 
                     check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, ping_heartbeat_address)
+                        job_heartbeat_address, ping_heartbeat_address,
+                        max_memory)
                     if check_result:
                         self.lock.acquire()
                         self.actor_num += 1

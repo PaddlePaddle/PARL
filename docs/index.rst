@@ -60,6 +60,7 @@ Abstractions
 
     getting_started.rst
     new_alg.rst
+    save_param.rst
 
 .. toctree::
     :maxdepth: 2

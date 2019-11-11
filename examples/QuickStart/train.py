@@ -15,6 +15,7 @@
 import gym
 import numpy as np
 import parl
+import os.path
 from cartpole_agent import CartpoleAgent
 from cartpole_model import CartpoleModel
 from parl.utils import logger
@@ -51,6 +52,10 @@ def main():
     alg = parl.algorithms.PolicyGradient(model, lr=LEARNING_RATE)
     agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
 
+    # if the file already exists, restore parameters from it
+    if os.path.exists('./model.ckpt'):
+        agent.restore('./model.ckpt')
+
     for i in range(1000):
         obs_list, action_list, reward_list = run_episode(env, agent)
         if i % 10 == 0:
@@ -66,6 +71,9 @@ def main():
             _, _, reward_list = run_episode(env, agent, train_or_test='test')
             total_reward = np.sum(reward_list)
             logger.info('Test reward: {}'.format(total_reward))
+
+    # save the parameters to ./model.ckpt
+    agent.save('./model.ckpt')
 
 
 if __name__ == '__main__':

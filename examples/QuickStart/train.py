@@ -52,7 +52,7 @@ def main():
     alg = parl.algorithms.PolicyGradient(model, lr=LEARNING_RATE)
     agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
 
-    # if the model already exists, restore
+    # if the file already exists, restore parameters from it
     if os.path.exists('./model.ckpt'):
         agent.restore('./model.ckpt')
 
@@ -72,7 +72,7 @@ def main():
             total_reward = np.sum(reward_list)
             logger.info('Test reward: {}'.format(total_reward))
 
-    # save the model to ./model.ckpt
+    # save the parameters to ./model.ckpt
     agent.save('./model.ckpt')
 
 

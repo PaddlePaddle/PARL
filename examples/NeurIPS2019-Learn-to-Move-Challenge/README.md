@@ -14,5 +14,5 @@
   2. Download the model file from online stroage service: [Baidu Pan](https://pan.baidu.com/s/12LIPspckCT8-Q5U1QX69Fg) (password: `b5ck`) or [Google Drive](https://drive.google.com/file/d/1jJtOcOVJ6auz3s-TyWgUJvofPXI94yxy/view?usp=sharing) 
   3. Unpack the file: 
            `tar zxvf saved_models.tar.gz`
-  4. Launch test script: 
+  4. Launch the test script: 
            `python test.py`

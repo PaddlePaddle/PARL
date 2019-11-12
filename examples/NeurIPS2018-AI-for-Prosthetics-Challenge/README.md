@@ -40,7 +40,7 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
   2. Download the model file from online stroage service, [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3) 
   3. Unpack the file by using: 
            `tar zxvf saved_model.tar.gz`
-  4. Launch test script: 
+  4. Launch the test script: 
            `python test.py`
 
 ## Part2: Curriculum learning

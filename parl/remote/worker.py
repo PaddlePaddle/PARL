@@ -171,10 +171,11 @@ class Worker(object):
         """An endless loop that adds initialized job into the job buffer"""
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
-                initialized_jobs = self._init_jobs(
-                    job_num=self.cpu_num - self.job_buffer.qsize())
-                for job in initialized_jobs:
-                    self.job_buffer.put(job)
+                job_num = self.cpu_num - self.job_buffer.qsize()
+                if job_num > 0:
+                    initialized_jobs = self._init_jobs(job_num=job_num)
+                    for job in initialized_jobs:
+                        self.job_buffer.put(job)
 
             time.sleep(0.02)
 

@@ -258,15 +258,15 @@ class Job(object):
                     code_file.write(code)
 
             # save other files to current directory
-            for file, code in pyfiles['other_files'].items():
+            for file, content in pyfiles['other_files'].items():
                 # create directory (i.e. ./rom_files/)
                 if '/' in file:
                     try:
                         os.makedirs(os.path.join(*file.rsplit('/')[:-1]))
                     except OSError as e:
                         pass
-                with open(file, 'wb') as code_file:
-                    code_file.write(code)
+                with open(file, 'wb') as f:
+                    f.write(content)
             logger.info('[job] reply')
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
             return envdir

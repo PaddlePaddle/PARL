@@ -105,9 +105,9 @@ class Client(object):
 
             for file in distributed_files:
                 assert os.path.exists(file)
-                with open(file, 'rb') as code_file:
-                    code = code_file.read()
-                    pyfiles['other_files'][file] = code
+                with open(file, 'rb') as f:
+                    content = f.read()
+                    pyfiles['other_files'][file] = content
         except AssertionError as e:
             raise Exception(
                 'Failed to create the client, the file {} does not exist.'.
@@ -240,7 +240,7 @@ class Client(object):
                 self.lock.acquire()
                 self.actor_num -= 1
                 logger.error(
-                    '[xparl client] lost connection with a job, current actor num: {}'
+                    '[xparl] lost connection with a job, current actor num: {}'
                     .format(self.actor_num))
                 self.lock.release()
 

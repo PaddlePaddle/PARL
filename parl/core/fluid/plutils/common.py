@@ -35,6 +35,10 @@ def fetch_framework_var(attr_name):
 
     scope = fluid.executor.global_scope()
     core_var = scope.find_var(attr_name)
+    if core_var == None:
+        raise KeyError(
+            "Unable to find the variable:{}. Synchronize paramsters before initialization or attr_name does not exist."
+            .format(attr_name))
     shape = core_var.get_tensor().shape()
     framework_var = fluid.layers.create_parameter(
         shape=shape, dtype='float32', attr=fluid.ParamAttr(name=attr_name))

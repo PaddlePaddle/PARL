@@ -86,8 +86,8 @@ def cli():
 @click.option("--port", help="The port to bind to.", type=str, required=True)
 @click.option(
     "--debug",
-    help="Start parl in debug mode to show all logs.",
-    default=False)
+    help="Start parl in the debugging mode to print all running log.",
+    is_flag=True)
 @click.option(
     "--cpu_num",
     type=int,

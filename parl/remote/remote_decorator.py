@@ -92,7 +92,8 @@ def remote_class(*args, **kwargs):
                 # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
                 # finds the master is dead.
                 if self.GLOBAL_CLIENT.master_is_alive:
-                    job_address = self.request_cpu_resource(self.GLOBAL_CLIENT)
+                    job_address = self.request_cpu_resource(
+                        self.GLOBAL_CLIENT, max_memory)
                 else:
                     raise Exception("Can not submit job to the master. "
                                     "Please check if master is still alive.")
@@ -117,7 +118,6 @@ def remote_class(*args, **kwargs):
                     remote_constants.INIT_OBJECT_TAG,
                     cloudpickle.dumps(cls),
                     cloudpickle.dumps([args, kwargs]),
-                    to_byte(str(max_memory))
                 ])
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
@@ -149,11 +149,11 @@ def remote_class(*args, **kwargs):
                 except zmq.error.Again as e:
                     logger.error("Send python files failed.")
 
-            def request_cpu_resource(self, global_client):
+            def request_cpu_resource(self, global_client, max_memory):
                 """Try to request cpu resource for 1 second/time for 300 times."""
                 cnt = 300
                 while cnt > 0:
-                    job_address = global_client.submit_job()
+                    job_address = global_client.submit_job(max_memory)
                     if job_address is not None:
                         return job_address
                     if cnt % 30 == 0:

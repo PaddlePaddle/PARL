@@ -173,7 +173,7 @@ function main() {
           run_test_with_gpu
 
           #
-          /root/miniconda3/envs/empty_env/bin/pip install -i https://pypi.tuna.tsinghua.edu.cn/simple .
+          /root/miniconda3/envs/empty_env/bin/pip install .
           run_import_test
           run_docs_test
           ;;

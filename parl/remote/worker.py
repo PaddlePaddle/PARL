@@ -56,10 +56,11 @@ class Worker(object):
         reply_job_socket (zmq.Context.socket): A socket which receives
                                                job_address from the job.
         kill_job_socket (zmq.Context.socket): A socket that receives commands to kill the job from jobs.
+        job_buffer (str): A buffer that stores initialized jobs for providing new jobs in a short time.
+
     Args:
         master_address (str): IP address of the master node.
         cpu_num (int): Number of cpu to be used on the worker.
-        job_buffer (str): A buffer that stores initialized jobs for providing new jobs in a short time.
     """
 
     def __init__(self, master_address, cpu_num=None):
@@ -170,9 +171,13 @@ class Worker(object):
         """An endless loop that adds initialized job into the job buffer"""
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
-                initialized_jobs = self._init_jobs(job_num=self.cpu_num)
-                for job in initialized_jobs:
-                    self.job_buffer.put(job)
+                job_num = self.cpu_num - self.job_buffer.qsize()
+                if job_num > 0:
+                    initialized_jobs = self._init_jobs(job_num=job_num)
+                    for job in initialized_jobs:
+                        self.job_buffer.put(job)
+
+            time.sleep(0.02)
 
         # release jobs if the worker is not alive
         for job in initialized_jobs:

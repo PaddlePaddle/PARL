@@ -59,7 +59,7 @@ class OpenSimAgent(parl.Agent):
             # Attention: In the beginning, sync target model totally.
             self.alg.sync_target(
                 model_id=i,
-                decay=1.0,
+                decay=0,
                 share_vars_parallel_executor=self.learn_pe[i])
             # Do cache, will create ParallelExecutor of sync params in advance
             # If not, there are some issues when ensemble_num > 1

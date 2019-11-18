@@ -9,9 +9,15 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Benchmark result
 
-<img src=".benchmark/DQN_Pong.png" width = "400" height ="300" alt="DQN_Pong" /> <img src=".benchmark/DQN_Breakout.png" width = "400" height ="300" alt="DQN_Breakout"/>
-<br>
-<img src=".benchmark/DQN_BeamRider.png" width = "400" height ="300" alt="DQN_BeamRider"/> <img src=".benchmark/DQN_SpaceInvaders.png" width = "400" height ="300" alt="DQN_SpaceInvaders"/>
+Mean episode rewards for 10 million training steps.
+
+<img src=".benchmark/merge.png" width = "1150" height ="230" alt="pong" /> 
+
+Performance of DQN on various environments
+
+<p align="center">
+<img src=".benchmark/table.png" alt="result" width="700"/>
+</p>
 
 ## How to use
 ### Dependencies:

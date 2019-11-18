@@ -11,7 +11,7 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 Mean episode rewards for 10 million training steps.
 
-<img src=".benchmark/merge.png" width = "1150" height ="180" alt="pong" /> 
+<img src=".benchmark/merge.png" width = "1150" height ="230" alt="pong" /> 
 
 Performance of DQN on various environments
 

@@ -55,7 +55,7 @@ def run_train_episode(env, agent, rpm):
 
         next_obs, reward, done, info = env.step(action)
 
-        rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
+        rpm.append(obs, action, reward, next_obs, done)
 
         if rpm.size() > WARMUP_SIZE:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(

@@ -19,7 +19,7 @@ import time
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.utils import logger, action_mapping, ReplayMemory
+from parl.utils import logger, tensorboard, action_mapping, ReplayMemory
 
 MAX_EPISODES = 5000
 ACTOR_LR = 3e-4
@@ -27,11 +27,10 @@ CRITIC_LR = 3e-4
 GAMMA = 0.99
 TAU = 0.005
 MEMORY_SIZE = int(1e6)
-MIN_LEARN_SIZE = 1e4
+WARMUP_SIZE = 1e4
 BATCH_SIZE = 256
-REWARD_SCALE = 1
 ENV_SEED = 1
-EXPL_NOISE = 0.1
+EXPL_NOISE = 0.1    # Std of Gaussian exploration noise
 
 
 def run_train_episode(env, agent, rpm):
@@ -43,7 +42,7 @@ def run_train_episode(env, agent, rpm):
         steps += 1
         batch_obs = np.expand_dims(obs, axis=0)
 
-        if rpm.size() < MIN_LEARN_SIZE:
+        if rpm.size() < WARMUP_SIZE:
             action = env.action_space.sample()
         else:
             action = agent.predict(batch_obs.astype('float32'))
@@ -58,7 +57,7 @@ def run_train_episode(env, agent, rpm):
 
         rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
 
-        if rpm.size() > MIN_LEARN_SIZE:
+        if rpm.size() > WARMUP_SIZE:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
                 BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
@@ -107,10 +106,7 @@ def main():
         gamma=GAMMA,
         tau=TAU,
         actor_lr=ACTOR_LR,
-        critic_lr=CRITIC_LR,
-        policy_noise=args.policy_noise * max_action,
-        noise_clip=args.noise_clip * max_action,
-        policy_freq=args.policy_freq)
+        critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm, obs_dim, act_dim)
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
@@ -121,6 +117,7 @@ def main():
         train_reward, steps = run_train_episode(env, agent, rpm)
         total_steps += steps
         logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
+        tensorboard.add_scalar('train/episode_reward', train_reward, total_steps)
 
         if total_steps // args.test_every_steps >= test_flag:
             while total_steps // args.test_every_steps >= test_flag:
@@ -128,6 +125,7 @@ def main():
             evaluate_reward = run_evaluate_episode(env, agent)
             logger.info('Steps {}, Evaluate reward: {}'.format(
                 total_steps, evaluate_reward))
+            tensorboard.add_scalar('eval/episode_reward', evaluate_reward, total_steps)
 
 
 if __name__ == '__main__':
@@ -144,9 +142,6 @@ if __name__ == '__main__':
         type=int,
         default=int(1e4),
         help='the step interval between two consecutive evaluations')
-    parser.add_argument("--policy_noise", default=0.2)
-    parser.add_argument("--noise_clip", default=0.5)
-    parser.add_argument("--policy_freq", default=2, type=int)
 
     args = parser.parse_args()
 

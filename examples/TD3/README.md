@@ -1,7 +1,7 @@
 ## Reproduce TD3 with PARL
-Based on PARL, the TD3 algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Atari benchmarks.
+Based on PARL, the TD3 algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Mujoco benchmarks.
 
-Include following approach:
+Include following approaches:
 + Clipped Double Q-learning
 + Target Networks and Delayed Policy Update
 + Target Policy Smoothing Regularization
@@ -14,7 +14,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/merge.png" width = "1500" height ="180" alt="Performance" />
+<img src=".benchmark/merge.png" width = "1500" height ="260" alt="Performance" />
 
 ## How to use
 ### Dependencies:
@@ -22,7 +22,6 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 + [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
-+ tqdm
 + mujoco-py>=1.50.1.0
 
 ### Start Training:

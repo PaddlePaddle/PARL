@@ -28,9 +28,9 @@ class TD3(Algorithm):
                  tau=None,
                  actor_lr=None,
                  critic_lr=None,
-                 policy_noise=0.2,
-                 noise_clip=0.5,
-                 policy_freq=2):
+                 policy_noise=0.2,  # Noise added to target policy during critic update
+                 noise_clip=0.5,    # Range to clip target policy noise
+                 policy_freq=2):    # Frequency of delayed policy updates
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)

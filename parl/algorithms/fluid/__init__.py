@@ -18,4 +18,5 @@ from parl.algorithms.fluid.dqn import *
 from parl.algorithms.fluid.ddqn import *
 from parl.algorithms.fluid.policy_gradient import *
 from parl.algorithms.fluid.ppo import *
+from parl.algorithms.fluid.td3 import *
 from parl.algorithms.fluid.impala.impala import *

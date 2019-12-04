@@ -104,10 +104,7 @@ class Learner(object):
         self.remote_metrics_queue = queue.Queue()
         self.sample_total_steps = 0
 
-        self.remote_manager_thread = threading.Thread(
-            target=self.create_actors)
-        self.remote_manager_thread.setDaemon(True)
-        self.remote_manager_thread.start()
+        self.create_actors()
 
     def learn_data_provider(self):
         """ Data generator for fluid.layers.py_reader

@@ -45,7 +45,7 @@ Then, we can start the distributed training by running:
 python train.py --actor_num 300 \
            --difficulty 1 \
            --penalty_coeff 3.0 \
-           --logdir ./output/difficulty1
+           --logdir ./output/difficulty1 \
            --restore_model_path ./low_speed_model
 ```
 

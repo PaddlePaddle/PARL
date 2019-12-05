@@ -1,4 +1,4 @@
-# The Winning Solution for the NeurIPS 2018: AI for Prosthetics Challenge
+# The Winner Solution for the NeurIPS 2018: AI for Prosthetics Challenge
 <p align="center">
 <img src="image/competition.png" alt="PARL" width="800"/>
 </p>

@@ -1,4 +1,4 @@
-# The Winning Solution for the NeurIPS 2019: Learn to Move Challenge
+# The Winner Solution for the NeurIPS 2019: Learn to Move Challenge
 
 ## Dependencies
 - python3.6

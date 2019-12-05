@@ -115,7 +115,10 @@ class DDPG(Algorithm):
         optimizer.minimize(cost)
         return cost
 
-    def sync_target(self, gpu_id=None, decay=None):
+    def sync_target(self,
+                    gpu_id=None,
+                    decay=None,
+                    share_vars_parallel_executor=None):
         if gpu_id is not None:
             warnings.warn(
                 "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DDPG` is deprecated since version 1.2 and will be removed in version 1.3.",
@@ -123,4 +126,7 @@ class DDPG(Algorithm):
                 stacklevel=2)
         if decay is None:
             decay = 1.0 - self.tau
-        self.model.sync_weights_to(self.target_model, decay=decay)
+        self.model.sync_weights_to(
+            self.target_model,
+            decay=decay,
+            share_vars_parallel_executor=share_vars_parallel_executor)

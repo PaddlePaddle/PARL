@@ -43,10 +43,12 @@ def run_episode(env, agent, train_or_test='train'):
             break
     return obs_list, action_list, reward_list
 
+
 def calc_reward_to_go(reward_list):
-    for i in range(len(reward_list)-2, -1, -1):
-        reward_list[i] += reward_list[i+1]
+    for i in range(len(reward_list) - 2, -1, -1):
+        reward_list[i] += reward_list[i + 1]
     return np.array(reward_list)
+
 
 def main():
     env = gym.make("CartPole-v0")

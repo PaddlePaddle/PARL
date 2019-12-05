@@ -1,4 +1,4 @@
-# The Winner Solution for the NeurIPS 2019: Learn to Move Challenge
+# The Winning Solution for the NeurIPS 2019: Learn to Move Challenge
 
 ## Dependencies
 - python3.6
@@ -22,7 +22,7 @@
 ## Part2: Curriculum learning
 
 #### 1. Run as fast as possible -> run at 3.0 m/s -> walk at 2.0 m/s -> walk slowly at 1.3 m/s
-The curriculum learning pipeline to get a walking slowly model is the same pipeline in [our winner solution in NeurIPS 2018: AI for Prosthetics Challenge](https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2018-AI-for-Prosthetics-Challenge). You can get a walking slowly model by following the [guide](https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2018-AI-for-Prosthetics-Challenge#part2-curriculum-learning).
+The curriculum learning pipeline to get a walking slowly model is the same pipeline in [our winning solution in NeurIPS 2018: AI for Prosthetics Challenge](https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2018-AI-for-Prosthetics-Challenge). You can get a walking slowly model by following the [guide](https://github.com/PaddlePaddle/PARL/tree/develop/examples/NeurIPS2018-AI-for-Prosthetics-Challenge#part2-curriculum-learning).
 
 We also provide a pre-trained model that walk naturally at ~1.3m/s. You can download the model file (naming `low_speed_model`) from online stroage service: [Baidu Pan](https://pan.baidu.com/s/1Mi_6bD4QxLWLdyLYe2GRFw) (password: `q9vj`) or [Google Drive](https://drive.google.com/file/d/1_cz6Cg3DAT4u2a5mxk2vP9u8nDWOE7rW/view?usp=sharing).
 

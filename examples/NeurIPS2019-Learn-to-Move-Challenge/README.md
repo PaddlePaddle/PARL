@@ -1,7 +1,7 @@
 The **PARL** team gets the first place in NeurIPS reinforcement learning competition, again! This folder contains our final submitted model and the code relative to the training process.
 
 <p align="center">
-<img src="image/performance.gif" alt="PARL" />
+<img src="image/performance.gif" alt="PARL" height="300" />
 </p>
 
 ## Dependencies

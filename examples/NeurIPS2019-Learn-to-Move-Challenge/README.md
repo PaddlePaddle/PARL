@@ -1,8 +1,12 @@
-# The Winning Solution for the NeurIPS 2019: Learn to Move Challenge
+The **PARL** team gets the first place in NeurIPS reinforcement learning competition, again! This folder contains our final submitted model and the code relative to the training process.
+
+<p align="center">
+<img src="image/performance.gif" alt="PARL" />
+</p>
 
 ## Dependencies
 - python3.6
-- [paddlepaddle>=1.5.2](https://github.com/PaddlePaddle/Paddle)
+- [paddlepaddle==1.5.2](https://github.com/PaddlePaddle/Paddle)
 - [parl>=1.2.1](https://github.com/PaddlePaddle/PARL)
 - [osim-rl==3.0.11](https://github.com/stanfordnmbl/osim-rl)
 
@@ -27,65 +31,47 @@ The curriculum learning pipeline to get a walking slowly model is the same pipel
 We also provide a pre-trained model that walk naturally at ~1.3m/s. You can download the model file (naming `low_speed_model`) from online stroage service: [Baidu Pan](https://pan.baidu.com/s/1Mi_6bD4QxLWLdyLYe2GRFw) (password: `q9vj`) or [Google Drive](https://drive.google.com/file/d/1_cz6Cg3DAT4u2a5mxk2vP9u8nDWOE7rW/view?usp=sharing).
 
 #### 2. difficulty=1
-At first, start a local cluster with 300 CPUs:
+We built our distributed training agent based on PARL cluster. To start a PARL cluster, we can execute the following two xparl commands:
+
+```bash
+# starts a master node to manage computation resources and adds the local CPUs to the cluster.
+xparl start --port 8010 
+```
+
+```bash
+# if necessary, adds more CPUs (computation resources) in other machine to the cluster.
+xparl connect --address [CLUSTER_IP]:8010 
+```
+
+For more information of xparl, please visit the [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+
+In this example, we can start a local cluster with 300 CPUs by running:
 
 ```bash
 xparl start --port 8010 --cpu_num 300
 ```
 
-Note: If there are not enough CPUs in your local machine, you can add CPUs resource of other machines to the cluster by running the command:
-```bash
-xparl connect --address [CLUSTER_IP]:8081
-```
-
-For more information of xparl, please visit the [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
-
 Then, we can start the distributed training by running:
 ```bash
-python train.py --actor_num 300 \
-           --difficulty 1 \
-           --penalty_coeff 3.0 \
-           --logdir ./output/difficulty1 \
-           --restore_model_path ./low_speed_model
+sh scripts/train_difficulty1.sh ./low_speed_model
 ```
 
 Optionally, you can start the distributed evaluating by running:
 ```bash
-python evaluate.py --actor_num 160 \
-           --difficulty 1 \
-           --penalty_coeff 3.0 \
-           --saved_models_dir ./output/difficulty1/model_every_100_episodes \
-           --evaluate_times 300
+sh scripts/eval_difficulty1.sh
 ```
 
 #### 3. difficulty=2
 ```bash
-python train.py --actor_num 300 \
-           --difficulty 2 \
-           --penalty_coeff 5.0 \
-           --logdir ./output/difficulty2 \
-           --restore_model_path [DIFFICULTY=1 MODEL]
+sh scripts/train_difficulty2.sh [DIFFICULTY=1 MODEL]
 ```
 
 #### 4. difficulty=3, first target
 ```bash
-python train.py --actor_num 300 \
-           --difficulty 3 \
-           --vel_penalty_coeff 3.0 \
-           --penalty_coeff 3.0 \
-           --only_first_target \
-           --logdir ./output/difficulty3_first_target \
-           --restore_model_path [DIFFICULTY=2 MODEL]
+sh scripts/train_difficulty3_first_target.sh [DIFFICULTY=2 MODEL]
 ```
 
 #### 5. difficulty=3
 ```bash
-python train.py --actor_num 300 \
-           --difficulty 3 \
-           --vel_penalty_coeff 3.0 \
-           --penalty_coeff 2.0 \
-           --rpm_size 6e6 \
-           --train_times 250 \
-           --logdir ./output/difficulty3 \
-           --restore_model_path [DIFFICULTY=3 FIRST TARGET MODEL]
+sh scripts/train_difficulty3.sh [DIFFICULTY=3 FIRST TARGET MODEL]
 ```

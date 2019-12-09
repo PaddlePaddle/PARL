@@ -20,11 +20,9 @@ from parl.utils import logger
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from policy_gradient import PolicyGradient
-from utils import calc_discount_norm_reward
 
 OBS_DIM = 4
 ACT_DIM = 2
-GAMMA = 0.99
 LEARNING_RATE = 1e-3
 
 
@@ -47,6 +45,12 @@ def run_episode(env, agent, train_or_test='train'):
     return obs_list, action_list, reward_list
 
 
+def calc_reward_to_go(reward_list):
+    for i in range(len(reward_list) - 2, -1, -1):
+        reward_list[i] += reward_list[i + 1]
+    return np.array(reward_list)
+
+
 def main():
     env = gym.make('CartPole-v0')
     model = CartpoleModel(name_scope='noIdeaWhyNeedThis', act_dim=ACT_DIM)
@@ -62,7 +66,7 @@ def main():
 
             batch_obs = np.array(obs_list)
             batch_action = np.array(action_list)
-            batch_reward = calc_discount_norm_reward(reward_list, GAMMA)
+            batch_reward = calc_reward_to_go(reward_list)
 
             agent.learn(batch_obs, batch_action, batch_reward)
             if (i + 1) % 100 == 0:

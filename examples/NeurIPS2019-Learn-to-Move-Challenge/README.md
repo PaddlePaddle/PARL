@@ -31,19 +31,20 @@ The curriculum learning pipeline to get a walking slowly model is the same pipel
 We also provide a pre-trained model that walk naturally at ~1.3m/s. You can download the model file (naming `low_speed_model`) from online stroage service: [Baidu Pan](https://pan.baidu.com/s/1Mi_6bD4QxLWLdyLYe2GRFw) (password: `q9vj`) or [Google Drive](https://drive.google.com/file/d/1_cz6Cg3DAT4u2a5mxk2vP9u8nDWOE7rW/view?usp=sharing).
 
 #### 2. difficulty=1
-We built our distributed training agent based on PARL cluster. To start a PARL cluster, we can execute the following two xparl commands:
-
-```bash
-# starts a master node to manage computation resources and adds the local CPUs to the cluster.
-xparl start --port 8010 
-```
-
-```bash
-# if necessary, adds more CPUs (computation resources) in other machine to the cluster.
-xparl connect --address [CLUSTER_IP]:8010 
-```
-
-For more information of xparl, please visit the [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+> We built our distributed training agent based on PARL cluster. To start a PARL cluster, we can execute the following two xparl commands:
+>
+>
+>```bash
+># starts a master node to manage computation resources and adds the local CPUs to the cluster.
+>xparl start --port 8010 
+>```
+>
+>```bash
+># if necessary, adds more CPUs (computation resources) in other machine to the cluster.
+>xparl connect --address [CLUSTER_IP]:8010 
+>```
+>
+> For more information of xparl, please visit the [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 In this example, we can start a local cluster with 300 CPUs by running:
 

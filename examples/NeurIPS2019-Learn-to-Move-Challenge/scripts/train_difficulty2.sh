@@ -3,6 +3,9 @@ if [ $# != 1 ]; then
     exit 0
 fi
 
+# use which GPU
+export CUDA_VISIBLE_DEVICES=0
+
 python train.py --actor_num 300 \
            --difficulty 2 \
            --penalty_coeff 5.0 \

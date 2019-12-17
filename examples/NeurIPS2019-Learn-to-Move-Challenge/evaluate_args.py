@@ -20,7 +20,7 @@ def get_args():
 
     parser.add_argument(
         '--cluster_address',
-        default='localhost:8081',
+        default='localhost:8010',
         type=str,
         help='cluster address of xparl.')
     parser.add_argument(

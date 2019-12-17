@@ -1,3 +1,7 @@
+# use which GPU
+export CUDA_VISIBLE_DEVICES=0
+
+
 python evaluate.py --actor_num 160 \
            --difficulty 2 \
            --penalty_coeff 5.0 \

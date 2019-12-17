@@ -22,9 +22,10 @@ import numpy as np
 from actor import Actor
 from opensim_model import OpenSimModel
 from opensim_agent import OpenSimAgent
-from parl.utils import logger, ReplayMemory, tensorboard
+from parl.utils import logger, ReplayMemory, tensorboard, get_gpu_count
 from parl.utils.window_stat import WindowStat
 from parl.remote.client import get_global_client
+from parl.utils import machine_info
 
 ACT_DIM = 22
 VEL_DIM = 19
@@ -68,6 +69,15 @@ class ActorState(object):
 
 class Learner(object):
     def __init__(self, args):
+        if machine_info.is_gpu_available():
+            assert get_gpu_count() == 1, 'Only support training in single GPU,\
+                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
+
+        else:
+            cpu_num = os.environ.get('CPU_NUM')
+            assert cpu_num is not None and cpu_num == '1', 'Only support training in single CPU,\
+                    Please set environment variable:  `export CPU_NUM=1`.'
+
         model = OpenSimModel(OBS_DIM, VEL_DIM, ACT_DIM)
         algorithm = parl.algorithms.DDPG(
             model,

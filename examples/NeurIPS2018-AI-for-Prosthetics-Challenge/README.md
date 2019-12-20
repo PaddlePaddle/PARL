@@ -37,7 +37,7 @@ For final submission, we test our model in 500 CPUs, running 10 episodes per CPU
 - How to Run
 
   1. Enter the sub-folder `final_submit`
-  2. Download the model file from online stroage service, [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3) 
+  2. Download the model file from online storage service, [Baidu Pan](https://pan.baidu.com/s/1NN1auY2eDblGzUiqR8Bfqw) or [Google Drive](https://drive.google.com/open?id=1DQHrwtXzgFbl9dE7jGOe9ZbY0G9-qfq3) 
   3. Unpack the file by using: 
            `tar zxvf saved_model.tar.gz`
   4. Launch the test script: 

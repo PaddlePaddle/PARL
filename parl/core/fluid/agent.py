@@ -212,6 +212,8 @@ class Agent(AgentBase):
 
         if program is None:
             program = self.learn_program
+        if type(program) is fluid.compiler.CompiledProgram:
+            program = program._init_program
         dirname = '/'.join(save_path.split('/')[:-1])
         filename = save_path.split('/')[-1]
         fluid.io.load_params(

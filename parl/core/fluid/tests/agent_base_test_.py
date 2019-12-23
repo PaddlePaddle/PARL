@@ -116,6 +116,22 @@ class AgentBaseTest(unittest.TestCase):
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 
+    def test_compiled_restore(self):
+        agent = TestAgent(self.algorithm)
+        agent.learn_program = parl.compile(agent.learn_program)
+        obs = np.random.random([3, 10]).astype('float32')
+        previous_output = agent.predict(obs)
+        save_path1 = './model.ckpt'
+        agent.save(save_path1)
+        agent.restore(save_path1)
+
+        # a new agent instance
+        another_agent = TestAgent(self.algorithm)
+        another_agent.learn_program = parl.compile(another_agent.learn_program)
+        another_agent.restore(save_path1)
+        current_output = another_agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
+
 
 if __name__ == '__main__':
     unittest.main()

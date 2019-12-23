@@ -40,7 +40,10 @@ def compile(program, loss=None):
     build_strategy = fluid.BuildStrategy()
     build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
 
-    return fluid.compiler.CompiledProgram(program).with_data_parallel(
-        loss_name=loss_name,
-        exec_strategy=exec_strategy,
-        build_strategy=build_strategy)
+    compiled_program = fluid.compiler.CompiledProgram(
+        program).with_data_parallel(
+            loss_name=loss_name,
+            exec_strategy=exec_strategy,
+            build_strategy=build_strategy)
+    compiled_program._init_program = program
+    return compiled_program

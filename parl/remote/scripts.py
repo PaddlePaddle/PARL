@@ -219,11 +219,14 @@ def start_worker(address, cpu_num):
 
 @click.command("stop", help="Exit the cluster.")
 def stop():
-    command = ("ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")
+    command = (
+        "ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")
     subprocess.call([command], shell=True)
-    command = ("ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
+    command = (
+        "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
     subprocess.call([command], shell=True)
-    command = ("ps aux | grep remote/monitor.py | awk '{print $2}' | xargs kill -9")
+    command = (
+        "ps aux | grep remote/monitor.py | awk '{print $2}' | xargs kill -9")
     subprocess.call([command], shell=True)
 
 

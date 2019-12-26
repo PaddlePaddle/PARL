@@ -70,7 +70,8 @@ class TestJobAlone(unittest.TestCase):
         time.sleep(1)
         self.assertEqual(master.cpu_num, 4)
         print("We are going to kill all the jobs.")
-        command = ("ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
+        command = (
+            "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
         subprocess.call([command], shell=True)
         parl.connect('localhost:1334')
         actor = Actor()

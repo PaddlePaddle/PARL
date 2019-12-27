@@ -96,7 +96,6 @@ def main():
     algorithm = parl.algorithms.SAC(
         actor,
         critic,
-        env.action_space,
         max_action=max_action,
         gamma=GAMMA,
         tau=TAU,

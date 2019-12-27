@@ -35,10 +35,22 @@ class SAC(Algorithm):
                  tau=None,
                  actor_lr=None,
                  critic_lr=None):
+        """ SAC algorithm
+
+        Args:
+            actor (parl.Model): forward network of actor.
+            critic (patl.Model): forward network of the critic.
+            alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+            gamma (float): discounted factor for reward computation.
+            tau (float): decay coefficient when updating the weights of self.target_model with self.model
+            actor_lr (float): learning rate of the actor model
+            critic_lr (float): learning rate of the critic model
+        """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
+        assert isinstance(alpha, float)
         self.max_action = max_action
         self.gamma = gamma
         self.tau = tau
@@ -52,7 +64,7 @@ class SAC(Algorithm):
         self.target_critic = deepcopy(critic)
 
     def predict(self, obs):
-        """ use actor model of self.model to predict the action
+        """ use actor model of self.policy to predict the action
         """
         mean, _ = self.actor.policy(obs)
         mean = layers.tanh(mean) * self.max_action

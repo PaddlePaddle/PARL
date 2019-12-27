@@ -16,8 +16,8 @@ import paddle.fluid as fluid
 import parl
 from parl import layers
 
-LOG_SIG_MAX = float(2)
-LOG_SIG_MIN = float(-20)
+LOG_SIG_MAX = 2.0
+LOG_SIG_MIN = -20.0
 
 
 class ActorModel(parl.Model):
@@ -67,12 +67,3 @@ class CriticModel(parl.Model):
         Q2 = layers.squeeze(Q2, axes=[1])
 
         return Q1, Q2
-
-    def Q1(self, obs, act):
-        hid1 = self.fc1(obs)
-        concat1 = layers.concat([hid1, act], axis=1)
-        Q1 = self.fc2(concat1)
-        Q1 = self.fc3(Q1)
-        Q1 = layers.squeeze(Q1, axes=[1])
-
-        return Q1

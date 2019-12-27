@@ -82,7 +82,7 @@ class MujocoAgent(parl.Agent):
         result = self.fluid_executor.run(
             self.learn_program,
             feed=feed,
-            fetch_list=[self.critic_cost, self.actor_cost])
-        critic_cost, actor_cost = result[0], result[1]
+            fetch_list=[self.actor_cost, self.critic_cost])
+        actor_cost, critic_cost = result[0], result[1]
         self.alg.sync_target()
-        return critic_cost, actor_cost
+        return actor_cost, critic_cost

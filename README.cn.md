@@ -76,8 +76,10 @@ pip install parl
 - [PPO](examples/PPO/)
 - [IMPALA](examples/IMPALA/)
 - [A2C](examples/A2C/)
-- [GA3C](examples/GA3C/)
+- [TD3](examples/TD3/)
+- [SAC](examples/SAC/)
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
+- [冠军解决方案：NIPS2019强化学习仿生人控制](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 
 <img src=".github/NeurlIPS2018.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>

@@ -28,7 +28,6 @@ class SAC(Algorithm):
     def __init__(self,
                  actor,
                  critic,
-                 action_space,
                  max_action,
                  alpha=0.2,
                  gamma=None,
@@ -40,6 +39,7 @@ class SAC(Algorithm):
         Args:
             actor (parl.Model): forward network of actor.
             critic (patl.Model): forward network of the critic.
+            max_action (float): the largest value that an action can be, env.action_space.high[0]
             alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
             gamma (float): discounted factor for reward computation.
             tau (float): decay coefficient when updating the weights of self.target_model with self.model

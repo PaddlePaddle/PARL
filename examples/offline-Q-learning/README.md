@@ -1,6 +1,6 @@
 ## Parallel Training with PARL
 
-Use parl.compile to train the model parallelly.
+Use parl.compile to train the model parallelly. When applying offline training or dataset is too large to train on a single GPU, we can use parallel computing to accelerate training.
 ```python
 # Set CUDA_VISIBLE_DEVICES to select which GPUs to train 
 
@@ -16,7 +16,10 @@ learn_program = parl.compile(learn_program, loss=training_loss)
 # Pass the training loss to parl.compile. Distribute the model and data to GPUs.
 ```
 
-## Run this demonstration
+## Demonstration
+
+We provide a demonstration of offline Q-learning with parallel executing, in which we seperate the procedures of collecting data and training the model. First we collect data by interacting with the environment and save them to a replay memory file, and then fit and evaluate the Q network with the collected data. Repeat these two steps to improve the performance gradually.
+
 ### Dependencies:
 + [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
@@ -24,7 +27,7 @@ learn_program = parl.compile(learn_program, loss=training_loss)
 + tqdm
 + atari-py
 
-### Offline Training:
+### How to Run:
 ```shell
 # Collect training data
 python parallel_run.py --rom rom_file/pong.bin

@@ -62,10 +62,7 @@ As shown in the above figure, real actors(orange circle) are running at the cpu 
 For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallized algorithms like [IMPALA](examples/IMPALA), [A2C](examples/A2C) and [GA3C](examples/GA3C). For more details in usage please refer to these examples.  
 
 
-# Install:
-### Dependencies
-- Python 2.7 or 3.5+. 
-- [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) >=1.5.1 (**Optional**, if you only want to use APIs related to parallelization alone)  
+
 
 
 ```

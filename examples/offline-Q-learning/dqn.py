@@ -67,7 +67,8 @@ class DQN(Algorithm):
         """ update value model self.model with DQN algorithm
         """
 
-        cost = self.cal_bellman_residual(obs, action, reward, next_obs, terminal)
+        cost = self.cal_bellman_residual(obs, action, reward, next_obs,
+                                         terminal)
         optimizer = fluid.optimizer.Adam(learning_rate=self.lr, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost
@@ -76,7 +77,8 @@ class DQN(Algorithm):
         """ Calculate squared Bellman residual with test dataset. The operations are the same as learn method above,
         except backpropagation.
         """
-        cost = self.cal_bellman_residual(obs, action, reward, next_obs, terminal)
+        cost = self.cal_bellman_residual(obs, action, reward, next_obs,
+                                         terminal)
         cost.stop_gradient = True
         return cost
 

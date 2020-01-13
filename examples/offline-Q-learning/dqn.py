@@ -67,24 +67,22 @@ class DQN(Algorithm):
         """ update value model self.model with DQN algorithm
         """
 
-        pred_value = self.model.value(obs)
-        next_pred_value = self.target_model.value(next_obs)
-        best_v = layers.reduce_max(next_pred_value, dim=1)
-        best_v.stop_gradient = True
-        target = reward + (
-            1.0 - layers.cast(terminal, dtype='float32')) * self.gamma * best_v
-
-        action_onehot = layers.one_hot(action, self.act_dim)
-        action_onehot = layers.cast(action_onehot, dtype='float32')
-        pred_action_value = layers.reduce_sum(
-            layers.elementwise_mul(action_onehot, pred_value), dim=1)
-        cost = layers.square_error_cost(pred_action_value, target)
-        cost = layers.reduce_mean(cost)
+        cost = self.cal_bellman_residual(obs, action, reward, next_obs, terminal)
         optimizer = fluid.optimizer.Adam(learning_rate=self.lr, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost
 
     def supervised_eval(self, obs, action, reward, next_obs, terminal):
+        """ Calculate squared Bellman residual with test dataset. The operations are the same as learn method above,
+        except backpropagation.
+        """
+        cost = self.cal_bellman_residual(obs, action, reward, next_obs, terminal)
+        cost.stop_gradient = True
+        return cost
+
+    def cal_bellman_residual(self, obs, action, reward, next_obs, terminal):
+        """ use self.model to get squared Bellman residual with fed data
+        """
         pred_value = self.model.value(obs)
         next_pred_value = self.target_model.value(next_obs)
         best_v = layers.reduce_max(next_pred_value, dim=1)
@@ -98,7 +96,6 @@ class DQN(Algorithm):
             layers.elementwise_mul(action_onehot, pred_value), dim=1)
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        cost.stop_gradient = True
         return cost
 
     def sync_target(self, gpu_id=None):

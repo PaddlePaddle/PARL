@@ -30,8 +30,8 @@ We provide a demonstration of offline Q-learning with parallel executing, in whi
 ### How to Run:
 ```shell
 # Collect training data
-python parallel_run.py --rom rom_file/pong.bin
+python parallel_run.py --rom rom_files/pong.bin
 
 # Train the model offline with multi-GPU
-python parallel_run.py --rom rom_file/pong.bin --train
+python parallel_run.py --rom rom_files/pong.bin --train
 ```

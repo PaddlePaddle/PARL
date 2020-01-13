@@ -40,7 +40,6 @@ GAMMA = 0.99
 LEARNING_RATE = 3e-4
 
 gpu_num = get_gpu_count()
-LOAD_MODEL = False  # load parameters of the model from ./model.ckpt
 
 
 def run_train_step(agent, rpm):
@@ -63,7 +62,7 @@ def run_train_step(agent, rpm):
                                               batch_reward, batch_next_state,
                                               batch_isOver)
             logger.info(
-                "train step {}, train cost are {}, eval cost is {}.".format(
+                "train step {}, train costs are {}, eval cost is {}.".format(
                     step, cost, eval_cost))
 
 
@@ -98,7 +97,7 @@ def main():
         model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE * gpu_num)
     agent = AtariAgent(
         algorithm, act_dim=act_dim, total_step=args.train_total_steps)
-    if os.path.isfile('./model.ckpt') and LOAD_MODEL:
+    if os.path.isfile('./model.ckpt'):
         logger.info("load model from file")
         agent.restore('./model.ckpt')
 

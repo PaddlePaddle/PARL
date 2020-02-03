@@ -161,7 +161,8 @@ class MAAgent(parl.Agent):
                 'act' + str(i): target_act_next_n[i]
                 for i in range(self.n)
             }
-            feed = feed_obs.update(feed_act)  # merge two dict
+            feed = feed_obs.copy()
+            feed.update(feed_act)  # merge two dict
             target_q_next = self.fluid_executor.run(
                 self.next_q_program, feed=feed, fetch_list=[self.next_Q])[0]
             target_q += (batch_rew +
@@ -171,7 +172,8 @@ class MAAgent(parl.Agent):
         feed_obs = {'obs' + str(i): batch_obs_n[i] for i in range(self.n)}
         feed_act = {'act' + str(i): batch_act_n[i] for i in range(self.n)}
         target_q = target_q.astype('float32')
-        feed = feed_obs.update(feed_act)
+        feed = feed_obs.copy()
+        feed.update(feed_act)
         feed['target_q'] = target_q
         critic_cost = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.critic_cost])[0]

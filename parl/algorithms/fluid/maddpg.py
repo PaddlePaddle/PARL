@@ -23,7 +23,6 @@ from parl.core.fluid.algorithm import Algorithm
 __all__ = ['MADDPG']
 
 from gym import spaces
-from multiagent.multi_discrete import MultiDiscrete
 from parl.core.fluid.policy_distribution import SoftCategoricalDistribution
 from parl.core.fluid.policy_distribution import SoftMultiCategoricalDistribution
 
@@ -31,7 +30,8 @@ from parl.core.fluid.policy_distribution import SoftMultiCategoricalDistribution
 def SoftPDistribution(logits, act_space):
     if (isinstance(act_space, spaces.Discrete)):
         return SoftCategoricalDistribution(logits)
-    elif (isinstance(act_space, MultiDiscrete)):
+    # is instance of multiagent.multi_discrete.MultiDiscrete
+    elif (hasattr(act_space, 'num_discrete_space')):
         return SoftMultiCategoricalDistribution(logits, act_space.low,
                                                 act_space.high)
     else:

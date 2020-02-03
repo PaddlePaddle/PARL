@@ -87,6 +87,11 @@ def train_agent():
             logger.info('num_discrete_space:{}'.format(
                 env.action_space[i].num_discrete_space))
 
+    from gym import spaces
+    from multiagent.multi_discrete import MultiDiscrete
+    assert (isinstance(env.action_space, spaces.Discrete)
+            or isinstance(env.action_space, MultiDiscrete))
+
     agents = []
     for i in range(env.n):
         model = MAModel(env.act_shape_n[i])

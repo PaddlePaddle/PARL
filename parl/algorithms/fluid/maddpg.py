@@ -20,20 +20,20 @@ from copy import deepcopy
 from paddle import fluid
 from parl.core.fluid.algorithm import Algorithm
 
-
 __all__ = ['MADDPG']
-
 
 from gym import spaces
 from multiagent.multi_discrete import MultiDiscrete
-from parl.core.fluid.policy_distribution import SoftCategoricalDistribution, SoftMultiCategoricalDistribution
+from parl.core.fluid.policy_distribution import SoftCategoricalDistribution
+from parl.core.fluid.policy_distribution import SoftMultiCategoricalDistribution
+
 
 def SoftPDistribution(logits, act_space):
-    if(isinstance(act_space, spaces.Discrete)):
+    if (isinstance(act_space, spaces.Discrete)):
         return SoftCategoricalDistribution(logits)
-    elif(isinstance(act_space, MultiDiscrete)):
-        return SoftMultiCategoricalDistribution(logits, 
-                            act_space.low, act_space.high)
+    elif (isinstance(act_space, MultiDiscrete)):
+        return SoftMultiCategoricalDistribution(logits, act_space.low,
+                                                act_space.high)
     else:
         raise NotImplementedError
 
@@ -43,8 +43,8 @@ class MADDPG(Algorithm):
                  model,
                  agent_index=None,
                  act_space=None,
-                 gamma=None, 
-                 tau=None, 
+                 gamma=None,
+                 tau=None,
                  lr=None):
         """  MADDPG algorithm
         
@@ -79,18 +79,20 @@ class MADDPG(Algorithm):
                 act: action, shape([B] + shape of act_n[agent_index])
         """
         this_policy = self.model.policy(obs)
-        this_action = SoftPDistribution(logits=this_policy, 
-                        act_space=self.act_space[self.agent_index]).sample()
-        return this_action 
+        this_action = SoftPDistribution(
+            logits=this_policy,
+            act_space=self.act_space[self.agent_index]).sample()
+        return this_action
 
     def predict_next(self, obs):
         """ input:  observation, shape([B] + shape of obs_n[agent_index])
             output: action, shape([B] + shape of act_n[agent_index])
         """
         next_policy = self.target_model.policy(obs)
-        next_action = SoftPDistribution(logits=next_policy, 
-                        act_space=self.act_space[self.agent_index]).sample()
-        return next_action 
+        next_action = SoftPDistribution(
+            logits=next_policy,
+            act_space=self.act_space[self.agent_index]).sample()
+        return next_action
 
     def Q(self, obs_n, act_n):
         """ input:  
@@ -99,7 +101,7 @@ class MADDPG(Algorithm):
                 act_n: all agents' action, shape([B] + shape of act_n)
         """
         return self.model.value(obs_n, act_n)
-    
+
     def Q_next(self, obs_n, act_n):
         """ input:  
                 obs_n: all agents' observation, shape([B] + shape of obs_n)
@@ -107,8 +109,7 @@ class MADDPG(Algorithm):
                 act_n: all agents' action, shape([B] + shape of act_n)
         """
         return self.target_model.value(obs_n, act_n)
-        
-    
+
     def learn(self, obs_n, act_n, target_q):
         """ update actor and critic model with MADDPG algorithm
         """
@@ -119,8 +120,9 @@ class MADDPG(Algorithm):
     def _actor_learn(self, obs_n, act_n):
         i = self.agent_index
         this_policy = self.model.policy(obs_n[i])
-        sample_this_action = SoftPDistribution(logits=this_policy, 
-                        act_space=self.act_space[self.agent_index]).sample()
+        sample_this_action = SoftPDistribution(
+            logits=this_policy,
+            act_space=self.act_space[self.agent_index]).sample()
 
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
@@ -130,7 +132,7 @@ class MADDPG(Algorithm):
         act_reg = layers.reduce_mean(layers.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3
-        
+
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByNorm(clip_norm=0.5),
             param_list=self.model.get_actor_params())
@@ -142,7 +144,7 @@ class MADDPG(Algorithm):
     def _critic_learn(self, obs_n, act_n, target_q):
         pred_q = self.Q(obs_n, act_n)
         cost = layers.reduce_mean(layers.square_error_cost(pred_q, target_q))
-        
+
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByNorm(clip_norm=0.5),
             param_list=self.model.get_critic_params())

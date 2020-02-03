@@ -35,8 +35,8 @@ class ReplayMemory(object):
 
     def sample_batch(self, batch_size):
         # index mapping to avoid sampling saving example
-        batch_idx = np.random.randint(
-            self._curr_size - 300 - 1, size=batch_size)
+        batch_idx = np.random.randint(self._curr_size - 300 - 1,
+                                      size=batch_size)
         batch_idx = (self._curr_pos + 300 + batch_idx) % self._curr_size
 
         obs = self.obs[batch_idx]
@@ -45,11 +45,11 @@ class ReplayMemory(object):
         next_obs = self.next_obs[batch_idx]
         terminal = self.terminal[batch_idx]
         return obs, action, reward, next_obs, terminal
-    
+
     def make_index(self, batch_size):
         # index mapping to avoid sampling saving example
-        batch_idx = np.random.randint(
-            self._curr_size - 300 - 1, size=batch_size)
+        batch_idx = np.random.randint(self._curr_size - 300 - 1,
+                                      size=batch_size)
         batch_idx = (self._curr_pos + 300 + batch_idx) % self._curr_size
         return batch_idx
 
@@ -77,14 +77,13 @@ class ReplayMemory(object):
 
     def save(self, pathname):
         other = np.array([self._curr_size, self._curr_pos], dtype=np.int32)
-        np.savez(
-            pathname,
-            obs=self.obs,
-            action=self.action,
-            reward=self.reward,
-            terminal=self.terminal,
-            next_obs=self.next_obs,
-            other=other)
+        np.savez(pathname,
+                 obs=self.obs,
+                 action=self.action,
+                 reward=self.reward,
+                 terminal=self.terminal,
+                 next_obs=self.next_obs,
+                 other=other)
 
     def load(self, pathname):
         data = np.load(pathname)

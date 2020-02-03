@@ -14,7 +14,7 @@
 
 from parl.core.fluid import layers
 
-__all__ = ['PolicyDistribution', 'CategoricalDistribution']
+__all__ = ['PolicyDistribution', 'CategoricalDistribution', 'SoftCategoricalDistribution', 'SoftMultiCategoricalDistribution']
 
 
 class PolicyDistribution(object):
@@ -122,3 +122,55 @@ class CategoricalDistribution(PolicyDistribution):
             (logits - layers.log(z) - other_logits + layers.log(other_z)),
             dim=1)
         return kl
+
+
+class SoftCategoricalDistribution(CategoricalDistribution): 
+    def __init__(self, logits):
+        self.logits = logits
+        super(SoftCategoricalDistribution, self).__init__(logits)
+
+    def sample(self):
+        eps = 1e-4
+        logits_shape = layers.cast(layers.shape(self.logits), dtype='int64')
+        uniform = layers.uniform_random(logits_shape, min=eps, max=1.0-eps)
+        soft_uniform = layers.log(-1.0 * layers.log(uniform))
+        return layers.softmax(self.logits - soft_uniform, axis=-1)
+
+
+class SoftMultiCategoricalDistribution(PolicyDistribution):
+    def __init__(self, logits, low, high):
+        self.logits = logits
+        # self.low = [layers.fill_constant(shape=[-1, high[i] - low[i] + 1], 
+        #                 dtype='float32', value=low[i]) for i in range(len(low))]
+        self.low= low
+        self.categoricals = list(map(SoftCategoricalDistribution, 
+            layers.split(input=logits, 
+                        num_or_sections=list(high - low + 1), 
+                        dim=len(logits.shape) - 1)))
+
+    def sample(self):
+        cate_list = []
+        for i in range(len(self.categoricals)):
+            cate_list.append(self.low[i] + self.categoricals[i].sample())
+        return layers.concat(cate_list, axis=-1)
+
+    def layers_add_n(self, input_list): # can replace tf.add_n
+        assert len(input_list) >= 1
+        res = input_list[0]
+        for i in range(1, len(input_list)):
+            res = layers.elementwise_add(res, input_list[i])
+        return res
+    
+    def entropy(self):
+        return self.layers_add_n([p.entropy() for p in self.categoricals]) 
+    
+    def kl(self, other):
+        return self.layers_add_n([
+            p.kl(q) for p, q in zip(self.categoricals, other.categoricals) 
+        ])
+    
+    def logp(self, x): 
+        return self.layers_add_n([
+            p.logp(px) for p, px in zip(self.categoricals, 
+                    layers.unstack(x - self.low, axis=len(x.shape) - 1))
+        ])

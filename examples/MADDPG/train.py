@@ -90,18 +90,20 @@ def train_agent():
     agents = []
     for i in range(env.n):
         model = MAModel(env.act_shape_n[i])
-        algorithm = parl.algorithms.MADDPG(model,
-                                           agent_index=i,
-                                           act_space=env.action_space,
-                                           gamma=args.gamma,
-                                           tau=args.tau,
-                                           lr=args.lr)
-        agent = MAAgent(algorithm,
-                        agent_index=i,
-                        obs_dim_n=env.obs_shape_n,
-                        act_dim_n=env.act_shape_n,
-                        batch_size=args.batch_size,
-                        speedup=(not args.restore))
+        algorithm = parl.algorithms.MADDPG(
+            model,
+            agent_index=i,
+            act_space=env.action_space,
+            gamma=args.gamma,
+            tau=args.tau,
+            lr=args.lr)
+        agent = MAAgent(
+            algorithm,
+            agent_index=i,
+            obs_dim_n=env.obs_shape_n,
+            act_dim_n=env.act_shape_n,
+            batch_size=args.batch_size,
+            speedup=(not args.restore))
         agents.append(agent)
     total_steps = 0
     total_episodes = 0
@@ -166,50 +168,53 @@ def train_agent():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Environment
-    parser.add_argument('--env',
-                        type=str,
-                        default='simple_speaker_listener',
-                        help='scenario of MultiAgentEnv')
-    parser.add_argument('--max_step_per_episode',
-                        type=int,
-                        default=25,
-                        help='maximum step per episode')
-    parser.add_argument('--max_episodes',
-                        type=int,
-                        default=25000,
-                        help='stop condition:number of episodes')
+    parser.add_argument(
+        '--env',
+        type=str,
+        default='simple_speaker_listener',
+        help='scenario of MultiAgentEnv')
+    parser.add_argument(
+        '--max_step_per_episode',
+        type=int,
+        default=25,
+        help='maximum step per episode')
+    parser.add_argument(
+        '--max_episodes',
+        type=int,
+        default=25000,
+        help='stop condition:number of episodes')
     parser.add_argument(
         '--stat_rate',
         type=int,
         default=1000,
         help='statistical interval of save model or count reward')
     # Core training parameters
-    parser.add_argument('--lr',
-                        type=float,
-                        default=1e-3,
-                        help='learning rate for Adam optimizer')
-    parser.add_argument('--gamma',
-                        type=float,
-                        default=0.95,
-                        help='discount factor')
-    parser.add_argument('--batch_size',
-                        type=int,
-                        default=1024,
-                        help='number of episodes to optimize at the same time')
+    parser.add_argument(
+        '--lr',
+        type=float,
+        default=1e-3,
+        help='learning rate for Adam optimizer')
+    parser.add_argument(
+        '--gamma', type=float, default=0.95, help='discount factor')
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=1024,
+        help='number of episodes to optimize at the same time')
     parser.add_argument('--tau', type=int, default=0.01, help='soft update')
     # auto save model, optional restore model
-    parser.add_argument('--show',
-                        action='store_true',
-                        default=False,
-                        help='display or not')
-    parser.add_argument('--restore',
-                        action='store_true',
-                        default=False,
-                        help='restore or not, must have model_dir')
-    parser.add_argument('--model_dir',
-                        type=str,
-                        default='./model',
-                        help='directory for saving model')
+    parser.add_argument(
+        '--show', action='store_true', default=False, help='display or not')
+    parser.add_argument(
+        '--restore',
+        action='store_true',
+        default=False,
+        help='restore or not, must have model_dir')
+    parser.add_argument(
+        '--model_dir',
+        type=str,
+        default='./model',
+        help='directory for saving model')
 
     args = parser.parse_args()
 

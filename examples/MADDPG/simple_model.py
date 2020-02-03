@@ -40,18 +40,18 @@ class ActorModel(parl.Model):
         hid1_size = 64
         hid2_size = 64
 
-        self.fc1 = layers.fc(size=hid1_size,
-                             act='relu',
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
-        self.fc2 = layers.fc(size=hid2_size,
-                             act='relu',
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
-        self.fc3 = layers.fc(size=act_dim,
-                             act=None,
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
+        self.fc1 = layers.fc(
+            size=hid1_size,
+            act='relu',
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
+        self.fc2 = layers.fc(
+            size=hid2_size,
+            act='relu',
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
+        self.fc3 = layers.fc(
+            size=act_dim,
+            act=None,
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
 
     def policy(self, obs):
         hid1 = self.fc1(obs)
@@ -66,18 +66,18 @@ class CriticModel(parl.Model):
         hid1_size = 64
         hid2_size = 64
 
-        self.fc1 = layers.fc(size=hid1_size,
-                             act='relu',
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
-        self.fc2 = layers.fc(size=hid2_size,
-                             act='relu',
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
-        self.fc3 = layers.fc(size=1,
-                             act=None,
-                             param_attr=fluid.initializer.Normal(loc=0.0,
-                                                                 scale=0.1))
+        self.fc1 = layers.fc(
+            size=hid1_size,
+            act='relu',
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
+        self.fc2 = layers.fc(
+            size=hid2_size,
+            act='relu',
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
+        self.fc3 = layers.fc(
+            size=1,
+            act=None,
+            param_attr=fluid.initializer.Normal(loc=0.0, scale=0.1))
 
     def value(self, obs_n, act_n):
         inputs = layers.concat(obs_n + act_n, axis=1)

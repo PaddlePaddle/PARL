@@ -41,9 +41,10 @@ class MAAgent(parl.Agent):
 
         self.memory_size = int(1e6)
         self.min_memory_size = batch_size * 25  # batch_size * args.max_episode_len
-        self.rpm = ReplayMemory(max_size=self.memory_size,
-                                obs_dim=self.obs_dim_n[agent_index],
-                                act_dim=self.act_dim_n[agent_index])
+        self.rpm = ReplayMemory(
+            max_size=self.memory_size,
+            obs_dim=self.obs_dim_n[agent_index],
+            act_dim=self.act_dim_n[agent_index])
         self.global_train_step = 0
 
         super(MAAgent, self).__init__(algorithm)
@@ -58,42 +59,48 @@ class MAAgent(parl.Agent):
         self.next_a_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
-            obs = layers.data(name='obs',
-                              shape=[self.obs_dim_n[self.agent_index]],
-                              dtype='float32')
+            obs = layers.data(
+                name='obs',
+                shape=[self.obs_dim_n[self.agent_index]],
+                dtype='float32')
             self.pred_act = self.alg.predict(obs)
 
         with fluid.program_guard(self.learn_program):
             obs_n = [
-                layers.data(name='obs' + str(i),
-                            shape=[self.obs_dim_n[i]],
-                            dtype='float32') for i in range(self.n)
+                layers.data(
+                    name='obs' + str(i),
+                    shape=[self.obs_dim_n[i]],
+                    dtype='float32') for i in range(self.n)
             ]
             act_n = [
-                layers.data(name='act' + str(i),
-                            shape=[self.act_dim_n[i]],
-                            dtype='float32') for i in range(self.n)
+                layers.data(
+                    name='act' + str(i),
+                    shape=[self.act_dim_n[i]],
+                    dtype='float32') for i in range(self.n)
             ]
             target_q = layers.data(name='target_q', shape=[], dtype='float32')
             self.critic_cost = self.alg.learn(obs_n, act_n, target_q)
 
         with fluid.program_guard(self.next_q_program):
             obs_n = [
-                layers.data(name='obs' + str(i),
-                            shape=[self.obs_dim_n[i]],
-                            dtype='float32') for i in range(self.n)
+                layers.data(
+                    name='obs' + str(i),
+                    shape=[self.obs_dim_n[i]],
+                    dtype='float32') for i in range(self.n)
             ]
             act_n = [
-                layers.data(name='act' + str(i),
-                            shape=[self.act_dim_n[i]],
-                            dtype='float32') for i in range(self.n)
+                layers.data(
+                    name='act' + str(i),
+                    shape=[self.act_dim_n[i]],
+                    dtype='float32') for i in range(self.n)
             ]
             self.next_Q = self.alg.Q_next(obs_n, act_n)
 
         with fluid.program_guard(self.next_a_program):
-            obs = layers.data(name='obs',
-                              shape=[self.obs_dim_n[self.agent_index]],
-                              dtype='float32')
+            obs = layers.data(
+                name='obs',
+                shape=[self.obs_dim_n[self.agent_index]],
+                dtype='float32')
             self.next_action = self.alg.predict_next(obs)
 
         if self.speedup:
@@ -106,9 +113,9 @@ class MAAgent(parl.Agent):
     def predict(self, obs):
         obs = np.expand_dims(obs, axis=0)
         obs = obs.astype('float32')
-        act = self.fluid_executor.run(self.pred_program,
-                                      feed={'obs': obs},
-                                      fetch_list=[self.pred_act])[0]
+        act = self.fluid_executor.run(
+            self.pred_program, feed={'obs': obs},
+            fetch_list=[self.pred_act])[0]
         return act[0]
 
     def learn(self, agents):
@@ -155,12 +162,10 @@ class MAAgent(parl.Agent):
                 for i in range(self.n)
             }
             feed = feed_obs.update(feed_act)  # merge two dict
-            target_q_next = self.fluid_executor.run(self.next_q_program,
-                                                    feed=feed,
-                                                    fetch_list=[self.next_Q
-                                                                ])[0]
-            target_q += (batch_rew + self.alg.gamma *
-                         (1.0 - batch_isOver) * target_q_next)
+            target_q_next = self.fluid_executor.run(
+                self.next_q_program, feed=feed, fetch_list=[self.next_Q])[0]
+            target_q += (batch_rew +
+                         self.alg.gamma * (1.0 - batch_isOver) * target_q_next)
         target_q = target_q / num_sample
 
         feed_obs = {'obs' + str(i): batch_obs_n[i] for i in range(self.n)}
@@ -168,9 +173,8 @@ class MAAgent(parl.Agent):
         target_q = target_q.astype('float32')
         feed = feed_obs.update(feed_act)
         feed['target_q'] = target_q
-        critic_cost = self.fluid_executor.run(self.learn_program,
-                                              feed=feed,
-                                              fetch_list=[self.critic_cost])[0]
+        critic_cost = self.fluid_executor.run(
+            self.learn_program, feed=feed, fetch_list=[self.critic_cost])[0]
 
         self.alg.sync_target()
         return critic_cost

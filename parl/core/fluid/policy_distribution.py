@@ -40,6 +40,7 @@ class PolicyDistribution(object):
 
 class CategoricalDistribution(PolicyDistribution):
     """Categorical distribution for discrete action spaces."""
+
     def __init__(self, logits):
         """
         Args:
@@ -67,8 +68,8 @@ class CategoricalDistribution(PolicyDistribution):
         e_logits = layers.exp(logits)
         z = layers.reduce_sum(e_logits, dim=1)
         prob = e_logits / z
-        entropy = -1.0 * layers.reduce_sum(prob * (logits - layers.log(z)),
-                                           dim=1)
+        entropy = -1.0 * layers.reduce_sum(
+            prob * (logits - layers.log(z)), dim=1)
 
         return entropy
 
@@ -148,9 +149,10 @@ class SoftMultiCategoricalDistribution(PolicyDistribution):
         self.categoricals = list(
             map(
                 SoftCategoricalDistribution,
-                layers.split(input=logits,
-                             num_or_sections=list(high - low + 1),
-                             dim=len(logits.shape) - 1)))
+                layers.split(
+                    input=logits,
+                    num_or_sections=list(high - low + 1),
+                    dim=len(logits.shape) - 1)))
 
     def sample(self):
         cate_list = []

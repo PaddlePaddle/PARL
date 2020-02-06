@@ -121,6 +121,7 @@ class MAAgent(parl.Agent):
     def learn(self, agents):
         self.global_train_step += 1
 
+        # only update parameter every 100 steps
         if self.global_train_step % 100 != 0:
             return 0.0
 
@@ -142,32 +143,26 @@ class MAAgent(parl.Agent):
                 = self.rpm.sample_batch_by_index(rpm_sample_index)
 
         # compute target q
-        num_sample = 1
         target_q = 0.0
-        for _ in range(num_sample):
-            target_act_next_n = []
-            for i in range(self.n):
-                feed = {'obs': batch_obs_new_n[i]}
-                target_act_next = agents[i].fluid_executor.run(
-                    agents[i].next_a_program,
-                    feed=feed,
-                    fetch_list=[agents[i].next_action])[0]
-                target_act_next_n.append(target_act_next)
-            feed_obs = {
-                'obs' + str(i): batch_obs_new_n[i]
-                for i in range(self.n)
-            }
-            feed_act = {
-                'act' + str(i): target_act_next_n[i]
-                for i in range(self.n)
-            }
-            feed = feed_obs.copy()
-            feed.update(feed_act)  # merge two dict
-            target_q_next = self.fluid_executor.run(
-                self.next_q_program, feed=feed, fetch_list=[self.next_Q])[0]
-            target_q += (batch_rew +
-                         self.alg.gamma * (1.0 - batch_isOver) * target_q_next)
-        target_q = target_q / num_sample
+        target_act_next_n = []
+        for i in range(self.n):
+            feed = {'obs': batch_obs_new_n[i]}
+            target_act_next = agents[i].fluid_executor.run(
+                agents[i].next_a_program,
+                feed=feed,
+                fetch_list=[agents[i].next_action])[0]
+            target_act_next_n.append(target_act_next)
+        feed_obs = {'obs' + str(i): batch_obs_new_n[i] for i in range(self.n)}
+        feed_act = {
+            'act' + str(i): target_act_next_n[i]
+            for i in range(self.n)
+        }
+        feed = feed_obs.copy()
+        feed.update(feed_act)  # merge two dict
+        target_q_next = self.fluid_executor.run(
+            self.next_q_program, feed=feed, fetch_list=[self.next_Q])[0]
+        target_q += (
+            batch_rew + self.alg.gamma * (1.0 - batch_isOver) * target_q_next)
 
         feed_obs = {'obs' + str(i): batch_obs_n[i] for i in range(self.n)}
         feed_act = {'act' + str(i): batch_act_n[i] for i in range(self.n)}

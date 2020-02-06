@@ -64,7 +64,6 @@ def run_episode(env, agents):
             critic_loss = agent.learn(agents)
             tensorboard.add_scalar('critic_loss_%d' % i, critic_loss,
                                    agent.global_train_step)
-            # tensorboard.add_scalar('actor_loss_%d'%i, actor_loss, agent.global_train_step)
 
     return total_reward, agents_reward, steps
 
@@ -89,8 +88,9 @@ def train_agent():
 
     from gym import spaces
     from multiagent.multi_discrete import MultiDiscrete
-    assert (isinstance(env.action_space, spaces.Discrete)
-            or isinstance(env.action_space, MultiDiscrete))
+    for space in env.action_space:
+        assert (isinstance(space, spaces.Discrete)
+                or isinstance(space, MultiDiscrete))
 
     agents = []
     for i in range(env.n):

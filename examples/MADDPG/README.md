@@ -14,37 +14,37 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <tr>
 <td>
 simple<br>
-<img src=".benchmark/MADDPG_simple.png"                  width = "150" height = "150" alt="MADDPG_simple"/>
+<img src=".benchmark/MADDPG_simple.png"                  width = "170" height = "170" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src=".benchmark/MADDPG_simple_adversary.png"        width = "150" height = "150" alt="MADDPG_simple_adversary"/>
+<img src=".benchmark/MADDPG_simple_adversary.png"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src=".benchmark/MADDPG_simple_push.png"             width = "150" height = "150" alt="MADDPG_simple_push"/>
+<img src=".benchmark/MADDPG_simple_push.png"             width = "170" height = "170" alt="MADDPG_simple_push"/>
 </td>
 <td>
 simple_reference<br>
-<img src=".benchmark/MADDPG_simple_reference.png"        width = "150" height = "150" alt="MADDPG_simple_reference"/>
+<img src=".benchmark/MADDPG_simple_reference.png"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src=".benchmark/MADDPG_simple_speaker_listener.png" width = "150" height = "150" alt="MADDPG_simple_speaker_listener"/>
+<img src=".benchmark/MADDPG_simple_speaker_listener.png" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src=".benchmark/MADDPG_simple_spread.png"           width = "150" height = "150" alt="MADDPG_simple_spread"/>
+<img src=".benchmark/MADDPG_simple_spread.png"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src=".benchmark/MADDPG_simple_tag.png"              width = "150" height = "150" alt="MADDPG_simple_tag"/>
+<img src=".benchmark/MADDPG_simple_tag.png"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src=".benchmark/MADDPG_simple_world_comm.png"       width = "150" height = "150" alt="MADDPG_simple_world_comm"/>
+<img src=".benchmark/MADDPG_simple_world_comm.png"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>
@@ -56,37 +56,37 @@ Display after 25000 episodes.
 <tr>
 <td>
 simple<br>
-<img src=".benchmark/MADDPG_simple.gif"                  width = "150" height = "150" alt="MADDPG_simple"/>
+<img src=".benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src=".benchmark/MADDPG_simple_adversary.gif"        width = "150" height = "150" alt="MADDPG_simple_adversary"/>
+<img src=".benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src=".benchmark/MADDPG_simple_push.gif"             width = "150" height = "150" alt="MADDPG_simple_push"/>
+<img src=".benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
 </td>
 <td>
 simple_reference<br>
-<img src=".benchmark/MADDPG_simple_reference.gif"        width = "150" height = "150" alt="MADDPG_simple_reference"/>
+<img src=".benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src=".benchmark/MADDPG_simple_speaker_listener.gif" width = "150" height = "150" alt="MADDPG_simple_speaker_listener"/>
+<img src=".benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src=".benchmark/MADDPG_simple_spread.gif"           width = "150" height = "150" alt="MADDPG_simple_spread"/>
+<img src=".benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src=".benchmark/MADDPG_simple_tag.gif"              width = "150" height = "150" alt="MADDPG_simple_tag"/>
+<img src=".benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src=".benchmark/MADDPG_simple_world_comm.gif"       width = "150" height = "150" alt="MADDPG_simple_world_comm"/>
+<img src=".benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>

@@ -50,7 +50,6 @@ class ReplayMemory(object):
         return batch_idx
 
     def sample_batch_by_index(self, batch_idx):
-
         obs = self.obs[batch_idx]
         reward = self.reward[batch_idx]
         action = self.action[batch_idx]

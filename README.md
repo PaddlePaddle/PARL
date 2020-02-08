@@ -81,6 +81,7 @@ pip install parl
 - [A2C](examples/A2C/)
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
+- [MADDPG](examples/MADDPG/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 

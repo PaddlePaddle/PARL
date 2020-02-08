@@ -14,7 +14,10 @@
 
 from parl.core.fluid import layers
 
-__all__ = ['PolicyDistribution', 'CategoricalDistribution']
+__all__ = [
+    'PolicyDistribution', 'CategoricalDistribution',
+    'SoftCategoricalDistribution', 'SoftMultiCategoricalDistribution'
+]
 
 
 class PolicyDistribution(object):
@@ -79,7 +82,6 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
         """
-
         assert len(actions.shape) == 1
 
         logits = self.logits - layers.reduce_max(self.logits, dim=1)
@@ -122,3 +124,88 @@ class CategoricalDistribution(PolicyDistribution):
             (logits - layers.log(z) - other_logits + layers.log(other_z)),
             dim=1)
         return kl
+
+
+class SoftCategoricalDistribution(CategoricalDistribution):
+    """Categorical distribution with noise for discrete action spaces"""
+
+    def __init__(self, logits):
+        """
+        Args:
+            logits: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS] of unnormalized policy logits
+        """
+        self.logits = logits
+        super(SoftCategoricalDistribution, self).__init__(logits)
+
+    def sample(self):
+        """
+        Returns:
+            sample_action: An int64 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
+                           with noise to keep the target close to the original action.
+        """
+        eps = 1e-4
+        logits_shape = layers.cast(layers.shape(self.logits), dtype='int64')
+        uniform = layers.uniform_random(logits_shape, min=eps, max=1.0 - eps)
+        soft_uniform = layers.log(-1.0 * layers.log(uniform))
+        return layers.softmax(self.logits - soft_uniform, axis=-1)
+
+
+class SoftMultiCategoricalDistribution(PolicyDistribution):
+    """Categorical distribution with noise for MultiDiscrete action spaces."""
+
+    def __init__(self, logits, low, high):
+        """
+        Args:
+            logits: A float32 tensor with shape [BATCH_SIZE, LEN_MultiDiscrete, NUM_ACTIONS] of unnormalized policy logits
+            low: lower bounds of sample action
+            high: Upper bounds of action
+        """
+        self.logits = logits
+        self.low = low
+        self.high = high
+        self.categoricals = list(
+            map(
+                SoftCategoricalDistribution,
+                layers.split(
+                    input=logits,
+                    num_or_sections=list(high - low + 1),
+                    dim=len(logits.shape) - 1)))
+
+    def sample(self):
+        """
+        Returns:
+            sample_action: An int64 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
+                           with noise to keep the target close to the original action.
+        """
+        cate_list = []
+        for i in range(len(self.categoricals)):
+            cate_list.append(self.low[i] + self.categoricals[i].sample())
+        return layers.concat(cate_list, axis=-1)
+
+    def layers_add_n(self, input_list):
+        """
+        Adds all input tensors element-wise, can replace tf.add_n
+        """
+        assert len(input_list) >= 1
+        res = input_list[0]
+        for i in range(1, len(input_list)):
+            res = layers.elementwise_add(res, input_list[i])
+        return res
+
+    def entropy(self):
+        """
+        Returns:
+            entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
+        """
+        return self.layers_add_n([p.entropy() for p in self.categoricals])
+
+    def kl(self, other):
+        """
+        Args:
+            other: object of SoftCategoricalDistribution
+
+        Returns:
+            kl: A float32 tensor with shape [BATCH_SIZE]
+        """
+        return self.layers_add_n(
+            [p.kl(q) for p, q in zip(self.categoricals, other.categoricals)])

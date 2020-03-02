@@ -1,5 +1,5 @@
 ## PyTorch benchmark Quick Start
-Train an agent with PARL(PyTorch benchmark) to solve the CartPole problem, a classical benchmark in RL.
+Train an agent with PARL to solve the CartPole problem, a classical benchmark in RL.
 
 ## How to use
 ### Dependencies:

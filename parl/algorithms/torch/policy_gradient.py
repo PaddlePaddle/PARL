@@ -37,39 +37,24 @@ class PolicyGradient(parl.Algorithm):
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
     def predict(self, obs):
-        """Predict actions of maximum probability
+        """Predict the probability of actions
 
         Args:
-            obs (torch.tensor): shape of (*, obs_dim)
+            obs (torch.tensor): shape of (obs_dim,)
 
         Returns:
-            predict_actions (torch.tensor): shape of (*, 1)
+            prob (torch.tensor): shape of (action_dim,)
         """
         prob = self.model(obs)
-        _, predict_actions = prob.max(-1)
-        return predict_actions
-
-    def sample(self, obs):
-        """Sample actions according to probability
-
-        Args:
-            obs (torch.tensor): shape of (*, obs_dim)
-
-        Returns:
-            sample_actions (torch.tensor): shape of (*, 1)
-        """
-
-        prob = self.model(obs)
-        sample_actions = Categorical(prob).sample()
-        return sample_actions
+        return prob
 
     def learn(self, obs, action, reward):
         """Update model with policy gradient algorithm
 
         Args:
-            obs (torch.tensor): shape of (*, obs_dim)
-            action (torch.tensor): shape of (*, 1)
-            reward (torch.tensor): shape of (*, 1)
+            obs (torch.tensor): shape of (batch_size, obs_dim)
+            action (torch.tensor): shape of (batch_size, 1)
+            reward (torch.tensor): shape of (batch_size, 1)
 
         Returns:
             loss (torch.tensor): shape of (1)

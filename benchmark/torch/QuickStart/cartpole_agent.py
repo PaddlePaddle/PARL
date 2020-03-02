@@ -14,7 +14,7 @@
 
 import parl
 import torch
-from torch.distributions import Categorical
+import numpy as np
 
 
 class CartpoleAgent(parl.Agent):
@@ -34,35 +34,38 @@ class CartpoleAgent(parl.Agent):
         """Sample an action when given an observation
 
         Args:
-            obs(np.float32): shape of (obs_dim)
+            obs(np.float32): shape of (obs_dim,)
         
         Returns:
             action(int)
         """
         obs = torch.tensor(obs, device=self.device, dtype=torch.float)
-        action = self.algorithm.sample(obs)
-        return action.item()
+        prob = self.algorithm.predict(obs)
+        prob = prob.data.numpy()
+        action = np.random.choice(len(prob), 1, p=prob)[0]
+        return action
 
     def predict(self, obs):
         """Predict an action when given an observation
 
         Args:
-            obs(np.float32): shape of (obs_dim)
+            obs(np.float32): shape of (obs_dim,)
         
         Returns:
             action(int)
         """
         obs = torch.tensor(obs, device=self.device, dtype=torch.float)
-        action = self.algorithm.predict(obs)
+        prob = self.algorithm.predict(obs)
+        _, action = prob.max(-1)
         return action.item()
 
     def learn(self, obs, action, reward):
         """Update model with an episode data
 
         Args:
-            obs(np.float32): shape of (N, obs_dim)
-            action(np.int64): shape of (N)
-            reward(np.float32): shape of (N)
+            obs(np.float32): shape of (batch_size, obs_dim)
+            action(np.int64): shape of (batch_size)
+            reward(np.float32): shape of (batch_size)
         
         Returns:
             loss(float)

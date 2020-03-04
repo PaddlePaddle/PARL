@@ -75,6 +75,7 @@ setup(
         "flask==1.0.4",
         "click",
         "psutil",
+        "gym",
     ],
     classifiers=[
         'Intended Audience :: Developers',

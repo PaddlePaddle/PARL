@@ -19,6 +19,7 @@ For more technical details about our solution, we provide:
 
 ## Dependencies
 - python3.6
+- [parl==1.0](https://github.com/PaddlePaddle/PARL)
 - [paddlepaddle==1.5.1](https://github.com/PaddlePaddle/Paddle)
 - [osim-rl](https://github.com/stanfordnmbl/osim-rl)
 - [grpcio==1.12.1](https://grpc.io/docs/quickstart/python.html)

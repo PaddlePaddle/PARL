@@ -6,6 +6,7 @@ The **PARL** team gets the first place in NeurIPS reinforcement learning competi
 
 ## Dependencies
 - python3.6
+- [parl==1.2.1](https://github.com/PaddlePaddle/PARL)
 - [paddlepaddle==1.5.1](https://github.com/PaddlePaddle/Paddle)
 - [parl>=1.2.1](https://github.com/PaddlePaddle/PARL)
 - [osim-rl==3.0.11](https://github.com/stanfordnmbl/osim-rl)

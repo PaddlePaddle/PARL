@@ -27,6 +27,12 @@ from parl.core.fluid.policy_distribution import SoftMultiCategoricalDistribution
 
 
 def SoftPDistribution(logits, act_space):
+    """input:
+            logits: the output of policy model
+            act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
+        output：
+            instance of SoftCategoricalDistribution or SoftMultiCategoricalDistribution
+    """
     # is instance of gym.spaces.Discrete
     if (hasattr(act_space, 'n')):
         return SoftCategoricalDistribution(logits)
@@ -35,7 +41,8 @@ def SoftPDistribution(logits, act_space):
         return SoftMultiCategoricalDistribution(logits, act_space.low,
                                                 act_space.high)
     else:
-        raise NotImplementedError
+        raise AssertionError("act_space must be instance of \
+            gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
 
 
 class MADDPG(Algorithm):

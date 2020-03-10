@@ -72,7 +72,7 @@ pip install parl
 # 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
-- [ES深度进化算法](examples/ES/)
+- [ES(深度进化算法)](examples/ES/)
 - [DDPG](examples/DDPG/)
 - [PPO](examples/PPO/)
 - [IMPALA](examples/IMPALA/)

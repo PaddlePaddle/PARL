@@ -21,6 +21,7 @@ from torch.distributions import Normal
 
 __all__ = ['PPO']
 
+
 class PPO(parl.Algorithm):
     def __init__(self,
                  model,

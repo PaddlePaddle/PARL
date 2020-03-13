@@ -21,6 +21,7 @@ import threading
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.utils import _IS_WINDOWS
 
 
 @parl.remote_class
@@ -44,12 +45,15 @@ class TestSendFile(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(2)
 
-        os.system('mkdir ./rom_files')
-        os.system('touch ./rom_files/pong.bin')
-        assert os.path.exists('./rom_files/pong.bin')
-        parl.connect(
-            'localhost:{}'.format(port),
-            distributed_files=['./rom_files/pong.bin'])
+        tmp_dir = 'rom_files'
+        tmp_file = os.path.join(tmp_dir, 'pong.bin')
+        os.system('mkdir {}'.format(tmp_dir))
+        if _IS_WINDOWS:
+            os.system('type NUL >> {}'.format(tmp_file))
+        else:
+            os.system('touch {}'.format(tmp_file))
+        assert os.path.exists(tmp_file)
+        parl.connect('localhost:{}'.format(port), distributed_files=[tmp_file])
         time.sleep(5)
         actor = Actor()
         for _ in range(10):
@@ -70,8 +74,9 @@ class TestSendFile(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(2)
 
+        tmp_file = os.path.join('rom_files', 'no_pong.bin')
         self.assertRaises(Exception, parl.connect, 'localhost:{}'.format(port),
-                          ['./rom_files/no_pong.bin'])
+                          [tmp_file])
 
         worker.exit()
         master.exit()

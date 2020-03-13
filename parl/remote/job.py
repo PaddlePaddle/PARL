@@ -60,12 +60,12 @@ class Job(object):
         self.worker_address = worker_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
-        self.lock = threading.Lock()
 
         self.run_job_process = Process(
             target=self.run, args=(job_address_sender, ))
         self.run_job_process.start()
 
+        self.lock = threading.Lock()
         self._create_sockets()
 
         process = psutil.Process(self.pid)

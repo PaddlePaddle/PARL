@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import parl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Normal
 
+__all__ = ['PPO']
 
-class PPO():
+class PPO(parl.Algorithm):
     def __init__(self,
                  model,
                  clip_param,

@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import parl
 import torch
 
 
-class MujocoAgent():
+class MujocoAgent(parl.Agent):
     def __init__(self, algorithm, device):
         self.alg = algorithm
         self.device = device

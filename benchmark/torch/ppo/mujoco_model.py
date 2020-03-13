@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import parl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
 
 
-class MujocoModel(nn.Module):
+class MujocoModel(parl.Model):
     def __init__(self, obs_dim, act_dim):
         super(MujocoModel, self).__init__()
         self.actor = Actor(obs_dim, act_dim)
@@ -31,7 +32,7 @@ class MujocoModel(nn.Module):
         return self.critic(obs)
 
 
-class Actor(nn.Module):
+class Actor(parl.Model):
     def __init__(self, obs_dim, act_dim):
         super(Actor, self).__init__()
         self.fc1 = nn.Linear(obs_dim, 64)
@@ -48,7 +49,7 @@ class Actor(nn.Module):
         return mean, self.log_std
 
 
-class Critic(nn.Module):
+class Critic(parl.Model):
     def __init__(self, obs_dim):
         super(Critic, self).__init__()
         self.fc1 = nn.Linear(obs_dim, 64)

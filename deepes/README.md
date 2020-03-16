@@ -21,7 +21,9 @@ predictor->update(noisy_keys, noisy_rewards);
 ```
 
 ## 一键运行demo列表
-Torch: sh [build.sh](./build.sh)
+- **Torch**: sh [build.sh](./build.sh)
+- **Paddle**: 
+- **裸写网络**：
 
 ## 相关依赖:
 - Protobuf >= 2.4.2

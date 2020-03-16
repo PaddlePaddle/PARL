@@ -1,7 +1,7 @@
 # DeepES工具
 DeepES是一个支持**快速验证**ES效果、**兼容多个框架**的C++库。
 <p align="center">
-<img src="deepes/DeepES.gif" alt="PARL" width="500"/>
+<img src="DeepES.gif" alt="PARL" width="500"/>
 </p>
 
 ## 使用示范

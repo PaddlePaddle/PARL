@@ -75,6 +75,7 @@ pip install parl
 # Examples
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
+- [ES](examples/ES/)
 - [DDPG](examples/DDPG/)
 - [PPO](examples/PPO/)
 - [IMPALA](examples/IMPALA/)

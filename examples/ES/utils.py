@@ -19,6 +19,10 @@ def compute_ranks(x):
 
 
 def compute_centered_ranks(x):
+    """Return ranks that is normliazed to [-0.5, 0.5] with the rewards as input.
+    Args:
+        x(np.array): an array of rewards.
+    """
     y = compute_ranks(x.ravel()).reshape(x.shape).astype(np.float32)
     y /= (x.size - 1)
     y -= 0.5
@@ -26,6 +30,7 @@ def compute_centered_ranks(x):
 
 
 def itergroups(items, group_size):
+    """An iterator that iterates a list with batch data."""
     assert group_size >= 1
     group = []
     for x in items:
@@ -38,16 +43,22 @@ def itergroups(items, group_size):
 
 
 def batched_weighted_sum(weights, vecs, batch_size):
+    """Compute the gradients for updating the parameters.
+    Args:
+        weights(np.array): the nomalized rewards computed by the function `compute_centered_ranks`.
+        vecs(np.array): the noise added to the parameters.
+        batch_size(int): the batch_size for speeding up the computation.
+    Return:
+    total(np.array): aggregated gradient. 
+    """
     total = 0
-    num_items_summed = 0
     for batch_weights, batch_vecs in zip(
             itergroups(weights, batch_size), itergroups(vecs, batch_size)):
         assert len(batch_weights) == len(batch_vecs) <= batch_size
         total += np.dot(
             np.asarray(batch_weights, dtype=np.float32),
             np.asarray(batch_vecs, dtype=np.float32))
-        num_items_summed += len(batch_weights)
-    return total, num_items_summed
+    return total
 
 
 def unflatten(flat_array, array_shapes):

@@ -55,7 +55,7 @@ class MujocoAgent(parl.Agent):
             noises(np.float32): [batch_size, weights_total_size]
         """
 
-        g, count = utils.batched_weighted_sum(
+        g = utils.batched_weighted_sum(
             # mirrored sampling: evaluate pairs of perturbations \epsilon, −\epsilon
             noisy_rewards[:, 0] - noisy_rewards[:, 1],
             noises,

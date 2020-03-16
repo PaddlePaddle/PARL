@@ -21,7 +21,7 @@ The environment is based on the full game of StarCraft II. To install the game, 
 $ cd starcraft2
 $ SC2PATH=~ bash install_sc2.sh
 ```
-### MacOS/Windows (use Docker)
+### MacOS (use Docker)
 ```shell
 $ cd starcraft2
 $ bash build_docker.sh  # build Dockerfile

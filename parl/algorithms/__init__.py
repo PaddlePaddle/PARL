@@ -20,4 +20,6 @@ if _HAS_FLUID:
 elif _HAS_TORCH:
     from parl.algorithms.torch import *
 else:
-    logger.warning("No deep learning framework was found, but it's ok for parallel computation.")
+    logger.warning(
+        "No deep learning framework was found, but it's ok for parallel computation."
+    )

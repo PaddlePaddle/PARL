@@ -1,9 +1,11 @@
+// Third party code
+// This code is copied or modified from openai/gym's cartpole.py
+
 #include <torch/torch.h>
 
 const double kPi = 3.1415926535898;
 
 class CartPole {
-	// Translated from openai/gym's cartpole.py
 public:
 	double gravity = 9.8;
 	double masscart = 1.0;

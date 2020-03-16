@@ -14,7 +14,7 @@ Mean win_rate (evaluate 5 episode) for 1000 epchos training (1 epcho = 5 episode
 
 
 ## StarCraft II Installation
-The environment is based on the full game of StarCraft II (version >= 3.16.1). To install the game, follow the commands bellow, or check more detail in [SMAC](https://github.com/oxwhirl/smac#installing-starcraft-ii)
+The environment is based on the full game of StarCraft II. To install the game, follow the commands bellow, or check more detail in [SMAC](https://github.com/oxwhirl/smac#installing-starcraft-ii)
 
 ### Linux
 ```shell
@@ -24,10 +24,13 @@ $ SC2PATH=~ bash install_sc2.sh
 ### MacOS/Windows (use Docker)
 ```shell
 $ cd starcraft2
-$ bash build_docker.sh  # build the Dockerfile
+$ bash build_docker.sh  # build Dockerfile
 $ bash install_sc2.sh  # download startcraft II and maps
 ```
-
+### Windows (use Docker)
+- Step 1: Build docker images, `cd starcraft2 && bash build_docker.sh`
+- Step 2: Download [Starcraft II package](https://github.com/Blizzard/s2client-proto#linux-packages) (version >= 3.16.1), unzip to folder `/starcraft2/StarCraftII` (password: `iagreetotheeula`)
+- Step 3: Download [Map](https://github.com/oxwhirl/smac/releases/download/v0.1-beta1/SMAC_Maps.zip), unzip to folder `/starcraft2/StarCraftII/Maps/SMAC_Maps`
 
 
 ## How to use

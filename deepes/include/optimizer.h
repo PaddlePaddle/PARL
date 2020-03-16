@@ -16,6 +16,10 @@
 #define OPTIMIZER_H
 namespace DeepES{
 
+/* Base class for optimizers. Subclsses are required to implement the following functions:
+ * 1. compute_steps
+ */
+
 class Optimizer {
 public:
   Optimizer() : _base_lr(1e-3), _update_times(0) {}
@@ -48,12 +52,12 @@ protected:
 private:
   float _momentum;
 
-}; //namespace
+}; //class
 
 //class AdamOptimizer: public Optimizer {
 //public:
 //  AdamOptimizer(float base)
-//}
+//};
 
-};
+}//namespace
 #endif

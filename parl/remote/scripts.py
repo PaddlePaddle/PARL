@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 import threading
+import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
@@ -144,9 +145,10 @@ def start_master(port, cpu_num, monitor_port, debug):
             worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
 
     if _IS_WINDOWS:
-        monitor_log = open('monitor.log', 'w')
-        _ = subprocess.Popen(monitor_command, stdout=monitor_log)
-        monitor_log.close()
+        # TODO(@zenghsh3) redirecting stdout of monitor subprocess to FNULL will cause occasional failure
+        tmp_file = tempfile.TemporaryFile()
+        _ = subprocess.Popen(monitor_command, stdout=tmp_file)
+        tmp_file.close()
     else:
         _ = subprocess.Popen(
             monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)

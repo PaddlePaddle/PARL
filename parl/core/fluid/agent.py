@@ -15,6 +15,7 @@
 import warnings
 warnings.simplefilter('default')
 
+import os
 import paddle.fluid as fluid
 from parl.core.fluid import layers
 from parl.utils.deprecation import deprecated
@@ -180,8 +181,9 @@ class Agent(AgentBase):
         """
         if program is None:
             program = self.learn_program
-        dirname = '/'.join(save_path.split('/')[:-1])
-        filename = save_path.split('/')[-1]
+        sep = os.sep
+        dirname = sep.join(save_path.split(sep)[:-1])
+        filename = save_path.split(sep)[-1]
         fluid.io.save_params(
             executor=self.fluid_executor,
             dirname=dirname,
@@ -214,8 +216,9 @@ class Agent(AgentBase):
             program = self.learn_program
         if type(program) is fluid.compiler.CompiledProgram:
             program = program._init_program
-        dirname = '/'.join(save_path.split('/')[:-1])
-        filename = save_path.split('/')[-1]
+        sep = os.sep
+        dirname = sep.join(save_path.split(sep)[:-1])
+        filename = save_path.split(sep)[-1]
         fluid.io.load_params(
             executor=self.fluid_executor,
             dirname=dirname,

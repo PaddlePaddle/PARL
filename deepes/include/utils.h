@@ -23,17 +23,27 @@
 
 namespace DeepES{
 
+/*Return ranks that is normliazed to [-0.5, 0.5] with the rewards as input.
+  Args:
+    reward: an array of rewards
+*/
 void compute_centered_ranks(std::vector<float> &reward) ;
 
+/* Load a protobuf-based configuration from the file.
+ * Args:
+ *  config_file: file path.
+ *  proto_config: protobuff message for configuration.
+ * return 
+ */
 template<typename T>
-int load_proto_conf(const std::string& config_file, T& proto_config) {
-    std::ifstream fin(config_file);
-    CHECK(fin) << "open config file " << config_file; 
-    if (fin.fail()) {
-        LOG(FATAL) << "open prototxt config failed: " << config_file;
-        return -1;
-    }
-
+bool load_proto_conf(const std::string& config_file, T& proto_config) {
+  bool success = true;
+  std::ifstream fin(config_file);
+  CHECK(fin) << "open config file " << config_file; 
+  if (fin.fail()) {
+    LOG(FATAL) << "open prototxt config failed: " << config_file;
+    success = false;
+  } else {
     fin.seekg(0, std::ios::end);
     size_t file_size = fin.tellg();
     fin.seekg(0, std::ios::beg);
@@ -43,16 +53,14 @@ int load_proto_conf(const std::string& config_file, T& proto_config) {
 
     std::string proto_str(file_content_buffer, file_size);
     if (!google::protobuf::TextFormat::ParseFromString(proto_str, &proto_config)) {
-        LOG(FATAL) << "Failed to load config: " << config_file;
-        return -1;
+      LOG(FATAL) << "Failed to load config: " << config_file;
+      return -1;
     }
     delete[] file_content_buffer;
     fin.close();
-
-    return 0;
+  }
+  return success;
 }
-
-
 
 }
 

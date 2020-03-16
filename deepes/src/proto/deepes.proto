@@ -1,4 +1,26 @@
-message GaussianSamplingConfig{
-    required float seed = 1;
-    required float std = 2;
+syntax = "proto2";
+
+package DeepES;
+
+message DeepESConfig {
+  //sampling configuration
+  optional int32 seed = 1 [default = 18];
+  optional int32 buffer_size = 2 [default = 100000];
+  optional GaussianSamplingConfig gaussian_sampling = 3;
+  // Optimizer Configuration
+  optional OptimizerConfig optimizer = 4;
+}
+
+message GaussianSamplingConfig {
+  optional float std = 1 [default = 1.0];
+}
+
+message OptimizerConfig{
+  optional string type = 1 [default = "SGD"];
+  optional float base_lr = 2; // The base learning rate
+  optional float momentum = 3; // The momentum value.
+}
+
+message SamplingKey{
+  repeated int32 key = 1;
 }

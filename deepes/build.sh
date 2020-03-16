@@ -3,6 +3,7 @@ cd "$(dirname "$0")"
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 #----------------protobuf-------------#
+cp ./src/proto/deepes.proto ./
 protoc deepes.proto --cpp_out ./
 mv deepes.pb.h ./include
 mv deepes.pb.cc ./src

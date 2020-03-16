@@ -1,0 +1,4 @@
+message GaussianSamplingConfig{
+    required float seed = 1;
+    required float std = 2;
+}

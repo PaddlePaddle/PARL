@@ -1,0 +1,10 @@
+seed : 1024
+
+gaussian_sampling {
+  std: 0.3
+}
+
+optimizer {
+  type: "SGD",
+  base_lr: 1e-2
+}

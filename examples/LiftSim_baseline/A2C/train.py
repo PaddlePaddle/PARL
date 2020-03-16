@@ -210,7 +210,7 @@ class Learner(object):
 
     def save_model(self):
         time_str = time.strftime(".%Y%m%d_%H%M%S", time.localtime())
-        self.agent.save('./saved_models/model.ckpt' + time_str)
+        self.agent.save(os.path.join('saved_models', 'model.ckpt' + time_str))
 
 
 if __name__ == '__main__':

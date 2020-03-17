@@ -10,7 +10,6 @@
 + [parl](https://github.com/PaddlePaddle/PARL)
 + [rlschool>=0.1.1][rlschool]
 
-Windows版本仅支持Python3.5及以上版本。
 
 ## 分布式训练
 
@@ -31,11 +30,11 @@ python train.py
 ## 评估
 可以通过下面命令来评估保存的模型
 ```bash
-python predict.py --model_path saved_models/[FILENAME]
+python evaluate.py --model_path saved_models/[FILENAME]
 ```
 
 ## 收敛指标
-在GPU上训练30h左右，评估指标能达到-120分左右（LiftSim环境运行1天reward）
+训练30h左右，评估指标能达到-120分左右（LiftSim环境运行1天reward）
 <img src="performance.png"/>
 
 ## 可视化效果

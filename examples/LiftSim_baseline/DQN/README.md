@@ -6,11 +6,9 @@
 
 ## 依赖库
 
-- paddlepaddle==1.5.1
-- parl==1.1.2
-- rlschool>=0.0.1
-
-Windows版本仅支持Python3.5及以上版本。
++ [paddlepaddle==1.5.1](https://github.com/PaddlePaddle/Paddle)
++ [parl==1.1.2](https://github.com/PaddlePaddle/PARL)
++ [rlschool>=0.0.1](rlschool)
 
 ## 运行
 

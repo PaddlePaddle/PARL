@@ -55,7 +55,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--model_path', type=str, help='path of the model to restore')
+        '--model_path', type=str, help='path of the model to evaluate.')
     args = parser.parse_args()
 
     evaluate_one_day(args.model_path)

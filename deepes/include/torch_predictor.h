@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef TORCHPREDICTOR_H
+#define TORCHPREDICTOR_H
 #include <memory>
 #include <string>
 #include "optimizer.h"
@@ -23,6 +23,13 @@
 
 namespace DeepES{
 
+/* DeepES predictor for Torch.
+ * Our implemtation is flexible to support any model that subclass torch::nn::Module.
+ * That is, we can instantiate a preditor by: predictor = Predcitor<Model>(model);
+ * After that, users can clone a predictor for multi-thread processing, add parametric noise for exploration,
+ * and update the parameteres, according to the evaluation resutls of noisy parameters.
+ *
+ */
 template <class T>
 class Predictor{
 public:

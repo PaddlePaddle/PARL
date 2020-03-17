@@ -41,6 +41,5 @@ python predict.py --model_path saved_models/[FILENAME]
 ## 可视化效果
 <img src="effect.gif" width="400"/>
 
-
 [rlschool]: https://github.com/PaddlePaddle/RLSchool
 [liftsim]: https://github.com/PaddlePaddle/RLSchool/tree/master/rlschool/liftsim

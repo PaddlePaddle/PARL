@@ -27,11 +27,14 @@ xparl start --port 8010 --cpu_num 5
 python train.py
 ```
 
+
 ## 评估
 可以通过下面命令来评估保存的模型
 ```bash
 python evaluate.py --model_path saved_models/[FILENAME]
 ```
+
+tensorboard和log文件会保存在`./train_log/train/`；可以通过运行命令`tensorboard --logdir .`查看tensorboard可视化界面。
 
 ## 收敛指标
 训练30h左右，评估指标能达到-120分左右（LiftSim环境运行1天reward）

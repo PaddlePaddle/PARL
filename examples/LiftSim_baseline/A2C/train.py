@@ -54,11 +54,6 @@ class Learner(object):
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
                     Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
-        else:
-            cpu_num = os.environ.get('CPU_NUM')
-            assert cpu_num is not None and cpu_num == '1', 'Only support training in single CPU,\
-                    Please set environment variable:  `export CPU_NUM=1`.'
-
         #========== Learner ==========
 
         self.entropy_stat = WindowStat(100)
@@ -99,7 +94,6 @@ class Learner(object):
             remote_thread.setDaemon(True)
             remote_thread.start()
 
-        logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
 
     def run_remote_sample(self, params_queue):

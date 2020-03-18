@@ -37,7 +37,8 @@ if __name__ == '__main__':
 
     exclude_examples = [
         'NeurIPS2019-Learn-to-Move-Challenge',
-        'NeurIPS2018-AI-for-Prosthetics-Challenge', 'EagerMode'
+        'NeurIPS2018-AI-for-Prosthetics-Challenge', 'LiftSim_baseline',
+        'EagerMode'
     ]
     for example in os.listdir('../examples/'):
         if example not in exclude_examples:

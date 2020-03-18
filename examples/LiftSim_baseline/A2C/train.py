@@ -12,26 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gym
 import numpy as np
 import os
+import parl
 import queue
 import six
 import time
 import threading
-import parl
-from atari_model import AtariModel
-from atari_agent import AtariAgent
-from collections import defaultdict
 
-from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, get_gpu_count, tensorboard
+from actor import Actor
+from collections import defaultdict
+from env_wrapper import ObsProcessWrapper, ActionProcessWrapper
+from parl.utils import logger, get_gpu_count, tensorboard, machine_info
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
-from parl.utils import machine_info
-
-from actor import Actor
+from rlschool import LiftSim
+from lift_model import LiftModel
+from lift_agent import LiftAgent
 
 
 class Learner(object):
@@ -39,17 +37,18 @@ class Learner(object):
         self.config = config
 
         #=========== Create Agent ==========
-        env = gym.make(config['env_name'])
-        env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
-        obs_shape = env.observation_space.shape
-        act_dim = env.action_space.n
-        self.config['obs_shape'] = obs_shape
-        self.config['act_dim'] = act_dim
+        env = LiftSim()
+        env = ActionProcessWrapper(env)
+        env = ObsProcessWrapper(env)
 
-        model = AtariModel(act_dim)
+        obs_dim = env.obs_dim
+        act_dim = env.act_dim
+        self.config['obs_dim'] = obs_dim
+
+        model = LiftModel(act_dim)
         algorithm = parl.algorithms.A3C(
             model, vf_loss_coeff=config['vf_loss_coeff'])
-        self.agent = AtariAgent(algorithm, config)
+        self.agent = LiftAgent(algorithm, config)
 
         if machine_info.is_gpu_available():
             assert get_gpu_count() == 1, 'Only support training in single GPU,\
@@ -57,12 +56,8 @@ class Learner(object):
 
         #========== Learner ==========
 
-        self.total_loss_stat = WindowStat(100)
-        self.pi_loss_stat = WindowStat(100)
-        self.vf_loss_stat = WindowStat(100)
         self.entropy_stat = WindowStat(100)
-        self.lr = None
-        self.entropy_coeff = None
+        self.target_values = None
 
         self.learn_time_stat = TimeStat(100)
         self.start_time = None
@@ -76,6 +71,8 @@ class Learner(object):
 
         self.params_queues = []
         self.create_actors()
+
+        self.log_steps = 0
 
     def create_actors(self):
         """ Connect to the cluster and start sampling of the remote actor.
@@ -97,7 +94,6 @@ class Learner(object):
             remote_thread.setDaemon(True)
             remote_thread.start()
 
-        logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
 
     def run_remote_sample(self, params_queue):
@@ -125,7 +121,6 @@ class Learner(object):
         2. collect sample data of all actors;
         3. update parameters.
         """
-
         latest_params = self.agent.get_weights()
         for params_queue in self.params_queues:
             params_queue.put(latest_params)
@@ -148,12 +143,13 @@ class Learner(object):
                 advantages_np=train_batch['advantages'],
                 target_values_np=train_batch['target_values'])
 
-        self.total_loss_stat.add(total_loss)
-        self.pi_loss_stat.add(pi_loss)
-        self.vf_loss_stat.add(vf_loss)
         self.entropy_stat.add(entropy)
-        self.lr = lr
-        self.entropy_coeff = entropy_coeff
+        self.target_values = np.mean(train_batch['target_values'])
+
+        tensorboard.add_scalar('model/entropy', entropy,
+                               self.sample_total_steps)
+        tensorboard.add_scalar('model/q_value', self.target_values,
+                               self.sample_total_steps)
 
     def log_metrics(self):
         """ Log metrics of learner and actors
@@ -169,48 +165,46 @@ class Learner(object):
             except queue.Empty:
                 break
 
-        episode_rewards, episode_steps = [], []
+        env_reward_1h, env_reward_24h = [], []
         for x in metrics:
-            episode_rewards.extend(x['episode_rewards'])
-            episode_steps.extend(x['episode_steps'])
-        max_episode_rewards, mean_episode_rewards, min_episode_rewards, \
-                max_episode_steps, mean_episode_steps, min_episode_steps =\
-                None, None, None, None, None, None
-        if episode_rewards:
-            mean_episode_rewards = np.mean(np.array(episode_rewards).flatten())
-            max_episode_rewards = np.max(np.array(episode_rewards).flatten())
-            min_episode_rewards = np.min(np.array(episode_rewards).flatten())
+            env_reward_1h.extend(x['env_reward_1h'])
+            env_reward_24h.extend(x['env_reward_24h'])
+        env_reward_1h = [x for x in env_reward_1h if x is not None]
+        env_reward_24h = [x for x in env_reward_24h if x is not None]
 
-            mean_episode_steps = np.mean(np.array(episode_steps).flatten())
-            max_episode_steps = np.max(np.array(episode_steps).flatten())
-            min_episode_steps = np.min(np.array(episode_steps).flatten())
+        mean_reward_1h, mean_reward_24h = None, None
+        if env_reward_1h:
+            mean_reward_1h = np.mean(np.array(env_reward_1h).flatten())
+            tensorboard.add_scalar('performance/env_rewards_1h',
+                                   mean_reward_1h, self.sample_total_steps)
+        if env_reward_24h:
+            mean_reward_24h = np.mean(np.array(env_reward_24h).flatten())
+            tensorboard.add_scalar('performance/env_rewards_24h',
+                                   mean_reward_24h, self.sample_total_steps)
 
         metric = {
             'Sample steps': self.sample_total_steps,
-            'max_episode_rewards': max_episode_rewards,
-            'mean_episode_rewards': mean_episode_rewards,
-            'min_episode_rewards': min_episode_rewards,
-            'max_episode_steps': max_episode_steps,
-            'mean_episode_steps': mean_episode_steps,
-            'min_episode_steps': min_episode_steps,
-            'total_loss': self.total_loss_stat.mean,
-            'pi_loss': self.pi_loss_stat.mean,
-            'vf_loss': self.vf_loss_stat.mean,
+            'env_reward_1h': mean_reward_1h,
+            'env_reward_24h': mean_reward_24h,
+            'target_values': self.target_values,
             'entropy': self.entropy_stat.mean,
             'learn_time_s': self.learn_time_stat.mean,
             'elapsed_time_s': int(time.time() - self.start_time),
-            'lr': self.lr,
-            'entropy_coeff': self.entropy_coeff,
         }
-
-        for key, value in metric.items():
-            if value is not None:
-                tensorboard.add_scalar(key, value, self.sample_total_steps)
-
         logger.info(metric)
+
+        self.log_steps += 1
+        save_interval_step = 7200 // max(1,
+                                         self.config['log_metrics_interval_s'])
+        if self.log_steps % save_interval_step == 0:
+            self.save_model()  # save model every 2h
 
     def should_stop(self):
         return self.sample_total_steps >= self.config['max_sample_steps']
+
+    def save_model(self):
+        time_str = time.strftime(".%Y%m%d_%H%M%S", time.localtime())
+        self.agent.save(os.path.join('saved_models', 'model.ckpt' + time_str))
 
 
 if __name__ == '__main__':

@@ -72,8 +72,19 @@ class A3C(Algorithm):
         policy_entropy = policy_distribution.entropy()
         entropy = layers.reduce_sum(policy_entropy)
 
+        from parl.utils import logger
+        entropy_coeff = layers.reshape(entropy_coeff, shape=[1])
         total_loss = (
             pi_loss + vf_loss * self.vf_loss_coeff + entropy * entropy_coeff)
+        tmp = vf_loss * self.vf_loss_coeff
+        tmp2 = entropy * entropy_coeff
+        logger.info("entropy_coeff:{}".format(entropy_coeff.shape))
+        logger.info("tmp:{}".format(tmp.shape))
+        logger.info("tmp2:{}".format(tmp2.shape))
+        logger.info("pi_loss:{}".format(pi_loss.shape))
+        logger.info("vf_loss:{}".format(vf_loss.shape))
+        logger.info("entropy:{}".format(entropy.shape))
+        logger.info("total_loss:{}".format(total_loss.shape))
 
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=40.0))

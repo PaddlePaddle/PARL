@@ -21,7 +21,7 @@ Performance of DQN on various environments
 
 ## How to use
 ### Dependencies:
-+ [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle==1.6.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm

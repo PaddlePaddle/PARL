@@ -59,7 +59,6 @@ else ()
   message("ERROR: You should choose at least one framework to compile DeepES.")
 endif()
 
-message(${src})
 add_executable(${TARGET} ${demo} ${src} ${framework_src}) 
 
 target_link_libraries(${TARGET} gflags protobuf pthread glog)

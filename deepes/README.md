@@ -20,8 +20,8 @@ agent->update(noisy_keys, noisy_rewards);
 ```
 
 ## 一键运行demo列表
-- PaddleLite**: sh [./scripts/build.sh](./scripts/build.sh) paddle
-- **Torch**: sh [./scripts/build.sh](./scripts/build.sh) torch
+- **PaddleLite: sh ./scripts/build.sh paddle
+- **Torch**: sh ./scripts/build.sh torch
 - **裸写网络**：
 
 ## 相关依赖:

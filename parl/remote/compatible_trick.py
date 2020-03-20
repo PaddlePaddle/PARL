@@ -28,8 +28,10 @@ except ImportError:
     pass
 
 """
+from parl.utils import _IS_MAC
 
-try:
-    import rlschool
-except ImportError:
-    pass
+if _IS_MAC:
+    try:
+        import rlschool
+    except ImportError:
+        pass

@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Fix cloudpickle compatible problem we known in mac os
-from parl.utils import _IS_MAC
-if _IS_MAC:
-    from mac_compatible_trick import *
+# Fix cloudpickle compatible problem we known.
+import compatible_trick
 
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''

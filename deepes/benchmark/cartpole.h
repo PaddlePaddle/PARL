@@ -1,7 +1,9 @@
 // Third party code
 // This code is copied or modified from openai/gym's cartpole.py
-
-#include <torch/torch.h>
+#include <iostream>
+#include <random>
+#include <cassert>
+#include <vector>
 
 const double kPi = 3.1415926535898;
 
@@ -21,13 +23,13 @@ public:
 	double x_threshold = 2.4;
 	int steps_beyond_done = -1;
 
-	torch::Tensor state;
+  std::vector<float> state = {0, 0, 0, 0};
 	double reward;
 	bool done;
 	int step_ = 0;
 
-	torch::Tensor getState() {
-		return state;
+	const float* getState() {
+		return state.data();
 	}
 
 	double getReward() {
@@ -39,7 +41,13 @@ public:
 	}
 
 	void reset() {
-		state = torch::empty({ 4 }).uniform_(-0.05, 0.05);
+    std::random_device rd;
+    std::default_random_engine generator(rd());
+    std::uniform_real_distribution<float> distribution(-0.05, 0.05);
+    for (int i = 0; i < 4; ++i) {
+      state[i] = distribution(generator);
+    }
+    
 		steps_beyond_done = -1;
 		step_ = 0;
 	}
@@ -49,10 +57,10 @@ public:
 	}
 
 	void step(int action) {
-		auto x = state[0].item<float>();
-		auto x_dot = state[1].item<float>();
-		auto theta = state[2].item<float>();
-		auto theta_dot = state[3].item<float>();
+		float x = state[0];
+		float x_dot = state[1];
+		float theta = state[2];
+		float theta_dot = state[3];
 
 		auto force = (action == 1) ? force_mag : -force_mag;
 		auto costheta = std::cos(theta);
@@ -67,7 +75,8 @@ public:
 		x_dot = x_dot + tau * xacc;
 		theta = theta + tau * theta_dot;
 		theta_dot = theta_dot + tau * thetaacc;
-		state = torch::tensor({ x, x_dot, theta, theta_dot });
+
+		state = {x, x_dot, theta, theta_dot};
 
 		done = x < -x_threshold || x > x_threshold ||
 			theta < -theta_threshold_radians || theta > theta_threshold_radians ||
@@ -83,7 +92,7 @@ public:
 		}
 		else {
 			if (steps_beyond_done == 0) {
-				AT_ASSERT(false); // Can't do this
+				assert(false); // Can't do this
 			}
 		}
 		step_++;

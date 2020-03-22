@@ -72,6 +72,7 @@ class A3C(Algorithm):
         policy_entropy = policy_distribution.entropy()
         entropy = layers.reduce_sum(policy_entropy)
 
+        entropy_coeff = layers.reshape(entropy_coeff, shape=[1])
         total_loss = (
             pi_loss + vf_loss * self.vf_loss_coeff + entropy * entropy_coeff)
 

@@ -40,7 +40,13 @@ public:
     load_proto_conf(config_path, *_config);
     _sampling_method = std::make_shared<GaussianSampling>();
     _sampling_method->load_config(*_config);
-    _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
+    if (_config->optimizer().type() == "SGD") {
+      _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
+    }else if (_config->optimizer().type() == "Adam") {
+      _optimizer = std::make_shared<AdamOptimizer>(_config->optimizer().base_lr());
+    }else {
+      // TODO: NotImplementedError
+    }
     _param_size = 0;
     _sampled_model = model;
     param_size();
@@ -111,7 +117,7 @@ public:
     for (auto& param: params) {
       torch::Tensor tensor = param.value().view({-1});
       auto tensor_a = tensor.accessor<float,1>();
-      _optimizer->update(tensor_a, neg_gradients+counter, tensor.size(0));
+      _optimizer->update(tensor_a, neg_gradients+counter, tensor.size(0), param.key());
       counter += tensor.size(0);
     }
     delete[] noise;

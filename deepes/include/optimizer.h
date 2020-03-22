@@ -12,20 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
 namespace DeepES{
 
-/* Base class for optimizers. Subclsses are required to implement the following functions:
+/*@brief Optimizer. Base class for optimizers. 
+ * 
+ *@Args:
+ *     base_lr: learning rate (default: 1e-3).
+ *     
+ * .. warning: update () is based on the parameter level, 
+ *             you need to perform update () on each parameter.
+ * 
+ * Subclasses are required to implement the following functions:
  * 1. compute_steps
  */
-
 class Optimizer {
 public:
   Optimizer() : _base_lr(1e-3), _update_times(0) {}
   Optimizer(float base_lr) : _base_lr(base_lr), _update_times(0) {}
+
   template<typename T>
   bool update(T weights, float* gradient, int size, std::string param_name="") {
+  /*@ Performs a single optimization step (parameter update) at the parameter level.
+    *
+    *@Args:
+    *     weights (array): parameter weights.
+    *     gradient (array): gradient for updating weights, same size as weights.
+    *     size: size of gradient.
+    *     param_name: the name corresponding to the weights.
+    */
     bool success = true;
     ++_update_times;
     compute_step(gradient, size, param_name);
@@ -41,23 +59,75 @@ protected:
   float _update_times;
 };
 
+
+/*@brief SGDOptimizer.
+  * Implements stochastic gradient descent (optionally with momentum).
+  *
+  *@Args:
+  *     base_lr: learning rate (default: 1e-3).
+  *     momentum: momentum factor (default: 0).
+  */
 class SGDOptimizer: public Optimizer {
 public:
   SGDOptimizer(float base_lr, float momentum=0.0):Optimizer(base_lr), _momentum(momentum) {}
 
 protected:
   void compute_step(float* gradient, int size, std::string param_name="") {
+    if(_velocity.count(param_name) == 0) {
+      _velocity[param_name] = new float [size];
+      memset(_velocity[param_name], 0, size * sizeof(float));
+    }
+    for (int i = 0; i < size; ++i) {
+      _velocity[param_name][i] = _momentum * _velocity[param_name][i] + (1 - _momentum) * gradient[i];
+      gradient[i] = _velocity[param_name][i];
+    }
   }
 
 private:
   float _momentum;
+  std::map<std::string, float*> _velocity;
+};
 
-}; //class
 
-//class AdamOptimizer: public Optimizer {
-//public:
-//  AdamOptimizer(float base)
-//};
+/*@brief AdamOptimizer.
+  * Implements Adam algorithm.
+  *
+  *@Args:
+  *     base_lr: learning rate (default: 1e-3).
+  *     beta1: coefficients used for computing running averages of gradient (default: 0.9).
+  *     beta2: coefficients used for computing running averages of gradient's square (default: 0.999).
+  *     epsilon: term added to the denominator to improve numerical stability (default: 1e-8).
+  */
+class AdamOptimizer: public Optimizer {
+public:
+  AdamOptimizer(float base_lr, float beta1=0.9, float beta2=0.999, float epsilon=1e-8):Optimizer(base_lr), \
+                                    _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
+
+protected:
+  void compute_step(float* gradient, int size, std::string param_name="") {
+    if(_momentum.count(param_name) == 0) {
+      _momentum[param_name] = new float [size];
+      memset(_momentum[param_name], 0, size * sizeof(float));
+    }
+    if(_velocity.count(param_name) == 0) {
+      _velocity[param_name] = new float [size];
+      memset(_velocity[param_name], 0, size * sizeof(float));
+    }
+    float alpha = sqrt(1 - pow(_beta2, _update_times)) / (1 - pow(_beta1, _update_times));
+    for (int i = 0; i < size; ++i) {
+      _momentum[param_name][i] = _beta1 * _momentum[param_name][i] + (1 - _beta1) * gradient[i];
+      _velocity[param_name][i] = _beta2 * _velocity[param_name][i] + (1 - _beta2) * gradient[i] * gradient[i];
+      gradient[i] = alpha * _momentum[param_name][i] / (sqrt(_velocity[param_name][i]) + _epsilon);
+    }
+  }
+
+private:
+  float _beta1;
+  float _beta2;
+  float _epsilon;
+  std::map<std::string, float*> _momentum;
+  std::map<std::string, float*> _velocity;
+};
 
 }//namespace
 #endif

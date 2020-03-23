@@ -46,9 +46,13 @@ public:
     std::string opt_type = _config->optimizer().type();
     std::transform(opt_type.begin(),opt_type.end(),opt_type.begin(),::tolower);
     if (opt_type == "sgd") {
-      _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
+      _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr(), \
+                                                  _config->optimizer().momentum());
     }else if (opt_type == "adam") {
-      _optimizer = std::make_shared<AdamOptimizer>(_config->optimizer().base_lr());
+      _optimizer = std::make_shared<AdamOptimizer>(_config->optimizer().base_lr(), \
+                                                    _config->optimizer().beta1(), \
+                                                    _config->optimizer().beta2(), \
+                                                    _config->optimizer().epsilon());
     }else {
       // TODO: NotImplementedError
     }

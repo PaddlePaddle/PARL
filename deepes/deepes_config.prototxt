@@ -6,5 +6,9 @@ gaussian_sampling {
 
 optimizer {
   type: "Adam",
-  base_lr: 0.05
+  base_lr: 0.05,
+  momentum: 0.9,
+  beta1: 0.9,
+  beta2: 0.999,
+  epsilon: 1e-8,
 }

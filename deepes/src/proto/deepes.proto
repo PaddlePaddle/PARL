@@ -31,8 +31,11 @@ message GaussianSamplingConfig {
 
 message OptimizerConfig{
   optional string type = 1 [default = "SGD"];
-  optional float base_lr = 2; // The base learning rate
-  optional float momentum = 3; // The momentum value.
+  optional float base_lr = 2 [default = 1e-3]; // The base learning rate
+  optional float momentum = 3 [default = 0.9]; // The momentum value for SGD.
+  optional float beta1 = 4 [default = 0.9]; // beta1 for Adam.
+  optional float beta2 = 5 [default = 0.999]; // beta2 fot Adam.
+  optional float epsilon = 6 [default = 1e-8]; // epsilon fot Adam
 }
 
 message SamplingKey{

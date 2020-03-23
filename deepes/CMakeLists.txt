@@ -1,5 +1,25 @@
 cmake_minimum_required (VERSION 2.6)
 project (DeepES)
+set(TARGET parallel_main)
+
+########## options ##########
+option(WITH_PADDLE "Compile DeepES with PaddleLite framework." OFF)
+option(WITH_TORCH "Compile DeepES with Torch framework." OFF)
+
+message("WITH_PADDLE: "${WITH_PADDLE})
+message("WITH_TORCH: "${WITH_TORCH})
+
+if (NOT (WITH_PADDLE OR WITH_TORCH))
+  message("ERROR: You should choose at least one framework to compile DeepES.")
+  return()
+elseif(WITH_PADDLE AND WITH_TORCH)
+  message("ERROR: You cannot choose more than one framework to compile DeepES.")
+  return()
+endif()
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -8,19 +28,47 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-find_package(Torch REQUIRED ON)
 
-file(GLOB demo_src "demo/*.cpp")
-file(GLOB core_src "src/*.cpp")
-file(GLOB pb_src "src/*.cc")
-
+file(GLOB src "src/*.cc")
 include_directories("include")
-include_directories("demo")
 include_directories("benchmark")
-link_directories("/usr/lib/x86_64-linux-gnu/")
 
-add_executable(parallel_main "./demo/cartpole_solver_parallel.cpp" ${core_src} ${pb_src} ${benchmark_src})
-target_link_libraries(parallel_main gflags protobuf pthread glog "${TORCH_LIBRARIES}")
+########## PaddleLite config ##########
+if (WITH_PADDLE)
+  add_definitions(-g -O3 -pthread)
+
+  include_directories("include/paddle")
+  include_directories("${PROJECT_SOURCE_DIR}/inference_lite_lib/cxx/include" 
+                   "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/include")
+  link_directories("${PROJECT_SOURCE_DIR}/inference_lite_lib/cxx/lib" 
+                   "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/lib")
+  
+  file(GLOB framework_src "src/paddle/*.cc")
+  set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_solver_parallel.cc")
+########## Torch config ##########
+elseif (WITH_TORCH)
+  list(APPEND CMAKE_PREFIX_PATH "./libtorch")
+  find_package(Torch REQUIRED ON)
+
+  include_directories("include/torch")
+  include_directories("demo/torch")
+
+  file(GLOB framework_src "src/torch/*.cc")
+  set(demo "${PROJECT_SOURCE_DIR}/demo/torch/cartpole_solver_parallel.cc")
+else ()
+  message("ERROR: You should choose at least one framework to compile DeepES.")
+endif()
+
+add_executable(${TARGET} ${demo} ${src} ${framework_src}) 
+
+target_link_libraries(${TARGET} gflags protobuf pthread glog)
+
+########## PaddleLite libraries ##########
+if (WITH_PADDLE)
+  target_link_libraries(${TARGET} -lpaddle_full_api_shared)
+  target_link_libraries(${TARGET} -lmklml_intel)
+  target_link_libraries(${TARGET} -ldl)
+########## Torch libraries ##########
+elseif (WITH_TORCH)
+  target_link_libraries(${TARGET} "${TORCH_LIBRARIES}")
+endif()

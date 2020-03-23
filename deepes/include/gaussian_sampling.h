@@ -41,7 +41,7 @@ public:
      *@return:
      *     success: load configuration successfully or not.
      */
-    int sampling(float* noise, int size);
+    int sampling(float* noise, int64_t size);
 
     /*@brief reconstruct the Gaussion noise given the key.
      * This function is often used for updating the neuron network parameters in the offline environment.
@@ -51,7 +51,7 @@ public:
      *     noise: a pointer pointed to the memory that stores the noise
      *     size: the number of float to be sampled.
      */
-    bool resampling(int key, float* noise, int size);
+    bool resampling(int key, float* noise, int64_t size);
 
 private:
     float _std;

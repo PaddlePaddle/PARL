@@ -20,17 +20,18 @@
 #include "cartpole.h"
 #include "gaussian_sampling.h"
 #include "model.h"
-#include "torch_predictor.h"
+#include "es_agent.h"
 
 using namespace DeepES;
-const int ITER = 100;
+const int ITER = 10;
 
-float evaluate(CartPole& env, std::shared_ptr<Predictor<Model>> predictor) {
+float evaluate(CartPole& env, std::shared_ptr<ESAgent<Model>> agent, bool is_eval=false) {
   float total_reward = 0.0;
   env.reset();
-  auto obs = env.getState();
+  const float* obs = env.getState();
   while (true) {
-    torch::Tensor action = predictor->predict(obs);
+    torch::Tensor obs_tensor = torch::tensor({obs[0], obs[1], obs[2], obs[3]});
+    torch::Tensor action = agent->predict(obs_tensor, is_eval);
     int act = std::get<1>(action.max(-1)).item<long>(); 
     env.step(act);
     float reward = env.getReward(); 
@@ -50,10 +51,11 @@ int main(int argc, char* argv[]) {
   }
 
   auto model = std::make_shared<Model>(4, 2);
-  std::shared_ptr<Predictor<Model>> predictor = std::make_shared<Predictor<Model>>(model, "../deepes_config.prototxt");
-  std::vector<std::shared_ptr<Predictor<Model>>> noisy_predictors;
-  for (int i = 0; i < ITER; ++i) {
-    noisy_predictors.push_back(predictor->clone());
+  std::shared_ptr<ESAgent<Model>> agent = std::make_shared<ESAgent<Model>>(model, "../benchmark/cartpole_config.prototxt");
+
+  std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents = {agent};
+  for (int i = 0; i < ITER - 1; ++i) {
+    sampling_agents.push_back(agent->clone());
   }
 
   std::vector<SamplingKey> noisy_keys;
@@ -63,16 +65,16 @@ int main(int argc, char* argv[]) {
   for (int epoch = 0; epoch < 10000; ++epoch) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
-      auto noisy_predictor = noisy_predictors[i];
-      SamplingKey key = noisy_predictor->add_noise();
-      float reward = evaluate(envs[i], noisy_predictor);
+      auto sampling_agent = sampling_agents[i];
+      SamplingKey key = sampling_agent->add_noise();
+      float reward = evaluate(envs[i], sampling_agent);
       noisy_keys[i] = key;
       noisy_rewards[i] = reward;
     }
 
-    predictor->update(noisy_keys, noisy_rewards);
+    agent->update(noisy_keys, noisy_rewards);
 
-    int reward = evaluate(envs[0], predictor);
+    int reward = evaluate(envs[0], agent, true);
     LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;
   }
 }

@@ -26,17 +26,17 @@ void GaussianSampling::load_config(const DeepESConfig& config) {
     set_seed(config.seed());
 }
 
-int GaussianSampling::sampling(float* noise, int size) {
+int GaussianSampling::sampling(float* noise, int64_t size) {
     int key = rand();
     std::default_random_engine generator(key);
     std::normal_distribution<float> norm;
-    for (int i = 0; i < size; ++i) {
+    for (int64_t i = 0; i < size; ++i) {
         *(noise + i) = norm(generator) * _std;
     }
     return key;
 }
 
-bool GaussianSampling::resampling(int key, float* noise, int size) {
+bool GaussianSampling::resampling(int key, float* noise, int64_t size) {
     bool success = true;
     if (noise == nullptr) {
         success = false;
@@ -44,7 +44,7 @@ bool GaussianSampling::resampling(int key, float* noise, int size) {
     else {
         std::default_random_engine generator(key);
         std::normal_distribution<float> norm;
-        for (int i = 0; i < size; ++i) {
+        for (int64_t i = 0; i < size; ++i) {
             *(noise + i) = norm(generator) * _std;
         }
     }

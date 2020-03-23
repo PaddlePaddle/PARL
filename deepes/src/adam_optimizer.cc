@@ -18,10 +18,10 @@
 namespace DeepES {
 
 AdamOptimizer::~AdamOptimizer() {
-	for (std::map<std::string, float*>::iterator iter = _momentum.begin(); iter != _momentum.end(); iter++) {
+	for (auto iter = _momentum.begin(); iter != _momentum.end(); iter++) {
 		delete[] iter->second;
 	}
-	for (std::map<std::string, float*>::iterator iter = _velocity.begin(); iter != _velocity.end(); iter++) {
+	for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {
 		delete[] iter->second;
 	}
 	_momentum.clear();

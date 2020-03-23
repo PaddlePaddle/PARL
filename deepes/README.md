@@ -26,9 +26,10 @@ predictor->update(noisy_keys, noisy_rewards);
 - **裸写网络**：
 
 ## 相关依赖:
-- Protobuf >= 2.4.2
-- glog
-- gflag
+- Protobuf2
+- OpenMP
+- [glog](https://github.com/gflags/gflags/blob/master/INSTALL.md)
+- [gflag](https://github.com/google/glog)
 
 ## 额外依赖：
 

@@ -14,11 +14,13 @@
 
 from paddle import fluid
 
+
 def net(obs, act_dim):
     hid1_size = act_dim * 10
     hid1 = fluid.layers.fc(obs, size=hid1_size)
     prob = fluid.layers.fc(hid1, size=act_dim, act='softmax')
     return prob
+
 
 if __name__ == '__main__':
     obs_dim = 4
@@ -30,7 +32,8 @@ if __name__ == '__main__':
 
     exe = fluid.Executor(fluid.CPUPlace())
     exe.run(fluid.default_startup_program())
-    fluid.io.save_inference_model(dirname='cartpole_init_model',
-            feeded_var_names=['obs'],
-            target_vars=[prob],
-            executor=exe)
+    fluid.io.save_inference_model(
+        dirname='cartpole_init_model',
+        feeded_var_names=['obs'],
+        target_vars=[prob],
+        executor=exe)

@@ -46,8 +46,8 @@ class ESAgent {
   
   // Return a cloned ESAgent, whose _predictor is same with this->_predictor
   // but _sample_predictor is pointed to a newly created object.
-  // This function mainly used to clone a new ESAgent to do sampling in multi-thread way.
-  // NOTE: when calling `update` function of current object or cloned one, both of their
+  // This function is used to clone a new ESAgent to sample in multi-thread way.
+  // NOTE: when calling `update` function of current object, both of their
   //       parameters will be updated. Because their _predictor is point to same object.
   std::shared_ptr<ESAgent> clone();
   
@@ -57,34 +57,17 @@ class ESAgent {
       std::vector<float>& noisy_rewards);
   
   // parameters of _sample_predictor = parameters of _predictor + noise
-  SamplingKey add_noise();
+  bool add_noise(SamplingKey& sampling_key);
 
-  std::shared_ptr<SamplingMethod> get_sampling_method();
-  std::shared_ptr<Optimizer> get_optimizer();
-  std::shared_ptr<DeepESConfig> get_config();
-  int64_t get_param_size();
-  std::vector<std::string> get_param_names();
-  
-  // Return paddle predict _sample_predictor (with addded noise)
-  std::shared_ptr<PaddlePredictor> get_sample_predictor();
-
-  // Return paddle predict _predictor (without addded noise)
-  std::shared_ptr<PaddlePredictor> get_evaluate_predictor();
-
-  void set_config(std::shared_ptr<DeepESConfig> config);
-  void set_sampling_method(std::shared_ptr<SamplingMethod> sampling_method);
-  void set_optimizer(std::shared_ptr<Optimizer> optimizer);
-  void set_param_size(int64_t param_size);
-  void set_param_names(std::vector<std::string> param_names);
-  void set_noise(float* noise);
-  void set_neg_gradients(float* neg_gradients);
-  void set_predictor(
-      std::shared_ptr<PaddlePredictor> predictor,
-      std::shared_ptr<PaddlePredictor> sample_predictor);
+  // Return paddle predict _sample_predictor
+  // if _is_sampling_agent is true, will return predictor with added noise;
+  // if _is_sampling_agent is false, will return predictor without added noise.
+  std::shared_ptr<PaddlePredictor> get_predictor();
 
  private:
   std::shared_ptr<PaddlePredictor> _predictor;
   std::shared_ptr<PaddlePredictor> _sample_predictor;
+  bool _is_sampling_agent;
   std::shared_ptr<SamplingMethod> _sampling_method;
   std::shared_ptr<Optimizer> _optimizer;
   std::shared_ptr<DeepESConfig> _config;

@@ -59,16 +59,13 @@ int arg_max(const std::vector<float>& vec) {
 }
 
 
-float evaluate(CartPole& env, std::shared_ptr<ESAgent> agent, bool is_eval=false) {
+float evaluate(CartPole& env, std::shared_ptr<ESAgent> agent) {
   float total_reward = 0.0;
   env.reset();
   const float* obs = env.getState();
 
   std::shared_ptr<PaddlePredictor> paddle_predictor;
-  if (is_eval) 
-    paddle_predictor = agent->get_evaluate_predictor(); // For evaluate
-  else 
-    paddle_predictor = agent->get_sample_predictor(); // For sampling (ES exploring)
+  paddle_predictor = agent->get_predictor();
 
   while (true) {
     std::vector<float> probs = forward(paddle_predictor, obs); 
@@ -93,8 +90,9 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<PaddlePredictor> paddle_predictor = create_paddle_predictor("../demo/paddle/cartpole_init_model");
   std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
 
-  std::vector< std::shared_ptr<ESAgent> > sampling_agents{ agent };
-  for (int i = 0; i < (ITER - 1); ++i) {
+  // Clone agents to sample (explore).
+  std::vector< std::shared_ptr<ESAgent> > sampling_agents;
+  for (int i = 0; i < ITER; ++i) {
     sampling_agents.push_back(agent->clone());
   }
 
@@ -107,7 +105,8 @@ int main(int argc, char* argv[]) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
       std::shared_ptr<ESAgent> sampling_agent = sampling_agents[i];
-      SamplingKey key = sampling_agent->add_noise();
+      SamplingKey key;
+      bool success = sampling_agent->add_noise(key);
       float reward = evaluate(envs[i], sampling_agent);
 
       noisy_keys[i] = key;
@@ -115,9 +114,9 @@ int main(int argc, char* argv[]) {
     }
 
     // NOTE: all parameters of sampling_agents will be updated
-    agent->update(noisy_keys, noisy_rewards);
+    bool success = agent->update(noisy_keys, noisy_rewards);
   
-    int reward = evaluate(envs[0], agent, true);
+    int reward = evaluate(envs[0], agent);
     LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;
   }
 }

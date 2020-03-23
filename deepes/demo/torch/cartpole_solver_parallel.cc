@@ -25,13 +25,13 @@
 using namespace DeepES;
 const int ITER = 10;
 
-float evaluate(CartPole& env, std::shared_ptr<ESAgent<Model>> agent, bool is_eval=false) {
+float evaluate(CartPole& env, std::shared_ptr<ESAgent<Model>> agent) {
   float total_reward = 0.0;
   env.reset();
   const float* obs = env.getState();
   while (true) {
     torch::Tensor obs_tensor = torch::tensor({obs[0], obs[1], obs[2], obs[3]});
-    torch::Tensor action = agent->predict(obs_tensor, is_eval);
+    torch::Tensor action = agent->predict(obs_tensor);
     int act = std::get<1>(action.max(-1)).item<long>(); 
     env.step(act);
     float reward = env.getReward(); 
@@ -52,9 +52,10 @@ int main(int argc, char* argv[]) {
 
   auto model = std::make_shared<Model>(4, 2);
   std::shared_ptr<ESAgent<Model>> agent = std::make_shared<ESAgent<Model>>(model, "../benchmark/cartpole_config.prototxt");
-
-  std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents = {agent};
-  for (int i = 0; i < ITER - 1; ++i) {
+  
+  // Clone agents to sample (explore).
+  std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents;
+  for (int i = 0; i < ITER; ++i) {
     sampling_agents.push_back(agent->clone());
   }
 
@@ -66,15 +67,18 @@ int main(int argc, char* argv[]) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
       auto sampling_agent = sampling_agents[i];
-      SamplingKey key = sampling_agent->add_noise();
+      SamplingKey key;
+      bool success = sampling_agent->add_noise(key);
       float reward = evaluate(envs[i], sampling_agent);
       noisy_keys[i] = key;
       noisy_rewards[i] = reward;
     }
-
-    agent->update(noisy_keys, noisy_rewards);
-
-    int reward = evaluate(envs[0], agent, true);
+    
+    // Will also update parameters of sampling_agents
+    bool success = agent->update(noisy_keys, noisy_rewards);
+    
+    // Use original agent to evalute (without noise).
+    int reward = evaluate(envs[0], agent);
     LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;
   }
 }

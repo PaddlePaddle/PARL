@@ -12,6 +12,9 @@ if [ $1 = "paddle" ]; then
     echo "Please put the PaddleLite libraray to current folder according the instruction in README"
     exit 1
   fi
+  
+  # Initialization model
+  unzip ./demo/paddle/cartpole_init_model.zip -d ./demo/paddle/
 
   FLAGS=" -DWITH_PADDLE=ON"
 elif [ $1 = "torch" ]; then

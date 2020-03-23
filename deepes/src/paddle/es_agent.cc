@@ -13,14 +13,7 @@
 // limitations under the License.
 
 #include <vector>
-#include <iostream>
 #include "es_agent.h"
-#include "paddle_api.h"
-#include "optimizer.h"
-#include "utils.h"
-#include "gaussian_sampling.h"
-#include "deepes.pb.h"
-
 
 namespace DeepES {
 

@@ -25,15 +25,18 @@
 
 namespace DeepES {
 
-/* DeepES agent for PaddleLite.
- * Users can use `add_noise` function to add noise to parameters and use `get_sample_predictor`
- * function to get a predictor with added noise to explore.
- * Then can use `update` function to update parameters based on ES algorithm.
- * Users also can `clone` multi agents to sample in multi-thread way.
- */
-
 typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
 
+/**
+ * @brief DeepES agent for PaddleLite.
+ *
+ * Users use `clone` fucntion to clone a sampling agent, which can call `add_noise`
+ * function to add noise to copied parameters and call `get_predictor` fucntion to 
+ * get a paddle predictor with added noise.
+ *
+ * Then can use `update` function to update parameters based on ES algorithm.
+ * Note: parameters of cloned agents will also be updated.
+ */
 class ESAgent {
  public:
   ESAgent();
@@ -44,24 +47,34 @@ class ESAgent {
       std::shared_ptr<PaddlePredictor> predictor,
       std::string config_path);
   
-  // Return a cloned ESAgent, whose _predictor is same with this->_predictor
-  // but _sample_predictor is pointed to a newly created object.
-  // This function is used to clone a new ESAgent to sample in multi-thread way.
-  // NOTE: when calling `update` function of current object, both of their
-  //       parameters will be updated. Because their _predictor is point to same object.
+  /** 
+   * @breif Clone a sampling agent
+   *
+   * Only cloned ESAgent can call `add_noise` function.
+   * Each cloned ESAgent will have a copy of original parameters.
+   * (support sampling in multi-thread way)
+   */
   std::shared_ptr<ESAgent> clone();
   
-  // Update parameters of _predictor
+  /**
+   * @brief Update parameters of predictor based on ES algorithm.
+   *
+   * Only not cloned ESAgent can call `update` function.
+   * Parameters of cloned agents will also be updated.
+   */
   bool update(
       std::vector<SamplingKey>& noisy_keys,
       std::vector<float>& noisy_rewards);
   
-  // parameters of _sample_predictor = parameters of _predictor + noise
+  // copied parameters = original parameters + noise
   bool add_noise(SamplingKey& sampling_key);
 
-  // Return paddle predict _sample_predictor
-  // if _is_sampling_agent is true, will return predictor with added noise;
-  // if _is_sampling_agent is false, will return predictor without added noise.
+  /**
+   * @brief Get paddle predict
+   *
+   * if _is_sampling_agent is true, will return predictor with added noise;
+   * if _is_sampling_agent is false, will return predictor without added noise.
+   */
   std::shared_ptr<PaddlePredictor> get_predictor();
 
  private:

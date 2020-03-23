@@ -24,12 +24,13 @@
 
 namespace DeepES{
 
-/* DeepES agent for Torch.
+/**
+ * @brief DeepES agent for Torch.
+ *
  * Our implemtation is flexible to support any model that subclass torch::nn::Module.
  * That is, we can instantiate an agent by: es_agent = ESAgent<Model>(model);
  * After that, users can clone an agent for multi-thread processing, add parametric noise for exploration,
  * and update the parameteres, according to the evaluation resutls of noisy parameters.
- *
  */
 template <class T>
 class ESAgent{
@@ -57,6 +58,13 @@ public:
     _neg_gradients = new float [_param_size];
   }
 
+  /** 
+   * @breif Clone a sampling agent
+   *
+   * Only cloned ESAgent can call `add_noise` function.
+   * Each cloned ESAgent will have a copy of original parameters.
+   * (support sampling in multi-thread way)
+   */
   std::shared_ptr<ESAgent> clone() {
     std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>();
 
@@ -74,10 +82,22 @@ public:
     return new_agent;
   }
 
+  /**
+   * @brief Use the model to predict. 
+   *
+   * if _is_sampling_agent is true, will use the sampling model with added noise;
+   * if _is_sampling_agent is false, will use the original model without added noise.
+   */
   torch::Tensor predict(const torch::Tensor& x) {
     return _sampled_model->forward(x);
   }
 
+  /**
+   * @brief Update parameters of model based on ES algorithm.
+   *
+   * Only not cloned ESAgent can call `update` function.
+   * Parameters of cloned agents will also be updated.
+   */
   bool update(std::vector<SamplingKey>& noisy_keys, std::vector<float>& noisy_rewards) {
     if (_is_sampling_agent) {
       LOG(ERROR) << "[DeepES] Cloned ESAgent cannot call update function, please use original ESAgent.";
@@ -112,6 +132,7 @@ public:
     return true;
   }
 
+  // copied parameters = original parameters + noise
   bool add_noise(SamplingKey& sampling_key) {
     if (!_is_sampling_agent) {
       LOG(ERROR) << "[DeepES] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";

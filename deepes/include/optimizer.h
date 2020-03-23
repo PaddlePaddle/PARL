@@ -53,14 +53,15 @@ public:
     } else if (_params_size[param_name] != size) {
       LOG(WARNING) << "[Warning] Update times: "<< int(_update_times / _params_size.size()) \
        << ". Size of weights[" << param_name << "] is " << _params_size[param_name] << ", not " << size;
+      return false;
     }
-    bool success = true;
+
     ++_update_times;
     compute_step(gradient, size, param_name);
     for (int i = 0; i < size; ++i) {
       weights[i] -= _base_lr * gradient[i];
     }
-    return success;
+    return true;
   } // template function
 
 protected:
@@ -81,24 +82,10 @@ protected:
 class SGDOptimizer: public Optimizer {
 public:
   SGDOptimizer(float base_lr, float momentum=0.9):Optimizer(base_lr), _momentum(momentum) {}
-  ~SGDOptimizer() {
-    for (std::map<std::string, float*>::iterator iter = _velocity.begin(); iter != _velocity.end(); iter++) {
-      delete[] iter->second;
-    }
-    _velocity.clear();
-  }
+  ~SGDOptimizer();
 
 protected:
-  void compute_step(float* gradient, int size, std::string param_name="") {
-    if (_velocity.count(param_name) == 0) {
-      _velocity[param_name] = new float [size];
-      memset(_velocity[param_name], 0, size * sizeof(float));
-    }
-    for (int i = 0; i < size; ++i) {
-      _velocity[param_name][i] = _momentum * _velocity[param_name][i] + (1 - _momentum) * gradient[i];
-      gradient[i] = _velocity[param_name][i];
-    }
-  }
+  void compute_step(float* gradient, int size, std::string param_name);
 
 private:
   float _momentum;
@@ -119,34 +106,10 @@ class AdamOptimizer: public Optimizer {
 public:
   AdamOptimizer(float base_lr, float beta1=0.9, float beta2=0.999, float epsilon=1e-8):Optimizer(base_lr), \
                                     _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
-  ~AdamOptimizer() {
-    for (std::map<std::string, float*>::iterator iter = _momentum.begin(); iter != _momentum.end(); iter++) {
-      delete[] iter->second;
-    }
-    for (std::map<std::string, float*>::iterator iter = _velocity.begin(); iter != _velocity.end(); iter++) {
-      delete[] iter->second;
-    }
-    _momentum.clear();
-    _velocity.clear();
-  }
+  ~AdamOptimizer();
+
 protected:
-  void compute_step(float* gradient, int size, std::string param_name="") {
-    if (_momentum.count(param_name) == 0) {
-      _momentum[param_name] = new float [size];
-      memset(_momentum[param_name], 0, size * sizeof(float));
-    }
-    if (_velocity.count(param_name) == 0) {
-      _velocity[param_name] = new float [size];
-      memset(_velocity[param_name], 0, size * sizeof(float));
-    }
-    int true_update_times = int(_update_times / _velocity.size());
-    float alpha = sqrt(1 - pow(_beta2, _update_times)) / (1 - pow(_beta1, _update_times));
-    for (int i = 0; i < size; ++i) {
-      _momentum[param_name][i] = _beta1 * _momentum[param_name][i] + (1 - _beta1) * gradient[i];
-      _velocity[param_name][i] = _beta2 * _velocity[param_name][i] + (1 - _beta2) * gradient[i] * gradient[i];
-      gradient[i] = alpha * _momentum[param_name][i] / (sqrt(_velocity[param_name][i]) + _epsilon);
-    }
-  }
+  void compute_step(float* gradient, int size, std::string param_name);
 
 private:
   float _beta1;

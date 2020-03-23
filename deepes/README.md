@@ -9,9 +9,11 @@ DeepES是一个支持**快速验证**ES效果、**兼容多个框架**的C++库�
 //实例化一个预测，根据配置文件加载模型，采样方式（Gaussian\CMA sampling..)、更新方式(SGD\Adam)等
 auto agent = ESAgent(config); 
 
-for (int i = 0; i < 100; ++i) {
-   int key = agent->add_noise(); // 参数扰动，同时保存随机种子
-   int reward = evaluate(env, agent); //评估参数
+for (int i = 0; i < 10; ++i) {
+   auto sampling_agnet = agent->clone(); // clone出一个sampling agent
+   SamplingKey key;
+   agent->add_noise(key); // 参数扰动，同时保存随机种子到key中
+   int reward = evaluate(env, sampling_agent); //评估参数
    noisy_keys.push_back(key); // 记录随机噪声对应种子
    noisy_rewards.push_back(reward); // 记录评估结果
 }

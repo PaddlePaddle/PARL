@@ -78,6 +78,7 @@ class VTraceLoss(object):
         self.entropy = layers.reduce_sum(policy_entropy)
 
         # The summed weighted loss
+        entropy_coeff = layers.reshape(entropy_coeff, shape=[1])
         self.total_loss = (self.pi_loss + self.vf_loss * vf_loss_coeff +
                            self.entropy * entropy_coeff)
 

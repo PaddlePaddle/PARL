@@ -16,7 +16,8 @@ import numpy as np
 
 
 class CartpoleAgent(object):
-    def __init__(self, obs_dim, act_dim):
+    def __init__(self, obs_dim, act_dim, learning_rate):
+        self.learning_rate = learning_rate
         # init weights
         self.w = np.random.random((act_dim, obs_dim)) * 0.1
         self.b = np.zeros(act_dim)
@@ -34,9 +35,8 @@ class CartpoleAgent(object):
         gradient /= rewards.size
 
         flat_weights = self.get_flat_weights()
-        learning_rate = 0.1
         # Compute the new weights.
-        new_weights = flat_weights + learning_rate * gradient
+        new_weights = flat_weights + self.learning_rate * gradient
         self.set_flat_weights(new_weights)
 
     def set_flat_weights(self, flat_weights):
@@ -74,7 +74,7 @@ def reward_normalize(reward):
 
 if __name__ == '__main__':
     env = gym.make('CartPole-v0')
-    agent = CartpoleAgent(obs_dim=4, act_dim=2)
+    agent = CartpoleAgent(obs_dim=4, act_dim=2, learning_rate=0.1)
 
     for epcho in range(100):
         rewards = []

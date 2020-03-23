@@ -14,7 +14,9 @@ if [ $1 = "paddle" ]; then
   fi
   
   # Initialization model
-  unzip ./demo/paddle/cartpole_init_model.zip -d ./demo/paddle/
+  if [ ! -d ./demo/paddle/cartpole_init_model]; then
+    unzip ./demo/paddle/cartpole_init_model.zip -d ./demo/paddle/
+  fi
 
   FLAGS=" -DWITH_PADDLE=ON"
 elif [ $1 = "torch" ]; then

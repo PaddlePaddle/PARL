@@ -42,7 +42,7 @@ ESAgent::ESAgent(
   _is_sampling_agent = false;
   _predictor = predictor;
   // Original agent can't be used to sample, so keep it same with _predictor for evaluating.
-  _sample_predictor = predictor;
+  _sampling_predictor = predictor;
 
   _config = std::make_shared<DeepESConfig>();
   load_proto_conf(config_path, *_config);
@@ -60,20 +60,20 @@ ESAgent::ESAgent(
 }
 
 std::shared_ptr<ESAgent> ESAgent::clone() {
-  std::shared_ptr<PaddlePredictor> new_sample_predictor = _predictor->Clone();
+  std::shared_ptr<PaddlePredictor> new_sampling_predictor = _predictor->Clone();
 
   std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>();
 
-  float* new_noise = new float [_param_size];
+  float* noise = new float [_param_size];
 
   new_agent->_predictor = _predictor;
-  new_agent->_sample_predictor = new_sample_predictor;
+  new_agent->_sampling_predictor = new_sampling_predictor;
 
   new_agent->_is_sampling_agent = true;
   new_agent->_sampling_method = _sampling_method;
   new_agent->_param_names = _param_names;
   new_agent->_param_size = _param_size;
-  new_agent->_noise = new_noise;
+  new_agent->_noise = noise;
 
   return new_agent;
 }
@@ -126,7 +126,7 @@ bool ESAgent::add_noise(SamplingKey& sampling_key) {
   int64_t counter = 0;
 
   for (std::string param_name: _param_names) {
-    std::unique_ptr<Tensor> sample_tensor = _sample_predictor->GetMutableTensor(param_name);
+    std::unique_ptr<Tensor> sample_tensor = _sampling_predictor->GetMutableTensor(param_name);
     std::unique_ptr<const Tensor> tensor = _predictor->GetTensor(param_name);
     int64_t tensor_size = ShapeProduction(tensor->shape());
     for (int64_t j = 0; j < tensor_size; ++j) {
@@ -140,7 +140,7 @@ bool ESAgent::add_noise(SamplingKey& sampling_key) {
 
 
 std::shared_ptr<PaddlePredictor> ESAgent::get_predictor() {
-  return _sample_predictor;
+  return _sampling_predictor;
 }
 
 int64_t ESAgent::_calculate_param_size() {

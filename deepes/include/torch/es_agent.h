@@ -51,7 +51,7 @@ public:
     _sampling_method->load_config(*_config);
     _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
     // Origin agent can't be used to sample, so keep it same with _model for evaluating.
-    _sampled_model = model;
+    _sampling_model = model;
     _param_size = _calculate_param_size();
 
     _noise = new float [_param_size];
@@ -70,7 +70,7 @@ public:
 
     new_agent->_model = _model;
     std::shared_ptr<T> new_model = _model->clone();
-    new_agent->_sampled_model = new_model;
+    new_agent->_sampling_model = new_model;
   
     new_agent->_is_sampling_agent = true;
     new_agent->_sampling_method = _sampling_method;
@@ -89,7 +89,7 @@ public:
    * if _is_sampling_agent is false, will use the original model without added noise.
    */
   torch::Tensor predict(const torch::Tensor& x) {
-    return _sampled_model->forward(x);
+    return _sampling_model->forward(x);
   }
 
   /**
@@ -139,19 +139,19 @@ public:
       return false;
     }
 
-    auto sampled_params = _sampled_model->named_parameters();
+    auto sampling_params = _sampling_model->named_parameters();
     auto params = _model->named_parameters();
     int key = _sampling_method->sampling(_noise, _param_size);
     sampling_key.add_key(key);
     int64_t counter = 0;
-    for (auto& param: sampled_params) {
-      torch::Tensor sampled_tensor = param.value().view({-1});
+    for (auto& param: sampling_params) {
+      torch::Tensor sampling_tensor = param.value().view({-1});
       std::string param_name = param.key();
       torch::Tensor tensor = params.find(param_name)->view({-1});
-      auto sampled_tensor_a = sampled_tensor.accessor<float,1>();
+      auto sampling_tensor_a = sampling_tensor.accessor<float,1>();
       auto tensor_a = tensor.accessor<float,1>();
       for (int64_t j = 0; j < tensor.size(0); ++j) {
-        sampled_tensor_a[j] = tensor_a[j] + _noise[counter + j];
+        sampling_tensor_a[j] = tensor_a[j] + _noise[counter + j];
       }
       counter += tensor.size(0);
     }
@@ -161,7 +161,7 @@ public:
   
 
 private:
-  std::shared_ptr<T> _sampled_model;
+  std::shared_ptr<T> _sampling_model;
   std::shared_ptr<T> _model;
   bool _is_sampling_agent;
   std::shared_ptr<SamplingMethod> _sampling_method;

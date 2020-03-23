@@ -161,17 +161,6 @@ public:
   
 
 private:
-  std::shared_ptr<T> _sampling_model;
-  std::shared_ptr<T> _model;
-  bool _is_sampling_agent;
-  std::shared_ptr<SamplingMethod> _sampling_method;
-  std::shared_ptr<Optimizer> _optimizer;
-  std::shared_ptr<DeepESConfig> _config;
-  int64_t _param_size;
-  // malloc memory of noise and neg_gradients in advance.
-  float* _noise;
-  float* _neg_gradients;
-
   int64_t _calculate_param_size() {
     auto params = _model->named_parameters();
     for (auto& param: params) {
@@ -180,6 +169,17 @@ private:
     }
     return _param_size;
   }
+
+  std::shared_ptr<T> _model;
+  std::shared_ptr<T> _sampling_model;
+  bool _is_sampling_agent;
+  std::shared_ptr<SamplingMethod> _sampling_method;
+  std::shared_ptr<Optimizer> _optimizer;
+  std::shared_ptr<DeepESConfig> _config;
+  int64_t _param_size;
+  // malloc memory of noise and neg_gradients in advance.
+  float* _noise;
+  float* _neg_gradients;
 };
 
 }

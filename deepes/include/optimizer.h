@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <map>
+#include <glog/logging.h>
 
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
@@ -33,6 +34,9 @@ class Optimizer {
 public:
   Optimizer() : _base_lr(1e-3), _update_times(0) {}
   Optimizer(float base_lr) : _base_lr(base_lr), _update_times(0) {}
+  virtual ~Optimizer() {
+    _params_size.clear();
+  }
 
   template<typename T>
   bool update(T weights, float* gradient, int size, std::string param_name="") {
@@ -40,10 +44,16 @@ public:
     *
     *@Args:
     *     weights (array): parameter weights.
-    *     gradient (array): gradient for updating weights, same size as weights.
+    *     gradient (array): gradient for updating weights.
     *     size: size of gradient.
     *     param_name: the name corresponding to the weights.
     */
+    if (_params_size.count(param_name) == 0) {
+      _params_size[param_name] = size;
+    } else if (_params_size[param_name] != size) {
+      LOG(WARNING) << "[Warning] Update times: "<< int(_update_times / _params_size.size()) \
+       << ". Size of weights[" << param_name << "] is " << _params_size[param_name] << ", not " << size;
+    }
     bool success = true;
     ++_update_times;
     compute_step(gradient, size, param_name);
@@ -57,6 +67,7 @@ protected:
   virtual void compute_step(float* graident, int size, std::string param_name="") = 0;
   float _base_lr;
   float _update_times;
+  std::map<std::string, int> _params_size;
 };
 
 
@@ -65,15 +76,21 @@ protected:
   *
   *@Args:
   *     base_lr: learning rate (default: 1e-3).
-  *     momentum: momentum factor (default: 0).
+  *     momentum: momentum factor (default: 0.9).
   */
 class SGDOptimizer: public Optimizer {
 public:
-  SGDOptimizer(float base_lr, float momentum=0.0):Optimizer(base_lr), _momentum(momentum) {}
+  SGDOptimizer(float base_lr, float momentum=0.9):Optimizer(base_lr), _momentum(momentum) {}
+  ~SGDOptimizer() {
+    for (std::map<std::string, float*>::iterator iter = _velocity.begin(); iter != _velocity.end(); iter++) {
+      delete[] iter->second;
+    }
+    _velocity.clear();
+  }
 
 protected:
   void compute_step(float* gradient, int size, std::string param_name="") {
-    if(_velocity.count(param_name) == 0) {
+    if (_velocity.count(param_name) == 0) {
       _velocity[param_name] = new float [size];
       memset(_velocity[param_name], 0, size * sizeof(float));
     }
@@ -102,17 +119,27 @@ class AdamOptimizer: public Optimizer {
 public:
   AdamOptimizer(float base_lr, float beta1=0.9, float beta2=0.999, float epsilon=1e-8):Optimizer(base_lr), \
                                     _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
-
+  ~AdamOptimizer() {
+    for (std::map<std::string, float*>::iterator iter = _momentum.begin(); iter != _momentum.end(); iter++) {
+      delete[] iter->second;
+    }
+    for (std::map<std::string, float*>::iterator iter = _velocity.begin(); iter != _velocity.end(); iter++) {
+      delete[] iter->second;
+    }
+    _momentum.clear();
+    _velocity.clear();
+  }
 protected:
   void compute_step(float* gradient, int size, std::string param_name="") {
-    if(_momentum.count(param_name) == 0) {
+    if (_momentum.count(param_name) == 0) {
       _momentum[param_name] = new float [size];
       memset(_momentum[param_name], 0, size * sizeof(float));
     }
-    if(_velocity.count(param_name) == 0) {
+    if (_velocity.count(param_name) == 0) {
       _velocity[param_name] = new float [size];
       memset(_velocity[param_name], 0, size * sizeof(float));
     }
+    int true_update_times = int(_update_times / _velocity.size());
     float alpha = sqrt(1 - pow(_beta2, _update_times)) / (1 - pow(_beta1, _update_times));
     for (int i = 0; i < size; ++i) {
       _momentum[param_name][i] = _beta1 * _momentum[param_name][i] + (1 - _beta1) * gradient[i];

@@ -6,5 +6,5 @@ gaussian_sampling {
 
 optimizer {
   type: "Adam",
-  base_lr: 0.01
+  base_lr: 0.05
 }

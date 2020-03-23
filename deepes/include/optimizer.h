@@ -72,52 +72,5 @@ protected:
 };
 
 
-/*@brief SGDOptimizer.
-  * Implements stochastic gradient descent (optionally with momentum).
-  *
-  *@Args:
-  *     base_lr: learning rate (default: 1e-3).
-  *     momentum: momentum factor (default: 0.9).
-  */
-class SGDOptimizer: public Optimizer {
-public:
-  SGDOptimizer(float base_lr, float momentum=0.9):Optimizer(base_lr), _momentum(momentum) {}
-  ~SGDOptimizer();
-
-protected:
-  void compute_step(float* gradient, int size, std::string param_name);
-
-private:
-  float _momentum;
-  std::map<std::string, float*> _velocity;
-};
-
-
-/*@brief AdamOptimizer.
-  * Implements Adam algorithm.
-  *
-  *@Args:
-  *     base_lr: learning rate (default: 1e-3).
-  *     beta1: coefficients used for computing running averages of gradient (default: 0.9).
-  *     beta2: coefficients used for computing running averages of gradient's square (default: 0.999).
-  *     epsilon: term added to the denominator to improve numerical stability (default: 1e-8).
-  */
-class AdamOptimizer: public Optimizer {
-public:
-  AdamOptimizer(float base_lr, float beta1=0.9, float beta2=0.999, float epsilon=1e-8):Optimizer(base_lr), \
-                                    _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
-  ~AdamOptimizer();
-
-protected:
-  void compute_step(float* gradient, int size, std::string param_name);
-
-private:
-  float _beta1;
-  float _beta2;
-  float _epsilon;
-  std::map<std::string, float*> _momentum;
-  std::map<std::string, float*> _velocity;
-};
-
 }//namespace
 #endif

@@ -16,7 +16,9 @@
 #define TORCHPREDICTOR_H
 #include <memory>
 #include <string>
-#include "optimizer.h"
+#include <algorithm>
+#include "sgd_optimizer.h"
+#include "adam_optimizer.h"
 #include "utils.h"
 #include "gaussian_sampling.h"
 #include "deepes.pb.h"
@@ -40,9 +42,12 @@ public:
     load_proto_conf(config_path, *_config);
     _sampling_method = std::make_shared<GaussianSampling>();
     _sampling_method->load_config(*_config);
-    if (_config->optimizer().type() == "SGD") {
+
+    std::string opt_type = _config->optimizer().type();
+    std::transform(opt_type.begin(),opt_type.end(),opt_type.begin(),::tolower);
+    if (opt_type == "sgd") {
       _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
-    }else if (_config->optimizer().type() == "Adam") {
+    }else if (opt_type == "adam") {
       _optimizer = std::make_shared<AdamOptimizer>(_config->optimizer().base_lr());
     }else {
       // TODO: NotImplementedError

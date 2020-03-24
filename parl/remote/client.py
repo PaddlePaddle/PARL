@@ -140,7 +140,11 @@ class Client(object):
                 to_byte(socket.gethostname())
             ])
             _ = self.submit_job_socket.recv_multipart()
-            logger.info(" LOG :master is connected properly.")
+            #######################################################################
+            logger.info(
+                " LOG :master is connected properly."
+            )
+            ########################################################################
 
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
@@ -284,7 +288,11 @@ class Client(object):
                     job_address = to_str(message[1])
                     job_heartbeat_address = to_str(message[2])
                     ping_heartbeat_address = to_str(message[3])
-                    logger.info(" LOG :[Client] has submited the job to master successfully.")
+                    ##################################################
+                    logger.info(
+                        " LOG :Client has submitted the job to master successfully."
+                    )
+                    #################################################
 
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address,
@@ -335,12 +343,20 @@ def connect(master_address, distributed_files=[]):
     if GLOBAL_CLIENT is None:
         GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                distributed_files)
-        logger.info(" LOG :global client was none, global client has been created")
+        ############################################################
+        logger.info(
+            " LOG :global client was none, global client has been created"
+        )
+        ###########################################################
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
-            logger.info(" LOG :global client wasn't none,a new global client has been created")
+            ############################################################
+            logger.info(
+                " LOG :global client wasn't none,a new global client has been created"
+            )
+            ###########################################################
 
 
 def get_global_client():

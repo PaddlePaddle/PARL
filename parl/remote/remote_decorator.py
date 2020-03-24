@@ -94,6 +94,7 @@ def remote_class(*args, **kwargs):
                 if self.GLOBAL_CLIENT.master_is_alive:
                     job_address = self.request_cpu_resource(
                         self.GLOBAL_CLIENT, max_memory)
+                    logger.info(" LOG :received the job address.")
                 else:
                     raise Exception("Can not submit job to the master. "
                                     "Please check if master is still alive.")
@@ -134,6 +135,7 @@ def remote_class(*args, **kwargs):
                             [remote_constants.KILLJOB_TAG])
                         _ = self.job_socket.recv_multipart()
                         self.job_socket.close(0)
+                        logger.info(" LOG :Delete the remote class object and release remote resources.")
                     except AttributeError:
                         pass
                     except zmq.error.ZMQError:
@@ -146,6 +148,7 @@ def remote_class(*args, **kwargs):
                         self.GLOBAL_CLIENT.pyfiles
                     ])
                     _ = socket.recv_multipart()
+                    logger.info(" LOG :Send python files successfully.")
                 except zmq.error.Again as e:
                     logger.error("Send python files failed.")
 

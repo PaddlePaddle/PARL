@@ -140,6 +140,8 @@ class Client(object):
                 to_byte(socket.gethostname())
             ])
             _ = self.submit_job_socket.recv_multipart()
+            logger.info(" LOG :master is connected properly.")
+
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
                            "check if master is started and ensure the input "
@@ -282,6 +284,7 @@ class Client(object):
                     job_address = to_str(message[1])
                     job_heartbeat_address = to_str(message[2])
                     ping_heartbeat_address = to_str(message[3])
+                    logger.info(" LOG :[Client] has submited the job to master successfully.")
 
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address,
@@ -291,7 +294,6 @@ class Client(object):
                         self.actor_num += 1
                         self.lock.release()
                         return job_address
-
                 # no vacant CPU resources, cannot submit a new job
                 elif tag == remote_constants.CPU_TAG:
                     job_address = None
@@ -333,10 +335,12 @@ def connect(master_address, distributed_files=[]):
     if GLOBAL_CLIENT is None:
         GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                distributed_files)
+        logger.info(" LOG :global client was none, global client has been created")
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
+            logger.info(" LOG :global client wasn't none,a new global client has been created")
 
 
 def get_global_client():

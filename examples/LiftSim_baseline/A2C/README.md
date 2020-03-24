@@ -7,7 +7,7 @@
 ## 依赖库
 
 + [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=1.2.1](https://github.com/PaddlePaddle/PARL)
++ [parl>=1.2.2](https://github.com/PaddlePaddle/PARL)
 + [rlschool>=0.1.1][rlschool]
 
 

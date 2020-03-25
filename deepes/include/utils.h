@@ -27,7 +27,7 @@ namespace DeepES{
   Args:
     reward: an array of rewards
 */
-void compute_centered_ranks(std::vector<float> &reward) ;
+bool compute_centered_ranks(std::vector<float> &reward);
 
 /* Load a protobuf-based configuration from the file.
  * Args:

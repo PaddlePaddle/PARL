@@ -31,7 +31,7 @@ bool compute_centered_ranks(std::vector<float> &reward) {
     reward[id] = normlized_rank;
     normlized_rank += gap;
   }
-  return true
+  return true;
 }
 
 }//namespace

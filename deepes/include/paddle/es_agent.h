@@ -16,7 +16,7 @@
 #define DEEPES_PADDLE_ES_AGENT_H_
 
 #include "paddle_api.h"
-#include "optimizer.h"
+#include "optimizer_factory.h"
 #include "utils.h"
 #include "gaussian_sampling.h"
 #include "deepes.pb.h"

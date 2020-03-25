@@ -16,7 +16,6 @@
 #include <glog/logging.h>
 #include <omp.h>
 #include "cartpole.h"
-#include "gaussian_sampling.h"
 #include "es_agent.h"
 #include "paddle_api.h"
 
@@ -101,7 +100,7 @@ int main(int argc, char* argv[]) {
   noisy_keys.resize(ITER);
 
   omp_set_num_threads(10);
-  for (int epoch = 0; epoch < 10000; ++epoch) {
+  for (int epoch = 0; epoch < 1000; ++epoch) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
       std::shared_ptr<ESAgent> sampling_agent = sampling_agents[i];

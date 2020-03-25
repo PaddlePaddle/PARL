@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <string>
-#include <algorithm>
 #include "optimizer_factory.h"
 #include "utils.h"
 #include "gaussian_sampling.h"

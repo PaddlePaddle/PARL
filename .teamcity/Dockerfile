@@ -18,3 +18,10 @@
 FROM parl/parl-test:cuda9.0-cudnn7-v2
 
 COPY ./requirements.txt /root/
+
+RUN apt-get install -y libgflags-dev libgoogle-glog-dev libomp-dev libgtest-dev
+RUN cd /usr/src/gtest && mkdir build && cd build && cmake .. && make  && cp libgtest*.a /usr/local/lib
+
+RUN wget https://github.com/google/protobuf/releases/download/v2.4.1/protobuf-2.4.1.tar.gz \
+    && tar -zxvf protobuf-2.4.1.tar.gz \
+    && cd protobuf-2.4.1 && ./configure && make && make install 

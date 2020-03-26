@@ -159,39 +159,38 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
-          run_deepes_test
-          exit 0
-          declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
-          for env in "${envs[@]}";do
-              cd /work
-              source ~/.bashrc
-              export PATH="/root/miniconda3/bin:$PATH"
-              source activate $env
-              python -m pip install --upgrade pip
-              echo ========================================
-              echo Running tests in $env ..
-              echo `which pip`
-              echo ========================================
-              pip install .
-              if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
-              then  
-                pip install -r .teamcity/requirements.txt
-                run_test_with_cpu $env
-                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-              else
-                echo ========================================
-                echo "in torch environment"
-                echo ========================================
-                pip install -r .teamcity/requirements_torch.txt
-                run_test_with_cpu $env "DIS_TESTING_TORCH"
-              fi
-          done
-          run_test_with_gpu
+          # declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          # for env in "${envs[@]}";do
+          #     cd /work
+          #     source ~/.bashrc
+          #     export PATH="/root/miniconda3/bin:$PATH"
+          #     source activate $env
+          #     python -m pip install --upgrade pip
+          #     echo ========================================
+          #     echo Running tests in $env ..
+          #     echo `which pip`
+          #     echo ========================================
+          #     pip install .
+          #     if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
+          #     then  
+          #       pip install -r .teamcity/requirements.txt
+          #       run_test_with_cpu $env
+          #       run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+          #     else
+          #       echo ========================================
+          #       echo "in torch environment"
+          #       echo ========================================
+          #       pip install -r .teamcity/requirements_torch.txt
+          #       run_test_with_cpu $env "DIS_TESTING_TORCH"
+          #     fi
+          # done
+          # run_test_with_gpu
 
-          #
-          /root/miniconda3/envs/empty_env/bin/pip install .
-          run_import_test
-          run_docs_test
+          # #
+          # /root/miniconda3/envs/empty_env/bin/pip install .
+          # run_import_test
+          # run_docs_test
+          run_deepes_test
           ;;
         *)
           print_usage

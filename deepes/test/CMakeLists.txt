@@ -17,6 +17,7 @@ endif()
 file(GLOB core_src "../src/*.cc" "../src/*.cpp" "../benchmark/*.cc")
 file(GLOB test_src "../test/src/*.cc")
 
+
 include_directories("../include")
 include_directories("../benchmark")
 include_directories("../test/include")

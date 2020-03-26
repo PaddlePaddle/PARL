@@ -26,7 +26,7 @@ elif [ $1 = "torch" ]; then
       echo "Downloading Torch library"
       wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
       unzip libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
-      rm libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
+      rm -rf libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
       echo "Torch library Downloaded"
   fi
   FLAGS=" -DWITH_TORCH=ON"
@@ -35,7 +35,7 @@ else
   exit 0
 fi
 
-#export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 #----------------protobuf-------------#
 cp ./src/proto/deepes.proto ./

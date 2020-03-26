@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   std::vector<float> noisy_rewards(ITER, 0.0f);
   noisy_keys.resize(ITER);
 
-  for (int epoch = 0; epoch < 1000; ++epoch) {
+  for (int epoch = 0; epoch < 100; ++epoch) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
       auto sampling_agent = sampling_agents[i];

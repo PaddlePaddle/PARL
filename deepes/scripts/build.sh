@@ -14,7 +14,7 @@ if [ $1 = "paddle" ]; then
   fi
   
   # Initialization model
-  if [ ! -d ./demo/paddle/cartpole_init_model]; then
+  if [ ! -d ./demo/paddle/cartpole_init_model ]; then
     unzip ./demo/paddle/cartpole_init_model.zip -d ./demo/paddle/
   fi
 

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <vector>
 #include "es_agent.h"
 
 namespace DeepES {
@@ -50,7 +49,7 @@ ESAgent::ESAgent(
   _sampling_method = std::make_shared<GaussianSampling>();
   _sampling_method->load_config(*_config);
 
-  _optimizer = std::make_shared<SGDOptimizer>(_config->optimizer().base_lr());
+  _optimizer = create_optimizer(_config->optimizer());
 
   _param_names = _predictor->GetParamNames();
   _param_size = _calculate_param_size();
@@ -108,7 +107,7 @@ bool ESAgent::update(
     std::unique_ptr<Tensor> tensor = _predictor->GetMutableTensor(param_name);
     float* tensor_data = tensor->mutable_data<float>();
     int64_t tensor_size = ShapeProduction(tensor->shape());
-    _optimizer->update(tensor_data, _neg_gradients + counter, tensor_size);
+    _optimizer->update(tensor_data, _neg_gradients + counter, tensor_size, param_name);
     counter += tensor_size;
   }
   return true;

@@ -67,7 +67,10 @@ class LiftAgent(parl.Agent):
             lr = layers.data(
                 name='lr', shape=[1], dtype='float32', append_batch_size=False)
             entropy_coeff = layers.data(
-                name='entropy_coeff', shape=[], dtype='float32')
+                name='entropy_coeff',
+                shape=[1],
+                dtype='float32',
+                append_batch_size=False)
 
             total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
                 obs, actions, advantages, target_values, lr, entropy_coeff)

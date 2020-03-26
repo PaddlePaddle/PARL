@@ -123,7 +123,7 @@ class Learner(object):
                     obs_np, actions_np, behaviour_logits_np, rewards_np,
                     dones_np,
                     np.float32(self.lr),
-                    np.float32(self.entropy_coeff)
+                    np.array([self.entropy_coeff], dtype='float32')
                 ]
 
     def run_learn(self):

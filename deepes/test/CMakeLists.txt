@@ -6,11 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-########## options ##########
-option(WITH_TORCH "Compile DeepES with Torch framework." OFF)
-message("WITH_TORCH: "${WITH_TORCH})
-
-
 find_package(GTest REQUIRED)
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -27,4 +22,4 @@ include_directories("../benchmark")
 include_directories("../test/include")
 
 add_executable(${TARGET} "unit_test.cc" ${core_src} ${test_src} ${lib_src}) #  ${demo_src} 
-target_link_libraries(${TARGET} gflags protobuf pthread glog gtest "${TORCH_LIBRARIES}")
+target_link_libraries(${TARGET} gflags protobuf pthread glog gtest) #  "${TORCH_LIBRARIES}"

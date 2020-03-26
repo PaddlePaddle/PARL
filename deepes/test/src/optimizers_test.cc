@@ -34,6 +34,7 @@ TEST(SGDOptimizersTest, Method_update) {
 	for (int i = 0; i < 10; ++i) {
 		EXPECT_FLOAT_EQ(sgd_new[i], sgd_wei[i]) << " i: " << i ;
 	}
+	EXPECT_TRUE(optimizer->update(sgd_wei, sgd_grad, 10, "test"));
 	EXPECT_FALSE(optimizer->update(sgd_wei, sgd_grad, 9, "test"));
 }
 
@@ -51,6 +52,7 @@ TEST(AdamOptimizersTest, Method_update) {
 	for (int i = 0; i < 10; ++i) {
 		EXPECT_FLOAT_EQ(adam_new[i], adam_wei[i]) << " i: " << i ;
 	}
+	EXPECT_TRUE(optimizer->update(adam_wei, adam_grad, 10, "test"));
 	EXPECT_FALSE(optimizer->update(adam_wei, adam_grad, 9, "test"));
 }
 

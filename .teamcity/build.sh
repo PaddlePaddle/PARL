@@ -159,6 +159,8 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
+          run_deepes_test
+          exit 0
           declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
           for env in "${envs[@]}";do
               cd /work
@@ -190,7 +192,6 @@ function main() {
           /root/miniconda3/envs/empty_env/bin/pip install .
           run_import_test
           run_docs_test
-          run_deepes_test
           ;;
         *)
           print_usage

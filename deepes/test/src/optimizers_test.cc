@@ -55,5 +55,5 @@ TEST(AdamOptimizersTest, Method_update) {
 	EXPECT_FALSE(optimizer->update(adam_wei, adam_grad, 9, "test"));
 }
 
-}  // namespace project
+}
 

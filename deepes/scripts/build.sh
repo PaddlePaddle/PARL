@@ -24,8 +24,8 @@ elif [ $1 = "torch" ]; then
   if [ ! -d "./libtorch" ];then
     echo "Cannot find the torch library: ./libtorch"
       echo "Downloading Torch library"
-      wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
-      unzip libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
+      wget -q https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
+      unzip -q libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
       rm -rf libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
       echo "Torch library Downloaded"
   fi

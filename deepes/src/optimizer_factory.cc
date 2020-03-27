@@ -16,6 +16,7 @@
 
 namespace DeepES{
 
+
 std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config) {
   std::shared_ptr<Optimizer> optimizer;
   std::string opt_type = optimizer_config.type();

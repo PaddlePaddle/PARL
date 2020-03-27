@@ -12,26 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "gtest/gtest.h"
+#include <vector>
 #include "utils.h"
 
 namespace DeepES {
 
-bool compute_centered_ranks(std::vector<float> &reward) {
-  std::vector<std::pair<float, int>> reward_index;
-  float gap = 1.0 / (reward.size() - 1);
-  float normlized_rank = -0.5;
-  int id = 0;
-  for (auto& rew: reward) {
-    reward_index.push_back(std::make_pair(rew, id));
-    ++id;
-  }
-  std::sort(reward_index.begin(), reward_index.end());
-  for (int i = 0; i < reward.size(); ++i) {
-    id = reward_index[i].second;
-    reward[id] = normlized_rank;
-    normlized_rank += gap;
-  }
-  return true;
+// Tests that the Utils::compute_centered_rank() method.
+TEST(UtilsTest, Method_compute_centered_ranks) {
+	float a[5] = {9.0, 8.0, 7.0, 6.0, 5.0};
+	std::vector<float> reward_vec(a, a+5);
+	EXPECT_EQ(compute_centered_ranks(reward_vec), true);
 }
 
-}//namespace
+
+}
+

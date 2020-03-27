@@ -134,6 +134,19 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
+function run_deepes_test {
+    cd ${REPO_ROOT}/deepes
+
+    cat <<EOF
+    ========================================
+    Running DeepES test...
+    ========================================
+EOF
+    sh test/run_test.sh
+    rm -rf ${REPO_ROOT}/deepes/build
+    rm -rf ${REPO_ROOT}/deepes/libtorch
+}
+
 function main() {
     set -e
     local CMD=$1
@@ -158,7 +171,7 @@ function main() {
               echo ========================================
               pip install .
               if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
-              then  
+              then
                 pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
@@ -176,6 +189,7 @@ function main() {
           /root/miniconda3/envs/empty_env/bin/pip install .
           run_import_test
           run_docs_test
+          run_deepes_test
           ;;
         *)
           print_usage

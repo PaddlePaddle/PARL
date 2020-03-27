@@ -95,25 +95,25 @@ int main(int argc, char* argv[]) {
     sampling_agents.push_back(agent->clone());
   }
 
-  std::vector<SamplingKey> noisy_keys;
+  std::vector<SamplingInfo> noisy_info;
   std::vector<float> noisy_rewards(ITER, 0.0f);
-  noisy_keys.resize(ITER);
+  noisy_info.resize(ITER);
 
   omp_set_num_threads(10);
-  for (int epoch = 0; epoch < 1000; ++epoch) {
+  for (int epoch = 0; epoch < 300; ++epoch) {
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
       std::shared_ptr<ESAgent> sampling_agent = sampling_agents[i];
-      SamplingKey key;
-      bool success = sampling_agent->add_noise(key);
+      SamplingInfo info;
+      bool success = sampling_agent->add_noise(info);
       float reward = evaluate(envs[i], sampling_agent);
 
-      noisy_keys[i] = key;
+      noisy_info[i] = info;
       noisy_rewards[i] = reward;
     }
 
     // NOTE: all parameters of sampling_agents will be updated
-    bool success = agent->update(noisy_keys, noisy_rewards);
+    bool success = agent->update(noisy_info, noisy_rewards);
   
     int reward = evaluate(envs[0], agent);
     LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;

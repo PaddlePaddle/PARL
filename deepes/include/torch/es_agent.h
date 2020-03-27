@@ -98,7 +98,7 @@ public:
    * Only not cloned ESAgent can call `update` function.
    * Parameters of cloned agents will also be updated.
    */
-  bool update(std::vector<SamplingKey>& noisy_keys, std::vector<float>& noisy_rewards) {
+  bool update(std::vector<SamplingInfo>& noisy_info, std::vector<float>& noisy_rewards) {
     if (_is_sampling_agent) {
       LOG(ERROR) << "[DeepES] Cloned ESAgent cannot call update function, please use original ESAgent.";
       return false;
@@ -107,8 +107,8 @@ public:
     compute_centered_ranks(noisy_rewards);
 
     memset(_neg_gradients, 0, _param_size * sizeof(float));
-    for (int i = 0; i < noisy_keys.size(); ++i) {
-      int key = noisy_keys[i].key(0);
+    for (int i = 0; i < noisy_info.size(); ++i) {
+      int key = noisy_info[i].key(0);
       float reward = noisy_rewards[i];
       bool success = _sampling_method->resampling(key, _noise, _param_size);
       for (int64_t j = 0; j < _param_size; ++j) {
@@ -116,7 +116,7 @@ public:
       }
     }
     for (int64_t j = 0; j < _param_size; ++j) {
-      _neg_gradients[j] /= -1.0 * noisy_keys.size();
+      _neg_gradients[j] /= -1.0 * noisy_info.size();
     }
 
     //update
@@ -125,7 +125,7 @@ public:
     for (auto& param: params) {
       torch::Tensor tensor = param.value().view({-1});
       auto tensor_a = tensor.accessor<float,1>();
-      _optimizer->update(tensor_a, _neg_gradients+counter, tensor.size(0), param.key());
+      _optimizer->update(tensor_a, _neg_gradients+counter, tensor.size(0), param.info());
       counter += tensor.size(0);
     }
 
@@ -133,7 +133,7 @@ public:
   }
 
   // copied parameters = original parameters + noise
-  bool add_noise(SamplingKey& sampling_key) {
+  bool add_noise(SamplingInfo& sampling_info) {
     if (!_is_sampling_agent) {
       LOG(ERROR) << "[DeepES] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";
       return false;
@@ -142,11 +142,11 @@ public:
     auto sampling_params = _sampling_model->named_parameters();
     auto params = _model->named_parameters();
     int key = _sampling_method->sampling(_noise, _param_size);
-    sampling_key.add_key(key);
+    sampling_info.add_key(key);
     int64_t counter = 0;
     for (auto& param: sampling_params) {
       torch::Tensor sampling_tensor = param.value().view({-1});
-      std::string param_name = param.key();
+      std::string param_name = param.info();
       torch::Tensor tensor = params.find(param_name)->view({-1});
       auto sampling_tensor_a = sampling_tensor.accessor<float,1>();
       auto tensor_a = tensor.accessor<float,1>();

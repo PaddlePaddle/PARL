@@ -63,11 +63,11 @@ class ESAgent {
    * Parameters of cloned agents will also be updated.
    */
   bool update(
-      std::vector<SamplingKey>& noisy_keys,
+      std::vector<SamplingInfo>& noisy_info,
       std::vector<float>& noisy_rewards);
   
   // copied parameters = original parameters + noise
-  bool add_noise(SamplingKey& sampling_key);
+  bool add_noise(SamplingInfo& sampling_info);
 
   /**
    * @brief Get paddle predict

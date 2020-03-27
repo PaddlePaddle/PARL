@@ -78,7 +78,7 @@ std::shared_ptr<ESAgent> ESAgent::clone() {
 }
 
 bool ESAgent::update(
-    std::vector<SamplingKey>& noisy_keys,
+    std::vector<SamplingInfo>& noisy_info,
     std::vector<float>& noisy_rewards) {
   if (_is_sampling_agent) {
     LOG(ERROR) << "[DeepES] Cloned ESAgent cannot call update function, please use original ESAgent.";
@@ -88,8 +88,8 @@ bool ESAgent::update(
   compute_centered_ranks(noisy_rewards);
   
   memset(_neg_gradients, 0, _param_size * sizeof(float));
-  for (int i = 0; i < noisy_keys.size(); ++i) {
-    int key = noisy_keys[i].key(0);
+  for (int i = 0; i < noisy_info.size(); ++i) {
+    int key = noisy_info[i].key(0);
     float reward = noisy_rewards[i];
     bool success = _sampling_method->resampling(key, _noise, _param_size);
     for (int64_t j = 0; j < _param_size; ++j) {
@@ -97,7 +97,7 @@ bool ESAgent::update(
     }
   }
   for (int64_t j = 0; j < _param_size; ++j) {
-    _neg_gradients[j] /= -1.0 * noisy_keys.size();
+    _neg_gradients[j] /= -1.0 * noisy_info.size();
   }
 
   //update
@@ -114,14 +114,14 @@ bool ESAgent::update(
   
 }
 
-bool ESAgent::add_noise(SamplingKey& sampling_key) {
+bool ESAgent::add_noise(SamplingInfo& sampling_info) {
   if (!_is_sampling_agent) {
     LOG(ERROR) << "[DeepES] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";
     return false;
   }
 
   int key = _sampling_method->sampling(_noise, _param_size);
-  sampling_key.add_key(key);
+  sampling_info.add_key(key);
   int64_t counter = 0;
 
   for (std::string param_name: _param_names) {

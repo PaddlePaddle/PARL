@@ -11,14 +11,14 @@ auto agent = ESAgent(config);
 
 for (int i = 0; i < 10; ++i) {
    auto sampling_agnet = agent->clone(); // clone出一个sampling agent
-   SamplingKey key;
-   agent->add_noise(key); // 参数扰动，同时保存随机种子到key中
+   SamplingInfo info;
+   agent->add_noise(info); // 参数扰动，同时保存随机种子到info中
    int reward = evaluate(env, sampling_agent); //评估参数
-   noisy_keys.push_back(key); // 记录随机噪声对应种子
+   noisy_info.push_back(info); // 记录随机噪声对应种子
    noisy_rewards.push_back(reward); // 记录评估结果
 }
 //根据评估结果、随机种子更新参数，然后重复以上过程，直到收敛。
-agent->update(noisy_keys, noisy_rewards);
+agent->update(noisy_info, noisy_rewards);
 ```
 
 ## 一键运行demo列表

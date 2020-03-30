@@ -26,5 +26,5 @@ TEST(UtilsTest, Method_compute_centered_ranks) {
 }
 
 
-}
+} // namespace
 

@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (DeepES)
-set(TARGET unit_test_main)
+set(TARGET torch_agent_test_main)
 
 
 set(CMAKE_CXX_STANDARD 11)
@@ -16,21 +16,20 @@ if (OPENMP_FOUND)
 endif()
 
 # Torch lib
-list(APPEND CMAKE_PREFIX_PATH "../libtorch")
+list(APPEND CMAKE_PREFIX_PATH "../../libtorch")
 find_package(Torch REQUIRED ON)
 
 # include and source
-file(GLOB test_src "../test/src/*.cc")
-file(GLOB core_src "../src/*.cc")
-file(GLOB agent_src "../src/torch/*.cc")
+file(GLOB core_src "../../src/*.cc")
+file(GLOB agent_src "../../src/torch/*.cc")
 
-include_directories("../include/torch")
-include_directories("../include")
-include_directories("../benchmark")
-include_directories("../test/include")
+include_directories("../../include/torch")
+include_directories("../../include")
+include_directories("../../benchmark")
+include_directories("../../torch_agent/")
 
 
-add_executable(${TARGET} "unit_test.cc" ${core_src} ${agent_src} ${test_src})
+add_executable(${TARGET} "torch_agent_test.cc" ${core_src} ${agent_src}) 
 target_link_libraries(${TARGET} gflags protobuf pthread glog gtest "${TORCH_LIBRARIES}")
 
 

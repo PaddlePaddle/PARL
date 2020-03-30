@@ -13,14 +13,14 @@
 // limitations under the License.
 
 #include "es_agent.h"
+#include <ctime>
 
 namespace DeepES {
 
-typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
 typedef paddle::lite_api::Tensor Tensor;
 typedef paddle::lite_api::shape_t shape_t;
 
-inline int64_t ShapeProduction(const shape_t& shape) {
+int64_t ShapeProduction(const shape_t& shape) {
   int64_t res = 1;
   for (auto i : shape) res *= i;
   return res;
@@ -71,6 +71,7 @@ std::shared_ptr<ESAgent> ESAgent::clone() {
   new_agent->_is_sampling_agent = true;
   new_agent->_sampling_method = _sampling_method;
   new_agent->_param_names = _param_names;
+  new_agent->_config = _config;
   new_agent->_param_size = _param_size;
   new_agent->_noise = noise;
 
@@ -111,7 +112,6 @@ bool ESAgent::update(
     counter += tensor_size;
   }
   return true;
-  
 }
 
 bool ESAgent::add_noise(SamplingInfo& sampling_info) {
@@ -121,7 +121,9 @@ bool ESAgent::add_noise(SamplingInfo& sampling_info) {
   }
 
   int key = _sampling_method->sampling(_noise, _param_size);
+  int model_iter_id = _config->async_es().model_iter_id();
   sampling_info.add_key(key);
+  sampling_info.set_model_iter_id(model_iter_id);
   int64_t counter = 0;
 
   for (std::string param_name: _param_names) {
@@ -137,7 +139,6 @@ bool ESAgent::add_noise(SamplingInfo& sampling_info) {
   return true;
 }
 
-
 std::shared_ptr<PaddlePredictor> ESAgent::get_predictor() {
   return _sampling_predictor;
 }
@@ -151,6 +152,4 @@ int64_t ESAgent::_calculate_param_size() {
   return param_size;
 }
 
-
-}
-
+}//namespace

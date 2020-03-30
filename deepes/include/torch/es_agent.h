@@ -125,7 +125,7 @@ public:
     for (auto& param: params) {
       torch::Tensor tensor = param.value().view({-1});
       auto tensor_a = tensor.accessor<float,1>();
-      _optimizer->update(tensor_a, _neg_gradients+counter, tensor.size(0), param.info());
+      _optimizer->update(tensor_a, _neg_gradients+counter, tensor.size(0), param.key());
       counter += tensor.size(0);
     }
 
@@ -146,7 +146,7 @@ public:
     int64_t counter = 0;
     for (auto& param: sampling_params) {
       torch::Tensor sampling_tensor = param.value().view({-1});
-      std::string param_name = param.info();
+      std::string param_name = param.key();
       torch::Tensor tensor = params.find(param_name)->view({-1});
       auto sampling_tensor_a = sampling_tensor.accessor<float,1>();
       auto tensor_a = tensor.accessor<float,1>();
@@ -162,6 +162,7 @@ public:
 
 private:
   int64_t _calculate_param_size() {
+    _param_size = 0;
     auto params = _model->named_parameters();
     for (auto& param: params) {
       torch::Tensor tensor = param.value().view({-1});

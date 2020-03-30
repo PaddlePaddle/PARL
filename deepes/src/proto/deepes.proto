@@ -51,4 +51,5 @@ message AsyncESConfig{
   optional string model_warehouse = 1 [default = "./model_warehouse"];
   repeated string model_md5 = 2;
   optional int32 max_to_keep = 3 [default = 5];
+  optional int32 model_iter_id = 4 [default = 0];
 }

@@ -31,6 +31,4 @@ include_directories("../test/include")
 
 
 add_executable(${TARGET} "unit_test.cc" ${core_src} ${agent_src} ${test_src})
-
 target_link_libraries(${TARGET} gflags protobuf pthread glog gtest "${TORCH_LIBRARIES}")
-

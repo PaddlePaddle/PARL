@@ -45,6 +45,7 @@ if (WITH_PADDLE)
   
   file(GLOB framework_src "src/paddle/*.cc")
   set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_solver_parallel.cc")
+  #set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_async_solver.cc")
 ########## Torch config ##########
 elseif (WITH_TORCH)
   list(APPEND CMAKE_PREFIX_PATH "./libtorch")

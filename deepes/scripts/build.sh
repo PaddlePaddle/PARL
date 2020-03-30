@@ -47,7 +47,7 @@ rm -rf build
 mkdir build
 cd build
 cmake ../ ${FLAGS}
-make -j10 
+make -j10
 
 #-----------------run----------------#
 ./parallel_main

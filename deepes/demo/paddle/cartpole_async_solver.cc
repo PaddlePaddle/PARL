@@ -58,7 +58,7 @@ int arg_max(const std::vector<float>& vec) {
 }
 
 
-float evaluate(CartPole& env, std::shared_ptr<AsyncAgent> agent) {
+float evaluate(CartPole& env, std::shared_ptr<AsyncESAgent> agent) {
   float total_reward = 0.0;
   env.reset();
   const float* obs = env.getState();
@@ -87,10 +87,10 @@ int main(int argc, char* argv[]) {
   }
 
   std::shared_ptr<PaddlePredictor> paddle_predictor = create_paddle_predictor("../demo/paddle/cartpole_init_model");
-  std::shared_ptr<AsyncAgent> agent = std::make_shared<AsyncAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
+  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
 
   // Clone agents to sample (explore).
-  std::vector< std::shared_ptr<AsyncAgent> > sampling_agents;
+  std::vector< std::shared_ptr<AsyncESAgent> > sampling_agents;
   for (int i = 0; i < ITER; ++i) {
     sampling_agents.push_back(agent->clone());
   }
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     }
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
-      std::shared_ptr<AsyncAgent> sampling_agent = sampling_agents[i];
+      std::shared_ptr<AsyncESAgent> sampling_agent = sampling_agents[i];
       SamplingInfo info;
       bool success = sampling_agent->add_noise(info);
       float reward = evaluate(envs[i], sampling_agent);

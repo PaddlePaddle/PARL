@@ -26,27 +26,27 @@ namespace DeepES{
  * 2. add_noise: add noise into parameters.
  * 3. update: update parameters given data collected during evaluation.
  */
-class AsyncAgent: public ESAgent {
+class AsyncESAgent: public ESAgent {
   public:
-  AsyncAgent() {}
+  AsyncESAgent() {}
 
-  ~AsyncAgent();
+  ~AsyncESAgent();
 
     /**
      * @args:
      *    predictor: predictor created by users for prediction.
      *    config_path: the path of configuration file.
-     * Note that AsyncAgent will update the configuration file after calling the update function.
+     * Note that AsyncESAgent will update the configuration file after calling the update function.
      * Please use the up-to-date configuration.
      */
-  AsyncAgent(
+  AsyncESAgent(
       std::shared_ptr<PaddlePredictor> predictor,
       std::string config_path);
 
     /**
      * @brief: Clone an agent for sampling.
      */
-    std::shared_ptr<AsyncAgent> clone();
+    std::shared_ptr<AsyncESAgent> clone();
 
     /**
      * @brief: Clone an agent for sampling.

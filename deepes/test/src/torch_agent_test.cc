@@ -29,7 +29,6 @@
 namespace DeepES {
 
 
-
 // The fixture for testing class Foo.
 class TorchDemoTest : public ::testing::Test {
 protected:

@@ -19,6 +19,7 @@
 
 namespace DeepES {
 
+
 TEST(SGDOptimizersTest, Method_update) {
     std::shared_ptr<DeepESConfig> config = std::make_shared<DeepESConfig>();
 	auto optimizer_config = config->mutable_optimizer();

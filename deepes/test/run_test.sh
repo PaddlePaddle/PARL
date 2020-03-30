@@ -24,5 +24,6 @@ mkdir build
 cd build
 cmake ../test
 make -j10
+
 #-----------------run----------------#
 ./unit_test_main

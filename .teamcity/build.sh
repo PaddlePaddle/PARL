@@ -143,7 +143,6 @@ function run_deepes_test {
     ========================================
 EOF
     sh test/run_test.sh
-    sh test/run_test.sh torch
     rm -rf ${REPO_ROOT}/deepes/build
     rm -rf ${REPO_ROOT}/deepes/libtorch
 }

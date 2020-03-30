@@ -162,6 +162,7 @@ public:
 
 private:
   int64_t _calculate_param_size() {
+    int _param_size = 0;
     auto params = _model->named_parameters();
     for (auto& param: params) {
       torch::Tensor tensor = param.value().view({-1});

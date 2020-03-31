@@ -89,7 +89,7 @@ protected:
             sampling_agents.push_back(agent->clone());
         }
 
-        std::vector<SamplingKey> noisy_keys;
+        std::vector<SamplingInfo> noisy_keys;
         std::vector<float> noisy_rewards(iter, 0.0f);
         noisy_keys.resize(iter);
         
@@ -98,7 +98,7 @@ protected:
 #pragma omp parallel for schedule(dynamic, 1)
             for (int i = 0; i < iter; ++i) {
                 auto sampling_agent = sampling_agents[i];
-                SamplingKey key;
+                SamplingInfo key;
                 bool success = sampling_agent->add_noise(key);
                 float reward = evaluate(x_list, y_list, train_data_size, sampling_agent);
                 noisy_keys[i] = key;

@@ -19,6 +19,7 @@
 
 namespace DeepES {
 
+
 TEST(SGDOptimizersTest, Method_update) {
     std::shared_ptr<DeepESConfig> config = std::make_shared<DeepESConfig>();
 	auto optimizer_config = config->mutable_optimizer();
@@ -55,5 +56,5 @@ TEST(AdamOptimizersTest, Method_update) {
 	EXPECT_FALSE(optimizer->update(adam_wei, adam_grad, 9, "test"));
 }
 
-}
+} // namespace
 

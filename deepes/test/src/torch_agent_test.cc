@@ -13,16 +13,16 @@
 // limitations under the License.
 
 #include "gtest/gtest.h"
-
 #include <torch/torch.h>
-#include <memory>
-#include <algorithm>
 #include <glog/logging.h>
 #include <omp.h>
+
 #include "gaussian_sampling.h"
 #include "torch_demo_model.h"
 #include "es_agent.h"
 
+#include <memory>
+#include <vector>
 #include <random>
 #include <math.h>
 
@@ -32,7 +32,7 @@ namespace DeepES {
 // The fixture for testing class Foo.
 class TorchDemoTest : public ::testing::Test {
 protected:
-    float evaluate(float* x_list, float* y_list, int size, std::shared_ptr<ESAgent<Model>> agent) {
+    float evaluate(std::vector<float>& x_list, std::vector<float>& y_list, int size, std::shared_ptr<ESAgent<Model>> agent) {
         float total_loss = 0.0;
         for (int i = 0; i < size; ++i) {
             torch::Tensor x_input = torch::tensor(x_list[i], torch::dtype(torch::kFloat32));
@@ -63,33 +63,24 @@ protected:
         }
     }
 
-    float train_agent() {
-    }
-
-
     void SetUp() override {
-        x_list = new float [train_data_size];
-        memset(x_list, 0, train_data_size * sizeof(float));
-        y_list = new float [train_data_size];
-        memset(y_list, 0, train_data_size * sizeof(float));
-        test_x_list = new float [test_data_size];
-        memset(test_x_list, 0, test_data_size * sizeof(float));
-        test_y_list = new float [test_data_size];
-        memset(test_y_list, 0, test_data_size * sizeof(float));
-
         std::default_random_engine generator(0); // fix seed
         std::uniform_real_distribution<float> uniform(-3.0, 9.0);
         std::normal_distribution<float> norm;
         for (int i = 0; i < train_data_size; ++i) {
-            x_list[i] = uniform(generator); // generate data between [-3, 9]
-            y_list[i] = sin(x_list[i]) + norm(generator)*0.05; // noise std 0.05
+            float x_i = uniform(generator); // generate data between [-3, 9]
+            float y_i = sin(x_i) + norm(generator)*0.05; // noise std 0.05
+            x_list.push_back(x_i);
+            y_list.push_back(y_i);
         }
         for (int i= 0; i < test_data_size; ++i) {
-            test_x_list[i] = uniform(generator);
-            test_y_list[i] = sin(test_x_list[i]);
+            float x_i = uniform(generator);
+            float y_i = sin(x_i);
+            test_x_list.push_back(x_i);
+            test_y_list.push_back(y_i);
         }
 
-        model = std::make_shared<Model>(1, 1);
+        std::shared_ptr<Model>  model = std::make_shared<Model>(1, 1);
         agent = std::make_shared<ESAgent<Model>>(model, "../test/torch_sin_config.prototxt");
 
         // Clone agents to sample (explore).
@@ -101,6 +92,7 @@ protected:
         std::vector<SamplingKey> noisy_keys;
         std::vector<float> noisy_rewards(iter, 0.0f);
         noisy_keys.resize(iter);
+        
         LOG(INFO) << "start training...";
         for (int epoch = 0; epoch < 1001; ++epoch) {
 #pragma omp parallel for schedule(dynamic, 1)
@@ -122,29 +114,21 @@ protected:
         }
     }
 
-    void TearDown() override{
-        delete[] x_list;
-        delete[] y_list;
-        delete[] test_x_list;
-        delete[] test_y_list;
-    }
-
     // Class members declared here can be used by all tests in the test suite
     int train_data_size = 300;
     int test_data_size = 100;
     int iter = 10;
-    float* x_list;
-    float* y_list;
-    float* test_x_list;
-    float* test_y_list;
+    std::vector<float> x_list;
+    std::vector<float> y_list;
+    std::vector<float> test_x_list;
+    std::vector<float> test_y_list;
     std::shared_ptr<ESAgent<Model>> agent;
-    std::shared_ptr<Model> model;
 };
 
 
 TEST_F(TorchDemoTest, TrainingEffectTest) {
-	EXPECT_LT(train_loss(), 0.1);
-	EXPECT_LT(test_loss(), 0.1);
+	EXPECT_LT(train_loss(), 0.05);
+	EXPECT_LT(test_loss(), 0.05);
 	EXPECT_LT(train_test_gap(), 0.05);
 }
 

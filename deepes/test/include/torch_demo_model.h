@@ -25,17 +25,18 @@ struct Model : public torch::nn::Module{
 
     _obs_dim = obs_dim;
     _act_dim = act_dim;
-    int hid1_size = act_dim * 5;
+    int hid1_size = 30;
+    int hid2_size = 15;
     fc1 = register_module("fc1", torch::nn::Linear(obs_dim, hid1_size));
-    fc2 = register_module("fc2", torch::nn::Linear(hid1_size, act_dim));
+    fc2 = register_module("fc2", torch::nn::Linear(hid1_size, hid2_size));
+    fc3 = register_module("fc3", torch::nn::Linear(hid2_size, act_dim));
   }
 
   torch::Tensor forward(torch::Tensor x) {
     x = x.reshape({-1, _obs_dim});
-    // x = torch::tanh(fc1->forward(x));
-    // x = torch::softmax(fc2->forward(x), 1);
-    x = torch::relu(fc1->forward(x));
+    x = torch::tanh(fc1->forward(x));
     x = torch::tanh(fc2->forward(x));
+    x = torch::tanh(fc3->forward(x));
     return x;
   }
 
@@ -57,7 +58,7 @@ struct Model : public torch::nn::Module{
 
   int _act_dim;
   int _obs_dim;
-  torch::nn::Linear fc1{nullptr}, fc2{nullptr};
+  torch::nn::Linear fc1{nullptr}, fc2{nullptr}, fc3{nullptr};
 };
 
 #endif

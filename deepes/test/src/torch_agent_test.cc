@@ -69,7 +69,7 @@ protected:
         std::normal_distribution<float> norm;
         for (int i = 0; i < train_data_size; ++i) {
             float x_i = uniform(generator); // generate data between [-3, 9]
-            float y_i = sin(x_i) + norm(generator)*0.05; // noise std 0.05
+            float y_i = sin(x_i) + norm(generator)*0.05; // label noise std 0.05
             x_list.push_back(x_i);
             y_list.push_back(y_i);
         }

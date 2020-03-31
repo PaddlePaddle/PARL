@@ -17,7 +17,7 @@
 
 namespace DeepES {
 
-void compute_centered_ranks(std::vector<float> &reward) {
+bool compute_centered_ranks(std::vector<float> &reward) {
   std::vector<std::pair<float, int>> reward_index;
   float gap = 1.0 / (reward.size() - 1);
   float normlized_rank = -0.5;
@@ -32,6 +32,7 @@ void compute_centered_ranks(std::vector<float> &reward) {
     reward[id] = normlized_rank;
     normlized_rank += gap;
   }
+  return true;
 }
 
 std::vector<std::string> list_all_model_dirs(std::string path) {

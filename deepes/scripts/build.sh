@@ -23,8 +23,11 @@ elif [ $1 = "torch" ]; then
   #---------------libtorch-------------#
   if [ ! -d "./libtorch" ];then
     echo "Cannot find the torch library: ./libtorch"
-    echo "Please put the torch libraray to current folder according the instruction in README"
-    exit 1
+      echo "Downloading Torch library"
+      wget -q https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
+      unzip -q libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
+      rm -rf libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
+      echo "Torch library Downloaded"
   fi
   FLAGS=" -DWITH_TORCH=ON"
 else

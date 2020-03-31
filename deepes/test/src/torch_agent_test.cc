@@ -130,6 +130,7 @@ TEST_F(TorchDemoTest, TrainingEffectTest) {
 	EXPECT_LT(train_loss(), 0.05);
 	EXPECT_LT(test_loss(), 0.05);
 	EXPECT_LT(train_test_gap(), 0.03);
+    EXPECT_EQ(agent->get_param_size(), agent->update_param_size());
 }
 
 

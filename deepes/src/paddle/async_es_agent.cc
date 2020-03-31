@@ -30,7 +30,7 @@ AsyncESAgent::~AsyncESAgent() {
 bool AsyncESAgent::_save() {
   bool success = true;
   if (_is_sampling_agent) {
-    LOG(ERROR) << "[DeepES] Original AsyncESAgent cannot call add_noise function, please use cloned AsyncESAgent.";
+    LOG(ERROR) << "[DeepES] Original AsyncESAgent cannot call `save`.Please use cloned AsyncESAgent.";
     success = false;
     return success;
   }
@@ -49,7 +49,7 @@ bool AsyncESAgent::_save() {
   model_name = "model_iter_id-"+ std::to_string(model_iter_id);
   std::string model_path = _config->async_es().model_warehouse() + "/" + model_name;
   LOG(INFO) << "[save]model_path: " << model_path;
-  _predictor->SaveOptimizedModel(model_path, LiteModelType::kProtobuf);
+  _predictor->SaveOptimizedModel(model_path, paddle::lite_api::LiteModelType::kProtobuf);
   // save config
   auto async_es = _config->mutable_async_es();
   async_es->set_model_iter_id(model_iter_id);
@@ -93,15 +93,17 @@ bool AsyncESAgent::_compute_model_diff() {
     std::shared_ptr<PaddlePredictor> old_predictor = kv.second;
     float* diff = new float[_param_size];
     memset(diff, 0, _param_size * sizeof(float));
-    for (std::string param_name: _param_names) {
+    int offset = 0;
+    for (const std::string& param_name: _param_names) {
       auto des_tensor = old_predictor->GetTensor(param_name);
       auto src_tensor = _predictor->GetTensor(param_name);
       const float* des_data = des_tensor->data<float>();
       const float* src_data = src_tensor->data<float>();
       int64_t tensor_size = ShapeProduction(src_tensor->shape());
       for (int i = 0; i < tensor_size; ++i) {
-        diff[i] = des_data[i] - src_data[i];
+        diff[i + offset] = des_data[i] - src_data[i];
       }
+      offset += tensor_size;
     }
     _param_delta[model_iter_id] = diff;
   }
@@ -206,6 +208,7 @@ bool AsyncESAgent::update(
     float reward = noisy_rewards[i];
     int model_iter_id = noisy_info[i].model_iter_id();
     bool success = _sampling_method->resampling(key, _noise, _param_size);
+    CHECK(success) << "[DeepES] resampling error occurs at sample: " << i;
     float* delta = _param_delta[model_iter_id];
     // compute neg_gradients
     if (model_iter_id == current_model_iter_id) {

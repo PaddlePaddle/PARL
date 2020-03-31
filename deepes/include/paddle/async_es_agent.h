@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _ASYNC_ES_AGENT_H
-#define _ASYNC_ES_AGENT_H
+#ifndef ASYNC_ES_AGENT_H
+#define ASYNC_ES_AGENT_H
 
 #include "es_agent.h"
 #include <map>
@@ -49,7 +49,10 @@ class AsyncESAgent: public ESAgent {
     std::shared_ptr<AsyncESAgent> clone();
 
     /**
-     * @brief: Clone an agent for sampling.
+     * @brief: update parameters given data collected during evaluation.
+     * @args:
+     *   noisy_info: sampling information returned by add_noise function.
+     *   noisy_reward: evaluation rewards.
      */
     bool update(
         std::vector<SamplingInfo>& noisy_info,

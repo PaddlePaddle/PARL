@@ -11,5 +11,5 @@ optimizer {
   epsilon: 1e-08
 }
 async_es {
-  model_iter_id: 0
+  model_iter_id: 99
 }

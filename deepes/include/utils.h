@@ -40,7 +40,7 @@ bool load_proto_conf(const std::string& config_file, T& proto_config) {
   bool success = true;
   std::ifstream fin(config_file);
   if (!fin || fin.fail()) {
-    LOG(FATAL) << "open prototxt config failed: " << config_file;
+    LOG(ERROR) << "open prototxt config failed: " << config_file;
     success = false;
   } else {
     fin.seekg(0, std::ios::end);
@@ -52,7 +52,7 @@ bool load_proto_conf(const std::string& config_file, T& proto_config) {
 
     std::string proto_str(file_content_buffer, file_size);
     if (!google::protobuf::TextFormat::ParseFromString(proto_str, &proto_config)) {
-      LOG(FATAL) << "Failed to load config: " << config_file;
+      LOG(ERROR) << "Failed to load config: " << config_file;
       success = false;
     }
     delete[] file_content_buffer;
@@ -66,7 +66,7 @@ bool save_proto_conf(const std::string& config_file, T&proto_config) {
   bool success = true;
   std::ofstream ofs(config_file, std::ofstream::out);
   if (!ofs || ofs.fail()) {
-    LOG(FATAL) << "open prototxt config failed: " << config_file;
+    LOG(ERROR) << "open prototxt config failed: " << config_file;
     success = false;
   } else {
     std::string config_str;
@@ -76,6 +76,7 @@ bool save_proto_conf(const std::string& config_file, T&proto_config) {
     }
     ofs << config_str;
   }
+  return success;
 }
 
 std::vector<std::string> list_all_model_dirs(std::string path);

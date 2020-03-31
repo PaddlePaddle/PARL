@@ -17,9 +17,6 @@
 
 namespace DeepES {
 
-typedef paddle::lite_api::Tensor Tensor;
-typedef paddle::lite_api::shape_t shape_t;
-
 int64_t ShapeProduction(const shape_t& shape) {
   int64_t res = 1;
   for (auto i : shape) res *= i;

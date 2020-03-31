@@ -21,14 +21,12 @@
 #include "gaussian_sampling.h"
 #include "deepes.pb.h"
 #include <vector>
-using namespace paddle::lite_api;
 
+using namespace paddle::lite_api;
 
 namespace DeepES {
 
 int64_t ShapeProduction(const shape_t& shape);
-
-typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
 
 /**
  * @brief DeepES agent with PaddleLite as backend.

@@ -49,7 +49,7 @@ bool AsyncESAgent::_save() {
   model_name = "model_iter_id-"+ std::to_string(model_iter_id);
   std::string model_path = _config->async_es().model_warehouse() + "/" + model_name;
   LOG(INFO) << "[save]model_path: " << model_path;
-  _predictor->SaveOptimizedModel(model_path, paddle::lite_api::LiteModelType::kProtobuf);
+  _predictor->SaveOptimizedModel(model_path, LiteModelType::kProtobuf);
   // save config
   auto async_es = _config->mutable_async_es();
   async_es->set_model_iter_id(model_iter_id);

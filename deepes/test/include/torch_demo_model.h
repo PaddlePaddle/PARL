@@ -25,8 +25,8 @@ struct Model : public torch::nn::Module{
 
     _obs_dim = obs_dim;
     _act_dim = act_dim;
-    int hid1_size = 30;
-    int hid2_size = 15;
+    int hid1_size = 10;
+    int hid2_size = 5;
     fc1 = register_module("fc1", torch::nn::Linear(obs_dim, hid1_size));
     fc2 = register_module("fc2", torch::nn::Linear(hid1_size, hid2_size));
     fc3 = register_module("fc3", torch::nn::Linear(hid2_size, act_dim));

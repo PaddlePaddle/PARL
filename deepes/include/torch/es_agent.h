@@ -157,7 +157,10 @@ public:
     return true;
   }
 
-  
+  int64_t param_size() {
+    return _param_size;
+  }
+
 
 private:
   int64_t _calculate_param_size() {

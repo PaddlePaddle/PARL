@@ -63,13 +63,18 @@ protected:
         }
     }
 
-    void SetUp() override {
+    void init_agent(const int input_dim, const int output_dim) {
+        std::shared_ptr<Model>  model = std::make_shared<Model>(input_dim, output_dim);
+        agent = std::make_shared<ESAgent<Model>>(model, "../test/prototxt/torch_sin_normal_sampling_config.prototxt");
+    }
+
+    void train_agent(std::string config_path) {
         std::default_random_engine generator(0); // fix seed
         std::uniform_real_distribution<float> uniform(-3.0, 9.0);
         std::normal_distribution<float> norm;
         for (int i = 0; i < train_data_size; ++i) {
             float x_i = uniform(generator); // generate data between [-3, 9]
-            float y_i = sin(x_i) + norm(generator)*0.05; // noise std 0.05
+            float y_i = sin(x_i) + norm(generator) * 0.05; // label noise std 0.05
             x_list.push_back(x_i);
             y_list.push_back(y_i);
         }
@@ -81,7 +86,7 @@ protected:
         }
 
         std::shared_ptr<Model>  model = std::make_shared<Model>(1, 1);
-        agent = std::make_shared<ESAgent<Model>>(model, "../test/torch_sin_config.prototxt");
+        agent = std::make_shared<ESAgent<Model>>(model, config_path);
 
         // Clone agents to sample (explore).
         std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents;
@@ -125,12 +130,25 @@ protected:
     std::shared_ptr<ESAgent<Model>> agent;
 };
 
-
-TEST_F(TorchDemoTest, TrainingEffectTest) {
+TEST_F(TorchDemoTest, TrainingEffectUseNormalSampling) {
+    train_agent("../test/prototxt/torch_sin_normal_sampling_config.prototxt");
 	EXPECT_LT(train_loss(), 0.05);
 	EXPECT_LT(test_loss(), 0.05);
 	EXPECT_LT(train_test_gap(), 0.03);
 }
 
+TEST_F(TorchDemoTest, TrainingEffectTestUseTableSampling) {
+    train_agent("../test/prototxt/torch_sin_table_sampling_config.prototxt");
+	EXPECT_LT(train_loss(), 0.05);
+	EXPECT_LT(test_loss(), 0.05);
+	EXPECT_LT(train_test_gap(), 0.03);
+}
+
+TEST_F(TorchDemoTest,ParamSizeTest) {
+    init_agent(1, 1);
+	EXPECT_EQ(agent->param_size(), 81);
+    init_agent(2, 3);
+	EXPECT_EQ(agent->param_size(), 103);
+}
 
 } // namespace

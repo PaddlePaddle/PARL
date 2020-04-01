@@ -30,7 +30,7 @@ AsyncESAgent::~AsyncESAgent() {
 bool AsyncESAgent::_save() {
   bool success = true;
   if (_is_sampling_agent) {
-    LOG(ERROR) << "[DeepES] Cloned AsyncESAgent cannot call `save`.Please use cloned AsyncESAgent.";
+    LOG(ERROR) << "[DeepES] Cloned AsyncESAgent cannot call `save`.Please use original AsyncESAgent.";
     success = false;
     return success;
   }

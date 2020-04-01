@@ -30,7 +30,7 @@ AsyncESAgent::~AsyncESAgent() {
 bool AsyncESAgent::_save() {
   bool success = true;
   if (_is_sampling_agent) {
-    LOG(ERROR) << "[DeepES] Original AsyncESAgent cannot call `save`.Please use cloned AsyncESAgent.";
+    LOG(ERROR) << "[DeepES] Cloned AsyncESAgent cannot call `save`.Please use cloned AsyncESAgent.";
     success = false;
     return success;
   }
@@ -43,10 +43,7 @@ bool AsyncESAgent::_save() {
   time (&rawtime);
   timeinfo = localtime(&rawtime);
 
-  strftime(buffer,sizeof(buffer),"%d-%m-%Y-%H:%M:%S",timeinfo);
-  std::string current_time(buffer);
-  std::string model_name = current_time + "-model_iter_id-"+ std::to_string(model_iter_id);
-  model_name = "model_iter_id-"+ std::to_string(model_iter_id);
+  std::string model_name = "model_iter_id-"+ std::to_string(model_iter_id);
   std::string model_path = _config->async_es().model_warehouse() + "/" + model_name;
   LOG(INFO) << "[save]model_path: " << model_path;
   _predictor->SaveOptimizedModel(model_path, LiteModelType::kProtobuf);

@@ -72,8 +72,8 @@ int main(int argc, char* argv[]) {
     envs.push_back(CartPole());
   }
 
-  //std::shared_ptr<PaddlePredictor> paddle_predictor = create_paddle_predictor("../demo/paddle/cartpole_init_model");
-  std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>("../demo/paddle/cartpole_init_model", "../benchmark/cartpole_config.prototxt");
+  std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>("../demo/paddle/cartpole_init_model",
+      "../benchmark/cartpole_config.prototxt");
 
   // Clone agents to sample (explore).
   std::vector< std::shared_ptr<ESAgent> > sampling_agents;

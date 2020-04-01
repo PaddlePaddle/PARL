@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "utils.h"
+#include <dirent.h>
 
 namespace DeepES {
 
@@ -32,6 +33,23 @@ bool compute_centered_ranks(std::vector<float> &reward) {
     normlized_rank += gap;
   }
   return true;
+}
+
+std::vector<std::string> list_all_model_dirs(std::string path) {
+  std::vector<std::string> model_dirs;
+	DIR *dpdf;
+	struct dirent *epdf;
+	dpdf = opendir(path.data());
+	if (dpdf != NULL){
+    while (epdf = readdir(dpdf)){
+      std::string dir(epdf->d_name);
+      if (dir.find("model_iter_id") != std::string::npos) {
+        model_dirs.push_back(path + "/" + dir);
+      }
+    }
+	}
+	closedir(dpdf);
+  return model_dirs;
 }
 
 }//namespace

@@ -35,8 +35,6 @@ else
   exit 0
 fi
 
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
 #----------------protobuf-------------#
 cp ./src/proto/deepes.proto ./
 protoc deepes.proto --cpp_out ./

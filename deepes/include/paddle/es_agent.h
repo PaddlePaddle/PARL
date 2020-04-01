@@ -22,20 +22,19 @@
 #include "deepes.pb.h"
 #include <vector>
 
+using namespace paddle::lite_api;
 
 namespace DeepES {
 
-typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
+int64_t ShapeProduction(const shape_t& shape);
 
 /**
- * @brief DeepES agent for PaddleLite.
+ * @brief DeepES agent with PaddleLite as backend.
+ * Users mainly focus on the following functions:
+ * 1. clone: clone an agent for multi-thread evaluation
+ * 2. add_noise: add noise into parameters.
+ * 3. update: update parameters given data collected during evaluation.
  *
- * Users use `clone` fucntion to clone a sampling agent, which can call `add_noise`
- * function to add noise to copied parameters and call `get_predictor` fucntion to 
- * get a paddle predictor with added noise.
- *
- * Then can use `update` function to update parameters based on ES algorithm.
- * Note: parameters of cloned agents will also be updated.
  */
 class ESAgent {
  public:
@@ -63,11 +62,11 @@ class ESAgent {
    * Parameters of cloned agents will also be updated.
    */
   bool update(
-      std::vector<SamplingKey>& noisy_keys,
+      std::vector<SamplingInfo>& noisy_info,
       std::vector<float>& noisy_rewards);
   
   // copied parameters = original parameters + noise
-  bool add_noise(SamplingKey& sampling_key);
+  bool add_noise(SamplingInfo& sampling_info);
 
   /**
    * @brief Get paddle predict
@@ -77,7 +76,9 @@ class ESAgent {
    */
   std::shared_ptr<PaddlePredictor> get_predictor();
 
- private:
+
+
+ protected:
   int64_t _calculate_param_size();
 
   std::shared_ptr<PaddlePredictor> _predictor;

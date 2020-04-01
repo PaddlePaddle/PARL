@@ -16,7 +16,7 @@
 #include <glog/logging.h>
 #include <omp.h>
 #include "cartpole.h"
-#include "es_agent.h"
+#include "async_es_agent.h"
 #include "paddle_api.h"
 
 using namespace DeepES;
@@ -58,7 +58,7 @@ int arg_max(const std::vector<float>& vec) {
 }
 
 
-float evaluate(CartPole& env, std::shared_ptr<ESAgent> agent) {
+float evaluate(CartPole& env, std::shared_ptr<AsyncESAgent> agent) {
   float total_reward = 0.0;
   env.reset();
   const float* obs = env.getState();
@@ -87,33 +87,48 @@ int main(int argc, char* argv[]) {
   }
 
   std::shared_ptr<PaddlePredictor> paddle_predictor = create_paddle_predictor("../demo/paddle/cartpole_init_model");
-  std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
+  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
 
   // Clone agents to sample (explore).
-  std::vector< std::shared_ptr<ESAgent> > sampling_agents;
+  std::vector< std::shared_ptr<AsyncESAgent> > sampling_agents;
   for (int i = 0; i < ITER; ++i) {
     sampling_agents.push_back(agent->clone());
   }
 
-  std::vector<SamplingInfo> noisy_keys;
+  std::vector<SamplingInfo> noisy_info;
+  std::vector<SamplingInfo> last_noisy_info;
   std::vector<float> noisy_rewards(ITER, 0.0f);
-  noisy_keys.resize(ITER);
+  std::vector<float> last_noisy_rewards;
+  noisy_info.resize(ITER);
 
   omp_set_num_threads(10);
   for (int epoch = 0; epoch < 100; ++epoch) {
+    last_noisy_info.clear();
+    last_noisy_rewards.clear();
+    if (epoch != 0) {
+      for (int i = 0; i < ITER; ++i){
+        last_noisy_info.push_back(noisy_info[i]);
+        last_noisy_rewards.push_back(noisy_rewards[i]);
+      }
+    }
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < ITER; ++i) {
-      std::shared_ptr<ESAgent> sampling_agent = sampling_agents[i];
-      SamplingInfo key;
-      bool success = sampling_agent->add_noise(key);
+      std::shared_ptr<AsyncESAgent> sampling_agent = sampling_agents[i];
+      SamplingInfo info;
+      bool success = sampling_agent->add_noise(info);
       float reward = evaluate(envs[i], sampling_agent);
 
-      noisy_keys[i] = key;
+      noisy_info[i] = info;
       noisy_rewards[i] = reward;
     }
 
+    for (int i = 0; i < ITER; ++i){
+      last_noisy_info.push_back(noisy_info[i]);
+      last_noisy_rewards.push_back(noisy_rewards[i]);
+    }
+
     // NOTE: all parameters of sampling_agents will be updated
-    bool success = agent->update(noisy_keys, noisy_rewards);
+    bool success = agent->update(last_noisy_info, last_noisy_rewards);
   
     int reward = evaluate(envs[0], agent);
     LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;

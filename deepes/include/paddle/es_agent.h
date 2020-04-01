@@ -17,8 +17,8 @@
 
 #include "paddle_api.h"
 #include "optimizer_factory.h"
+#include "sampling_factory.h"
 #include "utils.h"
-#include "gaussian_sampling.h"
 #include "deepes.pb.h"
 #include <vector>
 

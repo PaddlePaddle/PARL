@@ -1,6 +1,8 @@
 seed: 1024
 gaussian_sampling {
   std: 0.5
+  type: "normal"
+  noise_table_size : 100000
 }
 optimizer {
   type: "Adam"

@@ -30,7 +30,7 @@ std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_con
                                                   optimizer_config.beta2(), \
                                                   optimizer_config.epsilon());
   }else {
-    // TODO: NotImplementedError
+    LOG(ERROR) << "type of OptimizerConfig must be SGD or Adam."; // NotImplementedError
   }
   return optimizer;
 }

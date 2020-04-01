@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef OPTIMIZER_FACTORY_H
-#define OPTIMIZER_FACTORY_H
+#ifndef SAMPLING_FACTORY_H
+#define SAMPLING_FACTORY_H
 
 #include <algorithm>
 #include <memory>
-#include "optimizer.h"
-#include "sgd_optimizer.h"
-#include "adam_optimizer.h"
+#include "sampling_method.h"
+#include "gaussian_sampling.h"
+#include "gaussian_table_sampling.h"
 #include "deepes.pb.h"
 #include <glog/logging.h>
 
 namespace DeepES{
-/* @brief: create an optimizer according to the configuration"
+/* @brief: create an sampling_method according to the configuration"
  * @args: 
- *    config: configuration for the optimizer
+ *    config: configuration for the DeepES
  * 
  */
-std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config);
+std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& Config);
 
 }//namespace
 

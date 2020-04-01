@@ -43,8 +43,7 @@ ESAgent::ESAgent(
   _config = std::make_shared<DeepESConfig>();
   load_proto_conf(config_path, *_config);
 
-  _sampling_method = std::make_shared<GaussianSampling>();
-  _sampling_method->load_config(*_config);
+  _sampling_method = create_sampling_method(*_config);
 
   _optimizer = create_optimizer(_config->optimizer());
 

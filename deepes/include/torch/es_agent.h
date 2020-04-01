@@ -18,8 +18,8 @@
 #include <memory>
 #include <string>
 #include "optimizer_factory.h"
+#include "sampling_factory.h"
 #include "utils.h"
-#include "gaussian_sampling.h"
 #include "deepes.pb.h"
 
 namespace DeepES{
@@ -47,8 +47,7 @@ public:
     _is_sampling_agent = false;
     _config = std::make_shared<DeepESConfig>();
     load_proto_conf(config_path, *_config);
-    _sampling_method = std::make_shared<GaussianSampling>();
-    _sampling_method->load_config(*_config);
+    _sampling_method = create_sampling_method(*_config);
     _optimizer = create_optimizer(_config->optimizer());
     // Origin agent can't be used to sample, so keep it same with _model for evaluating.
     _sampling_model = model;

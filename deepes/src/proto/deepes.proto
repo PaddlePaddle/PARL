@@ -29,6 +29,8 @@ message DeepESConfig {
 
 message GaussianSamplingConfig {
   optional float std = 1 [default = 1.0];
+  optional string type = 2 [default = "normal"];
+  optional int32 noise_table_size = 3 [default = 100000];
 }
 
 message OptimizerConfig{

@@ -23,22 +23,31 @@ int64_t ShapeProduction(const shape_t& shape) {
   return res;
 }
 
-ESAgent::ESAgent() {}
-
 ESAgent::~ESAgent() {
   delete[] _noise;
   if (!_is_sampling_agent)
     delete[] _neg_gradients;
 }
 
-ESAgent::ESAgent(
-    std::shared_ptr<PaddlePredictor> predictor,
-    std::string config_path) {
+ESAgent::ESAgent(const std::string& model_dir, const std::string& config_path) {
+  // 1. Create CxxConfig
+  _cxx_config = std::make_shared<CxxConfig>();
+  std::string model_path = model_dir + "/model";
+  std::string param_path = model_dir + "/param";
+  std::string model_buffer = read_file(model_path);
+  std::string param_buffer = read_file(param_path);
+	_cxx_config->set_model_buffer(model_buffer.c_str(), model_buffer.size(), 
+      param_buffer.c_str(), param_buffer.size());
+  _cxx_config->set_valid_places({
+    Place{TARGET(kX86), PRECISION(kFloat)},
+    Place{TARGET(kHost), PRECISION(kFloat)}
+  });
+
+  _predictor = CreatePaddlePredictor<CxxConfig>(*_cxx_config);
 
   _is_sampling_agent = false;
-  _predictor = predictor;
   // Original agent can't be used to sample, so keep it same with _predictor for evaluating.
-  _sampling_predictor = predictor;
+  _sampling_predictor = _predictor;
 
   _config = std::make_shared<DeepESConfig>();
   load_proto_conf(config_path, *_config);
@@ -55,16 +64,21 @@ ESAgent::ESAgent(
   _neg_gradients = new float [_param_size];
 }
 
-std::shared_ptr<ESAgent> ESAgent::clone() {
-  std::shared_ptr<PaddlePredictor> new_sampling_predictor = _predictor->Clone();
+ESAgent::ESAgent(const CxxConfig& cxx_config) {
+  _sampling_predictor = CreatePaddlePredictor<CxxConfig>(cxx_config);
+}
 
-  std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>();
+std::shared_ptr<ESAgent> ESAgent::clone() {
+  if (_is_sampling_agent) {
+    LOG(ERROR) << "[DeepES] only original ESAgent can call `clone` function.";
+    return nullptr;
+  }
+  std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>(*_cxx_config);
 
   float* noise = new float [_param_size];
 
   new_agent->_predictor = _predictor;
-  new_agent->_sampling_predictor = new_sampling_predictor;
-
+  new_agent->_cxx_config = _cxx_config;
   new_agent->_is_sampling_agent = true;
   new_agent->_sampling_method = _sampling_method;
   new_agent->_param_names = _param_names;

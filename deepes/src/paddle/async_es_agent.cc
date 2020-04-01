@@ -16,8 +16,8 @@
 namespace DeepES {
 
 AsyncESAgent::AsyncESAgent(
-    std::shared_ptr<PaddlePredictor> predictor,
-    std::string config_path): ESAgent(predictor, config_path) {
+    const std::string& model_dir,
+    const std::string& config_path): ESAgent(model_dir, config_path) {
   _config_path = config_path;
 }
 AsyncESAgent::~AsyncESAgent() {
@@ -154,15 +154,16 @@ std::shared_ptr<PaddlePredictor> AsyncESAgent::_load_previous_model(std::string 
   return predictor;
 }
 
-std::shared_ptr<AsyncESAgent> AsyncESAgent::clone() {
-  std::shared_ptr<PaddlePredictor> new_sampling_predictor = _predictor->Clone();
+AsyncESAgent::AsyncESAgent(const CxxConfig& cxx_config): ESAgent(cxx_config){
+}
 
-  std::shared_ptr<AsyncESAgent> new_agent = std::make_shared<AsyncESAgent>();
+std::shared_ptr<AsyncESAgent> AsyncESAgent::clone() {
+
+  std::shared_ptr<AsyncESAgent> new_agent = std::make_shared<AsyncESAgent>(*_cxx_config);
 
   float* noise = new float [_param_size];
 
   new_agent->_predictor = _predictor;
-  new_agent->_sampling_predictor = new_sampling_predictor;
 
   new_agent->_is_sampling_agent = true;
   new_agent->_sampling_method = _sampling_method;

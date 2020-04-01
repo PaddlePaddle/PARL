@@ -52,4 +52,16 @@ std::vector<std::string> list_all_model_dirs(std::string path) {
   return model_dirs;
 }
 
+std::string read_file(const std::string& filename) {
+  std::ifstream ifile(filename.c_str());
+  if (!ifile.is_open()) {
+    LOG(FATAL) << "Open file: [" << filename << "] failed.";
+  }
+  std::ostringstream buf;
+  char ch;
+  while (buf && ifile.get(ch)) buf.put(ch);
+  ifile.close();
+  return buf.str();
+}
+
 }//namespace

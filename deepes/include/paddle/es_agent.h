@@ -38,14 +38,14 @@ int64_t ShapeProduction(const shape_t& shape);
  */
 class ESAgent {
  public:
-  ESAgent();
+  ESAgent() = delete;
 
   ~ESAgent();
 
-  ESAgent(
-      std::shared_ptr<PaddlePredictor> predictor,
-      std::string config_path);
+
+  ESAgent(const std::string& model_dir, const std::string& config_path);
   
+  ESAgent(const CxxConfig& cxx_config);
   /** 
    * @breif Clone a sampling agent
    *
@@ -83,15 +83,16 @@ class ESAgent {
 
   std::shared_ptr<PaddlePredictor> _predictor;
   std::shared_ptr<PaddlePredictor> _sampling_predictor;
-  bool _is_sampling_agent;
   std::shared_ptr<SamplingMethod> _sampling_method;
   std::shared_ptr<Optimizer> _optimizer;
   std::shared_ptr<DeepESConfig> _config;
-  int64_t _param_size;
+  std::shared_ptr<CxxConfig> _cxx_config;
   std::vector<std::string> _param_names;
   // malloc memory of noise and neg_gradients in advance.
   float* _noise;
   float* _neg_gradients;
+  int64_t _param_size;
+  bool _is_sampling_agent;
 };
 
 }

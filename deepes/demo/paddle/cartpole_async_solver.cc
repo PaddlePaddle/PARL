@@ -24,20 +24,6 @@ using namespace paddle::lite_api;
 
 const int ITER = 10;
 
-std::shared_ptr<PaddlePredictor> create_paddle_predictor(const std::string& model_dir) {
-  // 1. Create CxxConfig
-  CxxConfig config;
-  config.set_model_dir(model_dir);
-  config.set_valid_places({
-    Place{TARGET(kX86), PRECISION(kFloat)},
-    Place{TARGET(kHost), PRECISION(kFloat)}
-  });
-
-  // 2. Create PaddlePredictor by CxxConfig
-  std::shared_ptr<PaddlePredictor> predictor = CreatePaddlePredictor<CxxConfig>(config);
-  return predictor;
-}
-
 // Use PaddlePredictor of CartPole model to predict the action.
 std::vector<float> forward(std::shared_ptr<PaddlePredictor> predictor, const float* obs) {
   std::unique_ptr<Tensor> input_tensor(std::move(predictor->GetInput(0)));
@@ -86,8 +72,7 @@ int main(int argc, char* argv[]) {
     envs.push_back(CartPole());
   }
 
-  std::shared_ptr<PaddlePredictor> paddle_predictor = create_paddle_predictor("../demo/paddle/cartpole_init_model");
-  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>(paddle_predictor, "../benchmark/cartpole_config.prototxt");
+  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>("../demo/paddle/cartpole_init_model", "../benchmark/cartpole_config.prototxt");
 
   // Clone agents to sample (explore).
   std::vector< std::shared_ptr<AsyncESAgent> > sampling_agents;

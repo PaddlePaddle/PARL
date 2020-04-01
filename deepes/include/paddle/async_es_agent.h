@@ -28,7 +28,9 @@ namespace DeepES{
  */
 class AsyncESAgent: public ESAgent {
   public:
-  AsyncESAgent() {}
+  AsyncESAgent() = delete;
+
+  AsyncESAgent(const CxxConfig& cxx_config);
 
   ~AsyncESAgent();
 
@@ -40,8 +42,8 @@ class AsyncESAgent: public ESAgent {
      * Please use the up-to-date configuration.
      */
   AsyncESAgent(
-      std::shared_ptr<PaddlePredictor> predictor,
-      std::string config_path);
+      const std::string& model_dir,
+      const std::string& config_path);
 
     /**
      * @brief: Clone an agent for sampling.

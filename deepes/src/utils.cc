@@ -55,7 +55,8 @@ std::vector<std::string> list_all_model_dirs(std::string path) {
 std::string read_file(const std::string& filename) {
   std::ifstream ifile(filename.c_str());
   if (!ifile.is_open()) {
-    LOG(FATAL) << "Open file: [" << filename << "] failed.";
+    LOG(ERROR) << "Open file: [" << filename << "] failed.";
+    return "";
   }
   std::ostringstream buf;
   char ch;

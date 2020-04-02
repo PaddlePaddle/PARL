@@ -64,19 +64,16 @@ ESAgent::ESAgent(const std::string& model_dir, const std::string& config_path) {
   _neg_gradients = new float [_param_size];
 }
 
-ESAgent::ESAgent(const CxxConfig& cxx_config) {
-  _sampling_predictor = CreatePaddlePredictor<CxxConfig>(cxx_config);
-}
-
 std::shared_ptr<ESAgent> ESAgent::clone() {
   if (_is_sampling_agent) {
     LOG(ERROR) << "[DeepES] only original ESAgent can call `clone` function.";
     return nullptr;
   }
-  std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>(*_cxx_config);
+  std::shared_ptr<ESAgent> new_agent = std::make_shared<ESAgent>();
 
   float* noise = new float [_param_size];
 
+  new_agent->_sampling_predictor = CreatePaddlePredictor<CxxConfig>(*_cxx_config);
   new_agent->_predictor = _predictor;
   new_agent->_cxx_config = _cxx_config;
   new_agent->_is_sampling_agent = true;

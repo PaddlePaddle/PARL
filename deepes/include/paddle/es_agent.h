@@ -38,14 +38,12 @@ int64_t ShapeProduction(const shape_t& shape);
  */
 class ESAgent {
  public:
-  ESAgent() = delete;
+  ESAgent() {}
 
   ~ESAgent();
 
-
   ESAgent(const std::string& model_dir, const std::string& config_path);
   
-  ESAgent(const CxxConfig& cxx_config);
   /** 
    * @breif Clone a sampling agent
    *

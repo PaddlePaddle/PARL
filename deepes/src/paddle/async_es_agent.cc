@@ -154,17 +154,14 @@ std::shared_ptr<PaddlePredictor> AsyncESAgent::_load_previous_model(std::string 
   return predictor;
 }
 
-AsyncESAgent::AsyncESAgent(const CxxConfig& cxx_config): ESAgent(cxx_config){
-}
-
 std::shared_ptr<AsyncESAgent> AsyncESAgent::clone() {
 
-  std::shared_ptr<AsyncESAgent> new_agent = std::make_shared<AsyncESAgent>(*_cxx_config);
+  std::shared_ptr<AsyncESAgent> new_agent = std::make_shared<AsyncESAgent>();
 
   float* noise = new float [_param_size];
 
   new_agent->_predictor = _predictor;
-
+  new_agent->_sampling_predictor = CreatePaddlePredictor<CxxConfig>(*_cxx_config);
   new_agent->_is_sampling_agent = true;
   new_agent->_sampling_method = _sampling_method;
   new_agent->_param_names = _param_names;

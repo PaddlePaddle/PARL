@@ -28,9 +28,7 @@ namespace DeepES{
  */
 class AsyncESAgent: public ESAgent {
   public:
-  AsyncESAgent() = delete;
-
-  AsyncESAgent(const CxxConfig& cxx_config);
+  AsyncESAgent() {}
 
   ~AsyncESAgent();
 

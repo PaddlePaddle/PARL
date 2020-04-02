@@ -157,6 +157,7 @@ public:
     return true;
   }
 
+  // get param size of model
   int64_t param_size() {
     return _param_size;
   }

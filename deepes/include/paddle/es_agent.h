@@ -75,6 +75,11 @@ class ESAgent {
    * if _is_sampling_agent is false, will return predictor without added noise.
    */
   std::shared_ptr<PaddlePredictor> get_predictor();
+  
+  // get param size of model
+  int64_t param_size() {
+    return _param_size;
+  }
 
 
 

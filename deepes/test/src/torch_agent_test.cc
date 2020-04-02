@@ -63,8 +63,8 @@ protected:
         }
     }
 
-    void init_agent(const int input_dim, const int output_dim) {
-        std::shared_ptr<Model>  model = std::make_shared<Model>(input_dim, output_dim);
+    void init_agent(const int in_dim, const int out_dim, const int h1_size, const int h2_size) {
+        std::shared_ptr<Model>  model = std::make_shared<Model>(in_dim, out_dim, h1_size, h2_size);
         agent = std::make_shared<ESAgent<Model>>(model, "../test/prototxt/torch_sin_normal_sampling_config.prototxt");
     }
 
@@ -85,7 +85,7 @@ protected:
             test_y_list.push_back(y_i);
         }
 
-        std::shared_ptr<Model>  model = std::make_shared<Model>(1, 1);
+        std::shared_ptr<Model>  model = std::make_shared<Model>(1, 1, 10, 5);
         agent = std::make_shared<ESAgent<Model>>(model, config_path);
 
         // Clone agents to sample (explore).
@@ -145,10 +145,14 @@ TEST_F(TorchDemoTest, TrainingEffectTestUseTableSampling) {
 }
 
 TEST_F(TorchDemoTest,ParamSizeTest) {
-    init_agent(1, 1);
+    init_agent(1, 1, 10, 5);
 	EXPECT_EQ(agent->param_size(), 81);
-    init_agent(2, 3);
+    init_agent(2, 3, 10, 5);
 	EXPECT_EQ(agent->param_size(), 103);
+    init_agent(1, 1, 1, 1);
+	EXPECT_EQ(agent->param_size(), 6);
+    init_agent(100, 2, 256, 64);
+	EXPECT_EQ(agent->param_size(), 42434);
 }
 
 } // namespace

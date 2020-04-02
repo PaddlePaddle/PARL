@@ -19,9 +19,8 @@
 #include <memory>
 #include "sampling_method.h"
 #include "gaussian_sampling.h"
-#include "gaussian_table_sampling.h"
+#include "cached_gaussian_sampling.h"
 #include "deepes.pb.h"
-#include <glog/logging.h>
 
 namespace DeepES{
 /* @brief: create an sampling_method according to the configuration"

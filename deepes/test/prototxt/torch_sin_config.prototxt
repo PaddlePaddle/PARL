@@ -2,8 +2,7 @@ seed : 1024
 
 gaussian_sampling {
   std: 0.005
-  type: "table"
-  noise_table_size : 100000
+  cached: false
 }
 
 optimizer {

@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef _GAUSSIAN_SAMPLING_H
-#define _GAUSSIAN_SAMPLING_H
+#ifndef GAUSSIAN_SAMPLING_H
+#define GAUSSIAN_SAMPLING_H
+
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "sampling_method.h"
+#include "utils.h"
 
 namespace DeepES{
 

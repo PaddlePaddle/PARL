@@ -12,18 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef _GAUSSIAN_TABLE_SAMPLING_H
-#define _GAUSSIAN_TABLE_SAMPLING_H
+#ifndef CACHED_GAUSSIAN_SAMPLING_H
+#define CACHED_GAUSSIAN_SAMPLING_H
+
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "sampling_method.h"
+#include "utils.h"
+#include <glog/logging.h>
 
 namespace DeepES{
 
-class GaussianTableSampling: public SamplingMethod {
+class CachedGaussianSampling: public SamplingMethod {
 
 public:
-    GaussianTableSampling();
+    CachedGaussianSampling();
 
-    ~GaussianTableSampling();
+    ~CachedGaussianSampling();
     /*Initialize the sampling algorithm given the config with the protobuf format.
      *DeepES library uses only one configuration file for all sampling algorithms. A defalut
      configuration file can be found at: . Usally you won't have to modify the configuration items of other algorithms 
@@ -55,10 +62,10 @@ public:
 
 private:
     float _std;
-    int _buffer_size;
-    float* _noise_table;
+    int _cache_size;
+    float* _noise_cache;
 
-    void _create_noise();
+    void _create_noise_cache();
 };
 
 }

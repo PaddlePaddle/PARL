@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <map>
-#include "optimizer.h"
 
 #ifndef ADAM_OPTIMIZER_H
 #define ADAM_OPTIMIZER_H
+
+#include <map>
+#include <cmath>
+#include "optimizer.h"
+
 namespace DeepES{
 
 /*@brief AdamOptimizer.

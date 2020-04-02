@@ -2,7 +2,8 @@ seed : 1024
 
 gaussian_sampling {
   std: 0.005
-  type: "normal"
+  cached: true
+  cache_size : 100000
 }
 
 optimizer {

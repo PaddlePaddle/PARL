@@ -131,14 +131,14 @@ protected:
 };
 
 TEST_F(TorchDemoTest, TrainingEffectUseNormalSampling) {
-    train_agent("../test/prototxt/torch_sin_normal_sampling_config.prototxt");
+    train_agent("../test/prototxt/torch_sin_config.prototxt");
 	EXPECT_LT(train_loss(), 0.05);
 	EXPECT_LT(test_loss(), 0.05);
 	EXPECT_LT(train_test_gap(), 0.03);
 }
 
 TEST_F(TorchDemoTest, TrainingEffectTestUseTableSampling) {
-    train_agent("../test/prototxt/torch_sin_table_sampling_config.prototxt");
+    train_agent("../test/prototxt/torch_sin_cached_config.prototxt");
 	EXPECT_LT(train_loss(), 0.05);
 	EXPECT_LT(test_loss(), 0.05);
 	EXPECT_LT(train_test_gap(), 0.03);

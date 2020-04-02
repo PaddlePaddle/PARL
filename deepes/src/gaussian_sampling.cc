@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <random>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include "gaussian_sampling.h"
-#include "utils.h"
 
 namespace DeepES{
 

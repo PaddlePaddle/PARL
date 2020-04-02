@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _SAMPLING_METHOD_H
-#define _SAMPLING_METHOD_H
+#ifndef SAMPLING_METHOD_H
+#define SAMPLING_METHOD_H
 
 #include <string>
 #include <random>

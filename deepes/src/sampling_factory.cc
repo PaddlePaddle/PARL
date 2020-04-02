@@ -19,14 +19,11 @@ namespace DeepES{
 
 std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& config) {
   std::shared_ptr<SamplingMethod> sampling_method;
-  std::string sample_type = config.gaussian_sampling().type();
-  std::transform(sample_type.begin(), sample_type.end(), sample_type.begin(), ::tolower);
-  if (sample_type == "normal") {
-    sampling_method = std::make_shared<GaussianSampling>();
-  }else if (sample_type == "table") {
-    sampling_method = std::make_shared<GaussianTableSampling>();
+  bool cached = config.gaussian_sampling().cached();
+  if (cached) {
+    sampling_method = std::make_shared<CachedGaussianSampling>();
   }else {
-    LOG(ERROR) << "type of GaussianSamplingConfig must be normal or table."; // NotImplementedError
+    sampling_method = std::make_shared<GaussianSampling>();
   }
   sampling_method->load_config(config);
   return sampling_method;

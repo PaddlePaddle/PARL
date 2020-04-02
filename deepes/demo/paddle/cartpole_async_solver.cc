@@ -72,7 +72,8 @@ int main(int argc, char* argv[]) {
     envs.push_back(CartPole());
   }
 
-  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>("../demo/paddle/cartpole_init_model", "../benchmark/cartpole_config.prototxt");
+  std::shared_ptr<AsyncESAgent> agent = std::make_shared<AsyncESAgent>("../demo/paddle/cartpole_init_model",
+      "../demo/cartpole_config.prototxt");
 
   // Clone agents to sample (explore).
   std::vector< std::shared_ptr<AsyncESAgent> > sampling_agents;

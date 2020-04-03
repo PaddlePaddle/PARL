@@ -16,34 +16,43 @@
 
 namespace DeepES{
 
-void GaussianSampling::load_config(const DeepESConfig& config) {
-    _std = config.gaussian_sampling().std();
-    set_seed(config.seed());
+bool GaussianSampling::load_config(const DeepESConfig& config) {
+  bool success = true;
+  _std = config.gaussian_sampling().std();
+  success = set_seed(config.seed());
+  return success;
 }
 
-int GaussianSampling::sampling(float* noise, int64_t size) {
-    int key = rand();
-    std::default_random_engine generator(key);
-    std::normal_distribution<float> norm;
-    for (int64_t i = 0; i < size; ++i) {
-        *(noise + i) = norm(generator) * _std;
-    }
-    return key;
+bool GaussianSampling::sampling(int* key, float* noise, int64_t size) {
+  bool success = true;
+  if (noise == nullptr) {
+    LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+    success = false;
+    return success;
+  }
+  int rand_key = rand();
+  *key = rand_key;
+  std::default_random_engine generator(rand_key);
+  std::normal_distribution<float> norm;
+  for (int64_t i = 0; i < size; ++i) {
+    *(noise + i) = norm(generator) * _std;
+  }
+  return success;
 }
 
 bool GaussianSampling::resampling(int key, float* noise, int64_t size) {
-    bool success = true;
-    if (noise == nullptr) {
-        success = false;
+  bool success = true;
+  if (noise == nullptr) {
+    LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+    success = false;
+  } else {
+    std::default_random_engine generator(key);
+    std::normal_distribution<float> norm;
+    for (int64_t i = 0; i < size; ++i) {
+      *(noise + i) = norm(generator) * _std;
     }
-    else {
-        std::default_random_engine generator(key);
-        std::normal_distribution<float> norm;
-        for (int64_t i = 0; i < size; ++i) {
-            *(noise + i) = norm(generator) * _std;
-        }
-    }
-    return success;
+  }
+  return success;
 }
 
 }

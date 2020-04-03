@@ -19,55 +19,85 @@ namespace DeepES{
 CachedGaussianSampling::CachedGaussianSampling() {}
 
 CachedGaussianSampling::~CachedGaussianSampling() {
-    delete[] _noise_cache;
+  delete[] _noise_cache;
 }
 
-void CachedGaussianSampling::load_config(const DeepESConfig& config) {
-    _std = config.gaussian_sampling().std();
-    set_seed(config.seed());
-    _cache_size = config.gaussian_sampling().cache_size();
-    _noise_cache = new float [_cache_size];
-	memset(_noise_cache, 0, _cache_size * sizeof(float));
-    _create_noise_cache();
+bool CachedGaussianSampling::load_config(const DeepESConfig& config) {
+  bool success = true;
+  _std = config.gaussian_sampling().std();
+  success = set_seed(config.seed());
+  CHECK(success) << "[DeepES] Fail to set seed while load config.";
+  _cache_size = config.gaussian_sampling().cache_size();
+  _noise_cache = new float [_cache_size];
+  memset(_noise_cache, 0, _cache_size * sizeof(float));
+  success = _create_noise_cache();
+  CHECK(success) << "[DeepES] Fail to create noise_cache while load config.";
+  return success;
 }
 
-int CachedGaussianSampling::sampling(float* noise, int64_t size) {
-    if (_noise_cache == nullptr) {
-        LOG(ERROR) << "[ERROR] Please use load_config() first.";
-    }
-    int key = rand();
-    std::default_random_engine generator(key);
-    std::uniform_int_distribution<unsigned int> uniform(0, _cache_size - size);
-    int index = uniform(generator);
-    for (int64_t i = 0; i < size; ++i) {
-        *(noise + i) = *(_noise_cache + index + i);
-    }
-    return index;
+bool CachedGaussianSampling::sampling(int* key, float* noise, int64_t size) {
+  bool success = true;
+  if (_noise_cache == nullptr) {
+    LOG(ERROR) << "[DeepES] Please use load_config() first.";
+    success = false;
+    return success;
+  }
+  if (noise == nullptr) {
+    LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+    success = false;
+    return success;
+  }
+  if ((size >= _cache_size) || (size < 0)) {
+    LOG(ERROR) << "[DeepES] Input size " << size << " is out of bounds [0, " << _cache_size << "), cache_size: " << _cache_size;
+    success = false;
+    return success;
+  }
+  int rand_key = rand();
+  std::default_random_engine generator(rand_key);
+  std::uniform_int_distribution<unsigned int> uniform(0, _cache_size - size);
+  int index = uniform(generator);
+  *key = index;
+  for (int64_t i = 0; i < size; ++i) {
+    *(noise + i) = *(_noise_cache + index + i);
+  }
+  return success;
 }
 
-bool CachedGaussianSampling::resampling(int index, float* noise, int64_t size) {
-    if (_noise_cache == nullptr) {
-        LOG(ERROR) << "[ERROR] Please use load_config() first.";
-        return false;
-    }
-    if (noise == nullptr) {
-        return false;
-    }
-    if ((index > _cache_size - size) || (index < 0)) {
-        LOG(ERROR) << "[ERROR] Sampling index out of bound( 0 - " << _cache_size - size << " ).";
-    }
-    for (int64_t i = 0; i < size; ++i) {
-        *(noise + i) = *(_noise_cache + index + i);
-    }
-    return true;
+bool CachedGaussianSampling::resampling(int key, float* noise, int64_t size) {
+  bool success = true;
+  if (_noise_cache == nullptr) {
+    LOG(ERROR) << "[DeepES] Please use load_config() first.";
+    success = false;
+    return success;
+  }
+  if (noise == nullptr) {
+    LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+    success = false;
+    return success;
+  }
+  if ((size >= _cache_size) || (size < 0)) {
+    LOG(ERROR) << "[DeepES] Input size " << size << " is out of bounds [0, " << _cache_size << "), cache_size: " << _cache_size;
+    success = false;
+    return success;
+  }
+  if ((key > _cache_size - size) || (key < 0)) {
+    LOG(ERROR) << "[DeepES] Resampling key " << key << " is out of bounds [0, " << _cache_size - size << "], cache_size: " << _cache_size << ", size: " << size;
+    success = false;
+    return success;
+  }
+  for (int64_t i = 0; i < size; ++i) {
+    *(noise + i) = *(_noise_cache + key + i);
+  }
+  return success;
 }
 
-void CachedGaussianSampling::_create_noise_cache() {
-    std::default_random_engine generator(_seed);
-    std::normal_distribution<float> norm;
-    for (int64_t i = 0; i < _cache_size; ++i) {
-        *(_noise_cache + i) = norm(generator) * _std;
-    }
+bool CachedGaussianSampling::_create_noise_cache() {
+  std::default_random_engine generator(_seed);
+  std::normal_distribution<float> norm;
+  for (int64_t i = 0; i < _cache_size; ++i) {
+    *(_noise_cache + i) = norm(generator) * _std;
+  }
+  return true;
 }
 
 }

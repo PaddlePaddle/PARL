@@ -24,12 +24,12 @@ std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_con
   if (opt_type == "sgd") {
     optimizer = std::make_shared<SGDOptimizer>(optimizer_config.base_lr(), \
                                                 optimizer_config.momentum());
-  }else if (opt_type == "adam") {
+  } else if (opt_type == "adam") {
     optimizer = std::make_shared<AdamOptimizer>(optimizer_config.base_lr(), \
-                                                  optimizer_config.beta1(), \
-                                                  optimizer_config.beta2(), \
-                                                  optimizer_config.epsilon());
-  }else {
+                                                optimizer_config.beta1(), \
+                                                optimizer_config.beta2(), \
+                                                optimizer_config.epsilon());
+  } else {
     LOG(ERROR) << "type of OptimizerConfig must be SGD or Adam."; // NotImplementedError
   }
   return optimizer;

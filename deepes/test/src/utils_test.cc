@@ -20,9 +20,9 @@ namespace DeepES {
 
 // Tests that the Utils::compute_centered_rank() method.
 TEST(UtilsTest, Method_compute_centered_ranks) {
-	float a[5] = {9.0, 8.0, 7.0, 6.0, 5.0};
-	std::vector<float> reward_vec(a, a+5);
-	EXPECT_EQ(compute_centered_ranks(reward_vec), true);
+  float a[5] = {9.0, 8.0, 7.0, 6.0, 5.0};
+  std::vector<float> reward_vec(a, a+5);
+  EXPECT_EQ(compute_centered_ranks(reward_vec), true);
 }
 
 

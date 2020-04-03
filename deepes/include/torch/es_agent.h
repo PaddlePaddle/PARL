@@ -110,6 +110,7 @@ public:
       int key = noisy_info[i].key(0);
       float reward = noisy_rewards[i];
       bool success = _sampling_method->resampling(key, _noise, _param_size);
+      CHECK(success) << "[DeepES] resampling error occurs at sample: " << i;
       for (int64_t j = 0; j < _param_size; ++j) {
         _neg_gradients[j] += _noise[j] * reward;
       }
@@ -133,14 +134,18 @@ public:
 
   // copied parameters = original parameters + noise
   bool add_noise(SamplingInfo& sampling_info) {
+    bool success = true;
     if (!_is_sampling_agent) {
       LOG(ERROR) << "[DeepES] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";
-      return false;
+      success =  false;
+      return success;
     }
 
     auto sampling_params = _sampling_model->named_parameters();
     auto params = _model->named_parameters();
-    int key = _sampling_method->sampling(_noise, _param_size);
+    int key = 0;
+    success = _sampling_method->sampling(&key, _noise, _param_size);
+    CHECK(success) << "[DeepES] sampling error occurs while add_noise.";
     sampling_info.add_key(key);
     int64_t counter = 0;
     for (auto& param: sampling_params) {
@@ -154,7 +159,7 @@ public:
       }
       counter += tensor.size(0);
     }
-    return true;
+    return success;
   }
 
   // get param size of model

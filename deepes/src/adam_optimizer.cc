@@ -17,32 +17,32 @@
 namespace DeepES {
 
 AdamOptimizer::~AdamOptimizer() {
-	for (auto iter = _momentum.begin(); iter != _momentum.end(); iter++) {
-		delete[] iter->second;
-	}
-	for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {
-		delete[] iter->second;
-	}
-	_momentum.clear();
-	_velocity.clear();
+  for (auto iter = _momentum.begin(); iter != _momentum.end(); iter++) {
+    delete[] iter->second;
+  }
+  for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {
+    delete[] iter->second;
+  }
+  _momentum.clear();
+  _velocity.clear();
 }
 
 void AdamOptimizer::compute_step(float* gradient, int size, std::string param_name="") {
-	if (_momentum.count(param_name) == 0) {
-		_momentum[param_name] = new float [size];
-		memset(_momentum[param_name], 0, size * sizeof(float));
-	}
-	if (_velocity.count(param_name) == 0) {
-		_velocity[param_name] = new float [size];
-		memset(_velocity[param_name], 0, size * sizeof(float));
-	}
-	int true_update_times = int(_update_times / _velocity.size());
-	float alpha = std::sqrt(1 - std::pow(_beta2, _update_times)) / (1 - std::pow(_beta1, _update_times));
-	for (int i = 0; i < size; ++i) {
-		_momentum[param_name][i] = _beta1 * _momentum[param_name][i] + (1 - _beta1) * gradient[i];
-		_velocity[param_name][i] = _beta2 * _velocity[param_name][i] + (1 - _beta2) * gradient[i] * gradient[i];
-		gradient[i] = alpha * _momentum[param_name][i] / (std::sqrt(_velocity[param_name][i]) + _epsilon);
-	}
+  if (_momentum.count(param_name) == 0) {
+    _momentum[param_name] = new float [size];
+    memset(_momentum[param_name], 0, size * sizeof(float));
+  }
+  if (_velocity.count(param_name) == 0) {
+    _velocity[param_name] = new float [size];
+    memset(_velocity[param_name], 0, size * sizeof(float));
+  }
+  int true_update_times = int(_update_times / _velocity.size());
+  float alpha = std::sqrt(1 - std::pow(_beta2, _update_times)) / (1 - std::pow(_beta1, _update_times));
+  for (int i = 0; i < size; ++i) {
+    _momentum[param_name][i] = _beta1 * _momentum[param_name][i] + (1 - _beta1) * gradient[i];
+    _velocity[param_name][i] = _beta2 * _velocity[param_name][i] + (1 - _beta2) * gradient[i] * gradient[i];
+    gradient[i] = alpha * _momentum[param_name][i] / (std::sqrt(_velocity[param_name][i]) + _epsilon);
+  }
 }
 
 }//namespace

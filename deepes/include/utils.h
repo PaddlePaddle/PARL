@@ -21,6 +21,7 @@
 #include <glog/logging.h>
 #include "deepes.pb.h"
 #include <google/protobuf/text_format.h>
+#include <fstream>
 
 namespace DeepES{
 
@@ -29,6 +30,8 @@ namespace DeepES{
     reward: an array of rewards
 */
 bool compute_centered_ranks(std::vector<float> &reward);
+
+std::string read_file(const std::string& filename);
 
 /* Load a protobuf-based configuration from the file.
  * Args:

@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <map>
-#include "optimizer.h"
-
 #ifndef SGD_OPTIMIZER_H
 #define SGD_OPTIMIZER_H
+
+#include <map>
+#include <cmath>
+#include "optimizer.h"
+
 namespace DeepES{
 
 /*@brief SGDOptimizer.

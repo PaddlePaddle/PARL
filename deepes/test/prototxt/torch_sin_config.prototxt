@@ -2,6 +2,7 @@ seed : 1024
 
 gaussian_sampling {
   std: 0.005
+  cached: false
 }
 
 optimizer {

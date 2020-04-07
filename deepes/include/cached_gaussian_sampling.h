@@ -11,32 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+#ifndef CACHED_GAUSSIAN_SAMPLING_H
+#define CACHED_GAUSSIAN_SAMPLING_H
 
-#ifndef SAMPLING_METHOD_H
-#define SAMPLING_METHOD_H
-
-#include <string>
 #include <random>
-#include "deepes.pb.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "sampling_method.h"
+#include "utils.h"
+#include <glog/logging.h>
 
 namespace DeepES{
 
-/*Base class for sampling algorithms. All algorithms are required to override the following functions:
- *
- * 1. load_config
- * 2. sampling
- * 3. resampling
- *
- * View an demostrative algorithm in gaussian_sampling.h
- * */
-
-class SamplingMethod{
+class CachedGaussianSampling: public SamplingMethod {
 
 public:
+  CachedGaussianSampling();
 
-  SamplingMethod(): _seed(0) {}
-
-  virtual ~SamplingMethod() {}
+  ~CachedGaussianSampling();
 
   /*Initialize the sampling algorithm given the config with the protobuf format.
    *DeepES library uses only one configuration file for all sampling algorithms.
@@ -44,7 +38,7 @@ public:
     Usally you won't have to modify the configuration items of other algorithms
     if you are not using them.
    */
-  virtual bool load_config(const DeepESConfig& config)=0;
+  bool load_config(const DeepESConfig& config);
 
   /*@brief generate Gaussian noise and the related key.
    *
@@ -56,7 +50,7 @@ public:
    *@return:
    *     success: generate Gaussian successfully or not.
    */
-  virtual bool sampling(int* key, float* noise, int64_t size)=0;
+  bool sampling(int* key, float* noise, int64_t size);
 
   /*@brief reconstruct the Gaussion noise given the key.
    * This function is often used for updating the neuron network parameters in the offline environment.
@@ -69,22 +63,16 @@ public:
    *@return:
    *     success: reconstruct Gaussian successfully or not.
    */
-  virtual bool resampling(int key, float* noise, int64_t size)=0;
-  
-  bool set_seed(int seed) {
-    _seed = seed;
-    srand(_seed);
-    return true;
-  }
+  bool resampling(int key, float* noise, int64_t size);
 
-  int get_seed() {
-    return _seed;
-  }
+private:
+  float _std;
+  int _cache_size;
+  float* _noise_cache = nullptr;
 
-protected:
-  int _seed;
-
+  bool _create_noise_cache();
 };
 
 }
+
 #endif

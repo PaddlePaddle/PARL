@@ -1,0 +1,16 @@
+seed : 1024
+
+gaussian_sampling {
+  std: 0.005
+  cached: true
+  cache_size : 100000
+}
+
+optimizer {
+  type: "Adam",
+  base_lr: 0.005,
+  momentum: 0.9,
+  beta1: 0.9,
+  beta2: 0.999,
+  epsilon: 1e-8,
+}

@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef OPTIMIZER_FACTORY_H
-#define OPTIMIZER_FACTORY_H
-
-#include <algorithm>
-#include <memory>
-#include "optimizer.h"
-#include "sgd_optimizer.h"
-#include "adam_optimizer.h"
-#include "deepes.pb.h"
-#include <glog/logging.h>
+#include "sampling_factory.h"
 
 namespace DeepES{
-/* @brief: create an optimizer according to the configuration"
- * @args: 
- *    config: configuration for the optimizer
- * 
- */
-std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config);
+
+
+std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& config) {
+  std::shared_ptr<SamplingMethod> sampling_method;
+  bool cached = config.gaussian_sampling().cached();
+  if (cached) {
+    sampling_method = std::make_shared<CachedGaussianSampling>();
+  } else {
+    sampling_method = std::make_shared<GaussianSampling>();
+  }
+
+  bool success = sampling_method->load_config(config);
+  if(success) {
+    return sampling_method;
+  } else {
+    LOG(ERROR) << "[DeepES] Fail to create sampling_method";
+    return nullptr;
+  }
+  
+}
 
 }//namespace
-
-#endif

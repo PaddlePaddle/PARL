@@ -21,15 +21,14 @@ struct Model : public torch::nn::Module{
 
   Model() = delete;
 
-  Model(const int obs_dim, const int act_dim) {
-
+  Model(const int obs_dim, const int act_dim, const int h1_size, const int h2_size) {
     _obs_dim = obs_dim;
     _act_dim = act_dim;
-    int hid1_size = 30;
-    int hid2_size = 15;
-    fc1 = register_module("fc1", torch::nn::Linear(obs_dim, hid1_size));
-    fc2 = register_module("fc2", torch::nn::Linear(hid1_size, hid2_size));
-    fc3 = register_module("fc3", torch::nn::Linear(hid2_size, act_dim));
+    _h1_size = h1_size;
+    _h2_size = h2_size;
+    fc1 = register_module("fc1", torch::nn::Linear(obs_dim, h1_size));
+    fc2 = register_module("fc2", torch::nn::Linear(h1_size, h2_size));
+    fc3 = register_module("fc3", torch::nn::Linear(h2_size, act_dim));
   }
 
   torch::Tensor forward(torch::Tensor x) {
@@ -41,7 +40,7 @@ struct Model : public torch::nn::Module{
   }
 
   std::shared_ptr<Model> clone() {
-    std::shared_ptr<Model> model = std::make_shared<Model>(_obs_dim, _act_dim);
+    std::shared_ptr<Model> model = std::make_shared<Model>(_obs_dim, _act_dim, _h1_size, _h2_size);
     std::vector<torch::Tensor> parameters1 = parameters();
     std::vector<torch::Tensor> parameters2 = model->parameters();
     for (int i = 0; i < parameters1.size(); ++i) {
@@ -58,6 +57,8 @@ struct Model : public torch::nn::Module{
 
   int _act_dim;
   int _obs_dim;
+  int _h1_size;
+  int _h2_size;
   torch::nn::Linear fc1{nullptr}, fc2{nullptr}, fc3{nullptr};
 };
 

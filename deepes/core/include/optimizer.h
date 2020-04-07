@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef OPTIMIZER_H
+#define OPTIMIZER_H
+
 #include <map>
 #include <glog/logging.h>
 
-#ifndef OPTIMIZER_H
-#define OPTIMIZER_H
+
 namespace DeepES{
 
 /*@brief Optimizer. Base class for optimizers. 

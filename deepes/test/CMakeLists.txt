@@ -21,11 +21,11 @@ find_package(Torch REQUIRED ON)
 
 # include and source
 file(GLOB test_src "../test/src/*.cc")
-file(GLOB core_src "../src/*.cc")
-file(GLOB agent_src "../src/torch/*.cc")
+file(GLOB core_src "../core/src/*.cc")
+file(GLOB agent_src "../torch/src/*.cc")
 
-include_directories("../include/torch")
-include_directories("../include")
+include_directories("../torch/include")
+include_directories("../core/include")
 include_directories("../benchmark")
 include_directories("../test/include")
 

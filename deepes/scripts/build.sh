@@ -36,10 +36,10 @@ else
 fi
 
 #----------------protobuf-------------#
-cp ./src/proto/deepes.proto ./
+cp ./core/src/proto/deepes.proto ./
 protoc deepes.proto --cpp_out ./
-mv deepes.pb.h ./include
-mv deepes.pb.cc ./src
+mv deepes.pb.h core/include
+mv deepes.pb.cc core/src
 rm deepes.proto
 
 #----------------build---------------#

@@ -29,21 +29,21 @@ if (OPENMP_FOUND)
 endif()
 
 
-file(GLOB src "src/*.cc")
-include_directories("include")
+file(GLOB src "core/src/*.cc")
+include_directories("core/include")
 include_directories("benchmark")
 
 ########## PaddleLite config ##########
 if (WITH_PADDLE)
   add_definitions(-g -O3 -pthread)
 
-  include_directories("include/paddle")
+  include_directories("paddle/include")
   include_directories("${PROJECT_SOURCE_DIR}/inference_lite_lib/cxx/include" 
                    "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/include")
   link_directories("${PROJECT_SOURCE_DIR}/inference_lite_lib/cxx/lib" 
                    "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/lib")
   
-  file(GLOB framework_src "src/paddle/*.cc")
+  file(GLOB framework_src "paddle/src/*.cc")
   set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_solver_parallel.cc")
   #set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_async_solver.cc")
 ########## Torch config ##########
@@ -51,10 +51,10 @@ elseif (WITH_TORCH)
   list(APPEND CMAKE_PREFIX_PATH "./libtorch")
   find_package(Torch REQUIRED ON)
 
-  include_directories("include/torch")
+  include_directories("torch/include")
   include_directories("demo/torch")
 
-  file(GLOB framework_src "src/torch/*.cc")
+  file(GLOB framework_src "torch/src/*.cc")
   set(demo "${PROJECT_SOURCE_DIR}/demo/torch/cartpole_solver_parallel.cc")
 else ()
   message("ERROR: You should choose at least one framework to compile DeepES.")

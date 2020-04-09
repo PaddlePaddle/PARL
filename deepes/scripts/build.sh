@@ -36,7 +36,7 @@ else
 fi
 
 #----------------protobuf-------------#
-cp ./core/src/proto/deepes.proto ./
+cp ./core/proto/deepes.proto ./
 protoc deepes.proto --cpp_out ./
 mv deepes.pb.h core/include
 mv deepes.pb.cc core/src
@@ -49,6 +49,7 @@ mkdir build
 cd build
 cmake ../ ${FLAGS}
 make -j10
+cd -
 
 #-----------------run----------------#
-./parallel_main
+./build/parallel_main

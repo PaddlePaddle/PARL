@@ -23,13 +23,13 @@
 #include <google/protobuf/text_format.h>
 #include <fstream>
 
-namespace DeepES{
+namespace deep_es {
 
 /*Return ranks that is normliazed to [-0.5, 0.5] with the rewards as input.
   Args:
     reward: an array of rewards
 */
-bool compute_centered_ranks(std::vector<float> &reward);
+bool compute_centered_ranks(std::vector<float>& reward);
 
 std::string read_file(const std::string& filename);
 
@@ -37,50 +37,58 @@ std::string read_file(const std::string& filename);
  * Args:
  *  config_file: file path.
  *  proto_config: protobuff message for configuration.
- * return 
+ * return
  */
 template<typename T>
 bool load_proto_conf(const std::string& config_file, T& proto_config) {
-  bool success = true;
-  std::ifstream fin(config_file);
-  if (!fin || fin.fail()) {
-    LOG(ERROR) << "open prototxt config failed: " << config_file;
-    success = false;
-  } else {
-    fin.seekg(0, std::ios::end);
-    size_t file_size = fin.tellg();
-    fin.seekg(0, std::ios::beg);
+    bool success = true;
+    std::ifstream fin(config_file);
 
-    char* file_content_buffer = new char[file_size];
-    fin.read(file_content_buffer, file_size);
+    if (!fin || fin.fail()) {
+        LOG(ERROR) << "open prototxt config failed: " << config_file;
+        success = false;
+    } else {
+        fin.seekg(0, std::ios::end);
+        size_t file_size = fin.tellg();
+        fin.seekg(0, std::ios::beg);
 
-    std::string proto_str(file_content_buffer, file_size);
-    if (!google::protobuf::TextFormat::ParseFromString(proto_str, &proto_config)) {
-      LOG(ERROR) << "Failed to load config: " << config_file;
-      success = false;
+        char* file_content_buffer = new char[file_size];
+        fin.read(file_content_buffer, file_size);
+
+        std::string proto_str(file_content_buffer, file_size);
+
+        if (!google::protobuf::TextFormat::ParseFromString(proto_str, &proto_config)) {
+            LOG(ERROR) << "Failed to load config: " << config_file;
+            success = false;
+        }
+
+        delete[] file_content_buffer;
+        fin.close();
     }
-    delete[] file_content_buffer;
-    fin.close();
-  }
-  return success;
+
+    return success;
 }
 
 template<typename T>
-bool save_proto_conf(const std::string& config_file, T&proto_config) {
-  bool success = true;
-  std::ofstream ofs(config_file, std::ofstream::out);
-  if (!ofs || ofs.fail()) {
-    LOG(ERROR) << "open prototxt config failed: " << config_file;
-    success = false;
-  } else {
-    std::string config_str;
-    success = google::protobuf::TextFormat::PrintToString(proto_config, &config_str);
-    if (!success) {
-      return success;
+bool save_proto_conf(const std::string& config_file, T& proto_config) {
+    bool success = true;
+    std::ofstream ofs(config_file, std::ofstream::out);
+
+    if (!ofs || ofs.fail()) {
+        LOG(ERROR) << "open prototxt config failed: " << config_file;
+        success = false;
+    } else {
+        std::string config_str;
+        success = google::protobuf::TextFormat::PrintToString(proto_config, &config_str);
+
+        if (!success) {
+            return success;
+        }
+
+        ofs << config_str;
     }
-    ofs << config_str;
-  }
-  return success;
+
+    return success;
 }
 
 std::vector<std::string> list_all_model_dirs(std::string path);

@@ -19,7 +19,7 @@
 #include <cmath>
 #include "optimizer.h"
 
-namespace DeepES{
+namespace deep_es {
 
 /*@brief SGDOptimizer.
   * Implements stochastic gradient descent (optionally with momentum).
@@ -30,15 +30,15 @@ namespace DeepES{
   */
 class SGDOptimizer: public Optimizer {
 public:
-  SGDOptimizer(float base_lr, float momentum=0.9):Optimizer(base_lr), _momentum(momentum) {}
-  ~SGDOptimizer();
+    SGDOptimizer(float base_lr, float momentum = 0.9): Optimizer(base_lr), _momentum(momentum) {}
+    ~SGDOptimizer();
 
 protected:
-  void compute_step(float* gradient, int size, std::string param_name);
+    void compute_step(float* gradient, int size, std::string param_name);
 
 private:
-  float _momentum;
-  std::map<std::string, float*> _velocity;
+    float _momentum;
+    std::map<std::string, float*> _velocity;
 };
 
 }

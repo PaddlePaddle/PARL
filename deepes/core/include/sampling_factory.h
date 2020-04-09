@@ -23,11 +23,11 @@
 #include "deepes.pb.h"
 #include <glog/logging.h>
 
-namespace DeepES{
+namespace deep_es {
 /* @brief: create an sampling_method according to the configuration"
- * @args: 
+ * @args:
  *    config: configuration for the DeepES
- * 
+ *
  */
 std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& Config);
 

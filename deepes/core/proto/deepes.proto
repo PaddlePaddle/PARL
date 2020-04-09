@@ -14,7 +14,7 @@
 
 syntax = "proto2";
 
-package DeepES;
+package deep_es;
 
 message DeepESConfig {
   //sampling configuration

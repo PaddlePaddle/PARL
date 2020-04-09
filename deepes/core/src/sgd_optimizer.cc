@@ -14,24 +14,26 @@
 
 #include "sgd_optimizer.h"
 
-namespace DeepES {
+namespace deep_es {
 
 SGDOptimizer::~SGDOptimizer() {
-  for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {
-    delete[] iter->second;
-  }
-  _velocity.clear();
+    for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {
+        delete[] iter->second;
+    }
+
+    _velocity.clear();
 }
 
-void SGDOptimizer::compute_step(float* gradient, int size, std::string param_name="") {
-  if (_velocity.count(param_name) == 0) {
-    _velocity[param_name] = new float [size];
-    memset(_velocity[param_name], 0, size * sizeof(float));
-  }
-  for (int i = 0; i < size; ++i) {
-    _velocity[param_name][i] = _momentum * _velocity[param_name][i] + (1 - _momentum) * gradient[i];
-    gradient[i] = _velocity[param_name][i];
-  }
+void SGDOptimizer::compute_step(float* gradient, int size, std::string param_name = "") {
+    if (_velocity.count(param_name) == 0) {
+        _velocity[param_name] = new float [size];
+        memset(_velocity[param_name], 0, size * sizeof(float));
+    }
+
+    for (int i = 0; i < size; ++i) {
+        _velocity[param_name][i] = _momentum * _velocity[param_name][i] + (1 - _momentum) * gradient[i];
+        gradient[i] = _velocity[param_name][i];
+    }
 }
 
 

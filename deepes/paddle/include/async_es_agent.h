@@ -19,7 +19,7 @@
 #include <map>
 #include <stdlib.h>
 
-namespace DeepES{
+namespace deep_es {
 /* DeepES agent with PaddleLite as backend. This agent supports asynchronous update.
  * Users mainly focus on the following functions:
  * 1. clone: clone an agent for multi-thread evaluation
@@ -27,10 +27,10 @@ namespace DeepES{
  * 3. update: update parameters given data collected during evaluation.
  */
 class AsyncESAgent: public ESAgent {
-  public:
-  AsyncESAgent() {}
+public:
+    AsyncESAgent() {}
 
-  ~AsyncESAgent();
+    ~AsyncESAgent();
 
     /**
      * @args:
@@ -39,9 +39,9 @@ class AsyncESAgent: public ESAgent {
      * Note that AsyncESAgent will update the configuration file after calling the update function.
      * Please use the up-to-date configuration.
      */
-  AsyncESAgent(
-      const std::string& model_dir,
-      const std::string& config_path);
+    AsyncESAgent(
+        const std::string& model_dir,
+        const std::string& config_path);
 
     /**
      * @brief: Clone an agent for sampling.
@@ -58,7 +58,7 @@ class AsyncESAgent: public ESAgent {
         std::vector<SamplingInfo>& noisy_info,
         std::vector<float>& noisy_rewards);
 
-  private:
+private:
     std::map<int, std::shared_ptr<PaddlePredictor>> _previous_predictors;
     std::map<int, float*> _param_delta;
     std::string _config_path;
@@ -76,7 +76,7 @@ class AsyncESAgent: public ESAgent {
 
     /**
      * @brief: remove expired models to avoid overuse of disk space.
-     * @args: 
+     * @args:
      *  max_to_keep: the maximum number of models to keep locally.
      */
     bool _remove_expired_model(int max_to_keep);

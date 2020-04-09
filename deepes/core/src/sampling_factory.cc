@@ -14,26 +14,28 @@
 
 #include "sampling_factory.h"
 
-namespace DeepES{
+namespace deep_es {
 
 
 std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& config) {
-  std::shared_ptr<SamplingMethod> sampling_method;
-  bool cached = config.gaussian_sampling().cached();
-  if (cached) {
-    sampling_method = std::make_shared<CachedGaussianSampling>();
-  } else {
-    sampling_method = std::make_shared<GaussianSampling>();
-  }
+    std::shared_ptr<SamplingMethod> sampling_method;
+    bool cached = config.gaussian_sampling().cached();
 
-  bool success = sampling_method->load_config(config);
-  if(success) {
-    return sampling_method;
-  } else {
-    LOG(ERROR) << "[DeepES] Fail to create sampling_method";
-    return nullptr;
-  }
-  
+    if (cached) {
+        sampling_method = std::make_shared<CachedGaussianSampling>();
+    } else {
+        sampling_method = std::make_shared<GaussianSampling>();
+    }
+
+    bool success = sampling_method->load_config(config);
+
+    if (success) {
+        return sampling_method;
+    } else {
+        LOG(ERROR) << "[DeepES] Fail to create sampling_method";
+        return nullptr;
+    }
+
 }
 
 }//namespace

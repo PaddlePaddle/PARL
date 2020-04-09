@@ -26,7 +26,7 @@
 #include <random>
 #include <math.h>
 
-namespace DeepES {
+namespace deep_es {
 
 
 // The fixture for testing class Foo.

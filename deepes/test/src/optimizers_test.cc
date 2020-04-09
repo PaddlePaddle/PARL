@@ -17,7 +17,7 @@
 #include "optimizer_factory.h"
 #include <memory>
 
-namespace DeepES {
+namespace deep_es {
 
 
 TEST(SGDOptimizersTest, Method_update) {

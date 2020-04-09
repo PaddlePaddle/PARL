@@ -16,7 +16,7 @@
 #include <vector>
 #include "utils.h"
 
-namespace DeepES {
+namespace deep_es {
 
 // Tests that the Utils::compute_centered_rank() method.
 TEST(UtilsTest, Method_compute_centered_ranks) {

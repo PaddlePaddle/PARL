@@ -19,7 +19,7 @@
 #include "cached_gaussian_sampling.h"
 #include <memory>
 
-namespace DeepES {
+namespace deep_es {
 
 
 class SamplingTest : public ::testing::Test {

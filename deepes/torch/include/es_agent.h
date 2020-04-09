@@ -22,7 +22,7 @@
 #include "utils.h"
 #include "deepes.pb.h"
 
-namespace DeepES{
+namespace deep_es{
 
 /**
  * @brief DeepES agent for Torch.

@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SAMPLING_FACTORY_H
-#define SAMPLING_FACTORY_H
+#ifndef EVO_KIT_SAMPLING_FACTORY_H
+#define EVO_KIT_SAMPLING_FACTORY_H
 
 #include <algorithm>
-#include <memory>
-#include "sampling_method.h"
-#include "gaussian_sampling.h"
-#include "cached_gaussian_sampling.h"
-#include "deepes.pb.h"
 #include <glog/logging.h>
+#include <memory>
+#include "evo_kit/cached_gaussian_sampling.h"
+#include "evo_kit/evo_kit.pb.h"
+#include "evo_kit/gaussian_sampling.h"
+#include "evo_kit/sampling_method.h"
 
-namespace deep_es {
+namespace evo_kit {
 /* @brief: create an sampling_method according to the configuration"
  * @args:
- *    config: configuration for the DeepES
+ *    config: configuration for the EvoKit
  *
  */
-std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& Config);
+std::shared_ptr<SamplingMethod> create_sampling_method(const EvoKitConfig& Config);
 
-}//namespace
+} // namespace
 
 #endif

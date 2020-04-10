@@ -14,9 +14,9 @@
 
 syntax = "proto2";
 
-package deep_es;
+package evo_kit;
 
-message DeepESConfig {
+message EvoKitConfig {
   //sampling configuration
   optional int32 seed = 1 [default = 18];
   optional int32 buffer_size = 2 [default = 100000];

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ASYNC_ES_AGENT_H
-#define ASYNC_ES_AGENT_H
+#ifndef EVO_KIT_ASYNC_ES_AGENT_H
+#define EVO_KIT_ASYNC_ES_AGENT_H
 
-#include "es_agent.h"
-#include <map>
 #include <stdlib.h>
+#include <unordered_map>
+#include "evo_kit/es_agent.h"
 
-namespace deep_es {
-/* DeepES agent with PaddleLite as backend. This agent supports asynchronous update.
+namespace evo_kit {
+/* EvoKit agent with PaddleLite as backend. This agent supports asynchronous update.
  * Users mainly focus on the following functions:
  * 1. clone: clone an agent for multi-thread evaluation
  * 2. add_noise: add noise into parameters.
@@ -59,8 +59,8 @@ public:
         std::vector<float>& noisy_rewards);
 
 private:
-    std::map<int, std::shared_ptr<PaddlePredictor>> _previous_predictors;
-    std::map<int, float*> _param_delta;
+    std::unordered_map<int, std::shared_ptr<PaddlePredictor>> _previous_predictors;
+    std::unordered_map<int, float*> _param_delta;
     std::string _config_path;
 
     /**
@@ -97,5 +97,5 @@ private:
     std::shared_ptr<PaddlePredictor> _load_previous_model(std::string model_dir);
 };
 
-} //namespace
+} // namespace
 #endif

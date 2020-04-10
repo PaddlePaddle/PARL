@@ -11,34 +11,40 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-#ifndef CACHED_GAUSSIAN_SAMPLING_H
-#define CACHED_GAUSSIAN_SAMPLING_H
 
+#ifndef EVO_KIT_SAMPLING_METHOD_H
+#define EVO_KIT_SAMPLING_METHOD_H
+
+#include <string>
 #include <random>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include "sampling_method.h"
-#include "utils.h"
-#include <glog/logging.h>
+#include "evo_kit/evo_kit.pb.h"
 
-namespace deep_es {
+namespace evo_kit {
 
-class CachedGaussianSampling: public SamplingMethod {
+/*Base class for sampling algorithms. All algorithms are required to override the following functions:
+ *
+ * 1. load_config
+ * 2. sampling
+ * 3. resampling
+ *
+ * View an demostrative algorithm in gaussian_sampling.h
+ * */
+
+class SamplingMethod {
 
 public:
-    CachedGaussianSampling();
 
-    ~CachedGaussianSampling();
+    SamplingMethod(): _seed(0) {}
+
+    virtual ~SamplingMethod() {}
 
     /*Initialize the sampling algorithm given the config with the protobuf format.
-     *DeepES library uses only one configuration file for all sampling algorithms.
+     *EvoKit library uses only one configuration file for all sampling algorithms.
       A defalut configuration file can be found at: . // TODO: where?
       Usally you won't have to modify the configuration items of other algorithms
       if you are not using them.
      */
-    bool load_config(const DeepESConfig& config);
+    virtual bool load_config(const EvoKitConfig& config) = 0;
 
     /*@brief generate Gaussian noise and the related key.
      *
@@ -50,7 +56,7 @@ public:
      *@return:
      *     success: generate Gaussian successfully or not.
      */
-    bool sampling(int* key, float* noise, int64_t size);
+    virtual bool sampling(int* key, float* noise, int64_t size) = 0;
 
     /*@brief reconstruct the Gaussion noise given the key.
      * This function is often used for updating the neuron network parameters in the offline environment.
@@ -63,16 +69,22 @@ public:
      *@return:
      *     success: reconstruct Gaussian successfully or not.
      */
-    bool resampling(int key, float* noise, int64_t size);
+    virtual bool resampling(int key, float* noise, int64_t size) = 0;
 
-private:
-    float _std;
-    int _cache_size;
-    float* _noise_cache = nullptr;
+    bool set_seed(int seed) {
+        _seed = seed;
+        srand(_seed);
+        return true;
+    }
 
-    bool _create_noise_cache();
+    int get_seed() {
+        return _seed;
+    }
+
+protected:
+    int _seed;
+
 };
 
 }
-
 #endif

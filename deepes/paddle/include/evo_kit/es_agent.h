@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DEEPES_PADDLE_ES_AGENT_H_
-#define DEEPES_PADDLE_ES_AGENT_H_
+#ifndef EVO_KIT_DEEPES_PADDLE_ES_AGENT_H_
+#define EVO_KIT_DEEPES_PADDLE_ES_AGENT_H_
 
-#include "paddle_api.h"
-#include "optimizer_factory.h"
-#include "sampling_factory.h"
-#include "utils.h"
-#include "deepes.pb.h"
 #include <vector>
+#include "evo_kit/evo_kit.pb.h"
+#include "evo_kit/optimizer_factory.h"
+#include "evo_kit/sampling_factory.h"
+#include "evo_kit/utils.h"
+#include "paddle_api.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
 typedef paddle::lite_api::CxxConfig CxxConfig;
@@ -31,7 +31,7 @@ typedef paddle::lite_api::Tensor Tensor;
 int64_t ShapeProduction(const paddle::lite_api::shape_t& shape);
 
 /**
- * @brief DeepES agent with PaddleLite as backend.
+ * @brief EvoKit agent with PaddleLite as backend.
  * Users mainly focus on the following functions:
  * 1. clone: clone an agent for multi-thread evaluation
  * 2. add_noise: add noise into parameters.
@@ -88,7 +88,7 @@ protected:
     std::shared_ptr<PaddlePredictor> _sampling_predictor;
     std::shared_ptr<SamplingMethod> _sampling_method;
     std::shared_ptr<Optimizer> _optimizer;
-    std::shared_ptr<DeepESConfig> _config;
+    std::shared_ptr<EvoKitConfig> _config;
     std::shared_ptr<CxxConfig> _cxx_config;
     std::vector<std::string> _param_names;
     // malloc memory of noise and neg_gradients in advance.
@@ -98,6 +98,6 @@ protected:
     bool _is_sampling_agent;
 };
 
-}
+} // namespace
 
-#endif /* DEEPES_PADDLE_ES_AGENT_H_ */
+#endif 

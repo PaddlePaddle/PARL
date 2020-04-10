@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "async_es_agent.h"
-namespace deep_es {
+#include "evo_kit/async_es_agent.h"
+
+namespace evo_kit {
 
 AsyncESAgent::AsyncESAgent(
     const std::string& model_dir,
@@ -32,7 +33,8 @@ bool AsyncESAgent::_save() {
     bool success = true;
 
     if (_is_sampling_agent) {
-        LOG(ERROR) << "[DeepES] Cloned AsyncESAgent cannot call `save`.Please use original AsyncESAgent.";
+        LOG(ERROR) <<
+            "[EvoKit] Cloned AsyncESAgent cannot call `save`.Please use original AsyncESAgent.";
         success = false;
         return success;
     }
@@ -80,9 +82,9 @@ bool AsyncESAgent::_remove_expired_model(int max_to_keep) {
             int ret = system(rm_command.c_str());
 
             if (ret == 0) {
-                LOG(INFO) << "[DeepES] remove expired Model: " << dir;
+                LOG(INFO) << "[EvoKit] remove expired Model: " << dir;
             } else {
-                LOG(ERROR) << "[DeepES] fail to remove expired Model: " << dir;
+                LOG(ERROR) << "[EvoKit] fail to remove expired Model: " << dir;
                 success = false;
                 return success;
             }
@@ -132,7 +134,7 @@ bool AsyncESAgent::_load() {
         success = model_iter_id == 0 ? true : false;
 
         if (!success) {
-            LOG(WARNING) << "[DeepES] current_model_iter_id is nonzero, but no model is \
+            LOG(WARNING) << "[EvoKit] current_model_iter_id is nonzero, but no model is \
         found at the dir: " << model_path;
         }
 
@@ -143,7 +145,7 @@ bool AsyncESAgent::_load() {
         int model_iter_id = _parse_model_iter_id(dir);
 
         if (model_iter_id == -1) {
-            LOG(WARNING) << "[DeepES] fail to parse model_iter_id: " << dir;
+            LOG(WARNING) << "[EvoKit] fail to parse model_iter_id: " << dir;
             success = false;
             return success;
         }
@@ -152,7 +154,7 @@ bool AsyncESAgent::_load() {
 
         if (predictor == nullptr) {
             success = false;
-            LOG(WARNING) << "[DeepES] fail to load model: " << dir;
+            LOG(WARNING) << "[EvoKit] fail to load model: " << dir;
             return success;
         }
 
@@ -201,11 +203,11 @@ bool AsyncESAgent::update(
     std::vector<SamplingInfo>& noisy_info,
     std::vector<float>& noisy_rewards) {
 
-    CHECK(!_is_sampling_agent) << "[DeepES] Cloned ESAgent cannot call update function. \
+    CHECK(!_is_sampling_agent) << "[EvoKit] Cloned ESAgent cannot call update function. \
     Please use original ESAgent.";
 
     bool success = _load();
-    CHECK(success) << "[DeepES] fail to load previous models.";
+    CHECK(success) << "[EvoKit] fail to load previous models.";
 
     int current_model_iter_id =  _config->async_es().model_iter_id();
 
@@ -215,7 +217,7 @@ bool AsyncESAgent::update(
 
         if (model_iter_id != current_model_iter_id
                 && _previous_predictors.count(model_iter_id) == 0) {
-            LOG(WARNING) << "[DeepES] The sample with model_dir_id: " << model_iter_id \
+            LOG(WARNING) << "[EvoKit] The sample with model_dir_id: " << model_iter_id \
                          << " cannot match any local model";
             success = false;
             return success;
@@ -230,7 +232,7 @@ bool AsyncESAgent::update(
         float reward = noisy_rewards[i];
         int model_iter_id = noisy_info[i].model_iter_id();
         bool success = _sampling_method->resampling(key, _noise, _param_size);
-        CHECK(success) << "[DeepES] resampling error occurs at sample: " << i;
+        CHECK(success) << "[EvoKit] resampling error occurs at sample: " << i;
         float* delta = _param_delta[model_iter_id];
 
         // compute neg_gradients
@@ -261,7 +263,7 @@ bool AsyncESAgent::update(
     }
 
     success = _save();
-    CHECK(success) << "[DeepES] fail to save model.";
+    CHECK(success) << "[EvoKit] fail to save model.";
     return true;
 }
 

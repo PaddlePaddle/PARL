@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#ifndef GAUSSIAN_SAMPLING_H
-#define GAUSSIAN_SAMPLING_H
+#ifndef EVO_KIT_CACHED_GAUSSIAN_SAMPLING_H
+#define EVO_KIT_CACHED_GAUSSIAN_SAMPLING_H
 
+#include <glog/logging.h>
 #include <random>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,22 +23,22 @@
 #include "sampling_method.h"
 #include "utils.h"
 
-namespace deep_es {
+namespace evo_kit {
 
-class GaussianSampling: public SamplingMethod {
+class CachedGaussianSampling: public SamplingMethod {
 
 public:
-    GaussianSampling() {}
+    CachedGaussianSampling();
 
-    ~GaussianSampling() {}
+    ~CachedGaussianSampling();
 
     /*Initialize the sampling algorithm given the config with the protobuf format.
-     *DeepES library uses only one configuration file for all sampling algorithms.
+     *EvoKit library uses only one configuration file for all sampling algorithms.
       A defalut configuration file can be found at: . // TODO: where?
       Usally you won't have to modify the configuration items of other algorithms
       if you are not using them.
      */
-    bool load_config(const DeepESConfig& config);
+    bool load_config(const EvoKitConfig& config);
 
     /*@brief generate Gaussian noise and the related key.
      *
@@ -66,6 +67,10 @@ public:
 
 private:
     float _std;
+    int _cache_size;
+    float* _noise_cache = nullptr;
+
+    bool _create_noise_cache();
 };
 
 }

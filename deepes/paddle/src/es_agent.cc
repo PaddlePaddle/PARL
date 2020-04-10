@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "es_agent.h"
+#include "evo_kit/es_agent.h"
 #include <ctime>
 
-namespace deep_es {
+namespace evo_kit {
 
 int64_t ShapeProduction(const paddle::lite_api::shape_t& shape) {
     int64_t res = 1;
@@ -56,7 +56,7 @@ ESAgent::ESAgent(const std::string& model_dir, const std::string& config_path) {
     // Original agent can't be used to sample, so keep it same with _predictor for evaluating.
     _sampling_predictor = _predictor;
 
-    _config = std::make_shared<DeepESConfig>();
+    _config = std::make_shared<EvoKitConfig>();
     load_proto_conf(config_path, *_config);
 
     _sampling_method = create_sampling_method(*_config);
@@ -72,7 +72,7 @@ ESAgent::ESAgent(const std::string& model_dir, const std::string& config_path) {
 
 std::shared_ptr<ESAgent> ESAgent::clone() {
     if (_is_sampling_agent) {
-        LOG(ERROR) << "[DeepES] only original ESAgent can call `clone` function.";
+        LOG(ERROR) << "[EvoKit] only original ESAgent can call `clone` function.";
         return nullptr;
     }
 
@@ -97,7 +97,7 @@ bool ESAgent::update(
     std::vector<SamplingInfo>& noisy_info,
     std::vector<float>& noisy_rewards) {
     if (_is_sampling_agent) {
-        LOG(ERROR) << "[DeepES] Cloned ESAgent cannot call update function, please use original ESAgent.";
+        LOG(ERROR) << "[EvoKit] Cloned ESAgent cannot call update function, please use original ESAgent.";
         return false;
     }
 
@@ -109,7 +109,7 @@ bool ESAgent::update(
         int key = noisy_info[i].key(0);
         float reward = noisy_rewards[i];
         bool success = _sampling_method->resampling(key, _noise, _param_size);
-        CHECK(success) << "[DeepES] resampling error occurs at sample: " << i;
+        CHECK(success) << "[EvoKit] resampling error occurs at sample: " << i;
 
         for (int64_t j = 0; j < _param_size; ++j) {
             _neg_gradients[j] += _noise[j] * reward;
@@ -139,14 +139,14 @@ bool ESAgent::add_noise(SamplingInfo& sampling_info) {
 
     if (!_is_sampling_agent) {
         LOG(ERROR) <<
-                   "[DeepES] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";
+                   "[EvoKit] Original ESAgent cannot call add_noise function, please use cloned ESAgent.";
         success =  false;
         return success;
     }
 
     int key = 0;
     success = _sampling_method->sampling(&key, _noise, _param_size);
-    CHECK(success) << "[DeepES] sampling error occurs while add_noise.";
+    CHECK(success) << "[EvoKit] sampling error occurs while add_noise.";
     int model_iter_id = _config->async_es().model_iter_id();
     sampling_info.add_key(key);
     sampling_info.set_model_iter_id(model_iter_id);

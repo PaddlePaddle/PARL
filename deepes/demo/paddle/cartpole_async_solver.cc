@@ -15,11 +15,11 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <omp.h>
+#include "evo_kit/async_es_agent.h"
 #include "cartpole.h"
-#include "async_es_agent.h"
 #include "paddle_api.h"
 
-using namespace deep_es;
+using namespace evo_kit;
 using namespace paddle::lite_api;
 
 const int ITER = 10;

@@ -1,19 +1,19 @@
 cmake_minimum_required (VERSION 2.6)
-project (DeepES)
+project (EvoKit)
 set(TARGET parallel_main)
 
 ########## options ##########
-option(WITH_PADDLE "Compile DeepES with PaddleLite framework." OFF)
-option(WITH_TORCH "Compile DeepES with Torch framework." OFF)
+option(WITH_PADDLE "Compile EvoKit jwith PaddleLite framework." OFF)
+option(WITH_TORCH "Compile EvoKit with Torch framework." OFF)
 
 message("WITH_PADDLE: "${WITH_PADDLE})
 message("WITH_TORCH: "${WITH_TORCH})
 
 if (NOT (WITH_PADDLE OR WITH_TORCH))
-  message("ERROR: You should choose at least one framework to compile DeepES.")
+  message("ERROR: You should choose at least one framework to compile EvoKit.")
   return()
 elseif(WITH_PADDLE AND WITH_TORCH)
-  message("ERROR: You cannot choose more than one framework to compile DeepES.")
+  message("ERROR: You cannot choose more than one framework to compile EvoKit.")
   return()
 endif()
 
@@ -29,8 +29,9 @@ if (OPENMP_FOUND)
 endif()
 
 
-file(GLOB src "core/src/*.cc")
+file(GLOB src "core/src/*.cc" "core/proto/evo_kit/*.cc")
 include_directories("core/include")
+include_directories("core/proto")
 include_directories("benchmark")
 
 ########## PaddleLite config ##########
@@ -57,7 +58,7 @@ elseif (WITH_TORCH)
   file(GLOB framework_src "torch/src/*.cc")
   set(demo "${PROJECT_SOURCE_DIR}/demo/torch/cartpole_solver_parallel.cc")
 else ()
-  message("ERROR: You should choose at least one framework to compile DeepES.")
+  message("ERROR: You should choose at least one framework to compile EvoKit.")
 endif()
 
 add_executable(${TARGET} ${demo} ${src} ${framework_src}) 

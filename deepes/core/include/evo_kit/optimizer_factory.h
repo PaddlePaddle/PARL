@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef OPTIMIZER_FACTORY_H
-#define OPTIMIZER_FACTORY_H
+#ifndef EVO_KIT_OPTIMIZER_FACTORY_H
+#define EVO_KIT_OPTIMIZER_FACTORY_H
 
 #include <algorithm>
-#include <memory>
-#include "optimizer.h"
-#include "sgd_optimizer.h"
-#include "adam_optimizer.h"
-#include "deepes.pb.h"
 #include <glog/logging.h>
+#include <memory>
+#include "evo_kit/adam_optimizer.h"
+#include "evo_kit/evo_kit.pb.h"
+#include "evo_kit/optimizer.h"
+#include "evo_kit/sgd_optimizer.h"
 
-namespace deep_es {
+namespace evo_kit {
 /* @brief: create an optimizer according to the configuration"
  * @args:
  *    config: configuration for the optimizer
@@ -31,6 +31,6 @@ namespace deep_es {
  */
 std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config);
 
-}//namespace
+} // namespace
 
 #endif

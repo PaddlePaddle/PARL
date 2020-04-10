@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SGD_OPTIMIZER_H
-#define SGD_OPTIMIZER_H
+#ifndef EVO_KIT_SGD_OPTIMIZER_H
+#define EVO_KIT_SGD_OPTIMIZER_H
 
-#include <map>
 #include <cmath>
-#include "optimizer.h"
+#include <unordered_map>
+#include "evo_kit/optimizer.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 /*@brief SGDOptimizer.
   * Implements stochastic gradient descent (optionally with momentum).
@@ -38,9 +38,9 @@ protected:
 
 private:
     float _momentum;
-    std::map<std::string, float*> _velocity;
+    std::unordered_map<std::string, float*> _velocity;
 };
 
-}
+} // namespace
 
 #endif

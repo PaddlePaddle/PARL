@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cached_gaussian_sampling.h"
+#include "evo_kit/cached_gaussian_sampling.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 CachedGaussianSampling::CachedGaussianSampling() {}
 
@@ -22,16 +22,16 @@ CachedGaussianSampling::~CachedGaussianSampling() {
     delete[] _noise_cache;
 }
 
-bool CachedGaussianSampling::load_config(const DeepESConfig& config) {
+bool CachedGaussianSampling::load_config(const EvoKitConfig& config) {
     bool success = true;
     _std = config.gaussian_sampling().std();
     success = set_seed(config.seed());
-    CHECK(success) << "[DeepES] Fail to set seed while load config.";
+    CHECK(success) << "[EvoKit] Fail to set seed while load config.";
     _cache_size = config.gaussian_sampling().cache_size();
     _noise_cache = new float [_cache_size];
     memset(_noise_cache, 0, _cache_size * sizeof(float));
     success = _create_noise_cache();
-    CHECK(success) << "[DeepES] Fail to create noise_cache while load config.";
+    CHECK(success) << "[EvoKit] Fail to create noise_cache while load config.";
     return success;
 }
 
@@ -39,19 +39,19 @@ bool CachedGaussianSampling::sampling(int* key, float* noise, int64_t size) {
     bool success = true;
 
     if (_noise_cache == nullptr) {
-        LOG(ERROR) << "[DeepES] Please use load_config() first.";
+        LOG(ERROR) << "[EvoKit] Please use load_config() first.";
         success = false;
         return success;
     }
 
     if (noise == nullptr) {
-        LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+        LOG(ERROR) << "[EvoKit] Input noise array cannot be nullptr.";
         success = false;
         return success;
     }
 
     if ((size >= _cache_size) || (size < 0)) {
-        LOG(ERROR) << "[DeepES] Input size " << size << " is out of bounds [0, " << _cache_size <<
+        LOG(ERROR) << "[EvoKit] Input size " << size << " is out of bounds [0, " << _cache_size <<
                    "), cache_size: " << _cache_size;
         success = false;
         return success;
@@ -74,26 +74,27 @@ bool CachedGaussianSampling::resampling(int key, float* noise, int64_t size) {
     bool success = true;
 
     if (_noise_cache == nullptr) {
-        LOG(ERROR) << "[DeepES] Please use load_config() first.";
+        LOG(ERROR) << "[EvoKit] Please use load_config() first.";
         success = false;
         return success;
     }
 
     if (noise == nullptr) {
-        LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+        LOG(ERROR) << "[EvoKit] Input noise array cannot be nullptr.";
         success = false;
         return success;
     }
 
     if ((size >= _cache_size) || (size < 0)) {
-        LOG(ERROR) << "[DeepES] Input size " << size << " is out of bounds [0, " << _cache_size <<
+        LOG(ERROR) << "[EvoKit] Input size " << size << " is out of bounds [0, " << _cache_size <<
                    "), cache_size: " << _cache_size;
         success = false;
         return success;
     }
 
     if ((key > _cache_size - size) || (key < 0)) {
-        LOG(ERROR) << "[DeepES] Resampling key " << key << " is out of bounds [0, " << _cache_size - size <<
+        LOG(ERROR) << "[EvoKit] Resampling key " << key << " is out of bounds [0, "
+                    << _cache_size - size <<
                    "], cache_size: " << _cache_size << ", size: " << size;
         success = false;
         return success;

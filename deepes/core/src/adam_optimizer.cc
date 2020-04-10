@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "adam_optimizer.h"
+#include "evo_kit/adam_optimizer.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 AdamOptimizer::~AdamOptimizer() {
     for (auto iter = _momentum.begin(); iter != _momentum.end(); iter++) {

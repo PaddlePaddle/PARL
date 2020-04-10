@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef EVO_KIT_UTILS_H
+#define EVO_KIT_UTILS_H
 
-#include <string>
-#include <fstream>
 #include <algorithm>
-#include <glog/logging.h>
-#include "deepes.pb.h"
-#include <google/protobuf/text_format.h>
 #include <fstream>
+#include <glog/logging.h>
+#include <google/protobuf/text_format.h>
+#include <string>
+#include "evo_kit/evo_kit.pb.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 /*Return ranks that is normliazed to [-0.5, 0.5] with the rewards as input.
   Args:

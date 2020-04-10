@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "utils.h"
+#include "evo_kit/utils.h"
 #include <dirent.h>
 
-namespace deep_es {
+namespace evo_kit {
 
 bool compute_centered_ranks(std::vector<float>& reward) {
     std::vector<std::pair<float, int>> reward_index;

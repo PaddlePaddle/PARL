@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gaussian_sampling.h"
+#include "evo_kit/gaussian_sampling.h"
 
-namespace deep_es {
+namespace evo_kit {
 
-bool GaussianSampling::load_config(const DeepESConfig& config) {
+bool GaussianSampling::load_config(const EvoKitConfig& config) {
     bool success = true;
     _std = config.gaussian_sampling().std();
     success = set_seed(config.seed());
@@ -27,7 +27,7 @@ bool GaussianSampling::sampling(int* key, float* noise, int64_t size) {
     bool success = true;
 
     if (noise == nullptr) {
-        LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+        LOG(ERROR) << "[EvoKit] Input noise array cannot be nullptr.";
         success = false;
         return success;
     }
@@ -48,7 +48,7 @@ bool GaussianSampling::resampling(int key, float* noise, int64_t size) {
     bool success = true;
 
     if (noise == nullptr) {
-        LOG(ERROR) << "[DeepES] Input noise array cannot be nullptr.";
+        LOG(ERROR) << "[EvoKit] Input noise array cannot be nullptr.";
         success = false;
     } else {
         std::default_random_engine generator(key);

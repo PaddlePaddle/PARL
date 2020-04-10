@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef OPTIMIZER_H
-#define OPTIMIZER_H
+#ifndef EVO_KIT_OPTIMIZER_H
+#define EVO_KIT_OPTIMIZER_H
 
-#include <map>
 #include <glog/logging.h>
+#include <unordered_map>
 
-namespace deep_es {
+namespace evo_kit {
 
 /*@brief Optimizer. Base class for optimizers.
  *
@@ -71,7 +71,7 @@ protected:
     virtual void compute_step(float* graident, int size, std::string param_name = "") = 0;
     float _base_lr;
     float _update_times;
-    std::map<std::string, int> _params_size;
+    std::unordered_map<std::string, int> _params_size;
 };
 
 

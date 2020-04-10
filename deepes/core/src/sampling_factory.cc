@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sampling_factory.h"
+#include "evo_kit/sampling_factory.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 
-std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& config) {
+std::shared_ptr<SamplingMethod> create_sampling_method(const EvoKitConfig& config) {
     std::shared_ptr<SamplingMethod> sampling_method;
     bool cached = config.gaussian_sampling().cached();
 
@@ -32,7 +32,7 @@ std::shared_ptr<SamplingMethod> create_sampling_method(const DeepESConfig& confi
     if (success) {
         return sampling_method;
     } else {
-        LOG(ERROR) << "[DeepES] Fail to create sampling_method";
+        LOG(ERROR) << "[EvoKit] Fail to create sampling_method";
         return nullptr;
     }
 

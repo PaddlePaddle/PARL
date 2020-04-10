@@ -16,10 +16,10 @@
 #include <glog/logging.h>
 #include <omp.h>
 #include "cartpole.h"
-#include "es_agent.h"
+#include "evo_kit/es_agent.h"
 #include "paddle_api.h"
 
-using namespace deep_es;
+using namespace evo_kit;
 using namespace paddle::lite_api;
 
 const int ITER = 10;

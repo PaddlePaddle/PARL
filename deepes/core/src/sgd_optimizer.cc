@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sgd_optimizer.h"
+#include "evo_kit/sgd_optimizer.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 SGDOptimizer::~SGDOptimizer() {
     for (auto iter = _velocity.begin(); iter != _velocity.end(); iter++) {

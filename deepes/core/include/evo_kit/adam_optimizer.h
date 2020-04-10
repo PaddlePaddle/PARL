@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ADAM_OPTIMIZER_H
-#define ADAM_OPTIMIZER_H
+#ifndef EVO_KIT_ADAM_OPTIMIZER_H
+#define EVO_KIT_ADAM_OPTIMIZER_H
 
-#include <map>
 #include <cmath>
-#include "optimizer.h"
+#include <unordered_map>
+#include "evo_kit/optimizer.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 /*@brief AdamOptimizer.
   * Implements Adam algorithm.
@@ -44,8 +44,8 @@ private:
     float _beta1;
     float _beta2;
     float _epsilon;
-    std::map<std::string, float*> _momentum;
-    std::map<std::string, float*> _velocity;
+    std::unordered_map<std::string, float*> _momentum;
+    std::unordered_map<std::string, float*> _velocity;
 };
 
 }//namespace

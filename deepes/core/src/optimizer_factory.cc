@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "optimizer_factory.h"
+#include "evo_kit/optimizer_factory.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config) {
     std::shared_ptr<Optimizer> optimizer;

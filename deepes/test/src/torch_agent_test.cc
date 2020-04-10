@@ -17,16 +17,16 @@
 #include <glog/logging.h>
 #include <omp.h>
 
-#include "gaussian_sampling.h"
+#include "evo_kit/gaussian_sampling.h"
+#include "evo_kit/es_agent.h"
 #include "torch_demo_model.h"
-#include "es_agent.h"
 
 #include <memory>
 #include <vector>
 #include <random>
 #include <math.h>
 
-namespace deep_es {
+namespace evo_kit {
 
 
 // The fixture for testing class Foo.

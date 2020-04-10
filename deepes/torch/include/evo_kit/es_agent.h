@@ -17,12 +17,12 @@
 
 #include <memory>
 #include <string>
-#include "optimizer_factory.h"
-#include "sampling_factory.h"
-#include "utils.h"
-#include "deepes.pb.h"
+#include "evo_kit/optimizer_factory.h"
+#include "evo_kit/sampling_factory.h"
+#include "evo_kit/utils.h"
+#include "evo_kit/evo_kit.pb.h"
 
-namespace deep_es{
+namespace evo_kit{
 
 /**
  * @brief DeepES agent for Torch.
@@ -45,7 +45,7 @@ public:
 
   ESAgent(std::shared_ptr<T> model, std::string config_path): _model(model) {
     _is_sampling_agent = false;
-    _config = std::make_shared<DeepESConfig>();
+    _config = std::make_shared<EvoKitConfig>();
     load_proto_conf(config_path, *_config);
     _sampling_method = create_sampling_method(*_config);
     _optimizer = create_optimizer(_config->optimizer());
@@ -145,7 +145,7 @@ public:
     auto params = _model->named_parameters();
     int key = 0;
     success = _sampling_method->sampling(&key, _noise, _param_size);
-    CHECK(success) << "[DeepES] sampling error occurs while add_noise.";
+    CHECK(success) << "[EvoKit] sampling error occurs while add_noise.";
     sampling_info.add_key(key);
     int64_t counter = 0;
     for (auto& param: sampling_params) {
@@ -184,7 +184,7 @@ private:
   bool _is_sampling_agent;
   std::shared_ptr<SamplingMethod> _sampling_method;
   std::shared_ptr<Optimizer> _optimizer;
-  std::shared_ptr<DeepESConfig> _config;
+  std::shared_ptr<EvoKitConfig> _config;
   int64_t _param_size;
   // malloc memory of noise and neg_gradients in advance.
   float* _noise;

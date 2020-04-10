@@ -14,18 +14,17 @@
 
 #include "gtest/gtest.h"
 #include <vector>
-#include "sampling_method.h"
-#include "gaussian_sampling.h"
-#include "cached_gaussian_sampling.h"
+#include "evo_kit/sampling_method.h"
+#include "evo_kit/gaussian_sampling.h"
+#include "evo_kit/cached_gaussian_sampling.h"
 #include <memory>
 
-namespace deep_es {
-
+namespace evo_kit {
 
 class SamplingTest : public ::testing::Test {
  protected:
   void init_sampling_method(bool cached) {
-    config = std::make_shared<DeepESConfig>();
+    config = std::make_shared<EvoKitConfig>();
     config->set_seed(1024);
     auto sampling_config = config->mutable_gaussian_sampling();
     sampling_config->set_std(1.0);
@@ -39,7 +38,7 @@ class SamplingTest : public ::testing::Test {
   }
 
   std::shared_ptr<SamplingMethod> sampler;
-  std::shared_ptr<DeepESConfig> config;
+  std::shared_ptr<EvoKitConfig> config;
   float array[3] = {1.0, 2.0, 3.0};
   int cache_size = 100;   // default cache_size 100
   int key = 0;

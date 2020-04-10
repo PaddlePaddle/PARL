@@ -17,12 +17,12 @@
 #include <algorithm>
 #include <glog/logging.h>
 #include <omp.h>
+#include "evo_kit/gaussian_sampling.h"
+#include "evo_kit/es_agent.h"
 #include "cartpole.h"
-#include "gaussian_sampling.h"
 #include "model.h"
-#include "es_agent.h"
 
-using namespace DeepES;
+using namespace evo_kit;
 const int ITER = 10;
 
 float evaluate(CartPole& env, std::shared_ptr<ESAgent<Model>> agent) {
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
   auto model = std::make_shared<Model>(4, 2);
   std::shared_ptr<ESAgent<Model>> agent = std::make_shared<ESAgent<Model>>(model,
-      "../demo/cartpole_config.prototxt");
+      "./demo/cartpole_config.prototxt");
   
   // Clone agents to sample (explore).
   std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents;

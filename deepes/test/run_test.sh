@@ -12,10 +12,9 @@ echo "Cannot find the torch library: ../libtorch"
 fi
 
 #----------------protobuf-------------#
-cp ./core/proto/deepes.proto ./
-protoc deepes.proto --cpp_out ./
-mv deepes.pb.h core/include
-mv deepes.pb.cc core/src
+cd core/proto/
+protoc evo_kit/evo_kit.proto --cpp_out . 
+cd -
 
 
 #----------------build---------------#

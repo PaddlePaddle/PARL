@@ -14,14 +14,13 @@
 
 #include "gtest/gtest.h"
 #include <vector>
-#include "optimizer_factory.h"
+#include "evo_kit/optimizer_factory.h"
 #include <memory>
 
-namespace deep_es {
-
+namespace evo_kit {
 
 TEST(SGDOptimizersTest, Method_update) {
-    std::shared_ptr<DeepESConfig> config = std::make_shared<DeepESConfig>();
+    std::shared_ptr<EvoKitConfig> config = std::make_shared<EvoKitConfig>();
   auto optimizer_config = config->mutable_optimizer();
   optimizer_config->set_base_lr(1.0);
   optimizer_config->set_type("sgd");
@@ -39,7 +38,7 @@ TEST(SGDOptimizersTest, Method_update) {
 }
 
 TEST(AdamOptimizersTest, Method_update) {
-    std::shared_ptr<DeepESConfig> config = std::make_shared<DeepESConfig>();
+    std::shared_ptr<EvoKitConfig> config = std::make_shared<EvoKitConfig>();
   auto optimizer_config = config->mutable_optimizer();
   optimizer_config->set_base_lr(1.0);
   optimizer_config->set_type("adam");

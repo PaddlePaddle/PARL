@@ -14,9 +14,9 @@
 
 #include "gtest/gtest.h"
 #include <vector>
-#include "utils.h"
+#include "evo_kit/utils.h"
 
-namespace deep_es {
+namespace evo_kit {
 
 // Tests that the Utils::compute_centered_rank() method.
 TEST(UtilsTest, Method_compute_centered_ranks) {

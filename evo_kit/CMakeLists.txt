@@ -3,7 +3,7 @@ project (EvoKit)
 set(TARGET parallel_main)
 
 ########## options ##########
-option(WITH_PADDLE "Compile EvoKit jwith PaddleLite framework." OFF)
+option(WITH_PADDLE "Compile EvoKit with PaddleLite framework." OFF)
 option(WITH_TORCH "Compile EvoKit with Torch framework." OFF)
 
 message("WITH_PADDLE: "${WITH_PADDLE})

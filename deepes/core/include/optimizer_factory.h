@@ -23,11 +23,11 @@
 #include "deepes.pb.h"
 #include <glog/logging.h>
 
-namespace DeepES{
+namespace deep_es {
 /* @brief: create an optimizer according to the configuration"
- * @args: 
+ * @args:
  *    config: configuration for the optimizer
- * 
+ *
  */
 std::shared_ptr<Optimizer> create_optimizer(const OptimizerConfig& optimizer_config);
 

@@ -22,11 +22,13 @@
 #include "deepes.pb.h"
 #include <vector>
 
-using namespace paddle::lite_api;
+namespace deep_es {
 
-namespace DeepES {
+typedef paddle::lite_api::PaddlePredictor PaddlePredictor;
+typedef paddle::lite_api::CxxConfig CxxConfig;
+typedef paddle::lite_api::Tensor Tensor;
 
-int64_t ShapeProduction(const shape_t& shape);
+int64_t ShapeProduction(const paddle::lite_api::shape_t& shape);
 
 /**
  * @brief DeepES agent with PaddleLite as backend.
@@ -37,65 +39,63 @@ int64_t ShapeProduction(const shape_t& shape);
  *
  */
 class ESAgent {
- public:
-  ESAgent() {}
+public:
+    ESAgent() {}
 
-  ~ESAgent();
+    ~ESAgent();
 
-  ESAgent(const std::string& model_dir, const std::string& config_path);
-  
-  /** 
-   * @breif Clone a sampling agent
-   *
-   * Only cloned ESAgent can call `add_noise` function.
-   * Each cloned ESAgent will have a copy of original parameters.
-   * (support sampling in multi-thread way)
-   */
-  std::shared_ptr<ESAgent> clone();
-  
-  /**
-   * @brief Update parameters of predictor based on ES algorithm.
-   *
-   * Only not cloned ESAgent can call `update` function.
-   * Parameters of cloned agents will also be updated.
-   */
-  bool update(
-      std::vector<SamplingInfo>& noisy_info,
-      std::vector<float>& noisy_rewards);
-  
-  // copied parameters = original parameters + noise
-  bool add_noise(SamplingInfo& sampling_info);
+    ESAgent(const std::string& model_dir, const std::string& config_path);
 
-  /**
-   * @brief Get paddle predict
-   *
-   * if _is_sampling_agent is true, will return predictor with added noise;
-   * if _is_sampling_agent is false, will return predictor without added noise.
-   */
-  std::shared_ptr<PaddlePredictor> get_predictor();
-  
-  // get param size of model
-  int64_t param_size() {
-    return _param_size;
-  }
+    /**
+     * @breif Clone a sampling agent
+     *
+     * Only cloned ESAgent can call `add_noise` function.
+     * Each cloned ESAgent will have a copy of original parameters.
+     * (support sampling in multi-thread way)
+     */
+    std::shared_ptr<ESAgent> clone();
 
+    /**
+     * @brief Update parameters of predictor based on ES algorithm.
+     *
+     * Only not cloned ESAgent can call `update` function.
+     * Parameters of cloned agents will also be updated.
+     */
+    bool update(
+        std::vector<SamplingInfo>& noisy_info,
+        std::vector<float>& noisy_rewards);
 
+    // copied parameters = original parameters + noise
+    bool add_noise(SamplingInfo& sampling_info);
 
- protected:
-  int64_t _calculate_param_size();
+    /**
+     * @brief Get paddle predict
+     *
+     * if _is_sampling_agent is true, will return predictor with added noise;
+     * if _is_sampling_agent is false, will return predictor without added noise.
+     */
+    std::shared_ptr<PaddlePredictor> get_predictor();
 
-  std::shared_ptr<PaddlePredictor> _predictor;
-  std::shared_ptr<PaddlePredictor> _sampling_predictor;
-  std::shared_ptr<SamplingMethod> _sampling_method;
-  std::shared_ptr<Optimizer> _optimizer;
-  std::shared_ptr<DeepESConfig> _config;
-  std::shared_ptr<CxxConfig> _cxx_config;
-  std::vector<std::string> _param_names;
-  // malloc memory of noise and neg_gradients in advance.
-  float* _noise;
-  float* _neg_gradients;
-  int64_t _param_size;
-  bool _is_sampling_agent;
+    // get param size of model
+    int64_t param_size() {
+        return _param_size;
+    }
+
+protected:
+    int64_t _calculate_param_size();
+
+    std::shared_ptr<PaddlePredictor> _predictor;
+    std::shared_ptr<PaddlePredictor> _sampling_predictor;
+    std::shared_ptr<SamplingMethod> _sampling_method;
+    std::shared_ptr<Optimizer> _optimizer;
+    std::shared_ptr<DeepESConfig> _config;
+    std::shared_ptr<CxxConfig> _cxx_config;
+    std::vector<std::string> _param_names;
+    // malloc memory of noise and neg_gradients in advance.
+    float* _noise;
+    float* _neg_gradients;
+    int64_t _param_size;
+    bool _is_sampling_agent;
 };
 
 }

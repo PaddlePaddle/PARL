@@ -19,7 +19,7 @@
 #include <random>
 #include "deepes.pb.h"
 
-namespace DeepES{
+namespace deep_es {
 
 /*Base class for sampling algorithms. All algorithms are required to override the following functions:
  *
@@ -30,59 +30,59 @@ namespace DeepES{
  * View an demostrative algorithm in gaussian_sampling.h
  * */
 
-class SamplingMethod{
+class SamplingMethod {
 
 public:
 
-  SamplingMethod(): _seed(0) {}
+    SamplingMethod(): _seed(0) {}
 
-  virtual ~SamplingMethod() {}
+    virtual ~SamplingMethod() {}
 
-  /*Initialize the sampling algorithm given the config with the protobuf format.
-   *DeepES library uses only one configuration file for all sampling algorithms.
-    A defalut configuration file can be found at: . // TODO: where?
-    Usally you won't have to modify the configuration items of other algorithms
-    if you are not using them.
-   */
-  virtual bool load_config(const DeepESConfig& config)=0;
+    /*Initialize the sampling algorithm given the config with the protobuf format.
+     *DeepES library uses only one configuration file for all sampling algorithms.
+      A defalut configuration file can be found at: . // TODO: where?
+      Usally you won't have to modify the configuration items of other algorithms
+      if you are not using them.
+     */
+    virtual bool load_config(const DeepESConfig& config) = 0;
 
-  /*@brief generate Gaussian noise and the related key.
-   *
-   *@Args:
-   *     key: a unique key associated with the sampled noise.
-   *     noise: a pointer pointed to the memory that stores the noise
-   *     size: the number of float to be sampled.
-   *
-   *@return:
-   *     success: generate Gaussian successfully or not.
-   */
-  virtual bool sampling(int* key, float* noise, int64_t size)=0;
+    /*@brief generate Gaussian noise and the related key.
+     *
+     *@Args:
+     *     key: a unique key associated with the sampled noise.
+     *     noise: a pointer pointed to the memory that stores the noise
+     *     size: the number of float to be sampled.
+     *
+     *@return:
+     *     success: generate Gaussian successfully or not.
+     */
+    virtual bool sampling(int* key, float* noise, int64_t size) = 0;
 
-  /*@brief reconstruct the Gaussion noise given the key.
-   * This function is often used for updating the neuron network parameters in the offline environment.
-   *
-   *@Args:
-   *     key: a unique key associated with the sampled noise.
-   *     noise: a pointer pointed to the memory that stores the noise
-   *     size: the number of float to be sampled.
-   *
-   *@return:
-   *     success: reconstruct Gaussian successfully or not.
-   */
-  virtual bool resampling(int key, float* noise, int64_t size)=0;
-  
-  bool set_seed(int seed) {
-    _seed = seed;
-    srand(_seed);
-    return true;
-  }
+    /*@brief reconstruct the Gaussion noise given the key.
+     * This function is often used for updating the neuron network parameters in the offline environment.
+     *
+     *@Args:
+     *     key: a unique key associated with the sampled noise.
+     *     noise: a pointer pointed to the memory that stores the noise
+     *     size: the number of float to be sampled.
+     *
+     *@return:
+     *     success: reconstruct Gaussian successfully or not.
+     */
+    virtual bool resampling(int key, float* noise, int64_t size) = 0;
 
-  int get_seed() {
-    return _seed;
-  }
+    bool set_seed(int seed) {
+        _seed = seed;
+        srand(_seed);
+        return true;
+    }
+
+    int get_seed() {
+        return _seed;
+    }
 
 protected:
-  int _seed;
+    int _seed;
 
 };
 

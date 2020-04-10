@@ -22,50 +22,50 @@
 #include "sampling_method.h"
 #include "utils.h"
 
-namespace DeepES{
+namespace deep_es {
 
 class GaussianSampling: public SamplingMethod {
 
 public:
-  GaussianSampling() {}
+    GaussianSampling() {}
 
-  ~GaussianSampling() {}
+    ~GaussianSampling() {}
 
-  /*Initialize the sampling algorithm given the config with the protobuf format.
-   *DeepES library uses only one configuration file for all sampling algorithms.
-    A defalut configuration file can be found at: . // TODO: where?
-    Usally you won't have to modify the configuration items of other algorithms
-    if you are not using them.
-   */
-  bool load_config(const DeepESConfig& config);
+    /*Initialize the sampling algorithm given the config with the protobuf format.
+     *DeepES library uses only one configuration file for all sampling algorithms.
+      A defalut configuration file can be found at: . // TODO: where?
+      Usally you won't have to modify the configuration items of other algorithms
+      if you are not using them.
+     */
+    bool load_config(const DeepESConfig& config);
 
-  /*@brief generate Gaussian noise and the related key.
-   *
-   *@Args:
-   *     key: a unique key associated with the sampled noise.
-   *     noise: a pointer pointed to the memory that stores the noise
-   *     size: the number of float to be sampled.
-   *
-   *@return:
-   *     success: generate Gaussian successfully or not.
-   */
-  bool sampling(int* key, float* noise, int64_t size);
+    /*@brief generate Gaussian noise and the related key.
+     *
+     *@Args:
+     *     key: a unique key associated with the sampled noise.
+     *     noise: a pointer pointed to the memory that stores the noise
+     *     size: the number of float to be sampled.
+     *
+     *@return:
+     *     success: generate Gaussian successfully or not.
+     */
+    bool sampling(int* key, float* noise, int64_t size);
 
-  /*@brief reconstruct the Gaussion noise given the key.
-   * This function is often used for updating the neuron network parameters in the offline environment.
-   *
-   *@Args:
-   *     key: a unique key associated with the sampled noise.
-   *     noise: a pointer pointed to the memory that stores the noise
-   *     size: the number of float to be sampled.
-   *
-   *@return:
-   *     success: reconstruct Gaussian successfully or not.
-   */
-  bool resampling(int key, float* noise, int64_t size);
+    /*@brief reconstruct the Gaussion noise given the key.
+     * This function is often used for updating the neuron network parameters in the offline environment.
+     *
+     *@Args:
+     *     key: a unique key associated with the sampled noise.
+     *     noise: a pointer pointed to the memory that stores the noise
+     *     size: the number of float to be sampled.
+     *
+     *@return:
+     *     success: reconstruct Gaussian successfully or not.
+     */
+    bool resampling(int key, float* noise, int64_t size);
 
 private:
-  float _std;
+    float _std;
 };
 
 }

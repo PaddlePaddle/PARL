@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef ADAM_OPTIMIZER_H
 #define ADAM_OPTIMIZER_H
 
@@ -20,7 +19,7 @@
 #include <cmath>
 #include "optimizer.h"
 
-namespace DeepES{
+namespace deep_es {
 
 /*@brief AdamOptimizer.
   * Implements Adam algorithm.
@@ -33,19 +32,20 @@ namespace DeepES{
   */
 class AdamOptimizer: public Optimizer {
 public:
-  AdamOptimizer(float base_lr, float beta1=0.9, float beta2=0.999, float epsilon=1e-8):Optimizer(base_lr), \
-                                    _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
-  ~AdamOptimizer();
+    AdamOptimizer(float base_lr, float beta1 = 0.9, float beta2 = 0.999,
+                  float epsilon = 1e-8): Optimizer(base_lr), \
+        _beta1(beta1), _beta2(beta2), _epsilon(epsilon) {}
+    ~AdamOptimizer();
 
 protected:
-  void compute_step(float* gradient, int size, std::string param_name);
+    void compute_step(float* gradient, int size, std::string param_name);
 
 private:
-  float _beta1;
-  float _beta2;
-  float _epsilon;
-  std::map<std::string, float*> _momentum;
-  std::map<std::string, float*> _velocity;
+    float _beta1;
+    float _beta2;
+    float _epsilon;
+    std::map<std::string, float*> _momentum;
+    std::map<std::string, float*> _velocity;
 };
 
 }//namespace

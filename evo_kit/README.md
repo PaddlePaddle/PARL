@@ -1,5 +1,5 @@
-# DeepES工具
-DeepES是一个支持**快速验证**ES效果、**兼容多个框架**的C++库。
+# EvoKit
+EvoKit 是一个集合了多种进化算法、兼容多种类预测框架的进化算法库，主打快速上线验证 。
 <p align="center">
 <img src="DeepES.gif" alt="PARL" width="500"/>
 </p>

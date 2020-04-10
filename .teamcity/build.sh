@@ -134,17 +134,17 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_deepes_test {
-    cd ${REPO_ROOT}/deepes
+function run_evo_kit_test {
+    cd ${REPO_ROOT}/evo_kit
 
     cat <<EOF
     ========================================
-    Running DeepES test...
+    Running evo_kit test...
     ========================================
 EOF
     sh test/run_test.sh
-    rm -rf ${REPO_ROOT}/deepes/build
-    rm -rf ${REPO_ROOT}/deepes/libtorch
+    rm -rf ${REPO_ROOT}/evo_kit/build
+    rm -rf ${REPO_ROOT}/evo_kit/libtorch
 }
 
 function main() {
@@ -189,7 +189,7 @@ function main() {
           /root/miniconda3/envs/empty_env/bin/pip install .
           run_import_test
           run_docs_test
-          run_deepes_test
+          run_evo_kit_test
           ;;
         *)
           print_usage

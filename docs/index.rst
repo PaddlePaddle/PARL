@@ -46,7 +46,7 @@ Abstractions
     :maxdepth: 1
     :caption: Installation
 
-   installation.rst
+    installation.rst
 
 .. toctree::
     :maxdepth: 1
@@ -83,3 +83,11 @@ Abstractions
    model.rst
    algorithm.rst
    agent.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: EvoKit
+
+   EvoKit/overview.rst
+   EvoKit/minimal_example.rst
+   EvoKit/online_example.rst

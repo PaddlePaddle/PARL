@@ -26,15 +26,8 @@ file(GLOB test_src "${PROJECT_SOURCE_DIR}/src/*.cc")
 add_executable(${TARGET} "unit_test.cc" ${core_src} ${agent_src} ${test_src})
 target_link_libraries(${TARGET} gflags protobuf pthread glog gtest "${TORCH_LIBRARIES}")
 
+
 ########## EvoKit libraries ##########
-include_directories("${PROJECT_SOURCE_DIR}/libevokit/include")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/libevokit/cmake/")
+list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/libevokit/cmake/Torch")
 find_package(EvoKit)
-if(EVOKIT_FOUND)
-  set(LIB_FILE "libEvoKit_torch.a")
-  include_directories("${PROJECT_SOURCE_DIR}/libevokit/torch")
-  include_directories("${PROJECT_SOURCE_DIR}/libevokit/include")
-  target_link_libraries(${TARGET} "${PROJECT_SOURCE_DIR}/libevokit/lib/${LIB_FILE}")
-else(EVOKIT_FOUND)
-  message(FATAL_ERROR "${LIB_FILE} cannot find !!!")
-endif(EVOKIT_FOUND)
+target_link_libraries(${TARGET} "${PROJECT_SOURCE_DIR}/libevokit/lib/libEvoKit_torch.a")

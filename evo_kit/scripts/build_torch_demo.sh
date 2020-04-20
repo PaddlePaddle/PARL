@@ -28,7 +28,7 @@ cp ../cartpole_config.prototxt ./
 rm -rf build
 mkdir build
 cd build
-cmake ../ -DWITH_TORCH=ON
+cmake ../
 make -j10
 cd -
 

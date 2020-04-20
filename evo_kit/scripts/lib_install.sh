@@ -41,4 +41,3 @@ cmake ../ ${FLAGS}
 make -j10
 make install
 cd -
-

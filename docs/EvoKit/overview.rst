@@ -3,7 +3,7 @@ Overview
 
 ``EvoKit`` 是一个集合了多种进化算法、兼容多种类预测框架的进化算法库，主打 **快速上线验证** 。
 
-.. image:: ../../deepes/DeepES.gif
+.. image:: ../../evo_kit/DeepES.gif
   :align: center
   :width: 400px
 

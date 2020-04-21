@@ -22,5 +22,5 @@ Here is a demonstration of usage:
     agent.restore('./model.ckpt')    
 
     # restore the parameters from ./model.ckpt to another_agent
-    another_agent =  AtariAgent()
+    another_agent = AtariAgent()
     another_agent.restore('./model.ckpt')    

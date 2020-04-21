@@ -36,6 +36,6 @@ if __name__ == '__main__':
         dirname='cartpole_init_model',
         feeded_var_names=['obs'],
         target_vars=[prob],
-        params_filename='param',
+        params_filename='params',
         model_filename='model',
         executor=exe)

@@ -15,8 +15,6 @@ endif()
 
 list(APPEND CMAKE_PREFIX_PATH "./libtorch")
 find_package(Torch REQUIRED ON)
-# include_directories("./") # demo/torch
-# file(GLOB framework_src "./src/*.cc")  # demo/torch
 set(demo "${PROJECT_SOURCE_DIR}/cartpole_solver_parallel.cc")
 
 
@@ -29,6 +27,6 @@ target_link_libraries(${TARGET} "${TORCH_LIBRARIES}")
 
 
 ########## EvoKit libraries ##########
-list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/libevokit/cmake/Torch")
+list(APPEND CMAKE_PREFIX_PATH "./libevokit/cmake/Torch")
 find_package(EvoKit)
-target_link_libraries(${TARGET} "${PROJECT_SOURCE_DIR}/libevokit/lib/libEvoKit_torch.a")
+target_link_libraries(${TARGET} "${EVOKIT_LIBRARY}")

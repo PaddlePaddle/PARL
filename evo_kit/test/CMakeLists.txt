@@ -30,4 +30,4 @@ target_link_libraries(${TARGET} gflags protobuf pthread glog gtest "${TORCH_LIBR
 ########## EvoKit libraries ##########
 list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/libevokit/cmake/Torch")
 find_package(EvoKit)
-target_link_libraries(${TARGET} "${PROJECT_SOURCE_DIR}/libevokit/lib/libEvoKit_torch.a")
+target_link_libraries(${TARGET} "${EVOKIT_LIBRARY}")

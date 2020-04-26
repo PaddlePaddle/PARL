@@ -16,13 +16,26 @@ cd core/proto/
 protoc evo_kit/evo_kit.proto --cpp_out . 
 cd -
 
-
 #----------------build---------------#
+sh scripts/lib_install.sh torch
+
+#----------------build test---------------#
+cd test
+
+cp -r ../libevokit ./
+if [ ! -d "./libevokit" ];then
+  echo "Cannot find the EvoKit library: ./libevokit"
+  echo "Please put the EvoKit libraray to current folder according the instruction in README" # TODO: readme
+  exit 1
+fi
+
 rm -rf build
 mkdir build
 cd build
-cmake ../test
+cmake ../
 make -j10
 
 #-----------------run----------------#
 ./unit_test_main
+
+cd ..

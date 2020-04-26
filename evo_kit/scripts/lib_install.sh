@@ -20,20 +20,12 @@ if [ $1 = "paddle" ]; then
 
   FLAGS=" -DWITH_PADDLE=ON"
 elif [ $1 = "torch" ]; then
-  #---------------libtorch-------------#
-  if [ ! -d "./libtorch" ];then
-    echo "Cannot find the torch library: ./libtorch"
-      echo "Downloading Torch library"
-      wget -q https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
-      unzip -q libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
-      rm -rf libtorch-cxx11-abi-shared-with-deps-1.4.0+cpu.zip
-      echo "Torch library Downloaded"
-  fi
   FLAGS=" -DWITH_TORCH=ON"
 else
   echo "Invalid arguments. [paddle/torch]"
   exit 0
 fi
+
 
 #----------------protobuf-------------#
 cd core/proto/
@@ -47,7 +39,5 @@ mkdir build
 cd build
 cmake ../ ${FLAGS}
 make -j10
+make install
 cd -
-
-#-----------------run----------------#
-./build/parallel_main

@@ -1,6 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
 project (EvoKit)
-set(TARGET parallel_main)
 
 ########## options ##########
 option(WITH_PADDLE "Compile EvoKit with PaddleLite framework." OFF)
@@ -43,34 +42,48 @@ if (WITH_PADDLE)
                    "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/include")
   link_directories("${PROJECT_SOURCE_DIR}/inference_lite_lib/cxx/lib" 
                    "${PROJECT_SOURCE_DIR}/inference_lite_lib/third_party/mklml/lib")
-  
+
   file(GLOB framework_src "paddle/src/*.cc")
-  set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_solver_parallel.cc")
-  #set(demo "${PROJECT_SOURCE_DIR}/demo/paddle/cartpole_async_solver.cc")
+  set(TARGET EvoKit_paddle)
 ########## Torch config ##########
 elseif (WITH_TORCH)
-  list(APPEND CMAKE_PREFIX_PATH "./libtorch")
-  find_package(Torch REQUIRED ON)
+  # list(APPEND CMAKE_PREFIX_PATH "./libtorch")
+  # find_package(Torch REQUIRED ON)  # TODO: not necessary for now
 
   include_directories("torch/include")
-  include_directories("demo/torch")
 
   file(GLOB framework_src "torch/src/*.cc")
-  set(demo "${PROJECT_SOURCE_DIR}/demo/torch/cartpole_solver_parallel.cc")
+  set(TARGET EvoKit_torch)
 else ()
   message("ERROR: You should choose at least one framework to compile EvoKit.")
 endif()
 
-add_executable(${TARGET} ${demo} ${src} ${framework_src}) 
 
+add_library(${TARGET} STATIC ${src} ${framework_src})
 target_link_libraries(${TARGET} gflags protobuf pthread glog)
 
-########## PaddleLite libraries ##########
-if (WITH_PADDLE)
-  target_link_libraries(${TARGET} -lpaddle_full_api_shared)
-  target_link_libraries(${TARGET} -lmklml_intel)
-  target_link_libraries(${TARGET} -ldl)
-########## Torch libraries ##########
-elseif (WITH_TORCH)
-  target_link_libraries(${TARGET} "${TORCH_LIBRARIES}")
-endif()
+
+# ########## PaddleLite libraries ##########
+# if (WITH_PADDLE)
+#   target_link_libraries(${TARGET} -lpaddle_full_api_shared)
+#   target_link_libraries(${TARGET} -lmklml_intel)
+#   target_link_libraries(${TARGET} -ldl)
+# ########## Torch libraries ##########
+# elseif (WITH_TORCH)
+#   target_link_libraries(${TARGET} "${TORCH_LIBRARIES}")
+# endif()
+
+file(GLOB include "core/include/evo_kit/*.h")
+file(GLOB proto_include "core/proto/evo_kit/*.h")
+file(GLOB torch_include "torch/include/evo_kit/*.h")
+file(GLOB paddle_include "paddle/include/evo_kit/*.h")
+file(GLOB benchmark_include "benchmark/*.h")
+file(GLOB findcmake "cmake/Torch/*.cmake")
+
+set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/libevokit")
+install(TARGETS ${TARGET} ARCHIVE DESTINATION "lib")
+install(FILES ${include} ${proto_include} DESTINATION "include/evo_kit")
+install(FILES ${torch_include} DESTINATION "torch/evo_kit")
+install(FILES ${paddle_include} DESTINATION "paddle/evo_kit")
+install(FILES ${benchmark_include} DESTINATION "include")
+install(FILES ${findcmake} DESTINATION "cmake/Torch")

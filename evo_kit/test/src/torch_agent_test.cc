@@ -64,7 +64,7 @@ protected:
 
   void init_agent(const int in_dim, const int out_dim, const int h1_size, const int h2_size) {
     std::shared_ptr<Model>  model = std::make_shared<Model>(in_dim, out_dim, h1_size, h2_size);
-    agent = std::make_shared<ESAgent<Model>>(model, "../test/prototxt/torch_sin_config.prototxt");
+    agent = std::make_shared<ESAgent<Model>>(model, "../prototxt/torch_sin_config.prototxt");
   }
 
   void train_agent(std::string config_path) {
@@ -130,14 +130,14 @@ protected:
 };
 
 TEST_F(TorchDemoTest, TrainingEffectUseNormalSampling) {
-  train_agent("../test/prototxt/torch_sin_config.prototxt");
+  train_agent("../prototxt/torch_sin_config.prototxt");
   EXPECT_LT(train_loss(), 0.05);
   EXPECT_LT(test_loss(), 0.05);
   EXPECT_LT(train_test_gap(), 0.03);
 }
 
 TEST_F(TorchDemoTest, TrainingEffectTestUseTableSampling) {
-  train_agent("../test/prototxt/torch_sin_cached_config.prototxt");
+  train_agent("../prototxt/torch_sin_cached_config.prototxt");
   EXPECT_LT(train_loss(), 0.05);
   EXPECT_LT(test_loss(), 0.05);
   EXPECT_LT(train_test_gap(), 0.03);

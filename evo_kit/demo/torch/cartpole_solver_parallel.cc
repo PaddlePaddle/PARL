@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
   auto model = std::make_shared<Model>(4, 2);
   std::shared_ptr<ESAgent<Model>> agent = std::make_shared<ESAgent<Model>>(model,
-      "./demo/cartpole_config.prototxt");
+      "./cartpole_config.prototxt");
   
   // Clone agents to sample (explore).
   std::vector<std::shared_ptr<ESAgent<Model>>> sampling_agents;

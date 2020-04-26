@@ -271,6 +271,236 @@ class IMPALAAgent(parl.Agent):
         return total_loss, pi_loss, vf_loss, entropy, kl
 
 
+class SACActor(parl.Model):
+    def __init__(self):
+        self.mean_linear = layers.fc(size=1)
+        self.log_std_linear = layers.fc(size=1)
+
+    def policy(self, obs):
+        means = self.mean_linear(obs)
+        log_std = self.log_std_linear(obs)
+
+        return means, log_std
+
+
+class SACCritic(parl.Model):
+    def __init__(self):
+        self.fc1 = layers.fc(size=1)
+        self.fc2 = layers.fc(size=1)
+
+    def value(self, obs, act):
+        concat = layers.concat([obs, act], axis=1)
+        Q1 = self.fc1(concat)
+        Q2 = self.fc2(concat)
+        Q1 = layers.squeeze(Q1, axes=[1])
+        Q2 = layers.squeeze(Q2, axes=[1])
+        return Q1, Q2
+
+
+class SACAgent(parl.Agent):
+    def __init__(self, algorithm):
+        super(SACAgent, self).__init__(algorithm)
+        self.alg.sync_target(decay=0)
+
+    def build_program(self):
+        self.pred_program = fluid.Program()
+        self.sample_program = fluid.Program()
+        self.learn_program = fluid.Program()
+
+        with fluid.program_guard(self.pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            self.pred_act = self.alg.predict(obs)
+
+        with fluid.program_guard(self.sample_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            self.sample_act, _ = self.alg.sample(obs)
+
+        with fluid.program_guard(self.learn_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            act = layers.data(name='act', shape=[1], dtype='float32')
+            reward = layers.data(name='reward', shape=[], dtype='float32')
+            next_obs = layers.data(name='next_obs', shape=[4], dtype='float32')
+            terminal = layers.data(name='terminal', shape=[], dtype='bool')
+            self.critic_cost, self.actor_cost = self.alg.learn(
+                obs, act, reward, next_obs, terminal)
+
+    def predict(self, obs):
+        obs = np.expand_dims(obs, axis=0)
+        act = self.fluid_executor.run(
+            self.pred_program, feed={'obs': obs},
+            fetch_list=[self.pred_act])[0]
+        return act
+
+    def sample(self, obs):
+        obs = np.expand_dims(obs, axis=0)
+        act = self.fluid_executor.run(
+            self.sample_program,
+            feed={'obs': obs},
+            fetch_list=[self.sample_act])[0]
+        return act
+
+    def learn(self, obs, act, reward, next_obs, terminal):
+        feed = {
+            'obs': obs,
+            'act': act,
+            'reward': reward,
+            'next_obs': next_obs,
+            'terminal': terminal
+        }
+        [critic_cost, actor_cost] = self.fluid_executor.run(
+            self.learn_program,
+            feed=feed,
+            fetch_list=[self.critic_cost, self.actor_cost])
+        return critic_cost[0], actor_cost[0]
+
+
+class DDPGModel(parl.Model):
+    def __init__(self):
+        self.policy_fc = layers.fc(size=1)
+        self.value_fc = layers.fc(size=1)
+
+    def policy(self, obs):
+        act = self.policy_fc(obs)
+        return act
+
+    def value(self, obs, act):
+        concat = layers.concat([obs, act], axis=1)
+        Q = self.value_fc(concat)
+        Q = layers.squeeze(Q, axes=[1])
+        return Q
+
+    def get_actor_params(self):
+        return self.parameters()[:2]  # TODO:
+
+
+class DDPGAgent(parl.Agent):
+    def __init__(self, algorithm):
+        super(DDPGAgent, self).__init__(algorithm)
+        self.alg.sync_target(decay=0)
+
+    def build_program(self):
+        self.pred_program = fluid.Program()
+        self.learn_program = fluid.Program()
+
+        with fluid.program_guard(self.pred_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            self.pred_act = self.alg.predict(obs)
+
+        with fluid.program_guard(self.learn_program):
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            act = layers.data(name='act', shape=[1], dtype='float32')
+            reward = layers.data(name='reward', shape=[], dtype='float32')
+            next_obs = layers.data(name='next_obs', shape=[4], dtype='float32')
+            terminal = layers.data(name='terminal', shape=[], dtype='bool')
+            _, self.critic_cost = self.alg.learn(obs, act, reward, next_obs,
+                                                 terminal)
+
+    def predict(self, obs):
+        obs = np.expand_dims(obs, axis=0)
+        act = self.fluid_executor.run(
+            self.pred_program, feed={'obs': obs},
+            fetch_list=[self.pred_act])[0]
+        return act
+
+    def learn(self, obs, act, reward, next_obs, terminal):
+        feed = {
+            'obs': obs,
+            'act': act,
+            'reward': reward,
+            'next_obs': next_obs,
+            'terminal': terminal
+        }
+        critic_cost = self.fluid_executor.run(
+            self.learn_program, feed=feed, fetch_list=[self.critic_cost])[0]
+        self.alg.sync_target()
+        return critic_cost
+
+
+class TD3Model(parl.Model):
+    def __init__(self):
+        self.actor_fc = layers.fc(size=1)
+        self.q1 = layers.fc(size=1)
+        self.q2 = layers.fc(size=1)
+
+    def policy(self, obs):
+        return self.actor_fc(obs)
+
+    def value(self, obs, act):
+        concat = layers.concat([obs, act], axis=1)
+        Q1 = self.q1(concat)
+        Q1 = layers.squeeze(Q1, axes=[1])
+        Q2 = self.q2(concat)
+        Q2 = layers.squeeze(Q2, axes=[1])
+        return Q1, Q2
+
+    def Q1(self, obs, act):
+        concat = layers.concat([obs, act], axis=1)
+        Q1 = self.q1(concat)
+        Q1 = layers.squeeze(Q1, axes=[1])
+        return Q1
+
+    def get_actor_params(self):
+        return self.parameters()[:2]
+
+
+class TD3Agent(parl.Agent):
+    def __init__(self, algorithm):
+        super(TD3Agent, self).__init__(algorithm)
+        self.alg.sync_target(decay=0)
+
+    def build_program(self):
+        self.pred_program = fluid.Program()
+        self.actor_learn_program = fluid.Program()
+        self.critic_learn_program = fluid.Program()
+
+        with fluid.program_guard(self.pred_program):
+            obs = layers.data(
+                name='obs', shape=[4], dtype='float32')
+            self.pred_act = self.alg.predict(obs)
+
+        with fluid.program_guard(self.actor_learn_program):
+            obs = layers.data(
+                name='obs', shape=[4], dtype='float32')
+            self.actor_cost = self.alg.actor_learn(obs)
+
+        with fluid.program_guard(self.critic_learn_program):
+            obs = layers.data(
+                name='obs', shape=[4], dtype='float32')
+            act = layers.data(
+                name='act', shape=[1], dtype='float32')
+            reward = layers.data(name='reward', shape=[], dtype='float32')
+            next_obs = layers.data(
+                name='next_obs', shape=[4], dtype='float32')
+            terminal = layers.data(name='terminal', shape=[], dtype='bool')
+            self.critic_cost = self.alg.critic_learn(obs, act, reward,
+                                                     next_obs, terminal)
+    def predict(self, obs):
+        obs = np.expand_dims(obs, axis=0)
+        act = self.fluid_executor.run(
+            self.pred_program, feed={'obs': obs},
+            fetch_list=[self.pred_act])[0]
+        return act
+
+    def learn(self, obs, act, reward, next_obs, terminal):
+        feed = {
+            'obs': obs,
+            'act': act,
+            'reward': reward,
+            'next_obs': next_obs,
+            'terminal': terminal
+        }
+        critic_cost = self.fluid_executor.run(
+            self.critic_learn_program,
+            feed=feed,
+            fetch_list=[self.critic_cost])[0]
+
+        actor_cost = self.fluid_executor.run(
+            self.actor_learn_program,
+            feed={'obs': obs},
+            fetch_list=[self.actor_cost])[0]
+        self.alg.sync_target()
+        return actor_cost, critic_cost
+
 class PARLtest(unittest.TestCase):
     def setUp(self):
         # set up DQN test
@@ -293,6 +523,30 @@ class PARLtest(unittest.TestCase):
             clip_rho_threshold=1.,
             clip_pg_rho_threshold=1.)
         self.IMPALA_agent = IMPALAAgent(IMPALA_alg)
+
+        # set up SAC test
+        SAC_actor = SACActor()
+        SAC_critic = SACCritic()
+        SAC_alg = parl.algorithms.SAC(
+            SAC_actor,
+            SAC_critic,
+            max_action=1.,
+            gamma=0.99,
+            tau=0.005,
+            actor_lr=1e-3,
+            critic_lr=1e-3)
+        self.SAC_agent = SACAgent(SAC_alg)
+
+        # set up DDPG test
+        DDPG_model = DDPGModel()
+        DDPG_alg = parl.algorithms.DDPG(
+            DDPG_model, gamma=0.99, tau=0.001, actor_lr=3e-4, critic_lr=3e-4)
+        self.DDPG_agent = DDPGAgent(DDPG_alg)
+
+        # set up TD3 test
+        TD3_model = TD3Model()
+        TD3_alg = parl.algorithms.TD3(TD3_model, 1., gamma=0.99, tau=0.005, actor_lr=3e-4, critic_lr=3e-4)
+        self.TD3_agent = TD3Agent(TD3_alg)
 
     def test_DQN_predict(self):
         """Test APIs in PARL DQN predict
@@ -364,6 +618,73 @@ class PARLtest(unittest.TestCase):
         total_loss, pi_loss, vf_loss, entropy, kl = self.IMPALA_agent.learn(
             obs, actions, behaviour_logits, rewards, dones, lr, entropy_coeff)
 
+    def test_SAC_predict(self):
+        """Test APIs in PARL SAC predict
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
+        act = self.SAC_agent.predict(obs)
+
+    def test_SAC_sample(self):
+        """Test APIs in PARL SAC sample
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
+        act = self.SAC_agent.sample(obs)
+
+    def test_SAC_learn(self):
+        """Test APIs in PARL SAC learn
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
+        next_obs = np.array([[-0.02332638, -0.16414229, 0.01142936, 0.29949173]]).astype(np.float32)
+        terminal = np.array([False]).astype('bool')
+        reward = np.array([1.0]).astype('float32')
+        act = np.array([[0.]]).astype('float32')
+
+        critic_cost, actor_cost = self.SAC_agent.learn(obs, act, reward, next_obs, terminal)
+
+    def test_DDPG_predict(self):
+        """Test APIs in PARL DDPG predict
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
+        act = self.DDPG_agent.predict(obs)
+
+    def test_DDPG_learn(self):
+        """Test APIs in PARL DDPG learn
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
+        next_obs = np.array(
+            [[-0.02332638, -0.16414229, 0.01142936,
+              0.29949173]]).astype(np.float32)
+        terminal = np.array([False]).astype('bool')
+        reward = np.array([1.0]).astype('float32')
+        act = np.array([[0.]]).astype('float32')
+
+        critic_cost, actor_cost = self.SAC_agent.learn(obs, act, reward,
+                                                       next_obs, terminal)
+
+    def test_TD3_predict(self):
+        """Test APIs in PARL TD3 predict
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
+        act = self.TD3_agent.predict(obs)
+
+    def test_TD3_learn(self):
+        """Test APIs in PARL TD3 learn
+        """
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
+        next_obs = np.array(
+            [[-0.02332638, -0.16414229, 0.01142936,
+              0.29949173]]).astype(np.float32)
+        terminal = np.array([False]).astype('bool')
+        reward = np.array([1.0]).astype('float32')
+        act = np.array([[0.]]).astype('float32')
+
+        critic_cost, actor_cost = self.TD3_agent.learn(obs, act, reward,
+                                                       next_obs, terminal)
+ 
 
 if __name__ == '__main__':
     unittest.main()

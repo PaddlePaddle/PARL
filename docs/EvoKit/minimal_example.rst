@@ -21,28 +21,28 @@ step1: 生成预测网络
 
 .. code-block:: python
 
-    from paddle import fluid
-    
-    def net(obs, act_dim):
-        hid1 = fluid.layers.fc(obs, size=20)
-        prob = fluid.layers.fc(hid1, size=act_dim, act='softmax')
-        return prob
-    
-    if __name__ == '__main__':
-        obs_dim = 4
-        act_dim = 2
-        obs = fluid.layers.data(name="obs", shape=[obs_dim], dtype='float32')
-        prob = net(obs, act_dim)
-    
-        exe = fluid.Executor(fluid.CPUPlace())
-        exe.run(fluid.default_startup_program())
-        fluid.io.save_inference_model(
-            dirname='init_model',
-            feeded_var_names=['obs'],
-            target_vars=[prob],
-            params_filename='params',
-            model_filename='model',
-            executor=exe)
+	from paddle import fluid
+	
+	def net(obs, act_dim):
+	    hid1 = fluid.layers.fc(obs, size=20)
+	    prob = fluid.layers.fc(hid1, size=act_dim, act='softmax')
+	    return prob
+	
+	if __name__ == '__main__':
+	    obs_dim = 4
+	    act_dim = 2
+	    obs = fluid.layers.data(name="obs", shape=[obs_dim], dtype='float32')
+	    prob = net(obs, act_dim)
+	
+	    exe = fluid.Executor(fluid.CPUPlace())
+	    exe.run(fluid.default_startup_program())
+	    fluid.io.save_inference_model(
+	        dirname='init_model',
+	        feeded_var_names=['obs'],
+	        target_vars=[prob],
+	        params_filename='params',
+	        model_filename='model',
+	        executor=exe)
 
 step2: 构造ESAgent
 ###################
@@ -85,7 +85,10 @@ step3: 生成用于采样的Agent
 ###################
 
 主要关注三个接口：
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8c1f4649396080f440c6fe9396563d060e133826
 - load_config(): 加载配置文件
 - clone(): 生成一个用于sampling的agent。
 - add_noise()：给这个agent的参数空间增加噪声，同时返回该噪声对应的唯一信息，这个信息得记录在log中，用于线下更新。

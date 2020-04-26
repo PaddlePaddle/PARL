@@ -370,7 +370,7 @@ class DDPGModel(parl.Model):
         return Q
 
     def get_actor_params(self):
-        return self.parameters()[:2]  # TODO:
+        return self.parameters()[:2]
 
 
 class DDPGAgent(parl.Agent):
@@ -454,26 +454,22 @@ class TD3Agent(parl.Agent):
         self.critic_learn_program = fluid.Program()
 
         with fluid.program_guard(self.pred_program):
-            obs = layers.data(
-                name='obs', shape=[4], dtype='float32')
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
             self.pred_act = self.alg.predict(obs)
 
         with fluid.program_guard(self.actor_learn_program):
-            obs = layers.data(
-                name='obs', shape=[4], dtype='float32')
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
             self.actor_cost = self.alg.actor_learn(obs)
 
         with fluid.program_guard(self.critic_learn_program):
-            obs = layers.data(
-                name='obs', shape=[4], dtype='float32')
-            act = layers.data(
-                name='act', shape=[1], dtype='float32')
+            obs = layers.data(name='obs', shape=[4], dtype='float32')
+            act = layers.data(name='act', shape=[1], dtype='float32')
             reward = layers.data(name='reward', shape=[], dtype='float32')
-            next_obs = layers.data(
-                name='next_obs', shape=[4], dtype='float32')
+            next_obs = layers.data(name='next_obs', shape=[4], dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
             self.critic_cost = self.alg.critic_learn(obs, act, reward,
                                                      next_obs, terminal)
+
     def predict(self, obs):
         obs = np.expand_dims(obs, axis=0)
         act = self.fluid_executor.run(
@@ -500,6 +496,7 @@ class TD3Agent(parl.Agent):
             fetch_list=[self.actor_cost])[0]
         self.alg.sync_target()
         return actor_cost, critic_cost
+
 
 class PARLtest(unittest.TestCase):
     def setUp(self):
@@ -545,7 +542,13 @@ class PARLtest(unittest.TestCase):
 
         # set up TD3 test
         TD3_model = TD3Model()
-        TD3_alg = parl.algorithms.TD3(TD3_model, 1., gamma=0.99, tau=0.005, actor_lr=3e-4, critic_lr=3e-4)
+        TD3_alg = parl.algorithms.TD3(
+            TD3_model,
+            1.,
+            gamma=0.99,
+            tau=0.005,
+            actor_lr=3e-4,
+            critic_lr=3e-4)
         self.TD3_agent = TD3Agent(TD3_alg)
 
     def test_DQN_predict(self):
@@ -621,25 +624,31 @@ class PARLtest(unittest.TestCase):
     def test_SAC_predict(self):
         """Test APIs in PARL SAC predict
         """
-        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
         act = self.SAC_agent.predict(obs)
 
     def test_SAC_sample(self):
         """Test APIs in PARL SAC sample
         """
-        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
         act = self.SAC_agent.sample(obs)
 
     def test_SAC_learn(self):
         """Test APIs in PARL SAC learn
         """
-        obs = np.array([[-0.02394919, 0.03114079, 0.01136446, 0.00324496]]).astype(np.float32)
-        next_obs = np.array([[-0.02332638, -0.16414229, 0.01142936, 0.29949173]]).astype(np.float32)
+        obs = np.array([[-0.02394919, 0.03114079, 0.01136446,
+                         0.00324496]]).astype(np.float32)
+        next_obs = np.array(
+            [[-0.02332638, -0.16414229, 0.01142936,
+              0.29949173]]).astype(np.float32)
         terminal = np.array([False]).astype('bool')
         reward = np.array([1.0]).astype('float32')
         act = np.array([[0.]]).astype('float32')
 
-        critic_cost, actor_cost = self.SAC_agent.learn(obs, act, reward, next_obs, terminal)
+        critic_cost, actor_cost = self.SAC_agent.learn(obs, act, reward,
+                                                       next_obs, terminal)
 
     def test_DDPG_predict(self):
         """Test APIs in PARL DDPG predict
@@ -684,7 +693,7 @@ class PARLtest(unittest.TestCase):
 
         critic_cost, actor_cost = self.TD3_agent.learn(obs, act, reward,
                                                        next_obs, terminal)
- 
+
 
 if __name__ == '__main__':
     unittest.main()

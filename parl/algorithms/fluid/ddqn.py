@@ -85,12 +85,7 @@ class DDQN(Algorithm):
         optimizer.minimize(cost)
         return cost
 
-    def sync_target(self, gpu_id=None):
+    def sync_target(self):
         """ sync weights of self.model to self.target_model
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         self.model.sync_weights_to(self.target_model)

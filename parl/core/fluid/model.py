@@ -67,30 +67,6 @@ class Model(ModelBase):
 
     """
 
-    @deprecated(
-        deprecated_in='1.2',
-        removed_in='1.3',
-        replace_function='sync_weights_to')
-    def sync_params_to(self,
-                       target_net,
-                       gpu_id=None,
-                       decay=0.0,
-                       share_vars_parallel_executor=None):
-        """Synchronize parameters in the model to another model (target_net).
-
-        target_net_weights = decay * target_net_weights + (1 - decay) * source_net_weights
-
-        Args:
-            target_model (`parl.Model`): an instance of ``Model`` that has the same neural network architecture as the current model.
-            decay (float):  the rate of decline in copying parameters. 0 if no parameters decay when synchronizing the parameters.
-            share_vars_parallel_executor (fluid.ParallelExecutor): Optional. If not None, will use fluid.ParallelExecutor 
-                                                                   to run program instead of fluid.Executor
-        """
-        self.sync_weights_to(
-            target_model=target_net,
-            decay=decay,
-            share_vars_parallel_executor=share_vars_parallel_executor)
-
     def sync_weights_to(self,
                         target_model,
                         decay=0.0,
@@ -181,21 +157,6 @@ class Model(ModelBase):
         else:
             self._cached_fluid_executor.run(fetch_list=[])
 
-    @property
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='parameters')
-    def parameter_names(self):
-        """Get names of all parameters in this ``Model``.
-
-        Only parameters created by ``parl.layers`` are included.
-        The order of parameter names is consistent among
-        different instances of the same `Model`.
-
-        Returns:
-            param_names(list): list of string containing parameter names of all parameters. 
-        """
-        return self.parameters()
-
     def parameters(self):
         """Get names of all parameters in this ``Model``.
 
@@ -222,26 +183,6 @@ class Model(ModelBase):
         except AttributeError:
             self._parameter_names = self._get_parameter_names(self)
             return self._parameter_names
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
-    def get_params(self):
-        """ Return a Python list containing parameters of current model.
-        
-        Returns:
-            parameters: a Python list containing parameters of the current model.
-        """
-        return self.get_weights()
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
-    def set_params(self, params, gpu_id=None):
-        """Set parameters in the model with params.
-        
-        Args:
-            params (List): List of numpy array .
-        """
-        self.set_weights(weights=params)
 
     def get_weights(self):
         """Returns a Python list containing parameters of current model.

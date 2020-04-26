@@ -27,7 +27,6 @@ __all__ = ['DDPG']
 class DDPG(Algorithm):
     def __init__(self,
                  model,
-                 hyperparas=None,
                  gamma=None,
                  tau=None,
                  actor_lr=None,
@@ -43,46 +42,22 @@ class DDPG(Algorithm):
             actor_lr (float): learning rate of the actor model
             critic_lr (float): learning rate of the critic model
         """
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.DDPG` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.gamma = hyperparas['gamma']
-            self.tau = hyperparas['tau']
-            self.actor_lr = hyperparas['actor_lr']
-            self.critic_lr = hyperparas['critic_lr']
-        else:
-            assert isinstance(gamma, float)
-            assert isinstance(tau, float)
-            assert isinstance(actor_lr, float)
-            assert isinstance(critic_lr, float)
-            self.gamma = gamma
-            self.tau = tau
-            self.actor_lr = actor_lr
-            self.critic_lr = critic_lr
+        assert isinstance(gamma, float)
+        assert isinstance(tau, float)
+        assert isinstance(actor_lr, float)
+        assert isinstance(critic_lr, float)
+        self.gamma = gamma
+        self.tau = tau
+        self.actor_lr = actor_lr
+        self.critic_lr = critic_lr
 
         self.model = model
         self.target_model = deepcopy(model)
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='predict')
-    def define_predict(self, obs):
-        """ use actor model of self.model to predict the action
-        """
-        return self.predict(obs)
 
     def predict(self, obs):
         """ use actor model of self.model to predict the action
         """
         return self.model.policy(obs)
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='learn')
-    def define_learn(self, obs, action, reward, next_obs, terminal):
-        """ update actor and critic model with DDPG algorithm
-        """
-        return self.learn(obs, action, reward, next_obs, terminal)
 
     def learn(self, obs, action, reward, next_obs, terminal):
         """ update actor and critic model with DDPG algorithm
@@ -116,14 +91,8 @@ class DDPG(Algorithm):
         return cost
 
     def sync_target(self,
-                    gpu_id=None,
                     decay=None,
                     share_vars_parallel_executor=None):
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DDPG` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(

@@ -27,7 +27,6 @@ __all__ = ['DQN']
 class DQN(Algorithm):
     def __init__(self,
                  model,
-                 hyperparas=None,
                  act_dim=None,
                  gamma=None,
                  lr=None):
@@ -43,20 +42,12 @@ class DQN(Algorithm):
         self.model = model
         self.target_model = copy.deepcopy(model)
 
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.act_dim = hyperparas['action_dim']
-            self.gamma = hyperparas['gamma']
-        else:
-            assert isinstance(act_dim, int)
-            assert isinstance(gamma, float)
-            assert isinstance(lr, float)
-            self.act_dim = act_dim
-            self.gamma = gamma
-            self.lr = lr
+        assert isinstance(act_dim, int)
+        assert isinstance(gamma, float)
+        assert isinstance(lr, float)
+        self.act_dim = act_dim
+        self.gamma = gamma
+        self.lr = lr
 
     def predict(self, obs):
         """ use value model self.model to predict the action value
@@ -100,12 +91,7 @@ class DQN(Algorithm):
         cost = layers.reduce_mean(cost)
         return cost
 
-    def sync_target(self, gpu_id=None):
+    def sync_target(self):
         """ sync weights of self.model to self.target_model
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         self.model.sync_weights_to(self.target_model)

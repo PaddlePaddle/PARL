@@ -24,7 +24,7 @@ __all__ = ['PolicyGradient']
 
 
 class PolicyGradient(Algorithm):
-    def __init__(self, model, hyperparas=None, lr=None):
+    def __init__(self, model, lr=None):
         """ Policy Gradient algorithm
         
         Args:
@@ -34,34 +34,13 @@ class PolicyGradient(Algorithm):
         """
 
         self.model = model
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.PolicyGradient` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.lr = hyperparas['lr']
-        else:
-            assert isinstance(lr, float)
-            self.lr = lr
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='predict')
-    def define_predict(self, obs):
-        """ use policy model self.model to predict the action probability
-        """
-        return self.predict(obs)
+        assert isinstance(lr, float)
+        self.lr = lr
 
     def predict(self, obs):
         """ use policy model self.model to predict the action probability
         """
         return self.model(obs)
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='learn')
-    def define_learn(self, obs, action, reward):
-        """ update policy model self.model with policy gradient algorithm
-        """
-        return self.learn(obs, action, reward)
 
     def learn(self, obs, action, reward):
         """ update policy model self.model with policy gradient algorithm

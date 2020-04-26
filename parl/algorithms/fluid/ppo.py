@@ -28,7 +28,6 @@ __all__ = ['PPO']
 class PPO(Algorithm):
     def __init__(self,
                  model,
-                 hyperparas=None,
                  act_dim=None,
                  policy_lr=None,
                  value_lr=None,
@@ -47,27 +46,14 @@ class PPO(Algorithm):
         # Used to calculate probability of action in old policy
         self.old_policy_model = deepcopy(model.policy_model)
 
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.PPO` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.act_dim = hyperparas['act_dim']
-            self.policy_lr = hyperparas['policy_lr']
-            self.value_lr = hyperparas['value_lr']
-            if 'epsilon' in hyperparas:
-                self.epsilon = hyperparas['epsilon']
-            else:
-                self.epsilon = 0.2  # default
-        else:
-            assert isinstance(act_dim, int)
-            assert isinstance(policy_lr, float)
-            assert isinstance(value_lr, float)
-            assert isinstance(epsilon, float)
-            self.act_dim = act_dim
-            self.policy_lr = policy_lr
-            self.value_lr = value_lr
-            self.epsilon = epsilon
+        assert isinstance(act_dim, int)
+        assert isinstance(policy_lr, float)
+        assert isinstance(value_lr, float)
+        assert isinstance(epsilon, float)
+        self.act_dim = act_dim
+        self.policy_lr = policy_lr
+        self.value_lr = value_lr
+        self.epsilon = epsilon
 
     def _calc_logprob(self, actions, means, logvars):
         """ Calculate log probabilities of actions, when given means and logvars
@@ -111,48 +97,17 @@ class PPO(Algorithm):
                 log_det_cov_new - log_det_cov_old) + tr_old_new - self.act_dim)
         return kl
 
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='predict')
-    def define_predict(self, obs):
-        """ Use policy model of self.model to predict means and logvars of actions
-        """
-        return self.predict(obs)
-
     def predict(self, obs):
         """ Use the policy model of self.model to predict means and logvars of actions
         """
         means, logvars = self.model.policy(obs)
         return means
 
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='sample')
-    def define_sample(self, obs):
-        """ Use the policy model of self.model to sample actions
-        """
-        return self.sample(obs)
-
     def sample(self, obs):
         """ Use the policy model of self.model to sample actions
         """
         sampled_act = self.model.policy_sample(obs)
         return sampled_act
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='policy_learn')
-    def define_policy_learn(self, obs, actions, advantages, beta=None):
-        """ Learn policy model with: 
-                1. CLIP loss: Clipped Surrogate Objective 
-                2. KLPEN loss: Adaptive KL Penalty Objective
-            See: https://arxiv.org/pdf/1707.02286.pdf
-
-        Args:
-            obs: Tensor, (batch_size, obs_dim)
-            actions: Tensor, (batch_size, act_dim)
-            advantages: Tensor (batch_size, )
-            beta: Tensor (1) or None
-                  if None, use CLIP Loss; else, use KLPEN loss. 
-        """
-        return self.policy_learn(obs, actions, advantages, beta)
 
     def policy_learn(self, obs, actions, advantages, beta=None):
         """ Learn policy model with: 
@@ -196,26 +151,10 @@ class PPO(Algorithm):
         optimizer.minimize(loss)
         return loss, kl
 
-    @deprecated(
-        deprecated_in='1.2',
-        removed_in='1.3',
-        replace_function='value_predict')
-    def define_value_predict(self, obs):
-        """ Use value model of self.model to predict value of obs
-        """
-        return self.value_predict(obs)
-
     def value_predict(self, obs):
         """ Use value model of self.model to predict value of obs
         """
         return self.model.value(obs)
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='value_learn')
-    def define_value_learn(self, obs, val):
-        """ Learn value model with square error cost
-        """
-        return self.value_learn(obs, val)
 
     def value_learn(self, obs, val):
         """ Learn the value model with square error cost
@@ -227,12 +166,7 @@ class PPO(Algorithm):
         optimizer.minimize(loss)
         return loss
 
-    def sync_old_policy(self, gpu_id=None):
+    def sync_old_policy(self):
         """ Synchronize weights of self.model.policy_model to self.old_policy_model
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_old_policy` function in `parl.Algorithms.PPO` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         self.model.policy_model.sync_weights_to(self.old_policy_model)

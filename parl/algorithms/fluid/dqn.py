@@ -25,7 +25,7 @@ __all__ = ['DQN']
 
 
 class DQN(Algorithm):
-    def __init__(self, model, hyperparas=None, act_dim=None, gamma=None):
+    def __init__(self, model, act_dim=None, gamma=None):
         """ DQN algorithm
         
         Args:
@@ -38,37 +38,15 @@ class DQN(Algorithm):
         self.model = model
         self.target_model = copy.deepcopy(model)
 
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.act_dim = hyperparas['action_dim']
-            self.gamma = hyperparas['gamma']
-        else:
-            assert isinstance(act_dim, int)
-            assert isinstance(gamma, float)
-            self.act_dim = act_dim
-            self.gamma = gamma
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='predict')
-    def define_predict(self, obs):
-        """ use value model self.model to predict the action value
-        """
-        return self.predict(obs)
+        assert isinstance(act_dim, int)
+        assert isinstance(gamma, float)
+        self.act_dim = act_dim
+        self.gamma = gamma
 
     def predict(self, obs):
         """ use value model self.model to predict the action value
         """
         return self.model.value(obs)
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='learn')
-    def define_learn(self, obs, action, reward, next_obs, terminal,
-                     learning_rate):
-        return self.learn(obs, action, reward, next_obs, terminal,
-                          learning_rate)
 
     def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
         """ update value model self.model with DQN algorithm
@@ -92,12 +70,7 @@ class DQN(Algorithm):
         optimizer.minimize(cost)
         return cost
 
-    def sync_target(self, gpu_id=None):
+    def sync_target(self):
         """ sync weights of self.model to self.target_model
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         self.model.sync_weights_to(self.target_model)

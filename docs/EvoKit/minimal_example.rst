@@ -37,7 +37,7 @@ step1: 生成预测网络
 	    exe = fluid.Executor(fluid.CPUPlace())
 	    exe.run(fluid.default_startup_program())
 	    fluid.io.save_inference_model(
-	        dirname='cartpole_init_model',
+	        dirname='init_model',
 	        feeded_var_names=['obs'],
 	        target_vars=[prob],
 	        params_filename='params',
@@ -54,23 +54,37 @@ step2: 构造ESAgent
 .. code-block:: c++
 
 	ESAgent agent = ESAgent(config_path);
-  agent->load_inference_model(model_dir);
+    agent->load_inference_model(model_dir);
 
-	//附：DeepES配置项示范
-	seed: 1024 //随机种子，用于复现
-	gaussian_sampling { //高斯采样相关参数
-	  std: 0.5
-	}
-	optimizer { //离线更新所用的optimizer 类型以及相关超级参数
-	  type: "Adam"
-	  base_lr: 0.05
-	}
+	// 附：EvoKit配置项示范
+    solver {
+        type: BASIC_ES
+        optimizer { // 线下Adam更新
+            type: ADAM
+            base_lr: 0.05
+            adam {
+                beta1: 0.9
+                beta2: 0.999
+                epsilon: 1e-08
+            }
+        }
+        sampling { // 线上高斯采样
+            type: GAUSSIAN_SAMPLING
+            gaussian_sampling {
+                std: 0.5
+                cached: true
+                seed: 1024
+                cache_size : 100000
+            }
+        }
+    }
+
 
 step3: 生成用于采样的Agent
 ###################
 
 主要关注三个接口：
-
+- load_config(): 加载配置文件
 - clone(): 生成一个用于sampling的agent。
 - add_noise()：给这个agent的参数空间增加噪声，同时返回该噪声对应的唯一信息，这个信息得记录在log中，用于线下更新。
 - predict()：提供预测接口。
@@ -85,12 +99,12 @@ step4: 用采样的数据更新模型参数
 ###################
 
 用户提供两组数据：
-- 采样参数过程中用于线下复现采样噪声的key
+- 采样参数过程中用于线下复现采样噪声的sampling_info
 - 扰动参数后，新参数的评估结果
 
 .. code-block:: c++
 
-	agent.update(info, rewards);
+	agent.update(sampling_infos, rewards);
 
 主代码以及注释
 #################
@@ -101,44 +115,48 @@ step4: 用采样的数据更新模型参数
 
 	int main(int argc, char* argv[]) {
 	    std::vector<CartPole> envs;
-      // 构造10个环境，用于多线程训练
+        // 构造10个环境，用于多线程训练
 	    for (int i = 0; i < ITER; ++i) {
 	        envs.push_back(CartPole());
 	    }
 	
-      // 初始化ESAgent
-	    std::string model_dir = "./demo/cartpole_init_model";
-	    std::string config_path = "./demo/cartpole_config.prototxt";
-	    std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>(model_dir, config_path);
+        // 初始化ESAgent
+	    std::string model_dir = "./demo/cartpole/init_model";
+	    std::string config_path = "./demo/cartpole/config.prototxt";
+	    std::shared_ptr<ESAgent> agent = std::make_shared<ESAgent>();
+        agent->load_config(config_path); // 加载配置
+
+        agent->load_inference_model(FLAGS_model_dir); // 加载初始预测模型
+        agent->init_solver(); // 初始化solver，注意要在load_inference_model后执行
 	
-      // 生成10个agent用于同时采样
-	    std::vector< std::shared_ptr<ESAgent> > sampling_agents;
+        // 生成10个agent用于同时采样
+	    std::vector<std::shared_ptr<ESAgent>> sampling_agents;
 	    for (int i = 0; i < ITER; ++i) {
 	        sampling_agents.push_back(agent->clone());
 	    }
 	
-	    std::vector<SamplingInfo> noisy_keys;
-	    std::vector<float> noisy_rewards(ITER, 0.0f);
-	    noisy_keys.resize(ITER);
+	    std::vector<SamplingInfo> sampling_infos;
+	    std::vector<float> rewards(ITER, 0.0f);
+	    sampling_infos.resize(ITER);
 	    omp_set_num_threads(10);
 	
-      // 共迭代100轮
+        // 共迭代100轮
 	    for (int epoch = 0; epoch < 100; ++epoch) {
 	        #pragma omp parallel for schedule(dynamic, 1)
 	        for (int i = 0; i < ITER; ++i) {
 	            std::shared_ptr<ESAgent> sampling_agent = sampling_agents[i];
-	            SamplingInfo key;
-	            bool success = sampling_agent->add_noise(key);
+	            SamplingInfo sampling_info;
+	            sampling_agent->add_noise(sampling_info);
 	            float reward = evaluate(envs[i], sampling_agent);
-              // 保存采样的key以及对应的评估结果
-	            noisy_keys[i] = key;
-	            noisy_rewards[i] = reward;
+                // 保存采样的sampling_info以及对应的评估结果reward
+	            sampling_infos[i] = sampling_info;
+	            rewards[i] = reward;
 	        }
-          // 更新模型参数，注意：参数更新后会自动同步到sampling_agent中
-	        bool success = agent->update(noisy_keys, noisy_rewards);
+            // 更新模型参数，注意：参数更新后会自动同步到sampling_agent中
+	        agent->update(sampling_infos, rewards);
 	
 	        int reward = evaluate(envs[0], agent);
-	        LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward;
+	        LOG(INFO) << "Epoch:" << epoch << " Reward: " << reward; // 打印每一轮reward
 	    }
 	}
 
@@ -147,7 +165,7 @@ step4: 用采样的数据更新模型参数
 
 - 下载代码
 
-  在icode上clone代码，我们的仓库路径是： ``baidu/nlp/deep-es``
+  在icode上clone代码，我们的仓库路径是： ``baidu/nlp/deep-es`` ``TO DO: 修改库路径``
 
 - 编译demo
 
@@ -159,7 +177,7 @@ step4: 用采样的数据更新模型参数
 
   ``export LD_LIBRARY_PATH=./output/so/:$LD_LIBRARY_PATH``
 
-  运行demo： ``./output/bin/evokit_demo``
+  运行demo： ``./output/bin/cartpole/train``
 
 问题解决
 ####################

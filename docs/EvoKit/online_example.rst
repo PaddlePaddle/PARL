@@ -92,7 +92,9 @@ demo的完整代码示例放在demp/online_example文件夹中。
 
 主代码
 -----------------------
+
 将以上代码分别编译成可执行文件。
+
 - 初始化solver: ``clone`` 。
 - 线上采样: ``online_sampling`` 。
 - 线下更新: ``offline update`` 。

@@ -24,11 +24,7 @@ __all__ = ['DQN']
 
 
 class DQN(Algorithm):
-    def __init__(self,
-                 model,
-                 act_dim=None,
-                 gamma=None,
-                 lr=None):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ DQN algorithm
         
         Args:

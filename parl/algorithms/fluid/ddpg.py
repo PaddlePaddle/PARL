@@ -88,9 +88,7 @@ class DDPG(Algorithm):
         optimizer.minimize(cost)
         return cost
 
-    def sync_target(self,
-                    decay=None,
-                    share_vars_parallel_executor=None):
+    def sync_target(self, decay=None, share_vars_parallel_executor=None):
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(

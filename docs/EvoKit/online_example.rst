@@ -11,8 +11,7 @@ demo的完整代码示例放在demp/online_example文件夹中。
 
 初始化solver
 ---------------------
-构造solver，对齐初始化，并保存到文件。
-
+构造solver，对它初始化，并保存到文件。初始化solver仅需在开始时调用一次。
 
 .. code-block:: c++
 
@@ -57,7 +56,6 @@ demo的完整代码示例放在demp/online_example文件夹中。
     log_stream.close();
 
 
-
 线下更新
 -----------------------
 在加载好之前记录的log之后，调用 ``update`` 函数进行更新，然后通过 ``save_inference_model`` 和 ``save_solver`` 函数保存更新后的参数到本地，推送到线上。
@@ -90,3 +88,35 @@ demo的完整代码示例放在demp/online_example文件夹中。
     agent->update(sampling_infos, rewards);
     agent->save_inference_model(FLAGS_updated_model_dir);
     agent->save_solver(FLAGS_updated_model_dir);
+
+
+主代码
+-----------------------
+将以上代码分别编译成可执行文件。
+- 初始化solver: ``clone`` 。
+- 线上采样: ``online_sampling`` 。
+- 线下更新: ``offline update`` 。
+
+.. code-block:: shell
+
+    #------------------------init solver------------------------
+    ./init_solver \
+        --model_dir="./model_warehouse/model_dir_0" \
+        --config_path="config.prototxt"
+
+
+    for ((epoch=0;epoch<200;++epoch));do
+    #------------------------online sampling------------------------
+        ./online_sampling \
+            --log_path="./sampling_log" \
+            --model_dir="./model_warehouse/model_dir_$epoch" \
+            --config_path="./config.prototxt"
+
+    #------------------------offline update------------------------
+        next_epoch=$((epoch+1))
+        ./offline_update \
+            --log_path='./sampling_log' \
+            --model_dir="./model_warehouse/model_dir_$epoch" \
+            --updated_model_dir="./model_warehouse/model_dir_${next_epoch}" \
+            --config_path="./config.prototxt"
+    done

@@ -20,7 +20,6 @@ from copy import deepcopy
 from paddle import fluid
 from parl.core.fluid import layers
 from parl.core.fluid.algorithm import Algorithm
-from parl.utils.deprecation import deprecated
 
 __all__ = ['PPO']
 
@@ -36,7 +35,6 @@ class PPO(Algorithm):
         
         Args:
             model (parl.Model): model defining forward network of policy and value.
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             act_dim (float): dimension of the action space.
             policy_lr (float): learning rate of the policy model. 
             value_lr (float): learning rate of the value model.

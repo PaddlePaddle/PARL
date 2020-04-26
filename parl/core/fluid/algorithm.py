@@ -17,7 +17,6 @@ warnings.simplefilter('default')
 
 from parl.core.algorithm_base import AlgorithmBase
 from parl.core.fluid.model import Model
-from parl.utils.deprecation import deprecated
 
 __all__ = ['Algorithm']
 
@@ -57,13 +56,13 @@ class Algorithm(AlgorithmBase):
         
     """
 
-    def __init__(self):
+    def __init__(self, model=None):
         """
         Args:
             model(``parl.Model``): a neural network that represents a policy or a Q-value function.
-            hyperparas(dict): a dict storing the hyper-parameters relative to training.
         """
-        pass
+        assert isinstance(model, Model)
+        self.model = model
 
     def learn(self, *args, **kwargs):
         """ Define the loss function and create an optimizer to minize the loss.

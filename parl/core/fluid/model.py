@@ -17,7 +17,6 @@ import paddle.fluid as fluid
 from parl.core.fluid.layers.layer_wrappers import LayerFunc
 from parl.core.fluid.plutils import *
 from parl.core.model_base import ModelBase
-from parl.utils.deprecation import deprecated
 from parl.utils import machine_info
 
 __all__ = ['Model']

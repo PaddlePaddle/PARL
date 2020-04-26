@@ -19,7 +19,6 @@ import copy
 import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
-from parl.utils.deprecation import deprecated
 
 __all__ = ['DQN']
 
@@ -34,7 +33,6 @@ class DQN(Algorithm):
         
         Args:
             model (parl.Model): model defining forward network of Q function
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             act_dim (int): dimension of the action space
             gamma (float): discounted factor for reward computation.
             lr (float): learning rate.

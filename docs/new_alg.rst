@@ -59,7 +59,6 @@ Within class ``DQN(Algorithm)``, we define the following methods:
         
         Args:
             model (parl.Model): model defining forward network of Q function
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             act_dim (int): dimension of the action space
             gamma (float): discounted factor for reward computation.
             lr (float): learning rate.

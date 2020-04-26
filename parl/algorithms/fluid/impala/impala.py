@@ -94,7 +94,6 @@ class IMPALA(Algorithm):
         
         Args:
             model (parl.Model): forward network of policy and value
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             sample_batch_steps (int): steps of each environment sampling.
             gamma (float): discounted factor for reward computation.
             vf_loss_coeff (float): coefficient of the value function loss.

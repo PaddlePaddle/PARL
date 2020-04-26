@@ -29,7 +29,6 @@ class A3C(Algorithm):
         
         Args:
             model (parl.Model): forward network of policy and value
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             vf_loss_coeff (float): coefficient of the value function loss
         """
 

@@ -17,7 +17,6 @@ warnings.simplefilter('default')
 
 import paddle.fluid as fluid
 from parl.core.fluid import layers
-from parl.utils.deprecation import deprecated
 from parl.core.agent_base import AgentBase
 from parl.core.fluid.algorithm import Algorithm
 from parl.utils import machine_info
@@ -46,7 +45,6 @@ class Agent(AgentBase):
       This class will initialize the neural network parameters automatically, and provides an executor for users to run the programs (self.fluid_executor).
 
     Attributes:
-        gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
         fluid_executor (fluid.Executor): executor for running programs of the agent.
         alg (parl.algorithm): algorithm of this agent.
 
@@ -70,7 +68,6 @@ class Agent(AgentBase):
 
         Args:
             algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.alg`.
-            gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
         """
 
         assert isinstance(algorithm, Algorithm)

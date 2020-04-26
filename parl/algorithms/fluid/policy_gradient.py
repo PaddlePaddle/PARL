@@ -18,7 +18,6 @@ warnings.simplefilter('default')
 import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
-from parl.utils.deprecation import deprecated
 
 __all__ = ['PolicyGradient']
 
@@ -29,7 +28,6 @@ class PolicyGradient(Algorithm):
         
         Args:
             model (parl.Model): forward network of the policy.
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             lr (float): learning rate of the policy model.
         """
 

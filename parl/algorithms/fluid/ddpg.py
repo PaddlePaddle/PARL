@@ -19,7 +19,6 @@ from parl.core.fluid import layers
 from copy import deepcopy
 from paddle import fluid
 from parl.core.fluid.algorithm import Algorithm
-from parl.utils.deprecation import deprecated
 
 __all__ = ['DDPG']
 
@@ -36,7 +35,6 @@ class DDPG(Algorithm):
         Args:
             model (parl.Model): forward network of actor and critic.
                                 The function get_actor_params() of model should be implemented.
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             gamma (float): discounted factor for reward computation.
             tau (float): decay coefficient when updating the weights of self.target_model with self.model
             actor_lr (float): learning rate of the actor model

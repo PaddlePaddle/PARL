@@ -46,16 +46,19 @@ step1: 生成预测网络
 
 step2: 构造ESAgent
 ###################
-- 根据配置文件构造一个ESAgent
-- 调用 ``load_inference_model`` 函数加载模型参数
+- 根据配置文件构造一个ESAgent。
+- 调用 ``load_config`` 加载配置文件。
+- 调用 ``load_inference_model`` 函数加载模型参数。
+- 调用 ``init_solver`` 初始化solver。
 
 配置文件主要是用于指定进化算法类型（比如Gaussian或者CMA）,使用的optimizer类型（Adam或者SGD）。
 
 .. code-block:: c++
 
-    ESAgent agent = ESAgent(config_path);
-    agent->load_inference_model(model_dir);
-    agent->init_solver();
+    ESAgent agent = ESAgent();
+    agent.load_config(config);
+    agent.load_inference_model(model_dir);
+    agent.init_solver();
 
     // 附：EvoKit配置项示范
     solver {
@@ -86,10 +89,9 @@ step3: 生成用于采样的Agent
 
 主要关注三个接口：
 
-- load_config(): 加载配置文件
-- clone(): 生成一个用于sampling的agent。
-- add_noise()：给这个agent的参数空间增加噪声，同时返回该噪声对应的唯一信息，这个信息得记录在log中，用于线下更新。
-- predict()：提供预测接口。
+- 调用 ``clone`` 生成一个用于sampling的agent。
+- 调用 ``add_noise`` 给这个agent的参数空间增加噪声，同时返回该噪声对应的唯一信息，这个信息得记录在log中，用于线下更新。
+- 调用 ``predict`` 提供预测接口。
 
 .. code-block:: c++
 

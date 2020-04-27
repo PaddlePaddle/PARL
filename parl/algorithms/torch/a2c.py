@@ -27,7 +27,7 @@ __all__ = ['A2C']
 
 
 class A2C(parl.Algorithm):
-    def __init__(self, model, config, hyperparas=None):
+    def __init__(self, model, config):
         assert isinstance(config['vf_loss_coeff'], (int, float))
         self.model = model
         self.vf_loss_coeff = config['vf_loss_coeff']

@@ -54,6 +54,7 @@ def run_episode(agent, env, rpm):
             break
     return total_reward
 
+
 def evaluate(agent, env, render=False):
     # test part, run 5 episodes and average
     eval_reward = []
@@ -69,6 +70,7 @@ def evaluate(agent, env, render=False):
             episode_reward += reward
         eval_reward.append(episode_reward)
     return statistics.mean(eval_reward)
+
 
 def main():
     env = gym.make('CartPole-v1')

@@ -22,7 +22,6 @@ Performance of DQN playing CartPole-v1
 
 ### Start Training:
 ```
-# To train a model for Pong game
+# To train a model for CartPole-v1 game
 python train.py
 ```
-> To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).

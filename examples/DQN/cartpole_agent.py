@@ -18,7 +18,7 @@ import parl
 from parl import layers
 
 
-class Agent(parl.Agent):
+class CartpoleAgent(parl.Agent):
     def __init__(self,
                  algorithm,
                  state_dim,
@@ -29,7 +29,7 @@ class Agent(parl.Agent):
         assert isinstance(act_dim, int)
         self.state_dim = state_dim
         self.act_dim = act_dim
-        super(Agent, self).__init__(algorithm)
+        super(CartpoleAgent, self).__init__(algorithm)
 
         self.global_step = 0
         self.update_target_steps = 200

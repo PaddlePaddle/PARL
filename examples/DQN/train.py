@@ -16,12 +16,11 @@ import os
 import gym
 import numpy as np
 from tqdm import tqdm
-from parl.utils import tensorboard
-from tensorboardX import SummaryWriter
-
 import parl
-from model import Model
-from agent import Agent
+from parl.utils import tensorboard
+
+from cartpole_model import CartpoleModel
+from cartpole_agent import CartpoleAgent
 
 from replay_memory import ReplayMemory, Experience
 
@@ -31,8 +30,6 @@ MEMORY_WARMUP_SIZE = 200  # store some experiences in the replay memory in advan
 BATCH_SIZE = 32
 LEARNING_RATE = 0.005
 GAMMA = 0.99  # discount factor of reward
-
-writer = SummaryWriter(comment='CartPole-v1')
 
 
 def run_episode(agent, env, rpm, train_or_test, render=False):
@@ -61,7 +58,6 @@ def run_episode(agent, env, rpm, train_or_test, render=False):
                                      batch_next_state, batch_isOver,
                                      LEARNING_RATE)
             tensorboard.add_scalar('loss', train_loss, agent.global_step)
-            writer.add_scalar('loss', train_loss, agent.global_step)
 
         total_reward += reward
         state = next_state
@@ -77,9 +73,9 @@ def main():
 
     rpm = ReplayMemory(MEMORY_SIZE, state_shape)
 
-    model = Model(act_dim=action_dim)
+    model = CartpoleModel(act_dim=action_dim)
     algorithm = parl.algorithms.DQN(model, act_dim=action_dim, gamma=GAMMA)
-    agent = Agent(
+    agent = CartpoleAgent(
         algorithm,
         state_dim=state_shape[0],
         act_dim=action_dim,
@@ -113,7 +109,6 @@ def main():
                     episode, np.mean(test_reward_list)))
                 tensorboard.add_scalar('reward', np.mean(test_reward_list),
                                        episode)
-                writer.add_scalar('reward', np.mean(test_reward_list), episode)
 
     pbar.close()
 

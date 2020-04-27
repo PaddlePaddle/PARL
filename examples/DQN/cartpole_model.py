@@ -17,7 +17,7 @@ import parl
 from parl import layers
 
 
-class Model(parl.Model):
+class CartpoleModel(parl.Model):
     def __init__(self, act_dim):
         hid1_size = 128
         hid2_size = 128

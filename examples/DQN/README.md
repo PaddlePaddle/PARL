@@ -1,5 +1,5 @@
 ## Reproduce DQN with PARL
-Based on PARL, we provide a simple demonstration of DQN. For complete implementation of DQN, please check [DQN_varient][https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant]
+Based on PARL, we provide a simple demonstration of DQN. For complete implementation of DQN, please check [DQN_varient](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)
 
 + DQN in
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)

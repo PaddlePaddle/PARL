@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import gym
+import statistics
 import numpy as np
-from tqdm import tqdm
 import parl
-from parl.utils import tensorboard
 
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 
-from replay_memory import ReplayMemory, Experience
+from replay_memory import ReplayMemory
 
 LEARN_FREQ = 5  # update parameters every 5 steps
 MEMORY_SIZE = 20000  # replay memory size
@@ -32,23 +30,15 @@ LEARNING_RATE = 0.0005
 GAMMA = 0.99  # discount factor of reward
 
 
-def run_episode(agent, env, rpm, train_or_test, render=False):
-    assert train_or_test in ['train', 'test'], train_or_test
+def run_episode(agent, env, rpm):
     total_reward = 0
     state = env.reset()
     step = 0
     while True:
         step += 1
-        if render:
-            env.render()
-        if train_or_test == 'train':
-            action = agent.sample(state)
-        else:
-            action = agent.predict(state)
+        action = agent.sample(state)
         next_state, reward, isOver, _ = env.step(action)
-
-        if train_or_test == 'train':
-            rpm.append(Experience(state, action, reward, isOver))
+        rpm.append((state, action, reward, next_state, isOver))
 
         # train model
         if (len(rpm) > MEMORY_WARMUP_SIZE) and (step % LEARN_FREQ == 0):
@@ -57,7 +47,6 @@ def run_episode(agent, env, rpm, train_or_test, render=False):
             train_loss = agent.learn(batch_state, batch_action, batch_reward,
                                      batch_next_state, batch_isOver,
                                      LEARNING_RATE)
-            tensorboard.add_scalar('loss', train_loss, agent.global_step)
 
         total_reward += reward
         state = next_state
@@ -65,13 +54,28 @@ def run_episode(agent, env, rpm, train_or_test, render=False):
             break
     return total_reward
 
+def evaluate(agent, env, render=False):
+    # test part, run 5 episodes and average
+    eval_reward = []
+    for i in range(5):
+        state = env.reset()
+        episode_reward = 0
+        isOver = False
+        while not isOver:
+            action = agent.predict(state)
+            if render:
+                env.render()
+            state, reward, isOver, _ = env.step(action)
+            episode_reward += reward
+        eval_reward.append(episode_reward)
+    return statistics.mean(eval_reward)
 
 def main():
     env = gym.make('CartPole-v1')
     action_dim = env.action_space.n
     state_shape = env.observation_space.shape
 
-    rpm = ReplayMemory(MEMORY_SIZE, state_shape)
+    rpm = ReplayMemory(MEMORY_SIZE)
 
     model = CartpoleModel(act_dim=action_dim)
     algorithm = parl.algorithms.DQN(model, act_dim=action_dim, gamma=GAMMA)
@@ -84,33 +88,20 @@ def main():
     )  # probability of exploring is decreasing during training
 
     while len(rpm) < MEMORY_WARMUP_SIZE:  # warm up replay memory
-        run_episode(agent, env, rpm, train_or_test='train')
+        run_episode(agent, env, rpm)
 
     max_episode = 2000
 
     # start train
-    pbar = tqdm(total=max_episode)
     episode = 0
     while episode < max_episode:
         # train part
         for i in range(0, 50):
-            total_reward = run_episode(agent, env, rpm, train_or_test='train')
+            total_reward = run_episode(agent, env, rpm)
             episode += 1
-            pbar.set_description('[train]e_greed:{}'.format(agent.e_greed))
-            pbar.update()
 
-        # test part, run 5 episodes and average
-        test_reward_list = []
-        for i in range(0, 5):
-            total_reward = run_episode(agent, env, rpm, train_or_test='test')
-            test_reward_list.append(total_reward)
-            if i == 4:
-                pbar.write('episode:{}    test_reward:{}'.format(
-                    episode, np.mean(test_reward_list)))
-                tensorboard.add_scalar('reward', np.mean(test_reward_list),
-                                       episode)
-
-    pbar.close()
+        eval_reward = evaluate(agent, env, render=True)
+        print('episode:{}    test_reward:{}'.format(episode, eval_reward))
 
 
 if __name__ == '__main__':

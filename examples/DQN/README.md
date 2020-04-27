@@ -9,6 +9,9 @@ Based on PARL, we provide a simple demonstration of DQN.
 Performance of DQN playing CartPole-v1
 
 <p align="left">
+<img src="https://parl.readthedocs.io/en/latest/_images/performance1.gif" alt="result" width="450"/>
+</p>
+<p align="left">
 <img src="cartpole.jpg" alt="result" width="450"/>
 </p>
 
@@ -28,4 +31,4 @@ python train.py
 
 ## DQN-Variants
 
-For complete implementation of DQN, please check [DQN_varient](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)
+For DQN variants such as Double DQN and Dueling DQN, please check [here](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)

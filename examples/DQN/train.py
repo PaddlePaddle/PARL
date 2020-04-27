@@ -117,8 +117,6 @@ def main():
 
     pbar.close()
 
-    agent.save('./model.ckpt')
-
 
 if __name__ == '__main__':
     main()

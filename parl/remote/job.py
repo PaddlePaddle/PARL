@@ -64,7 +64,10 @@ class Job(object):
         self.run_job_process = Process(
             target=self.run, args=(job_address_sender, ))
         self.run_job_process.start()
-
+        """
+        NOTE:
+            In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.  
+        """
         self.lock = threading.Lock()
         self._create_sockets()
 

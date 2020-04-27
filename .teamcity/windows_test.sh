@@ -33,7 +33,7 @@ function abort(){
 }
 
 function run_test_with_cpu() {
-    export CUDA_VISIBLE_DEVICES=""
+    export CUDA_VISIBLE_DEVICES="-1"
 
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build

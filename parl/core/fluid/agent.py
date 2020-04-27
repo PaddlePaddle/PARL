@@ -181,8 +181,7 @@ class Agent(AgentBase):
         """
         if program is None:
             program = self.learn_program
-        sep = os.sep
-        dirname = sep.join(save_path.split(sep)[:-1])
+        dirname = os.sep.join(save_path.split(sep)[:-1])
         filename = save_path.split(sep)[-1]
         fluid.io.save_params(
             executor=self.fluid_executor,
@@ -216,8 +215,7 @@ class Agent(AgentBase):
             program = self.learn_program
         if type(program) is fluid.compiler.CompiledProgram:
             program = program._init_program
-        sep = os.sep
-        dirname = sep.join(save_path.split(sep)[:-1])
+        dirname = os.sep.join(save_path.split(sep)[:-1])
         filename = save_path.split(sep)[-1]
         fluid.io.load_params(
             executor=self.fluid_executor,

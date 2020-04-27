@@ -138,9 +138,9 @@ def start_master(port, cpu_num, monitor_port, debug):
     _ = subprocess.Popen(
         master_command, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    # Sleep 1s for master ready
-    time.sleep(1)
     if cpu_num > 0:
+        # Sleep 1s for master ready
+        time.sleep(1)
         _ = subprocess.Popen(
             worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -242,13 +242,13 @@ def start_worker(address, cpu_num):
 def stop():
     if _IS_WINDOWS:
         command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\job.py%'" get processid^,status /format:csv') do taskkill /F /T /pid %a'''
-        print(os.popen(command).read())
+        os.popen(command).read()
 
         command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\start.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
-        print(os.popen(command).read())
+        os.popen(command).read()
 
         command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\monitor.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
-        print(os.popen(command).read())
+        os.popen(command).read()
     else:
         command = (
             "ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")

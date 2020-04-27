@@ -28,7 +28,7 @@ LEARN_FREQ = 5  # update parameters every 5 steps
 MEMORY_SIZE = 20000  # replay memory size
 MEMORY_WARMUP_SIZE = 200  # store some experiences in the replay memory in advance
 BATCH_SIZE = 32
-LEARNING_RATE = 0.005
+LEARNING_RATE = 0.0005
 GAMMA = 0.99  # discount factor of reward
 
 

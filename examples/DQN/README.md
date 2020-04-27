@@ -1,5 +1,5 @@
 ## Reproduce DQN with PARL
-Based on PARL, we provide a simple demonstration of DQN. For complete implementation of DQN, please check [DQN_varient](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)
+Based on PARL, we provide a simple demonstration of DQN.
 
 + DQN in
 [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
@@ -8,7 +8,7 @@ Based on PARL, we provide a simple demonstration of DQN. For complete implementa
 
 Performance of DQN playing CartPole-v1
 
-<p align="center">
+<p align="left">
 <img src="cartpole.jpg" alt="result" width="450"/>
 </p>
 
@@ -25,3 +25,7 @@ Performance of DQN playing CartPole-v1
 # To train a model for CartPole-v1 game
 python train.py
 ```
+
+## DQN-Variants
+
+For complete implementation of DQN, please check [DQN_varient](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)

@@ -46,7 +46,7 @@ step1: 生成预测网络
 
 step2: 构造ESAgent
 ###################
-- 根据配置文件构造一个ESAgent。
+
 - 调用 ``load_config`` 加载配置文件。
 - 调用 ``load_inference_model`` 函数加载模型参数。
 - 调用 ``init_solver`` 初始化solver。

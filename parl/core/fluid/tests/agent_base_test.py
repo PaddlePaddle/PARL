@@ -46,8 +46,8 @@ class TestAlgorithm(parl.Algorithm):
 
 
 class TestAgent(parl.Agent):
-    def __init__(self, algorithm, gpu_id=None):
-        super(TestAgent, self).__init__(algorithm, gpu_id)
+    def __init__(self, algorithm):
+        super(TestAgent, self).__init__(algorithm)
 
     def build_program(self):
         self.predict_program = fluid.Program()

@@ -9,10 +9,8 @@ Based on PARL, we provide a simple demonstration of DQN.
 Performance of DQN playing CartPole-v1
 
 <p align="left">
-<img src="../QuickStart/performance.gif" alt="result" width="450"/>
-</p>
-<p align="left">
-<img src="cartpole.jpg" alt="result" width="450"/>
+<img src="../QuickStart/performance.gif" alt="result" height="150"/>
+<img src="cartpole.jpg" alt="result" height="150"/>
 </p>
 
 ## How to use

@@ -24,25 +24,17 @@ __all__ = ['A3C']
 
 
 class A3C(Algorithm):
-    def __init__(self, model, hyperparas=None, vf_loss_coeff=None):
+    def __init__(self, model, vf_loss_coeff=None):
         """ A3C/A2C algorithm
         
         Args:
             model (parl.Model): forward network of policy and value
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             vf_loss_coeff (float): coefficient of the value function loss
         """
 
         self.model = model
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.A3C` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.vf_loss_coeff = hyperparas['vf_loss_coeff']
-        else:
-            assert isinstance(vf_loss_coeff, (int, float))
-            self.vf_loss_coeff = vf_loss_coeff
+        assert isinstance(vf_loss_coeff, (int, float))
+        self.vf_loss_coeff = vf_loss_coeff
 
     def learn(self, obs, actions, advantages, target_values, learning_rate,
               entropy_coeff):

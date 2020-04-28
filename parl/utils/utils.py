@@ -16,7 +16,7 @@ import sys
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS'
+    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC'
 ]
 
 
@@ -94,3 +94,4 @@ except ImportError:
     _HAS_TORCH = False
 
 _IS_WINDOWS = (sys.platform == 'win32')
+_IS_MAC = (sys.platform == 'darwin')

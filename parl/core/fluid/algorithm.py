@@ -17,7 +17,6 @@ warnings.simplefilter('default')
 
 from parl.core.algorithm_base import AlgorithmBase
 from parl.core.fluid.model import Model
-from parl.utils.deprecation import deprecated
 
 __all__ = ['Algorithm']
 
@@ -57,47 +56,13 @@ class Algorithm(AlgorithmBase):
         
     """
 
-    def __init__(self, model=None, hyperparas=None):
+    def __init__(self, model=None):
         """
         Args:
             model(``parl.Model``): a neural network that represents a policy or a Q-value function.
-            hyperparas(dict): a dict storing the hyper-parameters relative to training.
         """
-        if model is not None:
-            warnings.warn(
-                "the `model` argument of `__init__` function in `parl.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            assert isinstance(model, Model)
-            self.model = model
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithm` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            self.hp = hyperparas
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
-    def get_params(self):
-        """ Get parameters of self.model.
-
-        Returns:
-            params(dict): a Python List containing the parameters of self.model.
-        """
-        return self.model.get_params()
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
-    def set_params(self, params):
-        """ Set parameters from ``get_params`` to the model.
-
-        Args:
-            params(dict ): a Python List containing the parameters of self.model.
-        """
-        self.model.set_params(params)
+        assert isinstance(model, Model)
+        self.model = model
 
     def learn(self, *args, **kwargs):
         """ Define the loss function and create an optimizer to minize the loss.

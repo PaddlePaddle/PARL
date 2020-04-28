@@ -106,7 +106,7 @@ class AtariAgent(parl.Agent):
             'reward': reward,
             'next_obs': next_obs.astype('float32'),
             'terminal': terminal,
-            'lr': lr
+            'lr': np.float32(lr)
         }
         cost = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.cost])[0]

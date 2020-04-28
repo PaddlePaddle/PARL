@@ -62,7 +62,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 # 安装:
 ### 依赖
 - Python 2.7 or 3.5+. 
-- [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) >=1.2.1 (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
+- [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 
 ```
@@ -72,6 +72,7 @@ pip install parl
 # 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
+- [ES(深度进化算法)](examples/ES/)
 - [DDPG](examples/DDPG/)
 - [PPO](examples/PPO/)
 - [IMPALA](examples/IMPALA/)
@@ -82,6 +83,6 @@ pip install parl
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [冠军解决方案：NIPS2019强化学习仿生人控制赛事](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 
-<img src=".github/NeurlIPS2018.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
+<img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>
 <img src=".github/Aircraft.gif"  width = "808" height ="300"  alt="NeurlIPS2018"/>

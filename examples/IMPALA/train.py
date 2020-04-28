@@ -121,7 +121,9 @@ class Learner(object):
 
                 yield [
                     obs_np, actions_np, behaviour_logits_np, rewards_np,
-                    dones_np, self.lr, self.entropy_coeff
+                    dones_np,
+                    np.float32(self.lr),
+                    np.array([self.entropy_coeff], dtype='float32')
                 ]
 
     def run_learn(self):

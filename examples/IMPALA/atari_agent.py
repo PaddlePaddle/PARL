@@ -58,7 +58,10 @@ class AtariAgent(parl.Agent):
             lr = layers.data(
                 name='lr', shape=[1], dtype='float32', append_batch_size=False)
             entropy_coeff = layers.data(
-                name='entropy_coeff', shape=[], dtype='float32')
+                name='entropy_coeff',
+                shape=[1],
+                dtype='float32',
+                append_batch_size=False)
 
             self.learn_reader = fluid.layers.create_py_reader_by_data(
                 capacity=32,

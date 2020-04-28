@@ -35,8 +35,13 @@ os.environ['XPARL'] = 'True'
 
 # Solve `Click will abort further execution because Python 3 was configured
 # to use ASCII as encoding for the environment` error.
+
 if not _IS_WINDOWS:
-    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+    try:
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+    except:
+        pass
+
 
 #TODO: this line will cause error in python2/macOS
 if sys.version_info.major == 3:

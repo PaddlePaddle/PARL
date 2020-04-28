@@ -95,10 +95,10 @@ simple_world_comm<br>
 ## How to use
 ### Dependencies:
 + python3.5+
-+ [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + [multiagent-particle-envs](https://github.com/openai/multiagent-particle-envs)
-+ gym
++ gym==0.10.5
 
 ### Start Training:
 ```

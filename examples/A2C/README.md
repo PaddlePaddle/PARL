@@ -19,8 +19,8 @@ Performance of A2C on various envrionments
 
 ## How to use
 ### Dependencies
-+ [paddlepaddle>=1.5.1](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
++ [parl>=1.2.1](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7
 

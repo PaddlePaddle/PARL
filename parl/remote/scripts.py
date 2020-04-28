@@ -42,7 +42,6 @@ if not _IS_WINDOWS:
     except:
         pass
 
-
 #TODO: this line will cause error in python2/macOS
 if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)

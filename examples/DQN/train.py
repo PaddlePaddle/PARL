@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import gym
-import statistics
 import numpy as np
 import parl
+from parl.utils import logger
 
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
@@ -69,7 +69,7 @@ def evaluate(agent, env, render=False):
             state, reward, isOver, _ = env.step(action)
             episode_reward += reward
         eval_reward.append(episode_reward)
-    return statistics.mean(eval_reward)
+    return np.mean(eval_reward)
 
 
 def main():
@@ -102,8 +102,8 @@ def main():
             total_reward = run_episode(agent, env, rpm)
             episode += 1
 
-        eval_reward = evaluate(agent, env, render=True)
-        print('episode:{}    test_reward:{}'.format(episode, eval_reward))
+        eval_reward = evaluate(agent, env)
+        logger.info('episode:{}    test_reward:{}'.format(episode, eval_reward))
 
 
 if __name__ == '__main__':

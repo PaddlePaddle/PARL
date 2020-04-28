@@ -103,7 +103,8 @@ def main():
             episode += 1
 
         eval_reward = evaluate(agent, env)
-        logger.info('episode:{}    test_reward:{}'.format(episode, eval_reward))
+        logger.info('episode:{}    test_reward:{}'.format(
+            episode, eval_reward))
 
 
 if __name__ == '__main__':

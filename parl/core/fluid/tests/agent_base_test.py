@@ -46,8 +46,8 @@ class TestAlgorithm(parl.Algorithm):
 
 
 class TestAgent(parl.Agent):
-    def __init__(self, algorithm, gpu_id=None):
-        super(TestAgent, self).__init__(algorithm, gpu_id)
+    def __init__(self, algorithm):
+        super(TestAgent, self).__init__(algorithm)
 
     def build_program(self):
         self.predict_program = fluid.Program()
@@ -92,8 +92,8 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.algorithm)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
-        save_path1 = './model.ckpt'
-        save_path2 = './my_model/model-2.ckpt'
+        save_path1 = 'model.ckpt'
+        save_path2 = os.path.join('my_model', 'model-2.ckpt')
         agent.save(save_path1)
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
@@ -103,7 +103,7 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.algorithm)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
-        save_path1 = './model.ckpt'
+        save_path1 = 'model.ckpt'
         previous_output = agent.predict(obs)
         agent.save(save_path1)
         agent.restore(save_path1)
@@ -121,7 +121,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.learn_program = parl.compile(agent.learn_program)
         obs = np.random.random([3, 10]).astype('float32')
         previous_output = agent.predict(obs)
-        save_path1 = './model.ckpt'
+        save_path1 = 'model.ckpt'
         agent.save(save_path1)
         agent.restore(save_path1)
 

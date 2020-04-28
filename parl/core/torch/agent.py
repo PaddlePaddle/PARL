@@ -113,8 +113,9 @@ class Agent(AgentBase):
         """
         if model is None:
             model = self.algorithm.model
-        dirname = '/'.join(save_path.split('/')[:-1])
-        if not os.path.exists(dirname):
+        sep = os.sep
+        dirname = sep.join(save_path.split(sep)[:-1])
+        if dirname != '' and not os.path.exists(dirname):
             os.makedirs(dirname)
         torch.save(model.state_dict(), save_path)
 

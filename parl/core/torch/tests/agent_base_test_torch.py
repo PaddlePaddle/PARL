@@ -77,8 +77,8 @@ class AgentBaseTest(unittest.TestCase):
     def test_save(self):
         agent = TestAgent(self.alg)
         obs = torch.randn(3, 10)
-        save_path1 = './model.ckpt'
-        save_path2 = './my_model/model-2.ckpt'
+        save_path1 = 'model.ckpt'
+        save_path2 = os.path.join('my_model', 'model-2.ckpt')
         agent.save(save_path1)
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
@@ -88,7 +88,7 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.alg)
         obs = torch.randn(3, 10)
         output = agent.predict(obs)
-        save_path1 = './model.ckpt'
+        save_path1 = 'model.ckpt'
         previous_output = agent.predict(obs).detach().cpu().numpy()
         agent.save(save_path1)
         agent.restore(save_path1)

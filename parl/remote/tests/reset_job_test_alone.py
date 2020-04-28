@@ -16,7 +16,8 @@ import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import logger
+from parl.utils import logger, _IS_WINDOWS
+import os
 import threading
 import time
 import subprocess
@@ -70,9 +71,14 @@ class TestJobAlone(unittest.TestCase):
         time.sleep(1)
         self.assertEqual(master.cpu_num, 4)
         print("We are going to kill all the jobs.")
-        command = (
-            "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
-        subprocess.call([command], shell=True)
+        if _IS_WINDOWS:
+            command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\job.py%'" get processid^,status /format:csv') do taskkill /F /T /pid %a'''
+            print(os.popen(command).read())
+        else:
+            command = (
+                "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9"
+            )
+            subprocess.call([command], shell=True)
         parl.connect('localhost:1334')
         actor = Actor()
         self.assertEqual(actor.add_one(1), 2)

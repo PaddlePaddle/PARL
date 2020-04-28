@@ -22,7 +22,6 @@ import time
 import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
-import timeout_decorator
 import subprocess
 
 

@@ -14,9 +14,9 @@
 
 import os
 import platform
+import socket
 import subprocess
-from parl.utils import logger
-from parl.utils import utils
+from parl.utils import logger, _HAS_FLUID, _IS_WINDOWS
 
 __all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
 
@@ -25,29 +25,25 @@ def get_ip_address():
     """
     get the IP address of the host.
     """
-    platform_sys = platform.system()
 
-    # Only support Linux and MacOS
-    if platform_sys != 'Linux' and platform_sys != 'Darwin':
-        logger.warning(
-            'get_ip_address only support Linux and MacOS, please set ip address manually.'
-        )
-        return None
-
-    local_ip = None
-    import socket
-    try:
-        # First way, tested in Ubuntu and MacOS
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        local_ip = s.getsockname()[0]
-        s.close()
-    except:
-        # Second way, tested in CentOS
+    # Windows
+    if _IS_WINDOWS:
+        local_ip = socket.gethostbyname(socket.gethostname())
+    else:
+        # Linux and MacOS
+        local_ip = None
         try:
-            local_ip = socket.gethostbyname(socket.gethostname())
+            # First way, tested in Ubuntu and MacOS
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
         except:
-            pass
+            # Second way, tested in CentOS
+            try:
+                local_ip = socket.gethostbyname(socket.gethostname())
+            except:
+                pass
 
     if local_ip == None or local_ip == '127.0.0.1' or local_ip == '127.0.1.1':
         logger.warning(
@@ -97,7 +93,7 @@ def is_gpu_available():
       True if a gpu device can be found.
     """
     ret = get_gpu_count() > 0
-    if utils._HAS_FLUID:
+    if _HAS_FLUID:
         from paddle import fluid
         if ret is True and not fluid.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \

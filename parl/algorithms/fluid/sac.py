@@ -102,11 +102,11 @@ class SAC(Algorithm):
         return cost
 
     def critic_learn(self, obs, action, reward, next_obs, terminal):
-        next_state_action, next_state_log_pi = self.sample(next_obs)
+        next_obs_action, next_obs_log_pi = self.sample(next_obs)
         qf1_next_target, qf2_next_target = self.target_critic.value(
-            next_obs, next_state_action)
+            next_obs, next_obs_action)
         min_qf_next_target = layers.elementwise_min(
-            qf1_next_target, qf2_next_target) - next_state_log_pi * self.alpha
+            qf1_next_target, qf2_next_target) - next_obs_log_pi * self.alpha
 
         terminal = layers.cast(terminal, dtype='float32')
         target_Q = reward + (1.0 - terminal) * self.gamma * min_qf_next_target

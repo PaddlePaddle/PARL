@@ -16,16 +16,16 @@ import numpy as np
 import copy
 from collections import deque, namedtuple
 
-Experience = namedtuple('Experience', ['state', 'action', 'reward', 'isOver'])
+Experience = namedtuple('Experience', ['obs', 'action', 'reward', 'isOver'])
 
 
 class ReplayMemory(object):
-    def __init__(self, max_size, state_shape, context_len):
+    def __init__(self, max_size, obs_shape, context_len):
         self.max_size = int(max_size)
-        self.state_shape = state_shape
+        self.obs_shape = obs_shape
         self.context_len = int(context_len)
 
-        self.state = np.zeros((self.max_size, ) + state_shape, dtype='uint8')
+        self.obs = np.zeros((self.max_size, ) + obs_shape, dtype='uint8')
         self.action = np.zeros((self.max_size, ), dtype='int32')
         self.reward = np.zeros((self.max_size, ), dtype='float32')
         self.isOver = np.zeros((self.max_size, ), dtype='bool')
@@ -48,42 +48,42 @@ class ReplayMemory(object):
         else:
             self._context.append(exp)
 
-    def recent_state(self):
-        """ maintain recent state for training"""
+    def recent_obs(self):
+        """ maintain recent obs for training"""
         lst = list(self._context)
-        states = [np.zeros(self.state_shape, dtype='uint8')] * \
+        obs = [np.zeros(self.obs_shape, dtype='uint8')] * \
                     (self._context.maxlen - len(lst))
-        states.extend([k.state for k in lst])
-        return states
+        obs.extend([k.obs for k in lst])
+        return obs
 
     def sample(self, idx):
-        """ return state, action, reward, isOver,
-            note that some frames in state may be generated from last episode,
-            they should be removed from state
+        """ return obs, action, reward, isOver,
+            note that some frames in obs may be generated from last episode,
+            they should be removed from obs
             """
-        state = np.zeros(
-            (self.context_len + 1, ) + self.state_shape, dtype=np.uint8)
-        state_idx = np.arange(idx,
+        obs = np.zeros(
+            (self.context_len + 1, ) + self.obs_shape, dtype=np.uint8)
+        obs_idx = np.arange(idx,
                               idx + self.context_len + 1) % self._curr_size
 
         # confirm that no frame was generated from last episode
         has_last_episode = False
         for k in range(self.context_len - 2, -1, -1):
-            to_check_idx = state_idx[k]
+            to_check_idx = obs_idx[k]
             if self.isOver[to_check_idx]:
                 has_last_episode = True
-                state_idx = state_idx[k + 1:]
-                state[k + 1:] = self.state[state_idx]
+                obs_idx = obs_idx[k + 1:]
+                obs[k + 1:] = self.obs[obs_idx]
                 break
 
         if not has_last_episode:
-            state = self.state[state_idx]
+            obs = self.obs[obs_idx]
 
         real_idx = (idx + self.context_len - 1) % self._curr_size
         action = self.action[real_idx]
         reward = self.reward[real_idx]
         isOver = self.isOver[real_idx]
-        return state, reward, action, isOver
+        return obs, reward, action, isOver
 
     def __len__(self):
         return self._curr_size
@@ -92,7 +92,7 @@ class ReplayMemory(object):
         return self._curr_size
 
     def _assign(self, pos, exp):
-        self.state[pos] = exp.state
+        self.obs[pos] = exp.obs
         self.reward[pos] = exp.reward
         self.action[pos] = exp.action
         self.isOver[pos] = exp.isOver
@@ -107,8 +107,8 @@ class ReplayMemory(object):
         return self._process_batch(batch_exp)
 
     def _process_batch(self, batch_exp):
-        state = np.asarray([e[0] for e in batch_exp], dtype='uint8')
+        obs = np.asarray([e[0] for e in batch_exp], dtype='uint8')
         reward = np.asarray([e[1] for e in batch_exp], dtype='float32')
         action = np.asarray([e[2] for e in batch_exp], dtype='int8')
         isOver = np.asarray([e[3] for e in batch_exp], dtype='bool')
-        return [state, action, reward, isOver]
+        return [obs, action, reward, isOver]

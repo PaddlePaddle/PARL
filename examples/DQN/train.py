@@ -32,24 +32,24 @@ GAMMA = 0.99  # discount factor of reward
 
 def run_episode(agent, env, rpm):
     total_reward = 0
-    state = env.reset()
+    obs = env.reset()
     step = 0
     while True:
         step += 1
-        action = agent.sample(state)
-        next_state, reward, isOver, _ = env.step(action)
-        rpm.append((state, action, reward, next_state, isOver))
+        action = agent.sample(obs)
+        next_obs, reward, isOver, _ = env.step(action)
+        rpm.append((obs, action, reward, next_obs, isOver))
 
         # train model
         if (len(rpm) > MEMORY_WARMUP_SIZE) and (step % LEARN_FREQ == 0):
-            (batch_state, batch_action, batch_reward, batch_next_state,
+            (batch_obs, batch_action, batch_reward, batch_next_obs,
              batch_isOver) = rpm.sample(BATCH_SIZE)
-            train_loss = agent.learn(batch_state, batch_action, batch_reward,
-                                     batch_next_state, batch_isOver,
+            train_loss = agent.learn(batch_obs, batch_action, batch_reward,
+                                     batch_next_obs, batch_isOver,
                                      LEARNING_RATE)
 
         total_reward += reward
-        state = next_state
+        obs = next_obs
         if isOver:
             break
     return total_reward
@@ -59,14 +59,14 @@ def evaluate(agent, env, render=False):
     # test part, run 5 episodes and average
     eval_reward = []
     for i in range(5):
-        state = env.reset()
+        obs = env.reset()
         episode_reward = 0
         isOver = False
         while not isOver:
-            action = agent.predict(state)
+            action = agent.predict(obs)
             if render:
                 env.render()
-            state, reward, isOver, _ = env.step(action)
+            obs, reward, isOver, _ = env.step(action)
             episode_reward += reward
         eval_reward.append(episode_reward)
     return np.mean(eval_reward)
@@ -75,7 +75,7 @@ def evaluate(agent, env, render=False):
 def main():
     env = gym.make('CartPole-v1')
     action_dim = env.action_space.n
-    state_shape = env.observation_space.shape
+    obs_shape = env.observation_space.shape
 
     rpm = ReplayMemory(MEMORY_SIZE)
 
@@ -83,7 +83,7 @@ def main():
     algorithm = parl.algorithms.DQN(model, act_dim=action_dim, gamma=GAMMA)
     agent = CartpoleAgent(
         algorithm,
-        state_dim=state_shape[0],
+        obs_dim=obs_shape[0],
         act_dim=action_dim,
         e_greed=0.1,  # explore
         e_greed_decrement=1e-6

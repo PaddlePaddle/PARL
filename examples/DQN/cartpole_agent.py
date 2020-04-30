@@ -21,13 +21,13 @@ from parl import layers
 class CartpoleAgent(parl.Agent):
     def __init__(self,
                  algorithm,
-                 state_dim,
+                 obs_dim,
                  act_dim,
                  e_greed=0.1,
                  e_greed_decrement=0):
-        assert isinstance(state_dim, int)
+        assert isinstance(obs_dim, int)
         assert isinstance(act_dim, int)
-        self.state_dim = state_dim
+        self.obs_dim = obs_dim
         self.act_dim = act_dim
         super(CartpoleAgent, self).__init__(algorithm)
 
@@ -43,16 +43,16 @@ class CartpoleAgent(parl.Agent):
 
         with fluid.program_guard(self.pred_program):
             obs = layers.data(
-                name='obs', shape=[self.state_dim], dtype='float32')
+                name='obs', shape=[self.obs_dim], dtype='float32')
             self.value = self.alg.predict(obs)
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(
-                name='obs', shape=[self.state_dim], dtype='float32')
+                name='obs', shape=[self.obs_dim], dtype='float32')
             action = layers.data(name='act', shape=[1], dtype='int32')
             reward = layers.data(name='reward', shape=[], dtype='float32')
             next_obs = layers.data(
-                name='next_obs', shape=[self.state_dim], dtype='float32')
+                name='next_obs', shape=[self.obs_dim], dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
             lr = layers.data(
                 name='lr', shape=[1], dtype='float32', append_batch_size=False)

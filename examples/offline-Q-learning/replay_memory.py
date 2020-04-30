@@ -38,8 +38,7 @@ class ReplayMemory(object):
             self.load_memory()
             logger.info("memory size is {}".format(self._curr_size))
         else:
-            self.obs = np.zeros(
-                (self.max_size, ) + obs_shape, dtype='uint8')
+            self.obs = np.zeros((self.max_size, ) + obs_shape, dtype='uint8')
             self.action = np.zeros((self.max_size, ), dtype='int32')
             self.reward = np.zeros((self.max_size, ), dtype='float32')
             self.isOver = np.zeros((self.max_size, ), dtype='bool')
@@ -77,8 +76,7 @@ class ReplayMemory(object):
             """
         obs = np.zeros(
             (self.context_len + 1, ) + self.obs_shape, dtype=np.uint8)
-        obs_idx = np.arange(idx,
-                              idx + self.context_len + 1) % self._curr_size
+        obs_idx = np.arange(idx, idx + self.context_len + 1) % self._curr_size
 
         # confirm that no frame was generated from last episode
         has_last_episode = False

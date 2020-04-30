@@ -63,8 +63,7 @@ class ReplayMemory(object):
             """
         obs = np.zeros(
             (self.context_len + 1, ) + self.obs_shape, dtype=np.uint8)
-        obs_idx = np.arange(idx,
-                              idx + self.context_len + 1) % self._curr_size
+        obs_idx = np.arange(idx, idx + self.context_len + 1) % self._curr_size
 
         # confirm that no frame was generated from last episode
         has_last_episode = False

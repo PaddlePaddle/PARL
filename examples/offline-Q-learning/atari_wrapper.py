@@ -1,1 +1,1 @@
-../DQN/atari_wrapper.py
+../DQN_variant/atari_wrapper.py

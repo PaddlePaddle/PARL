@@ -1,1 +1,1 @@
-../DQN/atari.py
+../DQN_variant/atari.py

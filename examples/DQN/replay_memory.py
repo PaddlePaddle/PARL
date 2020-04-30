@@ -28,19 +28,19 @@ class ReplayMemory(object):
 
     def sample(self, batch_size):
         mini_batch = random.sample(self.buffer, batch_size)
-        state_batch, action_batch, reward_batch, next_state_batch, done_batch = [], [], [], [], []
+        obs_batch, action_batch, reward_batch, next_obs_batch, done_batch = [], [], [], [], []
 
         for experience in mini_batch:
             s, a, r, s_p, done = experience
-            state_batch.append(s)
+            obs_batch.append(s)
             action_batch.append(a)
             reward_batch.append(r)
-            next_state_batch.append(s_p)
+            next_obs_batch.append(s_p)
             done_batch.append(done)
 
-        return np.array(state_batch).astype('float32'), \
+        return np.array(obs_batch).astype('float32'), \
             np.array(action_batch).astype('float32'), np.array(reward_batch).astype('float32'),\
-            np.array(next_state_batch).astype('float32'), np.array(done_batch).astype('float32')
+            np.array(next_obs_batch).astype('float32'), np.array(done_batch).astype('float32')
 
     def __len__(self):
         return len(self.buffer)

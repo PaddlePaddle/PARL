@@ -39,28 +39,28 @@ LEARNING_RATE = 3e-4
 def run_train_episode(env, agent, rpm):
     total_reward = 0
     all_cost = []
-    state = env.reset()
+    obs = env.reset()
     steps = 0
     while True:
         steps += 1
-        context = rpm.recent_state()
-        context.append(state)
+        context = rpm.recent_obs()
+        context.append(obs)
         context = np.stack(context, axis=0)
         action = agent.sample(context)
-        next_state, reward, isOver, _ = env.step(action)
-        rpm.append(Experience(state, action, reward, isOver))
+        next_obs, reward, isOver, _ = env.step(action)
+        rpm.append(Experience(obs, action, reward, isOver))
         # start training
         if rpm.size() > MEMORY_WARMUP_SIZE:
             if steps % UPDATE_FREQ == 0:
-                batch_all_state, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
+                batch_all_obs, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
                     args.batch_size)
-                batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
-                batch_next_state = batch_all_state[:, 1:, :, :]
-                cost = agent.learn(batch_state, batch_action, batch_reward,
-                                   batch_next_state, batch_isOver)
+                batch_obs = batch_all_obs[:, :CONTEXT_LEN, :, :]
+                batch_next_obs = batch_all_obs[:, 1:, :, :]
+                cost = agent.learn(batch_obs, batch_action, batch_reward,
+                                   batch_next_obs, batch_isOver)
                 all_cost.append(float(cost))
         total_reward += reward
-        state = next_state
+        obs = next_obs
         if isOver:
             break
     if all_cost:
@@ -70,11 +70,11 @@ def run_train_episode(env, agent, rpm):
 
 
 def run_evaluate_episode(env, agent):
-    state = env.reset()
+    obs = env.reset()
     total_reward = 0
     while True:
-        action = agent.predict(state)
-        state, reward, isOver, info = env.step(action)
+        action = agent.predict(obs)
+        obs, reward, isOver, info = env.step(action)
         total_reward += reward
         if isOver:
             break

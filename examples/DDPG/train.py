@@ -118,7 +118,7 @@ if __name__ == '__main__':
         '--train_total_episode',
         type=int,
         default=int(1e4),
-        help='maximum training steps')
+        help='maximum training episodes')
 
     args = parser.parse_args()
 

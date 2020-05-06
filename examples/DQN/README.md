@@ -6,7 +6,7 @@ Based on PARL, we provide a simple demonstration of DQN.
 
 ### Result
 
-Performance of DQN playing CartPole-v1
+Performance of DQN playing CartPole-v0
 
 <p align="left">
 <img src="../QuickStart/performance.gif" alt="result" height="175"/>
@@ -23,7 +23,7 @@ Performance of DQN playing CartPole-v1
 
 ### Start Training:
 ```
-# To train a model for CartPole-v1 game
+# To train a model for CartPole-v0 game
 python train.py
 ```
 

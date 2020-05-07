@@ -45,7 +45,6 @@ class ActorModel(parl.Model):
         hid1 = self.fc1(obs)
         hid2 = self.fc2(hid1)
         means = self.fc3(hid2)
-        means = means
         return means
 
 

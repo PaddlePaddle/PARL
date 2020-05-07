@@ -21,14 +21,12 @@ from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from parl.utils import logger, action_mapping, ReplayMemory
 
-MAX_EPISODES = 5000
-TEST_EVERY_EPISODES = 20
 ACTOR_LR = 1e-4
 CRITIC_LR = 1e-3
 GAMMA = 0.99
 TAU = 0.001
 MEMORY_SIZE = int(1e6)
-MIN_LEARN_SIZE = 1e4
+MEMORY_WARMUP_SIZE = 1e4
 BATCH_SIZE = 128
 REWARD_SCALE = 0.1
 ENV_SEED = 1
@@ -37,12 +35,9 @@ ENV_SEED = 1
 def run_train_episode(env, agent, rpm):
     obs = env.reset()
     total_reward = 0
-    steps = 0
     while True:
-        steps += 1
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
-        action = np.squeeze(action)
 
         # Add exploration noise, and clip to [-1.0, 1.0]
         action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
@@ -53,7 +48,7 @@ def run_train_episode(env, agent, rpm):
 
         rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
 
-        if rpm.size() > MIN_LEARN_SIZE:
+        if rpm.size() > MEMORY_WARMUP_SIZE:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
                 BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
@@ -64,7 +59,7 @@ def run_train_episode(env, agent, rpm):
 
         if done:
             break
-    return total_reward, steps
+    return total_reward
 
 
 def run_evaluate_episode(env, agent):
@@ -73,7 +68,6 @@ def run_evaluate_episode(env, agent):
     while True:
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
-        action = np.squeeze(action)
         action = action_mapping(action, env.action_space.low[0],
                                 env.action_space.high[0])
 
@@ -101,19 +95,19 @@ def main():
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
 
-    test_flag = 0
-    total_steps = 0
-    while total_steps < args.train_total_steps:
-        train_reward, steps = run_train_episode(env, agent, rpm)
-        total_steps += steps
-        logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
+    while rpm.size() < MEMORY_WARMUP_SIZE:
+        run_train_episode(env, agent, rpm)
 
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
-                test_flag += 1
-            evaluate_reward = run_evaluate_episode(env, agent)
-            logger.info('Steps {}, Evaluate reward: {}'.format(
-                total_steps, evaluate_reward))
+    episode = 0
+    while episode < args.train_total_episode:
+        for i in range(50):
+            train_reward = run_train_episode(env, agent, rpm)
+            episode += 1
+            logger.info('Episode: {} Reward: {}'.format(episode, train_reward))
+
+        evaluate_reward = run_evaluate_episode(env, agent)
+        logger.info('Episode {}, Evaluate reward: {}'.format(
+            episode, evaluate_reward))
 
 
 if __name__ == '__main__':
@@ -121,15 +115,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env', help='Mujoco environment name', default='HalfCheetah-v2')
     parser.add_argument(
-        '--train_total_steps',
-        type=int,
-        default=int(1e7),
-        help='maximum training steps')
-    parser.add_argument(
-        '--test_every_steps',
+        '--train_total_episode',
         type=int,
         default=int(1e4),
-        help='the step interval between two consecutive evaluations')
+        help='maximum training episodes')
 
     args = parser.parse_args()
 

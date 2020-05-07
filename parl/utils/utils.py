@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import numpy as np
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
@@ -45,9 +46,12 @@ def action_mapping(model_output_act, low_bound, high_bound):
     Returns:
         action: np.array, which value is in [low_bound, high_bound]
     """
+    assert np.all(((model_output_act<=1.0), (model_output_act>=-1.0))), \
+        'the action should be in range [-1.0, 1.0]'
     assert high_bound > low_bound
     action = low_bound + (model_output_act - (-1.0)) * (
         (high_bound - low_bound) / 2.0)
+    action = np.clip(action, -1.0, 1.0)
     return action
 
 

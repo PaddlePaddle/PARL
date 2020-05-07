@@ -51,7 +51,7 @@ def action_mapping(model_output_act, low_bound, high_bound):
     assert high_bound > low_bound
     action = low_bound + (model_output_act - (-1.0)) * (
         (high_bound - low_bound) / 2.0)
-    action = np.clip(action, -1.0, 1.0)
+    action = np.clip(action, low_bound, high_bound)
     return action
 
 

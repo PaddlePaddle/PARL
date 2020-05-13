@@ -58,9 +58,10 @@ Abstractions
     :maxdepth: 1
     :caption: Tutorial
 
-    getting_started.rst
-    new_alg.rst
-    save_param.rst
+    tutorial/getting_started.rst
+    tutorial/new_alg.rst
+    tutorial/save_param.rst
+    tutorial/tensorboard.rst
 
 .. toctree::
     :maxdepth: 2

@@ -178,9 +178,9 @@ Then we use this agent to interact with the environment, and run around 1000 epi
 Summary
 -----------
 
-.. image:: ../examples/QuickStart/performance.gif
+.. image:: ../../examples/QuickStart/performance.gif
   :width: 300px
-.. image:: ./images/quickstart.png
+.. image:: ../images/quickstart.png
   :width: 300px
 In this tutorial, we have shown how to build an agent step-by-step to solve the `Cartpole` problem.
 

@@ -3,7 +3,7 @@
 </p>
 
 [English](./README.md) | 简体中文   
-[**文档**](https://parl.readthedocs.io)
+[**文档**](https://parl.readthedocs.io/en/stable/index.html)
 
 > PARL 是一个高性能、灵活的强化学习框架。
 # 特点

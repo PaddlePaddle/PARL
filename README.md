@@ -3,7 +3,7 @@
 </p>
 
 English | [简体中文](./README.cn.md)   
-[**Documentation**](https://parl.readthedocs.io)
+[**Documentation**](https://parl.readthedocs.io/en/stable/index.html)
 
 > PARL is a flexible and high-efficient reinforcement learning framework.
 

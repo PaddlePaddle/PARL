@@ -75,6 +75,8 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
+        # create log server
+        self.log_server_proc, self.log_server_address = self._create_log_server()
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
@@ -195,8 +197,9 @@ class Worker(object):
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
-            sys.executable, job_file, "--worker_address",
-            self.reply_job_address
+            sys.executable, job_file,
+            "--worker_address", self.reply_job_address,
+            "--log_server_address", self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -357,8 +360,37 @@ class Worker(object):
             "[Worker] lost connection with the master, will exit replying heartbeat for master."
         )
         self.worker_status.clear()
+        self.log_server_proc.kill()
         # exit the worker
         self.worker_is_alive = False
+
+    def _create_log_server(self):
+        log_server_file = __file__.replace('worker.pyc', 'log_server.py')
+        log_server_file = log_server_file.replace('worker.py', 'log_server.py')
+
+        # Get a random port for log server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('', 0))
+        addr, port = s.getsockname()
+        s.close()
+
+        command = [
+            sys.executable, log_server_file,
+            "--port", str(port),
+            "--log_dir", "~/.parl_data/job/",
+            "--line_num", "500"
+        ]
+
+        if sys.version_info.major == 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+        # Redirect the output to DEVNULL
+        with open('/tmp/worker_log_server.log', 'w') as FNULL:
+            log_server_proc = subprocess.Popen(
+                command, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        log_server_address = "{}:{}".format(self.worker_ip, port)
+        return log_server_proc, log_server_address
 
     def exit(self):
         """close the worker"""

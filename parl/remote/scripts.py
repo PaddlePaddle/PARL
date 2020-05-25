@@ -124,7 +124,8 @@ def start_master(port, cpu_num, monitor_port, debug):
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
 
     master_command = [
-        sys.executable, start_file, "--name", "master", "--port", port
+        sys.executable, start_file, "--name", "master", "--port", port,
+        "--monitor_url", "http://{}:{}".format(get_ip_address(), monitor_port),
     ]
     worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
@@ -262,6 +263,10 @@ def stop():
         subprocess.call([command], shell=True)
         command = (
             "ps aux | grep remote/monitor.py | awk '{print $2}' | xargs kill -9"
+        )
+        subprocess.call([command], shell=True)
+        command = (
+            "ps aux | grep remote/log_server.py | awk '{print $2}' | xargs kill -9"
         )
         subprocess.call([command], shell=True)
 

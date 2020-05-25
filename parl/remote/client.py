@@ -59,6 +59,7 @@ class Client(object):
         self.heartbeat_socket_initialized = threading.Event()
         self.master_is_alive = True
         self.client_is_alive = True
+        self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
 
@@ -132,14 +133,19 @@ class Client(object):
         thread.start()
         self.heartbeat_socket_initialized.wait()
 
+        self.client_id = self.reply_master_heartbeat_address.replace(':', '_') + \
+                            '_' + str(int(time.time()))
+
         # check if the master is connected properly
         try:
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
-                to_byte(self.heartbeat_master_address),
-                to_byte(socket.gethostname())
+                to_byte(self.reply_master_heartbeat_address),
+                to_byte(socket.gethostname()),
+                to_byte(self.client_id),
             ])
-            _ = self.submit_job_socket.recv_multipart()
+            message = self.submit_job_socket.recv_multipart()
+            self.log_monitor_url = to_str(message[1])
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
                            "check if master is started and ensure the input "
@@ -150,16 +156,16 @@ class Client(object):
                             "address {} is correct.".format(master_address))
 
     def _reply_heartbeat(self):
-        """Reply heartbeat signals to the specific node."""
+        """Reply heartbeat signals to the master node."""
 
         socket = self.ctx.socket(zmq.REP)
         socket.linger = 0
         socket.setsockopt(zmq.RCVTIMEO,
                           remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-        heartbeat_master_port =\
+        reply_master_heartbeat_port =\
             socket.bind_to_random_port(addr="tcp://*")
-        self.heartbeat_master_address = "{}:{}".format(get_ip_address(),
-                                                       heartbeat_master_port)
+        self.reply_master_heartbeat_address = "{}:{}".format(get_ip_address(),
+                                                       reply_master_heartbeat_port)
         self.heartbeat_socket_initialized.set()
         while self.client_is_alive and self.master_is_alive:
             try:
@@ -170,7 +176,8 @@ class Client(object):
                     remote_constants.HEARTBEAT_TAG,
                     to_byte(self.executable_path),
                     to_byte(str(self.actor_num)),
-                    to_byte(str(elapsed_time))
+                    to_byte(str(elapsed_time)),
+                    to_byte(str(self.log_monitor_url)),
                 ])
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
@@ -182,7 +189,7 @@ class Client(object):
     def _check_and_monitor_job(self, job_heartbeat_address,
                                ping_heartbeat_address, max_memory):
         """ Sometimes the client may receive a job that is dead, thus 
-        we have to check if this job is still alive before sending it to the actor.
+        we have to check if this job is still alive before adding it to the `actor_num`.
         """
         # job_heartbeat_socket: sends heartbeat signal to job
         job_heartbeat_socket = self.ctx.socket(zmq.REQ)
@@ -271,7 +278,8 @@ class Client(object):
                 self.lock.acquire()
                 self.submit_job_socket.send_multipart([
                     remote_constants.CLIENT_SUBMIT_TAG,
-                    to_byte(self.heartbeat_master_address)
+                    to_byte(self.reply_master_heartbeat_address),
+                    to_byte(self.client_id),
                 ])
                 message = self.submit_job_socket.recv_multipart()
                 self.lock.release()
@@ -337,6 +345,7 @@ def connect(master_address, distributed_files=[]):
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
+    logger.info("Remote actors log monitor url: {}".format(GLOBAL_CLIENT.log_monitor_url))
 
 
 def get_global_client():

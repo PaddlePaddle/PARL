@@ -8,11 +8,7 @@ import numpy as np
 
 def GridWorld(gridmap=None, is_slippery=False):
     if gridmap is None:
-        gridmap = [
-                'SFFF',
-                'FHFH',
-                'FFFH',
-                'HFFG']
+        gridmap = ['SFFF', 'FHFH', 'FFFH', 'HFFG']
     env = gym.make("FrozenLake-v0", desc=gridmap, is_slippery=False)
     env = FrozenLakeWapper(env)
     return env

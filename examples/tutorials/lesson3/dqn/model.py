@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import parl
-from parl import layers # 封装了 paddle.fluid.layers 的API
+from parl import layers  # 封装了 paddle.fluid.layers 的API
 
 
 class Model(parl.Model):

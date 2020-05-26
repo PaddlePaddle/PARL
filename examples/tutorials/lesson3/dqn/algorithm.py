@@ -38,11 +38,11 @@ class DQN(parl.Algorithm):
         # 从target_model中获取 max Q' 的值，用于计算target_Q
         next_pred_value = self.target_model.value(next_obs)
         best_v = layers.reduce_max(next_pred_value, dim=1)
-        best_v.stop_gradient = True # 阻止梯度传递
+        best_v.stop_gradient = True  # 阻止梯度传递
         terminal = layers.cast(terminal, dtype='float32')
         target = reward + (1.0 - terminal) * self.gamma * best_v
 
-        pred_value = self.model.value(obs) # 获取Q预测值
+        pred_value = self.model.value(obs)  # 获取Q预测值
         # 将action转onehot向量，比如：3 => [0,0,0,1,0]
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
@@ -55,7 +55,7 @@ class DQN(parl.Algorithm):
         # 计算 Q(s,a) 与 target_Q的均方差，得到loss
         cost = layers.square_error_cost(pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(learning_rate=self.lr) # 使用Adam优化器
+        optimizer = fluid.optimizer.Adam(learning_rate=self.lr)  # 使用Adam优化器
         optimizer.minimize(cost)
         return cost
 

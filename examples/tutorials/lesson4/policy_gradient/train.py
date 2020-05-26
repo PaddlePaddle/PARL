@@ -7,12 +7,12 @@ import parl
 
 from agent import Agent
 from model import Model
-from algorithm import PolicyGradient # from parl.algorithms import PolicyGradient
+from algorithm import PolicyGradient  # from parl.algorithms import PolicyGradient
 
 from parl.utils import logger
 
-
 LEARNING_RATE = 1e-3
+
 
 def run_episode(env, agent):
     obs_list, action_list, reward_list = [], [], []
@@ -28,6 +28,7 @@ def run_episode(env, agent):
         if done:
             break
     return obs_list, action_list, reward_list
+
 
 # 评估 agent, 跑 1 个episode
 def evaluate(env, agent, render=False):
@@ -72,7 +73,8 @@ def main():
     for i in range(1000):
         obs_list, action_list, reward_list = run_episode(env, agent)
         if i % 10 == 0:
-            logger.info("Episode {}, Reward Sum {}.".format(i, sum(reward_list)))
+            logger.info("Episode {}, Reward Sum {}.".format(
+                i, sum(reward_list)))
 
         batch_obs = np.array(obs_list)
         batch_action = np.array(action_list)

@@ -6,31 +6,32 @@ import time
 
 
 def run_episode(env, agent, render=False):
-    total_steps = 0 # 记录每个episode走了多少step
+    total_steps = 0  # 记录每个episode走了多少step
     total_reward = 0
 
-    obs = env.reset() # 重置环境, 重新开一局（即开始新的一个episode）
+    obs = env.reset()  # 重置环境, 重新开一局（即开始新的一个episode）
 
     while True:
-        action = agent.sample(obs) # 根据算法选择一个动作
-        next_obs, reward, done, _ = env.step(action) # 与环境进行一个交互
+        action = agent.sample(obs)  # 根据算法选择一个动作
+        next_obs, reward, done, _ = env.step(action)  # 与环境进行一个交互
         # 训练 Q-learning算法
         agent.learn(obs, action, reward, next_obs, done)
 
         obs = next_obs  # 存储上一个观察值
         total_reward += reward
-        total_steps += 1 # 计算step数
+        total_steps += 1  # 计算step数
         if render:
-            env.render() #渲染新的一帧图形
+            env.render()  #渲染新的一帧图形
         if done:
             break
     return total_reward, total_steps
+
 
 def test_episode(env, agent):
     total_reward = 0
     obs = env.reset()
     while True:
-        action = agent.predict(obs) # greedy
+        action = agent.predict(obs)  # greedy
         next_obs, reward, done, _ = env.step(action)
         total_reward += reward
         obs = next_obs
@@ -40,8 +41,8 @@ def test_episode(env, agent):
             print('test reward = %.1f' % (total_reward))
             break
 
+
 def main():
-    # https://github.com/openai/gym/wiki/FrozenLake-v0
     # env = gym.make("FrozenLake-v0", is_slippery=False)  # 0 left, 1 down, 2 right, 3 up
     # env = FrozenLakeWapper(env)
 
@@ -58,8 +59,9 @@ def main():
     is_render = False
     for episode in range(500):
         ep_reward, ep_steps = run_episode(env, agent, is_render)
-        print('Episode %s: steps = %s , reward = %.1f' % (episode, ep_steps, ep_reward))
-        
+        print('Episode %s: steps = %s , reward = %.1f' % (episode, ep_steps,
+                                                          ep_reward))
+
         # 每隔20个episode渲染一下看看效果
         if episode % 20 == 0:
             is_render = True

@@ -16,32 +16,37 @@ class Agent(parl.Agent):
         self.pred_program = fluid.Program()
         self.learn_program = fluid.Program()
 
-        with fluid.program_guard(self.pred_program): # 搭建计算图用于 预测动作，定义输入输出变量
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+        with fluid.program_guard(self.pred_program):  # 搭建计算图用于 预测动作，定义输入输出变量
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             self.act_prob = self.alg.predict(obs)
 
-        with fluid.program_guard(self.learn_program): # 搭建计算图用于 更新policy网络，定义输入输出变量
-            obs = layers.data(name='obs', shape=[self.obs_dim], dtype='float32')
+        with fluid.program_guard(
+                self.learn_program):  # 搭建计算图用于 更新policy网络，定义输入输出变量
+            obs = layers.data(
+                name='obs', shape=[self.obs_dim], dtype='float32')
             act = layers.data(name='act', shape=[1], dtype='int64')
             reward = layers.data(name='reward', shape=[], dtype='float32')
             self.cost = self.alg.learn(obs, act, reward)
 
     def sample(self, obs):
-        obs = np.expand_dims(obs, axis=0) # 增加一维维度
-        act_prob = self.fluid_executor.run(self.pred_program,
-                                            feed={'obs': obs.astype('float32')},
-                                            fetch_list=[self.act_prob])[0]
-        act_prob = np.squeeze(act_prob, axis=0) # 减少一维维度
-        act = np.random.choice(range(self.act_dim), p=act_prob) # 根据动作概率选取动作
+        obs = np.expand_dims(obs, axis=0)  # 增加一维维度
+        act_prob = self.fluid_executor.run(
+            self.pred_program,
+            feed={'obs': obs.astype('float32')},
+            fetch_list=[self.act_prob])[0]
+        act_prob = np.squeeze(act_prob, axis=0)  # 减少一维维度
+        act = np.random.choice(range(self.act_dim), p=act_prob)  # 根据动作概率选取动作
         return act
 
     def predict(self, obs):
         obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(self.pred_program,
-                                            feed={'obs': obs.astype('float32')},
-                                            fetch_list=[self.act_prob])[0]
+        act_prob = self.fluid_executor.run(
+            self.pred_program,
+            feed={'obs': obs.astype('float32')},
+            fetch_list=[self.act_prob])[0]
         act_prob = np.squeeze(act_prob, axis=0)
-        act = np.argmax(act_prob) # 根据动作概率选择概率最高的动作
+        act = np.argmax(act_prob)  # 根据动作概率选择概率最高的动作
         return act
 
     def learn(self, obs, act, reward):

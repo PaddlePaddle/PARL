@@ -19,10 +19,10 @@ from parl.utils import logger, action_mapping, ReplayMemory
 
 from agent import Agent
 from model import Model
-from algorithms import DDPG # from parl.algorithms import DDPG
+from algorithms import DDPG  # from parl.algorithms import DDPG
 from env import ContinuousCartPoleEnv
 
-ACTOR_LR  = 1e-3
+ACTOR_LR = 1e-3
 CRITIC_LR = 1e-3
 GAMMA = 0.99
 TAU = 0.001
@@ -113,7 +113,7 @@ def main():
         for i in range(50):
             total_reward = run_train_episode(agent, env, rpm)
             episode += 1
-        
+
         eval_reward = run_evaluate_episode(env, agent, render=False)
         logger.info('episode:{}    test_reward:{}'.format(
             episode, eval_reward))

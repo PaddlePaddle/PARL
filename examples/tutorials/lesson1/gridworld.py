@@ -5,14 +5,15 @@ import numpy as np
 
 # turtle tutorial : https://docs.python.org/3.3/library/turtle.html
 
+
 def GridWorld(gridmap=None, is_slippery=False):
     if gridmap is None:
         gridmap = [
                 'SFFF',
                 'FHFH',
                 'FFFH',
-                'HFFG' ]
-    env = gym.make("FrozenLake-v0", desc=gridmap, is_slippery=False) 
+                'HFFG']
+    env = gym.make("FrozenLake-v0", desc=gridmap, is_slippery=False)
     env = FrozenLakeWapper(env)
     return env
 
@@ -24,10 +25,10 @@ class FrozenLakeWapper(gym.Wrapper):
         self.max_x = env.desc.shape[1]
         self.t = None
         self.unit = 50
-    
+
     def draw_box(self, x, y, fillcolor='', line_color='gray'):
         self.t.up()
-        self.t.goto(x*self.unit, y*self.unit)
+        self.t.goto(x * self.unit, y * self.unit)
         self.t.color(line_color)
         self.t.fillcolor(fillcolor)
         self.t.setheading(90)
@@ -43,13 +44,15 @@ class FrozenLakeWapper(gym.Wrapper):
         self.t.setheading(90)
         self.t.fillcolor('red')
         self.t.goto((x + 0.5) * self.unit, (y + 0.5) * self.unit)
-        
+
     def render(self):
         if self.t == None:
             self.t = turtle.Turtle()
             self.wn = turtle.Screen()
-            self.wn.setup(self.unit*self.max_x+100, self.unit*self.max_y+100)
-            self.wn.setworldcoordinates(0, 0, self.unit*self.max_x, self.unit*self.max_y)
+            self.wn.setup(self.unit * self.max_x + 100,
+                          self.unit * self.max_y + 100)
+            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,
+                                        self.unit * self.max_y)
             self.t.shape('circle')
             self.t.width(2)
             self.t.speed(0)
@@ -58,13 +61,13 @@ class FrozenLakeWapper(gym.Wrapper):
                 for j in range(self.desc.shape[1]):
                     x = j
                     y = self.max_y - 1 - i
-                    if self.desc[i][j] == b'S': # Start
+                    if self.desc[i][j] == b'S':  # Start
                         self.draw_box(x, y, 'white')
-                    elif self.desc[i][j] == b'F': # Frozen ice
+                    elif self.desc[i][j] == b'F':  # Frozen ice
                         self.draw_box(x, y, 'white')
-                    elif self.desc[i][j] == b'G': # Goal
+                    elif self.desc[i][j] == b'G':  # Goal
                         self.draw_box(x, y, 'yellow')
-                    elif self.desc[i][j] == b'H': # Hole
+                    elif self.desc[i][j] == b'H':  # Hole
                         self.draw_box(x, y, 'black')
                     else:
                         self.draw_box(x, y, 'white')
@@ -75,7 +78,6 @@ class FrozenLakeWapper(gym.Wrapper):
         self.move_player(x_pos, y_pos)
 
 
-
 class CliffWalkingWapper(gym.Wrapper):
     def __init__(self, env):
         gym.Wrapper.__init__(self, env)
@@ -83,7 +85,7 @@ class CliffWalkingWapper(gym.Wrapper):
         self.unit = 50
         self.max_x = 12
         self.max_y = 4
-    
+
     def draw_x_line(self, y, x0, x1, color='gray'):
         assert x1 > x0
         self.t.color(color)
@@ -91,8 +93,8 @@ class CliffWalkingWapper(gym.Wrapper):
         self.t.up()
         self.t.goto(x0, y)
         self.t.down()
-        self.t.forward(x1-x0)
-    
+        self.t.forward(x1 - x0)
+
     def draw_y_line(self, x, y0, y1, color='gray'):
         assert y1 > y0
         self.t.color(color)
@@ -100,11 +102,11 @@ class CliffWalkingWapper(gym.Wrapper):
         self.t.up()
         self.t.goto(x, y0)
         self.t.down()
-        self.t.forward(y1-y0)
+        self.t.forward(y1 - y0)
 
     def draw_box(self, x, y, fillcolor='', line_color='gray'):
         self.t.up()
-        self.t.goto(x*self.unit, y*self.unit)
+        self.t.goto(x * self.unit, y * self.unit)
         self.t.color(line_color)
         self.t.fillcolor(fillcolor)
         self.t.setheading(90)
@@ -120,13 +122,15 @@ class CliffWalkingWapper(gym.Wrapper):
         self.t.setheading(90)
         self.t.fillcolor('red')
         self.t.goto((x + 0.5) * self.unit, (y + 0.5) * self.unit)
-        
+
     def render(self):
         if self.t == None:
             self.t = turtle.Turtle()
             self.wn = turtle.Screen()
-            self.wn.setup(self.unit*self.max_x+100, self.unit*self.max_y+100)
-            self.wn.setworldcoordinates(0, 0, self.unit*self.max_x, self.unit*self.max_y)
+            self.wn.setup(self.unit * self.max_x + 100,
+                          self.unit * self.max_y + 100)
+            self.wn.setworldcoordinates(0, 0, self.unit * self.max_x,
+                                        self.unit * self.max_y)
             self.t.shape('circle')
             self.t.width(2)
             self.t.speed(0)
@@ -137,9 +141,11 @@ class CliffWalkingWapper(gym.Wrapper):
                 self.t.forward(self.max_y * self.unit)
                 self.t.left(90)
             for i in range(1, self.max_y):
-                self.draw_x_line(y=i*self.unit, x0=0, x1=self.max_x*self.unit)
+                self.draw_x_line(
+                    y=i * self.unit, x0=0, x1=self.max_x * self.unit)
             for i in range(1, self.max_x):
-                self.draw_y_line(x=i*self.unit, y0=0, y1=self.max_y*self.unit)
+                self.draw_y_line(
+                    x=i * self.unit, y0=0, y1=self.max_y * self.unit)
 
             for i in range(1, self.max_x - 1):
                 self.draw_box(i, 0, 'black')
@@ -153,7 +159,8 @@ class CliffWalkingWapper(gym.Wrapper):
 
 if __name__ == '__main__':
     # 环境1：FrozenLake, 可以配置冰面是否是滑的
-    env = gym.make("FrozenLake-v0", is_slippery=False)  # 0 left, 1 down, 2 right, 3 up
+    # 0 left, 1 down, 2 right, 3 up
+    env = gym.make("FrozenLake-v0", is_slippery=False)
     env = FrozenLakeWapper(env)
 
     # 环境2：CliffWalking, 悬崖环境
@@ -174,4 +181,4 @@ if __name__ == '__main__':
         obs, reward, done, info = env.step(action)
         print('step {}: action {}, obs {}, reward {}, done {}, info {}'.format(\
                 step, action, obs, reward, done, info))
-        env.render() # 渲染一帧图像
+        env.render()  # 渲染一帧图像

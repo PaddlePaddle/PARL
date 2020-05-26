@@ -39,15 +39,12 @@ class ContinuousCartPoleEnv(gym.Env):
         # is still within bounds
         high = np.array([
             self.x_threshold * 2,
-            np.finfo(np.float32).max,
-            self.theta_threshold_radians * 2,
-            np.finfo(np.float32).max])
+            np.finfo(np.float32).max, self.theta_threshold_radians * 2,
+            np.finfo(np.float32).max
+        ])
 
         self.action_space = spaces.Box(
-            low=self.min_action,
-            high=self.max_action,
-            shape=(1,)
-        )
+            low=self.min_action, high=self.max_action, shape=(1, ))
         self.observation_space = spaces.Box(-high, high)
 
         self.seed()
@@ -64,7 +61,8 @@ class ContinuousCartPoleEnv(gym.Env):
         x, x_dot, theta, theta_dot = self.state
         costheta = math.cos(theta)
         sintheta = math.sin(theta)
-        temp = (force + self.polemass_length * theta_dot * theta_dot * sintheta) / self.total_mass
+        temp = (force + self.polemass_length * theta_dot * theta_dot * sintheta
+                ) / self.total_mass
         thetaacc = (self.gravity * sintheta - costheta * temp) / \
             (self.length * (4.0/3.0 - self.masspole * costheta * costheta / self.total_mass))
         xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
@@ -107,7 +105,7 @@ Any further steps are undefined behavior.
         return np.array(self.state), reward, done, {}
 
     def reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4, ))
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -116,7 +114,7 @@ Any further steps are undefined behavior.
         screen_height = 400
 
         world_width = self.x_threshold * 2
-        scale = screen_width /world_width
+        scale = screen_width / world_width
         carty = 100  # TOP OF CART
         polewidth = 10.0
         polelen = scale * 1.0
@@ -132,7 +130,7 @@ Any further steps are undefined behavior.
             self.carttrans = rendering.Transform()
             cart.add_attr(self.carttrans)
             self.viewer.add_geom(cart)
-            l, r, t, b = -polewidth / 2, polewidth / 2, polelen-polewidth / 2, -polewidth / 2
+            l, r, t, b = -polewidth / 2, polewidth / 2, polelen - polewidth / 2, -polewidth / 2
             pole = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
             pole.set_color(.8, .6, .4)
             self.poletrans = rendering.Transform(translation=(0, axleoffset))

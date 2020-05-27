@@ -26,7 +26,7 @@ import warnings
 import zmq
 from datetime import datetime
 
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, get_free_tcp_port
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -369,15 +369,10 @@ class Worker(object):
         log_server_file = __file__.replace('worker.pyc', 'log_server.py')
         log_server_file = log_server_file.replace('worker.py', 'log_server.py')
 
-        # Get a random port for log server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('', 0))
-        addr, port = s.getsockname()
-        s.close()
-
+        port = get_free_tcp_port()
         command = [
-            sys.executable, log_server_file, "--port",
-            str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"
+            sys.executable, log_server_file, "--port", port, "--log_dir",
+            "~/.parl_data/job/", "--line_num", "500"
         ]
 
         if sys.version_info.major == 3:

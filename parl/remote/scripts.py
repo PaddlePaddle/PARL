@@ -18,7 +18,6 @@ import multiprocessing
 import os
 import random
 import re
-import socket
 import subprocess
 import sys
 import time
@@ -27,7 +26,7 @@ import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address, to_str, _IS_WINDOWS
+from parl.utils import get_ip_address, to_str, _IS_WINDOWS, get_free_tcp_port, is_port_available
 from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
@@ -45,26 +44,6 @@ if not _IS_WINDOWS:
 #TODO: this line will cause error in python2/macOS
 if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)
-
-
-def get_free_tcp_port():
-    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp.bind(('', 0))
-    addr, port = tcp.getsockname()
-    tcp.close()
-    return str(port)
-
-
-def is_port_available(port):
-    """ Check if a port is used.
-
-    True if the port is available for connection.
-    """
-    port = int(port)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    available = sock.connect_ex(('localhost', port))
-    sock.close()
-    return available
 
 
 def is_master_started(address):

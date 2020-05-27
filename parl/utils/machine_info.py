@@ -18,7 +18,10 @@ import socket
 import subprocess
 from parl.utils import logger, _HAS_FLUID, _IS_WINDOWS
 
-__all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
+__all__ = [
+    'get_gpu_count', 'get_ip_address', 'is_gpu_available', 'get_free_tcp_port',
+    'is_port_available'
+]
 
 
 def get_ip_address():
@@ -100,3 +103,23 @@ def is_gpu_available():
                 But PARL found that Paddle was not complied with CUDA, which may cause issues."
                            )
     return ret
+
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return str(port)
+
+
+def is_port_available(port):
+    """ Check if a port is used.
+
+    True if the port is available for connection.
+    """
+    port = int(port)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    available = sock.connect_ex(('localhost', port))
+    sock.close()
+    return available

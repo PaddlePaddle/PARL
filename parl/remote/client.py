@@ -178,7 +178,7 @@ class Client(object):
                     to_byte(str(self.actor_num)),
                     to_byte(str(elapsed_time)),
                     to_byte(str(self.log_monitor_url)),
-                ]) # TODO: remove additional information
+                ])  # TODO: remove additional information
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
                                "Please check if it is still alive.")

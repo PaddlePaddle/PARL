@@ -57,10 +57,10 @@ class Master(object):
         port: The ip port that the master node binds to.
     """
 
-    def __init__(self, port, monitor_url):
+    def __init__(self, port, monitor_port=None):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
-        self.monitor_url = monitor_url
+        self.monitor_url = "http://{}:{}".format(self.master_ip, monitor_port)
         logger.set_dir(
             os.path.expanduser('~/.parl_data/master/{}_{}'.format(
                 self.master_ip, port)))
@@ -221,8 +221,9 @@ class Master(object):
             thread.start()
             log_monitor_address = "{}/logs?client_id={}".format(
                 self.monitor_url, client_id)
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG,
-                                               to_byte(log_monitor_address)])
+            self.client_socket.send_multipart(
+                [remote_constants.NORMAL_TAG,
+                 to_byte(log_monitor_address)])
 
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:

@@ -76,7 +76,8 @@ class Worker(object):
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
         # create log server
-        self.log_server_proc, self.log_server_address = self._create_log_server()
+        self.log_server_proc, self.log_server_address = self._create_log_server(
+        )
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
@@ -197,9 +198,9 @@ class Worker(object):
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
-            sys.executable, job_file,
-            "--worker_address", self.reply_job_address,
-            "--log_server_address", self.log_server_address
+            sys.executable, job_file, "--worker_address",
+            self.reply_job_address, "--log_server_address",
+            self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -375,10 +376,8 @@ class Worker(object):
         s.close()
 
         command = [
-            sys.executable, log_server_file,
-            "--port", str(port),
-            "--log_dir", "~/.parl_data/job/",
-            "--line_num", "500"
+            sys.executable, log_server_file, "--port",
+            str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"
         ]
 
         if sys.version_info.major == 3:

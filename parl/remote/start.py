@@ -28,8 +28,8 @@ def main(args):
 
     if args.name == 'master':
         port = args.port
-        monitor_url = args.monitor_url
-        master = Master(port, monitor_url)
+        monitor_port = args.monitor_port
+        master = Master(port, monitor_port)
         master.run()
 
     elif args.name == 'worker':
@@ -49,6 +49,6 @@ if __name__ == "__main__":
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)
-    parser.add_argument('--monitor_url', default='', type=str)
+    parser.add_argument('--monitor_port', default='', type=str)
     args = parser.parse_args()
     main(args)

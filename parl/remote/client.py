@@ -164,8 +164,8 @@ class Client(object):
                           remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         reply_master_heartbeat_port =\
             socket.bind_to_random_port(addr="tcp://*")
-        self.reply_master_heartbeat_address = "{}:{}".format(get_ip_address(),
-                                                       reply_master_heartbeat_port)
+        self.reply_master_heartbeat_address = "{}:{}".format(
+            get_ip_address(), reply_master_heartbeat_port)
         self.heartbeat_socket_initialized.set()
         while self.client_is_alive and self.master_is_alive:
             try:
@@ -178,7 +178,7 @@ class Client(object):
                     to_byte(str(self.actor_num)),
                     to_byte(str(elapsed_time)),
                     to_byte(str(self.log_monitor_url)),
-                ])
+                ]) # TODO: remove additional information
             except zmq.error.Again as e:
                 logger.warning("[Client] Cannot connect to the master."
                                "Please check if it is still alive.")
@@ -345,7 +345,8 @@ def connect(master_address, distributed_files=[]):
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
-    logger.info("Remote actors log monitor url: {}".format(GLOBAL_CLIENT.log_monitor_url))
+    logger.info("Remote actors log monitor url: {}".format(
+        GLOBAL_CLIENT.log_monitor_url))
 
 
 def get_global_client():

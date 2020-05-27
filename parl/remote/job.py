@@ -346,8 +346,9 @@ class Job(object):
         job_id = job_address.replace(':', '_') + '_' + str(int(time.time()))
         self.log_dir = os.path.expanduser('~/.parl_data/job/{}'.format(job_id))
         logger.set_dir(self.log_dir)
-        logger.info("[Job] Job {} initialized. Reply heartbeat socket Address: {}.".format(
-            job_id, job_address))
+        logger.info(
+            "[Job] Job {} initialized. Reply heartbeat socket Address: {}.".
+            format(job_id, job_address))
 
         job_address_sender.send(job_address)
         job_id_sender.send(job_id)
@@ -461,6 +462,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--worker_address", required=True, type=str, help="worker_address")
     parser.add_argument(
-        "--log_server_address", required=True, type=str, help="log_server_address, address of the log web server on worker")
+        "--log_server_address",
+        required=True,
+        type=str,
+        help="log_server_address, address of the log web server on worker")
     args = parser.parse_args()
     job = Job(args.worker_address, args.log_server_address)

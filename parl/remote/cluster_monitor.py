@@ -49,8 +49,6 @@ class ClusterMonitor(object):
 
     def add_client_job(self, client_id, job_info):
         self.lock.acquire()
-        if client_id not in self.status['client_jobs']:
-            self.status['client_jobs'][client_id] = {}
         self.status['client_jobs'][client_id].update(job_info)
         self.lock.release()
 

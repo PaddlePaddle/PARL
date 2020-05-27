@@ -100,13 +100,19 @@ def cluster():
     return jsonify(data)
 
 
-@app.route('/logs', methods=['GET', ])
+@app.route(
+    '/logs', methods=[
+        'GET',
+    ])
 def logs():
     client_id = request.args.get('client_id')
     return render_template('jobs.html', client_id=client_id)
 
 
-@app.route('/get-jobs', methods=['GET', ])
+@app.route(
+    '/get-jobs', methods=[
+        'GET',
+    ])
 def get_jobs():
     client_id = request.args.get('client_id')
     jobs = CLUSTER_MONITOR.get_data()['client_jobs'].get(client_id)
@@ -114,16 +120,16 @@ def get_jobs():
     if jobs:
         for idx, job_id in enumerate(jobs):
             monitor_url = jobs[job_id]
-            data.append(
-                {
-                    "id": idx,
-                    "job_id": job_id,
-                    "log_url": "http://{}/get-log?job_id={}".format(
-                        monitor_url, job_id),
-                    "download_url": "http://{}/download-log?job_id={}".format(
-                        monitor_url, job_id),
-                }
-            )
+            data.append({
+                "id":
+                idx,
+                "job_id":
+                job_id,
+                "log_url":
+                "http://{}/get-log?job_id={}".format(monitor_url, job_id),
+                "download_url":
+                "http://{}/download-log?job_id={}".format(monitor_url, job_id),
+            })
     return jsonify(data)
 
 

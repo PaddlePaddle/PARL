@@ -1,3 +1,17 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import linecache
 import os
@@ -9,7 +23,10 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route("/get-log", methods=['GET', ])
+@app.route(
+    "/get-log", methods=[
+        'GET',
+    ])
 def get_log():
     '''
     args: 
@@ -20,22 +37,29 @@ def get_log():
     try:
         job_id = request.args.get('job_id')
     except:
-        return make_response(jsonify(message="No job_id provided, please check your request."), 400)
+        return make_response(
+            jsonify(message="No job_id provided, please check your request."),
+            400)
 
     log_dir = current_app.config.get('LOG_DIR')
     log_dir = os.path.expanduser(log_dir)
     log_file_path = os.path.join(log_dir, job_id, 'stdout.log')
     if not os.path.isfile(log_file_path):
-        return make_response(jsonify(message="Log not exsits, please check your job_id"), 400)
+        return make_response(
+            jsonify(message="Log not exsits, please check your job_id"), 400)
     else:
         line_num = current_app.config.get('LINE_NUM')
         linecache.checkcache(log_file_path)
         log_content = ''.join(linecache.getlines(log_file_path)[-line_num:])
-        return make_response(jsonify(message="Log exsits, content in log",
-                                     log=log_content), 200)
+        return make_response(
+            jsonify(message="Log exsits, content in log", log=log_content),
+            200)
 
 
-@app.route('/download-log', methods=['GET', ])
+@app.route(
+    '/download-log', methods=[
+        'GET',
+    ])
 def download_log():
     '''
     args:
@@ -46,12 +70,15 @@ def download_log():
     try:
         job_id = request.args.get('job_id')
     except:
-        return make_response(jsonify(message="No job_id provided, please check your request."), 400)
+        return make_response(
+            jsonify(message="No job_id provided, please check your request."),
+            400)
     log_dir = current_app.config.get('LOG_DIR')
     log_dir = os.path.expanduser(log_dir)
     log_file_path = os.path.join(log_dir, job_id, 'stdout.log')
     if not os.path.isfile(log_file_path):
-        return make_response(jsonify(message="Log not exsits, please check your job_id"), 400)
+        return make_response(
+            jsonify(message="Log not exsits, please check your job_id"), 400)
     else:
         return send_file(log_file_path, as_attachment=True)
 

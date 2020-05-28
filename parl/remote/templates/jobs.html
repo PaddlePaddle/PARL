@@ -22,8 +22,11 @@
         </a>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav">
-            <li class="nav-item" id="job-monitor-nav">
-              <a class="text-white">Remote Job Monitor</a>
+            <li class="nav-item" id="worker_nav">
+              <a class="btn text-white" href="workers">Worker</a>
+            </li>
+            <li class="nav-item" id="client_nav">
+              <a class="btn text-white" href="clients">Client</a>
             </li>
           </ul>
         </div>
@@ -35,13 +38,23 @@
       </h5>
 
       <div class="card">
-        <div class="card-header">
-          <h5 class="card-title" style="display: inline;">
+        <div class="card-header" style="display: inline;">
+          <h3 style="display: inline;">
+            Remote Job Log
+          </h3>
+          <p
+            style="
+              float: right;
+              margin-bottom: 0rem;
+              position: relative;
+              bottom: -0.5rem;
+            "
+          >
             Client ID: {{ client_id }}
-          </h5>
+          </p>
         </div>
-        <table id="table"></table>
       </div>
+      <table id="table"></table>
     </div>
 
     <!-- Modal -->
@@ -73,7 +86,7 @@
           </div>
           <div class="modal-footer">
             <a style="position: relative; left: -160px; font-size: small;">
-              * Only the lastest 500 lines of the log are shown, <br>
+              * Only the lastest 500 lines of the log are shown, <br />
               download the log file for the full log.
             </a>
             <button

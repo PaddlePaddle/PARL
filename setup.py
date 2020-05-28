@@ -80,6 +80,7 @@ setup(
         "flask==1.0.4",
         "click",
         "psutil>=5.6.2",
+        "flask_cors",
     ],
     classifiers=[
         'Intended Audience :: Developers',

@@ -345,7 +345,7 @@ def connect(master_address, distributed_files=[]):
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
-    logger.info("Remote actors log monitor url: {}".format(
+    logger.info("Remote actors log url: {}".format(
         GLOBAL_CLIENT.log_monitor_url))
 
 

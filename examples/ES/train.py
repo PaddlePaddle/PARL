@@ -23,7 +23,7 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 from parl.utils.window_stat import WindowStat
 from six.moves import queue
 from actor import Actor
@@ -202,7 +202,7 @@ class Learner(object):
         logger.info(metrics)
         for k, v in metrics.items():
             if v is not None:
-                tensorboard.add_scalar(k, v, self.sample_total_steps)
+                summary.add_scalar(k, v, self.sample_total_steps)
 
 
 if __name__ == '__main__':

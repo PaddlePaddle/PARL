@@ -22,7 +22,7 @@ from tqdm import tqdm
 import parl
 import paddle.fluid as fluid
 from parl.utils import get_gpu_count
-from parl.utils import tensorboard, logger
+from parl.utils import summary, logger
 
 from dqn import DQN  # slight changes from parl.algorithms.DQN
 from atari_agent import AtariAgent

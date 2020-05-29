@@ -206,18 +206,18 @@ class Learner(object):
 
         if metric['mean_episode_rewards'] is not None:
             summary.add_scalar('train/mean_reward',
-                                   metric['mean_episode_rewards'],
-                                   self.sample_total_steps)
+                               metric['mean_episode_rewards'],
+                               self.sample_total_steps)
             summary.add_scalar('train/total_loss', metric['total_loss'],
-                                   self.sample_total_steps)
+                               self.sample_total_steps)
             summary.add_scalar('train/pi_loss', metric['pi_loss'],
-                                   self.sample_total_steps)
+                               self.sample_total_steps)
             summary.add_scalar('train/vf_loss', metric['vf_loss'],
-                                   self.sample_total_steps)
+                               self.sample_total_steps)
             summary.add_scalar('train/entropy', metric['entropy'],
-                                   self.sample_total_steps)
+                               self.sample_total_steps)
             summary.add_scalar('train/learn_rate', metric['lr'],
-                                   self.sample_total_steps)
+                               self.sample_total_steps)
 
         logger.info(metric)
 

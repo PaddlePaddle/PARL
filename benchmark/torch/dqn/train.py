@@ -153,17 +153,16 @@ def main():
                     eval_rewards.append(run_evaluate_episode(test_env, agent))
 
                 summary.add_scalar('dqn/eval', np.mean(eval_rewards),
-                                       total_steps)
+                                   total_steps)
                 summary.add_scalar('dqn/score', total_reward, total_steps)
                 summary.add_scalar('dqn/loss', loss, total_steps)
                 summary.add_scalar('dqn/exploration', agent.exploration,
-                                       total_steps)
+                                   total_steps)
                 summary.add_scalar('dqn/Q value',
-                                       evaluate_fixed_Q(agent, fixed_obs),
-                                       total_steps)
+                                   evaluate_fixed_Q(agent, fixed_obs),
+                                   total_steps)
                 summary.add_scalar('dqn/grad_norm',
-                                       get_grad_norm(agent.alg.model),
-                                       total_steps)
+                                   get_grad_norm(agent.alg.model), total_steps)
 
 
 if __name__ == '__main__':

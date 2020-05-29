@@ -19,7 +19,6 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger  # 日志打印工具
-from parl.utils import tensorboard  # 曲线图记录工具
 
 from model import Model
 from algorithm import DQN
@@ -53,7 +52,6 @@ def run_episode(env, agent, rpm):
             train_loss = agent.learn(batch_obs, batch_action, batch_reward,
                                      batch_next_obs,
                                      batch_done)  # s,a,r,s',done
-            tensorboard.add_scalar('loss', train_loss, agent.global_step)
 
         total_reward += reward
         obs = next_obs
@@ -122,7 +120,6 @@ def main():
         eval_reward = evaluate(env, agent, render=True)  # render=True 查看显示效果
         logger.info('episode:{}    e_greed:{}   test_reward:{}'.format(
             episode, agent.e_greed, eval_reward))
-        tensorboard.add_scalar('reward/Episodes', eval_reward, episode)  # 记录曲线
 
     # 训练结束，保存模型
     save_path = './dqn_model.ckpt'

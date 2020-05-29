@@ -26,7 +26,7 @@ import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address, to_str, _IS_WINDOWS, get_free_tcp_port, is_port_available
+from parl.utils import get_ip_address, to_str, _IS_WINDOWS, get_free_tcp_port, is_port_available, get_port_from_range
 from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
@@ -62,6 +62,20 @@ def is_master_started(address):
         return False
 
 
+def parse_port_range(log_server_port_range):
+    try:
+        re.match(r'\d*[-]\d*', log_server_port_range).span()
+    except:
+        raise Exception(
+            "The input log_server_port_range should be `start-end` format.")
+    start, end = map(int, log_server_port_range.split('-'))
+    if start > end:
+        raise Exception(
+            "Start port number must be smaller than the end port number.")
+
+    return start, end
+
+
 @click.group()
 def cli():
     pass
@@ -80,7 +94,15 @@ def cli():
     "cpus of this machine.")
 @click.option(
     "--monitor_port", help="The port to start a cluster monitor.", type=str)
-def start_master(port, cpu_num, monitor_port, debug):
+@click.option(
+    "--log_server_port_range",
+    help='''
+    Port range (start-end) of the log server on the worker. Default: 8000-9000. 
+    The worker will pick a random avaliable port in [start, end] for the log server.
+    ''',
+    default="8000-9000",
+    type=str)
+def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     if debug:
         os.environ['DEBUG'] = 'True'
 
@@ -101,6 +123,10 @@ def start_master(port, cpu_num, monitor_port, debug):
     monitor_file = monitor_file.replace('scripts.py', 'monitor.py')
 
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
+    start, end = parse_port_range(log_server_port_range)
+    log_server_port = get_port_from_range(start, end)
+    while log_server_port_range == monitor_port:
+        log_server_port = get_port_from_range(start, end)
 
     master_command = [
         sys.executable,
@@ -115,7 +141,8 @@ def start_master(port, cpu_num, monitor_port, debug):
     worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
-        str(cpu_num)
+        str(cpu_num), '--log_server_port',
+        str(log_server_port)
     ]
     monitor_command = [
         sys.executable, monitor_file, "--monitor_port",
@@ -211,7 +238,18 @@ def start_master(port, cpu_num, monitor_port, debug):
     type=int,
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
-def start_worker(address, cpu_num):
+@click.option(
+    "--log_server_port_range",
+    help='''
+    Port range (start-end) of the log server on the worker. Default: 8000-9000. 
+    The worker will pick a random avaliable port in [start, end] for the log server.
+    ''',
+    default="8000-9000",
+    type=str)
+def start_worker(address, cpu_num, log_server_port_range):
+    start, end = parse_port_range(log_server_port_range)
+    log_server_port = get_port_from_range(start, end)
+
     if not is_master_started(address):
         raise Exception("Worker can not connect to the master node, " +
                         "please check if the input address {} ".format(
@@ -223,7 +261,8 @@ def start_worker(address, cpu_num):
     command = [
         sys.executable, start_file, "--name", "worker", "--address", address,
         "--cpu_num",
-        str(cpu_num)
+        str(cpu_num), "--log_server_port",
+        str(log_server_port)
     ]
     p = subprocess.Popen(command)
 

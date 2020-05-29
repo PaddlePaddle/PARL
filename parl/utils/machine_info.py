@@ -14,13 +14,14 @@
 
 import os
 import platform
+import random
 import socket
 import subprocess
 from parl.utils import logger, _HAS_FLUID, _IS_WINDOWS
 
 __all__ = [
     'get_gpu_count', 'get_ip_address', 'is_gpu_available', 'get_free_tcp_port',
-    'is_port_available'
+    'is_port_available', 'get_port_from_range'
 ]
 
 
@@ -123,3 +124,12 @@ def is_port_available(port):
     available = sock.connect_ex(('localhost', port))
     sock.close()
     return available
+
+
+def get_port_from_range(start, end):
+    while True:
+        port = random.randint(start, end)
+        if is_port_available(port):
+            break
+
+    return port

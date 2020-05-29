@@ -34,8 +34,9 @@ def main(args):
 
     elif args.name == 'worker':
         address = args.address
+        log_server_port = args.log_server_port
         cpu_num = int(args.cpu_num) if args.cpu_num else None
-        worker = Worker(address, cpu_num)
+        worker = Worker(address, cpu_num, log_server_port)
         worker.run()
 
     else:
@@ -50,5 +51,6 @@ if __name__ == "__main__":
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)
     parser.add_argument('--monitor_port', default='', type=str)
+    parser.add_argument('--log_server_port', default='', type=str)
     args = parser.parse_args()
     main(args)

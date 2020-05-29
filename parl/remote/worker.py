@@ -26,7 +26,7 @@ import warnings
 import zmq
 from datetime import datetime
 
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, get_free_tcp_port
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -63,7 +63,7 @@ class Worker(object):
         cpu_num (int): Number of cpu to be used on the worker.
     """
 
-    def __init__(self, master_address, cpu_num=None):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None):
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
         self.ctx = zmq.Context.instance()
@@ -77,7 +77,7 @@ class Worker(object):
         self._create_sockets()
         # create log server
         self.log_server_proc, self.log_server_address = self._create_log_server(
-        )
+            port=log_server_port)
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
@@ -365,11 +365,10 @@ class Worker(object):
         # exit the worker
         self.worker_is_alive = False
 
-    def _create_log_server(self):
+    def _create_log_server(self, port):
         log_server_file = __file__.replace('worker.pyc', 'log_server.py')
         log_server_file = log_server_file.replace('worker.py', 'log_server.py')
 
-        port = get_free_tcp_port()
         command = [
             sys.executable, log_server_file, "--port", port, "--log_dir",
             "~/.parl_data/job/", "--line_num", "500"

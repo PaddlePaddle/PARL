@@ -35,7 +35,7 @@ def get_log():
         log: newest `LINE_NUM` lines of the log file
     '''
     try:
-        job_id = request.args.get('job_id')
+        job_id = request.args['job_id']
     except:
         return make_response(
             jsonify(message="No job_id provided, please check your request."),
@@ -68,7 +68,7 @@ def download_log():
         log: log file
     '''
     try:
-        job_id = request.args.get('job_id')
+        job_id = request.args['job_id']
     except:
         return make_response(
             jsonify(message="No job_id provided, please check your request."),

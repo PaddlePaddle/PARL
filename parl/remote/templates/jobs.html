@@ -82,7 +82,11 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p id="log-content">Loading...</p>
+            <p id="log-content">
+              <div id="loading-spin" class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </p>
           </div>
           <div class="modal-footer">
             <a style="position: relative; left: -160px; font-size: small;">
@@ -171,6 +175,7 @@
               .ansi_to_html(data.log)
               .replace(/\r\n/g, "<br>")
               .replace(/\n/g, "<br>");
+            $("#loading-spin").hide();
             $("#log-content").html(html);
           });
         }, 1000);

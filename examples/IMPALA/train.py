@@ -221,7 +221,7 @@ class Learner(object):
             min_episode_steps = np.min(np.array(episode_steps).flatten())
 
         metric = {
-            'Sample steps': self.sample_total_steps,
+            'sample_steps': self.sample_total_steps,
             'max_episode_rewards': max_episode_rewards,
             'mean_episode_rewards': mean_episode_rewards,
             'min_episode_rewards': min_episode_rewards,

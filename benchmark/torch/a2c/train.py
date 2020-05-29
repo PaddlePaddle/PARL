@@ -27,7 +27,7 @@ from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils.window_stat import WindowStat
 from parl.utils.time_stat import TimeStat
 from parl.utils import machine_info
-from parl.utils import logger, get_gpu_count, tensorboard
+from parl.utils import get_gpu_count, logger
 from parl.algorithms import A2C
 
 from atari_model import ActorCritic
@@ -205,18 +205,18 @@ class Learner(object):
         }
 
         if metric['mean_episode_rewards'] is not None:
-            tensorboard.add_scalar('train/mean_reward',
+            logger.add_scalar('train/mean_reward',
                                    metric['mean_episode_rewards'],
                                    self.sample_total_steps)
-            tensorboard.add_scalar('train/total_loss', metric['total_loss'],
+            logger.add_scalar('train/total_loss', metric['total_loss'],
                                    self.sample_total_steps)
-            tensorboard.add_scalar('train/pi_loss', metric['pi_loss'],
+            logger.add_scalar('train/pi_loss', metric['pi_loss'],
                                    self.sample_total_steps)
-            tensorboard.add_scalar('train/vf_loss', metric['vf_loss'],
+            logger.add_scalar('train/vf_loss', metric['vf_loss'],
                                    self.sample_total_steps)
-            tensorboard.add_scalar('train/entropy', metric['entropy'],
+            logger.add_scalar('train/entropy', metric['entropy'],
                                    self.sample_total_steps)
-            tensorboard.add_scalar('train/learn_rate', metric['lr'],
+            logger.add_scalar('train/learn_rate', metric['lr'],
                                    self.sample_total_steps)
 
         logger.info(metric)

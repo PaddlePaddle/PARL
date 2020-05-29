@@ -20,6 +20,8 @@ import sys
 from termcolor import colored
 import shutil
 from datetime import datetime
+from parl.utils.tensorboard import _writer
+from tensorboardX import SummaryWriter
 
 __all__ = ['set_dir', 'get_dir', 'set_level', 'auto_set_dir']
 
@@ -222,3 +224,32 @@ def get_dir():
 mod = sys.modules['__main__']
 if hasattr(mod, '__file__') and 'XPARL' not in os.environ:
     _logger.info("Argv: " + ' '.join(sys.argv))
+
+
+# ----------logging data with tensorboard as backend--------------
+_writer = None
+_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
+
+
+def create_file_before_first_call(func_name):
+    def call(*args, **kwargs):
+        global _writer
+        if _writer is None:
+            logdir = get_dir()
+            if logdir is None:
+                logdir = auto_set_dir(action='d')
+                _logger.warning(
+                    "[tensorboard] logdir is None, will save tensorboard files to {}"
+                    .format(logdir))
+            _writer = SummaryWriter(logdir=get_dir())
+        func = getattr(_writer, func_name)
+        func(*args, **kwargs)
+        _writer.flush()
+
+    return call
+
+
+# export writter functions
+for func_name in _WRITTER_METHOD:
+    locals()[func_name] = create_file_before_first_call(func_name)
+    __all__.append(func_name)

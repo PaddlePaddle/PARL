@@ -22,7 +22,7 @@ import parl
 
 import numpy as np
 from tqdm import tqdm
-from parl.utils import tensorboard, logger
+from parl.utils import logger
 from parl.algorithms import DQN, DDQN
 
 from agent import AtariAgent
@@ -152,16 +152,16 @@ def main():
                 for _ in range(3):
                     eval_rewards.append(run_evaluate_episode(test_env, agent))
 
-                tensorboard.add_scalar('dqn/eval', np.mean(eval_rewards),
+                logger.add_scalar('dqn/eval', np.mean(eval_rewards),
                                        total_steps)
-                tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-                tensorboard.add_scalar('dqn/loss', loss, total_steps)
-                tensorboard.add_scalar('dqn/exploration', agent.exploration,
+                logger.add_scalar('dqn/score', total_reward, total_steps)
+                logger.add_scalar('dqn/loss', loss, total_steps)
+                logger.add_scalar('dqn/exploration', agent.exploration,
                                        total_steps)
-                tensorboard.add_scalar('dqn/Q value',
+                logger.add_scalar('dqn/Q value',
                                        evaluate_fixed_Q(agent, fixed_obs),
                                        total_steps)
-                tensorboard.add_scalar('dqn/grad_norm',
+                logger.add_scalar('dqn/grad_norm',
                                        get_grad_norm(agent.alg.model),
                                        total_steps)
 

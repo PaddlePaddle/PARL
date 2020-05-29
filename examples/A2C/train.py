@@ -25,7 +25,7 @@ from atari_agent import AtariAgent
 from collections import defaultdict
 
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, get_gpu_count, tensorboard
+from parl.utils import get_gpu_count, logger
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
@@ -205,7 +205,7 @@ class Learner(object):
 
         for key, value in metric.items():
             if value is not None:
-                tensorboard.add_scalar(key, value, self.sample_total_steps)
+                logger.add_scalar(key, value, self.sample_total_steps)
 
         logger.info(metric)
 

@@ -21,7 +21,7 @@ _writer = None
 _WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
 
-def create_file_after_first_call(func_name):
+def create_file_before_first_call(func_name):
     def call(*args, **kwargs):
         global _writer
         if _writer is None:
@@ -41,5 +41,5 @@ def create_file_after_first_call(func_name):
 
 # export writter functions
 for func_name in _WRITTER_METHOD:
-    locals()[func_name] = create_file_after_first_call(func_name)
+    locals()[func_name] = create_file_before_first_call(func_name)
     __all__.append(func_name)

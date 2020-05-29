@@ -29,7 +29,7 @@ def get_args():
         '--logdir',
         type=str,
         default='logdir',
-        help='directory to save model/tensorboard data')
+        help='directory to save model/evaluation data')
 
     parser.add_argument(
         '--difficulty',

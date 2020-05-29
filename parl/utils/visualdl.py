@@ -9,7 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Note: This is an experimental function. 
 We don't recommend you use it now untill Visualdl release the official version.
@@ -23,6 +22,7 @@ __all__ = []
 
 _writer = None
 _WRITTER_METHOD = ['add_scalar']
+
 
 def create_file_after_first_call(func_name):
     def call(*args, **kwargs):
@@ -38,7 +38,9 @@ def create_file_after_first_call(func_name):
         func = getattr(_writer, func_name)
         func(*args, **kwargs)
         _writer.flush()
+
     return call
+
 
 # export writter functions
 for func_name in _WRITTER_METHOD:

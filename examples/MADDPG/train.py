@@ -63,7 +63,7 @@ def run_episode(env, agents):
         for i, agent in enumerate(agents):
             critic_loss = agent.learn(agents)
             summary.add_scalar('critic_loss_%d' % i, critic_loss,
-                                   agent.global_train_step)
+                               agent.global_train_step)
 
     return total_reward, agents_reward, steps
 
@@ -156,11 +156,11 @@ def train_agent():
                        use_time))
             t_start = time.time()
             summary.add_scalar('mean_episode_reward/episode',
-                                   mean_episode_reward, total_episodes)
+                               mean_episode_reward, total_episodes)
             summary.add_scalar('mean_episode_reward/steps',
-                                   mean_episode_reward, total_steps)
+                               mean_episode_reward, total_steps)
             summary.add_scalar('use_time/1000episode', use_time,
-                                   total_episodes)
+                               total_episodes)
 
             # save model
             if not args.restore:

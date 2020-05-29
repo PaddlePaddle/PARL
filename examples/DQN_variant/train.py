@@ -121,10 +121,8 @@ def main():
         total_steps += steps
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
         summary.add_scalar('dqn/score', total_reward, total_steps)
-        summary.add_scalar('dqn/loss', loss,
-                               total_steps)  # mean of total loss
-        summary.add_scalar('dqn/exploration', agent.exploration,
-                               total_steps)
+        summary.add_scalar('dqn/loss', loss, total_steps)  # mean of total loss
+        summary.add_scalar('dqn/exploration', agent.exploration, total_steps)
         pbar.update(steps)
 
         if total_steps // args.test_every_steps >= test_flag:

@@ -111,8 +111,7 @@ def main():
         train_reward, steps = run_train_episode(env, agent, rpm)
         total_steps += steps
         logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
-        summary.add_scalar('train/episode_reward', train_reward,
-                               total_steps)
+        summary.add_scalar('train/episode_reward', train_reward, total_steps)
 
         if total_steps // args.test_every_steps >= test_flag:
             while total_steps // args.test_every_steps >= test_flag:
@@ -121,7 +120,7 @@ def main():
             logger.info('Steps {}, Evaluate reward: {}'.format(
                 total_steps, evaluate_reward))
             summary.add_scalar('eval/episode_reward', evaluate_reward,
-                                   total_steps)
+                               total_steps)
 
 
 if __name__ == '__main__':

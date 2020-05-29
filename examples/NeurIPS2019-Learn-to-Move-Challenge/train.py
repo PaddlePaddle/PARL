@@ -247,23 +247,23 @@ class Learner(object):
 
                 if self.env_reward_stat.count > 500:
                     summary.add_scalar('recent_env_reward',
-                                           self.env_reward_stat.mean,
-                                           self.total_steps)
+                                       self.env_reward_stat.mean,
+                                       self.total_steps)
                     summary.add_scalar('recent_shaping_reward',
-                                           self.shaping_reward_stat.mean,
-                                           self.total_steps)
+                                       self.shaping_reward_stat.mean,
+                                       self.total_steps)
                 if self.critic_loss_stat.count > 500:
                     summary.add_scalar('recent_critic_loss',
-                                           self.critic_loss_stat.mean,
-                                           self.total_steps)
+                                       self.critic_loss_stat.mean,
+                                       self.total_steps)
                 summary.add_scalar('episode_length', n, self.total_steps)
                 summary.add_scalar('max_env_reward', self.max_env_reward,
-                                       self.total_steps)
+                                   self.total_steps)
                 summary.add_scalar('ready_actor_num',
-                                       self.ready_actor_queue.qsize(),
-                                       self.total_steps)
+                                   self.ready_actor_queue.qsize(),
+                                   self.total_steps)
                 summary.add_scalar('episode_time', episode_time,
-                                       self.total_steps)
+                                   self.total_steps)
 
             self.noiselevel = self.noiselevel * NOISE_DECAY
 

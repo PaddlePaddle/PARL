@@ -17,12 +17,13 @@
 import gym
 import numpy as np
 import parl
-from parl.utils import logger, action_mapping, ReplayMemory
+from parl.utils import logger
 
 from agent import Agent
 from model import Model
-from algorithms import DDPG  # from parl.algorithms import DDPG
+from algorithm import DDPG  # from parl.algorithms import DDPG
 from env import ContinuousCartPoleEnv
+from replay_memory import ReplayMemory
 
 ACTOR_LR = 1e-3
 CRITIC_LR = 1e-3
@@ -34,6 +35,18 @@ BATCH_SIZE = 128
 REWARD_SCALE = 0.1
 NOISE = 0.05
 TRAIN_EPISODE = 6e3
+
+def action_mapping(model_output_act, low_bound, high_bound):
+    """ 把模型输出的动作从[-1, 1]映射到实际动作范围[low_bound, high_bound]
+        输入的model_output_act和输出的action都是np.array类型
+    """
+    assert np.all(((model_output_act<=1.0), (model_output_act>=-1.0))), \
+        'the action should be in range [-1.0, 1.0]'
+    assert high_bound > low_bound
+    action = low_bound + (model_output_act - (-1.0)) * (
+        (high_bound - low_bound) / 2.0)
+    action = np.clip(action, low_bound, high_bound)
+    return action
 
 
 def run_train_episode(agent, env, rpm):
@@ -52,13 +65,15 @@ def run_train_episode(agent, env, rpm):
 
         next_obs, reward, done, info = env.step(action)
 
-        rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
+        # 因为action只有一个浮点数，先放入list中，兼容action是多个浮点数的情况
+        action = [action]
+        rpm.append((obs, action, REWARD_SCALE * reward, next_obs, done))
 
-        if rpm.size() > MEMORY_WARMUP_SIZE and (steps % 5) == 0:
-            batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
-                BATCH_SIZE)
+        if len(rpm) > MEMORY_WARMUP_SIZE and (steps % 5) == 0:
+            (batch_obs, batch_action, batch_reward, batch_next_obs,
+                        batch_done) = rpm.sample(BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
-                        batch_terminal)
+                        batch_done)
 
         obs = next_obs
         total_reward += reward
@@ -105,9 +120,9 @@ def main():
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
     agent = Agent(algorithm, obs_dim, act_dim)
 
-    rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
+    rpm = ReplayMemory(MEMORY_SIZE)
 
-    while rpm.size() < MEMORY_WARMUP_SIZE:
+    while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
     episode = 0

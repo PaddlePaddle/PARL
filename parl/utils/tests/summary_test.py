@@ -11,25 +11,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
-import paddle.fluid as fluid
-from parl import layers
+import unittest
+from parl.utils import summary
 import numpy as np
-import parl
+from parl.utils import logger
+import os
 
 
-class RLDispatcherModel(parl.Model):
-    def __init__(self, act_dim):
-        self._act_dim = act_dim
-        self._fc_1 = layers.fc(size=512, act='relu')
-        self._fc_2 = layers.fc(size=256, act='relu')
-        self._fc_3 = layers.fc(size=128, act='tanh')
-        self._output = layers.fc(size=act_dim)
+class TestUtils(unittest.TestCase):
+    def tearDown(self):
+        summary.flush()
 
-    def value(self, obs):
-        _h_1 = self._fc_1(obs)
-        _h_2 = self._fc_2(_h_1)
-        _h_3 = self._fc_3(_h_2)
-        self._pred = self._output(_h_3)
-        return self._pred
+    def test_add_scalar(self):
+        x = range(100)
+        for i in x:
+            summary.add_scalar('y=2x', i * 2, i)
+        self.assertTrue(os.path.exists('./train_log/summary_test'))
+
+    def test_add_histogram(self):
+        for i in range(10):
+            x = np.random.random(1000)
+            summary.add_histogram('distribution centers', x + i, i)
+
+
+if __name__ == '__main__':
+    logger.auto_set_dir(action='d')
+    unittest.main()

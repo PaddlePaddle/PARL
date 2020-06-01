@@ -20,6 +20,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import threading
 import warnings
@@ -377,10 +378,13 @@ class Worker(object):
         if sys.version_info.major == 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
-        # Redirect the output to DEVNULL
-        with open(os.devnull, 'w') as FNULL:
-            log_server_proc = subprocess.Popen(
-                command, stdout=FNULL, stderr=subprocess.STDOUT)
+        if _IS_WINDOWS:
+            FNULL = tempfile.TemporaryFile()
+        else:
+            FNULL = open(os.devnull, 'w')
+        log_server_proc = subprocess.Popen(
+            command, stdout=FNULL, stderr=subprocess.STDOUT)
+        FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)
         return log_server_proc, log_server_address

@@ -15,14 +15,15 @@ import parl
 import unittest
 from parl.remote.client import disconnect
 
-class TestPingMaster(unittest.TestCase):
-  def tearDown(self):
-    disconnect()
 
-  def test_throw_exception(self):
-    with self.assertRaises(AssertionError):
-      parl.connect("176.2.3.4:8080")
+class TestPingMaster(unittest.TestCase):
+    def tearDown(self):
+        disconnect()
+
+    def test_throw_exception(self):
+        with self.assertRaises(AssertionError):
+            parl.connect("176.2.3.4:8080")
+
 
 if __name__ == '__main__':
     unittest.main()
- 

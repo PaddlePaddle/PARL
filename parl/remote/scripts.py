@@ -278,6 +278,9 @@ def stop():
 
         command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\monitor.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
         os.popen(command).read()
+
+        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\log_server.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
+        os.popen(command).read()
     else:
         command = (
             "ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")

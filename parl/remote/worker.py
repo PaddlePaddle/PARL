@@ -378,7 +378,7 @@ class Worker(object):
             warnings.simplefilter("ignore", ResourceWarning)
 
         # Redirect the output to DEVNULL
-        with open('/tmp/worker_log_server.log', 'w') as FNULL:
+        with open(os.devnull, 'w') as FNULL:
             log_server_proc = subprocess.Popen(
                 command, stdout=FNULL, stderr=subprocess.STDOUT)
 

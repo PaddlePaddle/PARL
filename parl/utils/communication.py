@@ -14,7 +14,6 @@
 
 import cloudpickle
 import pyarrow
-import platform
 import subprocess
 import os
 from parl.utils import _IS_WINDOWS

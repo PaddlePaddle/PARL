@@ -81,7 +81,7 @@ setup(
         "click",
         "six>=1.14.0"
         "psutil>=5.6.2",
-        "visualdl>=2.0.0b;python_version>='3' and platform_system!='Windows'",
+        "visualdl>=2.0.0b;python_version>='3' and platform_system=='Linux'",
     ],
     classifiers=[
         'Intended Audience :: Developers',

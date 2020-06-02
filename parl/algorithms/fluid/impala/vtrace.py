@@ -146,7 +146,7 @@ def from_importance_weights(behaviour_actions_log_probs,
 
 
 def recursively_scan(discounts, cs, deltas):
-    """ Recursively calculate vs_minus_v_xs according to following equation:
+    r""" Recursively calculate vs_minus_v_xs according to following equation:
     vs_minus_v_xs(t) = deltas(t) + discounts(t) * cs(t) * vs_minus_v_xs(t + 1)
 
     Args:

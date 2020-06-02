@@ -11,17 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import parl
+import unittest
+from parl.remote.client import disconnect
 
 
-# A dev image based on paddle production image
+class TestPingMaster(unittest.TestCase):
+    def tearDown(self):
+        disconnect()
 
-FROM parl/parl-test:cuda9.0-cudnn7-v2
+    def test_throw_exception(self):
+        with self.assertRaises(AssertionError):
+            parl.connect("176.2.3.4:8080")
 
-COPY ./requirements.txt /root/
 
-RUN apt-get install -y libgflags-dev libgoogle-glog-dev libomp-dev unzip
-RUN apt-get install -y libgtest-dev && cd /usr/src/gtest && mkdir build \
-	&& cd build && cmake .. && make  && cp libgtest*.a /usr/local/lib
-
-RUN apt-get update
-RUN apt-get install -y iputils-ping
+if __name__ == '__main__':
+    unittest.main()

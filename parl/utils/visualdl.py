@@ -11,11 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Note: This is an experimental function. 
-We don't recommend you use it now untill Visualdl release the official version.
-To use this function, please install visualdl first.
-"""
 
 from visualdl import LogWriter
 from parl.utils import logger

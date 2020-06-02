@@ -18,6 +18,7 @@ import multiprocessing
 import os
 import random
 import re
+import requests
 import subprocess
 import sys
 import time
@@ -74,6 +75,19 @@ def parse_port_range(log_server_port_range):
             "Start port number must be smaller than the end port number.")
 
     return start, end
+
+
+def is_log_server_started(ip_address, port):
+    started = False
+    for _ in range(3):
+        try:
+            r = requests.get("http://{}:{}/get-log".format(ip_address, port))
+            if r.status_code == 400:
+                started = True
+                break
+        except:
+            time.sleep(3)
+    return started
 
 
 @click.group()
@@ -229,6 +243,9 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
+    if not is_log_server_started(master_ip, log_server_port):
+        click.echo("# Fail to start the log server.")
+
 
 @click.command("connect", short_help="Start a worker node.")
 @click.option(
@@ -265,6 +282,9 @@ def start_worker(address, cpu_num, log_server_port_range):
         str(log_server_port)
     ]
     p = subprocess.Popen(command)
+
+    if not is_log_server_started(get_ip_address(), log_server_port):
+        click.echo("# Fail to start the log server.")
 
 
 @click.command("stop", help="Exit the cluster.")

@@ -139,7 +139,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
-    while log_server_port_range == monitor_port:
+    while log_server_port == monitor_port or log_server_port == port:
         log_server_port = get_port_from_range(start, end)
 
     master_command = [

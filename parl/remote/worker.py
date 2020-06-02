@@ -370,8 +370,8 @@ class Worker(object):
         log_server_file = __file__.replace('worker.pyc', 'log_server.py')
         log_server_file = log_server_file.replace('worker.py', 'log_server.py')
 
-        if not port:
-            port = "0"  # `0` means using a random port
+        if port is None:
+            port = "0"  # `0` means using a random port in flask
         command = [
             sys.executable, log_server_file, "--port",
             str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"

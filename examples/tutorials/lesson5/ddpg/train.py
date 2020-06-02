@@ -36,6 +36,7 @@ REWARD_SCALE = 0.1
 NOISE = 0.05
 TRAIN_EPISODE = 6e3
 
+
 def action_mapping(model_output_act, low_bound, high_bound):
     """ 把模型输出的动作从[-1, 1]映射到实际动作范围[low_bound, high_bound]
         输入的model_output_act和输出的action都是np.array类型
@@ -71,7 +72,7 @@ def run_train_episode(agent, env, rpm):
 
         if len(rpm) > MEMORY_WARMUP_SIZE and (steps % 5) == 0:
             (batch_obs, batch_action, batch_reward, batch_next_obs,
-                        batch_done) = rpm.sample(BATCH_SIZE)
+             batch_done) = rpm.sample(BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_done)
 

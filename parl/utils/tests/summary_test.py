@@ -20,8 +20,8 @@ import os
 
 class TestUtils(unittest.TestCase):
     def tearDown(self):
-      if hasattr(summary, 'flush'):
-          summary.flush()
+        if hasattr(summary, 'flush'):
+            summary.flush()
 
     def test_add_scalar(self):
         x = range(100)

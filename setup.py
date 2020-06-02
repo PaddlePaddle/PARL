@@ -79,7 +79,6 @@ setup(
         "tb-nightly==1.15.0a20190801",
         "flask>=1.0.4",
         "click",
-        "six>=1.14.0"
         "psutil>=5.6.2",
         "visualdl>=2.0.0b;python_version>='3' and platform_system=='Linux'",
     ],

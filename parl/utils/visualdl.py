@@ -19,6 +19,7 @@ To use this function, please install visualdl first.
 
 from visualdl import LogWriter
 from parl.utils import logger
+from parl.utils.machine_info import get_ip_address
 
 __all__ = []
 
@@ -34,8 +35,8 @@ def create_file_after_first_call(func_name):
             if logdir is None:
                 logdir = logger.auto_set_dir(action='d')
                 logger.warning(
-                    "[VisualDL] logdir is None, will save VisualDL files to {}"
-                    .format(logdir))
+                    "[VisualDL] logdir is None, will save VisualDL files to {}\nView the data using: visualdl --logdir=./{} --host={}"
+                    .format(logdir, logdir, get_ip_address()))
             _writer = LogWriter(logdir=logger.get_dir())
         func = getattr(_writer, func_name)
         func(*args, **kwargs)

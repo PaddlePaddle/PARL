@@ -13,6 +13,6 @@
 # limitations under the License.
 
 try:
-  from parl.utils.visualdl import *
+    from parl.utils.visualdl import *
 except:
-  from parl.utils.tensorboard import *
+    from parl.utils.tensorboard import *

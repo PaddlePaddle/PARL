@@ -372,5 +372,5 @@ def disconnect():
         GLOBAL_CLIENT = None
     else:
         logger.info(
-            "No client to be released. Please make sure that you have call `parl.connect`"
+            "No client to be released. Please make sure that you have called `parl.connect`"
         )

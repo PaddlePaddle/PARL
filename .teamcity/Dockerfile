@@ -26,3 +26,6 @@ RUN apt-get install -y libgtest-dev && cd /usr/src/gtest && mkdir build \
 RUN wget https://github.com/google/protobuf/releases/download/v2.4.1/protobuf-2.4.1.tar.gz \
     && tar -zxvf protobuf-2.4.1.tar.gz \
     && cd protobuf-2.4.1 && ./configure && make && make install 
+
+RUN apt-get update
+RUN apt-get install -y iputils-ping

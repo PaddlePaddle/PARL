@@ -368,6 +368,7 @@ class Worker(object):
             "ps aux | grep remote/job.py | grep " + self.reply_job_address +
             " | awk '{print $2}' | xargs kill -9")
         subprocess.call([command], shell=True)
+        os._exit(1)
 
     def run(self):
         """Keep running until it lost connection with the master.

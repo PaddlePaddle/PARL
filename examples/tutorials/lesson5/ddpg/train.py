@@ -37,19 +37,6 @@ NOISE = 0.05
 TRAIN_EPISODE = 6e3
 
 
-def action_mapping(model_output_act, low_bound, high_bound):
-    """ 把模型输出的动作从[-1, 1]映射到实际动作范围[low_bound, high_bound]
-        输入的model_output_act和输出的action都是np.array类型
-    """
-    assert np.all(((model_output_act<=1.0), (model_output_act>=-1.0))), \
-        'the action should be in range [-1.0, 1.0]'
-    assert high_bound > low_bound
-    action = low_bound + (model_output_act - (-1.0)) * (
-        (high_bound - low_bound) / 2.0)
-    action = np.clip(action, low_bound, high_bound)
-    return action
-
-
 def run_train_episode(agent, env, rpm):
     obs = env.reset()
     total_reward = 0
@@ -61,8 +48,6 @@ def run_train_episode(agent, env, rpm):
 
         # 增加探索扰动, 输出限制在 [-1.0, 1.0] 范围内
         action = np.clip(np.random.normal(action, NOISE), -1.0, 1.0)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 

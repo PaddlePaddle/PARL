@@ -87,7 +87,7 @@ class Job(object):
                 _ = self.kill_job_socket.recv_multipart()
             except zmq.error.Again as e:
                 pass
-            os._exit(1)
+            os._exit(0)
 
     def _create_sockets(self):
         """Create five sockets for each job in main process.

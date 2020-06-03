@@ -134,7 +134,6 @@ def remote_class(*args, **kwargs):
                     try:
                         self.job_socket.send_multipart(
                             [remote_constants.KILLJOB_TAG])
-                        _ = self.job_socket.recv_multipart()
                         self.job_socket.close(0)
                     except AttributeError:
                         pass

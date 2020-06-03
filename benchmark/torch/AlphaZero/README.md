@@ -24,3 +24,7 @@ Generate `submission.py` by provided script, for example:
 ```bash
 python gen_submission.py saved_model/best.pth.tar
 ```
+
+### Reference
+- [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
+- [Scoring connect-x agents](https://www.kaggle.com/petercnudde/scoring-connect-x-agents)

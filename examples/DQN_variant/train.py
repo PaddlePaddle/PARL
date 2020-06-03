@@ -22,7 +22,7 @@ from atari_agent import AtariAgent
 from atari_model import AtariModel
 from datetime import datetime
 from replay_memory import ReplayMemory, Experience
-from parl.utils import tensorboard, logger
+from parl.utils import summary, logger
 from tqdm import tqdm
 from utils import get_player
 
@@ -120,11 +120,9 @@ def main():
         total_reward, steps, loss = run_train_episode(env, agent, rpm)
         total_steps += steps
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
-        tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-        tensorboard.add_scalar('dqn/loss', loss,
-                               total_steps)  # mean of total loss
-        tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                               total_steps)
+        summary.add_scalar('dqn/score', total_reward, total_steps)
+        summary.add_scalar('dqn/loss', loss, total_steps)  # mean of total loss
+        summary.add_scalar('dqn/exploration', agent.exploration, total_steps)
         pbar.update(steps)
 
         if total_steps // args.test_every_steps >= test_flag:
@@ -139,7 +137,7 @@ def main():
                 "eval_agent done, (steps, eval_reward): ({}, {})".format(
                     total_steps, np.mean(eval_rewards)))
             eval_test = np.mean(eval_rewards)
-            tensorboard.add_scalar('dqn/eval', eval_test, total_steps)
+            summary.add_scalar('dqn/eval', eval_test, total_steps)
 
     pbar.close()
 

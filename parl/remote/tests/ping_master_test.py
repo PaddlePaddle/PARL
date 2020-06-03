@@ -11,25 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
-import paddle.fluid as fluid
-from parl import layers
-import numpy as np
 import parl
+import unittest
+from parl.remote.client import disconnect
 
 
-class RLDispatcherModel(parl.Model):
-    def __init__(self, act_dim):
-        self._act_dim = act_dim
-        self._fc_1 = layers.fc(size=512, act='relu')
-        self._fc_2 = layers.fc(size=256, act='relu')
-        self._fc_3 = layers.fc(size=128, act='tanh')
-        self._output = layers.fc(size=act_dim)
+class TestPingMaster(unittest.TestCase):
+    def tearDown(self):
+        disconnect()
 
-    def value(self, obs):
-        _h_1 = self._fc_1(obs)
-        _h_2 = self._fc_2(_h_1)
-        _h_3 = self._fc_3(_h_2)
-        self._pred = self._output(_h_3)
-        return self._pred
+    def test_throw_exception(self):
+        with self.assertRaises(AssertionError):
+            parl.connect("176.2.3.4:8080")
+
+
+if __name__ == '__main__':
+    unittest.main()

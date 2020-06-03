@@ -110,7 +110,8 @@ class ClusterMonitor(object):
             client_address (str): IP address of the exited client.
         """
         self.lock.acquire()
-        self.status['clients'].pop(client_address)
+        if client_address in self.status['clients']:
+            self.status['clients'].pop(client_address)
         self.lock.release()
 
     def get_status_info(self):

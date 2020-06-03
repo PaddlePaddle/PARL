@@ -19,7 +19,7 @@ import time
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.utils import logger, tensorboard, action_mapping, ReplayMemory
+from parl.utils import logger, summary, action_mapping, ReplayMemory
 
 MAX_EPISODES = 5000
 ACTOR_LR = 3e-4
@@ -117,8 +117,7 @@ def main():
         train_reward, steps = run_train_episode(env, agent, rpm)
         total_steps += steps
         logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
-        tensorboard.add_scalar('train/episode_reward', train_reward,
-                               total_steps)
+        summary.add_scalar('train/episode_reward', train_reward, total_steps)
 
         if total_steps // args.test_every_steps >= test_flag:
             while total_steps // args.test_every_steps >= test_flag:
@@ -126,8 +125,8 @@ def main():
             evaluate_reward = run_evaluate_episode(env, agent)
             logger.info('Steps {}, Evaluate reward: {}'.format(
                 total_steps, evaluate_reward))
-            tensorboard.add_scalar('eval/episode_reward', evaluate_reward,
-                                   total_steps)
+            summary.add_scalar('eval/episode_reward', evaluate_reward,
+                               total_steps)
 
 
 if __name__ == '__main__':

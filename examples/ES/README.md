@@ -34,7 +34,7 @@ Then we can start the distributed training by running:
 python train.py
 ```
 
-Training result will be saved in `train_log` with training curve that can be visualized in tensorboard data.
+Training result will be saved in `train_log` with training curve.
 
 ### Reference
 + [Ray](https://github.com/ray-project/ray)

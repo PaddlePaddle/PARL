@@ -90,7 +90,7 @@ class IMPALA(Algorithm):
                  vf_loss_coeff=None,
                  clip_rho_threshold=None,
                  clip_pg_rho_threshold=None):
-        """ IMPALA algorithm
+        r""" IMPALA algorithm
         
         Args:
             model (parl.Model): forward network of policy and value

@@ -86,7 +86,7 @@ MAX_INT32 = 0x7fffffff
 try:
     from paddle import fluid
     fluid_version = get_fluid_version()
-    assert fluid_version >= 151, "PARL requires paddle>=1.5.1"
+    assert fluid_version >= 161, "PARL requires paddle>=1.6.1"
     _HAS_FLUID = True
 except ImportError:
     _HAS_FLUID = False

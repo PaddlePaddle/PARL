@@ -20,7 +20,8 @@ import os
 
 class TestUtils(unittest.TestCase):
     def tearDown(self):
-        summary.flush()
+        if hasattr(summary, 'flush'):
+            summary.flush()
 
     def test_add_scalar(self):
         x = range(100)
@@ -29,6 +30,8 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(os.path.exists('./train_log/summary_test'))
 
     def test_add_histogram(self):
+        if not hasattr(summary, 'add_histogram'):
+            return
         for i in range(10):
             x = np.random.random(1000)
             summary.add_histogram('distribution centers', x + i, i)

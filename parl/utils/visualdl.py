@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tensorboardX import SummaryWriter
+from visualdl import LogWriter
 from parl.utils import logger
 from parl.utils.machine_info import get_ip_address
 
 __all__ = []
 
 _writer = None
-_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
+_WRITTER_METHOD = ['add_scalar']
 
 
 def create_file_after_first_call(func_name):
@@ -30,9 +30,9 @@ def create_file_after_first_call(func_name):
             if logdir is None:
                 logdir = logger.auto_set_dir(action='d')
                 logger.warning(
-                    "[tensorboard] logdir is None, will save tensorboard files to {}\nView the data using: tensorboard --logdir=./{} --host={}"
+                    "[VisualDL] logdir is None, will save VisualDL files to {}\nView the data using: visualdl --logdir=./{} --host={}"
                     .format(logdir, logdir, get_ip_address()))
-            _writer = SummaryWriter(logdir=logger.get_dir())
+            _writer = LogWriter(logdir=logger.get_dir())
         func = getattr(_writer, func_name)
         func(*args, **kwargs)
         _writer.flush()

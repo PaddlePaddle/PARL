@@ -109,6 +109,13 @@ class Client(object):
                 with open(file, 'rb') as f:
                     content = f.read()
                     pyfiles['other_files'][file] = content
+            # append entry file to code list
+            main_file = sys.argv[0]
+            with open(main_file, 'rb') as code_file:
+                code = code_file.read()
+                # parl/remote/remote_decorator.py -> remote_decorator.py
+                file_name = main_file.split('/')[-1]
+                pyfiles['python_files'][file_name] = code
         except AssertionError as e:
             raise Exception(
                 'Failed to create the client, the file {} does not exist.'.

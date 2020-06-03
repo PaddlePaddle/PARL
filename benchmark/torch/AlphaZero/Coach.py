@@ -15,7 +15,7 @@ import parl
 from parl.utils import logger
 
 from actor import Actor
-from utils import split_group
+from utils import split_group, get_test_dataset
 from alphazero_agent import AlphaZeroAgent
 
 
@@ -36,8 +36,7 @@ class Coach():
         self.remote_actors_signal_queues = []
         self.remote_actors_return_queue = queue.Queue()
 
-        with open("./test_dataset.pickle", 'rb') as f:
-            self.test_dataset = pickle.load(f)
+        self.test_dataset = get_test_dataset()
 
     def _run_remote_tasks(self, signal_queue):
         # The remote actor will actually run on the local machine or other machines of xparl cluster
@@ -156,7 +155,7 @@ class Coach():
                 current_wins += cwins_
                 draws += draws_
 
-            logger.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (previous_wins, current_wins, draws))
+            logger.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (current_wins, previous_wins, draws))
             if previous_wins + current_wins == 0 or float(current_wins) / (previous_wins + current_wins) < self.args.updateThreshold:
                 logger.info('REJECTING NEW MODEL')
                 self.current_agent.restore(os.path.join(self.args.checkpoint, 'temp.pth.tar'))

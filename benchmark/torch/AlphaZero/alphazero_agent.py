@@ -1,3 +1,17 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import numpy as np
 import parl
@@ -11,24 +25,26 @@ from connect4_model import Connect4Model
 args = dotdict({
     'lr': 0.001,
     'dropout': 0.3,
-    'epochs': 10,
+    'epochs': 5,
     'batch_size': 64,
     'num_channels': 64,
 })
 
+
 class AlphaZero(parl.Algorithm):
     def __init__(self, model):
         self.model = model
-    
+
     def learn(self, boards, target_pis, target_vs, optimizer):
-        self.model.train() # train mode
+        self.model.train()  # train mode
 
         # compute model output
         out_log_pi, out_v = self.model(boards)
 
         pi_loss = -torch.sum(target_pis * out_log_pi) / target_pis.size()[0]
 
-        v_loss =  torch.sum((target_vs - out_v.view(-1)) ** 2) / target_vs.size()[0]
+        v_loss = torch.sum(
+            (target_vs - out_v.view(-1))**2) / target_vs.size()[0]
 
         total_loss = pi_loss + v_loss
 
@@ -38,16 +54,16 @@ class AlphaZero(parl.Algorithm):
         optimizer.step()
 
         return total_loss, pi_loss, v_loss
-    
+
     def predict(self, board):
-        self.model.eval() # eval mode
+        self.model.eval()  # eval mode
 
         with torch.no_grad():
             log_pi, v = self.model(board)
-        
+
         pi = torch.exp(log_pi)
         return pi, v
-   
+
 
 class AlphaZeroAgent(parl.Agent):
     def __init__(self, game, cuda=True):
@@ -76,20 +92,23 @@ class AlphaZeroAgent(parl.Agent):
 
             pbar = tqdm(range(batch_count), desc='Training Net')
             for _ in pbar:
-                sample_ids = np.random.randint(len(examples), size=args.batch_size)
+                sample_ids = np.random.randint(
+                    len(examples), size=args.batch_size)
                 boards, pis, vs = list(zip(*[examples[i] for i in sample_ids]))
                 boards = torch.FloatTensor(np.array(boards).astype(np.float64))
                 target_pis = torch.FloatTensor(np.array(pis))
                 target_vs = torch.FloatTensor(np.array(vs).astype(np.float64))
 
                 if self.cuda:
-                    boards, target_pis, target_vs = boards.contiguous().cuda(), target_pis.contiguous().cuda(), target_vs.contiguous().cuda()
-                
-                total_loss, pi_loss, v_loss = self.algorithm.learn(boards, target_pis, target_vs, optimizer)
+                    boards, target_pis, target_vs = boards.contiguous().cuda(
+                    ), target_pis.contiguous().cuda(), target_vs.contiguous(
+                    ).cuda()
+
+                total_loss, pi_loss, v_loss = self.algorithm.learn(
+                    boards, target_pis, target_vs, optimizer)
 
                 # record loss with tqdm
-                pbar.set_postfix(Loss_pi=pi_loss.item(), Loss_v=v_loss.item()) 
-                
+                pbar.set_postfix(Loss_pi=pi_loss.item(), Loss_v=v_loss.item())
 
     def predict(self, board):
         """

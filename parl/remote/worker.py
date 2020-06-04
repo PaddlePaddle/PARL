@@ -180,13 +180,7 @@ class Worker(object):
                         self.job_buffer.put(job)
 
             time.sleep(0.02)
-
-        # release jobs if the worker is not alive
-        for job in initialized_jobs:
-            try:
-                os.kill(job.pid, signal.SIGTERM)
-            except OSError:
-                pass
+        self.exit()
 
     def _init_jobs(self, job_num):
         """Create jobs.

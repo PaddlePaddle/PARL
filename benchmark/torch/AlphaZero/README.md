@@ -41,7 +41,7 @@ python gen_submission.py saved_model/best.pth.tar
 ```
 
 ### Performance
-- Following are `good moves rate` and `perfect moves rate` tensorbaord, please refer to the [link](https://www.kaggle.com/petercnudde/scoring-connect-x-agents) for specific meaning.
+- Following are `good moves rate` and `perfect moves rate` indicators in tensorbaord, please refer to the [link](https://www.kaggle.com/petercnudde/scoring-connect-x-agents) for specific meaning.
 <img src=".pic/good_moves.png" width = "300" alt="good moves rate"/> <img src=".pic/perfect_moves.png" width = "300" alt="perfect moves rate"/>
 
 > It takes about 1 day to run 25 iterations on the machine with 25 cpus.

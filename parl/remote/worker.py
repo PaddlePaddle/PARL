@@ -223,6 +223,7 @@ class Worker(object):
             # a thread for sending heartbeat signals to job
             thread = threading.Thread(
                 target=self._create_job_monitor, args=(initialized_job, ))
+            thread.setDaemon(True)
             thread.start()
         self.lock.release()
         assert len(new_jobs) > 0, "init jobs failed"
@@ -368,7 +369,7 @@ class Worker(object):
             "ps aux | grep remote/job.py | grep " + self.reply_job_address +
             " | awk '{print $2}' | xargs kill -9")
         subprocess.call([command], shell=True)
-        os._exit(1)
+        os._exit(0)
 
     def run(self):
         """Keep running until it lost connection with the master.

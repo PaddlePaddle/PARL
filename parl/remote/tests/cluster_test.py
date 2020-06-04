@@ -88,7 +88,7 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
-    def test_actor_exception(self):
+    def test_actor_exception_2(self):
         master = Master(port=1236)
         th = threading.Thread(target=master.run)
         th.start()
@@ -159,7 +159,7 @@ class TestCluster(unittest.TestCase):
 
         worker2.exit()
 
-        for _ in range(20):
+        for _ in range(10):
             if master.cpu_num == 4:
                 break
             time.sleep(10)

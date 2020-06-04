@@ -78,6 +78,7 @@ class Worker(object):
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
+        self.kill_job_thread.setDaemon(True)
         self.kill_job_thread.start()
 
         self._create_jobs()
@@ -367,10 +368,9 @@ class Worker(object):
         """close the worker"""
         self.worker_is_alive = False
         command = (
-            "ps aux | grep remote/job.py | grep " + self.reply_job_address +
+            'ps aux | grep "remote/job.py.*{}"'.format(self.reply_job_address) +
             " | awk '{print $2}' | xargs kill -9")
         subprocess.call([command], shell=True)
-        os._exit(0)
 
     def run(self):
         """Keep running until it lost connection with the master.

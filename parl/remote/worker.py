@@ -362,9 +362,8 @@ class Worker(object):
             "[Worker] lost connection with the master, will exit replying heartbeat for master."
         )
         self.worker_status.clear()
-        # kill everything started by `log_server_proc`
-        os.killpg(os.getpgid(self.log_server_proc.pid), signal.SIGTERM)
-        self.log_server_proc.communicate()
+        self.log_server_proc.kill()
+        self.log_server_proc.wait()
         # exit the worker
         self.worker_is_alive = False
 
@@ -390,8 +389,7 @@ class Worker(object):
             command,
             stdout=FNULL,
             stderr=subprocess.STDOUT,
-            shell=True,
-            preexec_fn=os.setsid)
+        )
         FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)

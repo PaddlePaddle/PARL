@@ -114,7 +114,7 @@ class Coach():
         self._create_remote_actors()
 
         for iteration in range(1, self.args.numIters + 1):
-            logger.info(f'Starting Iter #{iteration} ...')
+            logger.info('Starting Iter #{} ...'.format(iteration))
 
             ####################
             logger.info('Step1: self-play in parallel...')
@@ -234,7 +234,7 @@ class Coach():
         examplesFile = modelFile + ".examples"
         if not os.path.isfile(examplesFile):
             logger.warning(
-                f'File "{examplesFile}" with trainExamples not found!')
+                "File {} with trainExamples not found!".format(examplesFile))
             r = input("Continue? [y|n]")
             if r != "y":
                 sys.exit()

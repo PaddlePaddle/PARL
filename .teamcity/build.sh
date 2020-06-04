@@ -145,7 +145,8 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
-          declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          declare -a envs=("py27" "py36" "py37")
           for env in "${envs[@]}";do
               cd /work
               source ~/.bashrc

@@ -13,11 +13,14 @@
 # limitations under the License.
 
 import sys
+import os
+import subprocess
 import numpy as np
 
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC'
+    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
+    'kill_process'
 ]
 
 
@@ -99,3 +102,23 @@ except ImportError:
 
 _IS_WINDOWS = (sys.platform == 'win32')
 _IS_MAC = (sys.platform == 'darwin')
+
+
+def kill_process(regex_pattern):
+    """kill process whose execution commnad is matched by regex pattern
+
+    Args:
+        regex_pattern(string): regex pattern used to filter the process to be killed
+    
+    NOTE:
+        In windows, we will replace sep `/` with `\\\\`
+    """
+    if _IS_WINDOWS:
+        regex_pattern = regex_pattern.replace('/', '\\\\')
+        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%{}%'" get processid^,status /format:csv') do taskkill /F /T /pid %a'''.format(
+            regex_pattern)
+        os.popen(command).read()
+    else:
+        command = "ps aux | grep {} | awk '{{print $2}}' | xargs kill -9".format(
+            regex_pattern)
+        subprocess.call([command], shell=True)

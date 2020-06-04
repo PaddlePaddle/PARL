@@ -367,9 +367,8 @@ class Worker(object):
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
-        command = (
-            'ps aux | grep "remote/job.py.*{}"'.format(self.reply_job_address) +
-            " | awk '{print $2}' | xargs kill -9")
+        command = ('ps aux | grep "remote/job.py.*{}"'.format(
+            self.reply_job_address) + " | awk '{print $2}' | xargs kill -9")
         subprocess.call([command], shell=True)
 
     def run(self):

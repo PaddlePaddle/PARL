@@ -14,7 +14,8 @@
 
 import os
 import sys
-import threading import queue
+import threading
+import queue
 import pickle
 from pickle import Pickler, Unpickler
 from random import shuffle
@@ -80,7 +81,9 @@ class Coach():
                 result = remote_actor.evaluate_test_dataset(
                     self.current_agent.get_weights(), test_dataset)
                 self.remote_actors_return_queue.put({
-                    "evaluate_test_dataset": result})
+                    "evaluate_test_dataset":
+                    result
+                })
             else:
                 raise NotImplementedError
 
@@ -157,8 +160,10 @@ class Coach():
                         self.test_dataset,
                         len(self.test_dataset) // self.args.actors_num)):
                 self.remote_actors_signal_queues[i].put({
-                    "task": "evaluate_test_dataset",
-                    "test_dataset": data
+                    "task":
+                    "evaluate_test_dataset",
+                    "test_dataset":
+                    data
                 })
                 cnt += len(data)
             perfect_moves_cnt, good_moves_cnt = 0, 0
@@ -204,7 +209,6 @@ class Coach():
             self.current_agent.save(
                 os.path.join(self.args.checkpoint,
                              self.getCheckpointFile(iteration)))
-
 
     def getCheckpointFile(self, iteration):
         return 'checkpoint_' + str(iteration) + '.pth.tar'

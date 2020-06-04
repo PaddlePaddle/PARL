@@ -60,7 +60,7 @@ class Connect4Model(parl.Model):
         # batch_size x 1 x board_x x board_y
         s = s.view(-1, 1, self.board_x, self.board_y)
         # batch_size x num_channels x board_x x board_y
-        s = F.relu(self.bn1(self.conv1(s)))  
+        s = F.relu(self.bn1(self.conv1(s)))
         # batch_size x num_channels x board_x x board_y
         s = F.relu(self.bn2(self.conv2(s)))
         # batch_size x num_channels x (board_x-2) x (board_y-2)

@@ -75,9 +75,11 @@ class TestCluster(unittest.TestCase):
             time.sleep(10)
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:1235')
+        logger.info("running:test_actor_exception: 1")
 
         with self.assertRaises(exceptions.RemoteError):
             actor = Actor(abcd='a bug')
+        logger.info("running:test_actor_exception: 2")
 
         actor2 = Actor()
         for _ in range(3):

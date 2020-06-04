@@ -35,7 +35,7 @@ def get_test_dataset():
             # find out how many moves are played to set the correct mark.
             ply = len([x for x in data["board"] if x > 0])
             if ply & 1:
-                player = 2
+                player = -1
             else:
                 player = 1
             

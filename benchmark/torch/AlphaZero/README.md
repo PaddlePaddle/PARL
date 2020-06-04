@@ -1,5 +1,4 @@
 ## AlphaZero baseline for Connect4 game (distributed version)
-Based on [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
 
 ### Dependencies
 - python3

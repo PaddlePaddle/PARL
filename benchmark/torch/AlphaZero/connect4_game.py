@@ -3,7 +3,6 @@
 # The following code are copied or modified from:
 # https://github.com/suragnair/alpha-zero-general
 
-
 import numpy as np
 from collections import namedtuple
 
@@ -19,7 +18,11 @@ class Board():
     Connect4 Board.
     """
 
-    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+    def __init__(self,
+                 height=None,
+                 width=None,
+                 win_length=None,
+                 np_pieces=None):
         "Set up initial board configuration."
         self.height = height or DEFAULT_HEIGHT
         self.width = width or DEFAULT_WIDTH
@@ -35,7 +38,8 @@ class Board():
         "Create copy of board containing new stone."
         available_idx, = np.where(self.np_pieces[:, column] == 0)
         if len(available_idx) == 0:
-            raise ValueError("Can't play column %s on board %s" % (column, self))
+            raise ValueError(
+                "Can't play column %s on board %s" % (column, self))
 
         self.np_pieces[available_idx[-1]][column] = player
 
@@ -47,9 +51,9 @@ class Board():
         for player in [-1, 1]:
             player_pieces = self.np_pieces == -player
             # Check rows & columns for win
-            if (self._is_straight_winner(player_pieces) or
-                self._is_straight_winner(player_pieces.transpose()) or
-                self._is_diagonal_winner(player_pieces)):
+            if (self._is_straight_winner(player_pieces)
+                    or self._is_straight_winner(player_pieces.transpose())
+                    or self._is_diagonal_winner(player_pieces)):
                 return WinState(True, -player)
 
         # draw has very little value.
@@ -79,8 +83,10 @@ class Board():
 
     def _is_straight_winner(self, player_pieces):
         """Checks if player_pieces contains a vertical or horizontal win."""
-        run_lengths = [player_pieces[:, i:i + self.win_length].sum(axis=1)
-                       for i in range(len(player_pieces) - self.win_length + 2)]
+        run_lengths = [
+            player_pieces[:, i:i + self.win_length].sum(axis=1)
+            for i in range(len(player_pieces) - self.win_length + 2)
+        ]
         return max([x.max() for x in run_lengths]) >= self.win_length
 
     def __str__(self):
@@ -94,7 +100,11 @@ class Connect4Game(object):
     Use 1 for player1 and -1 for player2.
     """
 
-    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+    def __init__(self,
+                 height=None,
+                 width=None,
+                 win_length=None,
+                 np_pieces=None):
         self._base_board = Board(height, width, win_length, np_pieces)
 
     def getInitBoard(self):
@@ -148,7 +158,8 @@ class Connect4Game(object):
                         moves that are valid from the current board and player,
                         0 for invalid moves
         """
-        return self._base_board.with_np_pieces(np_pieces=board).get_valid_moves()
+        return self._base_board.with_np_pieces(
+            np_pieces=board).get_valid_moves()
 
     def getGameEnded(self, board, player):
         """
@@ -205,7 +216,9 @@ class Connect4Game(object):
                        form of the board and the corresponding pi vector. This
                        is used when training the neural network from examples.
         """
-        return [(board, pi), (np.array(board[:, ::-1], copy=True), np.array(pi[::-1], copy=True))]
+        return [(board, pi),
+                (np.array(board[:, ::-1], copy=True),
+                 np.array(pi[::-1], copy=True))]
 
     def stringRepresentation(self, board):
         """

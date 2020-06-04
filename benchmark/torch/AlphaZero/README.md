@@ -30,6 +30,11 @@ xparl connect --address MASTER_IP:8010 --cpu_num [CPU_NUM]
 python main.py
 ```
 
+4. Visualize (good moves rate and perfect moves rate)
+```
+tensorboard --logdir .
+```
+
 ### Submitting
 To submit the well-trained model to the Kaggle, you can use our provided script to generate `submission.py`, for example:
 ```bash
@@ -37,9 +42,12 @@ python gen_submission.py saved_model/best.pth.tar
 ```
 
 ### Performance
-- Following are `good move rate` and `perfect move rate` indicators, please refer to the [link](https://www.kaggle.com/petercnudde/scoring-connect-x-agents) for specific meaning.
+- Following are `good moves rate` and `perfect moves rate` tensorbaord, please refer to the [link](https://www.kaggle.com/petercnudde/scoring-connect-x-agents) for specific meaning.
+<img src=".pic/good_moves.png" alt="good moves rate"/> <img src=".pic/perfect_moves.png" alt="perfect moves rate"/>
 
-- It can reach about score 1368 in the Kaggle [Connect X](https://www.kaggle.com/c/connectx/leaderboard) competition now.
+> It takes about 1 day to run 25 iterations on the machine with 25 cpus.
+
+- It can reach about score 1368 (rank 5 on 2020/06/04) in the Kaggle [Connect X](https://www.kaggle.com/c/connectx/leaderboard) competition.
 
 
 ### Reference

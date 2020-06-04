@@ -3,14 +3,15 @@
 # The following code are copied or modified from:
 # https://github.com/suragnair/alpha-zero-general
 
-
 import os
-os.environ['OMP_NUM_THREADS']="1"
+os.environ['OMP_NUM_THREADS'] = "1"
+
 
 # ===== utils.py =====
 class dotdict(dict):
     def __getattr__(self, name):
         return self[name]
+
 
 # ===== MCTS.py ======
 import math
@@ -53,7 +54,10 @@ class MCTS():
             self.search(canonicalBoard, dirichlet_noise=dir_noise)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
+        counts = [
+            self.Nsa[(s, a)] if (s, a) in self.Nsa else 0
+            for a in range(self.game.getActionSize())
+        ]
 
         if temp == 0:
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
@@ -62,7 +66,7 @@ class MCTS():
             probs[bestA] = 1
             return probs
 
-        counts = [x ** (1. / temp) for x in counts]
+        counts = [x**(1. / temp) for x in counts]
         counts_sum = float(sum(counts))
         probs = [x / counts_sum for x in counts]
         return probs
@@ -110,7 +114,7 @@ class MCTS():
                 # if all valid moves were masked make all valid moves equally probable
 
                 # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
+                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.
                 print("All valid moves were masked, doing a workaround.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])
@@ -123,7 +127,7 @@ class MCTS():
         if dirichlet_noise:
             self.applyDirNoise(s, valids)
             sum_Ps_s = np.sum(self.Ps[s])
-            self.Ps[s] /= sum_Ps_s      # renormalize
+            self.Ps[s] /= sum_Ps_s  # renormalize
         cur_best = -float('inf')
         best_act = -1
 
@@ -131,10 +135,12 @@ class MCTS():
         for a in range(self.game.getActionSize()):
             if valids[a]:
                 if (s, a) in self.Qsa:
-                    u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
-                            1 + self.Nsa[(s, a)])
+                    u = self.Qsa[
+                        (s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(
+                            self.Ns[s]) / (1 + self.Nsa[(s, a)])
                 else:
-                    u = self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0 ?
+                    u = self.args.cpuct * self.Ps[s][a] * math.sqrt(
+                        self.Ns[s] + EPS)  # Q = 0 ?
 
                 if u > cur_best:
                     cur_best = u
@@ -147,7 +153,8 @@ class MCTS():
         v = self.search(next_s)
 
         if (s, a) in self.Qsa:
-            self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
+            self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[
+                (s, a)] + v) / (self.Nsa[(s, a)] + 1)
             self.Nsa[(s, a)] += 1
 
         else:
@@ -158,12 +165,15 @@ class MCTS():
         return -v
 
     def applyDirNoise(self, s, valids):
-        dir_values = np.random.dirichlet([self.args.dirichletAlpha] * np.count_nonzero(valids))
+        dir_values = np.random.dirichlet(
+            [self.args.dirichletAlpha] * np.count_nonzero(valids))
         dir_idx = 0
         for idx in range(len(self.Ps[s])):
             if self.Ps[s][idx]:
-                self.Ps[s][idx] = (0.75 * self.Ps[s][idx]) + (0.25 * dir_values[dir_idx])
+                self.Ps[s][idx] = (0.75 * self.Ps[s][idx]) + (
+                    0.25 * dir_values[dir_idx])
                 dir_idx += 1
+
 
 # ===== connect4_game.py ======
 import numpy as np
@@ -181,7 +191,11 @@ class Board():
     Connect4 Board.
     """
 
-    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+    def __init__(self,
+                 height=None,
+                 width=None,
+                 win_length=None,
+                 np_pieces=None):
         "Set up initial board configuration."
         self.height = height or DEFAULT_HEIGHT
         self.width = width or DEFAULT_WIDTH
@@ -197,7 +211,8 @@ class Board():
         "Create copy of board containing new stone."
         available_idx, = np.where(self.np_pieces[:, column] == 0)
         if len(available_idx) == 0:
-            raise ValueError("Can't play column %s on board %s" % (column, self))
+            raise ValueError(
+                "Can't play column %s on board %s" % (column, self))
 
         self.np_pieces[available_idx[-1]][column] = player
 
@@ -209,9 +224,9 @@ class Board():
         for player in [-1, 1]:
             player_pieces = self.np_pieces == -player
             # Check rows & columns for win
-            if (self._is_straight_winner(player_pieces) or
-                self._is_straight_winner(player_pieces.transpose()) or
-                self._is_diagonal_winner(player_pieces)):
+            if (self._is_straight_winner(player_pieces)
+                    or self._is_straight_winner(player_pieces.transpose())
+                    or self._is_diagonal_winner(player_pieces)):
                 return WinState(True, -player)
 
         # draw has very little value.
@@ -241,8 +256,10 @@ class Board():
 
     def _is_straight_winner(self, player_pieces):
         """Checks if player_pieces contains a vertical or horizontal win."""
-        run_lengths = [player_pieces[:, i:i + self.win_length].sum(axis=1)
-                       for i in range(len(player_pieces) - self.win_length + 2)]
+        run_lengths = [
+            player_pieces[:, i:i + self.win_length].sum(axis=1)
+            for i in range(len(player_pieces) - self.win_length + 2)
+        ]
         return max([x.max() for x in run_lengths]) >= self.win_length
 
     def __str__(self):
@@ -256,7 +273,11 @@ class Connect4Game(object):
     Use 1 for player1 and -1 for player2.
     """
 
-    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+    def __init__(self,
+                 height=None,
+                 width=None,
+                 win_length=None,
+                 np_pieces=None):
         self._base_board = Board(height, width, win_length, np_pieces)
 
     def getInitBoard(self):
@@ -310,7 +331,8 @@ class Connect4Game(object):
                         moves that are valid from the current board and player,
                         0 for invalid moves
         """
-        return self._base_board.with_np_pieces(np_pieces=board).get_valid_moves()
+        return self._base_board.with_np_pieces(
+            np_pieces=board).get_valid_moves()
 
     def getGameEnded(self, board, player):
         """
@@ -367,7 +389,9 @@ class Connect4Game(object):
                        form of the board and the corresponding pi vector. This
                        is used when training the neural network from examples.
         """
-        return [(board, pi), (np.array(board[:, ::-1], copy=True), np.array(pi[::-1], copy=True))]
+        return [(board, pi),
+                (np.array(board[:, ::-1], copy=True),
+                 np.array(pi[::-1], copy=True))]
 
     def stringRepresentation(self, board):
         """
@@ -387,11 +411,13 @@ class Connect4Game(object):
         print(board)
         print(" -----------------------")
 
+
 # ===== connect4_model ======
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
 
 #class Connect4Model(parl.Model): # Kaggle doesn't support parl package
 class Connect4Model(nn.Module):
@@ -403,16 +429,20 @@ class Connect4Model(nn.Module):
 
         super(Connect4Model, self).__init__()
         self.conv1 = nn.Conv2d(1, args.num_channels, 3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1, padding=1)
-        self.conv3 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1)
-        self.conv4 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1)
+        self.conv2 = nn.Conv2d(
+            args.num_channels, args.num_channels, 3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(
+            args.num_channels, args.num_channels, 3, stride=1)
+        self.conv4 = nn.Conv2d(
+            args.num_channels, args.num_channels, 3, stride=1)
 
         self.bn1 = nn.BatchNorm2d(args.num_channels)
         self.bn2 = nn.BatchNorm2d(args.num_channels)
         self.bn3 = nn.BatchNorm2d(args.num_channels)
         self.bn4 = nn.BatchNorm2d(args.num_channels)
 
-        self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4), 128)
+        self.fc1 = nn.Linear(
+            args.num_channels * (self.board_x - 4) * (self.board_y - 4), 128)
         self.fc_bn1 = nn.BatchNorm1d(128)
 
         self.fc2 = nn.Linear(128, 64)
@@ -424,26 +454,41 @@ class Connect4Model(nn.Module):
 
     def forward(self, s):
         #                                                            s: batch_size x board_x x board_y
-        s = s.view(-1, 1, self.board_x, self.board_y)                # batch_size x 1 x board_x x board_y
-        s = F.relu(self.bn1(self.conv1(s)))                          # batch_size x num_channels x board_x x board_y
-        s = F.relu(self.bn2(self.conv2(s)))                          # batch_size x num_channels x board_x x board_y
-        s = F.relu(self.bn3(self.conv3(s)))                          # batch_size x num_channels x (board_x-2) x (board_y-2)
-        s = F.relu(self.bn4(self.conv4(s)))                          # batch_size x num_channels x (board_x-4) x (board_y-4)
-        s = s.view(-1, self.args.num_channels*(self.board_x-4)*(self.board_y-4))
+        s = s.view(-1, 1, self.board_x,
+                   self.board_y)  # batch_size x 1 x board_x x board_y
+        s = F.relu(self.bn1(
+            self.conv1(s)))  # batch_size x num_channels x board_x x board_y
+        s = F.relu(self.bn2(
+            self.conv2(s)))  # batch_size x num_channels x board_x x board_y
+        s = F.relu(self.bn3(self.conv3(
+            s)))  # batch_size x num_channels x (board_x-2) x (board_y-2)
+        s = F.relu(self.bn4(self.conv4(
+            s)))  # batch_size x num_channels x (board_x-4) x (board_y-4)
+        s = s.view(
+            -1,
+            self.args.num_channels * (self.board_x - 4) * (self.board_y - 4))
 
-        s = F.dropout(F.relu(self.fc_bn1(self.fc1(s))), p=self.args.dropout, training=self.training)  # batch_size x 128
-        s = F.dropout(F.relu(self.fc_bn2(self.fc2(s))), p=self.args.dropout, training=self.training)  # batch_size x 64
+        s = F.dropout(
+            F.relu(self.fc_bn1(self.fc1(s))),
+            p=self.args.dropout,
+            training=self.training)  # batch_size x 128
+        s = F.dropout(
+            F.relu(self.fc_bn2(self.fc2(s))),
+            p=self.args.dropout,
+            training=self.training)  # batch_size x 64
 
-        pi = self.fc3(s)                                                                         # batch_size x action_size
-        v = self.fc4(s)                                                                          # batch_size x 1
+        pi = self.fc3(s)  # batch_size x action_size
+        v = self.fc4(s)  # batch_size x 1
 
         return F.log_softmax(pi, dim=1), torch.tanh(v)
+
 
 # ===== simple agent ======
 args = dotdict({
     'dropout': 0.3,
     'num_channels': 64,
 })
+
 
 class SimpleAgent():
     def __init__(self, game, cuda=True):
@@ -470,11 +515,11 @@ class SimpleAgent():
             board = board.contiguous().cuda()
         board = board.view(1, self.board_x, self.board_y)
 
-        self.model.eval() # eval mode
+        self.model.eval()  # eval mode
 
         with torch.no_grad():
             log_pi, v = self.model(board)
-        
+
         pi = torch.exp(log_pi)
 
         return pi.data.cpu().numpy()[0], v.data.cpu().numpy()[0]
@@ -483,6 +528,7 @@ class SimpleAgent():
         map_location = None if self.cuda else 'cpu'
         checkpoint = torch.load(buffer, map_location=map_location)
         self.model.load_state_dict(checkpoint)
+
 
 # ===== predict function ======
 import base64
@@ -494,7 +540,7 @@ game = Connect4Game()
 agent = SimpleAgent(game)
 buffer = io.BytesIO(decoded)
 agent.load_checkpoint(buffer)
-mcts_args = dotdict({'numMCTSSims': 800, 'cpuct':1.0})
+mcts_args = dotdict({'numMCTSSims': 800, 'cpuct': 1.0})
 mcts = MCTS(game, agent, mcts_args)
 
 
@@ -505,8 +551,9 @@ def alphazero_agent(obs, config):
     player = 1
     if obs.mark == 2:
         player = -1
-    
+
     x = game.getCanonicalForm(board, player)
 
-    action = np.argmax(mcts.getActionProb(x, temp=0, timelimit=config.timeout - 0.1))
+    action = np.argmax(
+        mcts.getActionProb(x, temp=0, timelimit=config.timeout - 0.1))
     return int(action)

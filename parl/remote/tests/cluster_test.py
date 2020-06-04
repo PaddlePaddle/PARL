@@ -74,6 +74,7 @@ class TestCluster(unittest.TestCase):
                 break
             time.sleep(10)
         self.assertEqual(1, master.cpu_num)
+        logger.info("running:test_actor_exception: 0")
         parl.connect('localhost:1235')
         logger.info("running:test_actor_exception: 1")
 

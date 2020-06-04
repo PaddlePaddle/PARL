@@ -47,7 +47,7 @@ args = dotdict({
     'checkpoint': './saved_model/',
     # whether to load saved model and training examples
     'load_model': False,
-    'load_folder_file': ('./saved_model', 'checkpoint_24.pth.tar'),
+    'load_folder_file': ('./saved_model', 'checkpoint_1.pth.tar'),
 })
 
 # Plays arenaCompare games in which player1 starts arenaCompare/2 games and player2 starts arenaCompare/2 games.
@@ -65,9 +65,10 @@ def main():
     c = Coach(game, args)
 
     if args.load_model:
-        logger.info('Loading checkpoint "%s/%s"...', args.load_folder_file)
+        logger.info('Loading checkpoint {}...'.format(args.load_folder_file))
         c.loadModel()
-        logger.info("Loading 'trainExamples' from file...")
+        logger.info("Loading 'trainExamples' from file {}...".format(
+            args.load_folder_file))
         c.loadTrainExamples()
 
     c.learn()

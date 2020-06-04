@@ -29,7 +29,7 @@ from parl.utils import logger
 
 from actor import Actor
 from utils import split_group, get_test_dataset
-from alphazero_agent import AlphaZeroAgent
+from alphazero_agent import create_agent
 
 
 class Coach():
@@ -42,9 +42,9 @@ class Coach():
         self.args = args
 
         # neural network of current generation
-        self.current_agent = AlphaZeroAgent(self.game)
+        self.current_agent = create_agent(self.game)
         # neural network of previous generation
-        self.previous_agent = AlphaZeroAgent(self.game)
+        self.previous_agent = create_agent(self.game)
 
         # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.trainExamplesHistory = []
@@ -131,7 +131,7 @@ class Coach():
             self.trainExamplesHistory.append(iterationTrainExamples)
             if len(self.trainExamplesHistory
                    ) > self.args.numItersForTrainExamplesHistory:
-                logger.warning(f"Removing the oldest entry in trainExamples.")
+                logger.warning("Removing the oldest entry in trainExamples.")
                 self.trainExamplesHistory.pop(0)
             self.saveTrainExamples(iteration)  # backup history to a file
 
@@ -226,7 +226,8 @@ class Coach():
 
     def loadModel(self):
         self.current_agent.restore(
-            os.path.join(args.load_folder_file[0], args.load_folder_file[1]))
+            os.path.join(self.args.load_folder_file[0],
+                         self.args.load_folder_file[1]))
 
     def loadTrainExamples(self):
         modelFile = os.path.join(self.args.load_folder_file[0],

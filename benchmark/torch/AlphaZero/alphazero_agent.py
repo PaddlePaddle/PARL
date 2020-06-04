@@ -65,16 +65,23 @@ class AlphaZero(parl.Algorithm):
         return pi, v
 
 
+def create_agent(game, cuda=True):
+    cuda = cuda and torch.cuda.is_available()
+
+    model = Connect4Model(game, args)
+    if cuda:
+        model.cuda()
+
+    algorithm = AlphaZero(model)
+
+    alphazero_agent = AlphaZeroAgent(algorithm, game, cuda)
+    return alphazero_agent
+
+
 class AlphaZeroAgent(parl.Agent):
-    def __init__(self, game, cuda=True):
-        self.cuda = cuda and torch.cuda.is_available()
-        self.model = Connect4Model(game, args)
-        if self.cuda:
-            self.model.cuda()
-
-        algorithm = AlphaZero(self.model)
+    def __init__(self, algorithm, game, cuda):
         super(AlphaZeroAgent, self).__init__(algorithm)
-
+        self.cuda = cuda
         self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
 
@@ -83,7 +90,7 @@ class AlphaZeroAgent(parl.Agent):
         Args:
             examples: list of examples, each example is of form (board, pi, v)
         """
-        optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
+        optimizer = optim.Adam(self.algorithm.model.parameters(), lr=args.lr)
 
         for epoch in range(args.epochs):
             print('EPOCH ::: ' + str(epoch + 1))
@@ -128,3 +135,16 @@ class AlphaZeroAgent(parl.Agent):
         pi, v = self.algorithm.predict(board)
 
         return pi.data.cpu().numpy()[0], v.data.cpu().numpy()[0]
+
+
+def create_agent(game, cuda=True):
+    cuda = cuda and torch.cuda.is_available()
+
+    model = Connect4Model(game, args)
+    if cuda:
+        model.cuda()
+
+    algorithm = AlphaZero(model)
+
+    alphazero_agent = AlphaZeroAgent(algorithm, game, cuda)
+    return alphazero_agent

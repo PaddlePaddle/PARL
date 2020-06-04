@@ -15,7 +15,7 @@
 import numpy as np
 import parl
 import os
-from alphazero_agent import AlphaZeroAgent
+from alphazero_agent import create_agent
 from MCTS import MCTS
 from Arena import Arena
 from utils import win_loss_draw
@@ -29,9 +29,9 @@ class Actor(object):
         self.args = args
 
         # neural network of previous generation
-        self.previous_agent = AlphaZeroAgent(self.game, cuda=False)
+        self.previous_agent = create_agent(self.game, cuda=False)
         # neural network of current generation
-        self.current_agent = AlphaZeroAgent(self.game, cuda=False)
+        self.current_agent = create_agent(self.game, cuda=False)
 
         # MCTS of previous generation
         self.previous_mcts = MCTS(

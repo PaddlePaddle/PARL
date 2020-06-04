@@ -169,6 +169,8 @@ function main() {
                 pip install -r .teamcity/requirements_torch.txt
                 run_test_with_cpu $env "DIS_TESTING_TORCH"
               fi
+              # clean env
+              xparl stop
           done
           run_test_with_gpu
 

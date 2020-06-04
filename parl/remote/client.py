@@ -114,7 +114,7 @@ class Client(object):
             with open(main_file, 'rb') as code_file:
                 code = code_file.read()
                 # parl/remote/remote_decorator.py -> remote_decorator.py
-                file_name = main_file.split('/')[-1]
+                file_name = main_file.split(os.sep)[-1]
                 pyfiles['python_files'][file_name] = code
         except AssertionError as e:
             raise Exception(

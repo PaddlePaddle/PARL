@@ -303,7 +303,7 @@ class Job(object):
             try:
                 file_name, class_name = cloudpickle.loads(message[1])
                 #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
-                file_name = file_name.split('/')[-1]
+                file_name = file_name.split(os.sep)[-1]
                 args, kwargs = cloudpickle.loads(message[2])
                 mod = __import__(file_name)
                 cls = getattr(mod, class_name)._original

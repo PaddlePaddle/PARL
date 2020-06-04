@@ -22,6 +22,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
+from parl.utils import logger
 
 
 @parl.remote_class
@@ -62,6 +63,7 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_actor_exception(self):
+        logger.info("running:test_actor_exception")
         master = Master(port=1235)
         th = threading.Thread(target=master.run)
         th.start()
@@ -89,6 +91,7 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
 
     def test_actor_exception_2(self):
+        logger.info("running: test_actor_exception_2")
         master = Master(port=1236)
         th = threading.Thread(target=master.run)
         th.start()
@@ -114,6 +117,7 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_reset_actor(self):
+        logger.info("running: test_reset_actor")
         # start the master
         master = Master(port=1237)
         th = threading.Thread(target=master.run)
@@ -138,6 +142,7 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_add_worker(self):
+        logger.info("running: test_add_worker")
         master = Master(port=1234)
         th = threading.Thread(target=master.run)
         th.start()

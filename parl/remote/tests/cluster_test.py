@@ -159,7 +159,7 @@ class TestCluster(unittest.TestCase):
 
         worker2.exit()
 
-        for _ in range(10):
+        for _ in range(20):
             if master.cpu_num == 4:
                 break
             time.sleep(10)

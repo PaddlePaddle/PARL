@@ -169,6 +169,7 @@ class Worker(object):
 
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""
+        initialized_jobs = []
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
                 job_num = self.cpu_num - self.job_buffer.qsize()

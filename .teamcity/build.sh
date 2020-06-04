@@ -170,6 +170,8 @@ function main() {
                 run_test_with_cpu $env "DIS_TESTING_TORCH"
               fi
               # clean env
+              export LC_ALL=C.UTF-8
+              export LANG=C.UTF-8
               xparl stop
           done
           run_test_with_gpu

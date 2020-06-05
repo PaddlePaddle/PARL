@@ -26,7 +26,7 @@ import warnings
 import zmq
 from datetime import datetime
 
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -361,9 +361,7 @@ class Worker(object):
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
-        command = ('ps aux | grep "remote/job.py.*{}"'.format(
-            self.reply_job_address) + " | awk '{print $2}' | xargs kill -9")
-        subprocess.call([command], shell=True)
+        kill_process('remote/job.py.*{}'.format(self.reply_job_address))
 
     def run(self):
         """Keep running until it lost connection with the master.

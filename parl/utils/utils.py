@@ -121,4 +121,5 @@ def kill_process(regex_pattern):
     else:
         command = "ps aux | grep {} | awk '{{print $2}}' | xargs kill -9".format(
             regex_pattern)
+        print("command", command)
         subprocess.call([command], shell=True)

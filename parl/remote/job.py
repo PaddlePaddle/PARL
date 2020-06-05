@@ -69,7 +69,7 @@ class Job(object):
         self.run_job_process.start()
         """
         NOTE:
-            In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.  
+            In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.
         """
         self.lock = threading.Lock()
         self._create_sockets()
@@ -87,7 +87,7 @@ class Job(object):
                 _ = self.kill_job_socket.recv_multipart()
             except zmq.error.Again as e:
                 pass
-            os._exit(1)
+            os._exit(0)
 
     def _create_sockets(self):
         """Create five sockets for each job in main process.
@@ -243,7 +243,7 @@ class Job(object):
         the python files to the job. Later, the job will save these files to a
         temporary directory and add the temporary diretory to Python's working
         directory.
-        
+
         Args:
             reply_socket (sockert): main socket to accept commands of remote object.
             job_address (String): address of reply_socket.
@@ -301,8 +301,12 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                cls = cloudpickle.loads(message[1])
+                file_name, class_name = cloudpickle.loads(message[1])
+                #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
+                file_name = file_name.split(os.sep)[-1]
                 args, kwargs = cloudpickle.loads(message[2])
+                mod = __import__(file_name)
+                cls = getattr(mod, class_name)._original
                 obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())

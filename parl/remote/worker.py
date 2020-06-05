@@ -351,7 +351,7 @@ class Worker(object):
                 break
         socket.close(0)
         logger.warning(
-            "[Worker] lost connection with the master, will exit replying heartbeat for master."
+            "[Worker] lost connection with the master, will exit reply heartbeat for master."
         )
         self.worker_status.clear()
         # exit the worker

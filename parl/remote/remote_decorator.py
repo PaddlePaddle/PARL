@@ -18,6 +18,7 @@ import threading
 import time
 import zmq
 import numpy as np
+import inspect
 
 from parl.utils import get_ip_address, logger, to_str, to_byte
 from parl.utils.communication import loads_argument, loads_return,\
@@ -55,7 +56,7 @@ def remote_class(*args, **kwargs):
         actor = Actor()
         actor.step()
 
-        # Set maximum memory usage to 300 MB for each object. 
+        # Set maximum memory usage to 300 MB for each object.
         @parl.remote_class(max_memory=300)
         class LimitedActor(object):
            ...
@@ -113,10 +114,11 @@ def remote_class(*args, **kwargs):
                 self.job_shutdown = False
 
                 self.send_file(self.job_socket)
-
+                file_name = inspect.getfile(cls)[:-3]
+                class_name = cls.__name__
                 self.job_socket.send_multipart([
                     remote_constants.INIT_OBJECT_TAG,
-                    cloudpickle.dumps(cls),
+                    cloudpickle.dumps([file_name, class_name]),
                     cloudpickle.dumps([args, kwargs]),
                 ])
                 message = self.job_socket.recv_multipart()
@@ -128,6 +130,7 @@ def remote_class(*args, **kwargs):
 
             def __del__(self):
                 """Delete the remote class object and release remote resources."""
+                self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
                 if not self.job_shutdown:
                     try:
                         self.job_socket.send_multipart(
@@ -212,6 +215,7 @@ def remote_class(*args, **kwargs):
 
                 return wrapper
 
+        RemoteWrapper._original = cls
         return RemoteWrapper
 
     max_memory = kwargs.get('max_memory')

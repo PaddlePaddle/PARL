@@ -25,11 +25,11 @@ with open(model_path, 'rb') as f:
     encoded_weights = base64.encodebytes(raw_bytes)
 
 # encode weights of model to byte string
-submission_file = f"""
+submission_file = """
 import base64
-decoded = base64.b64decode({encoded_weights})
+decoded = base64.b64decode({})
 
-"""
+""".format(encoded_weights)
 
 # insert code snippet of loading weights
 with open('submission_template.py', 'r') as f:

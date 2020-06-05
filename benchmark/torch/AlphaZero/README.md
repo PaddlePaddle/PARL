@@ -1,5 +1,5 @@
 ## AlphaZero baseline for Connect4 game (distributed version)
-- In this example, we provide an AlphaZero baseline to solve the Connect4 game, which is based on the code of [alpha-zero-general](https://github.com/suragnair/alpha-zero-general) repo.
+- In this example, we provide a fine-tuned AlphaZero baseline to solve the Connect4 game, based on the code of [alpha-zero-general](https://github.com/suragnair/alpha-zero-general) repo.
 - We take advantage of the parallelism capacity of [PARL](https://github.com/PaddlePaddle/PARL) to support running self-play and evaluating tasks in parallel.
 - We also provide scripts to pack your well-trained model to a submission file, which can be submitted to the Kaggle [Connect X](https://www.kaggle.com/c/connectx/leaderboard) competition directly.
 

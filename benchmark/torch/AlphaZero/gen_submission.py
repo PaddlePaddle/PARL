@@ -11,19 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import parl
-import unittest
-from parl.remote.client import disconnect
 
+import sys
+import base64
+import inspect
+import os
 
-class TestPingMaster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
+assert len(sys.argv) == 2, "please specify model path."
+model_path = sys.argv[1]
 
-    def test_throw_exception(self):
-        with self.assertRaises(AssertionError):
-            parl.connect("176.2.3.4:8080")
+with open(model_path, 'rb') as f:
+    raw_bytes = f.read()
+    encoded_weights = base64.encodebytes(raw_bytes)
 
+# encode weights of model to byte string
+submission_file = """
+import base64
+decoded = base64.b64decode({})
 
-if __name__ == '__main__':
-    unittest.main()
+""".format(encoded_weights)
+
+# insert code snippet of loading weights
+with open('submission_template.py', 'r') as f:
+    submission_file += ''.join(f.readlines())
+
+# generate final submission file
+with open('submission.py', 'w') as f:
+    f.write(submission_file)

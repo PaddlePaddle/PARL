@@ -27,7 +27,9 @@ import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address, to_str, _IS_WINDOWS, get_free_tcp_port, is_port_available, get_port_from_range
+from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address,
+                        get_port_from_range, is_port_available, kill_process,
+                        to_str)
 from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
@@ -289,33 +291,10 @@ def start_worker(address, cpu_num, log_server_port_range):
 
 @click.command("stop", help="Exit the cluster.")
 def stop():
-    if _IS_WINDOWS:
-        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\job.py%'" get processid^,status /format:csv') do taskkill /F /T /pid %a'''
-        os.popen(command).read()
-
-        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\start.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
-        os.popen(command).read()
-
-        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\monitor.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
-        os.popen(command).read()
-
-        command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%remote\\log_server.py%'" get processid^,status /format:csv') do taskkill /F /pid %a'''
-        os.popen(command).read()
-    else:
-        command = (
-            "ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")
-        subprocess.call([command], shell=True)
-        command = (
-            "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
-        subprocess.call([command], shell=True)
-        command = (
-            "ps aux | grep remote/monitor.py | awk '{print $2}' | xargs kill -9"
-        )
-        subprocess.call([command], shell=True)
-        command = (
-            "ps aux | grep remote/log_server.py | awk '{print $2}' | xargs kill -9"
-        )
-        subprocess.call([command], shell=True)
+    kill_process('remote/start.py')
+    kill_process('remote/job.py')
+    kill_process('remote/monitor.py')
+    kill_process('remote/log_server.py')
 
 
 @click.command("status")

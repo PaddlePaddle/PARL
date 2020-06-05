@@ -20,7 +20,6 @@ import sys
 import threading
 import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
-from parl.utils.communication import ping
 from parl.remote import remote_constants
 import time
 
@@ -110,6 +109,13 @@ class Client(object):
                 with open(file, 'rb') as f:
                     content = f.read()
                     pyfiles['other_files'][file] = content
+            # append entry file to code list
+            main_file = sys.argv[0]
+            with open(main_file, 'rb') as code_file:
+                code = code_file.read()
+                # parl/remote/remote_decorator.py -> remote_decorator.py
+                file_name = main_file.split(os.sep)[-1]
+                pyfiles['python_files'][file_name] = code
         except AssertionError as e:
             raise Exception(
                 'Failed to create the client, the file {} does not exist.'.
@@ -168,6 +174,7 @@ class Client(object):
         self.reply_master_heartbeat_address = "{}:{}".format(
             get_ip_address(), reply_master_heartbeat_port)
         self.heartbeat_socket_initialized.set()
+        connected = False
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
@@ -181,8 +188,14 @@ class Client(object):
                     to_byte(str(self.log_monitor_url)),
                 ])  # TODO: remove additional information
             except zmq.error.Again as e:
-                logger.warning("[Client] Cannot connect to the master."
-                               "Please check if it is still alive.")
+                if connected:
+                    logger.warning("[Client] Cannot connect to the master."
+                                   "Please check if it is still alive.")
+                else:
+                    logger.warning(
+                        "[Client] Cannot connect to the master."
+                        "Please check the firewall between client and master.(e.g., ping the master IP)"
+                    )
                 self.master_is_alive = False
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")
@@ -339,10 +352,6 @@ def connect(master_address, distributed_files=[]):
         "{ip}:{port} format"
     global GLOBAL_CLIENT
     addr = master_address.split(":")[0]
-    assert ping(
-        addr
-    ) == 0, "Error occurs in connection with {}. PARL failed to ping this IP.".format(
-        master_address)
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
         GLOBAL_CLIENT = Client(master_address, cur_process_id,

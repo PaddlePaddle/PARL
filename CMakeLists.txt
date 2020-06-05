@@ -33,6 +33,7 @@ function(py_test TARGET_NAME)
     add_test(NAME ${TARGET_NAME}
         COMMAND python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 300)
 endfunction()
 
 function(import_test TARGET_NAME)

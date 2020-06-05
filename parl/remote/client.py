@@ -168,6 +168,7 @@ class Client(object):
         self.heartbeat_master_address = "{}:{}".format(get_ip_address(),
                                                        heartbeat_master_port)
         self.heartbeat_socket_initialized.set()
+        connected = False
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
@@ -179,9 +180,16 @@ class Client(object):
                     to_byte(str(self.actor_num)),
                     to_byte(str(elapsed_time))
                 ])
+                connected = True
             except zmq.error.Again as e:
-                logger.warning("[Client] Cannot connect to the master."
-                               "Please check if it is still alive.")
+                if connected:
+                    logger.warning("[Client] Cannot connect to the master."
+                                   "Please check if it is still alive.")
+                else:
+                    logger.warning(
+                        "[Client] Cannot connect to the master."
+                        "Please check the firewall between client and master.(e.g., ping the master IP)"
+                    )
                 self.master_is_alive = False
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")

@@ -20,7 +20,6 @@ import sys
 import threading
 import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
-from parl.utils.communication import ping
 from parl.remote import remote_constants
 import time
 
@@ -338,10 +337,6 @@ def connect(master_address, distributed_files=[]):
         "{ip}:{port} format"
     global GLOBAL_CLIENT
     addr = master_address.split(":")[0]
-    assert ping(
-        addr
-    ) == 0, "Error occurs in connection with {}. PARL failed to ping this IP.".format(
-        master_address)
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
         GLOBAL_CLIENT = Client(master_address, cur_process_id,

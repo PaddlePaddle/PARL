@@ -16,12 +16,9 @@ import cloudpickle
 import pyarrow
 import subprocess
 import os
-from parl.utils import _IS_WINDOWS
 from parl.utils import SerializeError, DeserializeError
 
-__all__ = [
-    'dumps_argument', 'loads_argument', 'dumps_return', 'loads_return', 'ping'
-]
+__all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
 
 # Reference: https://github.com/apache/arrow/blob/f88474c84e7f02e226eb4cc32afef5e2bbc6e5b4/python/pyarrow/tests/test_serialization.py#L658-L682
@@ -120,23 +117,3 @@ def loads_return(data):
         raise DeserializeError(e)
 
     return ret
-
-
-#Reference: https://stackoverflow.com/questions/2953462/pinging-servers-in-python
-def ping(host):
-    """
-    Returns True if host (str) responds to a ping request.
-    Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
-    """
-
-    # Option for the number of packets as a function of
-    param = '-n' if _IS_WINDOWS else '-c'
-
-    # Building the command. Ex: "ping -c 1 google.com"
-    command = ['ping', param, '1', host]
-    FNULL = open(os.devnull, 'w')
-    child = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
-    FNULL.close()
-    child.communicate()[0]
-
-    return child.returncode

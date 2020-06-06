@@ -555,5 +555,5 @@ def alphazero_agent(obs, config):
     x = game.getCanonicalForm(board, player)
 
     action = np.argmax(
-        mcts.getActionProb(x, temp=0, timelimit=config.timeout - 0.1))
+        mcts.getActionProb(x, temp=0, timelimit=config.timeout - 0.5))
     return int(action)

@@ -38,7 +38,7 @@ class DQN(Algorithm):
 
         assert isinstance(act_dim, int)
         assert isinstance(gamma, float)
-        
+
         self.act_dim = act_dim
         self.gamma = gamma
         self.lr = lr
@@ -48,12 +48,20 @@ class DQN(Algorithm):
         """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate=None):
+    def learn(self,
+              obs,
+              action,
+              reward,
+              next_obs,
+              terminal,
+              learning_rate=None):
         """ update value model self.model with DQN algorithm
         """
         # Support the modification of learning_rate
         if learning_rate is None:
-            assert isinstance(self.lr, float), "Please pass parameter to lr (learning rate) of DQN."
+            assert isinstance(
+                self.lr,
+                float), "Please pass parameter to lr (learning rate) of DQN."
             learning_rate = self.lr
 
         pred_value = self.model.value(obs)

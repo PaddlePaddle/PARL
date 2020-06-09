@@ -23,14 +23,9 @@ from parl.core.fluid import layers
 
 __all__ = ['DDQN']
 
+
 class DDQN(Algorithm):
-    def __init__(
-            self,
-            model,
-            act_dim=None,
-            gamma=None,
-            lr=None
-    ):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ Double DQN algorithm
         Args:
             model (parl.Model): model defining forward network of Q function
@@ -53,12 +48,20 @@ class DDQN(Algorithm):
         """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate=None):
+    def learn(self,
+              obs,
+              action,
+              reward,
+              next_obs,
+              terminal,
+              learning_rate=None):
         """ update value model self.model with DQN algorithm
         """
         # Support the modification of learning_rate
         if learning_rate is None:
-            assert isinstance(self.lr, float), "Please pass parameter to lr (learning rate) of DQN."
+            assert isinstance(
+                self.lr,
+                float), "Please pass parameter to lr (learning rate) of DQN."
             learning_rate = self.lr
 
         pred_value = self.model.value(obs)

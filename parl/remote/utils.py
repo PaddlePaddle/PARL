@@ -44,7 +44,7 @@ def simplify_code(code, end_of_file):
 
 
 def load_remote_class(file_name, class_name, end_of_file):
-  """
+    """
   load a class given its file_name and class_name.
 
   Args:
@@ -55,13 +55,14 @@ def load_remote_class(file_name, class_name, end_of_file):
   Return:
     cls: the class to load
   """
-    with open(file_name) as t_file:
+    with open(file_name + '.py') as t_file:
         code = t_file.readlines()
-    code = simplify_code(code)
-    tmp_file_name = 'xparl_' + file_name
+    code = simplify_code(code, end_of_file)
+    module_name = 'xparl_' + file_name
+    tmp_file_name = 'xparl_' + file_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
-    mod = __import__(tmp_file_name)
-    cls = getattr(mod, class_name)._original
+    mod = __import__(module_name)
+    cls = getattr(mod, class_name)
     return cls

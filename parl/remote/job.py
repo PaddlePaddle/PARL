@@ -272,6 +272,7 @@ class Job(object):
                         os.makedirs(os.path.join(*file.rsplit('/')[:-1]))
                     except OSError as e:
                         pass
+                file = os.path.join(envdir, file)
                 with open(file, 'wb') as f:
                     f.write(content)
             logger.info('[job] reply')
@@ -350,6 +351,7 @@ class Job(object):
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
             sys.path.append(envdir)
+            os.chdir(envdir)
 
             obj = self.wait_for_connection(reply_socket)
             assert obj is not None

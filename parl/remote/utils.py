@@ -45,7 +45,7 @@ def simplify_code(code, end_of_file):
 
 def load_remote_class(file_name, class_name, end_of_file):
   """
-  load a class given is file_name and class_name.
+  load a class given its file_name and class_name.
 
   Args:
     file_name: specify the file to load the class

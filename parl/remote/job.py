@@ -36,6 +36,7 @@ from parl.utils.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
+from parl.remote.utils import load_remote_class
 
 
 class Job(object):
@@ -268,12 +269,15 @@ class Job(object):
                 # create directory (i.e. ./rom_files/)
                 if '/' in file:
                     try:
-                        os.makedirs(os.path.join(*file.rsplit('/')[:-1]))
+                        sep = os.sep
+                        recursive_dirs = os.path.join(*(file.split(sep)[:-1]))
+                        recursive_dirs = os.path.join(envdir, recursive_dirs)
+                        os.makedirs(recursive_dirs)
                     except OSError as e:
                         pass
+                file = os.path.join(envdir, file)
                 with open(file, 'wb') as f:
                     f.write(content)
-            logger.info('[job] reply')
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
             return envdir
         else:
@@ -301,12 +305,12 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                file_name, class_name = cloudpickle.loads(message[1])
+                file_name, class_name, end_of_file = cloudpickle.loads(
+                    message[1])
                 #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
                 file_name = file_name.split(os.sep)[-1]
+                cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
-                mod = __import__(file_name)
-                cls = getattr(mod, class_name)._original
                 obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())
@@ -349,13 +353,14 @@ class Job(object):
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
             sys.path.append(envdir)
+            os.chdir(envdir)
 
             obj = self.wait_for_connection(reply_socket)
             assert obj is not None
             self.single_task(obj, reply_socket, job_address)
         except Exception as e:
             logger.error(
-                "Error occurs when running a single task. We will reset this job. Reason:{}"
+                "Error occurs when running a single task. We will reset this job. \nReason:{}"
                 .format(e))
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))

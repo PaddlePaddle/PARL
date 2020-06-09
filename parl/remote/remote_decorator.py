@@ -75,6 +75,12 @@ def remote_class(*args, **kwargs):
     """
 
     def decorator(cls):
+        # we are not going to create a remote actor in job.py
+        if 'XPARL' in os.environ and os.environ['XPARL'] == 'True':
+            logger.warning(
+                "Note: this object will be runnning as a local object")
+            return cls
+
         class RemoteWrapper(object):
             """
             Wrapper for remote class in client side.
@@ -115,10 +121,12 @@ def remote_class(*args, **kwargs):
 
                 self.send_file(self.job_socket)
                 file_name = inspect.getfile(cls)[:-3]
+                cls_source = inspect.getsourcelines(cls)
+                end_of_file = cls_source[1] + len(cls_source[0])
                 class_name = cls.__name__
                 self.job_socket.send_multipart([
                     remote_constants.INIT_OBJECT_TAG,
-                    cloudpickle.dumps([file_name, class_name]),
+                    cloudpickle.dumps([file_name, class_name, end_of_file]),
                     cloudpickle.dumps([args, kwargs]),
                 ])
                 message = self.job_socket.recv_multipart()
@@ -130,7 +138,10 @@ def remote_class(*args, **kwargs):
 
             def __del__(self):
                 """Delete the remote class object and release remote resources."""
-                self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
+                try:
+                    self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
+                except AttributeError:
+                    pass
                 if not self.job_shutdown:
                     try:
                         self.job_socket.send_multipart(

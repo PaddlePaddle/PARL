@@ -105,6 +105,9 @@ class Client(object):
 
             for file in distributed_files:
                 assert os.path.exists(file)
+                assert not os.path.isabs(
+                    file
+                ), "[XPARL] Please do not distribute a file with absolute path."
                 with open(file, 'rb') as f:
                     content = f.read()
                     pyfiles['other_files'][file] = content

@@ -44,10 +44,21 @@ def simplify_code(code, end_of_file):
 
 
 def load_remote_class(file_name, class_name, end_of_file):
+  """
+  load a class given is file_name and class_name.
+
+  Args:
+    file_name: specify the file to load the class
+    class_name: specify the class to be loaded
+    end_of_file: line ID to indicate the last line that defines the class.
+
+  Return:
+    cls: the class to load
+  """
     with open(file_name) as t_file:
         code = t_file.readlines()
     code = simplify_code(code)
-    tmp_file_name = 'parl_' + file_name
+    tmp_file_name = 'xparl_' + file_name
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)

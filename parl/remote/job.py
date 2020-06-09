@@ -36,6 +36,7 @@ from parl.utils.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
+from parl.remote.utils import load_remote_class
 
 
 class Job(object):
@@ -301,12 +302,12 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                file_name, class_name = cloudpickle.loads(message[1])
+                file_name, class_name, end_of_file = cloudpickle.loads(
+                    message[1])
                 #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
                 file_name = file_name.split(os.sep)[-1]
+                cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
-                mod = __import__(file_name)
-                cls = getattr(mod, class_name)._original
                 obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())

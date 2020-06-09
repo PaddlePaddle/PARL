@@ -21,19 +21,17 @@ import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
 
+__all__ = ['DDQN']
+
 
 class DDQN(Algorithm):
-    def __init__(
-            self,
-            model,
-            act_dim=None,
-            gamma=None,
-    ):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ Double DQN algorithm
-
         Args:
-            model (parl.Model): model defining forward network of Q function.
+            model (parl.Model): model defining forward network of Q function
+            act_dim (int): dimension of the action space
             gamma (float): discounted factor for reward computation.
+            lr (float): learning rate.
         """
         self.model = model
         self.target_model = copy.deepcopy(model)
@@ -43,11 +41,29 @@ class DDQN(Algorithm):
 
         self.act_dim = act_dim
         self.gamma = gamma
+        self.lr = lr
 
     def predict(self, obs):
+        """ use value model self.model to predict the action value
+        """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
+    def learn(self,
+              obs,
+              action,
+              reward,
+              next_obs,
+              terminal,
+              learning_rate=None):
+        """ update value model self.model with DQN algorithm
+        """
+        # Support the modification of learning_rate
+        if learning_rate is None:
+            assert isinstance(
+                self.lr,
+                float), "Please set the learning rate of DQN in initializaion."
+            learning_rate = self.lr
+
         pred_value = self.model.value(obs)
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')

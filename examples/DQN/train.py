@@ -45,8 +45,7 @@ def run_episode(agent, env, rpm):
             (batch_obs, batch_action, batch_reward, batch_next_obs,
              batch_isOver) = rpm.sample(BATCH_SIZE)
             train_loss = agent.learn(batch_obs, batch_action, batch_reward,
-                                     batch_next_obs, batch_isOver,
-                                     LEARNING_RATE)
+                                     batch_next_obs, batch_isOver)
 
         total_reward += reward
         obs = next_obs
@@ -80,7 +79,8 @@ def main():
     rpm = ReplayMemory(MEMORY_SIZE)
 
     model = CartpoleModel(act_dim=action_dim)
-    algorithm = parl.algorithms.DQN(model, act_dim=action_dim, gamma=GAMMA)
+    algorithm = parl.algorithms.DQN(
+        model, act_dim=action_dim, gamma=GAMMA, lr=LEARNING_RATE)
     agent = CartpoleAgent(
         algorithm,
         obs_dim=obs_shape[0],

@@ -54,10 +54,7 @@ class CartpoleAgent(parl.Agent):
             next_obs = layers.data(
                 name='next_obs', shape=[self.obs_dim], dtype='float32')
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
-            lr = layers.data(
-                name='lr', shape=[1], dtype='float32', append_batch_size=False)
-            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal,
-                                       lr)
+            self.cost = self.alg.learn(obs, action, reward, next_obs, terminal)
 
     def sample(self, obs):
         sample = np.random.rand()
@@ -78,7 +75,7 @@ class CartpoleAgent(parl.Agent):
         act = np.argmax(pred_Q)
         return act
 
-    def learn(self, obs, act, reward, next_obs, terminal, lr):
+    def learn(self, obs, act, reward, next_obs, terminal):
         if self.global_step % self.update_target_steps == 0:
             self.alg.sync_target()
         self.global_step += 1
@@ -90,7 +87,6 @@ class CartpoleAgent(parl.Agent):
             'reward': reward,
             'next_obs': next_obs.astype('float32'),
             'terminal': terminal,
-            'lr': np.float32([lr]),
         }
         cost = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.cost])[0]

@@ -61,7 +61,7 @@ class DQN(Algorithm):
         if learning_rate is None:
             assert isinstance(
                 self.lr,
-                float), "Please pass parameter to lr (learning rate) of DQN."
+                float), "Please set the learning rate of DQN in initializaion."
             learning_rate = self.lr
 
         pred_value = self.model.value(obs)

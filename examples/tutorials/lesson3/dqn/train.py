@@ -89,8 +89,7 @@ def main():
 
     # 根据parl框架构建agent
     model = Model(act_dim=action_dim)
-    algorithm = DQN(
-        model, act_dim=action_dim, gamma=GAMMA, learning_rate=LEARNING_RATE)
+    algorithm = DQN(model, act_dim=action_dim, gamma=GAMMA, lr=LEARNING_RATE)
     agent = Agent(
         algorithm,
         obs_dim=obs_shape[0],

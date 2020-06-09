@@ -21,24 +21,24 @@ from parl import layers
 
 
 class DQN(parl.Algorithm):
-    def __init__(self, model, act_dim=None, gamma=None, learning_rate=None):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ DQN algorithm
         
         Args:
             model (parl.Model): 定义Q函数的前向网络结构
             act_dim (int): action空间的维度，即有几个action
             gamma (float): reward的衰减因子
-            learning_rate (float): 学习率.
+            lr (float): learning_rate，学习率.
         """
         self.model = model
         self.target_model = copy.deepcopy(model)
 
         assert isinstance(act_dim, int)
         assert isinstance(gamma, float)
-        assert isinstance(learning_rate, float)
+        assert isinstance(lr, float)
         self.act_dim = act_dim
         self.gamma = gamma
-        self.lr = learning_rate
+        self.lr = lr
 
     def predict(self, obs):
         """ 使用self.model的value网络来获取 [Q(s,a1),Q(s,a2),...]

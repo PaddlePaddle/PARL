@@ -269,13 +269,15 @@ class Job(object):
                 # create directory (i.e. ./rom_files/)
                 if '/' in file:
                     try:
-                        os.makedirs(os.path.join(*file.rsplit('/')[:-1]))
+                        sep = os.sep
+                        recursive_dirs = os.path.join(*(file.split(sep)[:-1]))
+                        recursive_dirs = os.path.join(envdir, recursive_dirs)
+                        os.makedirs(recursive_dirs)
                     except OSError as e:
                         pass
                 file = os.path.join(envdir, file)
                 with open(file, 'wb') as f:
                     f.write(content)
-            logger.info('[job] reply')
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
             return envdir
         else:
@@ -358,7 +360,7 @@ class Job(object):
             self.single_task(obj, reply_socket, job_address)
         except Exception as e:
             logger.error(
-                "Error occurs when running a single task. We will reset this job. Reason:{}"
+                "Error occurs when running a single task. We will reset this job. \nReason:{}"
                 .format(e))
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))

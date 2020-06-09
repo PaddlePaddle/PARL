@@ -22,10 +22,11 @@ import threading
 
 c = 10
 port = 3002
-master = Master(port=port)
-th = threading.Thread(target=master.run)
-th.setDaemon(True)
-th.start()
+if __name__ == '__main__':
+    master = Master(port=port)
+    th = threading.Thread(target=master.run)
+    th.setDaemon(True)
+    th.start()
 time.sleep(5)
 cluster_addr = 'localhost:{}'.format(port)
 parl.connect(cluster_addr)

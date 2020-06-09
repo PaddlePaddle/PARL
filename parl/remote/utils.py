@@ -30,7 +30,7 @@ def simplify_code(code, end_of_file):
   def data_process():
     XXXX
   ------------------>
-  line 25 and 26 will be removed.
+  The last two lines of the above code block will be removed as they are not class related.
   """
     to_write_lines = []
     for i, line in enumerate(code):

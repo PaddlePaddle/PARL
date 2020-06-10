@@ -36,6 +36,7 @@ from parl.utils.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
+from parl.remote.utils import load_remote_class
 
 
 class Job(object):
@@ -47,7 +48,7 @@ class Job(object):
 
     """
 
-    def __init__(self, worker_address):
+    def __init__(self, worker_address, log_server_address):
         """
         Args:
             worker_address(str): worker_address for sending job information(e.g, pid)
@@ -59,17 +60,19 @@ class Job(object):
         self.max_memory = None
 
         self.job_address_receiver, job_address_sender = Pipe()
+        self.job_id_receiver, job_id_sender = Pipe()
 
         self.worker_address = worker_address
+        self.log_server_address = log_server_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
 
         self.run_job_process = Process(
-            target=self.run, args=(job_address_sender, ))
+            target=self.run, args=(job_address_sender, job_id_sender))
         self.run_job_process.start()
         """
         NOTE:
-            In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.  
+            In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.
         """
         self.lock = threading.Lock()
         self._create_sockets()
@@ -87,7 +90,7 @@ class Job(object):
                 _ = self.kill_job_socket.recv_multipart()
             except zmq.error.Again as e:
                 pass
-            os._exit(1)
+            os._exit(0)
 
     def _create_sockets(self):
         """Create five sockets for each job in main process.
@@ -101,6 +104,7 @@ class Job(object):
         """
         # wait for another process to create reply socket
         self.job_address = self.job_address_receiver.recv()
+        self.job_id = self.job_id_receiver.recv()
 
         self.ctx = zmq.Context()
         # create the job_socket
@@ -134,7 +138,8 @@ class Job(object):
         # sends job information to the worker
         initialized_job = InitializedJob(
             self.job_address, worker_heartbeat_address,
-            client_heartbeat_address, ping_heartbeat_address, None, self.pid)
+            client_heartbeat_address, ping_heartbeat_address, None, self.pid,
+            self.job_id, self.log_server_address)
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
@@ -243,7 +248,7 @@ class Job(object):
         the python files to the job. Later, the job will save these files to a
         temporary directory and add the temporary diretory to Python's working
         directory.
-        
+
         Args:
             reply_socket (sockert): main socket to accept commands of remote object.
             job_address (String): address of reply_socket.
@@ -268,12 +273,15 @@ class Job(object):
                 # create directory (i.e. ./rom_files/)
                 if '/' in file:
                     try:
-                        os.makedirs(os.path.join(*file.rsplit('/')[:-1]))
+                        sep = os.sep
+                        recursive_dirs = os.path.join(*(file.split(sep)[:-1]))
+                        recursive_dirs = os.path.join(envdir, recursive_dirs)
+                        os.makedirs(recursive_dirs)
                     except OSError as e:
                         pass
+                file = os.path.join(envdir, file)
                 with open(file, 'wb') as f:
                     f.write(content)
-            logger.info('[job] reply')
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
             return envdir
         else:
@@ -301,7 +309,11 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                cls = cloudpickle.loads(message[1])
+                file_name, class_name, end_of_file = cloudpickle.loads(
+                    message[1])
+                #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
+                file_name = file_name.split(os.sep)[-1]
+                cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
                 obj = cls(*args, **kwargs)
             except Exception as e:
@@ -324,7 +336,7 @@ class Job(object):
 
         return obj
 
-    def run(self, job_address_sender):
+    def run(self, job_address_sender, job_id_sender):
         """An infinite loop waiting for a new task.
 
         Args:
@@ -339,19 +351,28 @@ class Job(object):
         job_ip = get_ip_address()
         job_address = "{}:{}".format(job_ip, job_port)
 
+        job_id = job_address.replace(':', '_') + '_' + str(int(time.time()))
+        self.log_dir = os.path.expanduser('~/.parl_data/job/{}'.format(job_id))
+        logger.set_dir(self.log_dir)
+        logger.info(
+            "[Job] Job {} initialized. Reply heartbeat socket Address: {}.".
+            format(job_id, job_address))
+
         job_address_sender.send(job_address)
+        job_id_sender.send(job_id)
 
         try:
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
             sys.path.append(envdir)
+            os.chdir(envdir)
 
             obj = self.wait_for_connection(reply_socket)
             assert obj is not None
             self.single_task(obj, reply_socket, job_address)
         except Exception as e:
             logger.error(
-                "Error occurs when running a single task. We will reset this job. Reason:{}"
+                "Error occurs when running a single task. We will reset this job. \nReason:{}"
                 .format(e))
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))
@@ -382,7 +403,15 @@ class Job(object):
                     function_name = to_str(message[1])
                     data = message[2]
                     args, kwargs = loads_argument(data)
-                    ret = getattr(obj, function_name)(*args, **kwargs)
+
+                    # Redirect stdout to stdout.log temporarily
+                    logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                    with open(logfile_path, 'a') as f:
+                        tmp = sys.stdout
+                        sys.stdout = f
+                        ret = getattr(obj, function_name)(*args, **kwargs)
+                        sys.stdout = tmp
+
                     ret = dumps_return(ret)
 
                     reply_socket.send_multipart(
@@ -441,5 +470,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--worker_address", required=True, type=str, help="worker_address")
+    parser.add_argument(
+        "--log_server_address",
+        required=True,
+        type=str,
+        help="log_server_address, address of the log web server on worker")
     args = parser.parse_args()
-    job = Job(args.worker_address)
+    job = Job(args.worker_address, args.log_server_address)

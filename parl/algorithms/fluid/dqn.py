@@ -24,7 +24,7 @@ __all__ = ['DQN']
 
 
 class DQN(Algorithm):
-    def __init__(self, model, act_dim=None, gamma=None):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ DQN algorithm
         
         Args:
@@ -38,17 +38,31 @@ class DQN(Algorithm):
 
         assert isinstance(act_dim, int)
         assert isinstance(gamma, float)
+
         self.act_dim = act_dim
         self.gamma = gamma
+        self.lr = lr
 
     def predict(self, obs):
         """ use value model self.model to predict the action value
         """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
+    def learn(self,
+              obs,
+              action,
+              reward,
+              next_obs,
+              terminal,
+              learning_rate=None):
         """ update value model self.model with DQN algorithm
         """
+        # Support the modification of learning_rate
+        if learning_rate is None:
+            assert isinstance(
+                self.lr,
+                float), "Please set the learning rate of DQN in initializaion."
+            learning_rate = self.lr
 
         pred_value = self.model.value(obs)
         next_pred_value = self.target_model.value(next_obs)

@@ -64,7 +64,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 
 # Install:
 ### Dependencies
-- Python 2.7 or 3.5+. 
+- Python 2.7 or 3.5+(On **Windows**, PARL only supprorts the enviroment with python3.6+). 
 - [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 

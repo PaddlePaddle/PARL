@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Parl Cluster</title>
+    <link rel="shortcut icon" href="../static/favicon.ico" />
+    <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/js/ansi_up.js"></script>
+    <script
+      type="text/javascript"
+      src="../static/js/bootstrap-table.min.js"
+    ></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="../static/css/bootstrap-parl.min.css" />
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand">
+          <img src="../static/logo.png" style="height: 30px;" />
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav">
+            <li class="nav-item" id="worker_nav">
+              <a class="btn text-white" href="workers">Worker</a>
+            </li>
+            <li class="nav-item" id="client_nav">
+              <a class="btn text-white" href="clients">Client</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container" id="main-container">
+      <h5 class="font-weight-light text-center text-lg-left mt-4 mb-4">
+        Jobs Monitor
+      </h5>
+
+      <div class="card">
+        <div class="card-header" style="display: inline;">
+          <h3 style="display: inline;">
+            Remote Job Log
+          </h3>
+          <p
+            style="
+              float: right;
+              margin-bottom: 0rem;
+              position: relative;
+              bottom: -0.5rem;
+            "
+          >
+            Client ID: {{ client_id }}
+          </p>
+        </div>
+      </div>
+      <table id="table"></table>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="log-modal"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-lg modal-dialog-scrollable"
+        role="document"
+      >
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="log-modal-title">
+              Job ID:
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="log-content">
+              <div id="loading-spin" class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <a style="position: relative; left: -160px; font-size: small;">
+              * Only the lastest 500 lines of the log are shown, <br />
+              download the log file for the full log.
+            </a>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <a
+              role="button"
+              id="download-btn"
+              type="button"
+              class="btn btn-primary"
+              href=""
+            >
+              Download the complete log
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let client_id = "{{ client_id }}";
+      let $table = $("#table");
+      function initTable() {
+        $table.bootstrapTable({
+          url: "get-jobs?client_id={{ client_id }}",
+          pagination: true,
+          pageSize: 10,
+          pageList: [10, 25, 50, 100],
+          columns: [
+            {
+              field: "id",
+              title: "ID",
+            },
+            {
+              field: "job_id",
+              title: "Job ID",
+            },
+            {
+              field: "log_url",
+              title: "Log",
+              formatter: urlButtonFormatter,
+            },
+            {
+              field: "download_url",
+              title: "Download",
+              formatter: downloadButtonFormatter,
+            },
+          ],
+        });
+      }
+      function urlButtonFormatter(value, row, index) {
+        let job_id = value.split("?job_id=")[1];
+        return `<a
+                role="button"
+                data-toggle="modal"
+                data-target="#log-modal"
+                data-job-url="${value}"
+                data-job-id="${job_id}"
+                class="btn btn-sm btn-outline-primary"
+                href="">view</a>`;
+      }
+      function downloadButtonFormatter(value, row, index) {
+        return `<a
+                role="button"
+                class="btn btn-sm btn-outline-primary"
+                href=${value}>link</a>`;
+      }
+      let refresher_id = null;
+      let ansi_up = new AnsiUp();
+      $("#log-modal").on("show.bs.modal", function (e) {
+        let job_id = $(e.relatedTarget).data("job-id");
+        let job_url = $(e.relatedTarget).data("job-url");
+        $("#log-modal-title").text("Job ID: " + job_id);
+        $("#download-btn").attr("href", job_url.replace("get", "download"));
+        refresher_id = setInterval(() => {
+          $.get(job_url, function (data, status) {
+            html = ansi_up
+              .ansi_to_html(data.log)
+              .replace(/\r\n/g, "<br>")
+              .replace(/\n/g, "<br>");
+            $("#loading-spin").hide();
+            $("#log-content").html(html);
+          });
+        }, 1000);
+      });
+      $("#log-modal").on("hide.bs.modal", function (e) {
+        clearInterval(refresher_id);
+      });
+      $(document).ready(initTable);
+      setInterval(() => {
+        $table.bootstrapTable("refresh");
+      }, 10000);
+    </script>
+  </body>
+</html>

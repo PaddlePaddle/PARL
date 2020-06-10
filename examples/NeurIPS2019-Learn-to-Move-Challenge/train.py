@@ -22,7 +22,7 @@ import numpy as np
 from actor import Actor
 from opensim_model import OpenSimModel
 from opensim_agent import OpenSimAgent
-from parl.utils import logger, ReplayMemory, tensorboard, get_gpu_count
+from parl.utils import logger, ReplayMemory, summary, get_gpu_count
 from parl.utils.window_stat import WindowStat
 from parl.remote.client import get_global_client
 from parl.utils import machine_info
@@ -97,7 +97,7 @@ class Learner(object):
         # add lock between training and predicting
         self.model_lock = threading.Lock()
 
-        # add lock when appending data to rpm or writing scalars to tensorboard
+        # add lock when appending data to rpm or writing scalars to summary
         self.memory_lock = threading.Lock()
 
         self.ready_actor_queue = queue.Queue()
@@ -246,24 +246,24 @@ class Learner(object):
                                           episode_env_reward)
 
                 if self.env_reward_stat.count > 500:
-                    tensorboard.add_scalar('recent_env_reward',
-                                           self.env_reward_stat.mean,
-                                           self.total_steps)
-                    tensorboard.add_scalar('recent_shaping_reward',
-                                           self.shaping_reward_stat.mean,
-                                           self.total_steps)
+                    summary.add_scalar('recent_env_reward',
+                                       self.env_reward_stat.mean,
+                                       self.total_steps)
+                    summary.add_scalar('recent_shaping_reward',
+                                       self.shaping_reward_stat.mean,
+                                       self.total_steps)
                 if self.critic_loss_stat.count > 500:
-                    tensorboard.add_scalar('recent_critic_loss',
-                                           self.critic_loss_stat.mean,
-                                           self.total_steps)
-                tensorboard.add_scalar('episode_length', n, self.total_steps)
-                tensorboard.add_scalar('max_env_reward', self.max_env_reward,
+                    summary.add_scalar('recent_critic_loss',
+                                       self.critic_loss_stat.mean,
                                        self.total_steps)
-                tensorboard.add_scalar('ready_actor_num',
-                                       self.ready_actor_queue.qsize(),
-                                       self.total_steps)
-                tensorboard.add_scalar('episode_time', episode_time,
-                                       self.total_steps)
+                summary.add_scalar('episode_length', n, self.total_steps)
+                summary.add_scalar('max_env_reward', self.max_env_reward,
+                                   self.total_steps)
+                summary.add_scalar('ready_actor_num',
+                                   self.ready_actor_queue.qsize(),
+                                   self.total_steps)
+                summary.add_scalar('episode_time', episode_time,
+                                   self.total_steps)
 
             self.noiselevel = self.noiselevel * NOISE_DECAY
 

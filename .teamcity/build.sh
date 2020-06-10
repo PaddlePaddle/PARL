@@ -69,7 +69,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j10
+    ctest --output-on-failure -j20 --verbose
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -90,7 +90,7 @@ function run_test_with_cpu() {
     =====================================================
 EOF
     if [ $# -eq 1 ];then
-      ctest --output-on-failure -j10
+      ctest --output-on-failure -j20 --verbose
     else
       ctest --output-on-failure 
     fi
@@ -134,19 +134,6 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_evo_kit_test {
-    cd ${REPO_ROOT}/evo_kit
-
-    cat <<EOF
-    ========================================
-    Running evo_kit test...
-    ========================================
-EOF
-    sh test/run_test.sh
-    rm -rf ${REPO_ROOT}/evo_kit/build
-    rm -rf ${REPO_ROOT}/evo_kit/libtorch
-}
-
 function main() {
     set -e
     local CMD=$1
@@ -158,7 +145,8 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
-          declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          declare -a envs=("py27" "py36")
           for env in "${envs[@]}";do
               cd /work
               source ~/.bashrc
@@ -182,6 +170,10 @@ function main() {
                 pip install -r .teamcity/requirements_torch.txt
                 run_test_with_cpu $env "DIS_TESTING_TORCH"
               fi
+              # clean env
+              export LC_ALL=C.UTF-8
+              export LANG=C.UTF-8
+              xparl stop
           done
           run_test_with_gpu
 
@@ -189,7 +181,6 @@ function main() {
           /root/miniconda3/envs/empty_env/bin/pip install .
           run_import_test
           run_docs_test
-          run_evo_kit_test
           ;;
         *)
           print_usage

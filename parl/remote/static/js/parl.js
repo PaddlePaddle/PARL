@@ -185,7 +185,8 @@ function autoTable(res) {
     var s3 = `<td>${res.clients[i].client_address}</td>`;
     var s4 = `<td>${res.clients[i].actor_num}</td>`;
     var s5 = `<td>${res.clients[i].time}</td>`;
-    tr.innerHTML = s1 + s2 + s3 + s4 + s5;
+    var s6 = `<td><a href=${res.clients[i].log_monitor_url}>link</a></td>`;
+    tr.innerHTML = s1 + s2 + s3 + s4 + s5 + s6;
     table.appendChild(tr);
   }
 };

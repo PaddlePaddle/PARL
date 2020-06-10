@@ -22,6 +22,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
+from parl.utils import logger
 
 
 @parl.remote_class
@@ -62,20 +63,24 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_actor_exception(self):
-        master = Master(port=1235)
+        logger.info("running:test_actor_exception")
+        master = Master(port=8235)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:1235', 1)
+        worker1 = Worker('localhost:8235', 1)
         for _ in range(3):
             if master.cpu_num == 1:
                 break
             time.sleep(10)
         self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:1235')
+        logger.info("running:test_actor_exception: 0")
+        parl.connect('localhost:8235')
+        logger.info("running:test_actor_exception: 1")
 
         with self.assertRaises(exceptions.RemoteError):
             actor = Actor(abcd='a bug')
+        logger.info("running:test_actor_exception: 2")
 
         actor2 = Actor()
         for _ in range(3):
@@ -88,14 +93,15 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
-    def test_actor_exception(self):
-        master = Master(port=1236)
+    def test_actor_exception_2(self):
+        logger.info("running: test_actor_exception_2")
+        master = Master(port=8236)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:1236', 1)
+        worker1 = Worker('localhost:8236', 1)
         self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:1236')
+        parl.connect('localhost:8236')
         actor = Actor()
         try:
             actor.will_raise_exception_func()
@@ -114,14 +120,15 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_reset_actor(self):
+        logger.info("running: test_reset_actor")
         # start the master
-        master = Master(port=1237)
+        master = Master(port=8237)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
 
-        worker1 = Worker('localhost:1237', 4)
-        parl.connect('localhost:1237')
+        worker1 = Worker('localhost:8237', 4)
+        parl.connect('localhost:8237')
         for _ in range(10):
             actor = Actor()
             ret = actor.add_one(1)
@@ -138,19 +145,20 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_add_worker(self):
-        master = Master(port=1234)
+        logger.info("running: test_add_worker")
+        master = Master(port=8234)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
 
-        worker1 = Worker('localhost:1234', 4)
+        worker1 = Worker('localhost:8234', 4)
         for _ in range(3):
             if master.cpu_num == 4:
                 break
             time.sleep(10)
         self.assertEqual(master.cpu_num, 4)
 
-        worker2 = Worker('localhost:1234', 4)
+        worker2 = Worker('localhost:8234', 4)
         for _ in range(3):
             if master.cpu_num == 8:
                 break

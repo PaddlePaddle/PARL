@@ -14,6 +14,8 @@
 
 import cloudpickle
 import pyarrow
+import subprocess
+import os
 from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']

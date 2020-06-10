@@ -12,24 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import base64
+import inspect
 import os
-import paddle.fluid as fluid
-from parl import layers
-import numpy as np
-import parl
 
+assert len(sys.argv) == 2, "please specify model path."
+model_path = sys.argv[1]
 
-class RLDispatcherModel(parl.Model):
-    def __init__(self, act_dim):
-        self._act_dim = act_dim
-        self._fc_1 = layers.fc(size=512, act='relu')
-        self._fc_2 = layers.fc(size=256, act='relu')
-        self._fc_3 = layers.fc(size=128, act='tanh')
-        self._output = layers.fc(size=act_dim)
+with open(model_path, 'rb') as f:
+    raw_bytes = f.read()
+    encoded_weights = base64.encodebytes(raw_bytes)
 
-    def value(self, obs):
-        _h_1 = self._fc_1(obs)
-        _h_2 = self._fc_2(_h_1)
-        _h_3 = self._fc_3(_h_2)
-        self._pred = self._output(_h_3)
-        return self._pred
+# encode weights of model to byte string
+submission_file = """
+import base64
+decoded = base64.b64decode({})
+
+""".format(encoded_weights)
+
+# insert code snippet of loading weights
+with open('submission_template.py', 'r') as f:
+    submission_file += ''.join(f.readlines())
+
+# generate final submission file
+with open('submission.py', 'w') as f:
+    f.write(submission_file)

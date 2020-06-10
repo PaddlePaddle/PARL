@@ -1,6 +1,6 @@
 ## 《PARL强化学习入门实践》课程示例
 
-针对强化学习初学者，PARL提供了一系列入门课程，展示最基础的5个强化学习算法代码示例。
+针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例。
 
 ## 课程大纲
 + 一、强化学习(RL)初印象
@@ -20,14 +20,16 @@
 
 
 
-## 使用前安装依赖
+## 使用说明
+
+### 安装依赖
 
 + [paddlepaddle==1.6.3](https://github.com/PaddlePaddle/Paddle)
 + [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
 + gym
 
 
-### 使用说明
+### 运行示例
 
 进入每个示例对应的代码文件夹中，运行
 ```

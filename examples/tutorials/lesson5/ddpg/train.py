@@ -25,16 +25,16 @@ from algorithm import DDPG  # from parl.algorithms import DDPG
 from env import ContinuousCartPoleEnv
 from replay_memory import ReplayMemory
 
-ACTOR_LR = 1e-3
-CRITIC_LR = 1e-3
-GAMMA = 0.99
-TAU = 0.001
-MEMORY_SIZE = int(1e6)
-MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
+ACTOR_LR = 1e-3   # Actor网络的 learning rate
+CRITIC_LR = 1e-3  # Critic网络的 learning rate
+GAMMA = 0.99      # reward 的衰减因子
+TAU = 0.001       # 软更新的系数
+MEMORY_SIZE = int(1e6)                  # 经验池大小
+MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20  # 预存一部分经验之后再开始训练
 BATCH_SIZE = 128
-REWARD_SCALE = 0.1
-NOISE = 0.05
-TRAIN_EPISODE = 6e3
+REWARD_SCALE = 0.1  # reward 缩放系数
+NOISE = 0.05        # 动作噪声方差
+TRAIN_EPISODE = 6e3 # 训练的总episode数
 
 
 def run_train_episode(agent, env, rpm):
@@ -106,8 +106,9 @@ def main():
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
     agent = Agent(algorithm, obs_dim, act_dim)
 
+    # 创建经验池
     rpm = ReplayMemory(MEMORY_SIZE)
-
+    # 往经验池中预存数据
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 

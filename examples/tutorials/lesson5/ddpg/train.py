@@ -51,8 +51,7 @@ def run_train_episode(agent, env, rpm):
 
         next_obs, reward, done, info = env.step(action)
 
-        # 因为action只有一个浮点数，先放入list中，兼容action是多个浮点数的情况
-        action = [action]
+        action = [action] # 方便存入replaymemory
         rpm.append((obs, action, REWARD_SCALE * reward, next_obs, done))
 
         if len(rpm) > MEMORY_WARMUP_SIZE and (steps % 5) == 0:

@@ -364,7 +364,7 @@ class Job(object):
         try:
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
-            sys.path.append(envdir)
+            sys.path.insert(0, envdir)
             os.chdir(envdir)
 
             obj = self.wait_for_connection(reply_socket)

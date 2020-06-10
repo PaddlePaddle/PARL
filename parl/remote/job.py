@@ -48,7 +48,7 @@ class Job(object):
 
     """
 
-    def __init__(self, worker_address):
+    def __init__(self, worker_address, log_server_address):
         """
         Args:
             worker_address(str): worker_address for sending job information(e.g, pid)
@@ -60,13 +60,15 @@ class Job(object):
         self.max_memory = None
 
         self.job_address_receiver, job_address_sender = Pipe()
+        self.job_id_receiver, job_id_sender = Pipe()
 
         self.worker_address = worker_address
+        self.log_server_address = log_server_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
 
         self.run_job_process = Process(
-            target=self.run, args=(job_address_sender, ))
+            target=self.run, args=(job_address_sender, job_id_sender))
         self.run_job_process.start()
         """
         NOTE:
@@ -102,6 +104,7 @@ class Job(object):
         """
         # wait for another process to create reply socket
         self.job_address = self.job_address_receiver.recv()
+        self.job_id = self.job_id_receiver.recv()
 
         self.ctx = zmq.Context()
         # create the job_socket
@@ -135,7 +138,8 @@ class Job(object):
         # sends job information to the worker
         initialized_job = InitializedJob(
             self.job_address, worker_heartbeat_address,
-            client_heartbeat_address, ping_heartbeat_address, None, self.pid)
+            client_heartbeat_address, ping_heartbeat_address, None, self.pid,
+            self.job_id, self.log_server_address)
         self.job_socket.send_multipart(
             [remote_constants.NORMAL_TAG,
              cloudpickle.dumps(initialized_job)])
@@ -332,7 +336,7 @@ class Job(object):
 
         return obj
 
-    def run(self, job_address_sender):
+    def run(self, job_address_sender, job_id_sender):
         """An infinite loop waiting for a new task.
 
         Args:
@@ -347,7 +351,15 @@ class Job(object):
         job_ip = get_ip_address()
         job_address = "{}:{}".format(job_ip, job_port)
 
+        job_id = job_address.replace(':', '_') + '_' + str(int(time.time()))
+        self.log_dir = os.path.expanduser('~/.parl_data/job/{}'.format(job_id))
+        logger.set_dir(self.log_dir)
+        logger.info(
+            "[Job] Job {} initialized. Reply heartbeat socket Address: {}.".
+            format(job_id, job_address))
+
         job_address_sender.send(job_address)
+        job_id_sender.send(job_id)
 
         try:
             # receive source code from the actor and append them to the environment variables.
@@ -391,7 +403,15 @@ class Job(object):
                     function_name = to_str(message[1])
                     data = message[2]
                     args, kwargs = loads_argument(data)
-                    ret = getattr(obj, function_name)(*args, **kwargs)
+
+                    # Redirect stdout to stdout.log temporarily
+                    logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                    with open(logfile_path, 'a') as f:
+                        tmp = sys.stdout
+                        sys.stdout = f
+                        ret = getattr(obj, function_name)(*args, **kwargs)
+                        sys.stdout = tmp
+
                     ret = dumps_return(ret)
 
                     reply_socket.send_multipart(
@@ -450,5 +470,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--worker_address", required=True, type=str, help="worker_address")
+    parser.add_argument(
+        "--log_server_address",
+        required=True,
+        type=str,
+        help="log_server_address, address of the log web server on worker")
     args = parser.parse_args()
-    job = Job(args.worker_address)
+    job = Job(args.worker_address, args.log_server_address)

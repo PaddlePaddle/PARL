@@ -20,6 +20,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import threading
 import warnings
@@ -63,7 +64,7 @@ class Worker(object):
         cpu_num (int): Number of cpu to be used on the worker.
     """
 
-    def __init__(self, master_address, cpu_num=None):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None):
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
         self.ctx = zmq.Context.instance()
@@ -75,6 +76,9 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
+        # create log server
+        self.log_server_proc, self.log_server_address = self._create_log_server(
+            port=log_server_port)
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
@@ -192,7 +196,8 @@ class Worker(object):
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
             sys.executable, job_file, "--worker_address",
-            self.reply_job_address
+            self.reply_job_address, "--log_server_address",
+            self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -354,9 +359,39 @@ class Worker(object):
             "[Worker] lost connection with the master, will exit reply heartbeat for master."
         )
         self.worker_status.clear()
+        self.log_server_proc.kill()
+        self.log_server_proc.wait()
         # exit the worker
         self.worker_is_alive = False
         self.exit()
+
+    def _create_log_server(self, port):
+        log_server_file = __file__.replace('worker.pyc', 'log_server.py')
+        log_server_file = log_server_file.replace('worker.py', 'log_server.py')
+
+        if port is None:
+            port = "0"  # `0` means using a random port in flask
+        command = [
+            sys.executable, log_server_file, "--port",
+            str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"
+        ]
+
+        if sys.version_info.major == 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+        if _IS_WINDOWS:
+            FNULL = tempfile.TemporaryFile()
+        else:
+            FNULL = open(os.devnull, 'w')
+        log_server_proc = subprocess.Popen(
+            command,
+            stdout=FNULL,
+            stderr=subprocess.STDOUT,
+        )
+        FNULL.close()
+
+        log_server_address = "{}:{}".format(self.worker_ip, port)
+        return log_server_proc, log_server_address
 
     def exit(self):
         """close the worker"""

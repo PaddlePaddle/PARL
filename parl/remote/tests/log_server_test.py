@@ -102,13 +102,15 @@ class TestLogServer(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             log_content = json.loads(r.text).get('log')
             self.assertIsNotNone(log_content)
+            log_content = log_content.replace('\r\n', '\n')
             self.assertIn(log_content, outputs)
 
             # Test download
             download_url = "http://{}/download-log".format(log_server_addr)
             r = requests.get(download_url, params={'job_id': job_id})
             self.assertEqual(r.status_code, 200)
-            self.assertIn(r.text, outputs)
+            log_content = r.text.replace('\r\n', '\n')
+            self.assertIn(log_content, outputs)
 
         disconnect()
         worker.exit()
@@ -123,10 +125,10 @@ class TestLogServer(unittest.TestCase):
         th.start()
         time.sleep(1)
         # start the cluster monitor
-        monitor_file = __file__.replace('tests/log_server_test.pyc',
-                                        'monitor.py')
-        monitor_file = monitor_file.replace('tests/log_server_test.py',
-                                            'monitor.py')
+        monitor_file = __file__.replace(
+            os.path.join('tests', 'log_server_test.pyc'), 'monitor.py')
+        monitor_file = monitor_file.replace(
+            os.path.join('tests', 'log_server_test.py'), 'monitor.py')
         command = [
             sys.executable, monitor_file, "--monitor_port",
             str(monitor_port), "--address", "localhost:" + str(master_port)
@@ -162,13 +164,15 @@ class TestLogServer(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             log_content = json.loads(r.text).get('log')
             self.assertIsNotNone(log_content)
+            log_content = log_content.replace('\r\n', '\n')
             self.assertIn(log_content, outputs)
 
             # Test download
             download_url = job.get('download_url')
             r = requests.get(download_url)
             self.assertEqual(r.status_code, 200)
-            self.assertIn(r.text, outputs)
+            log_content = r.text.replace('\r\n', '\n')
+            self.assertIn(log_content, outputs)
 
         # Clean context
         monitor_proc.kill()

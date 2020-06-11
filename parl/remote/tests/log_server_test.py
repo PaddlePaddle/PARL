@@ -29,7 +29,7 @@ import parl
 from parl.remote.client import disconnect, get_global_client
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-from parl.utils import _IS_WINDOWS, get_free_tcp_port
+from parl.utils import _IS_WINDOWS
 
 
 @parl.remote_class
@@ -38,6 +38,8 @@ class Actor(object):
         self.number = number
         self.arg1 = arg1
         self.arg2 = arg2
+        print("Init actor...")
+        self.init_output = "Init actor...\n"
 
     def sim_output(self, start, end):
         output = ""
@@ -48,7 +50,7 @@ class Actor(object):
             print(i)
             output += str(i)
             output += "\n"
-        return output
+        return self.init_output + output
 
 
 class TestLogServer(unittest.TestCase):

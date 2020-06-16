@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
+from contextlib import contextmanager
 
-__all__ = ['load_remote_class']
+__all__ = ['load_remote_class', 'redirect_stdout_to_file']
 
 
 def simplify_code(code, end_of_file):
@@ -66,3 +68,29 @@ def load_remote_class(file_name, class_name, end_of_file):
     mod = __import__(module_name)
     cls = getattr(mod, class_name)
     return cls
+
+
+@contextmanager
+def redirect_stdout_to_file(file_path):
+    """Redirect stdout (e.g., `print`) to specified file.
+
+    Example:
+    >>> print('test')
+    test
+    >>> with redirect_stdout_to_file('test.log'):
+    ...     print('test')  # Output nothing, `test` is printed to `test.log`.
+    >>> print('test')
+    test
+
+    Args:
+        file_path: Path of the file to output the stdout.
+
+    """
+    tmp = sys.stdout
+    f = open(file_path, 'a')
+    sys.stdout = f
+    try:
+        yield
+    finally:
+        sys.stdout = tmp
+        f.close()

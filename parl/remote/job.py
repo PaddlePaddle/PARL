@@ -36,7 +36,7 @@ from parl.utils.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
-from parl.remote.utils import load_remote_class
+from parl.remote.utils import load_remote_class, redirect_stdout_to_file
 
 
 class Job(object):
@@ -315,7 +315,9 @@ class Job(object):
                 file_name = file_name.split(os.sep)[-1]
                 cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
-                obj = cls(*args, **kwargs)
+                logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                with redirect_stdout_to_file(logfile_path):
+                    obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())
                 error_str = str(e)
@@ -364,7 +366,7 @@ class Job(object):
         try:
             # receive source code from the actor and append them to the environment variables.
             envdir = self.wait_for_files(reply_socket, job_address)
-            sys.path.append(envdir)
+            sys.path.insert(0, envdir)
             os.chdir(envdir)
 
             obj = self.wait_for_connection(reply_socket)
@@ -406,11 +408,8 @@ class Job(object):
 
                     # Redirect stdout to stdout.log temporarily
                     logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                    with open(logfile_path, 'a') as f:
-                        tmp = sys.stdout
-                        sys.stdout = f
+                    with redirect_stdout_to_file(logfile_path):
                         ret = getattr(obj, function_name)(*args, **kwargs)
-                        sys.stdout = tmp
 
                     ret = dumps_return(ret)
 

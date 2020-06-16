@@ -152,6 +152,8 @@ def remote_class(*args, **kwargs):
                         pass
                     except zmq.error.ZMQError:
                         pass
+                    except TypeError:
+                        pass
 
             def send_file(self, socket):
                 try:

@@ -21,7 +21,7 @@ import parl
 from parl.utils import logger  # 日志打印工具
 
 from model import Model
-from algorithm import DQN
+from algorithm import DQN  # from parl.algorithms import DQN  # parl >= 1.3.1
 from agent import Agent
 
 from replay_memory import ReplayMemory
@@ -117,7 +117,7 @@ def main():
 
         # test part
         eval_reward = evaluate(env, agent, render=True)  # render=True 查看显示效果
-        logger.info('episode:{}    e_greed:{}   test_reward:{}'.format(
+        logger.info('episode:{}    e_greed:{}   Test reward:{}'.format(
             episode, agent.e_greed, eval_reward))
 
     # 训练结束，保存模型

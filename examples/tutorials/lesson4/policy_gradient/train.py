@@ -28,6 +28,7 @@ from parl.utils import logger
 LEARNING_RATE = 1e-3
 
 
+# 训练一个episode
 def run_episode(env, agent):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
@@ -44,19 +45,22 @@ def run_episode(env, agent):
     return obs_list, action_list, reward_list
 
 
-# 评估 agent, 跑 1 个episode
+# 评估 agent, 跑 5 个episode，总reward求平均
 def evaluate(env, agent, render=False):
-    obs = env.reset()
-    episode_reward = 0
-    while True:
-        action = agent.predict(obs)
-        obs, reward, isOver, _ = env.step(action)
-        episode_reward += reward
-        if render:
-            env.render()
-        if isOver:
-            break
-    return episode_reward
+    eval_reward = []
+    for i in range(5):
+        obs = env.reset()
+        episode_reward = 0
+        while True:
+            action = agent.predict(obs)
+            obs, reward, isOver, _ = env.step(action)
+            episode_reward += reward
+            if render:
+                env.render()
+            if isOver:
+                break
+        eval_reward.append(episode_reward)
+    return np.mean(eval_reward)
 
 
 def calc_reward_to_go(reward_list, gamma=1.0):

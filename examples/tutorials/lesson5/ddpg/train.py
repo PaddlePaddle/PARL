@@ -37,7 +37,8 @@ NOISE = 0.05  # 动作噪声方差
 TRAIN_EPISODE = 6e3  # 训练的总episode数
 
 
-def run_train_episode(agent, env, rpm):
+# 训练一个episode
+def run_episode(agent, env, rpm):
     obs = env.reset()
     total_reward = 0
     steps = 0
@@ -68,7 +69,8 @@ def run_train_episode(agent, env, rpm):
     return total_reward
 
 
-def run_evaluate_episode(env, agent, render=False):
+# 评估 agent, 跑 5 个episode，总reward求平均
+def evaluate(env, agent, render=False):
     eval_reward = []
     for i in range(5):
         obs = env.reset()
@@ -109,16 +111,16 @@ def main():
     rpm = ReplayMemory(MEMORY_SIZE)
     # 往经验池中预存数据
     while len(rpm) < MEMORY_WARMUP_SIZE:
-        run_train_episode(agent, env, rpm)
+        run_episode(agent, env, rpm)
 
     episode = 0
     while episode < TRAIN_EPISODE:
         for i in range(50):
-            total_reward = run_train_episode(agent, env, rpm)
+            total_reward = run_episode(agent, env, rpm)
             episode += 1
 
-        eval_reward = run_evaluate_episode(env, agent, render=False)
-        logger.info('episode:{}    test_reward:{}'.format(
+        eval_reward = evaluate(env, agent, render=False)
+        logger.info('episode:{}    Test reward:{}'.format(
             episode, eval_reward))
 
 

@@ -97,7 +97,7 @@ pip install parl --upgrade
 pip install -i https://pypi.tuna.tsinghua.edu.cn/simple parl --upgrade
 ```
 
-如果想试试最新代码，可从源代码安装 NNI。
+如果想试试最新代码，可从源代码安装。
 ```shell
 git clone https://github.com/PaddlePaddle/PARL
 cd PARL
@@ -123,7 +123,7 @@ PARL使用yapf工具进行代码风格的统一，使用方法如下：
 pip install yapf==0.24.0
 yapf -i modified_file.py
 ```
-- 持续继承测试<br>
+- 持续继承集成<br>
 当增加代码时候，需要增加测试代码覆盖所添加的代码，测试代码得放在相关代码文件的`tests`文件夹下，以`_test.py`结尾（这样持续集成测试会自动拉取代码跑）。附：[测试代码示例](../../parl/tests/import_test.py)
 
 

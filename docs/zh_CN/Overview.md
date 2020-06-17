@@ -128,4 +128,4 @@ yapf -i modified_file.py
 
 
 ## 反馈
-- 在 GitHub 上[提交问题](https://github.com/PaddlePaddle/PARL/issues)。
+- 在 GitHub 上[提交问题](https://github.com/PaddlePaddle/PARL/issues)

@@ -121,7 +121,7 @@ def main():
     model = AtariModel(CONTEXT_LEN, act_dim, args.algo)
     if args.algo in ['DQN', 'Dueling']:
         algorithm = DQN(model, gamma=GAMMA, lr=args.lr)
-    elif args.algo is 'Double':
+    elif args.algo == 'Double':
         algorithm = DDQN(model, gamma=GAMMA, lr=args.lr)
     agent = AtariAgent(algorithm, act_dim=act_dim)
 

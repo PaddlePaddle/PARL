@@ -20,7 +20,7 @@ import numpy as np
 __all__ = [
     'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
     'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-    'kill_process'
+    'kill_process', 'get_fluid_version'
 ]
 
 

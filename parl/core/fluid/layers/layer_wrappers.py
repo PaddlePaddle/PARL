@@ -497,8 +497,10 @@ def row_conv(future_context_size, param_attr=None, act=None, name=None):
 def layer_norm(**kwargs):
     raise NotImplementedError()
 
+
 fluid_version = get_fluid_version()
 if fluid_version >= 162 or fluid_version == 0:
+
     def batch_norm(act=None,
                    momentum=0.9,
                    epsilon=1e-05,
@@ -518,8 +520,8 @@ if fluid_version >= 162 or fluid_version == 0:
         default_name = "batch_norm"
         param_attr = update_attr_name(name, default_name, param_attr, False)
         bias_attr = update_attr_name(name, default_name, bias_attr, True)
-        moving_mean_attr = update_attr_name(name, default_name + "_moving_mean",
-                                            None, False)
+        moving_mean_attr = update_attr_name(
+            name, default_name + "_moving_mean", None, False)
         moving_variance_attr = update_attr_name(
             name, default_name + "_moving_variance", None, False)
 
@@ -553,6 +555,7 @@ if fluid_version >= 162 or fluid_version == 0:
 
         return BatchNorm_()
 else:
+
     def batch_norm(act=None,
                    momentum=0.9,
                    epsilon=1e-05,
@@ -573,8 +576,8 @@ else:
         default_name = "batch_norm"
         param_attr = update_attr_name(name, default_name, param_attr, False)
         bias_attr = update_attr_name(name, default_name, bias_attr, True)
-        moving_mean_attr = update_attr_name(name, default_name + "_moving_mean",
-                                            None, False)
+        moving_mean_attr = update_attr_name(
+            name, default_name + "_moving_mean", None, False)
         moving_variance_attr = update_attr_name(
             name, default_name + "_moving_variance", None, False)
 

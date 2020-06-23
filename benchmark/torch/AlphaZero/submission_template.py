@@ -538,7 +538,7 @@ game = Connect4Game()
 
 # AlphaZero players
 agent = SimpleAgent(game)
-buffer = io.BytesIO(decoded)
+buffer = io.BytesIO(decoded)  # noqa: F821 'decoded' added in gen_submission.py
 agent.load_checkpoint(buffer)
 mcts_args = dotdict({'numMCTSSims': 800, 'cpuct': 1.0})
 mcts = MCTS(game, agent, mcts_args)

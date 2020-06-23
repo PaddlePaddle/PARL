@@ -1,13 +1,13 @@
+os: linux
+dist: focal
 language: python
-sudo: required
-dist: trusty
 services:
   - docker
-os:
-  - linux
 env:
   - JOB=check_style
+install: pip install flake8
 script:
+  - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
   - docker run -it -v $PWD:/work -w /work paddlepaddle/paddle:latest-dev ./.teamcity/build.sh ${JOB}
 notifications:
   email:

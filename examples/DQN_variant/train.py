@@ -93,7 +93,7 @@ def main():
     act_dim = env.action_space.n
 
     model = AtariModel(act_dim, args.algo)
-    if args.algo == 'Double':
+    if args.algo == 'DDQN':
         algorithm = parl.algorithms.DDQN(model, act_dim=act_dim, gamma=GAMMA)
     elif args.algo in ['DQN', 'Dueling']:
         algorithm = parl.algorithms.DQN(model, act_dim=act_dim, gamma=GAMMA)

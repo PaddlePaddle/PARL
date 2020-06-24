@@ -75,7 +75,7 @@ class DDQN(Algorithm):
         greedy_action = layers.argmax(next_action_value, axis=-1)
 
         # calculate the target q value with target network
-        batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int')
+        batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int32')
         range_tmp = layers.range(
             start=0, end=batch_size, step=1, dtype='int64') * self.act_dim
         a_indices = range_tmp + greedy_action

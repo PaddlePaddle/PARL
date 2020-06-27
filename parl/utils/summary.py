@@ -14,5 +14,5 @@
 
 try:
     from parl.utils.visualdl import *
-except:
+except ImportError:
     from parl.utils.tensorboard import *

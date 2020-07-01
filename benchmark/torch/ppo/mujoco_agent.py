@@ -18,7 +18,6 @@ import torch
 
 class MujocoAgent(parl.Agent):
     def __init__(self, algorithm, device):
-        self.alg = algorithm
         self.device = device
 
     def predict(self, obs):

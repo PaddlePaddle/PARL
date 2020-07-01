@@ -41,7 +41,6 @@ class AtariAgent(parl.Agent):
         self.global_step = 0
         self.update_target_steps = 10000 // 4
 
-        self.alg = algorithm
         self.device = torch.device('cuda' if torch.cuda.
                                    is_available() else 'cpu')
 

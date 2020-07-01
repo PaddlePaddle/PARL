@@ -25,6 +25,7 @@ class AgentBase(object):
         Args:
             algorithm (`AlgorithmBase`): an instance of `AlgorithmBase`
         """
+        self.alg = algorithm
         self.algorithm = algorithm
 
     def get_weights(self, model_ids=None):

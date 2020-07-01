@@ -26,7 +26,6 @@ class CartpoleAgent(parl.Agent):
     """
 
     def __init__(self, algorithm):
-        self.algorithm = algorithm
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 
@@ -40,7 +39,7 @@ class CartpoleAgent(parl.Agent):
             action(int)
         """
         obs = torch.tensor(obs, device=self.device, dtype=torch.float)
-        prob = self.algorithm.predict(obs)
+        prob = self.algorithm.predict(obs).cpu()
         prob = prob.data.numpy()
         action = np.random.choice(len(prob), 1, p=prob)[0]
         return action

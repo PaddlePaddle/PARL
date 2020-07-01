@@ -1,15 +1,19 @@
 ## Prioritized Experience Replay
 Reproducing paper [Prioritized Experience Replay](https://arxiv.org/abs/1511.05952).
 
-Prioritized experience replay (PER) develops a framework for prioritizing experience, so as to replay important transitions more frequently. In original paper, the authors define the probability of sampling transition $i$ as:
-$$
-P(i) = \frac{p_i^\alpha}{\sum_k p_k^\alpha}
-$$
+Prioritized experience replay (PER) develops a framework for prioritizing experience, so as to replay important transitions more frequently. In original paper, the authors define the probability of sampling transition *i* as:
 
-Where $p_i > 0$ is the priority of transition $i$. The exponent $\alpha$ determines how much prioritization is used, with $\alpha = 0$ corresponding to the uniform case. There are two variants:
+<img src=".figs/prob.jpg" /> 
 
-- rank-based: $p_i^\alpha = \frac{1}{\textrm{rank}(i)}$, where $\textrm{rank}(i)$ is the rank of transition $i$ when the replay memory is sorted to $| \delta_i |$ （absolute TD-error of transition $i$）. We use the binary heap as an approximation of the sorted array.
-- proportional: $p_i^\alpha = |\delta_i| + \epsilon$, where $\epsilon$ is a small positive number used to avoid extreme case when the TD-error is 0. We implement it with sum tree which is also efficient.
+Where p_i > 0 is the priority of transition *i*. The exponent alpha determines how much prioritization is used, with alpha = 0 corresponding to the uniform case. There are two variants:
+
+### rank-based
+<img src=".figs/rank.jpg" /> 
+where rank(*i*) is the rank of transition *i* when the replay memory is sorted to delta_i （absolute TD-error of transition *i*）. We use the binary heap as an approximation of the sorted array.
+
+### proportional
+<img src=".figs/propor.jpg" /> 
+where epsilon is a small positive number used to avoid the extreme case when the TD-error is 0 and the transition will never be sampled. We implement it with sum tree that is also efficient to sample and update.
 
 ## How to use
 

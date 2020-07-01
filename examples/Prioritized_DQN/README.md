@@ -9,10 +9,12 @@ Where p_i > 0 is the priority of transition *i*. The exponent alpha determines h
 
 ### rank-based
 <img src=".figs/rank.jpg" /> 
+
 where rank(*i*) is the rank of transition *i* when the replay memory is sorted to delta_i （absolute TD-error of transition *i*）. We use the binary heap as an approximation of the sorted array.
 
 ### proportional
-<img src=".figs/propor.jpg" /> 
+<img src=".figs/propor.jpg" />
+
 where epsilon is a small positive number used to avoid the extreme case when the TD-error is 0 and the transition will never be sampled. We implement it with sum tree that is also efficient to sample and update.
 
 ## How to use

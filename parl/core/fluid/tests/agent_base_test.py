@@ -54,13 +54,13 @@ class TestAgent(parl.Agent):
         self.learn_program = fluid.Program()
         with fluid.program_guard(self.predict_program):
             obs = layers.data(name='obs', shape=[10], dtype='float32')
-            output = self.algorithm.predict(obs)
+            output = self.alg.predict(obs)
         self.predict_output = [output]
 
         with fluid.program_guard(self.learn_program):
             obs = layers.data(name='obs', shape=[10], dtype='float32')
             label = layers.data(name='label', shape=[1], dtype='float32')
-            cost = self.algorithm.learn(obs, label)
+            cost = self.alg.learn(obs, label)
 
     def learn(self, obs, label):
         output_np = self.fluid_executor.run(
@@ -80,16 +80,16 @@ class TestAgent(parl.Agent):
 class AgentBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
-        self.algorithm = TestAlgorithm(self.model)
+        self.alg = TestAlgorithm(self.model)
 
     def test_agent(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
         self.assertIsNotNone(output_np)
 
     def test_save(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
         save_path1 = 'model.ckpt'
@@ -100,7 +100,7 @@ class AgentBaseTest(unittest.TestCase):
         self.assertTrue(os.path.exists(save_path2))
 
     def test_restore(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
         save_path1 = 'model.ckpt'
@@ -111,13 +111,13 @@ class AgentBaseTest(unittest.TestCase):
         np.testing.assert_equal(current_output, previous_output)
 
         # a new agent instance
-        another_agent = TestAgent(self.algorithm)
+        another_agent = TestAgent(self.alg)
         another_agent.restore(save_path1)
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 
     def test_compiled_restore(self):
-        agent = TestAgent(self.algorithm)
+        agent = TestAgent(self.alg)
         agent.learn_program = parl.compile(agent.learn_program)
         obs = np.random.random([3, 10]).astype('float32')
         previous_output = agent.predict(obs)
@@ -126,7 +126,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.restore(save_path1)
 
         # a new agent instance
-        another_agent = TestAgent(self.algorithm)
+        another_agent = TestAgent(self.alg)
         another_agent.learn_program = parl.compile(another_agent.learn_program)
         another_agent.restore(save_path1)
         current_output = another_agent.predict(obs)

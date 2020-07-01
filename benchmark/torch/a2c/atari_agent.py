@@ -25,19 +25,19 @@ class Agent(parl.Agent):
         self.obs_shape = config['obs_shape']
 
     def sample(self, obs):
-        sample_actions, values = self.algorithm.sample(obs)
+        sample_actions, values = self.alg.sample(obs)
         return sample_actions, values
 
     def predict(self, obs):
-        predict_actions = self.algorithm.predict(obs)
+        predict_actions = self.alg.predict(obs)
         return predict_actions
 
     def value(self, obs):
-        values = self.algorithm.value(obs)
+        values = self.alg.value(obs)
         return values
 
     def learn(self, obs, actions, advantages, target_values):
-        total_loss, pi_loss, vf_losss, entropy, lr, entropy_coeff = self.algorithm.learn(
+        total_loss, pi_loss, vf_losss, entropy, lr, entropy_coeff = self.alg.learn(
             obs, actions, advantages, target_values)
 
         return total_loss, pi_loss, vf_losss, entropy, lr, entropy_coeff

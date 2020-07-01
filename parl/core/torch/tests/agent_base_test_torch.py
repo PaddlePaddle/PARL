@@ -57,10 +57,10 @@ class TestAgent(parl.Agent):
         super(TestAgent, self).__init__(algorithm)
 
     def learn(self, obs, label):
-        cost = self.algorithm.learn(obs, label)
+        cost = self.alg.learn(obs, label)
 
     def predict(self, obs):
-        return self.algorithm.predict(obs)
+        return self.alg.predict(obs)
 
 
 class AgentBaseTest(unittest.TestCase):

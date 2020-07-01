@@ -26,6 +26,7 @@ class CartpoleAgent(parl.Agent):
     """
 
     def __init__(self, algorithm):
+        super(CartpoleAgent, self).__init__(algorithm)
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 

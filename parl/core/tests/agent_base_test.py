@@ -125,9 +125,8 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_get_weights_with_model_ids(self):
         weights = self.agent1.get_weights(model_ids=[
-            self.agent1.alg.model1.model_id, self.agent1.alg.
-            model_list2[0].model_id, self.agent1.alg.model_dict2['k1'].
-            model_id
+            self.agent1.alg.model1.model_id, self.agent1.alg.model_list2[0].
+            model_id, self.agent1.alg.model_dict2['k1'].model_id
         ])
         expected_dict = {
             'model1': 1,

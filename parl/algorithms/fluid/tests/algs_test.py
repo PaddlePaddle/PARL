@@ -33,7 +33,6 @@ class DQNModel(parl.Model):
 class DQNAgent(parl.Agent):
     def __init__(self, algorithm):
         super(DQNAgent, self).__init__(algorithm)
-        self.alg = algorithm
 
     def build_program(self):
         self.pred_program = fluid.Program()
@@ -115,7 +114,6 @@ class A3CModel(parl.Model):
 class A3CAgent(parl.Agent):
     def __init__(self, algorithm):
         super(A3CAgent, self).__init__(algorithm)
-        self.alg = algorithm
 
     def build_program(self):
         self.predict_program = fluid.Program()
@@ -213,7 +211,6 @@ class IMPALAModel(parl.Model):
 class IMPALAAgent(parl.Agent):
     def __init__(self, algorithm):
         super(IMPALAAgent, self).__init__(algorithm)
-        self.alg = algorithm
 
     def build_program(self):
         self.predict_program = fluid.Program()

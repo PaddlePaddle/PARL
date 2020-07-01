@@ -25,7 +25,7 @@ class AgentBase(object):
         Args:
             algorithm (`AlgorithmBase`): an instance of `AlgorithmBase`
         """
-        self.algorithm = algorithm
+        self.alg = algorithm
 
     def get_weights(self, model_ids=None):
         """Get weights of the agent.
@@ -44,7 +44,7 @@ class AgentBase(object):
         Returns:
             (Dict): Dict of weights ({attribute name: numpy array/List/Dict})
         """
-        return self.algorithm.get_weights(model_ids=model_ids)
+        return self.alg.get_weights(model_ids=model_ids)
 
     def set_weights(self, weights, model_ids=None):
         """Set weights of the agent with given weights.
@@ -62,15 +62,15 @@ class AgentBase(object):
                               whiose model_id in the `model_ids`.
         
         """
-        self.algorithm.set_weights(weights, model_ids=model_ids)
+        self.alg.set_weights(weights, model_ids=model_ids)
 
     def get_model_ids(self):
-        """Get all model ids of the self.algorithm in the agent.
+        """Get all model ids of the self.alg in the agent.
 
         Returns:
             List of model_id 
         """
-        return self.algorithm.get_model_ids()
+        return self.alg.get_model_ids()
 
     @property
     def model_ids(self):

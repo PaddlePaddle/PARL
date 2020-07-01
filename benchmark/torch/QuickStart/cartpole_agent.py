@@ -26,7 +26,7 @@ class CartpoleAgent(parl.Agent):
     """
 
     def __init__(self, algorithm):
-        self.algorithm = algorithm
+        super(CartpoleAgent, self).__init__(algorithm)
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 
@@ -40,7 +40,7 @@ class CartpoleAgent(parl.Agent):
             action(int)
         """
         obs = torch.tensor(obs, device=self.device, dtype=torch.float)
-        prob = self.algorithm.predict(obs)
+        prob = self.alg.predict(obs).cpu()
         prob = prob.data.numpy()
         action = np.random.choice(len(prob), 1, p=prob)[0]
         return action
@@ -55,7 +55,7 @@ class CartpoleAgent(parl.Agent):
             action(int)
         """
         obs = torch.tensor(obs, device=self.device, dtype=torch.float)
-        prob = self.algorithm.predict(obs)
+        prob = self.alg.predict(obs)
         _, action = prob.max(-1)
         return action.item()
 
@@ -75,5 +75,5 @@ class CartpoleAgent(parl.Agent):
         action = torch.tensor(action, device=self.device, dtype=torch.long)
         reward = torch.tensor(reward, device=self.device, dtype=torch.float)
 
-        loss = self.algorithm.learn(obs, action, reward)
+        loss = self.alg.learn(obs, action, reward)
         return loss.item()

@@ -90,7 +90,7 @@ class AlphaZeroAgent(parl.Agent):
         Args:
             examples: list of examples, each example is of form (board, pi, v)
         """
-        optimizer = optim.Adam(self.algorithm.model.parameters(), lr=args.lr)
+        optimizer = optim.Adam(self.alg.model.parameters(), lr=args.lr)
 
         for epoch in range(args.epochs):
             print('EPOCH ::: ' + str(epoch + 1))
@@ -111,7 +111,7 @@ class AlphaZeroAgent(parl.Agent):
                     ), target_pis.contiguous().cuda(), target_vs.contiguous(
                     ).cuda()
 
-                total_loss, pi_loss, v_loss = self.algorithm.learn(
+                total_loss, pi_loss, v_loss = self.alg.learn(
                     boards, target_pis, target_vs, optimizer)
 
                 # record loss with tqdm
@@ -132,7 +132,7 @@ class AlphaZeroAgent(parl.Agent):
             board = board.contiguous().cuda()
         board = board.view(1, self.board_x, self.board_y)
 
-        pi, v = self.algorithm.predict(board)
+        pi, v = self.alg.predict(board)
 
         return pi.data.cpu().numpy()[0], v.data.cpu().numpy()[0]
 

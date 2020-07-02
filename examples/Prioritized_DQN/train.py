@@ -203,7 +203,7 @@ def main():
 
     pbar.close()
     result = {"train_rewards": train_rewards, "eval_rewards": eval_rewards}
-    with open(os.path.join(log_dir, 'result.pickle'), 'wb') as f:
+    with open('result.pickle', 'wb') as f:
         pickle.dump(result, f)
 
 

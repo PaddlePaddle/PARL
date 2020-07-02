@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
-import queue
-
 import numpy as np
 
 
@@ -166,13 +163,46 @@ class SumTree:
         return self.tree[0]
 
 
-def _check_full(func):
-    @functools.wraps(func)
-    def check_full(self, *args, **kwargs):
+class BasePER:
+    def __init__(self,
+                 alpha,
+                 seg_num,
+                 elem_cls,
+                 size=1e6,
+                 init_mem=None,
+                 framestack=4):
+        self.alpha = alpha
+        self.seg_num = seg_num
+        self.size = int(size)
+        self.elements = elem_cls(self.size)
+        if init_mem:
+            self.elements.from_list(init_mem)
+        self.framestack = framestack
+        self._max_priority = 1.0
+
+    def _check_full(self):
         try:
             assert self.elements.full()
         except AssertionError:
             raise RuntimeError("The replay memory is not full!")
-        return func(self, *args, **kwargs)
 
-    return check_full
+    def _get_stacked_item(self, idx):
+        obs, act, reward, next_obs, done = self.elements.elements[idx]
+        stacked_obs = np.zeros((self.framestack, ) + obs.shape)
+        stacked_obs[-1] = obs
+        for i in range(self.framestack - 2, -1, -1):
+            elem_idx = (self.size + idx + i - self.framestack + 1) % self.size
+            obs, _, _, _, d = self.elements.elements[elem_idx]
+            if d:
+                break
+            stacked_obs[i] = obs
+        return (stacked_obs, act, reward, next_obs, done)
+
+    def store(self):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
+
+    def sample(self):
+        raise NotImplementedError

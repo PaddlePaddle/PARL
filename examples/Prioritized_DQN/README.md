@@ -33,10 +33,6 @@ Train on BattleZone game with DDQN and rank-based PER:
 ```bash
 python train.py --rom ./rom_files/battle_zone.bin --alg ddqn --prior_type rank --exp_name run_train
 ```
-training and evaluation curves will be saved in `./exps/run_train`, which can viewed with:
-```bash
-visualdl --logdir ./exps
-```
 
 > To train on more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).
 

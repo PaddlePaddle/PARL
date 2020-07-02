@@ -13,36 +13,37 @@
 # limitations under the License.
 
 import numpy as np
-import time
 
-from .utils import SumTree, _check_full
+from .utils import SumTree, BasePER
 
 
-class ProportionalPER:
+class ProportionalPER(BasePER):
     """Rank-based Prioritized Experience Replay.
     """
 
-    def __init__(self, alpha, seg_num, size=1e6, eps=0.01, init_mem=None):
-        self.size = int(size)
+    def __init__(self,
+                 alpha,
+                 seg_num,
+                 size=1e6,
+                 eps=0.01,
+                 init_mem=None,
+                 framestack=4):
+        super(ProportionalPER, self).__init__(
+            alpha=alpha,
+            seg_num=seg_num,
+            elem_cls=SumTree,
+            size=size,
+            init_mem=init_mem,
+            framestack=framestack)
         self.eps = eps
-        self.seg_num = seg_num
-        self.alpha = alpha
-        self.elements = SumTree(capacity=self.size)
-        if init_mem:
-            self.elements.from_list(init_mem)
-        self._max_priority = 1.0
 
     def store(self, item, delta=None):
         assert len(item) == 5  # (s, a, r, s', terminal)
         if not delta:
             delta = self._max_priority
-        assert delta > 0
+        assert delta >= 0
         ps = np.power(delta + self.eps, self.alpha)
         self.elements.add(item, ps)
-
-    def _clip_priorities(self, priorities):
-        clipped = np.array([np.clip(p, -1, 1) for p in priorities])
-        return clipped
 
     def update(self, indices, priorities):
         priorities = np.array(priorities) + self.eps
@@ -51,28 +52,30 @@ class ProportionalPER:
             self.elements.update(idx, priority)
             self._max_priority = max(priority, self._max_priority)
 
-    @_check_full
     def sample_one(self):
+        self._check_full()
         sample_val = np.random.uniform(0, self.elements.total_p)
         item, tree_idx, _ = self.elements.retrieve(sample_val)
         return item, tree_idx
 
-    @_check_full
     def sample(self):
         """ sample a batch of `seg_num` transitions
 
         Return:
             items: 
             indices: 
-            probs: `N * P(i)`, for later calculating ISweights
+            probs: `N * P(i)`, for later calculating sampling weights
         """
+        self._check_full()
         seg_size = self.elements.total_p / self.seg_num
         seg_bound = [(seg_size * i, seg_size * (i + 1))
                      for i in range(self.seg_num)]
         items, indices, priorities = [], [], []
         for low, high in seg_bound:
             sample_val = np.random.uniform(low, high)
-            item, tree_idx, priority = self.elements.retrieve(sample_val)
+            _, tree_idx, priority = self.elements.retrieve(sample_val)
+            elem_idx = tree_idx - self.elements.capacity + 1
+            item = self._get_stacked_item(elem_idx)
             items.append(item)
             indices.append(tree_idx)
             priorities.append(priority)

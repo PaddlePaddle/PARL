@@ -39,6 +39,7 @@ CONTEXT_LEN = 4
 FRAME_SKIP = 4
 UPDATE_FREQ = 4
 GAMMA = 0.99
+LEARNING_RATE = 0.00025 / 4
 
 
 def beta_adder(init_beta, step_size=0.0001):
@@ -94,12 +95,12 @@ def run_episode(env, agent, per, mem=None, warmup=False, train=False):
                 transitions, idxs, probs = per.sample()
                 batch = process_transitions(transitions)
 
-                # Compute ISweight
+                # Compute sample_weight
                 beta = get_beta()
                 weights = np.power(probs, -beta)
-                batch_ISweight = weights / np.max(weights)
+                batch_sample_weight = weights / np.max(weights)
 
-                cost, delta = agent.learn(*batch, batch_ISweight)
+                cost, delta = agent.learn(*batch, batch_sample_weight)
                 all_cost.append(cost)
                 per.update(idxs, delta)
 
@@ -144,9 +145,11 @@ def main():
     act_dim = env.action_space.n
     model = AtariModel(act_dim)
     if args.alg == 'ddqn':
-        algorithm = PrioritizedDoubleDQN(model, act_dim=act_dim, gamma=GAMMA)
+        algorithm = PrioritizedDoubleDQN(
+            model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE)
     elif args.alg == 'dqn':
-        algorithm = PrioritizedDQN(model, act_dim=act_dim, gamma=GAMMA)
+        algorithm = PrioritizedDQN(
+            model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE)
     agent = AtariAgent(algorithm, act_dim=act_dim, update_freq=UPDATE_FREQ)
 
     # Replay memory warmup
@@ -160,8 +163,6 @@ def main():
             pbar.update(steps)
     per.elements.from_list(mem[:int(MEMORY_WARMUP_SIZE)])
 
-    log_dir = './exps/{}/'.format(args.exp_name)
-    logger.set_dir(log_dir)
     env_name = args.rom.split('/')[-1].split('.')[0]
 
     test_flag = 0
@@ -227,11 +228,6 @@ if __name__ == '__main__':
         type=int,
         default=100000,
         help='the step interval between two consecutive evaluations')
-    parser.add_argument(
-        '--exp_name',
-        type=str,
-        help=
-        'experiment name, will be set as the log dir (i.e., ./exps/exp_name)')
     parser.add_argument(
         '--prior_type',
         type=str,

@@ -17,28 +17,27 @@ import functools
 import random
 
 import numpy as np
-from .utils import IndexPriorityQueue, _check_full
+from .utils import IndexPriorityQueue, BasePER
 
 
-class RankPER(object):
+class RankPER(BasePER):
     """Rank-based Prioritized Experience Replay.
     """
 
     def __init__(self, alpha, seg_num, size=1e6, init_mem=None, framestack=4):
-        self.size = int(size)
-        self.framestack = 4
-        self.elements = IndexPriorityQueue(max_size=self.size)
-        if init_mem:
-            self.elements.from_list(init_mem)
-
-        self.seg_num = seg_num
-        self.pdf = self._build_pdf(alpha, heap_size=self.size)
+        super(RankPER, self).__init__(
+            alpha=alpha,
+            seg_num=seg_num,
+            elem_cls=IndexPriorityQueue,
+            size=size,
+            init_mem=init_mem,
+            framestack=framestack)
+        self.pdf = self._build_pdf(heap_size=self.size)
         self.seg_bound = self._compute_seg_bound()
-        self._max_priority = 1.0
 
-    def _build_pdf(self, alpha, heap_size):
+    def _build_pdf(self, heap_size):
         p = np.array([1 / (rank + 1) for rank in range(heap_size)])
-        p_alpha = np.power(p, alpha)
+        p_alpha = np.power(p, self.alpha)
         pdf = p_alpha / np.sum(p_alpha)
         return pdf
 
@@ -78,18 +77,6 @@ class RankPER(object):
         prob = self.pdf[sampled_idx]
         return item, sampled_idx, prob
 
-    def _get_stacked_item(self, idx):
-        obs, act, reward, next_obs, done = self.elements.elements[idx]
-        stacked_obs = np.zeros((self.framestack, ) + obs.shape)
-        stacked_obs[-1] = obs
-        for i in range(self.framestack - 2, -1, -1):
-            elem_idx = (self.size + idx + i - self.framestack + 1) % self.size
-            obs, _, _, _, d = self.elements.elements[elem_idx]
-            if d:
-                break
-            stacked_obs[i] = obs
-        return (stacked_obs, act, reward, next_obs, done)
-
     def store(self, item, delta=None):
         assert len(item) == 5  # [s, a, r, s', terminal]
         if not delta:
@@ -104,25 +91,25 @@ class RankPER(object):
             self.elements.update_item(idx, priority)
             self._max_priority = max(priority, self._max_priority)
 
-    @_check_full
     def sample_one(self):
         """Sample one item from heap.
          
         First sample one segment, then sample from the segment uniformly.
         """
+        self._check_full()
         seg_id = np.random.choice([i for i in range(1, self.seg_num + 1)])
         item, idx, _ = self._sample_from_segment(seg_id)
         return item, idx
 
-    @_check_full
     def sample(self):
         """Sample `batch_size` items from heap.
 
         Return:
             items: batch of `k` transition, each from one segment
             idxs: indexes of sampled transition in `self.elements`
-            probs: `N * P(i)`, for later calculating ISweights
+            probs: `N * P(i)`, for later calculating sampling weights
         """
+        self._check_full()
         items, idxs, probs = [], [], []
         for seg_id in range(1, self.seg_num + 1):
             item, idx, prob = self._sample_from_segment(seg_id)

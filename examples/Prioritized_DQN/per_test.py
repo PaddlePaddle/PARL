@@ -19,7 +19,6 @@ import unittest
 from tqdm import tqdm
 import numpy as np
 
-from per.baselines.replay_memory import PrioritizedReplayBuffer
 from per.proportional import ProportionalPER
 from per.rank_based import RankPER
 
@@ -89,39 +88,6 @@ class TestPER(unittest.TestCase):
             transition = next(self.trans_gen)
             per.store(transition)
 
-    def _run_op2(self, per):
-        """ For OpenAI Baselines Implementation PER
-        """
-        mid = MEMORY_SIZE >> 1
-        for transition in self.transition_list[:mid]:
-            per.add(*transition)
-
-        # Test sampling from a PER that is not full
-        try:
-            per.sample(batch_size=32, beta=0.7)
-        except RuntimeError:
-            pass
-
-        for transition in self.transition_list[mid:]:
-            per.add(*transition)
-
-        _, _, _, _, _, probs, idxs = per.sample(
-            batch_size=BATCH_SIZE, beta=0.7)
-        self.assertEqual(len(idxs), BATCH_SIZE)
-        self.assertEqual(len(probs), BATCH_SIZE)
-
-        # Test update priorities
-        for i in range(20):
-            _, _, _, _, _, probs, idxs = per.sample(
-                batch_size=BATCH_SIZE, beta=0.7)
-            priors = np.random.random((len(idxs), ))
-            per.update_priorities(idxs, priors)
-
-        # Test insert into a full PER
-        for _ in range(100):
-            transition = next(self.trans_gen)
-            per.add(*transition)
-
     @_timeit
     def test_proportional(self):
         per = ProportionalPER(alpha=0, seg_num=BATCH_SIZE, size=MEMORY_SIZE)
@@ -151,17 +117,6 @@ class TestPER(unittest.TestCase):
             size=MEMORY_SIZE,
             init_mem=self.transition_list)
         self._run_op(per)
-
-    @_timeit
-    def test_seg(self):
-        per = PrioritizedReplayBuffer(size=MEMORY_SIZE, alpha=0.8)
-        self._run_op2(per)
-
-        per = PrioritizedReplayBuffer(size=MEMORY_SIZE, alpha=0)
-        self._run_op2(per)
-
-        per = PrioritizedReplayBuffer(size=MEMORY_SIZE, alpha=1)
-        self._run_op2(per)
 
 
 if __name__ == "__main__":

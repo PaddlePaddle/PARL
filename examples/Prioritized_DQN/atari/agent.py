@@ -56,9 +56,10 @@ class AtariAgent(parl.Agent):
             lr = layers.data(
                 name='lr', shape=[1], dtype='float32', append_batch_size=False)
             terminal = layers.data(name='terminal', shape=[], dtype='bool')
-            ISweight = layers.data(name='ISweight', shape=[1], dtype='float32')
+            sample_weight = layers.data(
+                name='sample_weight', shape=[1], dtype='float32')
             self.cost, self.delta = self.alg.learn(
-                obs, action, reward, next_obs, terminal, lr, ISweight)
+                obs, action, reward, next_obs, terminal, lr, sample_weight)
 
     def sample(self, obs, decay_exploration=True):
         sample = np.random.random()
@@ -89,12 +90,12 @@ class AtariAgent(parl.Agent):
         act = np.argmax(pred_Q)
         return act
 
-    def learn(self, obs, act, reward, next_obs, terminal, ISweight):
+    def learn(self, obs, act, reward, next_obs, terminal, sample_weight):
         if self.global_step % self.update_target_steps == 0:
             self.alg.sync_target()
         self.global_step += 1
 
-        lr = 0.00025 / 4
+        lr = self.alg.lr
 
         act = np.expand_dims(act, -1)
         reward = np.clip(reward, -1, 1)
@@ -105,7 +106,7 @@ class AtariAgent(parl.Agent):
             'next_obs': next_obs.astype('float32'),
             'terminal': terminal.astype('bool'),
             'lr': np.float32(lr),
-            'ISweight': ISweight.astype('float32')
+            'sample_weight': sample_weight.astype('float32')
         }
         cost, delta = self.fluid_executor.run(
             self.learn_program, feed=feed, fetch_list=[self.cost, self.delta])

@@ -43,4 +43,3 @@ python train.py --rom ./rom_files/battle_zone.bin --alg ddqn --prior_type rank -
 ```
 
 > To train on more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).
-

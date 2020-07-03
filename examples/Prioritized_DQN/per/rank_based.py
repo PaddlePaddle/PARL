@@ -96,7 +96,7 @@ class RankPER(BasePER):
          
         First sample one segment, then sample from the segment uniformly.
         """
-        self._check_full()
+        assert self.elements.full(), "The replay memory is not full!"
         seg_id = np.random.choice([i for i in range(1, self.seg_num + 1)])
         item, idx, _ = self._sample_from_segment(seg_id)
         return item, idx
@@ -109,7 +109,7 @@ class RankPER(BasePER):
             idxs: indexes of sampled transition in `self.elements`
             probs: `N * P(i)`, for later calculating sampling weights
         """
-        self._check_full()
+        assert self.elements.full(), "The replay memory is not full!"
         items, idxs, probs = [], [], []
         for seg_id in range(1, self.seg_num + 1):
             item, idx, prob = self._sample_from_segment(seg_id)

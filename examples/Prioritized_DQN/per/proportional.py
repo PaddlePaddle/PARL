@@ -53,7 +53,7 @@ class ProportionalPER(BasePER):
             self._max_priority = max(priority, self._max_priority)
 
     def sample_one(self):
-        self._check_full()
+        assert self.elements.full(), "The replay memory is not full!"
         sample_val = np.random.uniform(0, self.elements.total_p)
         item, tree_idx, _ = self.elements.retrieve(sample_val)
         return item, tree_idx
@@ -66,7 +66,7 @@ class ProportionalPER(BasePER):
             indices: 
             probs: `N * P(i)`, for later calculating sampling weights
         """
-        self._check_full()
+        assert self.elements.full(), "The replay memory is not full!"
         seg_size = self.elements.total_p / self.seg_num
         seg_bound = [(seg_size * i, seg_size * (i + 1))
                      for i in range(self.seg_num)]

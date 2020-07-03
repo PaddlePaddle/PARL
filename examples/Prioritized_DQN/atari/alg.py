@@ -19,7 +19,6 @@ import paddle.fluid as fluid
 
 import parl
 from parl.core.fluid import layers
-from parl.core.fluid.algorithm import Algorithm
 
 
 class PrioritizedDQN(parl.Algorithm):
@@ -46,8 +45,7 @@ class PrioritizedDQN(parl.Algorithm):
         """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate,
-              sample_weight):
+    def learn(self, obs, action, reward, next_obs, terminal, sample_weight):
         """ update value model self.model with DQN algorithm
         """
 
@@ -61,13 +59,12 @@ class PrioritizedDQN(parl.Algorithm):
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
-            layers.elementwise_mul(action_onehot, pred_value), dim=1)
+            action_onehot * pred_value, dim=1)
         delta = layers.abs(target - pred_action_value)
         cost = sample_weight * layers.square_error_cost(
             pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(
-            learning_rate=learning_rate, epsilon=1e-3)
+        optimizer = fluid.optimizer.Adam(learning_rate=self.lr, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost, delta  # `delta` is the TD-error
 
@@ -77,7 +74,7 @@ class PrioritizedDQN(parl.Algorithm):
         self.model.sync_weights_to(self.target_model)
 
 
-class PrioritizedDoubleDQN(Algorithm):
+class PrioritizedDoubleDQN(parl.Algorithm):
     def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ Double DQN algorithm
 
@@ -98,15 +95,13 @@ class PrioritizedDoubleDQN(Algorithm):
     def predict(self, obs):
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate,
-              sample_weight):
+    def learn(self, obs, action, reward, next_obs, terminal, sample_weight):
         pred_value = self.model.value(obs)
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
-            layers.elementwise_mul(action_onehot, pred_value), dim=1)
+            action_onehot * pred_value, dim=1)
 
-        # choose acc. to behavior network
         next_action_value = self.model.value(next_obs)
         greedy_action = layers.argmax(next_action_value, axis=-1)
 
@@ -134,8 +129,7 @@ class PrioritizedDoubleDQN(Algorithm):
         cost = sample_weight * layers.square_error_cost(
             pred_action_value, target)
         cost = layers.reduce_mean(cost)
-        optimizer = fluid.optimizer.Adam(
-            learning_rate=learning_rate, epsilon=1e-3)
+        optimizer = fluid.optimizer.Adam(learning_rate=self.lr, epsilon=1e-3)
         optimizer.minimize(cost)
         return cost, delta
 

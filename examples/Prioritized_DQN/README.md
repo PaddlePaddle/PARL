@@ -3,17 +3,25 @@ Reproducing paper [Prioritized Experience Replay](https://arxiv.org/abs/1511.059
 
 Prioritized experience replay (PER) develops a framework for prioritizing experience, so as to replay important transitions more frequently. In original paper, the authors define the probability of sampling transition *i* as:
 
-<img src=".figs/prob.jpg" /> 
+<p align="center">
+  <img src=".figs/prob.jpg" width=140px /> 
+</p>
 
 Where p_i > 0 is the priority of transition *i*. The exponent alpha determines how much prioritization is used, with alpha = 0 corresponding to the uniform case. There are two variants:
 
 ### rank-based
-<img src=".figs/rank.jpg" /> 
+
+<p align="center">
+  <img src=".figs/rank.jpg" width=140px /> 
+</p>
 
 where rank(*i*) is the rank of transition *i* when the replay memory is sorted to delta_i （absolute TD-error of transition *i*）. We use the binary heap as an approximation of the sorted array.
 
 ### proportional
-<img src=".figs/propor.jpg" />
+
+<p align="center">
+  <img src=".figs/propor.jpg" width=140px /> 
+</p>
 
 where epsilon is a small positive number used to avoid the extreme case when the TD-error is 0 and the transition will never be sampled. We implement it with sum tree that is also efficient to sample and update.
 

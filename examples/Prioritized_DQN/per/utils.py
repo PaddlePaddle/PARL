@@ -180,12 +180,6 @@ class BasePER:
         self.framestack = framestack
         self._max_priority = 1.0
 
-    def _check_full(self):
-        try:
-            assert self.elements.full()
-        except AssertionError:
-            raise RuntimeError("The replay memory is not full!")
-
     def _get_stacked_item(self, idx):
         obs, act, reward, next_obs, done = self.elements.elements[idx]
         stacked_obs = np.zeros((self.framestack, ) + obs.shape)

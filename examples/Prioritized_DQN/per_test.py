@@ -66,7 +66,7 @@ class TestPER(unittest.TestCase):
         # Test sampling from a PER that is not full
         try:
             per.sample()
-        except RuntimeError:
+        except AssertionError:
             pass
 
         for transition in self.transition_list[mid:]:

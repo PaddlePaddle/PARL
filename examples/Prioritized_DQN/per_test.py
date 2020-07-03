@@ -16,7 +16,6 @@ import functools
 import random
 import time
 import unittest
-from tqdm import tqdm
 import numpy as np
 
 from per.proportional import ProportionalPER
@@ -78,13 +77,13 @@ class TestPER(unittest.TestCase):
         self.assertEqual(len(probs), BATCH_SIZE)
 
         # Test update priorities
-        for i in tqdm(range(100), desc="[Test update]"):
+        for i in range(100):
             _, idxs, _ = per.sample()
             priors = np.random.random((len(idxs), ))
             per.update(idxs, priors)
 
         # Test insert into a full PER
-        for _ in tqdm(range(1000), desc="[Test insert]"):
+        for _ in range(1000):
             transition = next(self.trans_gen)
             per.store(transition)
 

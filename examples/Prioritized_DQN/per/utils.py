@@ -105,7 +105,7 @@ class IndexPriorityQueue:
 
     def from_list(self, lst):
         assert len(lst) == self.max_size
-        self.elements = lst.copy()
+        self.elements = list(lst)
         for idx, elem in enumerate(self.elements):
             self.idx_heap.append([1.0, idx])
             self._idx_pos[idx] = idx
@@ -154,7 +154,7 @@ class SumTree:
 
     def from_list(self, lst):
         assert len(lst) == self.capacity
-        self.elements = lst.copy()
+        self.elements = list(lst)
         for i in range(self.capacity - 1, 2 * self.capacity - 1):
             self.update(i, 1.0)
 
@@ -163,7 +163,7 @@ class SumTree:
         return self.tree[0]
 
 
-class BasePER:
+class BasePER(object):
     def __init__(self,
                  alpha,
                  seg_num,

@@ -21,7 +21,7 @@ import numpy as np
 from per.proportional import ProportionalPER
 from per.rank_based import RankPER
 
-MEMORY_SIZE = int(1e6)
+MEMORY_SIZE = int(1e5)
 BATCH_SIZE = 32
 
 

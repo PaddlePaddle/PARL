@@ -19,7 +19,7 @@ from parl.utils.machine_info import get_ip_address
 __all__ = []
 
 _writer = None
-_WRITTER_METHOD = ['add_scalar']
+_WRITTER_METHOD = ['add_scalar', 'add_histogram', 'close', 'flush']
 
 
 def create_file_after_first_call(func_name):

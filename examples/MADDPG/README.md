@@ -1,7 +1,7 @@
 ## Reproduce MADDPG with PARL
 Based on PARL, the MADDPG algorithm of deep reinforcement learning has been reproduced.
 
-+ paper: 
+> MADDPG in 
 [ Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://arxiv.org/abs/1706.02275)
 
 ### Multi-agent particle environment introduction

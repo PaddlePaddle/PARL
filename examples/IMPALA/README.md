@@ -1,7 +1,7 @@
 ## Reproduce IMPALA with PARL
 Based on PARL, the IMPALA algorithm of deep reinforcement learning is reproduced, and the same level of indicators of the paper is reproduced in the classic Atari game.
 
-+ IMPALA in
+> IMPALA in
 [Impala: Scalable distributed deep-rl with importance weighted actor-learner architectures](https://arxiv.org/abs/1802.01561)
 
 ### Atari games introduction

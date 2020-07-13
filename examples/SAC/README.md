@@ -5,8 +5,7 @@ Include following approaches:
 + DDPG Style with Stochastic Policy
 + Maximum Entropy
 
-> SAC in
-[Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290)
+> Paper: SAC in [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290)
 
 ### Mujoco games introduction
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.

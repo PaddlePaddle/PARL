@@ -6,8 +6,7 @@ Include following approaches:
 + Target Networks and Delayed Policy Update
 + Target Policy Smoothing Regularization
 
-> TD3 in
-[Addressing Function Approximation Error in Actor-Critic Methods](https://arxiv.org/abs/1802.09477)
+> Paper: TD3 in [Addressing Function Approximation Error in Actor-Critic Methods](https://arxiv.org/abs/1802.09477)
 
 ### Mujoco games introduction
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.

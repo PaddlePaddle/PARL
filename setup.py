@@ -72,7 +72,7 @@ setup(
     install_requires=[
         "termcolor>=1.1.0",
         "pyzmq==18.0.1",
-        "pyarrow==0.13.0",
+        "pyarrow==0.17.1",
         "scipy>=1.0.0",
         "cloudpickle==1.2.1",
         "tensorboardX==1.8",

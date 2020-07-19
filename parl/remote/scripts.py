@@ -87,6 +87,7 @@ def is_log_server_started(ip_address, port):
             if r.status_code == 400:
                 started = True
                 break
+            time.sleep(3)
         except:
             time.sleep(3)
     return started

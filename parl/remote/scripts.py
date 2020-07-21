@@ -87,11 +87,10 @@ def is_log_server_started(ip_address, port):
             if r.status_code == 400:
                 started = True
                 break
-            time.sleep(3)
-            click.echo("Checking status of log_server...")
         except:
-            time.sleep(3)
-            click.echo("Checking status of log_server...")
+            pass
+        time.sleep(3)
+        click.echo("Checking status of log_server...")
     return started
 
 

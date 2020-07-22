@@ -170,7 +170,10 @@ def auto_set_dir(action=None):
         dirname(str): log directory used in the global logging directory.
     """
     mod = sys.modules['__main__']
-    basename = os.path.basename(mod.__file__)
+    if hasattr(mod, '__file__'):
+        basename = os.path.basename(mod.__file__)
+    else:
+        basename = ''
     dirname = os.path.join('train_log', basename[:basename.rfind('.')])
     dirname = os.path.normpath(dirname)
 

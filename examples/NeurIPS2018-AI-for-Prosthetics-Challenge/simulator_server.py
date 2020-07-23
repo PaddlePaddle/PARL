@@ -28,7 +28,8 @@ from concurrent import futures
 from multi_head_ddpg import MultiHeadDDPG
 from opensim_agent import OpenSimAgent
 from opensim_model import OpenSimModel
-from parl.utils import logger, ReplayMemory
+from parl.utils import logger
+from replay_memory import ReplayMemory
 from utils import calc_indicators, ScalarsManager, TransitionExperience
 
 ACT_DIM = 19

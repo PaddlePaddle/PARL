@@ -14,11 +14,11 @@
 
 import numpy as np
 
-from .utils import SumTree, BasePER
+from .utils import SumTree
 
 
-class ProportionalPER(BasePER):
-    """Rank-based Prioritized Experience Replay.
+class ProportionalPER(object):
+    """Proportional Prioritized Experience Replay.
     """
 
     def __init__(self,
@@ -28,14 +28,29 @@ class ProportionalPER(BasePER):
                  eps=0.01,
                  init_mem=None,
                  framestack=4):
-        super(ProportionalPER, self).__init__(
-            alpha=alpha,
-            seg_num=seg_num,
-            elem_cls=SumTree,
-            size=size,
-            init_mem=init_mem,
-            framestack=framestack)
+        self.alpha = alpha
+        self.seg_num = seg_num
+        self.size = int(size)
+        self.elements = SumTree(self.size)
+        if init_mem:
+            self.elements.from_list(init_mem)
+        self.framestack = framestack
+        self._max_priority = 1.0
         self.eps = eps
+
+    def _get_stacked_item(self, idx):
+        """ For atari environment, we use a 4-frame-stack as input
+        """
+        obs, act, reward, next_obs, done = self.elements.elements[idx]
+        stacked_obs = np.zeros((self.framestack, ) + obs.shape)
+        stacked_obs[-1] = obs
+        for i in range(self.framestack - 2, -1, -1):
+            elem_idx = (self.size + idx + i - self.framestack + 1) % self.size
+            obs, _, _, _, d = self.elements.elements[elem_idx]
+            if d:
+                break
+            stacked_obs[i] = obs
+        return (stacked_obs, act, reward, next_obs, done)
 
     def store(self, item, delta=None):
         assert len(item) == 5  # (s, a, r, s', terminal)

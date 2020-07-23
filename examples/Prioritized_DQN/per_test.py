@@ -19,7 +19,6 @@ import unittest
 import numpy as np
 
 from per.proportional import ProportionalPER
-from per.rank_based import RankPER
 
 MEMORY_SIZE = int(1e5)
 BATCH_SIZE = 32
@@ -97,21 +96,6 @@ class TestPER(unittest.TestCase):
 
         per = ProportionalPER(
             alpha=0.7,
-            seg_num=BATCH_SIZE,
-            size=MEMORY_SIZE,
-            init_mem=self.transition_list)
-        self._run_op(per)
-
-    @_timeit
-    def test_rank(self):
-        per = RankPER(alpha=0, seg_num=BATCH_SIZE, size=MEMORY_SIZE)
-        self._run_op(per)
-
-        per = RankPER(alpha=1, seg_num=BATCH_SIZE, size=MEMORY_SIZE)
-        self._run_op(per)
-
-        per = RankPER(
-            alpha=0.8,
             seg_num=BATCH_SIZE,
             size=MEMORY_SIZE,
             init_mem=self.transition_list)

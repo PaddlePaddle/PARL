@@ -30,7 +30,6 @@ from atari.model import AtariModel
 from atari.utils import get_player
 from parl.utils import logger, summary
 from per.proportional import ProportionalPER
-from per.rank_based import RankPER
 
 MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE
@@ -135,11 +134,7 @@ def main():
         context_len=CONTEXT_LEN)
 
     # Init Prioritized Replay Memory
-    if args.prior_type == 'rank':
-        per = RankPER(alpha=0.7, seg_num=args.batch_size, size=MEMORY_SIZE)
-    elif args.prior_type == 'proportional':
-        per = ProportionalPER(
-            alpha=0.6, seg_num=args.batch_size, size=MEMORY_SIZE)
+    per = ProportionalPER(alpha=0.6, seg_num=args.batch_size, size=MEMORY_SIZE)
 
     # Prepare PARL agent
     act_dim = env.action_space.n
@@ -228,15 +223,8 @@ if __name__ == '__main__':
         type=int,
         default=100000,
         help='the step interval between two consecutive evaluations')
-    parser.add_argument(
-        '--prior_type',
-        type=str,
-        default='rank',
-        help='rank or proportional, type of the prioritized replay memory.')
     args = parser.parse_args()
     assert args.alg in ['dqn','ddqn'], \
         'used algorithm should be dqn or ddqn (double dqn)'
-    assert args.prior_type in ['rank', 'proportional'], \
-        'type of the prioritized replay memory should be rank or proportional'
     get_beta = beta_adder(init_beta=0.5)
     main()

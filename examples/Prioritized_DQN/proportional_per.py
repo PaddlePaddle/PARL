@@ -14,7 +14,60 @@
 
 import numpy as np
 
-from .utils import SumTree
+
+class SumTree:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.elements = [None for _ in range(capacity)]
+        self.tree = [0 for _ in range(2 * capacity - 1)]
+        self._ptr = 0
+        self._min = 10
+
+    def full(self):
+        return all(self.elements)  # no `None` in self.elements
+
+    def add(self, item, priority):
+        self.elements[self._ptr] = item
+        tree_idx = self._ptr + self.capacity - 1
+        self.update(tree_idx, priority)
+        self._ptr = (self._ptr + 1) % self.capacity
+        self._min = min(self._min, priority)
+
+    def update(self, tree_idx, priority):
+        diff = priority - self.tree[tree_idx]
+        self.tree[tree_idx] = priority
+        while tree_idx != 0:
+            tree_idx = (tree_idx - 1) >> 1
+            self.tree[tree_idx] += diff
+        self._min = min(self._min, priority)
+
+    def retrieve(self, value):
+        parent_idx = 0
+        while True:
+            left_child_idx = 2 * parent_idx + 1
+            right_child_idx = left_child_idx + 1
+            if left_child_idx >= len(self.tree):
+                leaf_idx = parent_idx
+                break
+            else:
+                if value <= self.tree[left_child_idx]:
+                    parent_idx = left_child_idx
+                else:
+                    value -= self.tree[left_child_idx]
+                    parent_idx = right_child_idx
+        elem_idx = leaf_idx - self.capacity + 1
+        priority = self.tree[leaf_idx]
+        return self.elements[elem_idx], leaf_idx, priority
+
+    def from_list(self, lst):
+        assert len(lst) == self.capacity
+        self.elements = list(lst)
+        for i in range(self.capacity - 1, 2 * self.capacity - 1):
+            self.update(i, 1.0)
+
+    @property
+    def total_p(self):
+        return self.tree[0]
 
 
 class ProportionalPER(object):

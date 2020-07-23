@@ -24,12 +24,12 @@ import paddle.fluid as fluid
 from tqdm import tqdm
 
 import parl
-from atari.agent import AtariAgent
-from atari.alg import PrioritizedDoubleDQN, PrioritizedDQN
-from atari.model import AtariModel
-from atari.utils import get_player
+from atari_agent import AtariAgent
+from atari_model import AtariModel
 from parl.utils import logger, summary
-from per.proportional import ProportionalPER
+from per_alg import PrioritizedDoubleDQN, PrioritizedDQN
+from proportional_per import ProportionalPER
+from utils import get_player
 
 MEMORY_SIZE = 1e6
 MEMORY_WARMUP_SIZE = MEMORY_SIZE

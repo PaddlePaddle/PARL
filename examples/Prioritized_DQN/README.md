@@ -7,7 +7,7 @@ Prioritized experience replay (PER) develops a framework for prioritizing experi
 Results have been reproduced on following three environments:
 
 <p align="center">
-  <img src=".figs/result.png"/>
+  <img src="result.png"/>
 </p>
 
 ## How to use
@@ -15,9 +15,9 @@ Results have been reproduced on following three environments:
 ### Dependencies:
 + [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym[atari]
++ gym[atari]==0.17.2
++ atari-py==0.2.6
 + tqdm
-+ atari-py
 + [ale_python_interface](https://github.com/mgbellemare/Arcade-Learning-Environment)
 
 

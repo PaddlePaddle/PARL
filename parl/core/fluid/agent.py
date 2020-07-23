@@ -74,7 +74,6 @@ class Agent(AgentBase):
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
 
-        self.alg = algorithm
         self.gpu_id = 0 if machine_info.is_gpu_available() else -1
 
         self.build_program()

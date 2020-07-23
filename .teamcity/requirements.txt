@@ -1,4 +1,5 @@
 # requirements for unittest
+rarfile==3.1
 paddlepaddle-gpu==1.6.1.post97
 gym
 details

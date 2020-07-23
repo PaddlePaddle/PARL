@@ -22,7 +22,8 @@ import numpy as np
 from actor import Actor
 from opensim_model import OpenSimModel
 from opensim_agent import OpenSimAgent
-from parl.utils import logger, ReplayMemory, summary, get_gpu_count
+from parl.utils import logger, summary, get_gpu_count
+from replay_memory import ReplayMemory
 from parl.utils.window_stat import WindowStat
 from parl.remote.client import get_global_client
 from parl.utils import machine_info

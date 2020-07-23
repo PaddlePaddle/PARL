@@ -125,9 +125,8 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_get_weights_with_model_ids(self):
         weights = self.agent1.get_weights(model_ids=[
-            self.agent1.algorithm.model1.model_id, self.agent1.algorithm.
-            model_list2[0].model_id, self.agent1.algorithm.model_dict2['k1'].
-            model_id
+            self.agent1.alg.model1.model_id, self.agent1.alg.model_list2[0].
+            model_id, self.agent1.alg.model_dict2['k1'].model_id
         ])
         expected_dict = {
             'model1': 1,
@@ -163,22 +162,22 @@ class AgentBaseTest(unittest.TestCase):
         self.agent1.set_weights(
             new_weights,
             model_ids=[
-                self.agent1.algorithm.model1.model_id,
-                self.agent1.algorithm.model_list2[0].model_id,
-                self.agent1.algorithm.model_dict2['k1'].model_id
+                self.agent1.alg.model1.model_id,
+                self.agent1.alg.model_list2[0].model_id,
+                self.agent1.alg.model_dict2['k1'].model_id
             ])
         self.assertDictEqual(self.agent1.get_weights(), expected_dict)
 
     def test_get_and_set_weights_between_agents_with_model_ids(self):
         agent1_model_ids = [
-            self.agent1.algorithm.model1.model_id,
-            self.agent1.algorithm.model_list2[0].model_id,
-            self.agent1.algorithm.model_dict2['k1'].model_id
+            self.agent1.alg.model1.model_id,
+            self.agent1.alg.model_list2[0].model_id,
+            self.agent1.alg.model_dict2['k1'].model_id
         ]
         agent2_model_ids = [
-            self.agent2.algorithm.model1.model_id,
-            self.agent2.algorithm.model_list2[0].model_id,
-            self.agent2.algorithm.model_dict2['k1'].model_id
+            self.agent2.alg.model1.model_id,
+            self.agent2.alg.model_list2[0].model_id,
+            self.agent2.alg.model_dict2['k1'].model_id
         ]
         new_weights = {
             'model1': -1,

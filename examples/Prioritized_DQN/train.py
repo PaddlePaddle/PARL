@@ -158,15 +158,11 @@ def main():
 
     test_flag = 0
     total_steps = 0
-    train_rewards = []
-    eval_rewards = []
-    max_reward = None
     pbar = tqdm(total=args.train_total_steps)
     while total_steps < args.train_total_steps:
         # start epoch
         total_reward, steps, loss = run_episode(env, agent, per, train=True)
         total_steps += steps
-        train_rewards.append((total_steps, total_reward))
         pbar.set_description('[train]exploration:{}'.format(agent.exploration))
         summary.add_scalar('{}/score'.format(env_name), total_reward,
                            total_steps)
@@ -185,7 +181,6 @@ def main():
                 eval_reward = run_evaluate_episode(test_env, agent)
                 test_rewards.append(eval_reward)
             eval_reward = np.mean(test_rewards)
-            eval_rewards.append((total_steps, eval_reward))
             logger.info(
                 "eval_agent done, (steps, eval_reward): ({}, {})".format(
                     total_steps, eval_reward))
@@ -193,9 +188,6 @@ def main():
                                total_steps)
 
     pbar.close()
-    result = {"train_rewards": train_rewards, "eval_rewards": eval_rewards}
-    with open('result.pickle', 'wb') as f:
-        pickle.dump(result, f)
 
 
 if __name__ == '__main__':

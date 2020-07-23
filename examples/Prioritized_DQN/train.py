@@ -91,15 +91,11 @@ def run_episode(env, agent, per, mem=None, warmup=False, train=False):
         if train:
             per.store(transition)
             if steps % UPDATE_FREQ == 0:
-                transitions, idxs, probs = per.sample()
+                beta = get_beta()
+                transitions, idxs, sample_weights = per.sample(beta=beta)
                 batch = process_transitions(transitions)
 
-                # Compute sample_weight
-                beta = get_beta()
-                weights = np.power(probs, -beta)
-                batch_sample_weight = weights / np.max(weights)
-
-                cost, delta = agent.learn(*batch, batch_sample_weight)
+                cost, delta = agent.learn(*batch, sample_weights)
                 all_cost.append(cost)
                 per.update(idxs, delta)
 

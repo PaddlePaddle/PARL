@@ -73,13 +73,16 @@ class ProportionalPER(object):
         item, tree_idx, _ = self.elements.retrieve(sample_val)
         return item, tree_idx
 
-    def sample(self):
+    def sample(self, beta=1):
         """ sample a batch of `seg_num` transitions
+        Args:
+            beta: float, degree of using importance sampling weights,
+                0 - no corrections, 1 - full correction
 
         Return:
-            items: 
-            indices: 
-            probs: `N * P(i)`, for later calculating sampling weights
+            items: sampled transitions
+            indices: idxs of sampled items, used to update priorities later
+            sample_weights: importance sampling weight
         """
         assert self.elements.full(), "The replay memory is not full!"
         seg_size = self.elements.total_p / self.seg_num
@@ -95,5 +98,7 @@ class ProportionalPER(object):
             indices.append(tree_idx)
             priorities.append(priority)
 
-        probs = self.size * np.array(priorities) / self.elements.total_p
-        return np.array(items), np.array(indices), np.array(probs)
+        batch_probs = self.size * np.array(priorities) / self.elements.total_p
+        min_prob = self.size * self.elements._min / self.elements.total_p
+        sample_weights = np.power(batch_probs / min_prob, -beta)
+        return np.array(items), np.array(indices), sample_weights

@@ -21,6 +21,7 @@ class SumTree:
         self.elements = [None for _ in range(capacity)]
         self.tree = [0 for _ in range(2 * capacity - 1)]
         self._ptr = 0
+        self._min = 10
 
     def full(self):
         return all(self.elements)  # no `None` in self.elements
@@ -30,6 +31,7 @@ class SumTree:
         tree_idx = self._ptr + self.capacity - 1
         self.update(tree_idx, priority)
         self._ptr = (self._ptr + 1) % self.capacity
+        self._min = min(self._min, priority)
 
     def update(self, tree_idx, priority):
         diff = priority - self.tree[tree_idx]
@@ -37,6 +39,7 @@ class SumTree:
         while tree_idx != 0:
             tree_idx = (tree_idx - 1) >> 1
             self.tree[tree_idx] += diff
+        self._min = min(self._min, priority)
 
     def retrieve(self, value):
         parent_idx = 0

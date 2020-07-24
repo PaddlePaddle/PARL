@@ -15,7 +15,7 @@
 import numpy as np
 
 
-class SumTree:
+class SumTree(object):
     def __init__(self, capacity):
         self.capacity = capacity
         self.elements = [None for _ in range(capacity)]

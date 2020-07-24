@@ -61,17 +61,15 @@
         }, 10000);
 
         $(window).on("scroll", function() {
-          if (monitor === 1) {
-            var scrollTop = $(document).scrollTop();
-            var windowHeight = $(window).height();
-            var bodyHeight = $(document).height() - windowHeight;
-            var scrollPercentage = scrollTop / bodyHeight;
-            if (scrollPercentage > 0.25) {
-              if (div_num < res.workers.length) {
-                div_num += delta;
-                createDivs(res, div_num);
-                addPlots(res, record, imgHandle, div_num - delta, div_num);
-              }
+          var scrollTop = $(document).scrollTop();
+          var windowHeight = $(window).height();
+          var bodyHeight = $(document).height() - windowHeight;
+          var scrollPercentage = scrollTop / bodyHeight;
+          if (scrollPercentage > 0.25) {
+            if (div_num < res.workers.length) {
+              div_num += delta;
+              createDivs(res, div_num);
+              addPlots(res, record, imgHandle, div_num - delta, div_num);
             }
           }
         });

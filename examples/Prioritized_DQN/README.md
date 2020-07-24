@@ -4,7 +4,7 @@ Reproducing paper [Prioritized Experience Replay](https://arxiv.org/abs/1511.059
 Prioritized experience replay (PER) develops a framework for prioritizing experience, so as to replay important transitions more frequently. There are two variants of prioritizing the transitions, rank-based and proportional-based. Our implementation is the proportional variant, which has a better performance, as reported in the original paper.
 
 ## Reproduced Results
-Results have been reproduced on following three environments:
+Results have been reproduced with [Double DQN](https://arxiv.org/abs/1509.06461v3) on following three environments:
 
 <p align="center">
   <img src="result.png"/>

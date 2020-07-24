@@ -98,29 +98,17 @@ class PrioritizedDoubleDQN(parl.Algorithm):
     def learn(self, obs, action, reward, next_obs, terminal, sample_weight):
         pred_value = self.model.value(obs)
         action_onehot = layers.one_hot(action, self.act_dim)
-        action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
             action_onehot * pred_value, dim=1)
 
+        # calculate the target q value
         next_action_value = self.model.value(next_obs)
         greedy_action = layers.argmax(next_action_value, axis=-1)
-
-        # calculate the target q value with target network
-        batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int32')
-        range_tmp = layers.range(
-            start=0, end=batch_size, step=1, dtype='int32') * self.act_dim
-        a_indices = range_tmp + greedy_action
-        a_indices = layers.cast(a_indices, dtype='int32')
+        greedy_action = layers.unsqueeze(greedy_action, axes=[1])
+        greedy_action_onehot = layers.one_hot(greedy_action, self.act_dim)
         next_pred_value = self.target_model.value(next_obs)
-        next_pred_value = layers.reshape(
-            next_pred_value, shape=[
-                -1,
-            ])
-        max_v = layers.gather(next_pred_value, a_indices)
-        max_v = layers.reshape(
-            max_v, shape=[
-                -1,
-            ])
+        max_v = layers.reduce_sum(
+            greedy_action_onehot * next_pred_value, dim=1)
         max_v.stop_gradient = True
 
         target = reward + (

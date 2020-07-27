@@ -37,7 +37,7 @@ def fetch_framework_var(attr_name):
     core_var = scope.find_var(attr_name)
     if core_var == None:
         raise KeyError(
-            "Unable to find the variable:{}. Synchronize paramsters before initialization or attr_name does not exist."
+            "Unable to find the variable:{}. Synchronize parameters before initialization or attr_name does not exist."
             .format(attr_name))
     shape = core_var.get_tensor().shape()
     framework_var = fluid.layers.create_parameter(

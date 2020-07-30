@@ -18,9 +18,9 @@ import subprocess
 import numpy as np
 
 __all__ = [
-    'has_func', 'action_mapping', 'to_str', 'to_byte', 'is_PY2', 'is_PY3',
-    'MAX_INT32', '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-    'kill_process', 'get_fluid_version'
+    'has_func', 'to_str', 'to_byte', 'is_PY2', 'is_PY3', 'MAX_INT32',
+    '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
+    'get_fluid_version'
 ]
 
 
@@ -35,27 +35,6 @@ def has_func(obj, fun):
     """
     check_fun = getattr(obj, fun, None)
     return callable(check_fun)
-
-
-def action_mapping(model_output_act, low_bound, high_bound):
-    """ mapping action space [-1, 1] of model output 
-        to new action space [low_bound, high_bound].
-
-    Args:
-        model_output_act: np.array, which value is in [-1, 1]
-        low_bound: float, low bound of env action space
-        high_bound: float, high bound of env action space
-
-    Returns:
-        action: np.array, which value is in [low_bound, high_bound]
-    """
-    assert np.all(((model_output_act<=1.0), (model_output_act>=-1.0))), \
-        'the action should be in range [-1.0, 1.0]'
-    assert high_bound > low_bound
-    action = low_bound + (model_output_act - (-1.0)) * (
-        (high_bound - low_bound) / 2.0)
-    action = np.clip(action, low_bound, high_bound)
-    return action
 
 
 def to_str(byte):

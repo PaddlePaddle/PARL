@@ -13,6 +13,7 @@
 # limitations under the License.
 import sys
 from contextlib import contextmanager
+import os
 
 __all__ = ['load_remote_class', 'redirect_stdout_to_file']
 
@@ -32,7 +33,7 @@ def simplify_code(code, end_of_file):
   def data_process():
     XXXX
   ------------------>
-  The last two lines of the above code block will be removed as they are not class related.
+  The last two lines of the above code block will be removed as they are not class-related.
   """
     to_write_lines = []
     for i, line in enumerate(code):
@@ -60,12 +61,16 @@ def load_remote_class(file_name, class_name, end_of_file):
     with open(file_name + '.py') as t_file:
         code = t_file.readlines()
     code = simplify_code(code, end_of_file)
-    module_name = 'xparl_' + file_name
-    tmp_file_name = 'xparl_' + file_name + '.py'
+    #folder/xx.py -> folder/xparl_xx.py
+    file_name = file_name.split(os.sep)
+    module_name = os.sep.join(file_name[:-1]) + os.sep + 'xparl_' + file_name[-1]
+    #import os
+    tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
-    mod = __import__(module_name)
+    module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
+    mod = __import__(module_name, globals(), locals(), [class_name], 0)
     cls = getattr(mod, class_name)
     return cls
 

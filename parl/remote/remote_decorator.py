@@ -121,6 +121,10 @@ def remote_class(*args, **kwargs):
 
                 self.send_file(self.job_socket)
                 file_name = inspect.getfile(cls)[:-3]
+                res = inspect.getfile(cls)
+                cwd = os.getcwd()
+                file_name = '.' + file_name[len(cwd):]
+                #/home/nlp-ol/Firework/python_api/es_agent -> es_agent
                 cls_source = inspect.getsourcelines(cls)
                 end_of_file = cls_source[1] + len(cls_source[0])
                 class_name = cls.__name__

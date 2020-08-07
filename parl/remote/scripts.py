@@ -88,9 +88,7 @@ def is_log_server_started(ip_address, port):
                 started = True
                 break
         except:
-            pass
-        time.sleep(3)
-        click.echo("Checking status of log_server...")
+            time.sleep(3)
     return started
 
 

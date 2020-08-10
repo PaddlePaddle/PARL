@@ -24,6 +24,7 @@ import time
 import unittest
 
 import requests
+requests.adapters.DEFAULT_RETRIES = 5
 
 import parl
 from parl.remote.client import disconnect, get_global_client

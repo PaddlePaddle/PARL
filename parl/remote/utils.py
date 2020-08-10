@@ -64,11 +64,11 @@ def load_remote_class(file_name, class_name, end_of_file):
     #folder/xx.py -> folder/xparl_xx.py
     file_name = file_name.split(os.sep)
     module_name = os.sep.join(file_name[:-1]) + os.sep + 'xparl_' + file_name[-1]
-    #import os
     tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
+    #./folder/xx -> folder.xx
     module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
     mod = __import__(module_name, globals(), locals(), [class_name], 0)
     cls = getattr(mod, class_name)

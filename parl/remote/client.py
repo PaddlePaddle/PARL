@@ -98,9 +98,9 @@ class Client(object):
         main_folder = './'
         sep = os.sep
         if sep in main_file:
-          main_folder = sep.join(main_file.split(sep)[:-1])
-        print("MMMMMMMMMMMMMM", main_folder)
-        code_files = filter(lambda x: x.endswith('.py'), os.listdir(main_folder))
+            main_folder = sep.join(main_file.split(sep)[:-1])
+        code_files = filter(lambda x: x.endswith('.py'),
+                            os.listdir(main_folder))
 
         for file_name in code_files:
             file_path = os.path.join(main_folder, file_name)
@@ -109,7 +109,10 @@ class Client(object):
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
         # append entry file to code list
-        assert os.path.isfile(main_file), "[xparl] error occurs when distributing files. cannot find the entry file:{} in current working directory: {}".format(main_file, os.getcwd())
+        assert os.path.isfile(
+            main_file
+        ), "[xparl] error occurs when distributing files. cannot find the entry file:{} in current working directory: {}".format(
+            main_file, os.getcwd())
         with open(main_file, 'rb') as code_file:
             code = code_file.read()
             # parl/remote/remote_decorator.py -> remote_decorator.py

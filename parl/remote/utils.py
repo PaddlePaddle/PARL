@@ -63,7 +63,8 @@ def load_remote_class(file_name, class_name, end_of_file):
     code = simplify_code(code, end_of_file)
     #folder/xx.py -> folder/xparl_xx.py
     file_name = file_name.split(os.sep)
-    module_name = os.sep.join(file_name[:-1]) + os.sep + 'xparl_' + file_name[-1]
+    module_name = os.sep.join(
+        file_name[:-1]) + os.sep + 'xparl_' + file_name[-1]
     tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:

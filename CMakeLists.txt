@@ -32,10 +32,10 @@ function(py_test TARGET_NAME)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
     get_filename_component(WORKING_DIR ${py_test_SRCS} DIRECTORY)
     get_filename_component(FILE_NAME ${py_test_SRCS} NAME)
-    message( STATUS "WORKING_DIR = ${WORKING_DIR} FILE_NAME = ${FILE_NAME}")
+    get_filename_component(COMBINED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${WORKING_DIR} ABSOLUTE)
     add_test(NAME ${TARGET_NAME}
         COMMAND python -u ${FILE_NAME} ${py_test_ARGS}
-        WORKING_DIRECTORY ${WORKING_DIR})
+        WORKING_DIRECTORY ${COMBINED_PATH})
     set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 300)
 endfunction()
 

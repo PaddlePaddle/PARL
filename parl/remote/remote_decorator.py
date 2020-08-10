@@ -121,14 +121,16 @@ def remote_class(*args, **kwargs):
 
                 self.send_file(self.job_socket)
                 file_name = inspect.getfile(cls)[:-3]
+                print("FFFFFFFFFFFFAAA", file_name)
                 res = inspect.getfile(cls)
                 cwd = os.getcwd()
                 if file_name[:len(cwd)] == cwd:
-                    #/home/nlp-ol/Firework/python_api/es_agent -> es_agent
-                    file_name = '.' + file_name[len(cwd):]
+                  #/home/nlp-ol/Firework/python_api/es_agent -> ./es_agent
+                  file_name = '.' + file_name[len(cwd):]
                 else:
-                    # current working directory is not equal to the file path
-                    file_name = file_name.split(os.sep)[-1]
+                  # current working directory is not equal to the file path
+                  file_name = file_name.split(os.sep)[-1]
+                print("FFFFFFFFFFFFFF", file_name)
                 cls_source = inspect.getsourcelines(cls)
                 end_of_file = cls_source[1] + len(cls_source[0])
                 class_name = cls.__name__

@@ -64,9 +64,8 @@ def load_remote_class(file_name, class_name, end_of_file):
     #folder/xx.py -> folder/xparl_xx.py
     file_name = file_name.split(os.sep)
     prefix = os.sep.join(file_name[:-1])
-    #xpalr_xx.py->./xparl_xx.py
     if prefix == "":
-        prefix = '.'
+      prefix = '.'
     module_name = prefix + os.sep + 'xparl_' + file_name[-1]
     tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:

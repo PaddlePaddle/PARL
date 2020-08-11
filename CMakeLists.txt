@@ -30,18 +30,19 @@ function(py_test TARGET_NAME)
     set(oneValueArgs "")
     set(multiValueArgs SRCS DEPS ARGS ENVS)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    get_filename_component(WORKING_DIR ${py_test_SRCS} DIRECTORY)
-    get_filename_component(FILE_NAME ${py_test_SRCS} NAME)
-    get_filename_component(COMBINED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${WORKING_DIR} ABSOLUTE)
-    add_test(NAME ${TARGET_NAME}
-        COMMAND python -u ${FILE_NAME} ${py_test_ARGS}
-        WORKING_DIRECTORY ${COMBINED_PATH})
-    set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 300)
     if (${FILE_NAME} MATCHES ".*abs_test.py")
         add_test(NAME ${TARGET_NAME}"_with_abs_path"
             COMMAND python -u ${py_test_SRCS} ${py_test_ARGS}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         set_tests_properties(${TARGET_NAME}"_with_abs_path" PROPERTIES TIMEOUT 300)
+    else()
+        get_filename_component(WORKING_DIR ${py_test_SRCS} DIRECTORY)
+        get_filename_component(FILE_NAME ${py_test_SRCS} NAME)
+        get_filename_component(COMBINED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${WORKING_DIR} ABSOLUTE)
+        add_test(NAME ${TARGET_NAME}
+            COMMAND python -u ${FILE_NAME} ${py_test_ARGS}
+            WORKING_DIRECTORY ${COMBINED_PATH})
+        set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 300)
     endif()
 endfunction()
 

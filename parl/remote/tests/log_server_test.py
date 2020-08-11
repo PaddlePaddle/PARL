@@ -126,10 +126,9 @@ class TestLogServer(unittest.TestCase):
         th.start()
         time.sleep(1)
         # start the cluster monitor
-        monitor_file = __file__.replace(
-            os.path.join('tests', 'log_server_test.pyc'), 'monitor.py')
-        monitor_file = monitor_file.replace(
-            os.path.join('tests', 'log_server_test.py'), 'monitor.py')
+        monitor_file = __file__.replace('log_server_test.pyc', '../monitor.py')
+        monitor_file = monitor_file.replace('log_server_test.py',
+                                            '../monitor.py')
         command = [
             sys.executable, monitor_file, "--monitor_port",
             str(monitor_port), "--address", "localhost:" + str(master_port)

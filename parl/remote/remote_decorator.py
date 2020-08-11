@@ -179,8 +179,66 @@ def remote_class(*args, **kwargs):
                     cnt -= 1
                 return None
 
+            def __setattr__(self, attr, value):
+                if attr not in cls().__dict__:
+                    super().__setattr__(attr, value)
+                else:
+                    self.internal_lock.acquire()
+                    self.job_socket.send_multipart([
+                        remote_constants.SET_ATTRIBUTE,
+                        to_byte(attr),
+                        dumps_return(value)
+                    ])
+                    message = self.job_socket.recv_multipart()
+                    tag = message[0]
+                    self.internal_lock.release()
+                    if tag == remote_constants.NORMAL_TAG:
+                        pass
+                    else:
+                        self.job_shutdown = True
+                        raise NotImplementedError()
+                    return                     
+           
             def __getattr__(self, attr):
                 """Call the function of the unwrapped class."""
+                #check if attr is a function or not
+                if attr in cls().__dict__:
+                    self.internal_lock.acquire()
+                    self.job_socket.send_multipart([
+                        remote_constants.GET_ATTRIBUTE,
+                        to_byte(attr)
+                    ])
+                    message = self.job_socket.recv_multipart()
+                    tag = message[0]
+
+                    if tag == remote_constants.NORMAL_TAG:
+                        ret = loads_return(message[1])
+                        self.internal_lock.release()
+                        return ret
+                    elif tag == remote_constants.EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteError(attr, error_str)
+
+                    elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteAttributeError(attr, error_str)
+
+                    elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteSerializeError(attr, error_str)
+
+                    elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
+                        error_str = to_str(message[1])
+                        self.job_shutdown = True
+                        raise RemoteDeserializeError(attr, error_str)
+
+                    else:
+                        self.job_shutdown = True
+                        raise NotImplementedError()
+
 
                 def wrapper(*args, **kwargs):
                     if self.job_shutdown:

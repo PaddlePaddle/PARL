@@ -53,7 +53,7 @@ class Model(ModelBase):
         copied_policy = copy.deepcopy(model)
 
     Attributes:
-        model_id(str): each model instance has its uniqe model_id.
+        model_id(str): each model instance has its unique model_id.
 
     Public Functions:
         - ``sync_weights_to``: synchronize parameters of the current model to another model.

@@ -72,7 +72,6 @@ class Worker(object):
         self.master_is_alive = True
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
-        self.lock = threading.Lock()
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()

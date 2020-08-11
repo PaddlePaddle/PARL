@@ -19,6 +19,7 @@ import time
 import zmq
 import numpy as np
 import inspect
+import sys
 
 from parl.utils import get_ip_address, logger, to_str, to_byte
 from parl.utils.communication import loads_argument, loads_return,\
@@ -27,6 +28,7 @@ from parl.remote import remote_constants
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError
 from parl.remote.client import get_global_client
+from parl.remote.utils import locate_remote_file
 
 
 def remote_class(*args, **kwargs):
@@ -120,21 +122,15 @@ def remote_class(*args, **kwargs):
                 self.job_shutdown = False
 
                 self.send_file(self.job_socket)
-                file_name = inspect.getfile(cls)[:-3]
+                module_path = inspect.getfile(cls)[:-3]
                 res = inspect.getfile(cls)
-                cwd = os.getcwd()
-                if file_name[:len(cwd)] == cwd:
-                    #/home/nlp-ol/Firework/python_api/es_agent -> ./es_agent
-                    file_name = '.' + file_name[len(cwd):]
-                else:
-                    # current working directory is not equal to the file path
-                    file_name = file_name.split(os.sep)[-1]
+                file_path = locate_remote_file(module_path)
                 cls_source = inspect.getsourcelines(cls)
                 end_of_file = cls_source[1] + len(cls_source[0])
                 class_name = cls.__name__
                 self.job_socket.send_multipart([
                     remote_constants.INIT_OBJECT_TAG,
-                    cloudpickle.dumps([file_name, class_name, end_of_file]),
+                    cloudpickle.dumps([file_path, class_name, end_of_file]),
                     cloudpickle.dumps([args, kwargs]),
                 ])
                 message = self.job_socket.recv_multipart()

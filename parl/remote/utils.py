@@ -106,12 +106,12 @@ def redirect_stdout_to_file(file_path):
 
 
 def locate_remote_file(module_path):
-    """xparl has to locate the file that has the class decorated by @parl.remote_class. 
-      This function returns the relative path between this file and the entry file.
+    """xparl has to locate the file that has the class decorated by parl.remote_class. 
+    This function returns the relative path between this file and the entry file.
 
       Args:
           module_path: Absolute path of the module.
-    """
+  """
     entry_file = sys.argv[0]
     entry_file = entry_file.split(os.sep)[-1]
     entry_path = None
@@ -120,10 +120,13 @@ def locate_remote_file(module_path):
         if os.path.isfile(to_check_path):
             entry_path = path
             break
+    print("entry_path", entry_path)
+    print("module_path", module_path)
     if entry_path is None or \
-        entry_path != module_path[:len(entry_path)]:
+        (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
         raise FileNotFoundError("cannot locate the remote file")
-    relative_module_path = module_path[len(entry_path):]
-    if relative_module_path.startswith(os.sep):
-        relative_module_path = '.' + relative_module_path
+    if module_path.startswith(os.sep):
+        relative_module_path = '.' + module_path[len(entry_path):]
+    else:
+        relative_module_path = module_path
     return relative_module_path

@@ -120,8 +120,6 @@ def locate_remote_file(module_path):
         if os.path.isfile(to_check_path):
             entry_path = path
             break
-    print("entry_path", entry_path)
-    print("module_path", module_path)
     if entry_path is None or \
         (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
         raise FileNotFoundError("cannot locate the remote file")

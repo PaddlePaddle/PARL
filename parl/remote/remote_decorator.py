@@ -122,7 +122,14 @@ def remote_class(*args, **kwargs):
                 self.job_shutdown = False
 
                 self.send_file(self.job_socket)
-                module_path = inspect.getfile(cls)[:-3]
+                module_path = inspect.getfile(cls)
+                if module_path.endswith('pyc'):
+                    module_path = module_path[:-4]
+                elif module_path.endswith('py'):
+                    module_path = module_path[:-3]
+                else:
+                    raise FileNotFoundError(
+                        "cannot not find the module:{}".format(module_path))
                 res = inspect.getfile(cls)
                 file_path = locate_remote_file(module_path)
                 cls_source = inspect.getsourcelines(cls)

@@ -82,7 +82,7 @@ setup(
         "click",
         "psutil>=5.6.2",
         "flask_cors",
-        "visualdl>=2.0.0b;python_version>='3' and platform_system=='Linux'",
+        "visualdl>=2.0.0b;python_version>='3.7' and platform_system=='Linux'",
     ],
     classifiers=[
         'Intended Audience :: Developers',

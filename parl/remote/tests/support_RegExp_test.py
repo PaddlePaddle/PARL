@@ -46,13 +46,13 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir/data2.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp")
-        master = Master(port=8235)
+        master = Master(port=8602)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8235', 1)
+        worker1 = Worker('localhost:8602', 1)
         parl.connect(
-            'localhost:8235',
+            'localhost:8602',
             distributed_files=[
                 'distribute_test_dir/test*', 'distribute_test_dir/*npy'
             ])
@@ -62,6 +62,29 @@ class TestCluster(unittest.TestCase):
         self.assertTrue(actor.file_exists('distribute_test_dir/data1.npy'))
         self.assertTrue(actor.file_exists('distribute_test_dir/data2.npy'))
         shutil.rmtree('distribute_test_dir')
+        master.exit()
+        worker1.exit()
+
+    def test_miss_match_case(self):
+        os.mkdir('distribute_test_dir_2')
+        f = open('distribute_test_dir_2/test1.txt', 'wb')
+        f.close()
+        f = open('distribute_test_dir_2/data1.npy', 'wb')
+        f.close()
+        logger.info("running:test_distributed_files_with_RegExp_error_case")
+        master = Master(port=8603)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:8603', 1)
+
+        def connect_test():
+            parl.connect(
+                'localhost:8603',
+                distributed_files=['distribute_test_dir_2/miss_match*'])
+
+        self.assertRaises(ValueError, connect_test)
+        shutil.rmtree('distribute_test_dir_2')
         master.exit()
         worker1.exit()
 

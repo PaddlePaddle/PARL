@@ -24,6 +24,7 @@ from parl.remote import remote_constants
 import time
 import glob
 
+
 class Client(object):
     """Base class for the remote client.
 
@@ -99,15 +100,18 @@ class Client(object):
         pyfiles['other_files'] = {}
 
         code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
-        
-        parsed_distributed_files = []
+
+        parsed_distributed_files = set()
         for distributed_file in distributed_files:
             parsed_list = glob.glob(distributed_file)
+            if not parsed_list:
+                raise ValueError(
+                    "no local file is matched with '{}', please check your input"
+                    .format(distributed_file))
             # exclude the directiories
             for pathname in parsed_list:
                 if not os.path.isdir(pathname):
-                    parsed_distributed_files.append(pathname)
-        parsed_distributed_files = list(set(parsed_distributed_files))
+                    parsed_distributed_files.add(pathname)
 
         try:
             for file in code_files:

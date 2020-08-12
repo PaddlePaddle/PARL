@@ -95,11 +95,6 @@ class Client(object):
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
-        pyfiles = dict()
-        pyfiles['python_files'] = {}
-        pyfiles['other_files'] = {}
-
-        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
 
         parsed_distributed_files = set()
         for distributed_file in distributed_files:
@@ -113,32 +108,43 @@ class Client(object):
                 if not os.path.isdir(pathname):
                     parsed_distributed_files.add(pathname)
 
-        try:
-            for file in code_files:
-                assert os.path.exists(file)
-                with open(file, 'rb') as code_file:
-                    code = code_file.read()
-                    pyfiles['python_files'][file] = code
+        pyfiles = dict()
+        pyfiles['python_files'] = {}
+        pyfiles['other_files'] = {}
 
-            for file in parsed_distributed_files:
-                assert os.path.exists(file)
-                assert not os.path.isabs(
-                    file
-                ), "[XPARL] Please do not distribute a file with absolute path."
-                with open(file, 'rb') as f:
-                    content = f.read()
-                    pyfiles['other_files'][file] = content
-            # append entry file to code list
-            main_file = sys.argv[0]
-            with open(main_file, 'rb') as code_file:
+        main_file = sys.argv[0]
+        main_folder = './'
+        sep = os.sep
+        if sep in main_file:
+            main_folder = sep.join(main_file.split(sep)[:-1])
+        code_files = filter(lambda x: x.endswith('.py'),
+                            os.listdir(main_folder))
+
+        for file_name in code_files:
+            file_path = os.path.join(main_folder, file_name)
+            assert os.path.exists(file_path)
+            with open(file_path, 'rb') as code_file:
                 code = code_file.read()
-                # parl/remote/remote_decorator.py -> remote_decorator.py
-                file_name = main_file.split(os.sep)[-1]
                 pyfiles['python_files'][file_name] = code
-        except AssertionError as e:
-            raise Exception(
-                'Failed to create the client, the file {} does not exist.'.
-                format(file))
+        # append entry file to code list
+        assert os.path.isfile(
+            main_file
+        ), "[xparl] error occurs when distributing files. cannot find the entry file:{} in current working directory: {}".format(
+            main_file, os.getcwd())
+        with open(main_file, 'rb') as code_file:
+            code = code_file.read()
+            # parl/remote/remote_decorator.py -> remote_decorator.py
+            file_name = main_file.split(os.sep)[-1]
+            pyfiles['python_files'][file_name] = code
+
+        for file_name in parsed_distributed_files:
+            assert os.path.exists(file_name)
+            assert not os.path.isabs(
+                file_name
+            ), "[XPARL] Please do not distribute a file with absolute path."
+            with open(file_name, 'rb') as f:
+                content = f.read()
+                pyfiles['other_files'][file_name] = content
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

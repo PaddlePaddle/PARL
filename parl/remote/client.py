@@ -22,7 +22,7 @@ import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.remote import remote_constants
 import time
-import glob
+
 
 class Client(object):
     """Base class for the remote client.
@@ -85,11 +85,8 @@ class Client(object):
         Args:
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
-                                      file for initialization) . RegExp of file
-                                      names is supported. 
-                                      e.g. 
-                                          distributed_files = ['./*.npy', './test*']
-                                                                             
+                                      file for initialization) .
+
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
@@ -99,15 +96,6 @@ class Client(object):
         pyfiles['other_files'] = {}
 
         code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
-        
-        parsed_distributed_files = []
-        for distributed_file in distributed_files:
-            parsed_list = glob.glob(distributed_file)
-            # exclude the directiories
-            for pathname in parsed_list:
-                if not os.path.isdir(pathname):
-                    parsed_distributed_files.append(pathname)
-        parsed_distributed_files = list(set(parsed_distributed_files))
 
         try:
             for file in code_files:
@@ -116,7 +104,7 @@ class Client(object):
                     code = code_file.read()
                     pyfiles['python_files'][file] = code
 
-            for file in parsed_distributed_files:
+            for file in distributed_files:
                 assert os.path.exists(file)
                 assert not os.path.isabs(
                     file

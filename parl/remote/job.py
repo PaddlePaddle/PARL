@@ -400,21 +400,43 @@ class Job(object):
 
             tag = message[0]
 
-            if tag == remote_constants.CALL_TAG:
+            if tag in [
+                    remote_constants.CALL_TAG, remote_constants.GET_ATTRIBUTE,
+                    remote_constants.SET_ATTRIBUTE
+            ]:
+                # if tag == remote_constants.CALL_TAG:
                 try:
-                    function_name = to_str(message[1])
-                    data = message[2]
-                    args, kwargs = loads_argument(data)
+                    if tag == remote_constants.CALL_TAG:
+                        function_name = to_str(message[1])
+                        data = message[2]
+                        args, kwargs = loads_argument(data)
 
-                    # Redirect stdout to stdout.log temporarily
-                    logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                    with redirect_stdout_to_file(logfile_path):
-                        ret = getattr(obj, function_name)(*args, **kwargs)
+                        # Redirect stdout to stdout.log temporarily
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            ret = getattr(obj, function_name)(*args, **kwargs)
 
-                    ret = dumps_return(ret)
+                        ret = dumps_return(ret)
 
-                    reply_socket.send_multipart(
-                        [remote_constants.NORMAL_TAG, ret])
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG, ret])
+
+                    elif tag == remote_constants.GET_ATTRIBUTE:
+                        attribute_name = to_str(message[1])
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            ret = getattr(obj, attribute_name)
+                        ret = dumps_return(ret)
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG, ret])
+                    else:
+                        attribute_name = to_str(message[1])
+                        attribute_value = loads_return(message[2])
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            setattr(obj, attribute_name, attribute_value)
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG])
 
                 except Exception as e:
                     # reset the job

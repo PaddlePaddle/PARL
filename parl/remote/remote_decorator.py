@@ -85,7 +85,7 @@ def remote_class(*args, **kwargs):
             """
             Wrapper for remote class in client side.
             """
-            initilize_flag = False
+
             def __init__(self, *args, **kwargs):
                 """
                 Args:
@@ -184,7 +184,7 @@ def remote_class(*args, **kwargs):
                 self.internal_lock.acquire()
                 self.job_socket.send_multipart(
                     [remote_constants.CHECK_ATTRIBUTE,
-                        to_byte(attr)])
+                     to_byte(attr)])
                 message = self.job_socket.recv_multipart()
                 self.internal_lock.release()
                 tag = message[0]
@@ -193,7 +193,7 @@ def remote_class(*args, **kwargs):
                 else:
                     self.job_shutdown = True
                     raise NotImplementedError()
-     
+
             def set_remote_attr(self, attr, value):
                 self.internal_lock.acquire()
                 self.job_socket.send_multipart([
@@ -213,7 +213,7 @@ def remote_class(*args, **kwargs):
 
             def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
-                #check if attr is a function or not 
+                #check if attr is a function or not
                 is_attribute = self.check_attribute(attr)
                 if is_attribute:
                     self.internal_lock.acquire()
@@ -295,23 +295,26 @@ def remote_class(*args, **kwargs):
                     self.internal_lock.release()
                     return ret
 
-                return wrapper 
-        
+                return wrapper
+
         def proxy_wrapper_func(remote_wrapper):
             class ProxyWrapper(object):
                 def __init__(self, *args, **kwargs):
-                    self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
-                
+                    self.xparl_remote_wrapper_obj = remote_wrapper(
+                        *args, **kwargs)
+
                 def __getattr__(self, attr):
                     return self.xparl_remote_wrapper_obj.get_remote_attr(attr)
-                
+
                 def __setattr__(self, attr, value):
                     if attr == 'xparl_remote_wrapper_obj':
                         super(ProxyWrapper, self).__setattr__(attr, value)
                     else:
-                        self.xparl_remote_wrapper_obj.set_remote_attr(attr, value)
+                        self.xparl_remote_wrapper_obj.set_remote_attr(
+                            attr, value)
+
             return ProxyWrapper
-        
+
         RemoteWrapper._original = cls
         proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
         return proxy_wrapper

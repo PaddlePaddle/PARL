@@ -23,21 +23,14 @@ import time
 import threading
 import random
 
+
 @parl.remote_class
 class Actor(object):
-    def __init__(self, arg1=0, arg2=1.5, arg3=np.zeros((3, 3))):
+    def __init__(self, arg1, arg2, arg3, arg4):
         self.arg1 = arg1
         self.arg2 = arg2
         self.arg3 = arg3
-
-    def get_arg1(self):
-        return self.arg1
-
-    def get_arg2(self):
-        return self.arg2
-
-    def get_arg3(self):
-        return self.arg3
+        self.GLOBAL_CLIENT = arg4
 
     def add(self, x, y):
         time.sleep(0.2)
@@ -59,11 +52,13 @@ class Test_get_and_set_attribute(unittest.TestCase):
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
+        arg4 = 100
         parl.connect('localhost:{}'.format(port1))
-        actor = Actor(arg1, arg2, arg3)
+        actor = Actor(arg1, arg2, arg3, arg4)
         self.assertTrue(arg1 == actor.arg1)
         self.assertTrue(arg2 == actor.arg2)
         self.assertTrue((arg3 == actor.arg3).all())
+        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
         master.exit()
         worker1.exit()
 
@@ -78,16 +73,40 @@ class Test_get_and_set_attribute(unittest.TestCase):
         arg1 = 3
         arg2 = 3.5
         arg3 = np.random.randn(3, 3)
+        arg4 = 100
         parl.connect('localhost:{}'.format(port2))
-        actor = Actor()
+        actor = Actor(arg1, arg2, arg3, arg4)
         actor.arg1 = arg1
         actor.arg2 = arg2
         actor.arg3 = arg3
+        actor.GLOBAL_CLIENT = arg4
         self.assertTrue(arg1 == actor.arg1)
         self.assertTrue(arg2 == actor.arg2)
         self.assertTrue((arg3 == actor.arg3).all())
+        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
         master.exit()
         worker1.exit()
+
+    def test_create_new_attribute_same_with_wrapper(self):
+        port3 = random.randint(6400, 6500)
+        logger.info("running:test_get_attirbute")
+        master = Master(port=port3)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port3), 1)
+        arg1 = np.random.randint(100)
+        arg2 = np.random.randn()
+        arg3 = np.random.randn(3, 3)
+        arg4 = 100
+        parl.connect('localhost:{}'.format(port3))
+        actor = Actor(arg1, arg2, arg3, arg4)
+
+        actor.internal_lock = 50
+        self.assertTrue(actor.internal_lock == 50)
+        master.exit()
+        worker1.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

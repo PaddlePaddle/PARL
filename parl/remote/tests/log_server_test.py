@@ -24,6 +24,7 @@ import time
 import unittest
 
 import requests
+requests.adapters.DEFAULT_RETRIES = 5
 
 import parl
 from parl.remote.client import disconnect, get_global_client
@@ -128,7 +129,6 @@ class TestLogServer(unittest.TestCase):
         monitor_file = __file__.replace('log_server_test.pyc', '../monitor.py')
         monitor_file = monitor_file.replace('log_server_test.py',
                                             '../monitor.py')
-
         command = [
             sys.executable, monitor_file, "--monitor_port",
             str(monitor_port), "--address", "localhost:" + str(master_port)

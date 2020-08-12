@@ -311,8 +311,6 @@ class Job(object):
             try:
                 file_name, class_name, end_of_file = cloudpickle.loads(
                     message[1])
-                #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
-                file_name = file_name.split(os.sep)[-1]
                 cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
                 logfile_path = os.path.join(self.log_dir, 'stdout.log')

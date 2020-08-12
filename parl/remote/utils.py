@@ -83,6 +83,9 @@ def load_remote_class(file_name, class_name, end_of_file):
 def redirect_stdout_to_file(file_path):
     """Redirect stdout (e.g., `print`) to specified file.
 
+    Args:
+        file_path: Path of the file to output the stdout.
+
     Example:
     >>> print('test')
     test
@@ -90,10 +93,6 @@ def redirect_stdout_to_file(file_path):
     ...     print('test')  # Output nothing, `test` is printed to `test.log`.
     >>> print('test')
     test
-
-    Args:
-        file_path: Path of the file to output the stdout.
-
     """
     tmp = sys.stdout
     f = open(file_path, 'a')
@@ -109,8 +108,13 @@ def locate_remote_file(module_path):
     """xparl has to locate the file that has the class decorated by parl.remote_class. 
     This function returns the relative path between this file and the entry file.
 
-      Args:
-          module_path: Absolute path of the module.
+    Args:
+        module_path: Absolute path of the module.
+
+    Example:
+        module_path: /home/user/dir/subdir/my_module
+        entry_file: /home/user/dir/main.py
+        --------> relative_path: subdir/my_module
   """
     entry_file = sys.argv[0]
     entry_file = entry_file.split(os.sep)[-1]

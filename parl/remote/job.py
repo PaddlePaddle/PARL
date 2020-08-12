@@ -397,15 +397,22 @@ class Job(object):
 
         while True:
             message = reply_socket.recv_multipart()
-
-            tag = message[0]
-
+            tag = message[0]                
             if tag in [
                     remote_constants.CALL_TAG, remote_constants.GET_ATTRIBUTE,
-                    remote_constants.SET_ATTRIBUTE
+                    remote_constants.SET_ATTRIBUTE, remote_constants.CHECK_ATTRIBUTE
             ]:
                 # if tag == remote_constants.CALL_TAG:
                 try:
+                    if tag == remote_constants.CHECK_ATTRIBUTE:
+                        attr = to_str(message[1])
+                        if attr in obj.__dict__:
+                            reply_socket.send_multipart([
+                                remote_constants.NORMAL_TAG, dumps_return(True)])
+                        else:
+                            reply_socket.send_multipart(
+                                [remote_constants.NORMAL_TAG, dumps_return(False)])
+
                     if tag == remote_constants.CALL_TAG:
                         function_name = to_str(message[1])
                         data = message[2]

@@ -85,7 +85,7 @@ def remote_class(*args, **kwargs):
             """
             Wrapper for remote class in client side.
             """
-
+            initilize_flag = False
             def __init__(self, *args, **kwargs):
                 """
                 Args:
@@ -179,8 +179,24 @@ def remote_class(*args, **kwargs):
                     cnt -= 1
                 return None
 
+            def check_attribute(self, attr):
+                '''checkout if attr is a function or not'''
+                self.internal_lock.acquire()
+                self.job_socket.send_multipart(
+                    [remote_constants.CHECK_ATTRIBUTE,
+                        to_byte(attr)])
+                message = self.job_socket.recv_multipart()
+                self.internal_lock.release()
+                tag = message[0]
+                if tag == remote_constants.NORMAL_TAG:
+                    return loads_return(message[1])
+                else:
+                    self.job_shutdown = True
+                    raise NotImplementedError()
+     
             def __setattr__(self, attr, value):
-                if attr not in cls().__dict__:
+                is_attribute = self.check_attribute(attr)
+                if not is_attribute:
                     super().__setattr__(attr, value)
                 else:
                     self.internal_lock.acquire()
@@ -201,8 +217,9 @@ def remote_class(*args, **kwargs):
 
             def __getattr__(self, attr):
                 """Call the function of the unwrapped class."""
-                #check if attr is a function or not
-                if attr in cls().__dict__:
+                #check if attr is a function or not 
+                is_attribute = self.check_attribute(attr)
+                if is_attribute:
                     self.internal_lock.acquire()
                     self.job_socket.send_multipart(
                         [remote_constants.GET_ATTRIBUTE,

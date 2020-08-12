@@ -21,7 +21,7 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 import time
 import threading
-
+import random
 
 @parl.remote_class
 class Actor(object):
@@ -49,16 +49,17 @@ class Test_get_and_set_attribute(unittest.TestCase):
         disconnect()
 
     def test_get_attribute(self):
+        port1 = random.randint(6100, 6200)
         logger.info("running:test_get_attirbute")
-        master = Master(port=8507)
+        master = Master(port=port1)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8507', 1)
+        worker1 = Worker('localhost:{}'.format(port1), 1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
-        parl.connect('localhost:8507')
+        parl.connect('localhost:{}'.format(port1))
         actor = Actor(arg1, arg2, arg3)
         self.assertTrue(arg1 == actor.arg1)
         self.assertTrue(arg2 == actor.arg2)
@@ -67,16 +68,17 @@ class Test_get_and_set_attribute(unittest.TestCase):
         worker1.exit()
 
     def test_set_attribute(self):
+        port2 = random.randint(6200, 6300)
         logger.info("running:test_set_attirbute")
-        master = Master(port=8508)
+        master = Master(port=port2)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8508', 1)
+        worker1 = Worker('localhost:{}'.format(port2), 1)
         arg1 = 3
         arg2 = 3.5
         arg3 = np.random.randn(3, 3)
-        parl.connect('localhost:8508')
+        parl.connect('localhost:{}'.format(port2))
         actor = Actor()
         actor.arg1 = arg1
         actor.arg2 = arg2
@@ -86,7 +88,6 @@ class Test_get_and_set_attribute(unittest.TestCase):
         self.assertTrue((arg3 == actor.arg3).all())
         master.exit()
         worker1.exit()
-
 
 if __name__ == '__main__':
     unittest.main()

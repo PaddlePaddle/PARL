@@ -413,7 +413,7 @@ class Job(object):
                             reply_socket.send_multipart(
                                 [remote_constants.NORMAL_TAG, dumps_return(False)])
 
-                    if tag == remote_constants.CALL_TAG:
+                    elif tag == remote_constants.CALL_TAG:
                         function_name = to_str(message[1])
                         data = message[2]
                         args, kwargs = loads_argument(data)
@@ -436,7 +436,7 @@ class Job(object):
                         ret = dumps_return(ret)
                         reply_socket.send_multipart(
                             [remote_constants.NORMAL_TAG, ret])
-                    else:
+                    elif tag == remote_constants.SET_ATTRIBUTE:
                         attribute_name = to_str(message[1])
                         attribute_value = loads_return(message[2])
                         logfile_path = os.path.join(self.log_dir, 'stdout.log')
@@ -444,6 +444,8 @@ class Job(object):
                             setattr(obj, attribute_name, attribute_value)
                         reply_socket.send_multipart(
                             [remote_constants.NORMAL_TAG])
+                    else:
+                        pass
 
                 except Exception as e:
                     # reset the job

@@ -19,7 +19,7 @@ import socket
 import sys
 import threading
 import zmq
-from parl.utils import to_str, to_byte, get_ip_address, logger
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote import remote_constants
 import time
 
@@ -94,11 +94,14 @@ class Client(object):
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
 
-        main_file = sys.argv[0]
-        main_folder = './'
-        sep = os.sep
-        if sep in main_file:
-            main_folder = sep.join(main_file.split(sep)[:-1])
+        if isnotebook():
+            main_folder = './'
+        else:
+            main_file = sys.argv[0]
+            main_folder = './'
+            sep = os.sep
+            if sep in main_file:
+                main_folder = sep.join(main_file.split(sep)[:-1])
         code_files = filter(lambda x: x.endswith('.py'),
                             os.listdir(main_folder))
 
@@ -108,16 +111,6 @@ class Client(object):
             with open(file_path, 'rb') as code_file:
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
-        # append entry file to code list
-        assert os.path.isfile(
-            main_file
-        ), "[xparl] error occurs when distributing files. cannot find the entry file:{} in current working directory: {}".format(
-            main_file, os.getcwd())
-        with open(main_file, 'rb') as code_file:
-            code = code_file.read()
-            # parl/remote/remote_decorator.py -> remote_decorator.py
-            file_name = main_file.split(os.sep)[-1]
-            pyfiles['python_files'][file_name] = code
 
         for file_name in distributed_files:
             assert os.path.exists(file_name)

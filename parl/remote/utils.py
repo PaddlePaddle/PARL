@@ -14,6 +14,7 @@
 import sys
 from contextlib import contextmanager
 import os
+from parl.utils.utils import isnotebook
 
 __all__ = [
     'load_remote_class', 'redirect_stdout_to_file', 'locate_remote_file'
@@ -107,6 +108,7 @@ def redirect_stdout_to_file(file_path):
 def locate_remote_file(module_path):
     """xparl has to locate the file that has the class decorated by parl.remote_class. 
     This function returns the relative path between this file and the entry file.
+    Note that this function should support the jupyter-notebook environment.
 
     Args:
         module_path: Absolute path of the module.
@@ -116,14 +118,17 @@ def locate_remote_file(module_path):
         entry_file: /home/user/dir/main.py
         --------> relative_path: subdir/my_module
   """
-    entry_file = sys.argv[0]
-    entry_file = entry_file.split(os.sep)[-1]
-    entry_path = None
-    for path in sys.path:
-        to_check_path = os.path.join(path, entry_file)
-        if os.path.isfile(to_check_path):
-            entry_path = path
-            break
+    if isnotebook():
+        entry_path = os.getcwd()
+    else:
+        entry_file = sys.argv[0]
+        entry_file = entry_file.split(os.sep)[-1]
+        entry_path = None
+        for path in sys.path:
+            to_check_path = os.path.join(path, entry_file)
+            if os.path.isfile(to_check_path):
+                entry_path = path
+                break
     if entry_path is None or \
         (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
         raise FileNotFoundError("cannot locate the remote file")

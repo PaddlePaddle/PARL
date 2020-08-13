@@ -180,7 +180,7 @@ def remote_class(*args, **kwargs):
                 return None
 
             def check_attribute(self, attr):
-                '''checkout if attr is a function or not'''
+                '''checkout if attr is a attribute or a function'''
                 self.internal_lock.acquire()
                 self.job_socket.send_multipart(
                     [remote_constants.CHECK_ATTRIBUTE,
@@ -213,13 +213,25 @@ def remote_class(*args, **kwargs):
 
             def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
-                #check if attr is a function or not
+                #check if attr is a attribute or a function
                 is_attribute = self.check_attribute(attr)
-                if is_attribute:
+
+                def wrapper(*args, **kwargs):
                     self.internal_lock.acquire()
-                    self.job_socket.send_multipart(
-                        [remote_constants.GET_ATTRIBUTE,
-                         to_byte(attr)])
+                    if is_attribute:
+                        self.job_socket.send_multipart(
+                            [remote_constants.GET_ATTRIBUTE,
+                             to_byte(attr)])
+                    else:
+                        if self.job_shutdown:
+                            raise RemoteError(
+                                attr,
+                                "This actor losts connection with the job.")
+                        data = dumps_argument(*args, **kwargs)
+                        self.job_socket.send_multipart(
+                            [remote_constants.CALL_TAG,
+                             to_byte(attr), data])
+
                     message = self.job_socket.recv_multipart()
                     tag = message[0]
 
@@ -227,46 +239,6 @@ def remote_class(*args, **kwargs):
                         ret = loads_return(message[1])
                         self.internal_lock.release()
                         return ret
-                    elif tag == remote_constants.EXCEPTION_TAG:
-                        error_str = to_str(message[1])
-                        self.job_shutdown = True
-                        raise RemoteError(attr, error_str)
-
-                    elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
-                        error_str = to_str(message[1])
-                        self.job_shutdown = True
-                        raise RemoteAttributeError(attr, error_str)
-
-                    elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
-                        error_str = to_str(message[1])
-                        self.job_shutdown = True
-                        raise RemoteSerializeError(attr, error_str)
-
-                    elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
-                        error_str = to_str(message[1])
-                        self.job_shutdown = True
-                        raise RemoteDeserializeError(attr, error_str)
-
-                    else:
-                        self.job_shutdown = True
-                        raise NotImplementedError()
-
-                def wrapper(*args, **kwargs):
-                    if self.job_shutdown:
-                        raise RemoteError(
-                            attr, "This actor losts connection with the job.")
-                    self.internal_lock.acquire()
-                    data = dumps_argument(*args, **kwargs)
-
-                    self.job_socket.send_multipart(
-                        [remote_constants.CALL_TAG,
-                         to_byte(attr), data])
-
-                    message = self.job_socket.recv_multipart()
-                    tag = message[0]
-
-                    if tag == remote_constants.NORMAL_TAG:
-                        ret = loads_return(message[1])
 
                     elif tag == remote_constants.EXCEPTION_TAG:
                         error_str = to_str(message[1])
@@ -292,10 +264,7 @@ def remote_class(*args, **kwargs):
                         self.job_shutdown = True
                         raise NotImplementedError()
 
-                    self.internal_lock.release()
-                    return ret
-
-                return wrapper
+                return wrapper() if is_attribute else wrapper
 
         def proxy_wrapper_func(remote_wrapper):
             '''

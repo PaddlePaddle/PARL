@@ -51,7 +51,6 @@ class Client(object):
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
                                       file for initialization) .
-
         """
         self.master_address = master_address
         self.process_id = process_id

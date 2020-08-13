@@ -13,8 +13,11 @@
 # limitations under the License.
 import sys
 from contextlib import contextmanager
+import os
 
-__all__ = ['load_remote_class', 'redirect_stdout_to_file']
+__all__ = [
+    'load_remote_class', 'redirect_stdout_to_file', 'locate_remote_file'
+]
 
 
 def simplify_code(code, end_of_file):
@@ -32,7 +35,7 @@ def simplify_code(code, end_of_file):
   def data_process():
     XXXX
   ------------------>
-  The last two lines of the above code block will be removed as they are not class related.
+  The last two lines of the above code block will be removed as they are not class-related.
   """
     to_write_lines = []
     for i, line in enumerate(code):
@@ -60,12 +63,18 @@ def load_remote_class(file_name, class_name, end_of_file):
     with open(file_name + '.py') as t_file:
         code = t_file.readlines()
     code = simplify_code(code, end_of_file)
-    module_name = 'xparl_' + file_name
-    tmp_file_name = 'xparl_' + file_name + '.py'
+    #folder/xx.py -> folder/xparl_xx.py
+    file_name = file_name.split(os.sep)
+    prefix = os.sep.join(file_name[:-1])
+    if prefix == "":
+        prefix = '.'
+    module_name = prefix + os.sep + 'xparl_' + file_name[-1]
+    tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
-    mod = __import__(module_name)
+    module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
+    mod = __import__(module_name, globals(), locals(), [class_name], 0)
     cls = getattr(mod, class_name)
     return cls
 
@@ -74,6 +83,9 @@ def load_remote_class(file_name, class_name, end_of_file):
 def redirect_stdout_to_file(file_path):
     """Redirect stdout (e.g., `print`) to specified file.
 
+    Args:
+        file_path: Path of the file to output the stdout.
+
     Example:
     >>> print('test')
     test
@@ -81,10 +93,6 @@ def redirect_stdout_to_file(file_path):
     ...     print('test')  # Output nothing, `test` is printed to `test.log`.
     >>> print('test')
     test
-
-    Args:
-        file_path: Path of the file to output the stdout.
-
     """
     tmp = sys.stdout
     f = open(file_path, 'a')
@@ -94,3 +102,33 @@ def redirect_stdout_to_file(file_path):
     finally:
         sys.stdout = tmp
         f.close()
+
+
+def locate_remote_file(module_path):
+    """xparl has to locate the file that has the class decorated by parl.remote_class. 
+    This function returns the relative path between this file and the entry file.
+
+    Args:
+        module_path: Absolute path of the module.
+
+    Example:
+        module_path: /home/user/dir/subdir/my_module
+        entry_file: /home/user/dir/main.py
+        --------> relative_path: subdir/my_module
+  """
+    entry_file = sys.argv[0]
+    entry_file = entry_file.split(os.sep)[-1]
+    entry_path = None
+    for path in sys.path:
+        to_check_path = os.path.join(path, entry_file)
+        if os.path.isfile(to_check_path):
+            entry_path = path
+            break
+    if entry_path is None or \
+        (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
+        raise FileNotFoundError("cannot locate the remote file")
+    if module_path.startswith(os.sep):
+        relative_module_path = '.' + module_path[len(entry_path):]
+    else:
+        relative_module_path = module_path
+    return relative_module_path

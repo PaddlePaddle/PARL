@@ -19,12 +19,22 @@ __all__ = ['CSVLogger']
 
 class CSVLogger(object):
     def __init__(self, output_file):
-        """CSV Logger which can write dict result to csv file
+        """CSV Logger which can write dict result to csv file.
+
+        Args:
+            output_file(str): filename of the csv file.
         """
         self.output_file = open(output_file, "w")
         self.csv_writer = None
 
     def log_dict(self, result):
+        """Ouput result to the csv file.
+        Will create the header of the csv file automatically when the function is called for the first time.
+
+        Args:
+            result(dict)
+        """
+        assert isinstance(result, dict), "the input should be a dict."
         if self.csv_writer is None:
             self.csv_writer = csv.DictWriter(self.output_file, result.keys())
             self.csv_writer.writeheader()
@@ -38,4 +48,9 @@ class CSVLogger(object):
         self.output_file.flush()
 
     def close(self):
-        self.output_file.close()
+        if not self.output_file.closed:
+            self.output_file.close()
+
+    def __del__(self):
+        if not self.output_file.closed:
+            self.output_file.close()

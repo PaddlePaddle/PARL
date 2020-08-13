@@ -102,6 +102,7 @@ def kill_process(regex_pattern):
             regex_pattern)
         subprocess.call([command], shell=True)
 
+
 def isnotebook():
     """check if the code is excuted in the IPython notebook
     Reference: https://stackoverflow.com/a/39662359
@@ -109,10 +110,10 @@ def isnotebook():
     try:
         shell = get_ipython().__class__.__name__
         if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
+            return True  # Jupyter notebook or qtconsole
         elif shell == 'TerminalInteractiveShell':
             return False  # Terminal running IPython
         else:
             return False  # Other type (?)
     except NameError:
-        return False      # Probably standard Python interpreter
+        return False  # Probably standard Python interpreter

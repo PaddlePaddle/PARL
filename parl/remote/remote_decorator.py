@@ -298,6 +298,15 @@ def remote_class(*args, **kwargs):
                 return wrapper
 
         def proxy_wrapper_func(remote_wrapper):
+            '''
+            The 'proxy_wrapper_func' is defined on the top of class 'RemoteWrapper'
+            in order to set and get attributes of 'remoted_wrapper' and the corresponding 
+            remote models individually. 
+
+            With 'proxy_wrapper_func', it is allowed to define a attribute (or method) of
+            the same name in 'RemoteWrapper' and remote models.
+            '''
+
             class ProxyWrapper(object):
                 def __init__(self, *args, **kwargs):
                     self.xparl_remote_wrapper_obj = remote_wrapper(

@@ -210,7 +210,6 @@ class Worker(object):
         for _ in range(job_num):
             subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
         FNULL.close()
-        # subprocess.Popen(command, stdout=subprocess.STDOUT, stderr=subprocess.STDOUT)
 
         new_jobs = []
         for _ in range(job_num):

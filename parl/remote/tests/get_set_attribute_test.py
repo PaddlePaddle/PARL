@@ -32,9 +32,12 @@ class Actor(object):
         self.arg3 = arg3
         self.GLOBAL_CLIENT = arg4
 
-    def add(self, x, y):
+    def arg1(self, x, y):
         time.sleep(0.2)
         return x + y
+
+    def arg5(self):
+        return 100
 
 
 class Test_get_and_set_attribute(unittest.TestCase):
@@ -89,7 +92,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
     def test_create_new_attribute_same_with_wrapper(self):
         port3 = random.randint(6400, 6500)
-        logger.info("running:test_get_attirbute")
+        logger.info("running:test_create_new_attribute_same_with_wrapper")
         master = Master(port=port3)
         th = threading.Thread(target=master.run)
         th.start()
@@ -104,6 +107,53 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
         actor.internal_lock = 50
         self.assertTrue(actor.internal_lock == 50)
+        master.exit()
+        worker1.exit()
+
+    def test_same_name_of_attribute_and_method(self):
+        port4 = random.randint(6500, 6600)
+        logger.info("running:test_same_name_of_attribute_and_method")
+        master = Master(port=port4)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port4), 1)
+        arg1 = np.random.randint(100)
+        arg2 = np.random.randn()
+        arg3 = np.random.randn(3, 3)
+        arg4 = 100
+        parl.connect('localhost:{}'.format(port4))
+        actor = Actor(arg1, arg2, arg3, arg4)
+        self.assertEqual(arg1, actor.arg1)
+
+        def call_method():
+            return actor.arg1(1, 2)
+
+        self.assertRaises(TypeError, call_method)
+        master.exit()
+        worker1.exit()
+
+    def test_non_existing_attribute_same_with_existing_method(self):
+        port5 = random.randint(6600, 6700)
+        logger.info(
+            "running:test_non_existing_attribute_same_with_existing_method")
+        master = Master(port=port5)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port5), 1)
+        arg1 = np.random.randint(100)
+        arg2 = np.random.randn()
+        arg3 = np.random.randn(3, 3)
+        arg4 = 100
+        parl.connect('localhost:{}'.format(port5))
+        actor = Actor(arg1, arg2, arg3, arg4)
+        self.assertTrue(callable(actor.arg5))
+
+        def call_non_existing_method():
+            return actor.arg2(10)
+
+        self.assertRaises(TypeError, call_non_existing_method)
         master.exit()
         worker1.exit()
 

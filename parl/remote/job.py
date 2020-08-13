@@ -403,7 +403,6 @@ class Job(object):
                     remote_constants.SET_ATTRIBUTE,
                     remote_constants.CHECK_ATTRIBUTE
             ]:
-                # if tag == remote_constants.CALL_TAG:
                 try:
                     if tag == remote_constants.CHECK_ATTRIBUTE:
                         attr = to_str(message[1])

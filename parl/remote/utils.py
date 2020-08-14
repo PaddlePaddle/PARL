@@ -14,7 +14,7 @@
 import sys
 from contextlib import contextmanager
 import os
-from parl.utils.utils import isnotebook
+from parl.utils import isnotebook
 
 __all__ = [
     'load_remote_class', 'redirect_stdout_to_file', 'locate_remote_file'

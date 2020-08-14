@@ -190,25 +190,66 @@ def remote_class(*args, **kwargs):
                     cnt -= 1
                 return None
 
-            def __getattr__(self, attr):
+            def check_attribute(self, attr):
+                '''checkout if attr is a attribute or a function'''
+                self.internal_lock.acquire()
+                self.job_socket.send_multipart(
+                    [remote_constants.CHECK_ATTRIBUTE,
+                     to_byte(attr)])
+                message = self.job_socket.recv_multipart()
+                self.internal_lock.release()
+                tag = message[0]
+                if tag == remote_constants.NORMAL_TAG:
+                    return loads_return(message[1])
+                else:
+                    self.job_shutdown = True
+                    raise NotImplementedError()
+
+            def set_remote_attr(self, attr, value):
+                self.internal_lock.acquire()
+                self.job_socket.send_multipart([
+                    remote_constants.SET_ATTRIBUTE,
+                    to_byte(attr),
+                    dumps_return(value)
+                ])
+                message = self.job_socket.recv_multipart()
+                tag = message[0]
+                self.internal_lock.release()
+                if tag == remote_constants.NORMAL_TAG:
+                    pass
+                else:
+                    self.job_shutdown = True
+                    raise NotImplementedError()
+                return
+
+            def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
+                #check if attr is a attribute or a function
+                is_attribute = self.check_attribute(attr)
 
                 def wrapper(*args, **kwargs):
-                    if self.job_shutdown:
-                        raise RemoteError(
-                            attr, "This actor losts connection with the job.")
                     self.internal_lock.acquire()
-                    data = dumps_argument(*args, **kwargs)
-
-                    self.job_socket.send_multipart(
-                        [remote_constants.CALL_TAG,
-                         to_byte(attr), data])
+                    if is_attribute:
+                        self.job_socket.send_multipart(
+                            [remote_constants.GET_ATTRIBUTE,
+                             to_byte(attr)])
+                    else:
+                        if self.job_shutdown:
+                            raise RemoteError(
+                                attr,
+                                "This actor losts connection with the job.")
+                        data = dumps_argument(*args, **kwargs)
+                        self.job_socket.send_multipart(
+                            [remote_constants.CALL_TAG,
+                             to_byte(attr), data])
 
                     message = self.job_socket.recv_multipart()
                     tag = message[0]
 
                     if tag == remote_constants.NORMAL_TAG:
                         ret = loads_return(message[1])
+                        self.internal_lock.release()
+                        return ret
 
                     elif tag == remote_constants.EXCEPTION_TAG:
                         error_str = to_str(message[1])
@@ -234,13 +275,38 @@ def remote_class(*args, **kwargs):
                         self.job_shutdown = True
                         raise NotImplementedError()
 
-                    self.internal_lock.release()
-                    return ret
+                return wrapper() if is_attribute else wrapper
 
-                return wrapper
+        def proxy_wrapper_func(remote_wrapper):
+            '''
+            The 'proxy_wrapper_func' is defined on the top of class 'RemoteWrapper'
+            in order to set and get attributes of 'remoted_wrapper' and the corresponding 
+            remote models individually. 
+
+            With 'proxy_wrapper_func', it is allowed to define a attribute (or method) of
+            the same name in 'RemoteWrapper' and remote models.
+            '''
+
+            class ProxyWrapper(object):
+                def __init__(self, *args, **kwargs):
+                    self.xparl_remote_wrapper_obj = remote_wrapper(
+                        *args, **kwargs)
+
+                def __getattr__(self, attr):
+                    return self.xparl_remote_wrapper_obj.get_remote_attr(attr)
+
+                def __setattr__(self, attr, value):
+                    if attr == 'xparl_remote_wrapper_obj':
+                        super(ProxyWrapper, self).__setattr__(attr, value)
+                    else:
+                        self.xparl_remote_wrapper_obj.set_remote_attr(
+                            attr, value)
+
+            return ProxyWrapper
 
         RemoteWrapper._original = cls
-        return RemoteWrapper
+        proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
+        return proxy_wrapper
 
     max_memory = kwargs.get('max_memory')
     if len(args) == 1 and callable(args[0]):

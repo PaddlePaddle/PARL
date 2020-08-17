@@ -39,6 +39,9 @@ class Actor(object):
     def arg5(self):
         return 100
 
+    def set_new_attr(self):
+        self.new_attr_1 = 200
+
 
 class Test_get_and_set_attribute(unittest.TestCase):
     def tearDown(self):
@@ -148,6 +151,10 @@ class Test_get_and_set_attribute(unittest.TestCase):
         arg4 = 100
         parl.connect('localhost:{}'.format(port5))
         actor = Actor(arg1, arg2, arg3, arg4)
+        actor.new_attr_2 = 300
+        self.assertEqual(300, actor.new_attr_2)
+        actor.set_new_attr()
+        self.assertEqual(200, actor.new_attr_1)
         self.assertTrue(callable(actor.arg5))
 
         def call_non_existing_method():

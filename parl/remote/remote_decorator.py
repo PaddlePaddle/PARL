@@ -238,6 +238,9 @@ def remote_class(*args, **kwargs):
 
                     if tag == remote_constants.NORMAL_TAG:
                         ret = loads_return(message[1])
+                        if not is_attribute:
+                            self.remote_attribute_keys_set = loads_return(
+                                message[2])
                         self.internal_lock.release()
                         return ret
 

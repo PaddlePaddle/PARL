@@ -416,9 +416,10 @@ class Job(object):
                             ret = getattr(obj, function_name)(*args, **kwargs)
 
                         ret = dumps_return(ret)
-
-                        reply_socket.send_multipart(
-                            [remote_constants.NORMAL_TAG, ret])
+                        reply_socket.send_multipart([
+                            remote_constants.NORMAL_TAG, ret,
+                            dumps_return(set(obj.__dict__.keys()))
+                        ])
 
                     elif tag == remote_constants.GET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])

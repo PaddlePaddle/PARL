@@ -311,8 +311,6 @@ class Job(object):
             try:
                 file_name, class_name, end_of_file = cloudpickle.loads(
                     message[1])
-                #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
-                file_name = file_name.split(os.sep)[-1]
                 cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
                 logfile_path = os.path.join(self.log_dir, 'stdout.log')
@@ -430,12 +428,14 @@ class Job(object):
                         ret = dumps_return(ret)
                         reply_socket.send_multipart(
                             [remote_constants.NORMAL_TAG, ret])
+
                     elif tag == remote_constants.SET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
                         attribute_value = loads_return(message[2])
                         logfile_path = os.path.join(self.log_dir, 'stdout.log')
                         with redirect_stdout_to_file(logfile_path):
                             setattr(obj, attribute_name, attribute_value)
+
                         reply_socket.send_multipart([
                             remote_constants.NORMAL_TAG,
                             dumps_return(set(obj.__dict__.keys()))

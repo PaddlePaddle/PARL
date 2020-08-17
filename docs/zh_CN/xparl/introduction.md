@@ -24,4 +24,4 @@ PARL在实现底层的并行计算时，是通过端到端的这种网络传输�
 ## 自动分发本地文件
 市面上的并行框架大部分得要用户手动同步文件才可以跑起并行代码，比如配置文件得要手动或者通过命令分发到不同机器，parl可以自动分发当前目录下的代码文件，实现无缝的多机并行。
 
-<img src="../../parallel_training/comparison.png" width="500"/>
+<img src="../../parallel_training/comparison.png" width="1000"/>

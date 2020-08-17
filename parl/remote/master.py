@@ -18,6 +18,8 @@ import threading
 import time
 import zmq
 from collections import deque, defaultdict
+import parl
+import sys
 from parl.utils import to_str, to_byte, logger, get_ip_address
 from parl.remote import remote_constants
 from parl.remote.job_center import JobCenter
@@ -208,6 +210,7 @@ class Master(object):
         elif tag == remote_constants.CLIENT_CONNECT_TAG:
             # `client_heartbeat_address` is the
             #      `reply_master_heartbeat_address` of the client
+
             client_heartbeat_address = to_str(message[1])
             client_hostname = to_str(message[2])
             client_id = to_str(message[3])
@@ -224,6 +227,13 @@ class Master(object):
             self.client_socket.send_multipart(
                 [remote_constants.NORMAL_TAG,
                  to_byte(log_monitor_address)])
+
+        elif tag == remote_constants.CHECK_VERSION_TAG:
+            self.client_socket.send_multipart([
+                remote_constants.NORMAL_TAG,
+                to_byte(parl.__version__),
+                to_byte(str(sys.version_info.major))
+            ])
 
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:

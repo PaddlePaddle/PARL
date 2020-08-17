@@ -26,7 +26,7 @@ import threading
 import warnings
 import zmq
 from datetime import datetime
-
+import parl
 from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
@@ -75,6 +75,7 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
+        self.check_version()
         # create log server
         self.log_server_proc, self.log_server_address = self._create_log_server(
             port=log_server_port)
@@ -100,6 +101,23 @@ class Worker(object):
             self.cpu_num = cpu_num
         else:
             self.cpu_num = multiprocessing.cpu_count()
+
+    def check_version(self):
+        self.request_master_socket.send_multipart(
+            [remote_constants.CHECK_VERSION_TAG])
+        message = self.request_master_socket.recv_multipart()
+        tag = message[0]
+        if tag == remote_constants.NORMAL_TAG:
+            worker_parl_version = parl.__version__
+            worker_python_version = str(sys.version_info.major)
+            assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
+                'Version mismatch: the "master" is of version "parl={}, python={}",\
+however, "parl={}, python={}"is provided in your Worker!'                                                         .format(
+                        to_str(message[1]), to_str(message[2]),
+                        worker_parl_version, worker_python_version
+                    )
+        else:
+            raise NotImplementedError
 
     def _create_sockets(self):
         """ Each worker has three sockets at start:

@@ -19,6 +19,7 @@ import socket
 import sys
 import threading
 import zmq
+import parl
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote import remote_constants
 import time
@@ -65,6 +66,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
+        self.check_version()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -161,6 +163,23 @@ class Client(object):
             raise Exception("Client can not connect to the master, please "
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
+
+    def check_version(self):
+        self.submit_job_socket.send_multipart(
+            [remote_constants.CHECK_VERSION_TAG])
+        message = self.submit_job_socket.recv_multipart()
+        tag = message[0]
+        if tag == remote_constants.NORMAL_TAG:
+            client_parl_version = parl.__version__
+            client_python_version = str(sys.version_info.major)
+            assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
+                "Version mismatch: the 'master' is of version 'parl={}, python={}',\
+however, 'parl={}, python={}'is provided in your client!"                                                         .format(
+                        to_str(message[1]), to_str(message[2]),
+                        client_parl_version, client_python_version
+                    )
+        else:
+            raise NotImplementedError
 
     def _reply_heartbeat(self):
         """Reply heartbeat signals to the master node."""

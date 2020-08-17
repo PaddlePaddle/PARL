@@ -325,7 +325,10 @@ class Job(object):
                     to_byte(error_str + "\ntraceback:\n" + traceback_str)
                 ])
                 return None
-            reply_socket.send_multipart([remote_constants.NORMAL_TAG])
+            reply_socket.send_multipart([
+                remote_constants.NORMAL_TAG,
+                dumps_return(set(obj.__dict__.keys()))
+            ])
         else:
             logger.error("Message from job {}".format(message))
             reply_socket.send_multipart([
@@ -397,25 +400,12 @@ class Job(object):
             message = reply_socket.recv_multipart()
             tag = message[0]
             if tag in [
-                    remote_constants.CALL_TAG, remote_constants.GET_ATTRIBUTE,
-                    remote_constants.SET_ATTRIBUTE,
-                    remote_constants.CHECK_ATTRIBUTE
+                    remote_constants.CALL_TAG,
+                    remote_constants.GET_ATTRIBUTE_TAG,
+                    remote_constants.SET_ATTRIBUTE_TAG,
             ]:
                 try:
-                    if tag == remote_constants.CHECK_ATTRIBUTE:
-                        attr = to_str(message[1])
-                        if attr in obj.__dict__:
-                            reply_socket.send_multipart([
-                                remote_constants.NORMAL_TAG,
-                                dumps_return(True)
-                            ])
-                        else:
-                            reply_socket.send_multipart([
-                                remote_constants.NORMAL_TAG,
-                                dumps_return(False)
-                            ])
-
-                    elif tag == remote_constants.CALL_TAG:
+                    if tag == remote_constants.CALL_TAG:
                         function_name = to_str(message[1])
                         data = message[2]
                         args, kwargs = loads_argument(data)
@@ -430,7 +420,7 @@ class Job(object):
                         reply_socket.send_multipart(
                             [remote_constants.NORMAL_TAG, ret])
 
-                    elif tag == remote_constants.GET_ATTRIBUTE:
+                    elif tag == remote_constants.GET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
                         logfile_path = os.path.join(self.log_dir, 'stdout.log')
                         with redirect_stdout_to_file(logfile_path):
@@ -438,14 +428,16 @@ class Job(object):
                         ret = dumps_return(ret)
                         reply_socket.send_multipart(
                             [remote_constants.NORMAL_TAG, ret])
-                    elif tag == remote_constants.SET_ATTRIBUTE:
+                    elif tag == remote_constants.SET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
                         attribute_value = loads_return(message[2])
                         logfile_path = os.path.join(self.log_dir, 'stdout.log')
                         with redirect_stdout_to_file(logfile_path):
                             setattr(obj, attribute_name, attribute_value)
-                        reply_socket.send_multipart(
-                            [remote_constants.NORMAL_TAG])
+                        reply_socket.send_multipart([
+                            remote_constants.NORMAL_TAG,
+                            dumps_return(set(obj.__dict__.keys()))
+                        ])
                     else:
                         pass
 

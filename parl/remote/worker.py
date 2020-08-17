@@ -103,6 +103,7 @@ class Worker(object):
             self.cpu_num = multiprocessing.cpu_count()
 
     def check_version(self):
+        '''Verify that the parl & python version in 'worker' process matches that of the 'master' process'''
         self.request_master_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.request_master_socket.recv_multipart()
@@ -111,8 +112,8 @@ class Worker(object):
             worker_parl_version = parl.__version__
             worker_python_version = str(sys.version_info.major)
             assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
-                '''Version mismatch: the "master" is of version "parl={}, python={}",however, 
-                "parl={}, python={}"is provided in your Worker!'''.format(
+                '''Version mismatch: the "master" is of version "parl={}, python={}", However, 
+                "parl={}, python={}"is provided in your environment.'''.format(
                         to_str(message[1]), to_str(message[2]),
                         worker_parl_version, worker_python_version
                     )

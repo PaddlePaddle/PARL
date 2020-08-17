@@ -165,6 +165,7 @@ class Client(object):
                             "address {} is correct.".format(master_address))
 
     def check_version(self):
+        '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
         self.submit_job_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.submit_job_socket.recv_multipart()
@@ -174,7 +175,7 @@ class Client(object):
             client_python_version = str(sys.version_info.major)
             assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
                 '''Version mismatch: the 'master' is of version 'parl={}, python={}',however, 
-                'parl={}, python={}'is provided in your client!'''.format(
+                'parl={}, python={}'is provided in your environment.'''.format(
                         to_str(message[1]), to_str(message[2]),
                         client_parl_version, client_python_version
                     )

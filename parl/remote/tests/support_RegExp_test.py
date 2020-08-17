@@ -36,6 +36,8 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_distributed_files_with_RegExp(self):
+        if os.path.exists('distribute_test_dir'):
+            shutil.rmtree('distribute_test_dir')
         os.mkdir('distribute_test_dir')
         f = open('distribute_test_dir/test1.txt', 'wb')
         f.close()
@@ -46,41 +48,45 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir/data2.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp")
-        master = Master(port=8602)
+        master = Master(port=8605)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8602', 1)
+        worker1 = Worker('localhost:8605', 1)
         parl.connect(
-            'localhost:8602',
+            'localhost:8605',
             distributed_files=[
-                'distribute_test_dir/test*', 'distribute_test_dir/*npy'
+                'distribute_test_dir/test*',
+                'distribute_test_dir/*npy',
             ])
         actor = Actor()
         self.assertTrue(actor.file_exists('distribute_test_dir/test1.txt'))
         self.assertTrue(actor.file_exists('distribute_test_dir/test2.txt'))
         self.assertTrue(actor.file_exists('distribute_test_dir/data1.npy'))
         self.assertTrue(actor.file_exists('distribute_test_dir/data2.npy'))
+        self.assertFalse(actor.file_exists('distribute_test_dir/data3.npy'))
         shutil.rmtree('distribute_test_dir')
         master.exit()
         worker1.exit()
 
     def test_miss_match_case(self):
+        if os.path.exists('distribute_test_dir_2'):
+            shutil.rmtree('distribute_test_dir_2')
         os.mkdir('distribute_test_dir_2')
         f = open('distribute_test_dir_2/test1.txt', 'wb')
         f.close()
         f = open('distribute_test_dir_2/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp_error_case")
-        master = Master(port=8603)
+        master = Master(port=8606)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8603', 1)
+        worker1 = Worker('localhost:8606', 1)
 
         def connect_test():
             parl.connect(
-                'localhost:8603',
+                'localhost:8606',
                 distributed_files=['distribute_test_dir_2/miss_match*'])
 
         self.assertRaises(ValueError, connect_test)

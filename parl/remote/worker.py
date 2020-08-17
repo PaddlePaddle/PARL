@@ -112,7 +112,7 @@ class Worker(object):
             worker_parl_version = parl.__version__
             worker_python_version = str(sys.version_info.major)
             assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
-                '''Version mismatch: the "master" is of version "parl={}, python={}", However, 
+                '''Version mismatch: the "master" is of version "parl={}, python={}". However, 
                 "parl={}, python={}"is provided in your environment.'''.format(
                         to_str(message[1]), to_str(message[2]),
                         worker_parl_version, worker_python_version

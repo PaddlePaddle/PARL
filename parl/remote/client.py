@@ -174,7 +174,7 @@ class Client(object):
             client_parl_version = parl.__version__
             client_python_version = str(sys.version_info.major)
             assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
-                '''Version mismatch: the 'master' is of version 'parl={}, python={}',however, 
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}'. However, 
                 'parl={}, python={}'is provided in your environment.'''.format(
                         to_str(message[1]), to_str(message[2]),
                         client_parl_version, client_python_version

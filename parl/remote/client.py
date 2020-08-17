@@ -22,6 +22,7 @@ import zmq
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote import remote_constants
 import time
+import glob
 
 
 class Client(object):
@@ -84,12 +85,28 @@ class Client(object):
         Args:
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
-                                      file for initialization) .
-
+                                      file for initialization) . RegExp of file
+                                      names is supported. 
+                                      e.g. 
+                                          distributed_files = ['./*.npy', './test*']
+                                                                             
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
+
+        parsed_distributed_files = set()
+        for distributed_file in distributed_files:
+            parsed_list = glob.glob(distributed_file)
+            if not parsed_list:
+                raise ValueError(
+                    "no local file is matched with '{}', please check your input"
+                    .format(distributed_file))
+            # exclude the directiories
+            for pathname in parsed_list:
+                if not os.path.isdir(pathname):
+                    parsed_distributed_files.add(pathname)
+
         pyfiles = dict()
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
@@ -112,7 +129,7 @@ class Client(object):
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
 
-        for file_name in distributed_files:
+        for file_name in parsed_distributed_files:
             assert os.path.exists(file_name)
             assert not os.path.isabs(
                 file_name

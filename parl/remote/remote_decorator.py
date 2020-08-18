@@ -75,7 +75,6 @@ def remote_class(*args, **kwargs):
         Exception: An exception is raised if the client is not created
                    by `parl.connect(master_address)` beforehand.
     """
-
     def decorator(cls):
         # we are not going to create a remote actor in job.py
         if 'XPARL' in os.environ and os.environ['XPARL'] == 'True':
@@ -87,7 +86,6 @@ def remote_class(*args, **kwargs):
             """
             Wrapper for remote class in client side.
             """
-
             def __init__(self, *args, **kwargs):
                 """
                 Args:
@@ -203,9 +201,9 @@ def remote_class(*args, **kwargs):
                 ])
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
-                self.internal_lock.release()
                 if tag == remote_constants.NORMAL_TAG:
                     self.remote_attribute_keys_set = loads_return(message[1])
+                    self.internal_lock.release()
                 else:
                     self.job_shutdown = True
                     raise NotImplementedError()
@@ -279,7 +277,6 @@ def remote_class(*args, **kwargs):
             With 'proxy_wrapper_func', it is allowed to define a attribute (or method) of
             the same name in 'RemoteWrapper' and remote models.
             '''
-
             class ProxyWrapper(object):
                 def __init__(self, *args, **kwargs):
                     self.xparl_remote_wrapper_obj = remote_wrapper(

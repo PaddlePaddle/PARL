@@ -95,7 +95,7 @@ def remote_class(*args, **kwargs):
                     class.
                 """
                 self.GLOBAL_CLIENT = get_global_client()
-
+                self.remote_attribute_keys_set = set()
                 self.ctx = self.GLOBAL_CLIENT.ctx
 
                 # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
@@ -142,10 +142,14 @@ def remote_class(*args, **kwargs):
                 ])
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
-                if tag == remote_constants.EXCEPTION_TAG:
+                if tag == remote_constants.NORMAL_TAG:
+                    self.remote_attribute_keys_set = loads_return(message[1])
+                elif tag == remote_constants.EXCEPTION_TAG:
                     traceback_str = to_str(message[1])
                     self.job_shutdown = True
                     raise RemoteError('__init__', traceback_str)
+                else:
+                    pass
 
             def __del__(self):
                 """Delete the remote class object and release remote resources."""
@@ -190,33 +194,18 @@ def remote_class(*args, **kwargs):
                     cnt -= 1
                 return None
 
-            def check_attribute(self, attr):
-                '''checkout if attr is a attribute or a function'''
-                self.internal_lock.acquire()
-                self.job_socket.send_multipart(
-                    [remote_constants.CHECK_ATTRIBUTE,
-                     to_byte(attr)])
-                message = self.job_socket.recv_multipart()
-                self.internal_lock.release()
-                tag = message[0]
-                if tag == remote_constants.NORMAL_TAG:
-                    return loads_return(message[1])
-                else:
-                    self.job_shutdown = True
-                    raise NotImplementedError()
-
             def set_remote_attr(self, attr, value):
                 self.internal_lock.acquire()
                 self.job_socket.send_multipart([
-                    remote_constants.SET_ATTRIBUTE,
+                    remote_constants.SET_ATTRIBUTE_TAG,
                     to_byte(attr),
                     dumps_return(value)
                 ])
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
-                self.internal_lock.release()
                 if tag == remote_constants.NORMAL_TAG:
-                    pass
+                    self.remote_attribute_keys_set = loads_return(message[1])
+                    self.internal_lock.release()
                 else:
                     self.job_shutdown = True
                     raise NotImplementedError()
@@ -225,14 +214,15 @@ def remote_class(*args, **kwargs):
             def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
                 #check if attr is a attribute or a function
-                is_attribute = self.check_attribute(attr)
+                is_attribute = attr in self.remote_attribute_keys_set
 
                 def wrapper(*args, **kwargs):
                     self.internal_lock.acquire()
                     if is_attribute:
-                        self.job_socket.send_multipart(
-                            [remote_constants.GET_ATTRIBUTE,
-                             to_byte(attr)])
+                        self.job_socket.send_multipart([
+                            remote_constants.GET_ATTRIBUTE_TAG,
+                            to_byte(attr)
+                        ])
                     else:
                         if self.job_shutdown:
                             raise RemoteError(
@@ -248,6 +238,9 @@ def remote_class(*args, **kwargs):
 
                     if tag == remote_constants.NORMAL_TAG:
                         ret = loads_return(message[1])
+                        if not is_attribute:
+                            self.remote_attribute_keys_set = loads_return(
+                                message[2])
                         self.internal_lock.release()
                         return ret
 

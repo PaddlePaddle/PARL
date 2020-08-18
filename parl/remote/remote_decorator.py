@@ -279,7 +279,8 @@ def remote_class(*args, **kwargs):
             '''
             class ProxyWrapper(object):
                 def __init__(self, *args, **kwargs):
-                    self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
+                    self.xparl_remote_wrapper_obj = remote_wrapper(
+                        *args, **kwargs)
 
                 def __getattr__(self, attr):
                     return self.xparl_remote_wrapper_obj.get_remote_attr(attr)

@@ -214,7 +214,7 @@ def remote_class(*args, **kwargs):
             def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
                 #check if attr is a attribute or a function
-                is_attribute = (attr in self.remote_attribute_keys_set)
+                is_attribute = attr in self.remote_attribute_keys_set
 
                 def wrapper(*args, **kwargs):
                     self.internal_lock.acquire()

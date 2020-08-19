@@ -16,7 +16,6 @@
 import compatible_trick
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['XPARL'] = 'True'
 import argparse
 import cloudpickle

@@ -29,7 +29,6 @@ import os
 @parl.remote_class
 class Actor(object):
     def __init__(self):
-        os.environ['CUDA_VISIBLE_DEVICES'] = "0"
         if parl.utils.is_gpu_available():
             place = fluid.CUDAPlace(0)
         else:

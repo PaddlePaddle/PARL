@@ -125,8 +125,8 @@ yapf -i modified_file.py
 ```
 - 持续集成测试<br>
 当增加代码时候，需要增加测试代码覆盖所添加的代码，测试代码得放在相关代码文件的`tests`文件夹下，以`_test.py`结尾（这样持续集成测试会自动拉取代码跑）。附：[测试代码示例](../../parl/tests/import_test.py)
-<br>
-持续集成任务需排队，偶尔等待时间会比较久，如果希望先在自己的机器运行单测代码，可先在本地机器上安装Docker，再按以下步骤执行单测任务。
+- 本地运行单元测试(非必要)<br>
+如果你希望在自己的机器运行单测代码，可先在本地机器上安装Docker，再按以下步骤执行单测任务。
 ```
 cd PARL
 docker build -t parl/parl-test:unittest  .teamcity/

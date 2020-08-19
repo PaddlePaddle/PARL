@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-
 import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker

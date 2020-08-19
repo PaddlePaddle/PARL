@@ -69,7 +69,7 @@ class TestJob(unittest.TestCase):
 
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
-        proc = subprocess.Popen(command)
+        proc = subprocess.Popen(command, close_fds=True)
         for _ in range(6):
             if master.cpu_num == 0:
                 break

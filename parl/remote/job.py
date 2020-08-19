@@ -261,8 +261,14 @@ class Job(object):
         tag = message[0]
         if tag == remote_constants.SEND_FILE_TAG:
             pyfiles = pickle.loads(message[1])
-            # save python files to temporary directory
             envdir = tempfile.mkdtemp()
+
+            for empty_subfolder in pyfiles['empty_subfolders']:
+                empty_subfolder_path = os.path.join(envdir, empty_subfolder)
+                if not os.path.exists(empty_subfolder_path):
+                    os.makedirs(empty_subfolder_path)
+
+            # save python files to temporary directory
             for file, code in pyfiles['python_files'].items():
                 file = os.path.join(envdir, file)
                 with open(file, 'wb') as code_file:

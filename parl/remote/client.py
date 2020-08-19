@@ -96,6 +96,10 @@ class Client(object):
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
+        pyfiles = dict()
+        pyfiles['python_files'] = {}
+        pyfiles['other_files'] = {}
+        pyfiles['empty_subfolders'] = set()
 
         parsed_distributed_files = set()
         for distributed_file in distributed_files:
@@ -106,12 +110,18 @@ class Client(object):
                     .format(distributed_file))
             # exclude the directiories
             for pathname in parsed_list:
-                if not os.path.isdir(pathname):
+                if os.path.isdir(pathname):
+                    for root, dirs, files in os.walk(pathname):
+                        # distribute files in the folder
+                        if files:
+                            for sub_file in files:
+                                parsed_distributed_files.add(
+                                    os.path.join(root, sub_file))
+                        # dirtribute empty subfolders
+                        elif not dirs:
+                            pyfiles['empty_subfolders'].add(root)
+                else:
                     parsed_distributed_files.add(pathname)
-
-        pyfiles = dict()
-        pyfiles['python_files'] = {}
-        pyfiles['other_files'] = {}
 
         if isnotebook():
             main_folder = './'

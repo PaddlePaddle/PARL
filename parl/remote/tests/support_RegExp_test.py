@@ -48,13 +48,13 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir/data2.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp")
-        master = Master(port=8605)
+        master = Master(port=8435)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8605', 1)
+        worker1 = Worker('localhost:8435', 1)
         parl.connect(
-            'localhost:8605',
+            'localhost:8435',
             distributed_files=[
                 'distribute_test_dir/test*',
                 'distribute_test_dir/*npy',
@@ -78,19 +78,52 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir_2/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp_error_case")
-        master = Master(port=8606)
+        master = Master(port=8436)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8606', 1)
+        worker1 = Worker('localhost:8436', 1)
 
         def connect_test():
             parl.connect(
-                'localhost:8606',
+                'localhost:8436',
                 distributed_files=['distribute_test_dir_2/miss_match*'])
 
         self.assertRaises(ValueError, connect_test)
         shutil.rmtree('distribute_test_dir_2')
+        master.exit()
+        worker1.exit()
+
+    def test_distribute_folder(self):
+        if os.path.exists('distribute_test_dir_3'):
+            shutil.rmtree('distribute_test_dir_3')
+        os.mkdir('distribute_test_dir_3')
+        os.mkdir('distribute_test_dir_3/subfolder_test')
+        os.mkdir('distribute_test_dir_3/empty_folder')
+        f = open('distribute_test_dir_3/subfolder_test/test1.txt', 'wb')
+        f.close()
+        f = open('distribute_test_dir_3/subfolder_test/data1.npy', 'wb')
+        f.close()
+        logger.info("running:test_distributed_folder")
+        master = Master(port=8437)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:8437', 1)
+        parl.connect(
+            'localhost:8437', distributed_files=[
+                'distribute_test_dir_3',
+            ])
+        actor = Actor()
+        self.assertTrue(
+            actor.file_exists(
+                'distribute_test_dir_3/subfolder_test/test1.txt'))
+        self.assertTrue(
+            actor.file_exists(
+                'distribute_test_dir_3/subfolder_test/data1.npy'))
+        self.assertTrue(
+            actor.file_exists('distribute_test_dir_3/empty_folder'))
+        shutil.rmtree('distribute_test_dir_3')
         master.exit()
         worker1.exit()
 

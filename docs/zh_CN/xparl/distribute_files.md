@@ -4,7 +4,8 @@
 
 ### 例子
 
-文件目录结构如下，我们想分发policy文件夹中的py文件，我们可以在connect的时候传入想要分发的文件到`distributed_files`参数中，该参数支持正则表达式。
+文件目录结构如下，我们想分发policy文件夹中的py文件。
+我们可以在connect的时候传入想要分发的文件到`distributed_files`参数中，该参数支持正则表达式。
 
 ```
 .

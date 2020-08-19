@@ -138,10 +138,7 @@ class TestLogServer(unittest.TestCase):
         else:
             FNULL = open(os.devnull, 'w')
         monitor_proc = subprocess.Popen(
-            command,
-            stdout=FNULL,
-            stderr=subprocess.STDOUT,
-        )
+            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
 
         # Start worker
         cluster_addr = 'localhost:{}'.format(master_port)

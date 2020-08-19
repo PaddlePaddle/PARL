@@ -17,5 +17,5 @@
 ```
 
 ```python
-parl.connect("localhost:8004", distributed_files=['./policy/*.py'])
+parl.connect("localhost:8004", distributed_files=['./policy/*.py', './policy/*.ini'])
 ```

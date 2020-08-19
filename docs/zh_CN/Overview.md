@@ -77,6 +77,7 @@
             <li><a href="xparl/tutorial.md">使用教程</a></li>
             <li><a href="xparl/example.md">加速案例</a></li>
             <li><a href="xparl/debug.md">如何debug</a></li>
+            <li><a href="xparl/distribute_files.md">分发本地文件</a></li>
             </ul>
       </td>
     </tr>

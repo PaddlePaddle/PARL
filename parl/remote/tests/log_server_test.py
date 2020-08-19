@@ -24,6 +24,7 @@ import time
 import unittest
 
 import requests
+requests.adapters.DEFAULT_RETRIES = 5
 
 import parl
 from parl.remote.client import disconnect, get_global_client
@@ -125,10 +126,9 @@ class TestLogServer(unittest.TestCase):
         th.start()
         time.sleep(1)
         # start the cluster monitor
-        monitor_file = __file__.replace(
-            os.path.join('tests', 'log_server_test.pyc'), 'monitor.py')
-        monitor_file = monitor_file.replace(
-            os.path.join('tests', 'log_server_test.py'), 'monitor.py')
+        monitor_file = __file__.replace('log_server_test.pyc', '../monitor.py')
+        monitor_file = monitor_file.replace('log_server_test.py',
+                                            '../monitor.py')
         command = [
             sys.executable, monitor_file, "--monitor_port",
             str(monitor_port), "--address", "localhost:" + str(master_port)
@@ -138,10 +138,7 @@ class TestLogServer(unittest.TestCase):
         else:
             FNULL = open(os.devnull, 'w')
         monitor_proc = subprocess.Popen(
-            command,
-            stdout=FNULL,
-            stderr=subprocess.STDOUT,
-        )
+            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
 
         # Start worker
         cluster_addr = 'localhost:{}'.format(master_port)

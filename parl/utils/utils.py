@@ -20,7 +20,7 @@ import numpy as np
 __all__ = [
     'has_func', 'to_str', 'to_byte', 'is_PY2', 'is_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
-    'get_fluid_version'
+    'get_fluid_version', 'isnotebook'
 ]
 
 
@@ -101,3 +101,19 @@ def kill_process(regex_pattern):
         command = "ps aux | grep {} | awk '{{print $2}}' | xargs kill -9".format(
             regex_pattern)
         subprocess.call([command], shell=True)
+
+
+def isnotebook():
+    """check if the code is excuted in the IPython notebook
+    Reference: https://stackoverflow.com/a/39662359
+    """
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True  # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False  # Probably standard Python interpreter

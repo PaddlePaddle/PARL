@@ -19,6 +19,7 @@ import time
 import zmq
 import numpy as np
 import inspect
+import sys
 
 from parl.utils import get_ip_address, logger, to_str, to_byte
 from parl.utils.communication import loads_argument, loads_return,\
@@ -27,6 +28,7 @@ from parl.remote import remote_constants
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError
 from parl.remote.client import get_global_client
+from parl.remote.utils import locate_remote_file
 
 
 def remote_class(*args, **kwargs):
@@ -93,7 +95,7 @@ def remote_class(*args, **kwargs):
                     class.
                 """
                 self.GLOBAL_CLIENT = get_global_client()
-
+                self.remote_attribute_keys_set = set()
                 self.ctx = self.GLOBAL_CLIENT.ctx
 
                 # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
@@ -120,21 +122,34 @@ def remote_class(*args, **kwargs):
                 self.job_shutdown = False
 
                 self.send_file(self.job_socket)
-                file_name = inspect.getfile(cls)[:-3]
+                module_path = inspect.getfile(cls)
+                if module_path.endswith('pyc'):
+                    module_path = module_path[:-4]
+                elif module_path.endswith('py'):
+                    module_path = module_path[:-3]
+                else:
+                    raise FileNotFoundError(
+                        "cannot not find the module:{}".format(module_path))
+                res = inspect.getfile(cls)
+                file_path = locate_remote_file(module_path)
                 cls_source = inspect.getsourcelines(cls)
                 end_of_file = cls_source[1] + len(cls_source[0])
                 class_name = cls.__name__
                 self.job_socket.send_multipart([
                     remote_constants.INIT_OBJECT_TAG,
-                    cloudpickle.dumps([file_name, class_name, end_of_file]),
+                    cloudpickle.dumps([file_path, class_name, end_of_file]),
                     cloudpickle.dumps([args, kwargs]),
                 ])
                 message = self.job_socket.recv_multipart()
                 tag = message[0]
-                if tag == remote_constants.EXCEPTION_TAG:
+                if tag == remote_constants.NORMAL_TAG:
+                    self.remote_attribute_keys_set = loads_return(message[1])
+                elif tag == remote_constants.EXCEPTION_TAG:
                     traceback_str = to_str(message[1])
                     self.job_shutdown = True
                     raise RemoteError('__init__', traceback_str)
+                else:
+                    pass
 
             def __del__(self):
                 """Delete the remote class object and release remote resources."""
@@ -179,25 +194,55 @@ def remote_class(*args, **kwargs):
                     cnt -= 1
                 return None
 
-            def __getattr__(self, attr):
+            def set_remote_attr(self, attr, value):
+                self.internal_lock.acquire()
+                self.job_socket.send_multipart([
+                    remote_constants.SET_ATTRIBUTE_TAG,
+                    to_byte(attr),
+                    dumps_return(value)
+                ])
+                message = self.job_socket.recv_multipart()
+                tag = message[0]
+                if tag == remote_constants.NORMAL_TAG:
+                    self.remote_attribute_keys_set = loads_return(message[1])
+                    self.internal_lock.release()
+                else:
+                    self.job_shutdown = True
+                    raise NotImplementedError()
+                return
+
+            def get_remote_attr(self, attr):
                 """Call the function of the unwrapped class."""
+                #check if attr is a attribute or a function
+                is_attribute = attr in self.remote_attribute_keys_set
 
                 def wrapper(*args, **kwargs):
-                    if self.job_shutdown:
-                        raise RemoteError(
-                            attr, "This actor losts connection with the job.")
                     self.internal_lock.acquire()
-                    data = dumps_argument(*args, **kwargs)
-
-                    self.job_socket.send_multipart(
-                        [remote_constants.CALL_TAG,
-                         to_byte(attr), data])
+                    if is_attribute:
+                        self.job_socket.send_multipart([
+                            remote_constants.GET_ATTRIBUTE_TAG,
+                            to_byte(attr)
+                        ])
+                    else:
+                        if self.job_shutdown:
+                            raise RemoteError(
+                                attr,
+                                "This actor losts connection with the job.")
+                        data = dumps_argument(*args, **kwargs)
+                        self.job_socket.send_multipart(
+                            [remote_constants.CALL_TAG,
+                             to_byte(attr), data])
 
                     message = self.job_socket.recv_multipart()
                     tag = message[0]
 
                     if tag == remote_constants.NORMAL_TAG:
                         ret = loads_return(message[1])
+                        if not is_attribute:
+                            self.remote_attribute_keys_set = loads_return(
+                                message[2])
+                        self.internal_lock.release()
+                        return ret
 
                     elif tag == remote_constants.EXCEPTION_TAG:
                         error_str = to_str(message[1])
@@ -223,13 +268,38 @@ def remote_class(*args, **kwargs):
                         self.job_shutdown = True
                         raise NotImplementedError()
 
-                    self.internal_lock.release()
-                    return ret
+                return wrapper() if is_attribute else wrapper
 
-                return wrapper
+        def proxy_wrapper_func(remote_wrapper):
+            '''
+            The 'proxy_wrapper_func' is defined on the top of class 'RemoteWrapper'
+            in order to set and get attributes of 'remoted_wrapper' and the corresponding 
+            remote models individually. 
+
+            With 'proxy_wrapper_func', it is allowed to define a attribute (or method) of
+            the same name in 'RemoteWrapper' and remote models.
+            '''
+
+            class ProxyWrapper(object):
+                def __init__(self, *args, **kwargs):
+                    self.xparl_remote_wrapper_obj = remote_wrapper(
+                        *args, **kwargs)
+
+                def __getattr__(self, attr):
+                    return self.xparl_remote_wrapper_obj.get_remote_attr(attr)
+
+                def __setattr__(self, attr, value):
+                    if attr == 'xparl_remote_wrapper_obj':
+                        super(ProxyWrapper, self).__setattr__(attr, value)
+                    else:
+                        self.xparl_remote_wrapper_obj.set_remote_attr(
+                            attr, value)
+
+            return ProxyWrapper
 
         RemoteWrapper._original = cls
-        return RemoteWrapper
+        proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
+        return proxy_wrapper
 
     max_memory = kwargs.get('max_memory')
     if len(args) == 1 and callable(args[0]):

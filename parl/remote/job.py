@@ -311,8 +311,6 @@ class Job(object):
             try:
                 file_name, class_name, end_of_file = cloudpickle.loads(
                     message[1])
-                #/home/nlp-ol/Firework/baidu/nlp/evokit/python_api/es_agent -> es_agent
-                file_name = file_name.split(os.sep)[-1]
                 cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
                 logfile_path = os.path.join(self.log_dir, 'stdout.log')
@@ -327,7 +325,10 @@ class Job(object):
                     to_byte(error_str + "\ntraceback:\n" + traceback_str)
                 ])
                 return None
-            reply_socket.send_multipart([remote_constants.NORMAL_TAG])
+            reply_socket.send_multipart([
+                remote_constants.NORMAL_TAG,
+                dumps_return(set(obj.__dict__.keys()))
+            ])
         else:
             logger.error("Message from job {}".format(message))
             reply_socket.send_multipart([
@@ -397,24 +398,49 @@ class Job(object):
 
         while True:
             message = reply_socket.recv_multipart()
-
             tag = message[0]
-
-            if tag == remote_constants.CALL_TAG:
+            if tag in [
+                    remote_constants.CALL_TAG,
+                    remote_constants.GET_ATTRIBUTE_TAG,
+                    remote_constants.SET_ATTRIBUTE_TAG,
+            ]:
                 try:
-                    function_name = to_str(message[1])
-                    data = message[2]
-                    args, kwargs = loads_argument(data)
+                    if tag == remote_constants.CALL_TAG:
+                        function_name = to_str(message[1])
+                        data = message[2]
+                        args, kwargs = loads_argument(data)
 
-                    # Redirect stdout to stdout.log temporarily
-                    logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                    with redirect_stdout_to_file(logfile_path):
-                        ret = getattr(obj, function_name)(*args, **kwargs)
+                        # Redirect stdout to stdout.log temporarily
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            ret = getattr(obj, function_name)(*args, **kwargs)
 
-                    ret = dumps_return(ret)
+                        ret = dumps_return(ret)
+                        reply_socket.send_multipart([
+                            remote_constants.NORMAL_TAG, ret,
+                            dumps_return(set(obj.__dict__.keys()))
+                        ])
 
-                    reply_socket.send_multipart(
-                        [remote_constants.NORMAL_TAG, ret])
+                    elif tag == remote_constants.GET_ATTRIBUTE_TAG:
+                        attribute_name = to_str(message[1])
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            ret = getattr(obj, attribute_name)
+                        ret = dumps_return(ret)
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG, ret])
+                    elif tag == remote_constants.SET_ATTRIBUTE_TAG:
+                        attribute_name = to_str(message[1])
+                        attribute_value = loads_return(message[2])
+                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
+                        with redirect_stdout_to_file(logfile_path):
+                            setattr(obj, attribute_name, attribute_value)
+                        reply_socket.send_multipart([
+                            remote_constants.NORMAL_TAG,
+                            dumps_return(set(obj.__dict__.keys()))
+                        ])
+                    else:
+                        pass
 
                 except Exception as e:
                     # reset the job

@@ -19,9 +19,11 @@ import socket
 import sys
 import threading
 import zmq
-from parl.utils import to_str, to_byte, get_ip_address, logger
+import parl
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote import remote_constants
 import time
+import glob
 
 
 class Client(object):
@@ -50,7 +52,6 @@ class Client(object):
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
                                       file for initialization) .
-
         """
         self.master_address = master_address
         self.process_id = process_id
@@ -66,6 +67,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
+        self.check_version()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -85,44 +87,58 @@ class Client(object):
         Args:
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
-                                      file for initialization) .
-
+                                      file for initialization) . RegExp of file
+                                      names is supported. 
+                                      e.g. 
+                                          distributed_files = ['./*.npy', './test*']
+                                                                             
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
+
+        parsed_distributed_files = set()
+        for distributed_file in distributed_files:
+            parsed_list = glob.glob(distributed_file)
+            if not parsed_list:
+                raise ValueError(
+                    "no local file is matched with '{}', please check your input"
+                    .format(distributed_file))
+            # exclude the directiories
+            for pathname in parsed_list:
+                if not os.path.isdir(pathname):
+                    parsed_distributed_files.add(pathname)
+
         pyfiles = dict()
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
 
-        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
-
-        try:
-            for file in code_files:
-                assert os.path.exists(file)
-                with open(file, 'rb') as code_file:
-                    code = code_file.read()
-                    pyfiles['python_files'][file] = code
-
-            for file in distributed_files:
-                assert os.path.exists(file)
-                assert not os.path.isabs(
-                    file
-                ), "[XPARL] Please do not distribute a file with absolute path."
-                with open(file, 'rb') as f:
-                    content = f.read()
-                    pyfiles['other_files'][file] = content
-            # append entry file to code list
+        if isnotebook():
+            main_folder = './'
+        else:
             main_file = sys.argv[0]
-            with open(main_file, 'rb') as code_file:
+            main_folder = './'
+            sep = os.sep
+            if sep in main_file:
+                main_folder = sep.join(main_file.split(sep)[:-1])
+        code_files = filter(lambda x: x.endswith('.py'),
+                            os.listdir(main_folder))
+
+        for file_name in code_files:
+            file_path = os.path.join(main_folder, file_name)
+            assert os.path.exists(file_path)
+            with open(file_path, 'rb') as code_file:
                 code = code_file.read()
-                # parl/remote/remote_decorator.py -> remote_decorator.py
-                file_name = main_file.split(os.sep)[-1]
                 pyfiles['python_files'][file_name] = code
-        except AssertionError as e:
-            raise Exception(
-                'Failed to create the client, the file {} does not exist.'.
-                format(file))
+
+        for file_name in parsed_distributed_files:
+            assert os.path.exists(file_name)
+            assert not os.path.isabs(
+                file_name
+            ), "[XPARL] Please do not distribute a file with absolute path."
+            with open(file_name, 'rb') as f:
+                content = f.read()
+                pyfiles['other_files'][file_name] = content
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):
@@ -164,6 +180,24 @@ class Client(object):
             raise Exception("Client can not connect to the master, please "
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
+
+    def check_version(self):
+        '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
+        self.submit_job_socket.send_multipart(
+            [remote_constants.CHECK_VERSION_TAG])
+        message = self.submit_job_socket.recv_multipart()
+        tag = message[0]
+        if tag == remote_constants.NORMAL_TAG:
+            client_parl_version = parl.__version__
+            client_python_version = str(sys.version_info.major)
+            assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}'. However, 
+                'parl={}, python={}'is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]),
+                        client_parl_version, client_python_version
+                    )
+        else:
+            raise NotImplementedError
 
     def _reply_heartbeat(self):
         """Reply heartbeat signals to the master node."""

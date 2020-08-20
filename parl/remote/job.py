@@ -16,8 +16,8 @@
 import compatible_trick
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['XPARL'] = 'True'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import argparse
 import cloudpickle
 import pickle
@@ -66,21 +66,19 @@ class Job(object):
         self.log_server_address = log_server_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
-
-        self.run_job_process = Process(
-            target=self.run, args=(job_address_sender, job_id_sender))
-        self.run_job_process.start()
         """
         NOTE:
             In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.
         """
         self.lock = threading.Lock()
-        self._create_sockets()
+        th = threading.Thread(target=self._create_sockets)
+        th.setDaemon(True)
+        th.start()
 
         process = psutil.Process(self.pid)
         self.init_memory = float(process.memory_info()[0]) / (1024**2)
 
-        self.run_job_process.join()
+        self.run(job_address_sender, job_id_sender)
 
         with self.lock:
             self.kill_job_socket.send_multipart(

@@ -114,7 +114,7 @@ def locate_remote_file(module_path):
         module_path: Absolute path of the module.
 
     Example:
-        module_path: /home/user/dir/subdir/my_module
+        module_path: /home/user/dir/subdir/my_module (or) ./dir/main
         entry_file: /home/user/dir/main.py
         --------> relative_path: subdir/my_module
   """
@@ -129,6 +129,9 @@ def locate_remote_file(module_path):
             if os.path.isfile(to_check_path):
                 entry_path = path
                 break
+    # transfer the relative path to the absolute path
+    if not os.path.isabs(module_path):
+        module_path = os.path.abspath(module_path)
     if entry_path is None or \
         (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
         raise FileNotFoundError("cannot locate the remote file")

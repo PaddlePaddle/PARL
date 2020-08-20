@@ -28,8 +28,8 @@ import os
 
 @parl.remote_class
 class Actor(object):
-    def __init__(self):
-        if parl.utils.is_gpu_available():
+    def __init__(self, cuda=False):
+        if cuda:
             place = fluid.CUDAPlace(0)
         else:
             place = fluid.CPUPlace()
@@ -51,7 +51,10 @@ class TestCluster(unittest.TestCase):
 
         parl.connect('localhost:8241')
 
-        actor = Actor()
+        if parl.utils.is_gpu_available():
+            actor = Actor(cuda=True)
+        else:
+            actor = Actor(cuda=False)
 
         del actor
         master.exit()

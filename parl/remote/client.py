@@ -42,7 +42,6 @@ class Client(object):
         start_time (time): A timestamp to record the start time of the program.
 
     """
-
     def __init__(self, master_address, process_id, distributed_files=[]):
         """
         Args:
@@ -117,7 +116,7 @@ class Client(object):
                                 parsed_distributed_files.add(
                                     os.path.join(root, sub_file))
                         # dirtribute empty subfolders
-                        elif not dirs:
+                        elif len(dirs) == 0:
                             pyfiles['empty_subfolders'].add(root)
                 else:
                     parsed_distributed_files.add(pathname)
@@ -224,8 +223,8 @@ class Client(object):
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
-                elapsed_time = datetime.timedelta(
-                    seconds=int(time.time() - self.start_time))
+                elapsed_time = datetime.timedelta(seconds=int(time.time() -
+                                                              self.start_time))
                 socket.send_multipart([
                     remote_constants.HEARTBEAT_TAG,
                     to_byte(self.executable_path),
@@ -273,8 +272,8 @@ class Client(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
         # a thread for sending heartbeat signals to job
-        thread = threading.Thread(
-            target=self._create_job_monitor, args=(job_heartbeat_socket, ))
+        thread = threading.Thread(target=self._create_job_monitor,
+                                  args=(job_heartbeat_socket, ))
         thread.setDaemon(True)
         thread.start()
         return True

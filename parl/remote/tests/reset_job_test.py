@@ -23,7 +23,6 @@ import time
 import threading
 import subprocess
 import sys
-import timeout_decorator
 
 
 @parl.remote_class
@@ -44,9 +43,6 @@ class Actor(object):
     def set_arg2(self, value):
         self.arg2 = value
 
-    def get_unable_serialize_object(self):
-        return UnableSerializeObject()
-
     def add_one(self, value):
         value += 1
         return value
@@ -63,7 +59,6 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    @timeout_decorator.timeout(seconds=600)
     def test_acor_exit_exceptionally(self):
         port = 1337
         master = Master(port)
@@ -74,7 +69,7 @@ class TestJob(unittest.TestCase):
 
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
-        proc = subprocess.Popen(command)
+        proc = subprocess.Popen(command, close_fds=True)
         for _ in range(6):
             if master.cpu_num == 0:
                 break

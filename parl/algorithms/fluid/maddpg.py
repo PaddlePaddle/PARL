@@ -27,10 +27,11 @@ from parl.core.fluid.policy_distribution import SoftMultiCategoricalDistribution
 
 
 def SoftPDistribution(logits, act_space):
-    """input:
+    """Args:
             logits: the output of policy model
             act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
-        output：
+
+        Return:
             instance of SoftCategoricalDistribution or SoftMultiCategoricalDistribution
     """
     # is instance of gym.spaces.Discrete

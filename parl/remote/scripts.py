@@ -18,15 +18,18 @@ import multiprocessing
 import os
 import random
 import re
-import socket
+import requests
 import subprocess
 import sys
 import time
 import threading
+import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import get_ip_address, to_str
+from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address,
+                        get_port_from_range, is_port_available, kill_process,
+                        to_str)
 from parl.remote.remote_constants import STATUS_TAG
 
 # A flag to mark if parl is started from a command line
@@ -34,31 +37,16 @@ os.environ['XPARL'] = 'True'
 
 # Solve `Click will abort further execution because Python 3 was configured
 # to use ASCII as encoding for the environment` error.
-locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+
+if not _IS_WINDOWS:
+    try:
+        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
+    except:
+        pass
 
 #TODO: this line will cause error in python2/macOS
 if sys.version_info.major == 3:
     warnings.simplefilter("ignore", ResourceWarning)
-
-
-def get_free_tcp_port():
-    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp.bind(('', 0))
-    addr, port = tcp.getsockname()
-    tcp.close()
-    return str(port)
-
-
-def is_port_available(port):
-    """ Check if a port is used.
-
-    True if the port is available for connection.
-    """
-    port = int(port)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    available = sock.connect_ex(('localhost', port))
-    sock.close()
-    return available
 
 
 def is_master_started(address):
@@ -75,6 +63,35 @@ def is_master_started(address):
     except zmq.error.Again as e:
         socket.close(0)
         return False
+
+
+def parse_port_range(log_server_port_range):
+    try:
+        re.match(r'\d*[-]\d*', log_server_port_range).span()
+    except:
+        raise Exception(
+            "The input log_server_port_range should be `start-end` format.")
+    start, end = map(int, log_server_port_range.split('-'))
+    if start > end:
+        raise Exception(
+            "Start port number must be smaller than the end port number.")
+
+    return start, end
+
+
+def is_log_server_started(ip_address, port):
+    started = False
+    for _ in range(3):
+        try:
+            r = requests.get("http://{}:{}/get-log".format(ip_address, port))
+            if r.status_code == 400:
+                started = True
+                break
+        except:
+            pass
+        time.sleep(3)
+        click.echo("Checking status of log_server...")
+    return started
 
 
 @click.group()
@@ -95,7 +112,15 @@ def cli():
     "cpus of this machine.")
 @click.option(
     "--monitor_port", help="The port to start a cluster monitor.", type=str)
-def start_master(port, cpu_num, monitor_port, debug):
+@click.option(
+    "--log_server_port_range",
+    help='''
+    Port range (start-end) of the log server on the worker. Default: 8000-9000. 
+    The worker will pick a random avaliable port in [start, end] for the log server.
+    ''',
+    default="8000-9000",
+    type=str)
+def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     if debug:
         os.environ['DEBUG'] = 'True'
 
@@ -112,19 +137,33 @@ def start_master(port, cpu_num, monitor_port, debug):
         cpu_num) if cpu_num is not None else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
+    monitor_file = __file__.replace('scripts.pyc', 'monitor.py')
+    monitor_file = monitor_file.replace('scripts.py', 'monitor.py')
+
     monitor_port = monitor_port if monitor_port else get_free_tcp_port()
+    start, end = parse_port_range(log_server_port_range)
+    log_server_port = get_port_from_range(start, end)
+    while log_server_port == monitor_port or log_server_port == port:
+        log_server_port = get_port_from_range(start, end)
 
     master_command = [
-        sys.executable, start_file, "--name", "master", "--port", port
+        sys.executable,
+        start_file,
+        "--name",
+        "master",
+        "--port",
+        port,
+        "--monitor_port",
+        monitor_port,
     ]
     worker_command = [
         sys.executable, start_file, "--name", "worker", "--address",
         "localhost:" + str(port), "--cpu_num",
-        str(cpu_num)
+        str(cpu_num), '--log_server_port',
+        str(log_server_port)
     ]
     monitor_command = [
-        sys.executable, '{}/monitor.py'.format(__file__[:__file__.rfind('/')]),
-        "--monitor_port",
+        sys.executable, monitor_file, "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
 
@@ -132,12 +171,28 @@ def start_master(port, cpu_num, monitor_port, debug):
 
     # Redirect the output to DEVNULL to solve the warning log.
     _ = subprocess.Popen(
-        master_command, stdout=FNULL, stderr=subprocess.STDOUT)
+        master_command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+
     if cpu_num > 0:
+        # Sleep 1s for master ready
+        time.sleep(1)
         _ = subprocess.Popen(
-            worker_command, stdout=FNULL, stderr=subprocess.STDOUT)
-    _ = subprocess.Popen(
-        monitor_command, stdout=FNULL, stderr=subprocess.STDOUT)
+            worker_command,
+            stdout=FNULL,
+            stderr=subprocess.STDOUT,
+            close_fds=True)
+
+    if _IS_WINDOWS:
+        # TODO(@zenghsh3) redirecting stdout of monitor subprocess to FNULL will cause occasional failure
+        tmp_file = tempfile.TemporaryFile()
+        _ = subprocess.Popen(monitor_command, stdout=tmp_file, close_fds=True)
+        tmp_file.close()
+    else:
+        _ = subprocess.Popen(
+            monitor_command,
+            stdout=FNULL,
+            stderr=subprocess.STDOUT,
+            close_fds=True)
     FNULL.close()
 
     if cpu_num > 0:
@@ -158,16 +213,20 @@ def start_master(port, cpu_num, monitor_port, debug):
     click.echo(monitor_info)
 
     # check if monitor is started
-    cmd = r'ps -ef | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
-        monitor_port, port)
-
     monitor_is_started = False
+    if _IS_WINDOWS:
+        cmd = r'''wmic process where "commandline like '%remote\\monitor.py --monitor_port {} --address localhost:{}%'" get commandline /format:list | findstr /V wmic | findstr CommandLine='''.format(
+            monitor_port, port)
+    else:
+        cmd = r'ps -ef | grep -v grep | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
+            monitor_port, port)
     for i in range(3):
-        check_monitor_is_started = os.popen(cmd).read().strip().split('\n')
-        if len(check_monitor_is_started) == 2:
+        check_monitor_is_started = os.popen(cmd).read()
+        if len(check_monitor_is_started) > 0:
             monitor_is_started = True
             break
         time.sleep(3)
+
     master_ip = get_ip_address()
     if monitor_is_started:
         start_info = """
@@ -194,6 +253,9 @@ def start_master(port, cpu_num, monitor_port, debug):
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
+    if not is_log_server_started(master_ip, log_server_port):
+        click.echo("# Fail to start the log server.")
+
 
 @click.command("connect", short_help="Start a worker node.")
 @click.option(
@@ -203,36 +265,53 @@ def start_master(port, cpu_num, monitor_port, debug):
     type=int,
     help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
-def start_worker(address, cpu_num):
+@click.option(
+    "--log_server_port_range",
+    help='''
+    Port range (start-end) of the log server on the worker. Default: 8000-9000. 
+    The worker will pick a random avaliable port in [start, end] for the log server.
+    ''',
+    default="8000-9000",
+    type=str)
+def start_worker(address, cpu_num, log_server_port_range):
+    start, end = parse_port_range(log_server_port_range)
+    log_server_port = get_port_from_range(start, end)
+
     if not is_master_started(address):
         raise Exception("Worker can not connect to the master node, " +
                         "please check if the input address {} ".format(
                             address) + "is correct.")
     cpu_num = str(cpu_num) if cpu_num else ''
+    start_file = __file__.replace('scripts.pyc', 'start.py')
+    start_file = start_file.replace('scripts.py', 'start.py')
+
     command = [
-        sys.executable, "{}/start.py".format(__file__[:-11]), "--name",
-        "worker", "--address", address, "--cpu_num",
-        str(cpu_num)
+        sys.executable, start_file, "--name", "worker", "--address", address,
+        "--cpu_num",
+        str(cpu_num), "--log_server_port",
+        str(log_server_port)
     ]
-    p = subprocess.Popen(command)
+    p = subprocess.Popen(command, close_fds=True)
+
+    if not is_log_server_started(get_ip_address(), log_server_port):
+        click.echo("# Fail to start the log server.")
 
 
 @click.command("stop", help="Exit the cluster.")
 def stop():
-    command = (
-        "ps aux | grep remote/start.py | awk '{print $2}' | xargs kill -9")
-    subprocess.call([command], shell=True)
-    command = (
-        "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9")
-    subprocess.call([command], shell=True)
-    command = (
-        "ps aux | grep remote/monitor.py | awk '{print $2}' | xargs kill -9")
-    subprocess.call([command], shell=True)
+    kill_process('remote/start.py')
+    kill_process('remote/job.py')
+    kill_process('remote/monitor.py')
+    kill_process('remote/log_server.py')
 
 
 @click.command("status")
 def status():
-    cmd = r'ps -ef | grep remote/start.py\ --name\ worker\ --address'
+    if _IS_WINDOWS:
+        cmd = r'''wmic process where "commandline like '%remote\\start.py --name worker --address%'" get commandline /format:list | findstr /V wmic | findstr CommandLine='''
+    else:
+        cmd = r'ps -ef | grep remote/start.py\ --name\ worker\ --address'
+
     content = os.popen(cmd).read().strip()
     pattern = re.compile('--address (.*?) --cpu')
     clusters = set(pattern.findall(content))
@@ -242,7 +321,11 @@ def status():
         ctx = zmq.Context()
         status = []
         for cluster in clusters:
-            cmd = r'ps -ef | grep address\ {}'.format(cluster)
+            if _IS_WINDOWS:
+                cmd = r'''wmic process where "commandline like '%address {}%'" get commandline /format:list | findstr /V wmic | findstr CommandLine='''.format(
+                    cluster)
+            else:
+                cmd = r'ps -ef | grep address\ {}'.format(cluster)
             content = os.popen(cmd).read()
             pattern = re.compile('--monitor_port (.*?)\n', re.S)
             monitors = pattern.findall(content)

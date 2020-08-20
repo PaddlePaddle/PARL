@@ -28,7 +28,8 @@ class ClusterMonitor(object):
     def __init__(self):
         self.status = {
             'workers': defaultdict(dict),
-            'clients': defaultdict(dict)
+            'clients': defaultdict(dict),
+            'client_jobs': defaultdict(dict),
         }
         self.lock = threading.Lock()
 
@@ -46,6 +47,11 @@ class ClusterMonitor(object):
         worker_status['hostname'] = hostname
         self.lock.release()
 
+    def add_client_job(self, client_id, job_info):
+        self.lock.acquire()
+        self.status['client_jobs'][client_id].update(job_info)
+        self.lock.release()
+
     def update_client_status(self, client_status, client_address,
                              client_hostname):
         """Update client status with message send from client heartbeat.
@@ -61,7 +67,8 @@ class ClusterMonitor(object):
             'client_address': client_hostname,
             'file_path': to_str(client_status[1]),
             'actor_num': int(to_str(client_status[2])),
-            'time': to_str(client_status[3])
+            'time': to_str(client_status[3]),
+            'log_monitor_url': to_str(client_status[4]),
         }
         self.lock.release()
 
@@ -96,14 +103,15 @@ class ClusterMonitor(object):
         self.status['workers'].pop(worker_address)
         self.lock.release()
 
-    def drop_cluster_status(self, client_address):
-        """Drop cluster status when it exits.
+    def drop_client_status(self, client_address):
+        """Drop client status when it exits.
 
         Args:
-            cluster_address (str): IP address of the exited client.
+            client_address (str): IP address of the exited client.
         """
         self.lock.acquire()
-        self.status['clients'].pop(client_address)
+        if client_address in self.status['clients']:
+            self.status['clients'].pop(client_address)
         self.lock.release()
 
     def get_status_info(self):

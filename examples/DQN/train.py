@@ -12,160 +12,100 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import gym
-import paddle.fluid as fluid
 import numpy as np
-import os
 import parl
-from atari_agent import AtariAgent
-from atari_model import AtariModel
-from datetime import datetime
-from replay_memory import ReplayMemory, Experience
-from parl.utils import tensorboard, logger
-from tqdm import tqdm
-from utils import get_player
+from parl.utils import logger
 
-MEMORY_SIZE = 1e6
-MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
-IMAGE_SIZE = (84, 84)
-CONTEXT_LEN = 4
-FRAME_SKIP = 4
-UPDATE_FREQ = 4
-GAMMA = 0.99
-LEARNING_RATE = 3e-4
+from cartpole_model import CartpoleModel
+from cartpole_agent import CartpoleAgent
+
+from replay_memory import ReplayMemory
+
+LEARN_FREQ = 5  # update parameters every 5 steps
+MEMORY_SIZE = 20000  # replay memory size
+MEMORY_WARMUP_SIZE = 200  # store some experiences in the replay memory in advance
+BATCH_SIZE = 32
+LEARNING_RATE = 0.0005
+GAMMA = 0.99  # discount factor of reward
 
 
-def run_train_episode(env, agent, rpm):
+def run_episode(agent, env, rpm):
     total_reward = 0
-    all_cost = []
-    state = env.reset()
-    steps = 0
+    obs = env.reset()
+    step = 0
     while True:
-        steps += 1
-        context = rpm.recent_state()
-        context.append(state)
-        context = np.stack(context, axis=0)
-        action = agent.sample(context)
-        next_state, reward, isOver, _ = env.step(action)
-        rpm.append(Experience(state, action, reward, isOver))
-        # start training
-        if rpm.size() > MEMORY_WARMUP_SIZE:
-            if steps % UPDATE_FREQ == 0:
-                batch_all_state, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
-                    args.batch_size)
-                batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
-                batch_next_state = batch_all_state[:, 1:, :, :]
-                cost = agent.learn(batch_state, batch_action, batch_reward,
-                                   batch_next_state, batch_isOver)
-                all_cost.append(float(cost))
-        total_reward += reward
-        state = next_state
-        if isOver:
-            break
-    if all_cost:
-        logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
-            total_reward, np.mean(all_cost)))
-    return total_reward, steps, np.mean(all_cost)
+        step += 1
+        action = agent.sample(obs)
+        next_obs, reward, isOver, _ = env.step(action)
+        rpm.append((obs, action, reward, next_obs, isOver))
 
+        # train model
+        if (len(rpm) > MEMORY_WARMUP_SIZE) and (step % LEARN_FREQ == 0):
+            (batch_obs, batch_action, batch_reward, batch_next_obs,
+             batch_isOver) = rpm.sample(BATCH_SIZE)
+            train_loss = agent.learn(batch_obs, batch_action, batch_reward,
+                                     batch_next_obs, batch_isOver)
 
-def run_evaluate_episode(env, agent):
-    state = env.reset()
-    total_reward = 0
-    while True:
-        action = agent.predict(state)
-        state, reward, isOver, info = env.step(action)
         total_reward += reward
+        obs = next_obs
         if isOver:
             break
     return total_reward
 
 
+def evaluate(agent, env, render=False):
+    # test part, run 5 episodes and average
+    eval_reward = []
+    for i in range(5):
+        obs = env.reset()
+        episode_reward = 0
+        isOver = False
+        while not isOver:
+            action = agent.predict(obs)
+            if render:
+                env.render()
+            obs, reward, isOver, _ = env.step(action)
+            episode_reward += reward
+        eval_reward.append(episode_reward)
+    return np.mean(eval_reward)
+
+
 def main():
-    env = get_player(
-        args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
-    test_env = get_player(
-        args.rom,
-        image_size=IMAGE_SIZE,
-        frame_skip=FRAME_SKIP,
-        context_len=CONTEXT_LEN)
-    rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
-    act_dim = env.action_space.n
+    env = gym.make('CartPole-v0')
+    action_dim = env.action_space.n
+    obs_shape = env.observation_space.shape
 
-    model = AtariModel(act_dim, args.algo)
-    if args.algo == 'Double':
-        algorithm = parl.algorithms.DDQN(model, act_dim=act_dim, gamma=GAMMA)
-    elif args.algo in ['DQN', 'Dueling']:
-        algorithm = parl.algorithms.DQN(model, act_dim=act_dim, gamma=GAMMA)
-    agent = AtariAgent(
+    rpm = ReplayMemory(MEMORY_SIZE)
+
+    model = CartpoleModel(act_dim=action_dim)
+    algorithm = parl.algorithms.DQN(
+        model, act_dim=action_dim, gamma=GAMMA, lr=LEARNING_RATE)
+    agent = CartpoleAgent(
         algorithm,
-        act_dim=act_dim,
-        start_lr=LEARNING_RATE,
-        total_step=args.train_total_steps,
-        update_freq=UPDATE_FREQ)
+        obs_dim=obs_shape[0],
+        act_dim=action_dim,
+        e_greed=0.1,  # explore
+        e_greed_decrement=1e-6
+    )  # probability of exploring is decreasing during training
 
-    with tqdm(
-            total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
-        while rpm.size() < MEMORY_WARMUP_SIZE:
-            total_reward, steps, _ = run_train_episode(env, agent, rpm)
-            pbar.update(steps)
+    while len(rpm) < MEMORY_WARMUP_SIZE:  # warm up replay memory
+        run_episode(agent, env, rpm)
 
-    # train
-    test_flag = 0
-    pbar = tqdm(total=args.train_total_steps)
-    total_steps = 0
-    max_reward = None
-    while total_steps < args.train_total_steps:
-        # start epoch
-        total_reward, steps, loss = run_train_episode(env, agent, rpm)
-        total_steps += steps
-        pbar.set_description('[train]exploration:{}'.format(agent.exploration))
-        tensorboard.add_scalar('dqn/score', total_reward, total_steps)
-        tensorboard.add_scalar('dqn/loss', loss,
-                               total_steps)  # mean of total loss
-        tensorboard.add_scalar('dqn/exploration', agent.exploration,
-                               total_steps)
-        pbar.update(steps)
+    max_episode = 2000
 
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
-                test_flag += 1
-            pbar.write("testing")
-            eval_rewards = []
-            for _ in tqdm(range(3), desc='eval agent'):
-                eval_reward = run_evaluate_episode(test_env, agent)
-                eval_rewards.append(eval_reward)
-            logger.info(
-                "eval_agent done, (steps, eval_reward): ({}, {})".format(
-                    total_steps, np.mean(eval_rewards)))
-            eval_test = np.mean(eval_rewards)
-            tensorboard.add_scalar('dqn/eval', eval_test, total_steps)
+    # start train
+    episode = 0
+    while episode < max_episode:
+        # train part
+        for i in range(0, 50):
+            total_reward = run_episode(agent, env, rpm)
+            episode += 1
 
-    pbar.close()
+        eval_reward = evaluate(agent, env)
+        logger.info('episode:{}    test_reward:{}'.format(
+            episode, eval_reward))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--rom', help='path of the rom of the atari game', required=True)
-    parser.add_argument(
-        '--batch_size', type=int, default=64, help='batch size for training')
-    parser.add_argument(
-        '--algo',
-        default='DQN',
-        help=
-        'DQN/DDQN/Dueling, represent DQN, double DQN, and dueling DQN respectively',
-    )
-    parser.add_argument(
-        '--train_total_steps',
-        type=int,
-        default=int(1e7),
-        help='maximum environmental steps of games')
-    parser.add_argument(
-        '--test_every_steps',
-        type=int,
-        default=100000,
-        help='the step interval between two consecutive evaluations')
-
-    args = parser.parse_args()
     main()

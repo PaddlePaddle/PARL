@@ -55,6 +55,7 @@ class MujocoAgent(parl.Agent):
         act = self.fluid_executor.run(
             self.pred_program, feed={'obs': obs},
             fetch_list=[self.pred_act])[0]
+        act = np.squeeze(act)
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):

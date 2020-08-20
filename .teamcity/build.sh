@@ -69,7 +69,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j10
+    ctest --output-on-failure -j20 --verbose
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -90,7 +90,7 @@ function run_test_with_cpu() {
     =====================================================
 EOF
     if [ $# -eq 1 ];then
-      ctest --output-on-failure -j10
+      ctest --output-on-failure -j20 --verbose
     else
       ctest --output-on-failure 
     fi
@@ -145,7 +145,8 @@ function main() {
           ;;
         test)
           # test code compability in environments with various python versions
-          declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+          declare -a envs=("py27" "py36")
           for env in "${envs[@]}";do
               cd /work
               source ~/.bashrc
@@ -158,7 +159,7 @@ function main() {
               echo ========================================
               pip install .
               if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
-              then  
+              then
                 pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
@@ -169,6 +170,10 @@ function main() {
                 pip install -r .teamcity/requirements_torch.txt
                 run_test_with_cpu $env "DIS_TESTING_TORCH"
               fi
+              # clean env
+              export LC_ALL=C.UTF-8
+              export LANG=C.UTF-8
+              xparl stop
           done
           run_test_with_gpu
 

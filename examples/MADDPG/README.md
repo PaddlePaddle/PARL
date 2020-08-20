@@ -1,8 +1,7 @@
 ## Reproduce MADDPG with PARL
 Based on PARL, the MADDPG algorithm of deep reinforcement learning has been reproduced.
 
-+ paper: 
-[ Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://arxiv.org/abs/1706.02275)
+> Paper: MADDPG in [ Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://arxiv.org/abs/1706.02275)
 
 ### Multi-agent particle environment introduction
 A simple multi-agent particle world based on gym. Please see [here](https://github.com/openai/multiagent-particle-envs) to install and know more about the environment.
@@ -98,7 +97,7 @@ simple_world_comm<br>
 + [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + [multiagent-particle-envs](https://github.com/openai/multiagent-particle-envs)
-+ gym
++ gym==0.10.5
 
 ### Start Training:
 ```

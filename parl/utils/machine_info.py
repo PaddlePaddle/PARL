@@ -14,40 +14,40 @@
 
 import os
 import platform
+import random
+import socket
 import subprocess
-from parl.utils import logger
-from parl.utils import utils
+from parl.utils import logger, _HAS_FLUID, _IS_WINDOWS
 
-__all__ = ['get_gpu_count', 'get_ip_address', 'is_gpu_available']
+__all__ = [
+    'get_gpu_count', 'get_ip_address', 'is_gpu_available', 'get_free_tcp_port',
+    'is_port_available', 'get_port_from_range'
+]
 
 
 def get_ip_address():
     """
     get the IP address of the host.
     """
-    platform_sys = platform.system()
 
-    # Only support Linux and MacOS
-    if platform_sys != 'Linux' and platform_sys != 'Darwin':
-        logger.warning(
-            'get_ip_address only support Linux and MacOS, please set ip address manually.'
-        )
-        return None
-
-    local_ip = None
-    import socket
-    try:
-        # First way, tested in Ubuntu and MacOS
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        local_ip = s.getsockname()[0]
-        s.close()
-    except:
-        # Second way, tested in CentOS
+    # Windows
+    if _IS_WINDOWS:
+        local_ip = socket.gethostbyname(socket.gethostname())
+    else:
+        # Linux and MacOS
+        local_ip = None
         try:
-            local_ip = socket.gethostbyname(socket.gethostname())
+            # First way, tested in Ubuntu and MacOS
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
         except:
-            pass
+            # Second way, tested in CentOS
+            try:
+                local_ip = socket.gethostbyname(socket.gethostname())
+            except:
+                pass
 
     if local_ip == None or local_ip == '127.0.0.1' or local_ip == '127.0.1.1':
         logger.warning(
@@ -97,10 +97,40 @@ def is_gpu_available():
       True if a gpu device can be found.
     """
     ret = get_gpu_count() > 0
-    if utils._HAS_FLUID:
+    if _HAS_FLUID:
         from paddle import fluid
         if ret is True and not fluid.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
-                But PARL found that Paddle was not complied with CUDA, which may cause issues."
-                           )
+                But PARL found that Paddle was not complied with CUDA, which may cause issues. \
+                Thus PARL will not use GPU.")
+            return False
     return ret
+
+
+def get_free_tcp_port():
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.bind(('', 0))
+    addr, port = tcp.getsockname()
+    tcp.close()
+    return str(port)
+
+
+def is_port_available(port):
+    """ Check if a port is used.
+
+    True if the port is available for connection.
+    """
+    port = int(port)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    available = sock.connect_ex(('localhost', port))
+    sock.close()
+    return available
+
+
+def get_port_from_range(start, end):
+    while True:
+        port = random.randint(start, end)
+        if is_port_available(port):
+            break
+
+    return port

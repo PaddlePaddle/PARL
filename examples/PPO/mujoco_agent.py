@@ -31,7 +31,6 @@ class MujocoAgent(parl.Agent):
                  policy_learn_times=20,
                  value_learn_times=10,
                  value_batch_size=256):
-        self.alg = algorithm
         self.obs_dim = obs_dim
         self.act_dim = act_dim
         assert loss_type == 'CLIP' or loss_type == 'KLPEN'

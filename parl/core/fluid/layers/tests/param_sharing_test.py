@@ -45,7 +45,7 @@ class TestParamSharing(unittest.TestCase):
         dict_size = 100
         input_cx = np.random.uniform(0, 1, [batch_size, 100]).astype("float32")
         input_x = np.random.randint(
-            dict_size, size=(batch_size, 1)).astype("int")
+            dict_size, size=(batch_size, 1)).astype("int64")
         #################################
 
         main_program1 = fluid.Program()
@@ -59,7 +59,7 @@ class TestParamSharing(unittest.TestCase):
 
         main_program2 = fluid.Program()
         with fluid.program_guard(main_program2):
-            x_ = layers.data(name='x', shape=[1], dtype="int")
+            x_ = layers.data(name='x', shape=[1], dtype="int64")
             cx_ = layers.cast(
                 x=layers.one_hot(input=x_, depth=dict_size), dtype="float32")
             y1_ = net.fc1(input=cx_)

@@ -14,9 +14,15 @@
 
 
 class InitializedJob(object):
-    def __init__(self, job_address, worker_heartbeat_address,
-                 client_heartbeat_address, ping_heartbeat_address,
-                 worker_address, pid):
+    def __init__(self,
+                 job_address,
+                 worker_heartbeat_address,
+                 client_heartbeat_address,
+                 ping_heartbeat_address,
+                 worker_address,
+                 pid,
+                 job_id=None,
+                 log_server_address=None):
         """
     Args:
       job_address(str): Job address to which the new task connect.
@@ -35,6 +41,8 @@ class InitializedJob(object):
         self.worker_address = worker_address
         self.pid = pid
         self.is_alive = True
+        self.job_id = job_id
+        self.log_server_address = log_server_address
 
 
 class InitializedWorker(object):

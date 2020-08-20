@@ -34,8 +34,7 @@ class ReplayMemory(object):
         self._curr_pos = 0
 
     def sample_batch(self, batch_size):
-        batch_idx = np.random.randint(
-            self._curr_size - 300 - 1, size=batch_size)
+        batch_idx = np.random.randint(self._curr_size, size=batch_size)
 
         obs = self.obs[batch_idx]
         reward = self.reward[batch_idx]
@@ -45,8 +44,7 @@ class ReplayMemory(object):
         return obs, action, reward, next_obs, terminal
 
     def make_index(self, batch_size):
-        batch_idx = np.random.randint(
-            self._curr_size - 300 - 1, size=batch_size)
+        batch_idx = np.random.randint(self._curr_size, size=batch_size)
         return batch_idx
 
     def sample_batch_by_index(self, batch_idx):

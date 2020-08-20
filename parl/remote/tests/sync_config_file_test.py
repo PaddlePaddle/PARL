@@ -17,12 +17,10 @@ import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-
+import os
 import time
 import threading
-
 import sys
-
 import numpy as np
 import json
 
@@ -65,7 +63,8 @@ class TestConfigfile(unittest.TestCase):
         parl.connect('localhost:1335', ['random.npy', 'config.json'])
         actor = Actor('random.npy', 'config.json')
         time.sleep(5)
-
+        os.remove('./random.npy')
+        os.remove('./config.json')
         remote_sum = actor.random_sum()
         self.assertEqual(remote_sum, random_sum)
         time.sleep(10)

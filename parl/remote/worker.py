@@ -20,13 +20,14 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import threading
 import warnings
 import zmq
 from datetime import datetime
-
-from parl.utils import get_ip_address, to_byte, to_str, logger
+import parl
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -63,7 +64,7 @@ class Worker(object):
         cpu_num (int): Number of cpu to be used on the worker.
     """
 
-    def __init__(self, master_address, cpu_num=None):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None):
         self.lock = threading.Lock()
         self.heartbeat_socket_initialized = threading.Event()
         self.ctx = zmq.Context.instance()
@@ -71,13 +72,17 @@ class Worker(object):
         self.master_is_alive = True
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
-        self.lock = threading.Lock()
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
+        self.check_version()
+        # create log server
+        self.log_server_proc, self.log_server_address = self._create_log_server(
+            port=log_server_port)
 
         # create a thread that waits commands from the job to kill the job.
         self.kill_job_thread = threading.Thread(target=self._reply_kill_job)
+        self.kill_job_thread.setDaemon(True)
         self.kill_job_thread.start()
 
         self._create_jobs()
@@ -96,6 +101,24 @@ class Worker(object):
             self.cpu_num = cpu_num
         else:
             self.cpu_num = multiprocessing.cpu_count()
+
+    def check_version(self):
+        '''Verify that the parl & python version in 'worker' process matches that of the 'master' process'''
+        self.request_master_socket.send_multipart(
+            [remote_constants.CHECK_VERSION_TAG])
+        message = self.request_master_socket.recv_multipart()
+        tag = message[0]
+        if tag == remote_constants.NORMAL_TAG:
+            worker_parl_version = parl.__version__
+            worker_python_version = str(sys.version_info.major)
+            assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
+                '''Version mismatch: the "master" is of version "parl={}, python={}". However, 
+                "parl={}, python={}"is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]),
+                        worker_parl_version, worker_python_version
+                    )
+        else:
+            raise NotImplementedError
 
     def _create_sockets(self):
         """ Each worker has three sockets at start:
@@ -169,6 +192,7 @@ class Worker(object):
 
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""
+        initialized_jobs = []
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
                 job_num = self.cpu_num - self.job_buffer.qsize()
@@ -178,13 +202,7 @@ class Worker(object):
                         self.job_buffer.put(job)
 
             time.sleep(0.02)
-
-        # release jobs if the worker is not alive
-        for job in initialized_jobs:
-            try:
-                os.kill(job.pid, signal.SIGTERM)
-            except OSError:
-                pass
+        self.exit()
 
     def _init_jobs(self, job_num):
         """Create jobs.
@@ -196,7 +214,8 @@ class Worker(object):
         job_file = job_file.replace('worker.py', 'job.py')
         command = [
             sys.executable, job_file, "--worker_address",
-            self.reply_job_address
+            self.reply_job_address, "--log_server_address",
+            self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -208,7 +227,11 @@ class Worker(object):
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.Popen(
+                command,
+                stdout=FNULL,
+                stderr=subprocess.STDOUT,
+                close_fds=True)
         FNULL.close()
 
         new_jobs = []
@@ -223,6 +246,7 @@ class Worker(object):
             # a thread for sending heartbeat signals to job
             thread = threading.Thread(
                 target=self._create_job_monitor, args=(initialized_job, ))
+            thread.setDaemon(True)
             thread.start()
         self.lock.release()
         assert len(new_jobs) > 0, "init jobs failed"
@@ -311,7 +335,10 @@ class Worker(object):
         total_memory = round(virtual_memory[0] / (1024**3), 2)
         used_memory = round(virtual_memory[3] / (1024**3), 2)
         vacant_memory = round(total_memory - used_memory, 2)
-        load_average = round(os.getloadavg()[0], 2)
+        if _IS_WINDOWS:
+            load_average = round(psutil.getloadavg()[0], 2)
+        else:
+            load_average = round(os.getloadavg()[0], 2)
         return (vacant_memory, used_memory, now, load_average)
 
     def _reply_heartbeat(self, target):
@@ -329,7 +356,7 @@ class Worker(object):
 
         logger.set_dir(
             os.path.expanduser('~/.parl_data/worker/{}'.format(
-                self.master_heartbeat_address)))
+                self.master_heartbeat_address.replace(':', '_'))))
 
         self.heartbeat_socket_initialized.set()
         logger.info("[Worker] Connect to the master node successfully. "
@@ -351,15 +378,44 @@ class Worker(object):
                 break
         socket.close(0)
         logger.warning(
-            "[Worker] lost connection with the master, will exit replying heartbeat for master."
+            "[Worker] lost connection with the master, will exit reply heartbeat for master."
         )
         self.worker_status.clear()
+        self.log_server_proc.kill()
+        self.log_server_proc.wait()
         # exit the worker
         self.worker_is_alive = False
+        self.exit()
+
+    def _create_log_server(self, port):
+        log_server_file = __file__.replace('worker.pyc', 'log_server.py')
+        log_server_file = log_server_file.replace('worker.py', 'log_server.py')
+
+        if port is None:
+            port = "0"  # `0` means using a random port in flask
+        command = [
+            sys.executable, log_server_file, "--port",
+            str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"
+        ]
+
+        if sys.version_info.major == 3:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+        if _IS_WINDOWS:
+            FNULL = tempfile.TemporaryFile()
+        else:
+            FNULL = open(os.devnull, 'w')
+        log_server_proc = subprocess.Popen(
+            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        FNULL.close()
+
+        log_server_address = "{}:{}".format(self.worker_ip, port)
+        return log_server_proc, log_server_address
 
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
+        kill_process('remote/job.py.*{}'.format(self.reply_job_address))
 
     def run(self):
         """Keep running until it lost connection with the master.

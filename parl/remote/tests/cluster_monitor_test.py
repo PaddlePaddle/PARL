@@ -22,7 +22,6 @@ import time
 import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
-import timeout_decorator
 import subprocess
 
 
@@ -43,9 +42,6 @@ class Actor(object):
 
     def set_arg2(self, value):
         self.arg2 = value
-
-    def get_unable_serialize_object(self):
-        return UnableSerializeObject()
 
     def add_one(self, value):
         value += 1

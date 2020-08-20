@@ -21,19 +21,17 @@ import paddle.fluid as fluid
 from parl.core.fluid.algorithm import Algorithm
 from parl.core.fluid import layers
 
+__all__ = ['DDQN']
+
 
 class DDQN(Algorithm):
-    def __init__(
-            self,
-            model,
-            act_dim=None,
-            gamma=None,
-    ):
+    def __init__(self, model, act_dim=None, gamma=None, lr=None):
         """ Double DQN algorithm
-
         Args:
-            model (parl.Model): model defining forward network of Q function.
+            model (parl.Model): model defining forward network of Q function
+            act_dim (int): dimension of the action space
             gamma (float): discounted factor for reward computation.
+            lr (float): learning rate.
         """
         self.model = model
         self.target_model = copy.deepcopy(model)
@@ -43,37 +41,43 @@ class DDQN(Algorithm):
 
         self.act_dim = act_dim
         self.gamma = gamma
+        self.lr = lr
 
     def predict(self, obs):
+        """ use value model self.model to predict the action value
+        """
         return self.model.value(obs)
 
-    def learn(self, obs, action, reward, next_obs, terminal, learning_rate):
+    def learn(self,
+              obs,
+              action,
+              reward,
+              next_obs,
+              terminal,
+              learning_rate=None):
+        """ update value model self.model with DQN algorithm
+        """
+        # Support the modification of learning_rate
+        if learning_rate is None:
+            assert isinstance(
+                self.lr,
+                float), "Please set the learning rate of DQN in initializaion."
+            learning_rate = self.lr
+
         pred_value = self.model.value(obs)
         action_onehot = layers.one_hot(action, self.act_dim)
         action_onehot = layers.cast(action_onehot, dtype='float32')
         pred_action_value = layers.reduce_sum(
             layers.elementwise_mul(action_onehot, pred_value), dim=1)
 
-        # choose acc. to behavior network
+        # calculate the target q value
         next_action_value = self.model.value(next_obs)
         greedy_action = layers.argmax(next_action_value, axis=-1)
-
-        # calculate the target q value with target network
-        batch_size = layers.cast(layers.shape(greedy_action)[0], dtype='int')
-        range_tmp = layers.range(
-            start=0, end=batch_size, step=1, dtype='int64') * self.act_dim
-        a_indices = range_tmp + greedy_action
-        a_indices = layers.cast(a_indices, dtype='int32')
+        greedy_action = layers.unsqueeze(greedy_action, axes=[1])
+        greedy_action_onehot = layers.one_hot(greedy_action, self.act_dim)
         next_pred_value = self.target_model.value(next_obs)
-        next_pred_value = layers.reshape(
-            next_pred_value, shape=[
-                -1,
-            ])
-        max_v = layers.gather(next_pred_value, a_indices)
-        max_v = layers.reshape(
-            max_v, shape=[
-                -1,
-            ])
+        max_v = layers.reduce_sum(
+            greedy_action_onehot * next_pred_value, dim=1)
         max_v.stop_gradient = True
 
         target = reward + (
@@ -85,12 +89,7 @@ class DDQN(Algorithm):
         optimizer.minimize(cost)
         return cost
 
-    def sync_target(self, gpu_id=None):
+    def sync_target(self):
         """ sync weights of self.model to self.target_model
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `sync_target` function in `parl.Algorithms.DQN` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
         self.model.sync_weights_to(self.target_model)

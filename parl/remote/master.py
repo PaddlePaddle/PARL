@@ -18,6 +18,8 @@ import threading
 import time
 import zmq
 from collections import deque, defaultdict
+import parl
+import sys
 from parl.utils import to_str, to_byte, logger, get_ip_address
 from parl.remote import remote_constants
 from parl.remote.job_center import JobCenter
@@ -57,11 +59,12 @@ class Master(object):
         port: The ip port that the master node binds to.
     """
 
-    def __init__(self, port):
+    def __init__(self, port, monitor_port=None):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
+        self.monitor_url = "http://{}:{}".format(self.master_ip, monitor_port)
         logger.set_dir(
-            os.path.expanduser('~/.parl_data/master/{}:{}'.format(
+            os.path.expanduser('~/.parl_data/master/{}_{}'.format(
                 self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
         self.client_socket.bind("tcp://*:{}".format(port))
@@ -135,7 +138,7 @@ class Master(object):
 
             except zmq.error.Again as e:
                 client_is_alive = False
-                self.cluster_monitor.drop_cluster_status(
+                self.cluster_monitor.drop_client_status(
                     client_heartbeat_address)
                 logger.warning("[Master] cannot connect to the client " +
                                "{}. ".format(client_heartbeat_address) +
@@ -205,8 +208,12 @@ class Master(object):
 
         # a client connects to the master
         elif tag == remote_constants.CLIENT_CONNECT_TAG:
+            # `client_heartbeat_address` is the
+            #      `reply_master_heartbeat_address` of the client
+
             client_heartbeat_address = to_str(message[1])
             client_hostname = to_str(message[2])
+            client_id = to_str(message[3])
             self.client_hostname[client_heartbeat_address] = client_hostname
             logger.info(
                 "Client {} is connected.".format(client_heartbeat_address))
@@ -215,11 +222,21 @@ class Master(object):
                 target=self._create_client_monitor,
                 args=(client_heartbeat_address, ))
             thread.start()
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+            log_monitor_address = "{}/logs?client_id={}".format(
+                self.monitor_url, client_id)
+            self.client_socket.send_multipart(
+                [remote_constants.NORMAL_TAG,
+                 to_byte(log_monitor_address)])
+
+        elif tag == remote_constants.CHECK_VERSION_TAG:
+            self.client_socket.send_multipart([
+                remote_constants.NORMAL_TAG,
+                to_byte(parl.__version__),
+                to_byte(str(sys.version_info.major))
+            ])
 
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
-
             # check available CPU resources
             if self.cpu_num:
                 logger.info("Submitting job...")
@@ -230,6 +247,9 @@ class Master(object):
                     to_byte(job.client_heartbeat_address),
                     to_byte(job.ping_heartbeat_address),
                 ])
+                client_id = to_str(message[2])
+                job_info = {job.job_id: job.log_server_address}
+                self.cluster_monitor.add_client_job(client_id, job_info)
                 self._print_workers()
             else:
                 self.client_socket.send_multipart([remote_constants.CPU_TAG])

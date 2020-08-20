@@ -46,7 +46,7 @@ Abstractions
     :maxdepth: 1
     :caption: Installation
 
-   installation.rst
+    installation.rst
 
 .. toctree::
     :maxdepth: 1
@@ -58,9 +58,10 @@ Abstractions
     :maxdepth: 1
     :caption: Tutorial
 
-    getting_started.rst
-    new_alg.rst
-    save_param.rst
+    tutorial/getting_started.rst
+    tutorial/new_alg.rst
+    tutorial/save_param.rst
+    tutorial/tensorboard.rst
 
 .. toctree::
     :maxdepth: 2
@@ -83,3 +84,11 @@ Abstractions
    model.rst
    algorithm.rst
    agent.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: EvoKit
+
+   EvoKit/overview.rst
+   EvoKit/minimal_example.rst
+   EvoKit/online_example.rst

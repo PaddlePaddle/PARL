@@ -3,7 +3,7 @@
 </p>
 
 [English](./README.md) | 简体中文   
-[**文档**](https://parl.readthedocs.io)
+[**文档**](https://parl.readthedocs.io/en/stable/index.html)| [**中文文档**](./docs/zh_CN/Overview.md)
 
 > PARL 是一个高性能、灵活的强化学习框架。
 # 特点
@@ -18,7 +18,7 @@
 
 # 框架结构
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
-PARL的目标是构建一个可以完整复杂任务的智能体。以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
+PARL的目标是构建一个可以完成复杂任务的智能体。以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
 ### Model
 `Model` 用来定义前向(`Forward`)网络，这通常是一个策略网络(`Policy Network`)或者一个值函数网络(`Value Function`)，输入是当前环境状态(`State`)。
@@ -61,7 +61,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 
 # 安装:
 ### 依赖
-- Python 2.7 or 3.5+. 
+- Python 2.7 or 3.5+. (**Windows系统**目前仅支持python3.6+以上的环境）
 - [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 

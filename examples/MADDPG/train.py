@@ -20,7 +20,7 @@ from simple_model import MAModel
 from simple_agent import MAAgent
 import parl
 from parl.env.multiagent_simple_env import MAenv
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 
 
 def run_episode(env, agents):
@@ -62,8 +62,8 @@ def run_episode(env, agents):
         # learn policy
         for i, agent in enumerate(agents):
             critic_loss = agent.learn(agents)
-            tensorboard.add_scalar('critic_loss_%d' % i, critic_loss,
-                                   agent.global_train_step)
+            summary.add_scalar('critic_loss_%d' % i, critic_loss,
+                               agent.global_train_step)
 
     return total_reward, agents_reward, steps
 
@@ -155,12 +155,12 @@ def train_agent():
                 format(total_steps, total_episodes, mean_episode_reward,
                        use_time))
             t_start = time.time()
-            tensorboard.add_scalar('mean_episode_reward/episode',
-                                   mean_episode_reward, total_episodes)
-            tensorboard.add_scalar('mean_episode_reward/steps',
-                                   mean_episode_reward, total_steps)
-            tensorboard.add_scalar('use_time/1000episode', use_time,
-                                   total_episodes)
+            summary.add_scalar('mean_episode_reward/episode',
+                               mean_episode_reward, total_episodes)
+            summary.add_scalar('mean_episode_reward/steps',
+                               mean_episode_reward, total_steps)
+            summary.add_scalar('use_time/1000episode', use_time,
+                               total_episodes)
 
             # save model
             if not args.restore:

@@ -85,44 +85,31 @@ class VTraceLoss(object):
 class IMPALA(Algorithm):
     def __init__(self,
                  model,
-                 hyperparas=None,
                  sample_batch_steps=None,
                  gamma=None,
                  vf_loss_coeff=None,
                  clip_rho_threshold=None,
                  clip_pg_rho_threshold=None):
-        """ IMPALA algorithm
+        r""" IMPALA algorithm
         
         Args:
             model (parl.Model): forward network of policy and value
-            hyperparas (dict): (deprecated) dict of hyper parameters.
             sample_batch_steps (int): steps of each environment sampling.
             gamma (float): discounted factor for reward computation.
             vf_loss_coeff (float): coefficient of the value function loss.
             clip_rho_threshold (float): clipping threshold for importance weights (rho).
             clip_pg_rho_threshold (float): clipping threshold on rho_s in \rho_s \delta log \pi(a|x) (r + \gamma v_{s+1} - V(x_s)).
         """
-        if hyperparas is not None:
-            warnings.warn(
-                "the `hyperparas` argument of `__init__` function in `parl.Algorithms.IMPALA` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
-            self.sample_batch_steps = hyperparas['sample_batch_steps']
-            self.gamma = hyperparas['gamma']
-            self.vf_loss_coeff = hyperparas['vf_loss_coeff']
-            self.clip_rho_threshold = hyperparas['clip_rho_threshold']
-            self.clip_pg_rho_threshold = hyperparas['clip_pg_rho_threshold']
-        else:
-            assert isinstance(sample_batch_steps, int)
-            assert isinstance(gamma, float)
-            assert isinstance(vf_loss_coeff, float)
-            assert isinstance(clip_rho_threshold, float)
-            assert isinstance(clip_pg_rho_threshold, float)
-            self.sample_batch_steps = sample_batch_steps
-            self.gamma = gamma
-            self.vf_loss_coeff = vf_loss_coeff
-            self.clip_rho_threshold = clip_rho_threshold
-            self.clip_pg_rho_threshold = clip_pg_rho_threshold
+        assert isinstance(sample_batch_steps, int)
+        assert isinstance(gamma, float)
+        assert isinstance(vf_loss_coeff, float)
+        assert isinstance(clip_rho_threshold, float)
+        assert isinstance(clip_pg_rho_threshold, float)
+        self.sample_batch_steps = sample_batch_steps
+        self.gamma = gamma
+        self.vf_loss_coeff = vf_loss_coeff
+        self.clip_rho_threshold = clip_rho_threshold
+        self.clip_pg_rho_threshold = clip_pg_rho_threshold
 
         self.model = model
 

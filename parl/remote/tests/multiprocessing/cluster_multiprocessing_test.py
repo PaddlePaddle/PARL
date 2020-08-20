@@ -4,8 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
+#     http://www.apache.org/licenses/LICENSE-2.0 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +15,12 @@ import unittest
 import parl
 import time
 import threading
-import timeout_decorator
 import multiprocessing
 
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.utils import _IS_WINDOWS
 
 
 @parl.remote_class
@@ -39,21 +38,14 @@ class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def _connect_and_create_actor(self, cluster_addr):
-        parl.connect(cluster_addr)
+    #In windows, multiprocessing.Process cannot run the method of class, but static method is ok.
+    @staticmethod
+    def _create_actor():
         for _ in range(2):
             actor = Actor()
             ret = actor.add_one(1)
-            self.assertEqual(ret, 2)
-        disconnect()
+            assert ret == 2
 
-    def _create_actor(self):
-        for _ in range(2):
-            actor = Actor()
-            ret = actor.add_one(1)
-            self.assertEqual(ret, 2)
-
-    @timeout_decorator.timeout(seconds=300)
     def test_create_actor_in_multiprocessing(self):
         # start the master
         master = Master(port=8240)
@@ -64,14 +56,15 @@ class TestCluster(unittest.TestCase):
         worker1 = Worker('localhost:8240', 4)
         parl.connect('localhost:8240')
 
-        proc1 = multiprocessing.Process(target=self._create_actor)
-        proc2 = multiprocessing.Process(target=self._create_actor)
-        proc1.start()
-        proc2.start()
+        if not _IS_WINDOWS:  # In windows, fork process cannot access client created in main process.
+            proc1 = multiprocessing.Process(target=self._create_actor)
+            proc2 = multiprocessing.Process(target=self._create_actor)
+            proc1.start()
+            proc2.start()
 
-        proc1.join()
-        proc2.join()
-        print("[test_create_actor_in_multiprocessing]  Join")
+            proc1.join()
+            proc2.join()
+            print("[test_create_actor_in_multiprocessing]  Join")
 
         # make sure that the client of the main process still works
         self._create_actor()

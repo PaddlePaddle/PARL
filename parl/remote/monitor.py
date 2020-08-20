@@ -19,7 +19,7 @@ import time
 import zmq
 import threading
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
 
@@ -42,7 +42,7 @@ class ClusterMonitor(object):
     def __init__(self, master_address):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
-        self.socket.setsockopt(zmq.RCVTIMEO, 10000)
+        self.socket.setsockopt(zmq.RCVTIMEO, 30000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
 
@@ -81,6 +81,7 @@ class ClusterMonitor(object):
                 data['total_vacant_cpus'] = total_vacant_cpus
                 data['total_cpus'] = total_used_cpus + total_vacant_cpus
                 data['clients'] = list(status['clients'].values())
+                data['client_jobs'] = status['client_jobs']
                 self.data = data
                 time.sleep(10)
 
@@ -99,7 +100,44 @@ def cluster():
     return jsonify(data)
 
 
+@app.route(
+    '/logs', methods=[
+        'GET',
+    ])
+def logs():
+    client_id = request.args.get('client_id')
+    return render_template('jobs.html', client_id=client_id)
+
+
+@app.route(
+    '/get-jobs', methods=[
+        'GET',
+    ])
+def get_jobs():
+    client_id = request.args.get('client_id')
+    jobs = CLUSTER_MONITOR.get_data()['client_jobs'].get(client_id)
+    data = []
+    if jobs:
+        for idx, job_id in enumerate(jobs):
+            monitor_url = jobs[job_id]
+            data.append({
+                "id":
+                idx,
+                "job_id":
+                job_id,
+                "log_url":
+                "http://{}/get-log?job_id={}".format(monitor_url, job_id),
+                "download_url":
+                "http://{}/download-log?job_id={}".format(monitor_url, job_id),
+            })
+    return jsonify(data)
+
+
 if __name__ == "__main__":
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.disabled = True
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--monitor_port', default=1234, type=int)
     parser.add_argument('--address', default='localhost:8010', type=str)

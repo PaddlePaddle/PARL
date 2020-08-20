@@ -19,9 +19,11 @@ import socket
 import sys
 import threading
 import zmq
-from parl.utils import to_str, to_byte, get_ip_address, logger
+import parl
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote import remote_constants
 import time
+import glob
 
 
 class Client(object):
@@ -50,7 +52,6 @@ class Client(object):
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
                                       file for initialization) .
-
         """
         self.master_address = master_address
         self.process_id = process_id
@@ -59,12 +60,14 @@ class Client(object):
         self.heartbeat_socket_initialized = threading.Event()
         self.master_is_alive = True
         self.client_is_alive = True
+        self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
 
         self.actor_num = 0
 
         self._create_sockets(master_address)
+        self.check_version()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -84,34 +87,58 @@ class Client(object):
         Args:
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
-                                      file for initialization) .
-
+                                      file for initialization) . RegExp of file
+                                      names is supported. 
+                                      e.g. 
+                                          distributed_files = ['./*.npy', './test*']
+                                                                             
         Returns:
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
+
+        parsed_distributed_files = set()
+        for distributed_file in distributed_files:
+            parsed_list = glob.glob(distributed_file)
+            if not parsed_list:
+                raise ValueError(
+                    "no local file is matched with '{}', please check your input"
+                    .format(distributed_file))
+            # exclude the directiories
+            for pathname in parsed_list:
+                if not os.path.isdir(pathname):
+                    parsed_distributed_files.add(pathname)
+
         pyfiles = dict()
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
 
-        code_files = filter(lambda x: x.endswith('.py'), os.listdir('./'))
+        if isnotebook():
+            main_folder = './'
+        else:
+            main_file = sys.argv[0]
+            main_folder = './'
+            sep = os.sep
+            if sep in main_file:
+                main_folder = sep.join(main_file.split(sep)[:-1])
+        code_files = filter(lambda x: x.endswith('.py'),
+                            os.listdir(main_folder))
 
-        try:
-            for file in code_files:
-                assert os.path.exists(file)
-                with open(file, 'rb') as code_file:
-                    code = code_file.read()
-                    pyfiles['python_files'][file] = code
+        for file_name in code_files:
+            file_path = os.path.join(main_folder, file_name)
+            assert os.path.exists(file_path)
+            with open(file_path, 'rb') as code_file:
+                code = code_file.read()
+                pyfiles['python_files'][file_name] = code
 
-            for file in distributed_files:
-                assert os.path.exists(file)
-                with open(file, 'rb') as f:
-                    content = f.read()
-                    pyfiles['other_files'][file] = content
-        except AssertionError as e:
-            raise Exception(
-                'Failed to create the client, the file {} does not exist.'.
-                format(file))
+        for file_name in parsed_distributed_files:
+            assert os.path.exists(file_name)
+            assert not os.path.isabs(
+                file_name
+            ), "[XPARL] Please do not distribute a file with absolute path."
+            with open(file_name, 'rb') as f:
+                content = f.read()
+                pyfiles['other_files'][file_name] = content
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):
@@ -132,14 +159,19 @@ class Client(object):
         thread.start()
         self.heartbeat_socket_initialized.wait()
 
+        self.client_id = self.reply_master_heartbeat_address.replace(':', '_') + \
+                            '_' + str(int(time.time()))
+
         # check if the master is connected properly
         try:
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
-                to_byte(self.heartbeat_master_address),
-                to_byte(socket.gethostname())
+                to_byte(self.reply_master_heartbeat_address),
+                to_byte(socket.gethostname()),
+                to_byte(self.client_id),
             ])
-            _ = self.submit_job_socket.recv_multipart()
+            message = self.submit_job_socket.recv_multipart()
+            self.log_monitor_url = to_str(message[1])
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
                            "check if master is started and ensure the input "
@@ -149,18 +181,37 @@ class Client(object):
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
 
+    def check_version(self):
+        '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
+        self.submit_job_socket.send_multipart(
+            [remote_constants.CHECK_VERSION_TAG])
+        message = self.submit_job_socket.recv_multipart()
+        tag = message[0]
+        if tag == remote_constants.NORMAL_TAG:
+            client_parl_version = parl.__version__
+            client_python_version = str(sys.version_info.major)
+            assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}'. However, 
+                'parl={}, python={}'is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]),
+                        client_parl_version, client_python_version
+                    )
+        else:
+            raise NotImplementedError
+
     def _reply_heartbeat(self):
-        """Reply heartbeat signals to the specific node."""
+        """Reply heartbeat signals to the master node."""
 
         socket = self.ctx.socket(zmq.REP)
         socket.linger = 0
         socket.setsockopt(zmq.RCVTIMEO,
                           remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-        heartbeat_master_port =\
+        reply_master_heartbeat_port =\
             socket.bind_to_random_port(addr="tcp://*")
-        self.heartbeat_master_address = "{}:{}".format(get_ip_address(),
-                                                       heartbeat_master_port)
+        self.reply_master_heartbeat_address = "{}:{}".format(
+            get_ip_address(), reply_master_heartbeat_port)
         self.heartbeat_socket_initialized.set()
+        connected = False
         while self.client_is_alive and self.master_is_alive:
             try:
                 message = socket.recv_multipart()
@@ -170,11 +221,18 @@ class Client(object):
                     remote_constants.HEARTBEAT_TAG,
                     to_byte(self.executable_path),
                     to_byte(str(self.actor_num)),
-                    to_byte(str(elapsed_time))
-                ])
+                    to_byte(str(elapsed_time)),
+                    to_byte(str(self.log_monitor_url)),
+                ])  # TODO: remove additional information
             except zmq.error.Again as e:
-                logger.warning("[Client] Cannot connect to the master."
-                               "Please check if it is still alive.")
+                if connected:
+                    logger.warning("[Client] Cannot connect to the master."
+                                   "Please check if it is still alive.")
+                else:
+                    logger.warning(
+                        "[Client] Cannot connect to the master."
+                        "Please check the firewall between client and master.(e.g., ping the master IP)"
+                    )
                 self.master_is_alive = False
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")
@@ -182,7 +240,7 @@ class Client(object):
     def _check_and_monitor_job(self, job_heartbeat_address,
                                ping_heartbeat_address, max_memory):
         """ Sometimes the client may receive a job that is dead, thus 
-        we have to check if this job is still alive before sending it to the actor.
+        we have to check if this job is still alive before adding it to the `actor_num`.
         """
         # job_heartbeat_socket: sends heartbeat signal to job
         job_heartbeat_socket = self.ctx.socket(zmq.REQ)
@@ -271,7 +329,8 @@ class Client(object):
                 self.lock.acquire()
                 self.submit_job_socket.send_multipart([
                     remote_constants.CLIENT_SUBMIT_TAG,
-                    to_byte(self.heartbeat_master_address)
+                    to_byte(self.reply_master_heartbeat_address),
+                    to_byte(self.client_id),
                 ])
                 message = self.submit_job_socket.recv_multipart()
                 self.lock.release()
@@ -326,9 +385,10 @@ def connect(master_address, distributed_files=[]):
         Exception: An exception is raised if the master node is not started.
     """
 
-    assert len(master_address.split(":")) == 2, "please input address in " +\
+    assert len(master_address.split(":")) == 2, "Please input address in " +\
         "{ip}:{port} format"
     global GLOBAL_CLIENT
+    addr = master_address.split(":")[0]
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
         GLOBAL_CLIENT = Client(master_address, cur_process_id,
@@ -337,6 +397,8 @@ def connect(master_address, distributed_files=[]):
         if GLOBAL_CLIENT.process_id != cur_process_id:
             GLOBAL_CLIENT = Client(master_address, cur_process_id,
                                    distributed_files)
+    logger.info("Remote actors log url: {}".format(
+        GLOBAL_CLIENT.log_monitor_url))
 
 
 def get_global_client():
@@ -366,5 +428,5 @@ def disconnect():
         GLOBAL_CLIENT = None
     else:
         logger.info(
-            "No client to be released. Please make sure that you have call `parl.connect`"
+            "No client to be released. Please make sure that you have called `parl.connect`"
         )

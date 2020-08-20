@@ -22,7 +22,7 @@ import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, tensorboard, get_gpu_count
+from parl.utils import logger, summary, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
@@ -121,7 +121,9 @@ class Learner(object):
 
                 yield [
                     obs_np, actions_np, behaviour_logits_np, rewards_np,
-                    dones_np, self.lr, self.entropy_coeff
+                    dones_np,
+                    np.float32(self.lr),
+                    np.array([self.entropy_coeff], dtype='float32')
                 ]
 
     def run_learn(self):
@@ -219,7 +221,7 @@ class Learner(object):
             min_episode_steps = np.min(np.array(episode_steps).flatten())
 
         metric = {
-            'Sample steps': self.sample_total_steps,
+            'sample_steps': self.sample_total_steps,
             'max_episode_rewards': max_episode_rewards,
             'mean_episode_rewards': mean_episode_rewards,
             'min_episode_rewards': min_episode_rewards,
@@ -242,7 +244,7 @@ class Learner(object):
 
         for key, value in metric.items():
             if value is not None:
-                tensorboard.add_scalar(key, value, self.sample_total_steps)
+                summary.add_scalar(key, value, self.sample_total_steps)
 
         logger.info(metric)
 

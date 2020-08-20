@@ -16,7 +16,6 @@ import unittest
 import parl
 import time
 import threading
-import timeout_decorator
 import multiprocessing
 
 from parl.remote.master import Master
@@ -39,12 +38,14 @@ class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def _connect_and_create_actor(self, cluster_addr):
+    #In windows, multiprocessing.Process cannot run the method of class, but static method is ok.
+    @staticmethod
+    def _connect_and_create_actor(cluster_addr):
         parl.connect(cluster_addr)
         for _ in range(2):
             actor = Actor()
             ret = actor.add_one(1)
-            self.assertEqual(ret, 2)
+            assert ret == 2
         disconnect()
 
     def _create_actor(self):
@@ -53,7 +54,6 @@ class TestCluster(unittest.TestCase):
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
 
-    @timeout_decorator.timeout(seconds=300)
     def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
             self):
         # start the master

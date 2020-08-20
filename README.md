@@ -3,7 +3,7 @@
 </p>
 
 English | [简体中文](./README.cn.md)   
-[**Documentation**](https://parl.readthedocs.io)
+[**Documentation**](https://parl.readthedocs.io/en/stable/index.html) | [**中文文档**](./docs/zh_CN/Overview.md)
 
 > PARL is a flexible and high-efficient reinforcement learning framework.
 
@@ -64,7 +64,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 
 # Install:
 ### Dependencies
-- Python 2.7 or 3.5+. 
+- Python 2.7 or 3.5+(On **Windows**, PARL only supprorts the enviroment with python3.6+). 
 - [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 

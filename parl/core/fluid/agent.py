@@ -15,9 +15,9 @@
 import warnings
 warnings.simplefilter('default')
 
+import os
 import paddle.fluid as fluid
 from parl.core.fluid import layers
-from parl.utils.deprecation import deprecated
 from parl.core.agent_base import AgentBase
 from parl.core.fluid.algorithm import Algorithm
 from parl.utils import machine_info
@@ -46,7 +46,6 @@ class Agent(AgentBase):
       This class will initialize the neural network parameters automatically, and provides an executor for users to run the programs (self.fluid_executor).
 
     Attributes:
-        gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
         fluid_executor (fluid.Executor): executor for running programs of the agent.
         alg (parl.algorithm): algorithm of this agent.
 
@@ -65,23 +64,16 @@ class Agent(AgentBase):
 
     """
 
-    def __init__(self, algorithm, gpu_id=None):
+    def __init__(self, algorithm):
         """Build programs by calling the method ``self.build_program()`` and run initialization function of ``fluid.default_startup_program()``.
 
         Args:
             algorithm (parl.Algorithm): an instance of `parl.Algorithm`. This algorithm is then passed to `self.alg`.
-            gpu_id (int): deprecated. specify which GPU to be used. -1 if to use the CPU.
         """
-        if gpu_id is not None:
-            warnings.warn(
-                "the `gpu_id` argument of `__init__` function in `parl.Agent` is deprecated since version 1.2 and will be removed in version 1.3.",
-                DeprecationWarning,
-                stacklevel=2)
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
 
-        self.alg = algorithm
         self.gpu_id = 0 if machine_info.is_gpu_available() else -1
 
         self.build_program()
@@ -118,26 +110,6 @@ class Agent(AgentBase):
 
         """
         raise NotImplementedError
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='get_weights')
-    def get_params(self):
-        """ Returns a Python dictionary containing the whole parameters of self.alg.
-
-        Returns:
-            a Python List containing the parameters of self.alg.
-        """
-        return self.algorithm.get_params()
-
-    @deprecated(
-        deprecated_in='1.2', removed_in='1.3', replace_function='set_weights')
-    def set_params(self, params):
-        """Copy parameters from ``get_params()`` into this agent.
-
-        Args:
-            params(dict): a Python List containing the parameters of self.alg.
-        """
-        self.algorithm.set_params(params)
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -180,8 +152,8 @@ class Agent(AgentBase):
         """
         if program is None:
             program = self.learn_program
-        dirname = '/'.join(save_path.split('/')[:-1])
-        filename = save_path.split('/')[-1]
+        dirname = os.sep.join(save_path.split(os.sep)[:-1])
+        filename = save_path.split(os.sep)[-1]
         fluid.io.save_params(
             executor=self.fluid_executor,
             dirname=dirname,
@@ -214,8 +186,8 @@ class Agent(AgentBase):
             program = self.learn_program
         if type(program) is fluid.compiler.CompiledProgram:
             program = program._init_program
-        dirname = '/'.join(save_path.split('/')[:-1])
-        filename = save_path.split('/')[-1]
+        dirname = os.sep.join(save_path.split(os.sep)[:-1])
+        filename = save_path.split(os.sep)[-1]
         fluid.io.load_params(
             executor=self.fluid_executor,
             dirname=dirname,

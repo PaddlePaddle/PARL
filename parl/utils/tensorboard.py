@@ -14,6 +14,7 @@
 
 from tensorboardX import SummaryWriter
 from parl.utils import logger
+from parl.utils.machine_info import get_ip_address
 
 __all__ = []
 
@@ -29,8 +30,8 @@ def create_file_after_first_call(func_name):
             if logdir is None:
                 logdir = logger.auto_set_dir(action='d')
                 logger.warning(
-                    "[tensorboard] logdir is None, will save tensorboard files to {}"
-                    .format(logdir))
+                    "[tensorboard] logdir is None, will save tensorboard files to {}\nView the data using: tensorboard --logdir=./{} --host={}"
+                    .format(logdir, logdir, get_ip_address()))
             _writer = SummaryWriter(logdir=logger.get_dir())
         func = getattr(_writer, func_name)
         func(*args, **kwargs)

@@ -22,7 +22,7 @@ from tqdm import tqdm
 import parl
 import paddle.fluid as fluid
 from parl.utils import get_gpu_count
-from parl.utils import tensorboard, logger
+from parl.utils import summary, logger
 
 from dqn import DQN  # slight changes from parl.algorithms.DQN
 from atari_agent import AtariAgent
@@ -45,21 +45,21 @@ gpu_num = get_gpu_count()
 def run_train_step(agent, rpm):
     for step in range(args.train_total_steps):
         # use the first 80% data to train
-        batch_all_state, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
+        batch_all_obs, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
             args.batch_size * gpu_num)
-        batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
-        batch_next_state = batch_all_state[:, 1:, :, :]
-        cost = agent.learn(batch_state, batch_action, batch_reward,
-                           batch_next_state, batch_isOver)
+        batch_obs = batch_all_obs[:, :CONTEXT_LEN, :, :]
+        batch_next_obs = batch_all_obs[:, 1:, :, :]
+        cost = agent.learn(batch_obs, batch_action, batch_reward,
+                           batch_next_obs, batch_isOver)
 
         if step % 100 == 0:
             # use the last 20% data to evaluate
-            batch_all_state, batch_action, batch_reward, batch_isOver = rpm.sample_test_batch(
+            batch_all_obs, batch_action, batch_reward, batch_isOver = rpm.sample_test_batch(
                 args.batch_size)
-            batch_state = batch_all_state[:, :CONTEXT_LEN, :, :]
-            batch_next_state = batch_all_state[:, 1:, :, :]
-            eval_cost = agent.supervised_eval(batch_state, batch_action,
-                                              batch_reward, batch_next_state,
+            batch_obs = batch_all_obs[:, :CONTEXT_LEN, :, :]
+            batch_next_obs = batch_all_obs[:, 1:, :, :]
+            eval_cost = agent.supervised_eval(batch_obs, batch_action,
+                                              batch_reward, batch_next_obs,
                                               batch_isOver)
             logger.info(
                 "train step {}, train costs are {}, eval cost is {}.".format(
@@ -67,17 +67,17 @@ def run_train_step(agent, rpm):
 
 
 def collect_exp(env, rpm, agent):
-    state = env.reset()
+    obs = env.reset()
     # collect data to fulfill replay memory
     for i in tqdm(range(MEMORY_SIZE)):
-        context = rpm.recent_state()
-        context.append(state)
+        context = rpm.recent_obs()
+        context.append(obs)
         context = np.stack(context, axis=0)
         action = agent.sample(context)
 
-        next_state, reward, isOver, _ = env.step(action)
-        rpm.append(Experience(state, action, reward, isOver))
-        state = next_state
+        next_obs, reward, isOver, _ = env.step(action)
+        rpm.append(Experience(obs, action, reward, isOver))
+        obs = next_obs
 
 
 def main():

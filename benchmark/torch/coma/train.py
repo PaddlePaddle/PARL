@@ -210,7 +210,7 @@ def main(config):
     model_file = config['model_dir'] + '/coma.ckpt'
     if config['restore'] and os.path.isfile(model_file):
         agents.restore(model_file)
-        print('model loaded: ', model_path)
+        print('model loaded: ', model_file)
 
     if config['test']:
         test_by_sparse_reward(agents, config)

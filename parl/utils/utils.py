@@ -117,3 +117,35 @@ def isnotebook():
             return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
+
+
+def get_subfiles_recursively(folder_path,
+                             code_only=False,
+                             include_empty_folder=False):
+    '''
+    Get subfiles under 'folder_path' recursively
+    Args:
+        folder_path: A folder(dir) whose subfiles/subfolders will be returned.
+        code_only: if True, only files endwith '.py' will be included. 
+        include_empty_folder: if True, empty subfolders also will be included.
+
+    Returns:
+        fileset: A set including all found subfiles/subfolders.
+    '''
+    if not os.path.exists(folder_path):
+        raise ValueError("Path '{}' don't exist.".format(folder_path))
+    elif not os.path.isdir(folder_path):
+        raise ValueError('Input should be a folder, not a file.')
+    else:
+        fileset = set()
+        for root, dirs, files in os.walk(folder_path):
+            if files:
+                for sub_file in files:
+                    if code_only and not sub_file.endswith('.py'):
+                        continue
+                    else:
+                        fileset.add(
+                            os.path.normpath(os.path.join(root, sub_file)))
+            elif len(dirs) == 0 and include_empty_folder:
+                fileset.add(os.path.normpath(root))
+        return fileset

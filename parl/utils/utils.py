@@ -20,7 +20,7 @@ import numpy as np
 __all__ = [
     'has_func', 'to_str', 'to_byte', 'is_PY2', 'is_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
-    'get_fluid_version', 'isnotebook'
+    'get_fluid_version', 'isnotebook', 'get_subfiles_recursively'
 ]
 
 
@@ -119,33 +119,34 @@ def isnotebook():
         return False  # Probably standard Python interpreter
 
 
-def get_subfiles_recursively(folder_path,
-                             code_only=False,
-                             include_empty_folder=False):
+def get_subfiles_recursively(folder_path):
     '''
     Get subfiles under 'folder_path' recursively
     Args:
         folder_path: A folder(dir) whose subfiles/subfolders will be returned.
-        code_only: if True, only files endwith '.py' will be included. 
-        include_empty_folder: if True, empty subfolders also will be included.
 
     Returns:
-        fileset: A set including all found subfiles/subfolders.
+        python_files: A set including subfiles endwith '.py'.
+        other_files: A set including subfiles not endwith '.py'.
+        empty_subfolders: A set including empty subfolders.
     '''
     if not os.path.exists(folder_path):
         raise ValueError("Path '{}' don't exist.".format(folder_path))
     elif not os.path.isdir(folder_path):
         raise ValueError('Input should be a folder, not a file.')
     else:
-        fileset = set()
+        python_files = set()
+        other_files = set()
+        empty_subfolders = set()
         for root, dirs, files in os.walk(folder_path):
             if files:
                 for sub_file in files:
-                    if code_only and not sub_file.endswith('.py'):
-                        continue
-                    else:
-                        fileset.add(
+                    if sub_file.endswith('.py'):
+                        python_files.add(
                             os.path.normpath(os.path.join(root, sub_file)))
-            elif len(dirs) == 0 and include_empty_folder:
-                fileset.add(os.path.normpath(root))
-        return fileset
+                    else:
+                        other_files.add(
+                            os.path.normpath(os.path.join(root, sub_file)))
+            elif len(dirs) == 0:
+                empty_subfolders.add(os.path.normpath(root))
+        return python_files, other_files, empty_subfolders

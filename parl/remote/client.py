@@ -20,7 +20,7 @@ import sys
 import threading
 import zmq
 import parl
-from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, get_subfiles_recursively
 from parl.remote import remote_constants
 import time
 import glob
@@ -110,15 +110,12 @@ class Client(object):
                     .format(distributed_file))
             for pathname in parsed_list:
                 if os.path.isdir(pathname):
-                    for root, dirs, files in os.walk(pathname):
-                        # distribute files in the folder
-                        if files:
-                            for sub_file in files:
-                                parsed_distributed_files.add(
-                                    os.path.join(root, sub_file))
-                        # dirtribute empty subfolders
-                        elif len(dirs) == 0:
-                            pyfiles['empty_subfolders'].add(root)
+                    python_files, other_files, empty_subfolders = get_subfiles_recursively(
+                        pathname)
+                    parsed_distributed_files = parsed_distributed_files.union(
+                        python_files, other_files)
+                    pyfiles['empty_subfolders'] = pyfiles[
+                        'empty_subfolders'].union(empty_subfolders)
                 else:
                     parsed_distributed_files.add(pathname)
 

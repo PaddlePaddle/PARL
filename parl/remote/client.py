@@ -108,7 +108,6 @@ class Client(object):
                 raise ValueError(
                     "no local file is matched with '{}', please check your input"
                     .format(distributed_file))
-            # exclude the directiories
             for pathname in parsed_list:
                 if os.path.isdir(pathname):
                     for root, dirs, files in os.walk(pathname):

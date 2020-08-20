@@ -58,7 +58,7 @@ class ComaModel(parl.Model):
         return input_shape  # 48 + 30+ 3 = 135
 
 
-# all agent share one actor network
+# all agents share one actor network
 class ActorModel(parl.Model):
     def __init__(self, input_shape, act_dim):
         """ input : obs, include the agent's id and last action, shape: (batch, obs_shape + n_action + n_agents)

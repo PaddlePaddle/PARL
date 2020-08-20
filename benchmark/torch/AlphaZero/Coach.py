@@ -96,7 +96,7 @@ class Coach():
             self.remote_actors_signal_queues.append(signal_queue)
 
             remote_thread = threading.Thread(
-                target=self._run_remote_tasks, args=(signal_queue, ))
+                target=self._run_remote_tasks, args=(signal_queue, i))
             remote_thread.setDaemon(True)
             remote_thread.start()
 

@@ -114,9 +114,9 @@ class Client(object):
                 if os.path.isdir(pathname):
                     pythonfiles, otherfiles, emptysubfolders = get_subfiles_recursively(
                         pathname)
-                    user_files += pythonfiles
-                    user_files += otherfiles
-                    user_empty_subfolders += emptysubfolders
+                    user_files.extend(pythonfiles)
+                    user_files.extend(otherfiles)
+                    user_empty_subfolders.extend(emptysubfolders)
                 else:
                     user_files.append(pathname)
 
@@ -131,7 +131,7 @@ class Client(object):
         code_files = filter(lambda x: x.endswith('.py'),
                             os.listdir(main_folder))
 
-        for file_name in set(code_files):
+        for file_name in code_files:
             file_path = os.path.join(main_folder, file_name)
             assert os.path.exists(file_path)
             with open(file_path, 'rb') as code_file:

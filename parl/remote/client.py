@@ -101,9 +101,8 @@ class Client(object):
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
 
-        codefiles = set()
-        otherfiles = set()
-        emptysubfolders = set()
+        user_files = []
+        user_empty_subfolders = []
 
         for distributed_file in distributed_files:
             parsed_list = glob.glob(distributed_file)
@@ -113,14 +112,13 @@ class Client(object):
                     .format(distributed_file))
             for pathname in parsed_list:
                 if os.path.isdir(pathname):
-                    distribute_codefiles, distribute_otherfiles, distribute_emptysubfolders = get_subfiles_recursively(
+                    pythonfiles, otherfiles, emptysubfolders = get_subfiles_recursively(
                         pathname)
-                    otherfiles = otherfiles.union(distribute_codefiles,
-                                                  distribute_otherfiles)
-                    emptysubfolders = emptysubfolders.union(
-                        distribute_emptysubfolders)
+                    user_files += pythonfiles
+                    user_files += otherfiles
+                    user_empty_subfolders += emptysubfolders
                 else:
-                    otherfiles.add(pathname)
+                    user_files.append(pathname)
 
         if isnotebook():
             main_folder = './'
@@ -130,17 +128,17 @@ class Client(object):
             sep = os.sep
             if sep in main_file:
                 main_folder = sep.join(main_file.split(sep)[:-1])
-        codefiles = codefiles.union(
-            filter(lambda x: x.endswith('.py'), os.listdir(main_folder)))
+        code_files = filter(lambda x: x.endswith('.py'),
+                            os.listdir(main_folder))
 
-        for file_name in codefiles:
+        for file_name in set(code_files):
             file_path = os.path.join(main_folder, file_name)
             assert os.path.exists(file_path)
             with open(file_path, 'rb') as code_file:
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
 
-        for file_name in otherfiles:
+        for file_name in set(user_files):
             assert os.path.exists(file_name)
             assert not os.path.isabs(
                 file_name
@@ -149,7 +147,7 @@ class Client(object):
                 content = f.read()
                 pyfiles['other_files'][file_name] = content
 
-        pyfiles['empty_subfolders'] = emptysubfolders
+        pyfiles['empty_subfolders'] = set(user_empty_subfolders)
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

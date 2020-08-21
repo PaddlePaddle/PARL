@@ -20,7 +20,8 @@ import sys
 import threading
 import zmq
 import parl
-from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, get_subfiles_recursively
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
+from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
 import glob
@@ -99,9 +100,11 @@ class Client(object):
         pyfiles = dict()
         pyfiles['python_files'] = {}
         pyfiles['other_files'] = {}
-        pyfiles['empty_subfolders'] = set()
 
-        parsed_distributed_files = set()
+        codefiles = set()
+        otherfiles = set()
+        emptysubfolders = set()
+
         for distributed_file in distributed_files:
             parsed_list = glob.glob(distributed_file)
             if not parsed_list:
@@ -110,14 +113,14 @@ class Client(object):
                     .format(distributed_file))
             for pathname in parsed_list:
                 if os.path.isdir(pathname):
-                    python_files, other_files, empty_subfolders = get_subfiles_recursively(
+                    distribute_codefiles, distribute_otherfiles, distribute_emptysubfolders = get_subfiles_recursively(
                         pathname)
-                    parsed_distributed_files = parsed_distributed_files.union(
-                        python_files, other_files)
-                    pyfiles['empty_subfolders'] = pyfiles[
-                        'empty_subfolders'].union(empty_subfolders)
+                    otherfiles = otherfiles.union(distribute_codefiles,
+                                                  distribute_otherfiles)
+                    emptysubfolders = emptysubfolders.union(
+                        distribute_emptysubfolders)
                 else:
-                    parsed_distributed_files.add(pathname)
+                    otherfiles.add(pathname)
 
         if isnotebook():
             main_folder = './'
@@ -127,17 +130,17 @@ class Client(object):
             sep = os.sep
             if sep in main_file:
                 main_folder = sep.join(main_file.split(sep)[:-1])
-        code_files = filter(lambda x: x.endswith('.py'),
-                            os.listdir(main_folder))
+        codefiles = codefiles.union(
+            filter(lambda x: x.endswith('.py'), os.listdir(main_folder)))
 
-        for file_name in code_files:
+        for file_name in codefiles:
             file_path = os.path.join(main_folder, file_name)
             assert os.path.exists(file_path)
             with open(file_path, 'rb') as code_file:
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
 
-        for file_name in parsed_distributed_files:
+        for file_name in otherfiles:
             assert os.path.exists(file_name)
             assert not os.path.isabs(
                 file_name
@@ -145,6 +148,8 @@ class Client(object):
             with open(file_name, 'rb') as f:
                 content = f.read()
                 pyfiles['other_files'][file_name] = content
+
+        pyfiles['empty_subfolders'] = emptysubfolders
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

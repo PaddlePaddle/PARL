@@ -20,7 +20,7 @@ import numpy as np
 __all__ = [
     'has_func', 'to_str', 'to_byte', 'is_PY2', 'is_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
-    'get_fluid_version', 'isnotebook', 'get_subfiles_recursively'
+    'get_fluid_version', 'isnotebook'
 ]
 
 
@@ -117,36 +117,3 @@ def isnotebook():
             return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
-
-
-def get_subfiles_recursively(folder_path):
-    '''
-    Get subfiles under 'folder_path' recursively
-    Args:
-        folder_path: A folder(dir) whose subfiles/subfolders will be returned.
-
-    Returns:
-        python_files: A set including subfiles endwith '.py'.
-        other_files: A set including subfiles not endwith '.py'.
-        empty_subfolders: A set including empty subfolders.
-    '''
-    if not os.path.exists(folder_path):
-        raise ValueError("Path '{}' don't exist.".format(folder_path))
-    elif not os.path.isdir(folder_path):
-        raise ValueError('Input should be a folder, not a file.')
-    else:
-        python_files = set()
-        other_files = set()
-        empty_subfolders = set()
-        for root, dirs, files in os.walk(folder_path):
-            if files:
-                for sub_file in files:
-                    if sub_file.endswith('.py'):
-                        python_files.add(
-                            os.path.normpath(os.path.join(root, sub_file)))
-                    else:
-                        other_files.add(
-                            os.path.normpath(os.path.join(root, sub_file)))
-            elif len(dirs) == 0:
-                empty_subfolders.add(os.path.normpath(root))
-        return python_files, other_files, empty_subfolders

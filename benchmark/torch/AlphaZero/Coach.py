@@ -54,9 +54,9 @@ class Coach():
 
         self.test_dataset = get_test_dataset()
 
-    def _run_remote_tasks(self, signal_queue, i):
+    def _run_remote_tasks(self, signal_queue, seed):
         # The remote actor will actually run on the local machine or other machines of xparl cluster
-        remote_actor = Actor(self.game, self.args, i)
+        remote_actor = Actor(self.game, self.args, seed)
 
         while True:
             # receive running task signal
@@ -91,12 +91,12 @@ class Coach():
         # connect to xparl cluster to submit jobs
         parl.connect(self.args.master_address)
 
-        for i in range(self.args.actors_num):
+        for seed in range(self.args.actors_num):
             signal_queue = queue.Queue()
             self.remote_actors_signal_queues.append(signal_queue)
 
             remote_thread = threading.Thread(
-                target=self._run_remote_tasks, args=(signal_queue, i))
+                target=self._run_remote_tasks, args=(signal_queue, seed))
             remote_thread.setDaemon(True)
             remote_thread.start()
 

@@ -14,8 +14,7 @@ Mean win_rate (evaluate 5 episode) for 1000 epchos training (1 epcho = 5 episode
 
 
 ## StarCraft II Installation
-The environment is based on the full game of StarCraft II (version >= 3.16.1). To install the game, follow the commands bellow, or check more detail in [SMAC](https://github.com/oxwhirl/smac#installing-starcraft-ii). 
-MacOS/Windows users are required to run this folder in Docker, as the starcraft environment does not support these two systems.
+The environment is based on the full game of StarCraft II (version >= 3.16.1). To install the game, follow the commands bellow, or check more detail in [SMAC](https://github.com/oxwhirl/smac#installing-starcraft-ii). MacOS/Windows users are required to run this folder in Docker, as the starcraft environment does not support these two systems.
 
 ### Linux
 ```shell

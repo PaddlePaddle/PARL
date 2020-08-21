@@ -37,7 +37,7 @@ class Agents(parl.Agent):
         """ function: init a hidden tensor for every agent at the begging of every episode
             self.rnn_h: rnn hidden state, shape (n_agents, hidden_size)
         """
-        self.rnn_h = self.algorithm.init_hidden(1)[0]
+        self.rnn_h = self.alg.init_hidden(1)[0]
 
     def predict(self, obs, rnn_h_in):
         """input:
@@ -49,7 +49,7 @@ class Agents(parl.Agent):
         """
         obs = np.expand_dims(obs, 0)
         obs = torch.tensor(obs, dtype=torch.float32).to(device)
-        prob, rnn_h_out = self.algorithm.predict(obs, rnn_h_in)
+        prob, rnn_h_out = self.alg.predict(obs, rnn_h_in)
         return prob, rnn_h_out
 
     def sample(self,
@@ -229,9 +229,9 @@ class Agents(parl.Agent):
                 batch[key] = torch.tensor(
                     batch[key], dtype=torch.float32).to(device)
 
-        self.algorithm.learn(batch, epsilon)
+        self.alg.learn(batch, epsilon)
 
         if self.train_steps > 0 and self.train_steps % self.config[
                 'target_update_cycle'] == 0:
-            self.algorithm.sync_target()
+            self.alg.sync_target()
         self.train_steps += 1

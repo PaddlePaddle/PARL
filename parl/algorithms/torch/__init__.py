@@ -16,5 +16,6 @@ from parl.algorithms.torch.ddqn import *
 from parl.algorithms.torch.dqn import *
 from parl.algorithms.torch.a2c import *
 from parl.algorithms.torch.td3 import *
+from parl.algorithms.torch.coma import *
 from parl.algorithms.torch.ppo import *
 from parl.algorithms.torch.policy_gradient import *

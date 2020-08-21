@@ -23,7 +23,8 @@ from utils import win_loss_draw
 
 @parl.remote_class
 class Actor(object):
-    def __init__(self, game, args):
+    def __init__(self, game, args, seed):
+        np.random.seed(seed)
         os.environ['OMP_NUM_THREADS'] = "1"
         self.game = game
         self.args = args

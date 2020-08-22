@@ -21,6 +21,7 @@ import threading
 import zmq
 import parl
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
+from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
 import glob
@@ -96,22 +97,28 @@ class Client(object):
             A cloudpickled dictionary containing the python code in current
             working directory.
         """
+        pyfiles = dict()
+        pyfiles['python_files'] = {}
+        pyfiles['other_files'] = {}
 
-        parsed_distributed_files = set()
+        user_files = []
+        user_empty_subfolders = []
+
         for distributed_file in distributed_files:
             parsed_list = glob.glob(distributed_file)
             if not parsed_list:
                 raise ValueError(
                     "no local file is matched with '{}', please check your input"
                     .format(distributed_file))
-            # exclude the directiories
             for pathname in parsed_list:
-                if not os.path.isdir(pathname):
-                    parsed_distributed_files.add(pathname)
-
-        pyfiles = dict()
-        pyfiles['python_files'] = {}
-        pyfiles['other_files'] = {}
+                if os.path.isdir(pathname):
+                    pythonfiles, otherfiles, emptysubfolders = get_subfiles_recursively(
+                        pathname)
+                    user_files.extend(pythonfiles)
+                    user_files.extend(otherfiles)
+                    user_empty_subfolders.extend(emptysubfolders)
+                else:
+                    user_files.append(pathname)
 
         if isnotebook():
             main_folder = './'
@@ -131,7 +138,7 @@ class Client(object):
                 code = code_file.read()
                 pyfiles['python_files'][file_name] = code
 
-        for file_name in parsed_distributed_files:
+        for file_name in set(user_files):
             assert os.path.exists(file_name)
             assert not os.path.isabs(
                 file_name
@@ -139,6 +146,8 @@ class Client(object):
             with open(file_name, 'rb') as f:
                 content = f.read()
                 pyfiles['other_files'][file_name] = content
+
+        pyfiles['empty_subfolders'] = set(user_empty_subfolders)
         return cloudpickle.dumps(pyfiles)
 
     def _create_sockets(self, master_address):

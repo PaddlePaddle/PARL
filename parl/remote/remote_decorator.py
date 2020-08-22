@@ -217,6 +217,9 @@ def remote_class(*args, **kwargs):
                 is_attribute = attr in self.remote_attribute_keys_set
 
                 def wrapper(*args, **kwargs):
+                    if self.job_shutdown:
+                        raise RemoteError(
+                            attr, "This actor losts connection with the job.")
                     self.internal_lock.acquire()
                     if is_attribute:
                         self.job_socket.send_multipart([
@@ -224,10 +227,6 @@ def remote_class(*args, **kwargs):
                             to_byte(attr)
                         ])
                     else:
-                        if self.job_shutdown:
-                            raise RemoteError(
-                                attr,
-                                "This actor losts connection with the job.")
                         data = dumps_argument(*args, **kwargs)
                         self.job_socket.send_multipart(
                             [remote_constants.CALL_TAG,

@@ -50,7 +50,7 @@ class Agent(object):
 parl.connect('localhost:8037')
 agent = Agent()
 agent.say_hello()
-ans = agent.sum(1,5) # run remotely and not consume any local computation resources
+ans = agent.sum(1,5) # it runs remotely, without consuming any local computation resources
 ```
 Two steps to use outer computation resources:
 1. use the `parl.remote_class` to decorate a class at first, after which it is transferred to be a new class that can run in other CPUs or machines.

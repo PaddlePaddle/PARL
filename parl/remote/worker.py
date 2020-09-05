@@ -420,4 +420,5 @@ class Worker(object):
     def run(self):
         """Keep running until it lost connection with the master.
         """
-        self.reply_master_hearbeat_thread.join()
+        if self.worker_is_alive:
+            self.reply_master_hearbeat_thread.join()

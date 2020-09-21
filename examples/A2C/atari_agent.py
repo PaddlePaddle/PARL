@@ -16,7 +16,7 @@ import numpy as np
 import paddle.fluid as fluid
 import parl
 from parl import layers
-from parl.utils import machine_info
+from parl.utils import machine_info, get_gpu_count
 from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 
@@ -37,6 +37,10 @@ class AtariAgent(parl.Agent):
 
         self.entropy_coeff_scheduler = PiecewiseScheduler(
             config['entropy_coeff_scheduler'])
+        
+        if machine_info.is_gpu_available():
+            assert get_gpu_count() == 1, 'Only support training in single GPU,\
+                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
     def build_program(self):
         self.sample_program = fluid.Program()

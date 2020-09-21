@@ -101,7 +101,8 @@ def train_agent():
             act_space=env.action_space,
             gamma=args.gamma,
             tau=args.tau,
-            lr=args.lr)
+            critic_lr=args.critic_lr,
+            actor_lr=args.actor_lr)
         agent = MAAgent(
             algorithm,
             agent_index=i,
@@ -195,10 +196,15 @@ if __name__ == '__main__':
         help='statistical interval of save model or count reward')
     # Core training parameters
     parser.add_argument(
-        '--lr',
+        '--critic_lr',
         type=float,
         default=1e-3,
-        help='learning rate for Adam optimizer')
+        help='learning rate for the critic model')
+    parser.add_argument(
+        '--actor_lr',
+        type=float,
+        default=1e-3,
+        help='learning rate of the actor model')
     parser.add_argument(
         '--gamma', type=float, default=0.95, help='discount factor')
     parser.add_argument(

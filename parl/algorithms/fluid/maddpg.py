@@ -86,7 +86,8 @@ class MADDPG(Algorithm):
             actor_lr = lr
             warnings.warn(
                 "the `lr` argument of `__init__` function in `parl.Algorithms.MADDPG` is deprecated \
-                    since version 2.0 and will be removed in version 2.1.",
+                    since version 2.0 and will be removed in version 2.1. \
+                    Recommend to use `actor_lr` and `critic_lr`. ",
                 DeprecationWarning,
                 stacklevel=2)
         self.agent_index = agent_index

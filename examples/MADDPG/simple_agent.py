@@ -17,6 +17,7 @@ import parl
 from parl import layers
 from paddle import fluid
 from parl.utils import ReplayMemory
+from parl.utils import machine_info, get_gpu_count
 
 
 class MAAgent(parl.Agent):
@@ -46,6 +47,10 @@ class MAAgent(parl.Agent):
             obs_dim=self.obs_dim_n[agent_index],
             act_dim=self.act_dim_n[agent_index])
         self.global_train_step = 0
+
+        if machine_info.is_gpu_available():
+            assert get_gpu_count(
+            ) == 1, 'Only support training in single GPU, Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
         super(MAAgent, self).__init__(algorithm)
 

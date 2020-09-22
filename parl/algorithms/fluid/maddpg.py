@@ -53,7 +53,9 @@ class MADDPG(Algorithm):
                  act_space=None,
                  gamma=None,
                  tau=None,
-                 lr=None):
+                 lr=None,
+                 actor_lr=None,
+                 critic_lr=None):
         """  MADDPG algorithm
         
         Args:
@@ -63,19 +65,38 @@ class MADDPG(Algorithm):
             act_space: action_space, gym space
             gamma (float): discounted factor for reward computation.
             tau (float): decay coefficient when updating the weights of self.target_model with self.model
-            lr (float): learning rate 
+            lr (float): learning rate, lr will be assigned to both critic_lr and actor_lr
+            critic_lr (float): learning rate of the critic model
+            actor_lr (float): learning rate of the actor model
         """
 
         assert isinstance(agent_index, int)
         assert isinstance(act_space, list)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
-        assert isinstance(lr, float)
+        # compatible upgrade of lr
+        if lr is None:
+            assert isinstance(actor_lr, float)
+            assert isinstance(critic_lr, float)
+        else:
+            assert isinstance(lr, float)
+            assert actor_lr is None, 'no need to set `actor_lr` if `lr` is not None'
+            assert critic_lr is None, 'no need to set `critic_lr` if `lr` is not None'
+            critic_lr = lr
+            actor_lr = lr
+            warnings.warn(
+                "the `lr` argument of `__init__` function in `parl.Algorithms.MADDPG` is deprecated \
+                    since version 1.4 and will be removed in version 2.0. \
+                    Recommend to use `actor_lr` and `critic_lr`. ",
+                DeprecationWarning,
+                stacklevel=2)
         self.agent_index = agent_index
         self.act_space = act_space
         self.gamma = gamma
         self.tau = tau
         self.lr = lr
+        self.actor_lr = actor_lr
+        self.critic_lr = critic_lr
 
         self.model = model
         self.target_model = deepcopy(model)
@@ -145,7 +166,7 @@ class MADDPG(Algorithm):
             clip=fluid.clip.GradientClipByNorm(clip_norm=0.5),
             param_list=self.model.get_actor_params())
 
-        optimizer = fluid.optimizer.AdamOptimizer(self.lr)
+        optimizer = fluid.optimizer.AdamOptimizer(self.actor_lr)
         optimizer.minimize(cost, parameter_list=self.model.get_actor_params())
         return cost
 
@@ -157,7 +178,7 @@ class MADDPG(Algorithm):
             clip=fluid.clip.GradientClipByNorm(clip_norm=0.5),
             param_list=self.model.get_critic_params())
 
-        optimizer = fluid.optimizer.AdamOptimizer(self.lr)
+        optimizer = fluid.optimizer.AdamOptimizer(self.critic_lr)
         optimizer.minimize(cost, parameter_list=self.model.get_critic_params())
         return cost
 

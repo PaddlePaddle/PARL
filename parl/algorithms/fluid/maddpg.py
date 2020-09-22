@@ -65,7 +65,7 @@ class MADDPG(Algorithm):
             act_space: action_space, gym space
             gamma (float): discounted factor for reward computation.
             tau (float): decay coefficient when updating the weights of self.target_model with self.model
-            lr (float): learning rate 
+            lr (float): learning rate, lr will be assigned to both critic_lr and actor_lr
             critic_lr (float): learning rate of the critic model
             actor_lr (float): learning rate of the actor model
         """
@@ -86,7 +86,7 @@ class MADDPG(Algorithm):
             actor_lr = lr
             warnings.warn(
                 "the `lr` argument of `__init__` function in `parl.Algorithms.MADDPG` is deprecated \
-                    since version 2.0 and will be removed in version 2.1. \
+                    since version 1.4 and will be removed in version 2.0. \
                     Recommend to use `actor_lr` and `critic_lr`. ",
                 DeprecationWarning,
                 stacklevel=2)

@@ -21,7 +21,6 @@ from parl.core.fluid import layers
 from parl.core.agent_base import AgentBase
 from parl.core.fluid.algorithm import Algorithm
 from parl.utils import machine_info
-from parl.utils import logger
 
 __all__ = ['Agent']
 
@@ -101,7 +100,7 @@ class Agent(AgentBase):
 
         .. code-block:: python
 
-	    self.pred_program = fluid.Program()
+            self.pred_program = fluid.Program()
 
             with fluid.program_guard(self.pred_program):
                 obs = layers.data(
@@ -155,7 +154,7 @@ class Agent(AgentBase):
             filename = keyval[0]
             program = keyval[1]
             if isinstance(program, fluid.framework.Program) or \
-                isinstance(program, fluid.compiler.CompiledProgram):
+                    isinstance(program, fluid.compiler.CompiledProgram):
                 fluid.io.save_params(
                     executor=self.fluid_executor,
                     dirname=save_path,
@@ -196,14 +195,12 @@ class Agent(AgentBase):
             filename = keyval[0]
             program = keyval[1]
             if isinstance(program, fluid.framework.Program) or \
-                isinstance(program, fluid.compiler.CompiledProgram):
+                    isinstance(program, fluid.compiler.CompiledProgram):
                 if not os.path.isfile('{}/{}'.format(save_path, filename)):
                     raise Exception('{}/{} does not exits'.format(
                         save_path, filename))
-                logger.info(type(program))
                 if type(program) is fluid.compiler.CompiledProgram:
                     program = program._init_program
-                logger.info(type(program))
 
                 fluid.io.load_params(
                     executor=self.fluid_executor,

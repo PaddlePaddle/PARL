@@ -92,8 +92,8 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
-        save_path1 = 'model.ckpt'
-        save_path2 = os.path.join('my_model', 'model-2.ckpt')
+        save_path1 = 'model_dir'
+        save_path2 = os.path.join('my_model', 'model-2_dir')
         agent.save(save_path1)
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
@@ -103,7 +103,7 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
         output_np = agent.predict(obs)
-        save_path1 = 'model.ckpt'
+        save_path1 = 'model_dir'
         previous_output = agent.predict(obs)
         agent.save(save_path1)
         agent.restore(save_path1)
@@ -121,7 +121,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.learn_program = parl.compile(agent.learn_program)
         obs = np.random.random([3, 10]).astype('float32')
         previous_output = agent.predict(obs)
-        save_path1 = 'model.ckpt'
+        save_path1 = 'model_dir'
         agent.save(save_path1)
         agent.restore(save_path1)
 

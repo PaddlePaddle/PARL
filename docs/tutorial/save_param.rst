@@ -16,11 +16,11 @@ Here is a demonstration of usage:
 .. code-block:: python
 
     agent = AtariAgent()
-    # save the parameters of agent to ./model.ckpt
-    agent.save('./model.ckpt')             
-    # restore the parameters from ./model.ckpt to agent  
-    agent.restore('./model.ckpt')    
+    # save the parameters of agent to ./model_dir
+    agent.save('./model_dir')             
+    # restore the parameters from ./model_dir to agent  
+    agent.restore('./model_dir')    
 
-    # restore the parameters from ./model.ckpt to another_agent
+    # restore the parameters from ./model_dir to another_agent
     another_agent = AtariAgent()
-    another_agent.restore('./model.ckpt')    
+    another_agent.restore('./model_dir')    

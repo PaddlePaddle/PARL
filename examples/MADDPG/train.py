@@ -121,10 +121,10 @@ def train_agent():
     if args.restore:
         # restore modle
         for i in range(len(agents)):
-            model_file = args.model_dir + '/agent_' + str(i) + '.ckpt'
+            model_file = args.model_dir + '/agent_' + str(i)
             if not os.path.exists(model_file):
-                logger.info('model file {} does not exits'.format(model_file))
-                raise Exception
+                raise Exception(
+                    'model file {} does not exits'.format(model_file))
             agents[i].restore(model_file)
 
     t_start = time.time()
@@ -166,7 +166,7 @@ def train_agent():
             if not args.restore:
                 os.makedirs(os.path.dirname(args.model_dir), exist_ok=True)
                 for i in range(len(agents)):
-                    model_name = '/agent_' + str(i) + '.ckpt'
+                    model_name = '/agent_' + str(i)
                     agents[i].save(args.model_dir + model_name)
 
 

@@ -21,6 +21,7 @@ from parl.core.fluid import layers
 from parl.core.agent_base import AgentBase
 from parl.core.fluid.algorithm import Algorithm
 from parl.utils import machine_info
+from parl.utils import logger
 
 __all__ = ['Agent']
 
@@ -147,13 +148,14 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save()
-            agent.save('./program_model')
-            agent.save('./program_model', program=agent.learn_program)
+            agent.save('./model_dir')
+            agent.save('./model_dir', program=agent.learn_program)
 
         """
-        if save_path is None:
-            save_path = './program_model'
+        assert save_path is not None, 'please specify `save_path` '
+        if os.path.isfile(save_path):
+            raise Exception('can not save to {}, it is a file, not directory'.
+                            format(save_path))
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         all_programs = [
@@ -189,7 +191,6 @@ class Agent(AgentBase):
 
     def restore(self, save_path=None, program=None):
         """Restore previously saved parameters from save_path. 
-        default save_path is  ./program_model
 
         Args:
             save_path(str): path where parameters were previously saved.
@@ -203,12 +204,11 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save()
-            agent.restore()
+            agent.save('./model_dir')
+            agent.restore('./model_dir')
 
         """
-        if save_path is None:
-            save_path = './program_model'
+        assert save_path is not None, 'please specify `save_path` '
         if not os.path.exists(save_path):
             raise Exception(
                 'can not restore from {}, directory does not exists'.format(

@@ -22,9 +22,7 @@ agent->update(noisy_info, noisy_rewards);
 ```
 
 ## 一键运行demo列表
-- **PaddleLite**: sh ./scripts/build.sh paddle
-- **Torch**: sh ./scripts/build.sh torch
-- **裸写网络**：
+- sh ./scripts/build.sh
 
 ## 相关依赖:
 - Protobuf2

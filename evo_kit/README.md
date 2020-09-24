@@ -23,7 +23,6 @@ agent->update(noisy_info, noisy_rewards);
 
 ## 一键运行demo列表
 - sh ./scripts/build.sh
-- **裸写网络**：
 
 ## 相关依赖:
 - Protobuf2

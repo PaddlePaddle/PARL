@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sh scripts/lib_install.sh torch
+
 cd demo/torch
 
 #---------------libtorch-------------#

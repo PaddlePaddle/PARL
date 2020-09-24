@@ -22,8 +22,7 @@ agent->update(noisy_info, noisy_rewards);
 ```
 
 ## 一键运行demo列表
-- **PaddleLite**: sh ./scripts/build.sh paddle
-- **Torch**: sh ./scripts/build.sh torch
+- sh ./scripts/build.sh
 - **裸写网络**：
 
 ## 相关依赖:

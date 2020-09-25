@@ -15,3 +15,11 @@
 4. **Agent57: Outperforming the Atari Human Benchmark**. [paper link](https://arxiv.org/pdf/2003.13350.pdf)
 
     *Adrià Puigdomènech Badia,  Bilal Piot, Steven Kapturowski, Pablo Sprechmann, Alex Vitvitsky, Daniel Gu, Charles Blundel* 
+
+5. **Hyperparameter Selection for Offline Reinforcement Learning**. [paper link](https://arxiv.org/pdf/2007.09055.pdf)
+
+    *Tom Le Paine, Cosmin Paduraru, Andrea Michi , Caglar Gulcehre , Konrad Żołna, Alexander Novikov , Ziyu Wang and Nando de Freitas*
+
+6. **Importance Weighted Policy Learning and Adaption**. [paper link](https://arxiv.org/pdf/2009.04875.pdf)
+
+    *Alexandre Galashov, Jakub Sygnowski, Guillaume Desjardins, Jan Humplik, Leonard Hasenclever, Rae Jeong, Yee Whye Teh, Nicolas Heess*

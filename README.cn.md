@@ -33,7 +33,7 @@ PARL的目标是构建一个可以完成复杂任务的智能体。以下是用�
 
 # 简易高效的并行接口
 在PARL中，一个**修饰符**(parl.remote_class)就可以帮助用户实现自己的并行算法。
-以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。 请访问我们的[教程文档](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)以获取更多的并行训练信息。
+以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。 请访问我们的[教程文档](https://github.com/PaddlePaddle/PARL/blob/develop/docs/zh_CN/xparl/tutorial.md)以获取更多的并行训练信息。
 ```python
 #============Agent.py=================
 @parl.remote_class

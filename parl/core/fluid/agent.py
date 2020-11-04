@@ -159,16 +159,16 @@ class Agent(AgentBase):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         all_programs = [
-            (kv[0], kv[1]) for kv in self.__dict__.items()
-            if (isinstance(kv[1], fluid.framework.Program)
-                or isinstance(kv[1], fluid.compiler.CompiledProgram))
+            (key, val) for (key, val) in self.__dict__.items()
+            if (isinstance(val, fluid.framework.Program)
+                or isinstance(val, fluid.compiler.CompiledProgram))
         ]
 
         if program:
             filename = None
-            for keyval in all_programs:
-                if program == keyval[1]:
-                    filename = keyval[0]
+            for (name, prog) in all_programs:
+                if program == prog:
+                    filename = name
                     break
             if filename is None:
                 raise Exception('can not find program {}.'.format(program))
@@ -178,9 +178,7 @@ class Agent(AgentBase):
                 main_program=program,
                 filename=filename)
         else:
-            for keyval in all_programs:
-                filename = keyval[0]
-                program = keyval[1]
+            for (filename, program) in all_programs:
                 if isinstance(program, fluid.framework.Program) or \
                         isinstance(program, fluid.compiler.CompiledProgram):
                     fluid.io.save_params(
@@ -218,16 +216,16 @@ class Agent(AgentBase):
                 'can not restore from {}, it is a file, not directory'.format(
                     save_path))
         all_programs = [
-            (kv[0], kv[1]) for kv in self.__dict__.items()
-            if (isinstance(kv[1], fluid.framework.Program)
-                or isinstance(kv[1], fluid.compiler.CompiledProgram))
+            (key, val) for (key, val) in self.__dict__.items()
+            if (isinstance(val, fluid.framework.Program)
+                or isinstance(val, fluid.compiler.CompiledProgram))
         ]
 
         if program:
             filename = None
-            for keyval in all_programs:
-                if program == keyval[1]:
-                    filename = keyval[0]
+            for (name, prog) in all_programs:
+                if program == prog:
+                    filename = name
                     break
             if filename is None:
                 raise Exception('can not find the program to restore.')
@@ -250,9 +248,7 @@ class Agent(AgentBase):
                     .format(
                         len(programs_list), save_path, programs_list,
                         len(exist_files), exist_files))
-            for keyval in all_programs:
-                filename = keyval[0]
-                program = keyval[1]
+            for (filename, program) in all_programs:
                 if not os.path.isfile('{}/{}'.format(save_path, filename)):
                     raise Exception('{}/{} does not exits'.format(
                         save_path, filename))

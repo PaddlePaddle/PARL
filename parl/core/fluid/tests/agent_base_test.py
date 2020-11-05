@@ -109,10 +109,13 @@ class AgentBaseTest(unittest.TestCase):
         agent.save(save_program_path2, program=agent.learn_program)
         agent.save(save_program_deep_path1, program=agent.predict_program)
         agent.save(save_program_deep_path2, program=agent.learn_program)
-        self.assertTrue(os.path.exists(save_program_path1 + '/predict_program'))
+        self.assertTrue(
+            os.path.exists(save_program_path1 + '/predict_program'))
         self.assertTrue(os.path.exists(save_program_path2 + '/learn_program'))
-        self.assertTrue(os.path.exists(save_program_deep_path1 + '/predict_program'))
-        self.assertTrue(os.path.exists(save_program_deep_path2 + '/learn_program'))
+        self.assertTrue(
+            os.path.exists(save_program_deep_path1 + '/predict_program'))
+        self.assertTrue(
+            os.path.exists(save_program_deep_path2 + '/learn_program'))
 
     def test_restore(self):
         agent = TestAgent(self.alg)
@@ -144,7 +147,8 @@ class AgentBaseTest(unittest.TestCase):
 
         # a new agent instance
         another_agent = TestAgent(self.alg)
-        another_agent.restore(save_program_path1, program=another_agent.learn_program)
+        another_agent.restore(
+            save_program_path1, program=another_agent.learn_program)
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 
@@ -178,7 +182,8 @@ class AgentBaseTest(unittest.TestCase):
         # a new agent instance
         another_agent = TestAgent(self.alg)
         another_agent.learn_program = parl.compile(another_agent.learn_program)
-        another_agent.restore(save_program_path1, program=another_agent.learn_program)
+        another_agent.restore(
+            save_program_path1, program=another_agent.learn_program)
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 

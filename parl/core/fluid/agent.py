@@ -158,11 +158,10 @@ class Agent(AgentBase):
                             format(save_path))
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        all_programs = [
-            (key, val) for (key, val) in self.__dict__.items()
-            if (isinstance(val, fluid.framework.Program)
-                or isinstance(val, fluid.compiler.CompiledProgram))
-        ]
+        all_programs = [(key, val) for (key, val) in self.__dict__.items()
+                        if (isinstance(val, fluid.framework.Program)
+                            or isinstance(val, fluid.compiler.CompiledProgram))
+                        ]
 
         if program:
             filename = None
@@ -215,11 +214,10 @@ class Agent(AgentBase):
             raise Exception(
                 'can not restore from {}, it is a file, not directory'.format(
                     save_path))
-        all_programs = [
-            (key, val) for (key, val) in self.__dict__.items()
-            if (isinstance(val, fluid.framework.Program)
-                or isinstance(val, fluid.compiler.CompiledProgram))
-        ]
+        all_programs = [(key, val) for (key, val) in self.__dict__.items()
+                        if (isinstance(val, fluid.framework.Program)
+                            or isinstance(val, fluid.compiler.CompiledProgram))
+                        ]
 
         if program:
             filename = None

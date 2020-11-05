@@ -90,20 +90,38 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_save(self):
         agent = TestAgent(self.alg)
-        obs = np.random.random([3, 10]).astype('float32')
-        output_np = agent.predict(obs)
-        save_path1 = 'model.ckpt'
-        save_path2 = os.path.join('my_model', 'model-2.ckpt')
+        save_path1 = 'model_dir'
+        save_path2 = os.path.join('my_model', 'model-2_dir')
         agent.save(save_path1)
         agent.save(save_path2)
-        self.assertTrue(os.path.exists(save_path1))
-        self.assertTrue(os.path.exists(save_path2))
+        self.assertTrue(os.path.exists(save_path1 + '/predict_program'))
+        self.assertTrue(os.path.exists(save_path1 + '/learn_program'))
+        self.assertTrue(os.path.exists(save_path2 + '/predict_program'))
+        self.assertTrue(os.path.exists(save_path2 + '/learn_program'))
+
+    def test_save_with_program(self):
+        agent = TestAgent(self.alg)
+        save_program_path1 = 'program_dir1'
+        save_program_path2 = 'program_dir2'
+        save_program_deep_path1 = os.path.join('my_program1', 'model-2_dir')
+        save_program_deep_path2 = os.path.join('my_program2', 'model-2_dir')
+        agent.save(save_program_path1, program=agent.predict_program)
+        agent.save(save_program_path2, program=agent.learn_program)
+        agent.save(save_program_deep_path1, program=agent.predict_program)
+        agent.save(save_program_deep_path2, program=agent.learn_program)
+        self.assertTrue(
+            os.path.exists(save_program_path1 + '/predict_program'))
+        self.assertTrue(os.path.exists(save_program_path2 + '/learn_program'))
+        self.assertTrue(
+            os.path.exists(save_program_deep_path1 + '/predict_program'))
+        self.assertTrue(
+            os.path.exists(save_program_deep_path2 + '/learn_program'))
 
     def test_restore(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([3, 10]).astype('float32')
-        output_np = agent.predict(obs)
-        save_path1 = 'model.ckpt'
+
+        save_path1 = 'model_dir'
         previous_output = agent.predict(obs)
         agent.save(save_path1)
         agent.restore(save_path1)
@@ -116,12 +134,31 @@ class AgentBaseTest(unittest.TestCase):
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 
+    def test_restore_with_program(self):
+        agent = TestAgent(self.alg)
+        obs = np.random.random([3, 10]).astype('float32')
+
+        save_program_path1 = 'program_dir'
+        previous_output = agent.predict(obs)
+        agent.save(save_program_path1, program=agent.learn_program)
+        agent.restore(save_program_path1, program=agent.learn_program)
+        current_output = agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
+
+        # a new agent instance
+        another_agent = TestAgent(self.alg)
+        another_agent.restore(
+            save_program_path1, program=another_agent.learn_program)
+        current_output = another_agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
+
     def test_compiled_restore(self):
         agent = TestAgent(self.alg)
         agent.learn_program = parl.compile(agent.learn_program)
         obs = np.random.random([3, 10]).astype('float32')
+
+        save_path1 = 'model_dir'
         previous_output = agent.predict(obs)
-        save_path1 = 'model.ckpt'
         agent.save(save_path1)
         agent.restore(save_path1)
 
@@ -129,6 +166,24 @@ class AgentBaseTest(unittest.TestCase):
         another_agent = TestAgent(self.alg)
         another_agent.learn_program = parl.compile(another_agent.learn_program)
         another_agent.restore(save_path1)
+        current_output = another_agent.predict(obs)
+        np.testing.assert_equal(current_output, previous_output)
+
+    def test_compiled_restore_with_program(self):
+        agent = TestAgent(self.alg)
+        agent.learn_program = parl.compile(agent.learn_program)
+        obs = np.random.random([3, 10]).astype('float32')
+
+        save_program_path1 = 'program_dir'
+        previous_output = agent.predict(obs)
+        agent.save(save_program_path1, program=agent.learn_program)
+        agent.restore(save_program_path1, program=agent.learn_program)
+
+        # a new agent instance
+        another_agent = TestAgent(self.alg)
+        another_agent.learn_program = parl.compile(another_agent.learn_program)
+        another_agent.restore(
+            save_program_path1, program=another_agent.learn_program)
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
 

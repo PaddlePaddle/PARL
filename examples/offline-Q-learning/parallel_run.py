@@ -97,15 +97,15 @@ def main():
         model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE * gpu_num)
     agent = AtariAgent(
         algorithm, act_dim=act_dim, total_step=args.train_total_steps)
-    if os.path.isfile('./model.ckpt'):
+    if os.path.isfile('./model_dir'):
         logger.info("load model from file")
-        agent.restore('./model.ckpt')
+        agent.restore('./model_dir')
 
     if args.train:
         logger.info("train with memory data")
         run_train_step(agent, rpm)
         logger.info("finish training. Save the model.")
-        agent.save('./model.ckpt')
+        agent.save('./model_dir')
     else:
         logger.info("collect experience")
         collect_exp(env, rpm, agent)

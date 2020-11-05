@@ -57,8 +57,8 @@ def main():
     agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=ACT_DIM)
 
     # if the file already exists, restore parameters from it
-    if os.path.exists('./model.ckpt'):
-        agent.restore('./model.ckpt')
+    if os.path.exists('./model_dir'):
+        agent.restore('./model_dir')
 
     for i in range(1000):
         obs_list, action_list, reward_list = run_episode(env, agent)
@@ -76,8 +76,8 @@ def main():
             total_reward = np.sum(reward_list)
             logger.info('Test reward: {}'.format(total_reward))
 
-    # save the parameters to ./model.ckpt
-    agent.save('./model.ckpt')
+    # save the parameters to ./model_dir
+    agent.save('./model_dir')
 
 
 if __name__ == '__main__':

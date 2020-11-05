@@ -302,5 +302,22 @@ def remote_class(*args, **kwargs):
 
     max_memory = kwargs.get('max_memory')
     if len(args) == 1 and callable(args[0]): # args[0]: cls
+        """
+        @parl.remote_class
+        class Actor(object):
+            def __init__(self):
+                pass
+
+        args in the above example:  (<class '__main__.Actor'>,)
+        """
         return decorator(args[0])
+
+    """
+    @parl.remote_class(10)
+    class Actor(object):
+        def __init__(self):
+            pass
+
+    args in the above example:  (10,)
+    """
     return decorator

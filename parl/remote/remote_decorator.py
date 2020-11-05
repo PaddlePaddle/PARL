@@ -301,4 +301,6 @@ def remote_class(*args, **kwargs):
         return proxy_wrapper
 
     max_memory = kwargs.get('max_memory')
+    if len(args) == 1 and callable(args[0]): # args[0]: cls
+        return decorator(args[0])
     return decorator

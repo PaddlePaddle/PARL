@@ -46,18 +46,17 @@ class ModelBaseTest(unittest.TestCase):
         self.target_model3 = TestModel()
 
         gpu_count = get_gpu_count()
-        # print("MMMMMMMMMMMMMMMM, gpunum {}".format(gpu_count))
         if gpu_count > 0:
-            self.place = paddle.CPUPlace()
+            place = paddle.CUDAPlace(0)
         else:
-            self.place = paddle.CUDAPlace(0)
-        # TODO: self.place=paddle.CUDAPinnedPlace()
+            place = paddle.CPUPlace()
+        # OTHER: place=paddle.CUDAPinnedPlace()
 
     def test_sync_weights_in_one_program(self):
-        obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32), place=self.place)
+        obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32))
 
         N = 10
-        random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32), place=self.place)
+        random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32))
         for i in range(N):
             x = random_obs[i]
             model_output = self.model.predict(x)
@@ -66,7 +65,7 @@ class ModelBaseTest(unittest.TestCase):
 
         self.model.sync_weights_to(self.target_model)
 
-        random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32), place=self.place)
+        random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32))
         for i in range(N):
             x = random_obs[i]
             model_output = self.model.predict(x).numpy()
@@ -100,7 +99,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -125,7 +124,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -149,7 +148,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -174,7 +173,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -198,7 +197,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -223,7 +222,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -247,7 +246,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = random_obs[i]
             real_target_outputs = self.target_model2.predict(
-                paddle.to_tensor(obs, place=self.place)).numpy()
+                paddle.to_tensor(obs)).numpy()
             out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
             out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
             out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
@@ -278,7 +277,7 @@ class ModelBaseTest(unittest.TestCase):
         N = 10
         random_obs = np.random.randn(N, 4).astype(np.float32)
         for i in range(N):
-            x = paddle.to_tensor(random_obs[i], place=self.place)
+            x = paddle.to_tensor(random_obs[i])
             model1_output = model1.predict(x).numpy()
             model2_output = model2.predict(x).numpy()
             self.assertNotEqual(model1_output, model2_output)
@@ -288,7 +287,7 @@ class ModelBaseTest(unittest.TestCase):
 
         random_obs = np.random.randn(N, 4).astype(np.float32)
         for i in range(N):
-            x = paddle.to_tensor(random_obs[i], place=self.place)
+            x = paddle.to_tensor(random_obs[i])
             model1_output = model1.predict(x).numpy()
             model2_output = model2.predict(x).numpy()
             self.assertEqual(model1_output, model2_output)

@@ -59,7 +59,7 @@ def is_PY3():
 
 def get_fluid_version():
     import paddle
-    fluid_version = int(paddle.__version__.replace('.', ''))
+    fluid_version = int(paddle.__version__.replace('.', '').split('-')[0])
     return fluid_version
 
 
@@ -69,6 +69,7 @@ try:
     from paddle import fluid
     fluid_version = get_fluid_version()
     assert fluid_version >= 161 or fluid_version == 0, "PARL requires paddle>=1.6.1"
+    assert fluid_version < 200 or fluid_version == 0, "PARL requires paddle<2.0.0"
     _HAS_FLUID = True
 except ImportError:
     _HAS_FLUID = False

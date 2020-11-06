@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.3.2"
-"""
-generates new PARL python API
-"""
-import os
+from parl.core.paddle.model import *
+from parl.core.paddle.algorithm import *
+from parl.core.paddle.agent import *
 
-from tensorboardX import SummaryWriter
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
-
-if _HAS_FLUID:
-    # from parl.core.fluid import *
-    # from parl.core.fluid.plutils.compiler import compile
-    from parl.core.paddle import *
-elif _HAS_TORCH:
-    from parl.core.torch import *
-
-from parl.remote import remote_class, connect
-from parl import algorithms

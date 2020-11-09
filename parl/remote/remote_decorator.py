@@ -283,6 +283,7 @@ def remote_class(*args, **kwargs):
                 def __init__(self, *args, **kwargs):
                     self.xparl_remote_wrapper_obj = remote_wrapper(
                         *args, **kwargs)
+                    assert not hasattr(self.xparl_remote_wrapper_obj, 'xparl_remote_wrapper_obj')
 
                 def __getattr__(self, attr):
                     return self.xparl_remote_wrapper_obj.get_remote_attr(attr)
@@ -294,7 +295,100 @@ def remote_class(*args, **kwargs):
                         self.xparl_remote_wrapper_obj.set_remote_attr(
                             attr, value)
 
-            return ProxyWrapper
+            class ProxyWrapperNoWait(object):
+                def __init__(self, *args, **kwargs):
+                    self.xparl_remote_wrapper_calling_queue = queue.Queue()
+                    self.xparl_remote_wrapper_internal_lock = threading.Lock()
+                    self.xparl_calling_finished_event = threading.Event()
+                                        
+                    object_thread = threading.Thread(target=self._run_object_in_backend, args=(args, kwargs))
+                    object_thread.setDaemon(True)
+                    object_thread.start()
+
+                def _run_object_in_backend(self, args, kwargs):
+                    self.xparl_remote_wrapper_obj = remote_wrapper(
+                        *args, **kwargs)
+                    
+                    """
+                    NOTE:
+                        We should set the event after the initialization of self.xparl_remote_wrapper_obj.
+                        Only after the initialization is complete can we call the function of actor.
+                    """
+                    self.xparl_calling_finished_event.set() 
+
+                    assert not hasattr(self.xparl_remote_wrapper_obj, 'xparl_remote_wrapper_obj')
+                    assert not hasattr(self.xparl_remote_wrapper_obj, 'xparl_remote_wrapper_calling_queue')
+                    assert not hasattr(self.xparl_remote_wrapper_obj, 'xparl_remote_wrapper_internal_lock')
+                    assert not hasattr(self.xparl_remote_wrapper_obj, 'xparl_calling_finished_event')
+
+                    while True:
+                        calling_request = self.xparl_remote_wrapper_calling_queue.get()
+                        
+                        if calling_request.calling_type == "setattr":
+                            self.xparl_remote_wrapper_obj.set_remote_attr(
+                                calling_request.attr, calling_request.value)
+
+                            self.xparl_calling_finished_event.set()
+
+                        elif calling_request.calling_type == "getattr":
+                            is_attribute = hasattr(self.xparl_remote_wrapper_obj, calling_request.attr)
+
+                            if is_attribute:
+                                return_result = self.xparl_remote_wrapper_obj.get_remote_attr(calling_request.attr)
+                            else:
+                                function_wrapper = self.xparl_remote_wrapper_obj.get_remote_attr(calling_request.attr)
+                                return_result = function_wrapper(*calling_request.args, **calling_request.kwargs)
+                            
+                            calling_request.future_return_queue.put(return_result)
+
+                            self.xparl_calling_finished_event.set()
+                        else:
+                            assert False, "undefined calling type"
+
+                def __getattr__(self, attr):
+                    with self.xparl_remote_wrapper_internal_lock:
+                        self.xparl_calling_finished_event.wait()
+                        self.xparl_calling_finished_event.clear()
+
+                        """
+                        Don't use the following way, which will call the __getattr__ function and acquire the lock again.
+                            is_attribute = hasattr(self.xparl_remote_wrapper_obj, attr)
+                        """
+                        is_attribute = hasattr(self.__dict__['xparl_remote_wrapper_obj'], attr)
+
+                        def wrapper(*args, **kwargs):
+                            future_return_queue = queue.Queue()
+                            calling_request = CallingRequest(calling_type="getattr",
+                                        attr=attr, value=None, args=args, kwargs=kwargs,
+                                        future_return_queue=future_return_queue)
+           
+                            self.__dict__['xparl_remote_wrapper_calling_queue'].put(calling_request)
+
+
+                            future_object = FutureObject(future_return_queue)
+                            return future_object
+
+                        return wrapper() if is_attribute else wrapper
+
+                def __setattr__(self, attr, value):
+                    if attr in ['xparl_remote_wrapper_obj','xparl_remote_wrapper_calling_queue',
+                            'xparl_remote_wrapper_internal_lock', 'xparl_calling_finished_event']:
+                        super(ProxyWrapperNoWait, self).__setattr__(attr, value)
+                    else:
+                        with self.xparl_remote_wrapper_internal_lock:
+                            self.xparl_calling_finished_event.wait()
+                            self.xparl_calling_finished_event.clear()
+
+                            calling_request = CallingRequest(calling_type="setattr",
+                                    attr=attr, value=value, args=None, kwargs=None,
+                                    future_return_queue=None)
+                            self.xparl_remote_wrapper_calling_queue.put(calling_request)
+
+            if wait:
+                return ProxyWrapper
+            else:
+                # nowait
+                return ProxyWrapperNoWait
 
         RemoteWrapper._original = cls
         proxy_wrapper = proxy_wrapper_func(RemoteWrapper)

@@ -301,6 +301,17 @@ def remote_class(*args, **kwargs):
         return proxy_wrapper
 
     max_memory = kwargs.get('max_memory')
-    if len(args) == 1 and callable(args[0]):
+    """
+        Users may pass some arguments to the decorator (e.g., parl.remote_class(10)).
+        The following code tries to handle this issue.
+
+        The `args` is different in the following two decorating way, and we should return different wrapper.
+        @parl.remote_class     -> args: (<class '__main__.Actor'>,) -> we should return decorator(cls)
+        @parl.remote_class(10) -> args: (10,)                       -> we should return decorator
+    """
+    if len(args) == 1 and callable(args[0]):  # args[0]: cls
+        # The first element in the `args` is a class, we should return decorator(cls)
         return decorator(args[0])
+
+    # The first element in the `args` is not a class, we should return decorator
     return decorator

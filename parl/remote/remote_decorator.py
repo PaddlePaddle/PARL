@@ -302,6 +302,9 @@ def remote_class(*args, **kwargs):
 
     max_memory = kwargs.get('max_memory')
     """
+        Users may pass some arguments to the decorator (e.g., parl.remote_class(10)).
+        The following code tries to handle this issue.
+
         The `args` is different in the following two decorating way, and we should return different wrapper.
         @parl.remote_class     -> args: (<class '__main__.Actor'>,) -> we should return decorator(cls)
         @parl.remote_class(10) -> args: (10,)                       -> we should return decorator

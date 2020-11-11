@@ -247,7 +247,8 @@ class Client(object):
         logger.warning("Client exit replying heartbeat for master.")
 
     def _check_and_monitor_job(self, job_heartbeat_address,
-                               ping_heartbeat_address, max_memory):
+                               ping_heartbeat_address, max_memory,
+                               remote_wrapper_object):
         """ Sometimes the client may receive a job that is dead, thus 
         we have to check if this job is still alive before adding it to the `actor_num`.
         """
@@ -274,16 +275,23 @@ class Client(object):
 
         # a thread for sending heartbeat signals to job
         thread = threading.Thread(
-            target=self._create_job_monitor, args=(job_heartbeat_socket, ))
+            target=self._create_job_monitor,
+            args=(job_heartbeat_socket, remote_wrapper_object))
         thread.setDaemon(True)
         thread.start()
         return True
 
-    def _create_job_monitor(self, job_heartbeat_socket):
+    def _create_job_monitor(self, job_heartbeat_socket, remote_wrapper_object):
         """Send heartbeat signals to check target's status"""
+        copy_remote_wrapper_object = remote_wrapper_object
 
         job_is_alive = True
         while job_is_alive and self.client_is_alive:
+            if copy_remote_wrapper_object is not None:
+                refcount = sys.getrefcount(copy_remote_wrapper_object)
+                # @TODO(zenghsh3): hardcoded
+                if refcount == 7:
+                    break
             try:
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])
@@ -316,7 +324,7 @@ class Client(object):
 
         job_heartbeat_socket.close(0)
 
-    def submit_job(self, max_memory):
+    def submit_job(self, max_memory, remote_wrapper_object):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
@@ -327,6 +335,9 @@ class Client(object):
             max_memory (float): Maximum memory (MB) can be used by each remote
                                 instance, the unit is in MB and default value is
                                 none(unlimited).
+            remote_wrapper_object (object): instance of `RemoteWrapper`, use the 
+                                reference count of the object to detack whether 
+                                the remote_class has been deleted or out of scope.
 
         Returns:
             job_address(str): IP address of the job. None if there is no available CPU in the cluster.
@@ -353,7 +364,7 @@ class Client(object):
 
                     check_result = self._check_and_monitor_job(
                         job_heartbeat_address, ping_heartbeat_address,
-                        max_memory)
+                        max_memory, remote_wrapper_object)
                     if check_result:
                         self.lock.acquire()
                         self.actor_num += 1

@@ -21,8 +21,8 @@ from copy import deepcopy
 from parl.utils import get_gpu_count
 from parl.core.paddle.model import Model
 
-
 paddle.disable_static()
+
 
 class TestModel(Model):
     def __init__(self):
@@ -37,7 +37,8 @@ class TestModel(Model):
         out = self.fc3(out)
         return out
 
-class ACModel(Model): # TODO: use a new file to test this model
+
+class ACModel(Model):  # TODO: use a new file to test this model
     def __init__(self):
         super(ACModel, self).__init__()
         self.actor = Actor()
@@ -45,9 +46,10 @@ class ACModel(Model): # TODO: use a new file to test this model
 
     def predict(self, obs):
         return self.actor(obs)
-    
+
     def Q(self, obs):
         return self.critic(obs)
+
 
 class Actor(Model):
     def __init__(self):
@@ -60,6 +62,7 @@ class Actor(Model):
         out = self.fc2(out)
         return out
 
+
 class Critic(Model):
     def __init__(self):
         super(Critic, self).__init__()
@@ -70,6 +73,7 @@ class Critic(Model):
         out = self.fc1(x)
         out = self.fc2(out)
         return out
+
 
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
@@ -349,6 +353,7 @@ class ModelBaseTest(unittest.TestCase):
         new_params = self.model.get_weights()
         for i, j in zip(params.values(), new_params.values()):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
+
 
 if __name__ == '__main__':
     unittest.main()

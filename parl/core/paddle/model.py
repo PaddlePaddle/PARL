@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import paddle
 import paddle.nn as nn
 import collections
@@ -120,7 +119,7 @@ class Model(nn.Layer, ModelBase):
             target_data = decay * target_vars[name] + (1 - decay) * var
             target_vars[name] = target_data
         target_model.set_state_dict(target_vars)
-        
+
     # def parameters(self):
     #     """Get names of all parameters in this ``Model``.
 
@@ -138,9 +137,9 @@ class Model(nn.Layer, ModelBase):
     #         model = Model()
     #         model.parameters()
 
-    #         # output: 
+    #         # output:
     #         ['fc0.weight', 'fc0.bias']
-            
+
     #     """
     #     try:
     #         return self._parameter_names
@@ -166,11 +165,14 @@ class Model(nn.Layer, ModelBase):
         Args:
             weights (list): a Python list containing the parameters.
         """
-        old_weights = self.state_dict() # TODO speed up
+        old_weights = self.state_dict()  # TODO speed up
         # assert len(old_weights) == len(weights), '{} params are expected, but got {}'.format(len(old_weights), len(weights))
         new_weights = collections.OrderedDict()
         for key in old_weights.keys():
             assert key in weights, 'weight missing key: {}'.format(key)
-            assert old_weights[key].shape == list(weights[key].shape), 'key \'{}\' expect shape {}, but got {}'.format(key, old_weights[key].shape,  list(weights[key].shape))
+            assert old_weights[key].shape == list(
+                weights[key].
+                shape), 'key \'{}\' expect shape {}, but got {}'.format(
+                    key, old_weights[key].shape, list(weights[key].shape))
             new_weights[key] = paddle.to_tensor(weights[key])
         self.set_state_dict(new_weights)

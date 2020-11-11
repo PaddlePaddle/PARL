@@ -81,7 +81,7 @@ class Algorithm(AlgorithmBase):
         """
         raise NotImplementedError
 
-    def get_weights(self, model_ids=None): # TODO model_ids ??
+    def get_weights(self, model_ids=None):  # TODO model_ids ??
         """ Get weights of self.model.
 
         Returns:

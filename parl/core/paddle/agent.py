@@ -79,21 +79,22 @@ class Agent(AgentBase):
         #     0) if machine_info.is_gpu_available() else fluid.CPUPlace()
         # self.fluid_executor = fluid.Executor(self.place)
         # self.fluid_executor.run(fluid.default_startup_program())
+
+
 #TODO
-    #     Example:
+#     Example:
 
-    #     .. code-block:: python
+#     .. code-block:: python
 
-	#     self.pred_program = fluid.Program()
+#     self.pred_program = fluid.Program()
 
-    #         with fluid.program_guard(self.pred_program):
-    #             obs = .data(
-    #                 name='obs', shape=[self.obs_dim], dtype='float32')
-    #             self.act_prob = self.alg.predict(obs)
+#         with fluid.program_guard(self.pred_program):
+#             obs = .data(
+#                 name='obs', shape=[self.obs_dim], dtype='float32')
+#             self.act_prob = self.alg.predict(obs)
 
-
-    #     """
-    #     raise NotImplementedError
+#     """
+#     raise NotImplementedError
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.

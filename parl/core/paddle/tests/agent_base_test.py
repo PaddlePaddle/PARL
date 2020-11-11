@@ -42,9 +42,10 @@ class ACModel(parl.Model):  # TODO: use a new file to test this model
 
     def predict(self, obs):
         return self.actor(obs)
-    
+
     def Q(self, obs):
         return self.critic(obs)
+
 
 class Actor(parl.Model):
     def __init__(self):
@@ -56,6 +57,7 @@ class Actor(parl.Model):
         out = self.fc1(x)
         out = self.fc2(out)
         return out
+
 
 class Critic(parl.Model):
     def __init__(self):
@@ -80,7 +82,7 @@ class TestAlgorithm(parl.Algorithm):
         pred_output = self.model.policy(obs)
         mse_loss = paddle.nn.loss.MSELoss()
         cost = mse_loss(pred_output, label)
-        cost = paddle.reduce_mean(cost) # TODO: paddle.mean
+        cost = paddle.reduce_mean(cost)  # TODO: paddle.mean
         return cost
 
 
@@ -162,7 +164,6 @@ class AgentBaseTest(unittest.TestCase):
         another_agent.restore(save_path1, agent.alg.model)
         current_output = another_agent.predict(obs)
         np.testing.assert_equal(current_output, previous_output)
-
 
     # def test_compiled_restore(self):
     #     agent = TestAgent(self.alg)
@@ -271,7 +272,6 @@ class ACAgentBaseTest(unittest.TestCase):
         current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         np.testing.assert_equal(current_output, previous_output)
         np.testing.assert_equal(current_q_np, previous_q_np)
-
 
     # def test_compiled_restore(self):
     #     agent = TestAgent(self.alg)

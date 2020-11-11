@@ -37,6 +37,39 @@ class TestModel(Model):
         out = self.fc3(out)
         return out
 
+class ACModel(Model): # TODO: use a new file to test this model
+    def __init__(self):
+        super(ACModel, self).__init__()
+        self.actor = Actor()
+        self.critic = Critic()
+
+    def predict(self, obs):
+        return self.actor(obs)
+    
+    def Q(self, obs):
+        return self.critic(obs)
+
+class Actor(Model):
+    def __init__(self):
+        super(Actor, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300, 2)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.fc2(out)
+        return out
+
+class Critic(Model):
+    def __init__(self):
+        super(Critic, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.fc2(out)
+        return out
 
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
@@ -292,33 +325,30 @@ class ModelBaseTest(unittest.TestCase):
             model2_output = model2.predict(x).numpy()
             self.assertEqual(model1_output, model2_output)
 
-    # def test_set_weights_with_wrong_params_num(self): # TODO:fail
-    #     params = self.model.get_weights()
-    #     del params['fc3.bias']
-    #     with self.assertRaises(AssertionError):
-    #         self.model.set_weights(params)
+    def test_set_weights_with_wrong_params_num(self):
+        params = self.model.get_weights()
+        del params['fc3.bias']
+        with self.assertRaises(AssertionError):
+            self.model.set_weights(params)
 
-    # def test_set_weights_with_wrong_params_shape(self): # TODO:fail
-    #     params = self.model.get_weights()
-    #     params['fc1.weight'] = params['fc2.bias']
-    #     with self.assertRaises(AssertionError):
-    #         self.model.set_weights(params)
+    def test_set_weights_with_wrong_params_shape(self):
+        params = self.model.get_weights()
+        params['fc1.weight'] = params['fc2.bias']
+        with self.assertRaises(AssertionError):
+            self.model.set_weights(params)
 
-    # def test_set_weights_with_modified_params(self): # TODO:fail
-    #     params = self.model.get_weights()
-    #     params['fc1.weight'][0][0] = 100
-    #     params['fc1.bias'][0] = 100
-    #     params['fc2.weight'][0][0] = 100
-    #     params['fc2.bias'][0] = 100
-    #     params['fc3.weight'][0][0] = 100
-    #     params['fc3.bias'][0] = 100
-    #     self.model.set_weights(params)
-    #     new_params = self.model.get_weights()
-    #     for key in params:
-    #         print("===========")
-    #         print(type(params[key]))
-    #         print(type(new_params[key]))
-    #         self.assertEqual(params[key], new_params[key])
+    def test_set_weights_with_modified_params(self):
+        params = self.model.get_weights()
+        params['fc1.weight'][0][0] = 100
+        params['fc1.bias'][0] = 100
+        params['fc2.weight'][0][0] = 100
+        params['fc2.bias'][0] = 100
+        params['fc3.weight'][0][0] = 100
+        params['fc3.bias'][0] = 100
+        self.model.set_weights(params)
+        new_params = self.model.get_weights()
+        for i, j in zip(params.values(), new_params.values()):
+            self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
 
 if __name__ == '__main__':
     unittest.main()

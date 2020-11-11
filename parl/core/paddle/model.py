@@ -121,35 +121,34 @@ class Model(nn.Layer, ModelBase):
             target_vars[name] = target_data
         target_model.set_state_dict(target_vars)
         
+    # def parameters(self):
+    #     """Get names of all parameters in this ``Model``.
 
-    def parameters(self):
-        """Get names of all parameters in this ``Model``.
+    #     Only parameters created by ``parl.layers`` are included.
+    #     The order of parameter names is consistent among
+    #     different instances of the same `Model`.
 
-        Only parameters created by ``parl.layers`` are included.
-        The order of parameter names is consistent among
-        different instances of the same `Model`.
+    #     Returns:
+    #         param_names(list): list of string containing parameter names of all parameters
 
-        Returns:
-            param_names(list): list of string containing parameter names of all parameters
+    #     Example:
 
-        Example:
+    #     .. code-block:: python
 
-        .. code-block:: python
+    #         model = Model()
+    #         model.parameters()
 
-            model = Model()
-            model.parameters()
-
-            # output: 
-            ['fc0.weight', 'fc0.bias']
+    #         # output: 
+    #         ['fc0.weight', 'fc0.bias']
             
-        """
-        try:
-            return self._parameter_names
-        except AttributeError:
-            self._parameter_names = []
-            for name, _ in self.named_parameters():
-                self._parameter_names.append(name)
-            return self._parameter_names
+    #     """
+    #     try:
+    #         return self._parameter_names
+    #     except AttributeError:
+    #         self._parameter_names = []
+    #         for name, _ in self.named_parameters():
+    #             self._parameter_names.append(name)
+    #         return self._parameter_names
 
     def get_weights(self):
         """Returns a Python list containing parameters of current model.
@@ -167,7 +166,11 @@ class Model(nn.Layer, ModelBase):
         Args:
             weights (list): a Python list containing the parameters.
         """
+        old_weights = self.state_dict() # TODO speed up
+        # assert len(old_weights) == len(weights), '{} params are expected, but got {}'.format(len(old_weights), len(weights))
         new_weights = collections.OrderedDict()
-        for key in weights.keys():
+        for key in old_weights.keys():
+            assert key in weights, 'weight missing key: {}'.format(key)
+            assert old_weights[key].shape == list(weights[key].shape), 'key \'{}\' expect shape {}, but got {}'.format(key, old_weights[key].shape,  list(weights[key].shape))
             new_weights[key] = paddle.to_tensor(weights[key])
         self.set_state_dict(new_weights)

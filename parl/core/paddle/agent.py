@@ -133,8 +133,6 @@ class Agent(AgentBase):
         """
         if model is None:
             model = self.alg.model
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
         paddle.save(model.state_dict(), save_path)
 
     def restore(self, save_path, model=None):

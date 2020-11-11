@@ -107,3 +107,6 @@ ENV/
 
 # vscode
 .vscode
+
+# model
+model.ckpt

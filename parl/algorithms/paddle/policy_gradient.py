@@ -31,7 +31,8 @@ class PolicyGradient(parl.Algorithm):
         """
         assert isinstance(lr, float)
         self.model = model
-        self.optimizer = paddle.optimizer.Adam(learning_rate=lr, parameters=self.model.parameters())
+        self.optimizer = paddle.optimizer.Adam(
+            learning_rate=lr, parameters=self.model.parameters())
 
     def predict(self, obs):
         """Predict the probability of actions

@@ -75,7 +75,7 @@ class TestCluster(unittest.TestCase):
         parl.connect('localhost:{}'.format(port))
         logger.info("running:test_actor_exception: 1")
 
-        with self.assertRaises(exceptions.RemoteError):
+        with self.assertRaises(exceptions.AsyncFunctionError):
             actor = Actor(abcd='a bug')
             actor.get_arg1()  # calling any function will raise an exception
         logger.info("running:test_actor_exception: 2")
@@ -104,7 +104,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(1, master.cpu_num)
         parl.connect('localhost:{}'.format(port))
         actor = Actor()
-        with self.assertRaises(exceptions.FutureError):
+        with self.assertRaises(exceptions.AsyncFunctionError):
             future_object = actor.will_raise_exception_func()
             future_object.get()  # raise exception
 

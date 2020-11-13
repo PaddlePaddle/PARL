@@ -66,6 +66,9 @@ class TestFutureObject(unittest.TestCase):
         result = future_obj.get()
         assert result == 20
 
+        master.exit()
+        worker1.exit()
+
     def test_calling_get_function_twice(self):
         port = 8636
         master = Master(port=port)

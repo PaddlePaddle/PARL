@@ -22,6 +22,7 @@ from parl.remote.client import disconnect
 from parl.remote import exceptions
 from parl.remote.async_wait import FutureObject
 
+
 @parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, arg1=None, arg2=None):
@@ -65,7 +66,6 @@ class TestFutureObject(unittest.TestCase):
         result = future_obj.get()
         assert result == 20
 
-
     def test_calling_get_function_twice(self):
         port = 8636
         master = Master(port=port)
@@ -88,6 +88,7 @@ class TestFutureObject(unittest.TestCase):
 
         master.exit()
         worker1.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

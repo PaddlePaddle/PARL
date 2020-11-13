@@ -79,7 +79,7 @@ class FutureGetRepeatedlyError(Exception):
     Calling the get function of `FutureObject` repeatedly.
     """
 
-    def __init__(self, error_info):
+    def __init__(self):
         self.error_info = "The `get` function of `FutureObject` has been called, you cannot call the `get` function repeatedly."
 
     def __str__(self):

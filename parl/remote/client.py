@@ -20,7 +20,7 @@ import sys
 import threading
 import zmq
 import parl
-from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, is_PY2
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
@@ -285,12 +285,18 @@ class Client(object):
         """Send heartbeat signals to check target's status"""
         copy_remote_wrapper_object = remote_wrapper_object
 
+        # @TODO(zenghsh3): hardcoded
+        actor_deleted_refcount = 7
+        if is_PY2:
+            actor_deleted_refcount = 9
+
         job_is_alive = True
         while job_is_alive and self.client_is_alive:
             if copy_remote_wrapper_object is not None:
-                refcount = sys.getrefcount(copy_remote_wrapper_object)
-                # @TODO(zenghsh3): hardcoded
-                if refcount == 7:
+                cur_refcount = sys.getrefcount(copy_remote_wrapper_object)
+                if cur_refcount == actor_deleted_refcount:
+                    # actor is deleted or out of scope, we will terminate the heartbeat of the job
+                    # and release the cpu resource.
                     break
             try:
                 job_heartbeat_socket.send_multipart(

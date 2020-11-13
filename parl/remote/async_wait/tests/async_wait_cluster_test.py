@@ -21,7 +21,6 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
-from parl.utils import logger
 
 
 @parl.remote_class(wait=False)
@@ -60,7 +59,6 @@ class TestCluster(unittest.TestCase):
 
     def test_actor_exception(self):
         port = 8535
-        logger.info("running:test_actor_exception")
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -71,14 +69,11 @@ class TestCluster(unittest.TestCase):
                 break
             time.sleep(10)
         self.assertEqual(1, master.cpu_num)
-        logger.info("running:test_actor_exception: 0")
         parl.connect('localhost:{}'.format(port))
-        logger.info("running:test_actor_exception: 1")
 
         with self.assertRaises(exceptions.AsyncFunctionError):
             actor = Actor(abcd='a bug')
             actor.get_arg1()  # calling any function will raise an exception
-        logger.info("running:test_actor_exception: 2")
 
         actor2 = Actor()
         for _ in range(3):
@@ -95,7 +90,6 @@ class TestCluster(unittest.TestCase):
 
     def test_actor_exception_2(self):
         port = 8536
-        logger.info("running: test_actor_exception_2")
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -123,7 +117,6 @@ class TestCluster(unittest.TestCase):
 
     def test_reset_actor(self):
         port = 8537
-        logger.info("running: test_reset_actor")
         # start the master
         master = Master(port=port)
         th = threading.Thread(target=master.run)

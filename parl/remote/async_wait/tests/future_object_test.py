@@ -67,7 +67,7 @@ class TestFutureObject(unittest.TestCase):
 
 
     def test_calling_get_function_twice(self):
-        port = 8635
+        port = 8636
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

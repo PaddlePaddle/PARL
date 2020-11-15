@@ -20,7 +20,7 @@ import sys
 import threading
 import zmq
 import parl
-from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, is_PY2
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, _IS_PY2
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
@@ -287,7 +287,7 @@ class Client(object):
 
         # @TODO(zenghsh3): hardcoded
         actor_deleted_refcount = 7
-        if is_PY2:
+        if _IS_PY2:
             actor_deleted_refcount = 9
 
         job_is_alive = True

@@ -18,7 +18,7 @@ import subprocess
 import numpy as np
 
 __all__ = [
-    'has_func', 'to_str', 'to_byte', 'is_PY2', 'is_PY3', 'MAX_INT32',
+    'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
     'get_fluid_version', 'isnotebook'
 ]
@@ -49,12 +49,8 @@ def to_byte(string):
     return string.encode()
 
 
-def is_PY2():
-    return sys.version_info[0] == 2
-
-
-def is_PY3():
-    return sys.version_info[0] == 3
+_IS_PY2 = (sys.version_info[0] == 2)
+_IS_PY3 = (sys.version_info[0] == 3)
 
 
 def get_fluid_version():

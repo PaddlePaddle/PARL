@@ -30,7 +30,7 @@ from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError, FutureFunctionError
 from parl.remote.client import get_global_client
 from parl.remote.utils import locate_remote_file
-from parl.remote.async_wait import FutureObject, CallingRequest
+from parl.remote.future_mode import FutureObject, CallingRequest
 
 
 def remote_class(*args, **kwargs):

@@ -15,7 +15,7 @@
 import time
 import threading
 from collections import namedtuple
-from parl.remote.exceptions import FutureGetRepeatedlyError, AsyncFunctionError
+from parl.remote.exceptions import FutureGetRepeatedlyError, FutureFunctionError
 
 
 class FutureObject(object):
@@ -39,7 +39,7 @@ class FutureObject(object):
 
             result = self._output_queue.get()
 
-            if isinstance(result, AsyncFunctionError):
+            if isinstance(result, FutureFunctionError):
                 time.sleep(
                     0.1
                 )  # waiting for another thread printing the error message

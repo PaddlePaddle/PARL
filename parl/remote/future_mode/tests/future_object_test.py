@@ -20,7 +20,7 @@ import time
 import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
-from parl.remote.async_wait import FutureObject
+from parl.remote.future_mode import FutureObject
 
 
 @parl.remote_class(wait=False)

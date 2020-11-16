@@ -86,13 +86,13 @@ class FutureGetRepeatedlyError(Exception):
         return self.error_info
 
 
-class AsyncFunctionError(Exception):
+class FutureFunctionError(Exception):
     """
-    Error raised when calling async function.
+    Error raised when calling future function.
     """
 
     def __init__(self, func_name):
-        self.error_info = "There is an error raised when calling the async function `{}`.\n".format(func_name) + \
+        self.error_info = "There is an error raised when calling the future function `{}`.\n".format(func_name) + \
                 "You can see the detailed error message above, which is printed by another thread."
 
     def __str__(self):

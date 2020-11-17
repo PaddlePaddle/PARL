@@ -62,10 +62,10 @@ class Test_get_and_set_attribute(unittest.TestCase):
         parl.connect('localhost:{}'.format(port1))
         actor = Actor(arg1, arg2, arg3, arg4)
 
-        self.assertTrue(arg1 == actor.arg1.get())
-        self.assertTrue(arg2 == actor.arg2.get())
-        self.assertTrue((arg3 == actor.arg3.get()).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT.get())
+        self.assertTrue(arg1 == actor.arg1)
+        self.assertTrue(arg2 == actor.arg2)
+        self.assertTrue((arg3 == actor.arg3).all())
+        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
 
         master.exit()
         worker1.exit()
@@ -88,10 +88,10 @@ class Test_get_and_set_attribute(unittest.TestCase):
         actor.arg2 = arg2
         actor.arg3 = arg3
         actor.GLOBAL_CLIENT = arg4
-        self.assertTrue(arg1 == actor.arg1.get())
-        self.assertTrue(arg2 == actor.arg2.get())
-        self.assertTrue((arg3 == actor.arg3.get()).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT.get())
+        self.assertTrue(arg1 == actor.arg1)
+        self.assertTrue(arg2 == actor.arg2)
+        self.assertTrue((arg3 == actor.arg3).all())
+        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
         master.exit()
         worker1.exit()
 
@@ -111,7 +111,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
         actor = Actor(arg1, arg2, arg3, arg4)
 
         actor.internal_lock = 50
-        self.assertTrue(actor.internal_lock.get() == 50)
+        self.assertTrue(actor.internal_lock == 50)
         master.exit()
         worker1.exit()
 
@@ -129,10 +129,10 @@ class Test_get_and_set_attribute(unittest.TestCase):
         arg4 = 100
         parl.connect('localhost:{}'.format(port4))
         actor = Actor(arg1, arg2, arg3, arg4)
-        self.assertEqual(arg1, actor.arg1.get())
+        self.assertEqual(arg1, actor.arg1)
 
         def call_method():
-            return actor.arg1(1, 2).get()
+            return actor.arg1(1, 2)
 
         self.assertRaises(TypeError, call_method)
         master.exit()
@@ -154,13 +154,13 @@ class Test_get_and_set_attribute(unittest.TestCase):
         parl.connect('localhost:{}'.format(port5))
         actor = Actor(arg1, arg2, arg3, arg4)
         actor.new_attr_2 = 300
-        self.assertEqual(300, actor.new_attr_2.get())
+        self.assertEqual(300, actor.new_attr_2)
         actor.set_new_attr()
-        self.assertEqual(200, actor.new_attr_1.get())
+        self.assertEqual(200, actor.new_attr_1)
         self.assertTrue(callable(actor.arg5))
 
         def call_non_existing_method():
-            return actor.arg2(10).get()
+            return actor.arg2(10)
 
         self.assertRaises(TypeError, call_non_existing_method)
         master.exit()

@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from parl.remote.future_mode.utils import *
+from parl.remote.future_mode.proxy_wrapper_nowait import *

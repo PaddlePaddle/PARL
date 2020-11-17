@@ -26,6 +26,7 @@ from parl.remote.utils import locate_remote_file
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError, FutureFunctionError
 
+
 class RemoteWrapper(object):
     """
     Wrapper for remote class in client side.
@@ -45,11 +46,12 @@ class RemoteWrapper(object):
 
         # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
         # finds the master is dead.
-    
+
         # instance of actor class which is decorated by @remote_class(wait=False).
-        # use the reference count of the object to detect whether 
+        # use the reference count of the object to detect whether
         # the object has been deleted or out of scope.
-        proxy_wrapper_nowait_object = kwargs.get('__xparl_proxy_wrapper_nowait__')
+        proxy_wrapper_nowait_object = kwargs.get(
+            '__xparl_proxy_wrapper_nowait__')
 
         # class which is decorated by @remote_class
         cls = kwargs.get('__xparl_remote_class__')
@@ -124,8 +126,7 @@ class RemoteWrapper(object):
             pass
         if not self.job_shutdown:
             try:
-                self.job_socket.send_multipart(
-                    [remote_constants.KILLJOB_TAG])
+                self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
                 _ = self.job_socket.recv_multipart()
                 self.job_socket.close(0)
             except AttributeError:
@@ -141,10 +142,8 @@ class RemoteWrapper(object):
 
     def send_file(self, socket):
         try:
-            socket.send_multipart([
-                remote_constants.SEND_FILE_TAG,
-                self.GLOBAL_CLIENT.pyfiles
-            ])
+            socket.send_multipart(
+                [remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles])
             _ = socket.recv_multipart()
         except zmq.error.Again as e:
             logger.error("Send python files failed.")
@@ -159,9 +158,8 @@ class RemoteWrapper(object):
             if job_address is not None:
                 return job_address
             if cnt % 30 == 0:
-                logger.warning(
-                    "No vacant cpu resources at the moment, "
-                    "will try {} times later.".format(cnt))
+                logger.warning("No vacant cpu resources at the moment, "
+                               "will try {} times later.".format(cnt))
             cnt -= 1
         return None
 
@@ -189,14 +187,13 @@ class RemoteWrapper(object):
 
         def wrapper(*args, **kwargs):
             if self.job_shutdown:
-                raise RemoteError(
-                    attr, "This actor losts connection with the job.")
+                raise RemoteError(attr,
+                                  "This actor losts connection with the job.")
             self.internal_lock.acquire()
             if is_attribute:
-                self.job_socket.send_multipart([
-                    remote_constants.GET_ATTRIBUTE_TAG,
-                    to_byte(attr)
-                ])
+                self.job_socket.send_multipart(
+                    [remote_constants.GET_ATTRIBUTE_TAG,
+                     to_byte(attr)])
             else:
                 data = dumps_argument(*args, **kwargs)
                 self.job_socket.send_multipart(
@@ -209,8 +206,7 @@ class RemoteWrapper(object):
             if tag == remote_constants.NORMAL_TAG:
                 ret = loads_return(message[1])
                 if not is_attribute:
-                    self.remote_attribute_keys_set = loads_return(
-                        message[2])
+                    self.remote_attribute_keys_set = loads_return(message[2])
                 self.internal_lock.release()
                 return ret
 

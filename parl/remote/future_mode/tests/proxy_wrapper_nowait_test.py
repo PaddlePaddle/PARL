@@ -40,6 +40,42 @@ class ActorReservedAttr1(object):
         return 0
 
 
+@parl.remote_class(wait=False)
+class ActorReservedAttr2(object):
+    def __init__(self):
+        self.xparl_remote_wrapper_calling_queue = 0
+
+    def get_arg(self):
+        return 0
+
+
+@parl.remote_class(wait=False)
+class ActorReservedAttr3(object):
+    def __init__(self):
+        self.xparl_remote_wrapper_internal_lock = 0
+
+    def get_arg(self):
+        return 0
+
+
+@parl.remote_class(wait=False)
+class ActorReservedAttr4(object):
+    def __init__(self):
+        self.xparl_calling_finished_event = 0
+
+    def get_arg(self):
+        return 0
+
+
+@parl.remote_class(wait=False)
+class ActorReservedAttr5(object):
+    def __init__(self):
+        self.xparl_remote_object_exception = 0
+
+    def get_arg(self):
+        return 0
+
+
 class Test_proxy_wrapper(unittest.TestCase):
     def tearDown(self):
         disconnect()
@@ -103,6 +139,74 @@ class Test_proxy_wrapper(unittest.TestCase):
         parl.connect('localhost:{}'.format(port))
 
         actor = ActorReservedAttr1()  # will raise error in another thread
+        with self.assertRaises(FutureFunctionError):
+            actor.get_arg()  # calling any function will raise error
+
+        master.exit()
+        worker1.exit()
+
+    def test_attribute_with_reserved_names_2(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+
+        parl.connect('localhost:{}'.format(port))
+
+        actor = ActorReservedAttr2()  # will raise error in another thread
+        with self.assertRaises(FutureFunctionError):
+            actor.get_arg()  # calling any function will raise error
+
+        master.exit()
+        worker1.exit()
+
+    def test_attribute_with_reserved_names_3(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+
+        parl.connect('localhost:{}'.format(port))
+
+        actor = ActorReservedAttr3()  # will raise error in another thread
+        with self.assertRaises(FutureFunctionError):
+            actor.get_arg()  # calling any function will raise error
+
+        master.exit()
+        worker1.exit()
+
+    def test_attribute_with_reserved_names_4(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+
+        parl.connect('localhost:{}'.format(port))
+
+        actor = ActorReservedAttr4()  # will raise error in another thread
+        with self.assertRaises(FutureFunctionError):
+            actor.get_arg()  # calling any function will raise error
+
+        master.exit()
+        worker1.exit()
+
+    def test_attribute_with_reserved_names_5(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+
+        parl.connect('localhost:{}'.format(port))
+
+        actor = ActorReservedAttr5()  # will raise error in another thread
         with self.assertRaises(FutureFunctionError):
             actor.get_arg()  # calling any function will raise error
 

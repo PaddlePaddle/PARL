@@ -13,8 +13,13 @@
 # limitations under the License.
 
 from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
+from parl.utils import logger
 
 if _HAS_FLUID:
     from parl.algorithms.fluid import *
 elif _HAS_TORCH:
     from parl.algorithms.torch import *
+else:
+    logger.warning(
+        "No deep learning framework was found, but it's ok for parallel computation."
+    )

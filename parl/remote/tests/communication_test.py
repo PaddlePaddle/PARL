@@ -16,7 +16,7 @@ import numpy as np
 import time
 import threading
 import unittest
-from parl.utils.communication import dumps_return, loads_return, \
+from parl.remote.communication import dumps_return, loads_return, \
         dumps_argument, loads_argument
 
 

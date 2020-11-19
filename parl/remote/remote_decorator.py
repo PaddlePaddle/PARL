@@ -22,7 +22,7 @@ import inspect
 import sys
 
 from parl.utils import get_ip_address, logger, to_str, to_byte
-from parl.utils.communication import loads_argument, loads_return,\
+from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote import remote_constants
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\

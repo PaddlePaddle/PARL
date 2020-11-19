@@ -13,9 +13,9 @@ PARL默认是使用cloudpickle库进行数据的序列化和反序列化【数�
 
 > pyarrow版本：python2使用pyarrow==0.16.0，python3中使用pyarrow==2.0.0
 
-<img src="./images/dataset1.png" width="300"/>
-<img src="./images/dataset2.png" width="300"/>
-<img src="./images/dataset3.png" width="300"/>
-<img src="./images/dataset4.png" width="300"/>
+<img src="./.images/dataset1.png" width="300"/>
+<img src="./.images/dataset2.png" width="300"/>
+<img src="./.images/dataset3.png" width="300"/>
+<img src="./.images/dataset4.png" width="300"/>
 
 可以看到，在序列化/反序列化超大矩阵时，pyarrow表现明显比cloudpickle好，另外，使用高版本的python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持protocol=5）

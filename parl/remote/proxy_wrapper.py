@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from parl.remote.utils import RESERVED_NAME_ERROR_STR
+
 
 def proxy_wrapper_func(remote_wrapper, max_memory):
     '''
@@ -25,18 +27,20 @@ def proxy_wrapper_func(remote_wrapper, max_memory):
 
     class ProxyWrapper(object):
         def __init__(self, *args, **kwargs):
-            assert '__xparl_proxy_wrapper_nowait__' not in kwargs, "`__xparl_proxy_wrapper_nowait__` is the reserved variable name in xparl, please use other names"
+            for reserved_name in [
+                    '__xparl_proxy_wrapper_nowait__', '__xparl_remote_class__',
+                    '__xparl_remote_class_max_memory__'
+            ]:
+                assert reserved_name not in kwargs, RESERVED_NAME_ERROR_STR.format(
+                    reserved_name)
 
-            assert '__xparl_remote_class__' not in kwargs, "`__xparl_remote_class__` is the reserved variable name in xparl, please use other names"
             kwargs['__xparl_remote_class__'] = remote_wrapper._original
-
-            assert '__xparl_remote_class_max_memory__' not in kwargs, "`__xparl_remote_class_max_memory__` is the reserved variable name in xparl, please use other names"
             kwargs['__xparl_remote_class_max_memory__'] = max_memory
 
             self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
             assert not self.xparl_remote_wrapper_obj.has_attr(
-                'xparl_remote_wrapper_obj'
-            ), "`xparl_remote_wrapper_obj` is the reserved variable name in PARL, please use other names"
+                'xparl_remote_wrapper_obj'), RESERVED_NAME_ERROR_STR.format(
+                    "xparl_remote_wrapper_obj")
 
         def __getattr__(self, attr):
             return self.xparl_remote_wrapper_obj.get_remote_attr(attr)

@@ -17,6 +17,7 @@ import time
 import threading
 
 from parl.remote.exceptions import FutureFunctionError
+from parl.remote.utils import RESERVED_NAME_ERROR_STR
 from parl.remote.future_mode.utils import FutureObject, CallingRequest
 
 
@@ -54,13 +55,15 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
 
     class ProxyWrapperNoWait(object):
         def __init__(self, *args, **kwargs):
-            assert '__xparl_proxy_wrapper_nowait__' not in kwargs, "`__xparl_proxy_wrapper_nowait__` is the reserved variable name in xparl, please use other names"
+            for reserved_name in [
+                    '__xparl_proxy_wrapper_nowait__', '__xparl_remote_class__',
+                    '__xparl_remote_class_max_memory__'
+            ]:
+                assert reserved_name not in kwargs, RESERVED_NAME_ERROR_STR.format(
+                    reserved_name)
+
             kwargs['__xparl_proxy_wrapper_nowait__'] = self
-
-            assert '__xparl_remote_class__' not in kwargs, "`__xparl_remote_class__` is the reserved variable name in xparl, please use other names"
             kwargs['__xparl_remote_class__'] = remote_wrapper._original
-
-            assert '__xparl_remote_class_max_memory__' not in kwargs, "`__xparl_remote_class_max_memory__` is the reserved variable name in xparl, please use other names"
             kwargs['__xparl_remote_class_max_memory__'] = max_memory
 
             self.xparl_remote_wrapper_calling_queue = queue.Queue()
@@ -76,22 +79,15 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
         def _run_object_in_backend(self, args, kwargs):
             try:
                 self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
-
-                assert not self.xparl_remote_wrapper_obj.has_attr(
-                    'xparl_remote_wrapper_obj'
-                ), "`xparl_remote_wrapper_obj` is the reserved variable name in PARL, please use other names"
-                assert not self.xparl_remote_wrapper_obj.has_attr(
-                    'xparl_remote_wrapper_calling_queue'
-                ), "`xparl_remote_wrapper_calling_queue` is the reserved variable name in PARL, please use other names"
-                assert not self.xparl_remote_wrapper_obj.has_attr(
-                    'xparl_remote_wrapper_internal_lock'
-                ), "`xparl_remote_wrapper_internal_lock` is the reserved variable name in PARL, please use other names"
-                assert not self.xparl_remote_wrapper_obj.has_attr(
-                    'xparl_calling_finished_event'
-                ), "`xparl_calling_finished_event` is the reserved variable name in PARL, please use other names"
-                assert not self.xparl_remote_wrapper_obj.has_attr(
-                    'xparl_remote_object_exception'
-                ), "`xparl_remote_object_exception` is the reserved variable name in PARL, please use other names"
+                for attr in [
+                        'xparl_remote_wrapper_obj',
+                        'xparl_remote_wrapper_calling_queue',
+                        'xparl_remote_wrapper_internal_lock',
+                        'xparl_calling_finished_event',
+                        'xparl_remote_object_exception'
+                ]:
+                    assert not self.xparl_remote_wrapper_obj.has_attr(
+                        attr), RESERVED_NAME_ERROR_STR.format(attr)
             except Exception as e:
                 async_error = FutureFunctionError('__init__')
                 self.xparl_remote_object_exception = async_error

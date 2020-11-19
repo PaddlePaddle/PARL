@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import sys
 from contextlib import contextmanager
 import os
 from parl.utils import isnotebook, logger
-from parl.utils.logger import _Formatter
 
 __all__ = [
     'load_remote_class', 'redirect_stdout_to_file', 'locate_remote_file',

@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import logging
 import sys
 from contextlib import contextmanager
 import os
-from parl.utils import isnotebook
+from parl.utils import isnotebook, logger
+from parl.utils.logger import _Formatter
 
 __all__ = [
     'load_remote_class', 'redirect_stdout_to_file', 'locate_remote_file',
@@ -96,14 +99,20 @@ def redirect_stdout_to_file(file_path):
     >>> print('test')
     test
     """
+
     tmp = sys.stdout
     f = open(file_path, 'a')
     sys.stdout = f
+
+    # NOTE: we should add the handler after executing above code.
+    handler = logger.add_stdout_handler()
+
     try:
         yield
     finally:
         sys.stdout = tmp
         f.close()
+        logger.remove_handler(handler)
 
 
 def locate_remote_file(module_path):

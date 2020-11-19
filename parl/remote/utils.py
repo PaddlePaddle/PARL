@@ -102,7 +102,7 @@ def redirect_stdout_to_file(file_path):
     f = open(file_path, 'a')
     sys.stdout = f
 
-    # NOTE: we should add the handler after executing above code.
+    # NOTE: we should add the handler after executing the above code.
     handler = logger.add_stdout_handler()
 
     try:

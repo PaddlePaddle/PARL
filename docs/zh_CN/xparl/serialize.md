@@ -4,6 +4,7 @@ PARL默认使用cloudpickle库进行数据的序列化和反序列化【数据�
 
 不同数据场景下，pyarrow和cloudpickle的表现优劣不同，用户可以基于自己的使用场景选择是否要下载pyarrow库。
 
+### 性能对比
 这里提供了pyarrow和cloudpickle在不同数据下的序列化和反序列化的平均耗时作为参考：
 
 - 测试数据一：`data = [np.random.RandomState(0).randn(50, 50)] * 10`
@@ -16,4 +17,6 @@ PARL默认使用cloudpickle库进行数据的序列化和反序列化【数据�
 <img src="./.images/dataset1.png" width="400"/> <img src="./.images/dataset2.png" width="400"/>
 <img src="./.images/dataset3.png" width="400"/> <img src="./.images/dataset4.png" width="400"/>
 
-可以看到，在序列化/反序列化超大矩阵时，pyarrow表现明显比cloudpickle好，另外，使用高版本的python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持protocol=5）
+### 对比结论
+- 在序列化/反序列化**超大Numpy矩阵**时，pyarrow表现明显比cloudpickle好
+- 使用高版本的Python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持protocol=5）

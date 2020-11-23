@@ -36,11 +36,11 @@ class TestCommunication(unittest.TestCase):
 
         for i, data in enumerate([data1, data2, data3]):
             start = time.time()
-            for _ in range(10):
+            for _ in range(5):
                 serialize_bytes = dumps_return(data)
                 deserialize_result = loads_return(serialize_bytes)
             print('Case {}, Average dump and load return time:'.format(i),
-                  (time.time() - start) / 10)
+                  (time.time() - start) / 5)
 
     def test_speed_of_dumps_loads_argument(self):
         data1 = {
@@ -57,11 +57,11 @@ class TestCommunication(unittest.TestCase):
 
         for i, data in enumerate([data1, data2, data3]):
             start = time.time()
-            for _ in range(10):
+            for _ in range(5):
                 serialize_bytes = dumps_argument(data)
                 deserialize_result = loads_argument(serialize_bytes)
             print('Case {}, Average dump and load argument time:'.format(i),
-                  (time.time() - start) / 10)
+                  (time.time() - start) / 5)
 
     def test_dumps_loads_return_with_custom_class(self):
         class A(object):

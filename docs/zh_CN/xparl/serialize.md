@@ -1,4 +1,4 @@
-# **序列化/反序列化加速**
+# **序列化/反序列化加速（非必须）**
 
 PARL默认使用cloudpickle库进行数据的序列化和反序列化【数据是以序列化后的字节流形式在xparl中进行传输】；如果Python环境有下载pyarrow库的话，则会使用pyarrow库进行序列化和反序列化（由于pyarrow兼容性不够好，PARL不会默认下载该库）。
 
@@ -19,4 +19,4 @@ PARL默认使用cloudpickle库进行数据的序列化和反序列化【数据�
 
 ### 对比结论
 - 在序列化/反序列化**超大Numpy矩阵**时，pyarrow表现明显比cloudpickle好
-- 使用高版本的Python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持protocol=5）
+- 使用3.8+版本的Python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持protocol=5）

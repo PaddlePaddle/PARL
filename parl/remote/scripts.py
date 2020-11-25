@@ -79,7 +79,7 @@ def parse_port_range(log_server_port_range):
     return start, end
 
 
-def is_log_server_started(ip_address, port):
+def check_log_server_started(ip_address, port):
     started = False
     for _ in range(3):
         try:
@@ -91,7 +91,11 @@ def is_log_server_started(ip_address, port):
             pass
         time.sleep(3)
         click.echo("Checking status of log_server...")
-    return started
+
+    if started:
+        click.echo("# Start the log server sucessfully.")
+    else:
+        click.echo("# Fail to start the log server.")
 
 
 @click.group()
@@ -246,8 +250,8 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
-    if cpu_num > 0 and not is_log_server_started(master_ip, log_server_port):
-        click.echo("# Fail to start the log server.")
+    if cpu_num > 0:
+        check_log_server_started(master_ip, log_server_port)
 
 
 @click.command("connect", short_help="Start a worker node.")
@@ -291,8 +295,7 @@ def start_worker(address, cpu_num, log_server_port_range):
     p = subprocess.Popen(command, stdout=FNULL, close_fds=True)
     FNULL.close()
 
-    if not is_log_server_started(get_ip_address(), log_server_port):
-        click.echo("# Fail to start the log server.")
+    check_log_server_started(get_ip_address(), log_server_port)
 
 
 @click.command("stop", help="Exit the cluster.")

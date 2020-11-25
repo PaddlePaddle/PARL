@@ -170,16 +170,12 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     FNULL = open(os.devnull, 'w')
 
     # Redirect the output to DEVNULL to solve the warning log.
-    _ = subprocess.Popen(
-        master_command, stdout=FNULL, close_fds=True)
+    _ = subprocess.Popen(master_command, stdout=FNULL, close_fds=True)
 
     if cpu_num > 0:
         # Sleep 1s for master ready
         time.sleep(1)
-        _ = subprocess.Popen(
-            worker_command,
-            stdout=FNULL,
-            close_fds=True)
+        _ = subprocess.Popen(worker_command, stdout=FNULL, close_fds=True)
 
     if _IS_WINDOWS:
         # TODO(@zenghsh3) redirecting stdout of monitor subprocess to FNULL will cause occasional failure
@@ -187,10 +183,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         _ = subprocess.Popen(monitor_command, stdout=tmp_file, close_fds=True)
         tmp_file.close()
     else:
-        _ = subprocess.Popen(
-            monitor_command,
-            stdout=FNULL,
-            close_fds=True)
+        _ = subprocess.Popen(monitor_command, stdout=FNULL, close_fds=True)
     FNULL.close()
 
     if cpu_num > 0:
@@ -289,7 +282,9 @@ def start_worker(address, cpu_num, log_server_port_range):
         str(cpu_num), "--log_server_port",
         str(log_server_port)
     ]
-    p = subprocess.Popen(command, close_fds=True)
+    FNULL = open(os.devnull, 'w')
+    p = subprocess.Popen(command, stdout=FNULL, close_fds=True)
+    FNULL.close()
 
     if not is_log_server_started(get_ip_address(), log_server_port):
         click.echo("# Fail to start the log server.")

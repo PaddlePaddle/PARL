@@ -121,6 +121,8 @@ def cli():
     default="8000-9000",
     type=str)
 def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
+    if cpu_num is not None:
+        assert cpu_num >= 0, "cpu_num should be greater than or equal to 0."
     if debug:
         os.environ['DEBUG'] = 'True'
 
@@ -244,7 +246,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
-    if not is_log_server_started(master_ip, log_server_port):
+    if cpu_num > 0 and not is_log_server_started(master_ip, log_server_port):
         click.echo("# Fail to start the log server.")
 
 
@@ -265,6 +267,9 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     default="8000-9000",
     type=str)
 def start_worker(address, cpu_num, log_server_port_range):
+    if cpu_num is not None:
+        assert cpu_num > 0, "cpu_num should be greater than 0."
+
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
 

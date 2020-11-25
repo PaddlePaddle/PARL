@@ -171,7 +171,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
 
     # Redirect the output to DEVNULL to solve the warning log.
     _ = subprocess.Popen(
-        master_command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        master_command, stdout=FNULL, close_fds=True)
 
     if cpu_num > 0:
         # Sleep 1s for master ready
@@ -179,7 +179,6 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         _ = subprocess.Popen(
             worker_command,
             stdout=FNULL,
-            stderr=subprocess.STDOUT,
             close_fds=True)
 
     if _IS_WINDOWS:
@@ -191,7 +190,6 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         _ = subprocess.Popen(
             monitor_command,
             stdout=FNULL,
-            stderr=subprocess.STDOUT,
             close_fds=True)
     FNULL.close()
 

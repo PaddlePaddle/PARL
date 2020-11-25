@@ -230,7 +230,6 @@ class Worker(object):
             subprocess.Popen(
                 command,
                 stdout=FNULL,
-                stderr=subprocess.STDOUT,
                 close_fds=True)
         FNULL.close()
 
@@ -406,7 +405,7 @@ class Worker(object):
         else:
             FNULL = open(os.devnull, 'w')
         log_server_proc = subprocess.Popen(
-            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+            command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)

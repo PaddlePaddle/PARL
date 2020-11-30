@@ -18,6 +18,7 @@ import os
 
 from flask import Flask, current_app, jsonify, make_response, request, send_file
 from flask_cors import CORS
+from parl.remote.heartbeat_server import HeartbeatServerThread
 
 app = Flask(__name__)
 CORS(app)
@@ -92,11 +93,16 @@ if __name__ == "__main__":
     parser.add_argument('--port', required=True, type=int)
     parser.add_argument('--log_dir', required=True, type=str)
     parser.add_argument('--line_num', required=True, type=int)
+    parser.add_argument('--worker_address', required=True, type=str)
     args = parser.parse_args()
 
     app.config.from_mapping(
         LOG_DIR=args.log_dir,
         LINE_NUM=args.line_num,
     )
+
+    heartbeat_server_thread = HeartbeatServerThread(
+        args.worker_address, server_type="log_server", client_type="worker")
+    heartbeat_server_thread.start()
 
     app.run(host="0.0.0.0", port=args.port)

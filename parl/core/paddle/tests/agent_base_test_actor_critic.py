@@ -20,17 +20,40 @@ import parl
 import os
 
 
-class TestModel(parl.Model):
+class ACModel(parl.Model):
     def __init__(self):
-        super(TestModel, self).__init__()
-        self.fc1 = nn.Linear(4, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.fc3 = nn.Linear(128, 1)
+        super(ACModel, self).__init__()
+        self.actor = Actor()
+        self.critic = Critic()
 
     def predict(self, obs):
-        out = self.fc1(obs)
+        return self.actor(obs)
+
+    def Q(self, obs):
+        return self.critic(obs)
+
+
+class Actor(parl.Model):
+    def __init__(self):
+        super(Actor, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300, 2)
+
+    def forward(self, x):
+        out = self.fc1(x)
         out = self.fc2(out)
-        out = self.fc3(out)
+        return out
+
+
+class Critic(parl.Model):
+    def __init__(self):
+        super(Critic, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.fc2(out)
         return out
 
 
@@ -67,25 +90,26 @@ class TestAgent(parl.Agent):
         return output_np
 
 
-class AgentBaseTest(unittest.TestCase):
+class ACAgentBaseTest(unittest.TestCase):
     def setUp(self):
-        self.model = TestModel()
+        self.model = ACModel()
         self.alg = TestAlgorithm(self.model)
-        self.target_model = TestModel()
+        self.target_model = ACModel()
         self.target_alg = TestAlgorithm(self.target_model)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        output_np = agent.predict(obs)
-        self.assertIsNotNone(output_np)
+        act_np = agent.predict(obs)
+        self.assertIsNotNone(act_np)
 
         params = agent.get_weights()
-        hd1 = np.dot(obs, params['fc1.weight']) + params['fc1.bias']
-        hd2 = np.dot(hd1, params['fc2.weight']) + params['fc2.bias']
-        out = np.dot(hd2, params['fc3.weight']) + params['fc3.bias']
+        hid = np.dot(obs,
+                     params['actor.fc1.weight']) + params['actor.fc1.bias']
+        act = np.dot(hid,
+                     params['actor.fc2.weight']) + params['actor.fc2.bias']
 
-        self.assertLess((out.sum() - output_np.sum()), 1e-5)
+        self.assertLess((act.sum() - act_np.sum()), 1e-5)
 
     def test_save(self):
         agent = TestAgent(self.alg)
@@ -110,10 +134,14 @@ class AgentBaseTest(unittest.TestCase):
         obs = np.random.random([10, 4]).astype('float32')
         save_path1 = 'model.ckpt'
         previous_output = agent.predict(obs)
+        previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+
         agent.save(save_path1)
         agent.restore(save_path1)
         current_output = agent.predict(obs)
+        current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         np.testing.assert_equal(current_output, previous_output)
+        np.testing.assert_equal(current_q_np, previous_q_np)
 
         # a new agent instance
         another_agent = TestAgent(self.alg)
@@ -126,16 +154,42 @@ class AgentBaseTest(unittest.TestCase):
         obs = np.random.random([10, 4]).astype('float32')
         save_path1 = 'model.ckpt'
         previous_output = agent.predict(obs)
+        previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         agent.save(save_path1, agent.alg.model)
         agent.restore(save_path1, agent.alg.model)
         current_output = agent.predict(obs)
+        current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         np.testing.assert_equal(current_output, previous_output)
+        np.testing.assert_equal(current_q_np, previous_q_np)
 
         # a new agent instance
         another_agent = TestAgent(self.alg)
         another_agent.restore(save_path1, agent.alg.model)
         current_output = another_agent.predict(obs)
+        current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         np.testing.assert_equal(current_output, previous_output)
+        np.testing.assert_equal(current_q_np, previous_q_np)
+
+    def test_restore_with_actor_model(self):
+        agent = TestAgent(self.alg)
+        obs = np.random.random([10, 4]).astype('float32')
+        save_path1 = 'model.ckpt'
+        previous_output = agent.predict(obs)
+        previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        agent.save(save_path1, agent.alg.model.actor)
+        agent.restore(save_path1, agent.alg.model.actor)
+        current_output = agent.predict(obs)
+        current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        np.testing.assert_equal(current_output, previous_output)
+        np.testing.assert_equal(current_q_np, previous_q_np)
+
+        # a new agent instance
+        another_agent = TestAgent(self.alg)
+        another_agent.restore(save_path1, agent.alg.model.actor)
+        current_output = another_agent.predict(obs)
+        current_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        np.testing.assert_equal(current_output, previous_output)
+        np.testing.assert_equal(current_q_np, previous_q_np)
 
     def test_get_weights(self):
         agent = TestAgent(self.alg)
@@ -181,26 +235,30 @@ class AgentBaseTest(unittest.TestCase):
     def test_set_weights_with_wrong_params_num(self):
         agent = TestAgent(self.alg)
         params = agent.get_weights()
-        del params['fc2.bias']
+        del params['actor.fc2.bias']
+        del params['critic.fc2.bias']
         with self.assertRaises(AssertionError):
             agent.set_weights(params)
 
     def test_set_weights_with_wrong_params_shape(self):
         agent = TestAgent(self.alg)
         params = agent.get_weights()
-        params['fc1.weight'] = params['fc2.bias']
+        params['actor.fc1.weight'] = params['actor.fc2.bias']
+        params['critic.fc1.weight'] = params['critic.fc2.bias']
         with self.assertRaises(AssertionError):
             agent.set_weights(params)
 
     def test_set_weights_with_modified_params(self):
         agent = TestAgent(self.alg)
         params = agent.get_weights()
-        params['fc1.weight'][0][0] = 100
-        params['fc1.bias'][0] = 100
-        params['fc2.weight'][0][0] = 100
-        params['fc2.bias'][0] = 100
-        params['fc3.weight'][0][0] = 100
-        params['fc3.bias'][0] = 100
+        params['actor.fc1.weight'][0][0] = 100
+        params['actor.fc1.bias'][0] = 100
+        params['actor.fc2.weight'][0][0] = 100
+        params['actor.fc2.bias'][0] = 100
+        params['critic.fc1.weight'][0][0] = 100
+        params['critic.fc1.bias'][0] = 100
+        params['critic.fc2.weight'][0][0] = 100
+        params['critic.fc2.bias'][0] = 100
         agent.set_weights(params)
         new_params = agent.get_weights()
         for i, j in zip(params.values(), new_params.values()):

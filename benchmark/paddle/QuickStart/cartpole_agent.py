@@ -15,7 +15,6 @@
 import parl
 import paddle
 import numpy as np
-from parl.utils import get_gpu_count
 
 
 class CartpoleAgent(parl.Agent):
@@ -28,11 +27,6 @@ class CartpoleAgent(parl.Agent):
 
     def __init__(self, algorithm):
         super(CartpoleAgent, self).__init__(algorithm)
-        gpu_count = get_gpu_count()
-        if gpu_count > 0:
-            self.place = paddle.CUDAPlace(0)
-        else:
-            self.place = paddle.CPUPlace()
 
     def sample(self, obs):
         """Sample an action when given an observation
@@ -41,13 +35,13 @@ class CartpoleAgent(parl.Agent):
             obs(np.float32): shape of (obs_dim,)
         
         Returns:
-            action(int)
+            act(int): action
         """
-        obs = paddle.to_tensor(obs.astype(np.float32), place=self.place)
+        obs = paddle.to_tensor(obs.astype(np.float32))
         prob = self.alg.predict(obs)
         prob = prob.numpy()
-        action = np.random.choice(len(prob), 1, p=prob)[0]
-        return action
+        act = np.random.choice(len(prob), 1, p=prob)[0]
+        return act
 
     def predict(self, obs):
         """Predict an action when given an observation
@@ -56,31 +50,31 @@ class CartpoleAgent(parl.Agent):
             obs(np.float32): shape of (obs_dim,)
         
         Returns:
-            action(int)
+            act(int): action
         """
-        obs = paddle.to_tensor(obs.astype(np.float32), place=self.place)
+        obs = paddle.to_tensor(obs.astype(np.float32))
         prob = self.alg.predict(obs)
-        action = prob.argmax().numpy()[0]
-        return action
+        act = prob.argmax().numpy()[0]
+        return act
 
-    def learn(self, obs, action, reward):
+    def learn(self, obs, act, reward):
         """Update model with an episode data
 
         Args:
             obs(np.float32): shape of (batch_size, obs_dim)
-            action(np.int64): shape of (batch_size)
+            act(np.int64): shape of (batch_size)
             reward(np.float32): shape of (batch_size)
         
         Returns:
             loss(float)
 
         """
-        action = np.expand_dims(action, axis=1)
-        reward = np.expand_dims(reward, axis=1)
+        act = np.expand_dims(act, axis=-1)
+        reward = np.expand_dims(reward, axis=-1)
 
-        obs = paddle.to_tensor(obs.astype(np.float32), place=self.place)
-        action = paddle.to_tensor(action.astype(np.int32), place=self.place)
-        reward = paddle.to_tensor(reward.astype(np.float32), place=self.place)
+        obs = paddle.to_tensor(obs.astype(np.float32))
+        act = paddle.to_tensor(act.astype(np.int32))
+        reward = paddle.to_tensor(reward.astype(np.float32))
 
-        loss = self.alg.learn(obs, action, reward)
+        loss = self.alg.learn(obs, act, reward)
         return loss.numpy()[0]

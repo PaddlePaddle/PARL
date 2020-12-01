@@ -70,8 +70,6 @@ class Model(nn.Layer, ModelBase):
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
         - ``forward``: define the computations of a neural network. **Should** 
         be overridden by all subclasses.
-        - ``parameters``: return a list containting names of parameters of 
-        the model. 
     """
 
     def __init___(self):
@@ -88,9 +86,6 @@ class Model(nn.Layer, ModelBase):
                 the same neural network architecture as the current model.
             decay (float):  the rate of decline in copying parameters. 
                 0 if no parameters decay when synchronizing the parameters.
-            TODO: share_vars_parallel_executor (fluid.ParallelExecutor): 
-                Optional. If not None, will use ``fluid.ParallelExecutor``
-                to run program instead of ``fluid.Executor``.
 
         Example:
 
@@ -120,59 +115,34 @@ class Model(nn.Layer, ModelBase):
             target_vars[name] = target_data
         target_model.set_state_dict(target_vars)
 
-    # def parameters(self):
-    #     """Get names of all parameters in this ``Model``.
-
-    #     Only parameters created by ``parl.layers`` are included.
-    #     The order of parameter names is consistent among
-    #     different instances of the same `Model`.
-
-    #     Returns:
-    #         param_names(list): list of string containing parameter names of all parameters
-
-    #     Example:
-
-    #     .. code-block:: python
-
-    #         model = Model()
-    #         model.parameters()
-
-    #         # output:
-    #         ['fc0.weight', 'fc0.bias']
-
-    #     """
-    #     try:
-    #         return self._parameter_names
-    #     except AttributeError:
-    #         self._parameter_names = []
-    #         for name, _ in self.named_parameters():
-    #             self._parameter_names.append(name)
-    #         return self._parameter_names
-
     def get_weights(self):
-        """Returns a Python list containing parameters of current model.
+        """Returns a Python dict containing parameters of current model.
 
-        Returns: a Python list containing the parameters of current model.
+        Returns: 
+            a Python dict containing the parameters of current model.
         """
         weights = self.state_dict()
         for key in weights.keys():
-            weights[key] = np.asarray(weights[key].numpy())
+            weights[key] = weights[key].numpy()
         return weights
 
     def set_weights(self, weights):
         """Copy parameters from ``set_weights()`` to the model.
         
         Args:
-            weights (list): a Python list containing the parameters.
+            weights (dict): a Python dict containing the parameters.
         """
-        old_weights = self.state_dict()  # TODO speed up
-        # assert len(old_weights) == len(weights), '{} params are expected, but got {}'.format(len(old_weights), len(weights))
+        old_weights = self.state_dict()
+        assert len(old_weights) == len(
+            weights), '{} params are expected, but got {}'.format(
+                len(old_weights), len(weights))
         new_weights = collections.OrderedDict()
         for key in old_weights.keys():
-            assert key in weights, 'weight missing key: {}'.format(key)
+            assert key in weights, 'key: {} is expected to be in weights.'.format(
+                key)
             assert old_weights[key].shape == list(
-                weights[key].
-                shape), 'key \'{}\' expect shape {}, but got {}'.format(
-                    key, old_weights[key].shape, list(weights[key].shape))
+                weights[key].shape
+            ), 'key \'{}\' expects the data with shape {}, but gets {}'.format(
+                key, old_weights[key].shape, list(weights[key].shape))
             new_weights[key] = paddle.to_tensor(weights[key])
         self.set_state_dict(new_weights)

@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
-warnings.simplefilter('default')
-
 import os
 import paddle
 from parl.core.agent_base import AgentBase
 from parl.core.paddle.algorithm import Algorithm
-from parl.utils import machine_info
+from parl.utils import machine_info, get_gpu_count
 
 __all__ = ['Agent']
 
@@ -46,10 +43,9 @@ class Agent(AgentBase):
 
     Attributes:
         alg (parl.algorithm): algorithm of this agent.
+        place: can automatically specify device when creating a tensor.
 
     Public Functions:
-       TODO - ``get_weights``: return a Python dictionary containing all the parameters of self.alg.
-       TODO - ``set_weights``: copy parameters from ``set_weights()`` to this agent.
         - ``sample``: return a noisy action to perform exploration according to the policy.
         - ``predict``: return an action given current observation.
         - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
@@ -71,30 +67,11 @@ class Agent(AgentBase):
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
 
-        # self.gpu_id = 0 if machine_info.is_gpu_available() else -1
-
-        # self.build_program()
-
-        # self.place = fluid.CUDAPlace(
-        #     0) if machine_info.is_gpu_available() else fluid.CPUPlace()
-        # self.fluid_executor = fluid.Executor(self.place)
-        # self.fluid_executor.run(fluid.default_startup_program())
-
-
-#TODO
-#     Example:
-
-#     .. code-block:: python
-
-#     self.pred_program = fluid.Program()
-
-#         with fluid.program_guard(self.pred_program):
-#             obs = .data(
-#                 name='obs', shape=[self.obs_dim], dtype='float32')
-#             self.act_prob = self.alg.predict(obs)
-
-#     """
-#     raise NotImplementedError
+        gpu_count = get_gpu_count()
+        if gpu_count > 0:
+            self.place = paddle.CUDAPlace(0)
+        else:
+            self.place = paddle.CPUPlace()
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.

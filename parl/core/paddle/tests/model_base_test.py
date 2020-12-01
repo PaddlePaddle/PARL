@@ -18,7 +18,6 @@ import paddle.nn as nn
 import parl
 import unittest
 from copy import deepcopy
-from parl.utils import get_gpu_count
 from parl.core.paddle.model import Model
 
 paddle.disable_static()
@@ -82,14 +81,7 @@ class ModelBaseTest(unittest.TestCase):
         self.target_model2 = TestModel()
         self.target_model3 = TestModel()
 
-        gpu_count = get_gpu_count()
-        if gpu_count > 0:
-            place = paddle.CUDAPlace(0)
-        else:
-            place = paddle.CPUPlace()
-        # OTHER: place=paddle.CUDAPinnedPlace()
-
-    def test_sync_weights_in_one_program(self):
+    def test_sync_weights_in_one_model(self):
         obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32))
 
         N = 10
@@ -117,178 +109,63 @@ class ModelBaseTest(unittest.TestCase):
             ).numpy() + (1 - decay) * param.detach().numpy()
         return updated_parameters
 
-    def test_sync_weights_with_decay(self):
-        decay = 0.9
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
-
-        self.model.sync_weights_to(self.target_model, decay)
-
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
-
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
-
-    def test_sync_weights_with_multi_decay(self):
-        decay = 0.9
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
-
-        self.model.sync_weights_to(self.target_model, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
-
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
-
-        decay = 0.9
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
-
-        self.model.sync_weights_to(self.target_model, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
-
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
-
     def test_sync_weights_with_different_decay(self):
-        decay = 0.9
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
+        decay_list = [0., 0.47, 0.9, 1.0]
+        for decay in decay_list:
+            updated_parameters = self._numpy_update(self.target_model, decay)
+            (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
+             target_model_fc2_b, target_model_fc3_w,
+             target_model_fc3_b) = (updated_parameters['fc1.weight'],
+                                    updated_parameters['fc1.bias'],
+                                    updated_parameters['fc2.weight'],
+                                    updated_parameters['fc2.bias'],
+                                    updated_parameters['fc3.weight'],
+                                    updated_parameters['fc3.bias'])
 
-        self.model.sync_weights_to(self.target_model, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
+            self.model.sync_weights_to(self.target_model, decay)
+            N = 10
+            random_obs = np.random.randn(N, 4).astype(np.float32)
+            for i in range(N):
+                obs = random_obs[i]
+                real_target_outputs = self.target_model.predict(
+                    paddle.to_tensor(obs)).numpy()
+                out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
+                out_np = np.dot(out_np,
+                                target_model_fc2_w) + target_model_fc2_b
+                out_np = np.dot(out_np,
+                                target_model_fc3_w) + target_model_fc3_b
 
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
-
-        decay = 0.87
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
-
-        self.model.sync_weights_to(self.target_model, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
-
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+                self.assertLess(
+                    float(np.abs(real_target_outputs - out_np)), 1e-5)
 
     def test_sync_weights_with_different_target_model(self):
         decay = 0.9
-        updated_parameters = self._numpy_update(self.target_model, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
+        for the_target_model in [self.target_model, self.target_model2]:
+            updated_parameters = self._numpy_update(the_target_model, decay)
+            (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
+             target_model_fc2_b, target_model_fc3_w,
+             target_model_fc3_b) = (updated_parameters['fc1.weight'],
+                                    updated_parameters['fc1.bias'],
+                                    updated_parameters['fc2.weight'],
+                                    updated_parameters['fc2.bias'],
+                                    updated_parameters['fc3.weight'],
+                                    updated_parameters['fc3.bias'])
 
-        self.model.sync_weights_to(self.target_model, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
+            self.model.sync_weights_to(the_target_model, decay)
+            N = 10
+            random_obs = np.random.randn(N, 4).astype(np.float32)
+            for i in range(N):
+                obs = random_obs[i]
+                real_target_outputs = the_target_model.predict(
+                    paddle.to_tensor(obs)).numpy()
+                out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
+                out_np = np.dot(out_np,
+                                target_model_fc2_w) + target_model_fc2_b
+                out_np = np.dot(out_np,
+                                target_model_fc3_w) + target_model_fc3_b
 
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
-
-        decay = 0.87
-        updated_parameters = self._numpy_update(self.target_model2, decay)
-        (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
-         target_model_fc2_b, target_model_fc3_w,
-         target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                updated_parameters['fc1.bias'],
-                                updated_parameters['fc2.weight'],
-                                updated_parameters['fc2.bias'],
-                                updated_parameters['fc3.weight'],
-                                updated_parameters['fc3.bias'])
-
-        self.model.sync_weights_to(self.target_model2, decay)
-        N = 10
-        random_obs = np.random.randn(N, 4).astype(np.float32)
-        for i in range(N):
-            obs = random_obs[i]
-            real_target_outputs = self.target_model2.predict(
-                paddle.to_tensor(obs)).numpy()
-            out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
-            out_np = np.dot(out_np, target_model_fc2_w) + target_model_fc2_b
-            out_np = np.dot(out_np, target_model_fc3_w) + target_model_fc3_b
-
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+                self.assertLess(
+                    float(np.abs(real_target_outputs - out_np)), 1e-5)
 
     def test_get_weights(self):
         params = self.model.get_weights()
@@ -331,7 +208,7 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights_with_wrong_params_num(self):
         params = self.model.get_weights()
-        del params['fc3.bias']
+        del params['fc2.bias']
         with self.assertRaises(AssertionError):
             self.model.set_weights(params)
 

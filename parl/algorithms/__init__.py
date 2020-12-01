@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH
+from parl.utils.utils import _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
 
 if _HAS_FLUID:
+    from parl.algorithms.fluid import *
+if _HAS_PADDLE:
     from parl.algorithms.paddle import *
 elif _HAS_TORCH:
     from parl.algorithms.torch import *

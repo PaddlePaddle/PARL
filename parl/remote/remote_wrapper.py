@@ -18,7 +18,7 @@ import threading
 import zmq
 
 from parl.utils import logger, to_str, to_byte
-from parl.utils.communication import loads_argument, loads_return,\
+from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote.client import get_global_client
 from parl.remote import remote_constants

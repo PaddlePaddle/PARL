@@ -72,10 +72,9 @@ setup(
     install_requires=[
         "termcolor>=1.1.0",
         "pyzmq==18.0.1",
-        'pyarrow==0.16.0; python_version<"3"',
-        'pyarrow==0.17.1; python_version>="3"',
         "scipy>=1.0.0",
-        "cloudpickle==1.2.1",
+        'cloudpickle==1.3.0; python_version<"3"',
+        'cloudpickle==1.6.0; python_version>="3"',
         "tensorboardX==1.8",
         "tb-nightly==1.15.0a20190801",
         "flask>=1.0.4",
@@ -83,7 +82,7 @@ setup(
         "psutil>=5.6.2",
         "flask_cors",
         "requests",
-        "visualdl>=2.0.0b;python_version>='3.7' and platform_system=='Linux'",
+        "visualdl>=2.0.0b;python_version>='3.8' and platform_system=='Linux'",
     ],
     classifiers=[
         'Intended Audience :: Developers',
@@ -93,6 +92,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     entry_points={"console_scripts": ["xparl=parl.remote.scripts:main"]},
 )

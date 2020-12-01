@@ -28,4 +28,4 @@ actor.hello_world()# 因为计算是放在集群中执行，所以这里不会�
 - 根据xparl的日志服务查看
 在本地脚本连接到xparl集群之后，xparl会在程序中输出logserver的地址，通过浏览器访问这个网站即可实时查看每个并行任务的对应输出。
 
-<img src="./log_server.png" width="500"/>
+<img src="./.images/log_server.png" width="500"/>

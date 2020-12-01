@@ -21,7 +21,10 @@ from termcolor import colored
 import shutil
 from datetime import datetime
 
-__all__ = ['set_dir', 'get_dir', 'set_level', 'auto_set_dir']
+__all__ = [
+    'set_dir', 'get_dir', 'set_level', 'auto_set_dir', 'add_stdout_handler',
+    'remove_handler'
+]
 
 # globals: logger file and directory:
 LOG_DIR = None
@@ -218,6 +221,19 @@ Press any other key to exit. """)
 
 def get_dir():
     return LOG_DIR
+
+
+def add_stdout_handler():
+    global _logger
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(_Formatter(datefmt='%m-%d %H:%M:%S'))
+    _logger.addHandler(handler)
+    return handler
+
+
+def remove_handler(handler):
+    global _logger
+    _logger.removeHandler(handler)
 
 
 # Will save log to log_dir/main_file_name/log.log by default

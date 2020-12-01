@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 """
 generates new PARL python API
 """

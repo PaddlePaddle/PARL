@@ -16,6 +16,7 @@ import sys
 import os
 import subprocess
 import numpy as np
+from parl.utils import logger
 
 __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
@@ -67,8 +68,12 @@ try:
     assert fluid_version >= 161 or fluid_version == 0, "PARL requires paddle>=1.6.1"
     assert fluid_version < 200 or fluid_version == 0, "PARL requires paddle<2.0.0"
     _HAS_FLUID = True
-except ImportError:
+except ImportError as e:
     _HAS_FLUID = False
+    if _IS_PY2 and "{}".format(e) != "No module named paddle":
+        logger.warning("import paddle error:\n{}".format(e))
+    if _IS_PY3 and "{}".format(e) != "No module named 'paddle'":
+        logger.warning("import paddle error:\n{}".format(e))
 
 try:
     import torch

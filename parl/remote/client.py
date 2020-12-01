@@ -282,7 +282,16 @@ class Client(object):
         return True
 
     def _create_job_monitor(self, job_heartbeat_socket, actor_ref_monitor):
-        """Send heartbeat signals to check target's status"""
+        """Send heartbeat signals to check target's status
+
+        Args:
+            job_heartbeat_socket: socket of heartbeat server
+            actor_ref_monitor:
+                if `wait` argument is True in `@parl.remote_class`, the actor_ref_monitor is None;
+                if `wait` argument is False in `@parl.remote_class` (future mode), the actor_ref_monitor
+                        is an instance of `ActorRefMonitor`, used for detecting whether the actor has been
+                        deleted or out of scope;
+        """
         job_is_alive = True
         while job_is_alive and self.client_is_alive:
             if actor_ref_monitor is not None and actor_ref_monitor.is_deleted(

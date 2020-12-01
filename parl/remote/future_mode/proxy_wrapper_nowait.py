@@ -100,21 +100,13 @@ def proxy_wrapper_nowait_func(remote_wrapper):
             while True:
                 calling_request = self._xparl_remote_wrapper_calling_queue.get(
                 )
+                assert calling_request.calling_type in ["setattr", "getattr"]
 
-                if calling_request.calling_type == "setattr":
-                    try:
+                try:
+                    if calling_request.calling_type == "setattr":
                         self._xparl_remote_wrapper_obj.set_remote_attr(
                             calling_request.attr, calling_request.value)
-                    except Exception as e:
-                        async_error = FutureFunctionError(calling_request.attr)
-                        self._xparl_remote_object_exception = async_error
-                        self._xparl_calling_finished_event.set()
-                        raise e
-
-                    self._xparl_calling_finished_event.set()
-
-                elif calling_request.calling_type == "getattr":
-                    try:
+                    else:  # getattr
                         is_attribute = self._xparl_remote_wrapper_obj.has_attr(
                             calling_request.attr)
 
@@ -127,18 +119,17 @@ def proxy_wrapper_nowait_func(remote_wrapper):
                             return_result = function_wrapper(
                                 *calling_request.args,
                                 **calling_request.kwargs)
-                    except Exception as e:
-                        async_error = FutureFunctionError(calling_request.attr)
-                        self._xparl_remote_object_exception = async_error
+                        calling_request.future_return_queue.put(return_result)
+
+                except Exception as e:
+                    async_error = FutureFunctionError(calling_request.attr)
+                    self._xparl_remote_object_exception = async_error
+                    if calling_request.calling_type == "setattr":
                         calling_request.future_return_queue.put(async_error)
-                        self._xparl_calling_finished_event.set()
-                        raise e
+                    raise e
 
-                    calling_request.future_return_queue.put(return_result)
-
+                finally:
                     self._xparl_calling_finished_event.set()
-                else:
-                    raise NotImplementedError
 
         def __getattr__(self, attr):
             self._xparl_remote_wrapper_internal_lock.acquire()

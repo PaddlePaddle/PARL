@@ -20,7 +20,7 @@ from parl.remote.exceptions import FutureGetRepeatedlyError, FutureFunctionError
 class FutureObject(object):
     def __init__(self, output_queue):
         """This class is used to encapsulate the output_queue(`queue.Queue`),
-        and provide a `get` function. When calling a function of a class
+        and provides a `get` function. When calling a function of a class
         decorated by `pare.remote_class(wait=False)`, user will get a `FutureObject`
         immediately and can get the real return by calling the `get` function of 
         the `future` object.

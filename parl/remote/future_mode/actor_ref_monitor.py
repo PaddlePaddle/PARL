@@ -20,6 +20,7 @@ from parl.utils import _IS_PY2
 class ActorRefMonitor(object):
     def __init__(self, actor):
         """Monitor of actor reference count, which is used in the future mode.
+        It checks if we should release the CPU resource of the actor or not.
 
         Args:
             actor(instance of ProxyWrapperNoWait)

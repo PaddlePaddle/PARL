@@ -124,7 +124,7 @@ def proxy_wrapper_nowait_func(remote_wrapper):
                 except Exception as e:
                     async_error = FutureFunctionError(calling_request.attr)
                     self._xparl_remote_object_exception = async_error
-                    if calling_request.calling_type == "setattr":
+                    if calling_request.calling_type == "getattr":
                         calling_request.future_return_queue.put(async_error)
                     raise e
 

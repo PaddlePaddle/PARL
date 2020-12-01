@@ -12,43 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.remote.utils import RESERVED_NAME_ERROR_STR
+XPARL_RESERVED_PREFIX = "_xparl"
+RESERVED_NAME_ERROR_STR = "Name starting with `_xparl` is the reserved name in xparl, please don't use the name `{}`."
 
 
-def proxy_wrapper_func(remote_wrapper, max_memory):
+def proxy_wrapper_func(remote_wrapper):
     '''
     The 'proxy_wrapper_func' is defined on the top of class 'RemoteWrapper'
     in order to set and get attributes of 'remoted_wrapper' and the corresponding 
     remote models individually. 
 
-    With 'proxy_wrapper_func', it is allowed to define a attribute (or method) of
-    the same name in 'RemoteWrapper' and remote models.
+    This decorator function allows the user access the attributes of remote objects 
+    like local objects.
+
+    For example:
+        ```python
+        import parl
+
+        @parl.remote_class()
+        class Actor(object):
+            def __init__(self):
+                self.arg1 = 0
+
+            def func(self):
+                # do something
+                return 0
+
+        parl.connect("localhost:8010")
+
+        actor = Actor()
+        print(actor.arg1)
+        actor.arg2 = 10
+        print(actor.func())
+        ```
     '''
+
+    original_class = remote_wrapper._original
+    max_memory = remote_wrapper._max_memory
 
     class ProxyWrapper(object):
         def __init__(self, *args, **kwargs):
-            for reserved_name in [
-                    '__xparl_proxy_wrapper_nowait__', '__xparl_remote_class__',
-                    '__xparl_remote_class_max_memory__'
-            ]:
-                assert reserved_name not in kwargs, RESERVED_NAME_ERROR_STR.format(
-                    reserved_name)
+            for key in kwargs:
+                assert not key.startswith(
+                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
-            kwargs['__xparl_remote_class__'] = remote_wrapper._original
-            kwargs['__xparl_remote_class_max_memory__'] = max_memory
+            kwargs['_xparl_remote_class'] = original_class
+            kwargs['_xparl_remote_class_max_memory'] = max_memory
 
-            self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
-            assert not self.xparl_remote_wrapper_obj.has_attr(
-                'xparl_remote_wrapper_obj'), RESERVED_NAME_ERROR_STR.format(
-                    "xparl_remote_wrapper_obj")
+            self._xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
+            for key in self._xparl_remote_wrapper_obj.get_attrs():
+                assert not key.startswith(
+                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
         def __getattr__(self, attr):
-            return self.xparl_remote_wrapper_obj.get_remote_attr(attr)
+            return self._xparl_remote_wrapper_obj.get_remote_attr(attr)
 
         def __setattr__(self, attr, value):
-            if attr == 'xparl_remote_wrapper_obj':
+            if attr.startswith(XPARL_RESERVED_PREFIX):
                 super(ProxyWrapper, self).__setattr__(attr, value)
             else:
-                self.xparl_remote_wrapper_obj.set_remote_attr(attr, value)
+                self._xparl_remote_wrapper_obj.set_remote_attr(attr, value)
 
     return ProxyWrapper

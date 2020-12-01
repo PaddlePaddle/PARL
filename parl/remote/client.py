@@ -20,7 +20,7 @@ import sys
 import threading
 import zmq
 import parl
-from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook, _IS_PY2
+from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
@@ -248,7 +248,7 @@ class Client(object):
 
     def _check_and_monitor_job(self, job_heartbeat_address,
                                ping_heartbeat_address, max_memory,
-                               proxy_wrapper_nowait_object):
+                               actor_ref_monitor):
         """ Sometimes the client may receive a job that is dead, thus 
         we have to check if this job is still alive before adding it to the `actor_num`.
         """
@@ -276,30 +276,19 @@ class Client(object):
         # a thread for sending heartbeat signals to job
         thread = threading.Thread(
             target=self._create_job_monitor,
-            args=(job_heartbeat_socket, proxy_wrapper_nowait_object))
+            args=(job_heartbeat_socket, actor_ref_monitor))
         thread.setDaemon(True)
         thread.start()
         return True
 
-    def _create_job_monitor(self, job_heartbeat_socket,
-                            proxy_wrapper_nowait_object):
+    def _create_job_monitor(self, job_heartbeat_socket, actor_ref_monitor):
         """Send heartbeat signals to check target's status"""
-        copy_proxy_wrapper_nowait_object = proxy_wrapper_nowait_object
-
-        # @TODO(zenghsh3): hardcoded
-        actor_deleted_refcount = 7
-        if _IS_PY2:
-            actor_deleted_refcount = 9
-
         job_is_alive = True
         while job_is_alive and self.client_is_alive:
-            if copy_proxy_wrapper_nowait_object is not None:
-                cur_refcount = sys.getrefcount(
-                    copy_proxy_wrapper_nowait_object)
-                if cur_refcount == actor_deleted_refcount:
-                    # actor is deleted or out of scope, we will terminate the heartbeat of the job
-                    # and release the cpu resource.
-                    break
+            if actor_ref_monitor is not None and actor_ref_monitor.is_deleted(
+            ):
+                # terminate the heartbeat of the job and release the cpu resource.
+                break
             try:
                 job_heartbeat_socket.send_multipart(
                     [remote_constants.HEARTBEAT_TAG])

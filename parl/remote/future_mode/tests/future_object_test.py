@@ -21,6 +21,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 from parl.remote.future_mode import FutureObject
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class(wait=False)
@@ -41,7 +42,7 @@ class TestFutureObject(unittest.TestCase):
         disconnect()
 
     def test_resulf_of_get_function(self):
-        port = 8635
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -70,7 +71,7 @@ class TestFutureObject(unittest.TestCase):
         worker1.exit()
 
     def test_calling_get_function_twice(self):
-        port = 8636
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

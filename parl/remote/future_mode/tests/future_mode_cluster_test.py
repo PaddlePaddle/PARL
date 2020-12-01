@@ -14,13 +14,15 @@
 
 import unittest
 import parl
+import time
+import subprocess
+import threading
+
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-import time
-import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
-import subprocess
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class(wait=False)
@@ -58,7 +60,7 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_actor_exception(self):
-        port = 8535
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -89,7 +91,7 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
 
     def test_actor_exception_2(self):
-        port = 8536
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -116,7 +118,7 @@ class TestCluster(unittest.TestCase):
         master.exit()
 
     def test_reset_actor(self):
-        port = 8537
+        port = get_free_tcp_port()
         # start the master
         master = Master(port=port)
         th = threading.Thread(target=master.run)

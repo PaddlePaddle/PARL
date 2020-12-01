@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.remote.future_mode.utils import *
+from parl.remote.future_mode.future_object import *
 from parl.remote.future_mode.proxy_wrapper_nowait import *

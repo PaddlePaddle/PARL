@@ -15,13 +15,15 @@
 import unittest
 import parl
 import numpy as np
+import time
+import threading
+import random
+
 from parl.remote.client import disconnect
 from parl.utils import logger
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-import time
-import threading
-import random
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class(wait=False)
@@ -48,18 +50,18 @@ class Test_get_and_set_attribute(unittest.TestCase):
         disconnect()
 
     def test_get_attribute(self):
-        port1 = random.randint(6100, 6200)
+        port = get_free_tcp_port()
         logger.info("running:test_get_attirbute")
-        master = Master(port=port1)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port1), 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port1))
+        parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
 
         self.assertTrue(arg1 == actor.arg1)
@@ -71,18 +73,18 @@ class Test_get_and_set_attribute(unittest.TestCase):
         worker1.exit()
 
     def test_set_attribute(self):
-        port2 = random.randint(6200, 6300)
+        port = get_free_tcp_port()
         logger.info("running:test_set_attirbute")
-        master = Master(port=port2)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port2), 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         arg1 = 3
         arg2 = 3.5
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port2))
+        parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
         actor.arg1 = arg1
         actor.arg2 = arg2
@@ -96,18 +98,18 @@ class Test_get_and_set_attribute(unittest.TestCase):
         worker1.exit()
 
     def test_create_new_attribute_same_with_wrapper(self):
-        port3 = random.randint(6400, 6500)
+        port = get_free_tcp_port()
         logger.info("running:test_create_new_attribute_same_with_wrapper")
-        master = Master(port=port3)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port3), 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port3))
+        parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
 
         actor.internal_lock = 50
@@ -116,18 +118,18 @@ class Test_get_and_set_attribute(unittest.TestCase):
         worker1.exit()
 
     def test_same_name_of_attribute_and_method(self):
-        port4 = random.randint(6500, 6600)
+        port = get_free_tcp_port()
         logger.info("running:test_same_name_of_attribute_and_method")
-        master = Master(port=port4)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port4), 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port4))
+        parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
         self.assertEqual(arg1, actor.arg1)
 
@@ -139,19 +141,19 @@ class Test_get_and_set_attribute(unittest.TestCase):
         worker1.exit()
 
     def test_non_existing_attribute_same_with_existing_method(self):
-        port5 = random.randint(6600, 6700)
+        port = get_free_tcp_port()
         logger.info(
             "running:test_non_existing_attribute_same_with_existing_method")
-        master = Master(port=port5)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port5), 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port5))
+        parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
         actor.new_attr_2 = 300
         self.assertEqual(300, actor.new_attr_2)

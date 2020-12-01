@@ -174,6 +174,3 @@ def get_subfiles_recursively(folder_path):
             elif len(dirs) == 0:
                 empty_subfolders.append(os.path.normpath(root))
         return python_files, other_files, empty_subfolders
-
-
-RESERVED_NAME_ERROR_STR = "`{}` is the reserved variable name in xparl, please use other names"

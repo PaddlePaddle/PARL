@@ -74,14 +74,15 @@ def remote_class(*args, **kwargs):
             return cls
 
         RemoteWrapper._original = cls
+        RemoteWrapper._max_memory = max_memory
 
         if wait:
-            proxy_wrapper = proxy_wrapper_func(RemoteWrapper, max_memory)
+            proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
         else:
             # nowait
-            proxy_wrapper = proxy_wrapper_nowait_func(RemoteWrapper,
-                                                      max_memory)
+            proxy_wrapper = proxy_wrapper_nowait_func(RemoteWrapper)
 
+        proxy_wrapper._original = cls
         return proxy_wrapper
 
     max_memory = kwargs.get('max_memory')

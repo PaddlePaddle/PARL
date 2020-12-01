@@ -80,7 +80,7 @@ class FutureGetRepeatedlyError(Exception):
     """
 
     def __init__(self):
-        self.error_info = "The `get` function of `FutureObject` has been called, you cannot call the `get` function repeatedly."
+        self.error_info = "The `get` function of the `FutureObject` has been called before. We can only call the `get` function for each FutureObject **once**."
 
     def __str__(self):
         return self.error_info

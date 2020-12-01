@@ -16,23 +16,25 @@ import queue
 import time
 import threading
 
+from collections import namedtuple
 from parl.remote.exceptions import FutureFunctionError
-from parl.remote.utils import RESERVED_NAME_ERROR_STR
-from parl.remote.future_mode.utils import FutureObject, CallingRequest
+from parl.remote.future_mode.future_object import FutureObject
+
+XPARL_RESERVED_PREFIX = "_xparl"
+RESERVED_NAME_ERROR_STR = "Name starting with `_xparl` is the reserved name in xparl, please don't use the name `{}`."
+
+CallingRequest = namedtuple(
+    'CallingRequest',
+    ['calling_type', 'attr', 'value', 'args', 'kwargs', 'future_return_queue'])
 
 
-def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
-    '''
-    The 'proxy_wrapper_nowait_func' is defined on the top of class 'RemoteWrapper'
-    when using the `@remote_class(wait=False)` decorator. The main purpose is as follows:
+def proxy_wrapper_nowait_func(remote_wrapper):
+    '''This function implements the remote decorator for asynchronous mode.
+    With this decorator, the function called by user return a `future` object immediately
+    and it will not be blocked. Users can get the real return of the function by calling 
+    the `get` function of the `future` object.
 
-    1. set and get attributes of 'remoted_wrapper' and the corresponding 
-    remote models individually. (With 'proxy_wrapper_nowait_func', it is allowed to 
-    define a attribute (or method) of the same name in 'RemoteWrapper' and remote models.
-
-    2. provide asynchronous function calling. When user calling a function, he will get
-    the return(`FutureObject`) immediately and he need call the `get` function to get the
-    real return. For example:
+    For example:
         ```python
         import parl
 
@@ -52,24 +54,23 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
         results = [future_obj.get() for future_obj in future_objects]
         ```
     '''
+    original_class = remote_wrapper._original
+    max_memory = remote_wrapper._max_memory
 
     class ProxyWrapperNoWait(object):
         def __init__(self, *args, **kwargs):
-            for reserved_name in [
-                    '__xparl_proxy_wrapper_nowait__', '__xparl_remote_class__',
-                    '__xparl_remote_class_max_memory__'
-            ]:
-                assert reserved_name not in kwargs, RESERVED_NAME_ERROR_STR.format(
-                    reserved_name)
+            for key in kwargs:
+                assert not key.startswith(
+                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
-            kwargs['__xparl_proxy_wrapper_nowait__'] = self
-            kwargs['__xparl_remote_class__'] = remote_wrapper._original
-            kwargs['__xparl_remote_class_max_memory__'] = max_memory
+            kwargs['_xparl_proxy_wrapper_nowait'] = self
+            kwargs['_xparl_remote_class'] = original_class
+            kwargs['_xparl_remote_class_max_memory'] = max_memory
 
-            self.xparl_remote_wrapper_calling_queue = queue.Queue()
-            self.xparl_remote_wrapper_internal_lock = threading.Lock()
-            self.xparl_calling_finished_event = threading.Event()
-            self.xparl_remote_object_exception = None
+            self._xparl_remote_wrapper_calling_queue = queue.Queue()
+            self._xparl_remote_wrapper_internal_lock = threading.Lock()
+            self._xparl_calling_finished_event = threading.Event()
+            self._xparl_remote_object_exception = None
 
             object_thread = threading.Thread(
                 target=self._run_object_in_backend, args=(args, kwargs))
@@ -78,101 +79,98 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
 
         def _run_object_in_backend(self, args, kwargs):
             try:
-                self.xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
-                for attr in [
-                        'xparl_remote_wrapper_obj',
-                        'xparl_remote_wrapper_calling_queue',
-                        'xparl_remote_wrapper_internal_lock',
-                        'xparl_calling_finished_event',
-                        'xparl_remote_object_exception'
-                ]:
-                    assert not self.xparl_remote_wrapper_obj.has_attr(
-                        attr), RESERVED_NAME_ERROR_STR.format(attr)
+                self._xparl_remote_wrapper_obj = remote_wrapper(
+                    *args, **kwargs)
+                for key in self._xparl_remote_wrapper_obj.get_attrs():
+                    assert not key.startswith(
+                        XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(
+                            key)
             except Exception as e:
                 async_error = FutureFunctionError('__init__')
-                self.xparl_remote_object_exception = async_error
-                self.xparl_calling_finished_event.set()
+                self._xparl_remote_object_exception = async_error
+                self._xparl_calling_finished_event.set()
                 raise e
             """
             NOTE:
-                We should set the event after the initialization of self.xparl_remote_wrapper_obj.
+                We should set the event after the initialization of self._xparl_remote_wrapper_obj.
                 Only after the initialization is complete can we call the function of actor.
             """
-            self.xparl_calling_finished_event.set()
+            self._xparl_calling_finished_event.set()
 
             while True:
-                calling_request = self.xparl_remote_wrapper_calling_queue.get()
+                calling_request = self._xparl_remote_wrapper_calling_queue.get(
+                )
 
                 if calling_request.calling_type == "setattr":
                     try:
-                        self.xparl_remote_wrapper_obj.set_remote_attr(
+                        self._xparl_remote_wrapper_obj.set_remote_attr(
                             calling_request.attr, calling_request.value)
                     except Exception as e:
                         async_error = FutureFunctionError(calling_request.attr)
-                        self.xparl_remote_object_exception = async_error
-                        self.xparl_calling_finished_event.set()
+                        self._xparl_remote_object_exception = async_error
+                        self._xparl_calling_finished_event.set()
                         raise e
 
-                    self.xparl_calling_finished_event.set()
+                    self._xparl_calling_finished_event.set()
 
                 elif calling_request.calling_type == "getattr":
                     try:
-                        is_attribute = self.xparl_remote_wrapper_obj.has_attr(
+                        is_attribute = self._xparl_remote_wrapper_obj.has_attr(
                             calling_request.attr)
 
                         if is_attribute:
-                            return_result = self.xparl_remote_wrapper_obj.get_remote_attr(
+                            return_result = self._xparl_remote_wrapper_obj.get_remote_attr(
                                 calling_request.attr)
                         else:
-                            function_wrapper = self.xparl_remote_wrapper_obj.get_remote_attr(
+                            function_wrapper = self._xparl_remote_wrapper_obj.get_remote_attr(
                                 calling_request.attr)
                             return_result = function_wrapper(
                                 *calling_request.args,
                                 **calling_request.kwargs)
                     except Exception as e:
                         async_error = FutureFunctionError(calling_request.attr)
-                        self.xparl_remote_object_exception = async_error
+                        self._xparl_remote_object_exception = async_error
                         calling_request.future_return_queue.put(async_error)
-                        self.xparl_calling_finished_event.set()
+                        self._xparl_calling_finished_event.set()
                         raise e
 
                     calling_request.future_return_queue.put(return_result)
 
-                    self.xparl_calling_finished_event.set()
+                    self._xparl_calling_finished_event.set()
                 else:
-                    assert False, "undefined calling type"
+                    raise NotImplementedError
 
         def __getattr__(self, attr):
-            self.xparl_remote_wrapper_internal_lock.acquire()
+            self._xparl_remote_wrapper_internal_lock.acquire()
 
-            self.xparl_calling_finished_event.wait(
+            self._xparl_calling_finished_event.wait(
             )  # waiting for last function finishing before calling has_attr
 
-            if self.xparl_remote_object_exception is not None:
+            if self._xparl_remote_object_exception is not None:
                 time.sleep(
                     0.1
                 )  # waiting for another thread printing the error message
-                raise self.xparl_remote_object_exception
+                raise self._xparl_remote_object_exception
             """
             Don't use the following way, which will call the __getattr__ function and acquire the lock again.
-                is_attribute = self.xparl_remote_wrapper_obj.has_attr(attr)
+                is_attribute = self._xparl_remote_wrapper_obj.has_attr(attr)
             """
-            is_attribute = self.__dict__['xparl_remote_wrapper_obj'].has_attr(
+            is_attribute = self.__dict__['_xparl_remote_wrapper_obj'].has_attr(
                 attr)
 
-            self.xparl_remote_wrapper_internal_lock.release()
+            self._xparl_remote_wrapper_internal_lock.release()
 
             def wrapper(*args, **kwargs):
-                self.xparl_remote_wrapper_internal_lock.acquire()
+                self._xparl_remote_wrapper_internal_lock.acquire()
 
-                self.xparl_calling_finished_event.wait()
-                self.xparl_calling_finished_event.clear()
+                self._xparl_calling_finished_event.wait()
+                self._xparl_calling_finished_event.clear()
 
-                if self.xparl_remote_object_exception is not None:
+                if self._xparl_remote_object_exception is not None:
                     time.sleep(
                         0.1
                     )  # waiting for another thread printing the error message
-                    raise self.xparl_remote_object_exception
+                    raise self._xparl_remote_object_exception
 
                 future_return_queue = queue.Queue()
                 calling_request = CallingRequest(
@@ -183,12 +181,12 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
                     kwargs=kwargs,
                     future_return_queue=future_return_queue)
 
-                self.__dict__['xparl_remote_wrapper_calling_queue'].put(
+                self.__dict__['_xparl_remote_wrapper_calling_queue'].put(
                     calling_request)
 
                 future_object = FutureObject(future_return_queue)
 
-                self.xparl_remote_wrapper_internal_lock.release()
+                self._xparl_remote_wrapper_internal_lock.release()
                 return future_object
 
             if is_attribute:
@@ -198,25 +196,19 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
                 return wrapper
 
         def __setattr__(self, attr, value):
-            if attr in [
-                    'xparl_remote_wrapper_obj',
-                    'xparl_remote_wrapper_calling_queue',
-                    'xparl_remote_wrapper_internal_lock',
-                    'xparl_calling_finished_event',
-                    'xparl_remote_object_exception'
-            ]:
+            if attr.startswith(XPARL_RESERVED_PREFIX):
                 super(ProxyWrapperNoWait, self).__setattr__(attr, value)
             else:
-                self.xparl_remote_wrapper_internal_lock.acquire()
+                self._xparl_remote_wrapper_internal_lock.acquire()
 
-                self.xparl_calling_finished_event.wait()
-                self.xparl_calling_finished_event.clear()
+                self._xparl_calling_finished_event.wait()
+                self._xparl_calling_finished_event.clear()
 
-                if self.xparl_remote_object_exception is not None:
+                if self._xparl_remote_object_exception is not None:
                     time.sleep(
                         0.1
-                    )  # waiting for another thread printing the error message
-                    raise self.xparl_remote_object_exception
+                    )  # waiting for another thread to print the error message
+                    raise self._xparl_remote_object_exception
 
                 calling_request = CallingRequest(
                     calling_type="setattr",
@@ -225,8 +217,8 @@ def proxy_wrapper_nowait_func(remote_wrapper, max_memory):
                     args=None,
                     kwargs=None,
                     future_return_queue=None)
-                self.xparl_remote_wrapper_calling_queue.put(calling_request)
+                self._xparl_remote_wrapper_calling_queue.put(calling_request)
 
-                self.xparl_remote_wrapper_internal_lock.release()
+                self._xparl_remote_wrapper_internal_lock.release()
 
     return ProxyWrapperNoWait

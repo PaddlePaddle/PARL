@@ -25,13 +25,16 @@ from parl.remote import remote_constants
 from parl.remote.utils import locate_remote_file
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError, FutureFunctionError
+from parl.remote.future_mode.actor_ref_monitor import ActorRefMonitor
+
+XPARL_RESERVED_PREFIX = "_xparl"
 
 
 class RemoteWrapper(object):
     """
     Wrapper for remote class in client side.
     1. request cpu resource and submit job to the master
-    2. handle the function calling of user, mapping it to the remote procedure call through zmq
+    2. return the result of the function called by the user, using the remote computation resource.
     """
 
     def __init__(self, *args, **kwargs):
@@ -50,18 +53,21 @@ class RemoteWrapper(object):
         # instance of actor class which is decorated by @remote_class(wait=False).
         # use the reference count of the object to detect whether
         # the object has been deleted or out of scope.
-        proxy_wrapper_nowait_object = kwargs.get(
-            '__xparl_proxy_wrapper_nowait__')
+        proxy_wrapper_nowait_object = kwargs.get('_xparl_proxy_wrapper_nowait')
+        if proxy_wrapper_nowait_object is None:
+            actor_ref_monitor = None
+        else:
+            actor_ref_monitor = ActorRefMonitor(proxy_wrapper_nowait_object)
 
         # class which is decorated by @remote_class
-        cls = kwargs.get('__xparl_remote_class__')
+        cls = kwargs.get('_xparl_remote_class')
 
         # max_memory argument in @remote_class decorator
-        max_memory = kwargs.get('__xparl_remote_class_max_memory__')
+        max_memory = kwargs.get('_xparl_remote_class_max_memory')
 
         if self.GLOBAL_CLIENT.master_is_alive:
             job_address = self.request_cpu_resource(
-                self.GLOBAL_CLIENT, max_memory, proxy_wrapper_nowait_object)
+                self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
         else:
             raise Exception("Can not submit job to the master. "
                             "Please check if master is still alive.")
@@ -95,13 +101,9 @@ class RemoteWrapper(object):
         end_of_file = cls_source[1] + len(cls_source[0])
         class_name = cls.__name__
 
-        if '__xparl_proxy_wrapper_nowait__' in kwargs:
-            del kwargs['__xparl_proxy_wrapper_nowait__']
-        if '__xparl_remote_class__' in kwargs:
-            del kwargs['__xparl_remote_class__']
-        if '__xparl_remote_class_max_memory__' in kwargs:
-            del kwargs['__xparl_remote_class_max_memory__']
-
+        for key in list(kwargs.keys()):
+            if key.startswith(XPARL_RESERVED_PREFIX):
+                del kwargs[key]
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
             cloudpickle.dumps([file_path, class_name, end_of_file]),
@@ -140,6 +142,9 @@ class RemoteWrapper(object):
         has_attr = attr in self.remote_attribute_keys_set
         return has_attr
 
+    def get_attrs(self):
+        return self.remote_attribute_keys_set
+
     def send_file(self, socket):
         try:
             socket.send_multipart(
@@ -149,12 +154,12 @@ class RemoteWrapper(object):
             logger.error("Send python files failed.")
 
     def request_cpu_resource(self, global_client, max_memory,
-                             proxy_wrapper_nowait_object):
+                             actor_ref_monitor):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job_address = global_client.submit_job(
-                max_memory, proxy_wrapper_nowait_object)
+            job_address = global_client.submit_job(max_memory,
+                                                   actor_ref_monitor)
             if job_address is not None:
                 return job_address
             if cnt % 30 == 0:

@@ -14,13 +14,36 @@
 
 import time
 import threading
-from collections import namedtuple
 from parl.remote.exceptions import FutureGetRepeatedlyError, FutureFunctionError
 
 
 class FutureObject(object):
     def __init__(self, output_queue):
-        """Define a new class to avoid user calling the `put` function of output_queue
+        """This class is used to encapsulate the output_queue(`queue.Queue`),
+        and provide a `get` function. When calling a function of a class
+        decorated by `pare.remote_class(wait=False)`, user will get a `FutureObject`
+        immediately and can get the real return by calling the `get` function of 
+        the `future` object.
+
+        For example:
+            ```python
+            import parl
+
+            @parl.remote_class(wait=False)
+            class Actor(object):
+                def __init__(self):
+                    pass
+
+                def func(self):
+                    # do something
+                    return 0
+
+            parl.connect("localhost:8010")
+
+            actors = Actor()
+            future_object = actor.func() # return a `FutureObject`
+            result = future_object.get()
+            ```
 
         Args:
             output_queue(queue.Queue): queue to get the result of function calling
@@ -46,8 +69,3 @@ class FutureObject(object):
                 raise result
             self._already_get = True
             return result
-
-
-CallingRequest = namedtuple(
-    'CallingRequest',
-    ['calling_type', 'attr', 'value', 'args', 'kwargs', 'future_return_queue'])

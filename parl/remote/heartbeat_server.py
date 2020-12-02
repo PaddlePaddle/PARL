@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,13 +23,17 @@ from parl.utils import get_ip_address, to_byte, logger
 class HeartbeatServerThread(threading.Thread):
     def __init__(self, heartbeat_client_recv_addr, server_type, client_type):
         """Create a thread to run the heartbeat server.
+        Note that the process will exit directly if the heartbeat detection fails.
 
         Args:
             heartbeat_client_recv_addr(str): address of another server socket in the heartbeat client 
                     which used to receive the heartbeat server address.
-            server_type(str): type of server, which is used for logging.
-            client_type(str): type of client, which is used for logging.
+            server_type(str): type of server (E.g. master/worker/job/log_server), which is used for logging.
+            client_type(str): type of client (E.g. master/worker/job/log_server), which is used for logging.
         """
+        assert server_type in ['master', 'worker', 'job', 'log_server']
+        assert client_type in ['master', 'worker', 'job', 'log_server']
+
         self.heartbeat_client_recv_addr = heartbeat_client_recv_addr
         self.server_type = server_type
         self.client_type = client_type

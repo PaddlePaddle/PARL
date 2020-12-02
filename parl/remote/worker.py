@@ -122,7 +122,7 @@ class Worker(object):
             raise NotImplementedError
 
     def _create_sockets(self):
-        """ Each worker has four sockets at start:
+        """Each worker maintains four sockets:
 
         (1) request_master_socket: sends job address to master node.
         (2) reply_job_socket: receives job_address from subprocess.
@@ -432,7 +432,7 @@ class Worker(object):
         self.reply_log_server_socket.send_multipart(
             [remote_constants.NORMAL_TAG])
 
-        # a thread for sending heartbeat signals to job
+        # a thread for sending heartbeat signals to log_server
         thread = threading.Thread(
             target=self._create_log_server_monitor,
             args=(log_server_heartbeat_addr, ))

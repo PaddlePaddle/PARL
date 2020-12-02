@@ -98,6 +98,50 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
+function run_single_paddle_test() {
+    mkdir -p ${REPO_ROOT}/build
+    cd ${REPO_ROOT}/build
+    cmake .. -$1=ON
+    ctest --output-on-failure -j20 --verbose
+    cd ${REPO_ROOT}
+    rm -rf ${REPO_ROOT}/build
+}
+
+function run_test_with_dygraph_paddle() {
+    # declare -a envs=("py27" "py36" "py37")
+    declare -a envs=("py37")
+    for env in "${envs[@]}";do
+        cd /work
+        source ~/.bashrc
+        export PATH="/root/miniconda3/bin:$PATH"
+        source activate $env
+        python -m pip install --upgrade pip
+        echo "========================================"
+        echo "Running tests in $env with paddle 2.0.0rc0 .."
+        echo `which pip`
+        echo "========================================"
+        pip install .
+        pip install -r .teamcity/requirements_paddle.txt
+
+        echo "========================================"
+        echo "Running unit tests with CPU..."
+        echo "========================================"
+        export CUDA_VISIBLE_DEVICES=""
+        run_single_paddle_test "DIS_TESTING_PADDLE"
+        echo "========================================"
+        echo "Running unit tests with GPU..."
+        echo "========================================"
+        unset CUDA_VISIBLE_DEVICES
+        export FLAGS_fraction_of_gpu_memory_to_use=0.05
+        run_single_paddle_test "DIS_TESTING_PADDLE"
+
+        # clean env
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
+        xparl stop
+    done
+}
+
 function run_import_test {
     export CUDA_VISIBLE_DEVICES=""
 
@@ -176,6 +220,7 @@ function main() {
               xparl stop
           done
           run_test_with_gpu
+          run_test_with_dygraph_paddle
 
           #
           /root/miniconda3/envs/empty_env/bin/pip install .

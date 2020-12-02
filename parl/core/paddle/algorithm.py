@@ -82,7 +82,7 @@ class Algorithm(AlgorithmBase):
         """ Get weights of self.model.
 
         Returns:
-            weights (dict): a Python Dict containing the parameters of
+            weights (dict): a Python dict containing the parameters of
             self.model.
         """
         return self.model.get_weights()
@@ -91,7 +91,7 @@ class Algorithm(AlgorithmBase):
         """ Set weights from ``get_weights`` to the model.
 
         Args:
-            weights (dict): a Python Dict containing the parameters of
+            weights (dict): a Python dict containing the parameters of
             self.model.
         """
         self.model.set_weights(params)

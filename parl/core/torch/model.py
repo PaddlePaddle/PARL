@@ -62,7 +62,7 @@ class Model(nn.Module, ModelBase):
     Public Functions:
         - ``sync_weights_to``: synchronize parameters of the current model to
         another model.
-        - ``get_weights``: return a list containing all the parameters of the
+        - ``get_weights``: return a dict containing all the parameters of the
         current model.
         - ``set_weights``: copy parameters from ``set_weights()`` to the model.
         - ``forward``: define the computations of a neural network. **Should**
@@ -113,9 +113,9 @@ class Model(nn.Module, ModelBase):
                                          (1 - decay) * var.data)
 
     def get_weights(self):
-        """Returns a Python list containing parameters of current model.
+        """Returns a Python dict containing parameters of current model.
 
-        Returns: a Python list containing the parameters of current model.
+        Returns: a Python dict containing the parameters of current model.
         """
         weights = self.state_dict()
         for key in weights.keys():
@@ -126,7 +126,7 @@ class Model(nn.Module, ModelBase):
         """Copy parameters from ``set_weights()`` to the model.
         
         Args:
-            weights (list): a Python list containing the parameters.
+            weights (dict): a Python dict containing the parameters.
         """
         for key in weights.keys():
             weights[key] = torch.from_numpy(weights[key])

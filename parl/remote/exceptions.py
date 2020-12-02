@@ -72,3 +72,28 @@ class RemoteAttributeError(RemoteError):
 
     def __str__(self):
         return self.error_info
+
+
+class FutureGetRepeatedlyError(Exception):
+    """
+    Calling the get function of `FutureObject` repeatedly.
+    """
+
+    def __init__(self):
+        self.error_info = "The `get` function of the `FutureObject` has been called before. We can only call the `get` function for each FutureObject **once**."
+
+    def __str__(self):
+        return self.error_info
+
+
+class FutureFunctionError(Exception):
+    """
+    Error raised when calling future function.
+    """
+
+    def __init__(self, func_name):
+        self.error_info = "There is an error raised when calling the future function `{}`.\n".format(func_name) + \
+                "You can see the detailed error message above, which is printed by another thread."
+
+    def __str__(self):
+        return self.error_info

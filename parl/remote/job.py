@@ -31,7 +31,7 @@ import traceback
 import zmq
 from multiprocessing import Process, Pipe
 from parl.utils import to_str, to_byte, get_ip_address, logger
-from parl.utils.communication import loads_argument, loads_return,\
+from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError

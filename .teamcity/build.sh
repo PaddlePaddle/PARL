@@ -124,12 +124,12 @@ function run_test_with_dygraph_paddle() {
         pip install -r .teamcity/requirements_paddle.txt
 
         echo "========================================"
-        echo "Running unit tests with CPU..."
+        echo "Running dygraph unit tests with CPU..."
         echo "========================================"
         export CUDA_VISIBLE_DEVICES=""
         run_single_paddle_test "DIS_TESTING_PADDLE"
         echo "========================================"
-        echo "Running unit tests with GPU..."
+        echo "Running dygraph unit tests with GPU..."
         echo "========================================"
         unset CUDA_VISIBLE_DEVICES
         export FLAGS_fraction_of_gpu_memory_to_use=0.05

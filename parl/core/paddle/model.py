@@ -57,7 +57,7 @@ class Model(nn.Layer, ModelBase):
                 return out
                
         policy = Policy() 
-        copied_policy = copy.deepcopy(model)
+        copied_policy = copy.deepcopy(policy)
 
     Attributes:
         model_id(str): each model instance has its unique model_id.
@@ -109,7 +109,6 @@ class Model(nn.Layer, ModelBase):
         assert (decay >= 0 and decay <= 1)
 
         target_vars = dict(target_model.named_parameters())
-        # target_vars = target_model.named_parameters()
         for name, var in self.named_parameters():
             target_data = decay * target_vars[name] + (1 - decay) * var
             target_vars[name] = target_data

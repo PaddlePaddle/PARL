@@ -84,7 +84,6 @@ class AgentBaseTest(unittest.TestCase):
         hd1 = np.dot(obs, params['fc1.weight']) + params['fc1.bias']
         hd2 = np.dot(hd1, params['fc2.weight']) + params['fc2.bias']
         out = np.dot(hd2, params['fc3.weight']) + params['fc3.bias']
-
         self.assertLess((out.sum() - output_np.sum()), 1e-5)
 
     def test_save(self):

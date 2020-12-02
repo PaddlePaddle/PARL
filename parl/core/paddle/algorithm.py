@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
-warnings.simplefilter('default')
-
 from parl.core.algorithm_base import AlgorithmBase
 from parl.core.paddle.model import Model
 

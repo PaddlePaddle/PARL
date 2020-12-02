@@ -108,7 +108,6 @@ class ACAgentBaseTest(unittest.TestCase):
                      params['actor.fc1.weight']) + params['actor.fc1.bias']
         act = np.dot(hid,
                      params['actor.fc2.weight']) + params['actor.fc2.bias']
-
         self.assertLess((act.sum() - act_np.sum()), 1e-5)
 
     def test_save(self):

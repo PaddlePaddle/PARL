@@ -21,7 +21,7 @@ from parl.utils import logger
 __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-     'kill_process', 'get_fluid_version', 'isnotebook'
+    'kill_process', 'get_fluid_version', 'isnotebook'
 ]
 
 

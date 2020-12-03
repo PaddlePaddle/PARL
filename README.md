@@ -85,7 +85,7 @@ pip install parl
 - [MADDPG](examples/MADDPG/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)
-- [Winning Solution for NIPS2020: Learning to Run a Power Network Challenge](examples/NeurIPS-Learning-to-Run-a-Power-Network-Challenge/)
+- [Winning Solution for NIPS2020: Learning to Run a Power Network Challenge](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)
 
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/>
 <br>

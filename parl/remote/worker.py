@@ -31,6 +31,7 @@ from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kil
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
+from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from six.moves import queue
 
 
@@ -121,11 +122,12 @@ class Worker(object):
             raise NotImplementedError
 
     def _create_sockets(self):
-        """ Each worker has three sockets at start:
+        """Each worker maintains four sockets:
 
         (1) request_master_socket: sends job address to master node.
         (2) reply_job_socket: receives job_address from subprocess.
         (3) kill_job_socket : receives commands to kill the job from jobs.
+        (4) reply_log_server_socket: receives log_server_heartbeat_address from subprocess.
 
         When a job starts, a new heartbeat socket is created to receive
         heartbeat signals from the job.
@@ -152,6 +154,12 @@ class Worker(object):
         self.kill_job_socket.linger = 0
         kill_job_port = self.kill_job_socket.bind_to_random_port("tcp://*")
         self.kill_job_address = "{}:{}".format(self.worker_ip, kill_job_port)
+
+        # reply_log_server_socket: receives log_server_heartbeat_address from subprocess
+        self.reply_log_server_socket, reply_log_server_port = create_server_socket(
+            self.ctx)
+        self.reply_log_server_address = "{}:{}".format(self.worker_ip,
+                                                       reply_log_server_port)
 
     def _create_jobs(self):
         """Create jobs and send a instance of ``InitializedWorker`` that contains the worker information to the master."""
@@ -394,8 +402,16 @@ class Worker(object):
         if port is None:
             port = "0"  # `0` means using a random port in flask
         command = [
-            sys.executable, log_server_file, "--port",
-            str(port), "--log_dir", "~/.parl_data/job/", "--line_num", "500"
+            sys.executable,
+            log_server_file,
+            "--port",
+            str(port),
+            "--log_dir",
+            "~/.parl_data/job/",
+            "--line_num",
+            "500",
+            "--worker_address",
+            self.reply_log_server_address,
         ]
 
         if sys.version_info.major == 3:
@@ -410,7 +426,44 @@ class Worker(object):
         FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)
+
+        message = self.reply_log_server_socket.recv_multipart()
+        log_server_heartbeat_addr = to_str(message[1])
+        self.reply_log_server_socket.send_multipart(
+            [remote_constants.NORMAL_TAG])
+
+        # a thread for sending heartbeat signals to log_server
+        thread = threading.Thread(
+            target=self._create_log_server_monitor,
+            args=(log_server_heartbeat_addr, ))
+        thread.setDaemon(True)
+        thread.start()
+
         return log_server_proc, log_server_address
+
+    def _create_log_server_monitor(self, log_server_heartbeat_addr):
+        """Send heartbeat signals to check target's status"""
+
+        # heartbeat_socket: sends heartbeat signal to log_server
+        heartbeat_socket = create_client_socket(
+            self.ctx, log_server_heartbeat_addr, heartbeat_timeout=True)
+
+        while self.master_is_alive and self.worker_is_alive:
+            try:
+                heartbeat_socket.send_multipart(
+                    [remote_constants.HEARTBEAT_TAG])
+                _ = heartbeat_socket.recv_multipart()
+                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+            except zmq.error.Again as e:
+                logger.warning(
+                    "[Worker] lost connection with the log_server:{}".format(
+                        log_server_heartbeat_addr))
+                break
+
+            except zmq.error.ZMQError as e:
+                break
+
+        heartbeat_socket.close(0)
 
     def exit(self):
         """close the worker"""

@@ -76,7 +76,6 @@ class Track1PowerNetAgent(BaseAgent):
         self.redispatch_months = set([3])
 
     def act(self, observation, reward, done):
-        #try:
         self.observation = observation
 
         action = self._first_stage_act()

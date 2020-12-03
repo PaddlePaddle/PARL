@@ -26,7 +26,6 @@ class Track2PowerNetAgent(object):
         self.actions = self.actions[:1000]
         self.act_num = len(self.actions)
         self.sub_ids = np.load('./saved_files/sub_id_info.npz')['sub_ids']
-        #print("action_size: ", len(self.actions))
         self.do_nothing_action = action_space({})
         self.origin_ids = range(len(self.actions))
 
@@ -69,7 +68,6 @@ class Track2PowerNetAgent(object):
             line_status = []
             for line_id in to_maintain_lines:
                 line_status.append((line_id, -1))
-                #break
             to_check_action = self.action_space({
                 'set_line_status': line_status
             })
@@ -120,7 +118,6 @@ class Track2PowerNetAgent(object):
             return self.do_nothing_action, -1
         if to_check_action != self.do_nothing_action and obs_simulate.rho.max(
         ) < 1.0 and not done_simulate:
-            #print("early break directly", to_check_action)
             return to_check_action, -1
 
         # action selection and rerank
@@ -188,7 +185,7 @@ class Track2PowerNetAgent(object):
                         least_obs_simulate = obs_simulate
                         best_idx = idx
                     if least_overflow < 0.95:
-                        if not found:  #print("EEEEEEEEEE early break in enumeration, idx:", i)
+                        if not found:
                             pass
                         found = True
                         break
@@ -256,7 +253,6 @@ class Track2PowerNetAgent(object):
                     if np.max(observation.rho) < 1.0 and np.max(
                             obs_simulate.rho) >= 1.0:
                         continue
-                    #print("reset line", line_id, "at time step", self.step-1)
                     combined_action, sub_id = self.avoid_overflow(
                         observation, reset_action)
                     return combined_action

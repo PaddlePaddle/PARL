@@ -20,25 +20,21 @@ class FeatureProcessor(object):
     def process(self, raw_obs):
         obs = raw_obs.to_dict()
 
-        # loads
         loads = []
         for key in obs['loads']:
             loads.append(obs['loads'][key])
         loads = np.concatenate(loads)
 
-        # prods
         prods = []
         for key in obs['prods']:
             prods.append(obs['prods'][key])
         prods = np.concatenate(prods)
 
-        # lines_or
         lines_or = []
         for key in obs['lines_or']:
             lines_or.append(obs['lines_or'][key])
         lines_or = np.concatenate(lines_or)
 
-        # lines_ex
         lines_ex = []
         for key in obs['lines_ex']:
             lines_ex.append(obs['lines_ex'][key])
@@ -50,11 +46,8 @@ class FeatureProcessor(object):
         ])
         norm_features = (features - self.mean) / self.std
 
-        # rho
         rho = obs['rho'] - 1.0
-
         other_features = rho
-
         return np.concatenate([norm_features, other_features]).tolist()
 
 
@@ -77,13 +70,11 @@ class UnitaryFeatureProcessor(object):
     def process(self, raw_obs):
         obs = raw_obs.to_dict()
 
-        # loads
         loads = []
         for key in ['q', 'v']:
             loads.append(obs['loads'][key])
         loads = np.concatenate(loads)
 
-        # prods
         prods = []
         for key in ['q', 'v']:
             prods.append(obs['prods'][key])

@@ -1,6 +1,5 @@
 import grid2op
 import lightsim2grid
-#grid2op.change_local_dir("./dataset")
 assert grid2op.__version__ == "1.2.2"
 assert lightsim2grid.__version__ == "0.2.4"
 

@@ -14,11 +14,7 @@ selected_feature = [
 inference_info = np.load('./saved_files/inference_info.npz')
 col = inference_info['col']
 mean = inference_info['mean']
-#print("MMMMMMMMMMMM", mean[-:])
 std = inference_info['std']
-
-#print("SSSSS", std[-188:])
-
 
 def process(raw_obs):
     obs = raw_obs.to_dict()
@@ -40,14 +36,12 @@ def process(raw_obs):
     x['day_of_week'] = raw_obs.day_of_week
     x['month'] = raw_obs.month
     x['hour_of_day'] = raw_obs.hour_of_day
-    #rho = obs['rho'] - 1.0
     to_maintain_lines = np.where((raw_obs.time_next_maintenance>0) \
                           & (raw_obs.time_next_maintenance<2))[0]
     x['rho'] = np.copy(obs['rho'])
     x['line_status'] = np.copy(obs['line_status'].astype(float))
     line_num = x['line_status'].shape[0]
     if len(to_maintain_lines):
-        #print("TTTTTTTTTTTTTT", to_maintain_lines)
         x['rho'][to_maintain_lines] = 0.0
         x['line_status'][to_maintain_lines] = 0.0
     x['line_status'] += np.array([x * 2 for x in range(line_num)])
@@ -59,7 +53,6 @@ def process(raw_obs):
             col_data = np.array([col_data])
         data.append(col_data)
     data = np.concatenate(data)
-    #print("Ddddd", data[-200:].tolist())
     data = data[col]
     assert data.shape[0] == mean.shape[0]
     assert data.shape[0] == std.shape[0]

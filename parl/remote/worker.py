@@ -235,11 +235,7 @@ class Worker(object):
         # Redirect the output to DEVNULL
         FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(
-                command,
-                stdout=FNULL,
-                stderr=subprocess.STDOUT,
-                close_fds=True)
+            subprocess.Popen(command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
         new_jobs = []
@@ -422,7 +418,7 @@ class Worker(object):
         else:
             FNULL = open(os.devnull, 'w')
         log_server_proc = subprocess.Popen(
-            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+            command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)

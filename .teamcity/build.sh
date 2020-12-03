@@ -128,12 +128,6 @@ function run_test_with_dygraph_paddle() {
         echo "========================================"
         export CUDA_VISIBLE_DEVICES=""
         run_single_paddle_test "DIS_TESTING_PADDLE"
-        echo "========================================"
-        echo "Running dygraph unit tests with GPU..."
-        echo "========================================"
-        unset CUDA_VISIBLE_DEVICES
-        export FLAGS_fraction_of_gpu_memory_to_use=0.05
-        run_single_paddle_test "DIS_TESTING_PADDLE"
 
         # clean env
         export LC_ALL=C.UTF-8

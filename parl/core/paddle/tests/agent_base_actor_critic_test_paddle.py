@@ -131,7 +131,7 @@ class ACAgentBaseTest(unittest.TestCase):
     def test_restore(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'model.ckpt'
+        save_path1 = 'mymodel.ckpt'
         previous_output = agent.predict(obs)
         previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
 
@@ -151,7 +151,7 @@ class ACAgentBaseTest(unittest.TestCase):
     def test_restore_with_model(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'model.ckpt'
+        save_path1 = 'mymodel.ckpt'
         previous_output = agent.predict(obs)
         previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         agent.save(save_path1, agent.alg.model)
@@ -172,7 +172,7 @@ class ACAgentBaseTest(unittest.TestCase):
     def test_restore_with_actor_model(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'model.ckpt'
+        save_path1 = 'mymodel.ckpt'
         previous_output = agent.predict(obs)
         previous_q_np = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
         agent.save(save_path1, agent.alg.model.actor)

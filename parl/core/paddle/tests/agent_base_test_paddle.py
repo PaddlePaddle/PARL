@@ -107,7 +107,7 @@ class AgentBaseTest(unittest.TestCase):
     def test_restore(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'model.ckpt'
+        save_path1 = 'mymodel.ckpt'
         previous_output = agent.predict(obs)
         agent.save(save_path1)
         agent.restore(save_path1)
@@ -123,7 +123,7 @@ class AgentBaseTest(unittest.TestCase):
     def test_restore_with_model(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'model.ckpt'
+        save_path1 = 'mymodel.ckpt'
         previous_output = agent.predict(obs)
         agent.save(save_path1, agent.alg.model)
         agent.restore(save_path1, agent.alg.model)

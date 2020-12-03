@@ -30,7 +30,7 @@ import time
 import traceback
 import zmq
 from multiprocessing import Process, Pipe
-from parl.utils import to_str, to_byte, get_ip_address, logger
+from parl.utils import to_str, to_byte, get_ip_address, logger, kill_process
 from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote import remote_constants
@@ -237,7 +237,8 @@ class Job(object):
                     self.worker_address) + "Job will quit.")
                 break
         socket.close(0)
-        os._exit(1)
+        # `os._exit(1)` cannot exit completely, so we use the following killing way.
+        kill_process('remote/job.py.*{}'.format(self.worker_address))
 
     def wait_for_files(self, reply_socket, job_address):
         """Wait for python files from remote object.

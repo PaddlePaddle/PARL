@@ -37,7 +37,7 @@ from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
 from parl.remote.utils import load_remote_class, redirect_stdout_to_file
-from parl.remote.zmp_utils import create_client_socket
+from parl.remote.zmq_utils import create_client_socket
 
 
 class Job(object):

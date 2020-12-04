@@ -24,34 +24,3 @@ class OneHotTransform(object):
         one_hot_id = np.zeros(self.out_dim, dtype='float32')
         one_hot_id[agent_id] = 1.0
         return one_hot_id
-
-
-class EpsilonGreedy:
-    def __init__(self,
-                 action_nb,
-                 agent_nb,
-                 final_step,
-                 epsilon_start=float(1),
-                 epsilon_end=0.05):
-        self.epsilon = epsilon_start
-        self.initial_epsilon = epsilon_start
-        self.epsilon_end = epsilon_end
-        self.action_nb = action_nb
-        self.final_step = final_step
-        self.agent_nb = agent_nb
-
-    def act(self, value_action, avail_actions):
-        if np.random.random() > self.epsilon:
-            action = value_action.max(dim=1)[1].cpu().detach().numpy()
-        else:
-            action = torch.distributions.Categorical(
-                avail_actions).sample().long().cpu().detach().numpy()
-        return action
-
-    def epislon_decay(self, step):
-        progress = step / self.final_step
-
-        decay = self.initial_epsilon - progress
-        if decay <= self.epsilon_end:
-            decay = self.epsilon_end
-        self.epsilon = decay

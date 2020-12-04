@@ -114,6 +114,27 @@ def is_gpu_available():
     return ret
 
 
+def is_xpu_available():
+    """ check whether parl can access a XPU
+
+    Returns:
+      True if paddle was complied with XPU.
+    """
+    if _HAS_FLUID:
+        from paddle import fluid
+        if fluid.is_compiled_with_xpu():
+            logger.info("PARL found that Paddle was complied with XPU. \
+                Thus PARL will use XPU place.")
+            return True
+    if _HAS_PADDLE:
+        import paddle
+        if paddle.is_compiled_with_xpu():
+            logger.info("PARL found that Paddle was complied with XPU. \
+                Thus PARL will use XPU place.")
+            return True
+    return False
+
+
 def get_free_tcp_port():
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp.bind(('', 0))

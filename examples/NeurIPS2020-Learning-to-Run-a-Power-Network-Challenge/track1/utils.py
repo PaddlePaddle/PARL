@@ -14,6 +14,7 @@
 
 import numpy as np
 
+
 class FeatureProcessor(object):
     def __init__(self, scalar_path):
         scalar = np.load(scalar_path)

@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils.utils import _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
-from parl.utils import logger
-
-if _HAS_FLUID:
-    from parl.algorithms.fluid import *
-if _HAS_PADDLE:
-    from parl.algorithms.paddle import *
-elif _HAS_TORCH:
-    from parl.algorithms.torch import *
-else:
-    logger.warning(
-        "No deep learning framework was found, but it's ok for parallel computation."
-    )
+from parl.core.paddle.model import *
+from parl.core.paddle.algorithm import *
+from parl.core.paddle.agent import *

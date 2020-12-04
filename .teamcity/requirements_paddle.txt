@@ -1,0 +1,5 @@
+# requirements for paddle 2.0 unittest
+gym
+details
+parameterized
+paddlepaddle-gpu==2.0.0rc0

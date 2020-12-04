@@ -17,7 +17,7 @@ import platform
 import random
 import socket
 import subprocess
-from parl.utils import logger, _HAS_FLUID, _IS_WINDOWS
+from parl.utils import logger, _HAS_FLUID, _HAS_PADDLE, _IS_WINDOWS
 
 __all__ = [
     'get_gpu_count', 'get_ip_address', 'is_gpu_available', 'get_free_tcp_port',
@@ -100,6 +100,13 @@ def is_gpu_available():
     if _HAS_FLUID:
         from paddle import fluid
         if ret is True and not fluid.is_compiled_with_cuda():
+            logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
+                But PARL found that Paddle was not complied with CUDA, which may cause issues. \
+                Thus PARL will not use GPU.")
+            return False
+    if _HAS_PADDLE:
+        import paddle
+        if ret is True and not paddle.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues. \
                 Thus PARL will not use GPU.")

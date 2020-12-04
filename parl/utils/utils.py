@@ -20,8 +20,8 @@ from parl.utils import logger
 
 __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
-    '_HAS_FLUID', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
-    'get_fluid_version', 'isnotebook'
+    '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
+    'kill_process', 'get_fluid_version', 'isnotebook'
 ]
 
 
@@ -56,20 +56,30 @@ _IS_PY3 = (sys.version_info[0] == 3)
 
 def get_fluid_version():
     import paddle
-    fluid_version = int(paddle.__version__.replace('.', '').split('-')[0])
-    return fluid_version
+    paddle_version = int(paddle.__version__.replace('.', '').split('-')[0])
+    return paddle_version
 
 
 MAX_INT32 = 0x7fffffff
 
 try:
+    _HAS_FLUID = False
+    _HAS_PADDLE = False
+    import paddle
     from paddle import fluid
-    fluid_version = get_fluid_version()
-    assert fluid_version >= 161 or fluid_version == 0, "PARL requires paddle>=1.6.1"
-    assert fluid_version < 200 or fluid_version == 0, "PARL requires paddle<2.0.0"
-    _HAS_FLUID = True
+
+    paddle_version = get_fluid_version()
+    if paddle_version < 200:
+        assert paddle_version >= 161 or paddle_version == 0, "PARL requires paddle >= 1.6.1 and paddle < 2.0.0"
+        _HAS_FLUID = True
+    else:
+        logger.warning(
+            "paddlepaddle version: {}. The dynamic graph version of PARL is under development, not fully tested and supported"
+            .format(paddle.__version__))
+        _HAS_PADDLE = True
 except ImportError as e:
     _HAS_FLUID = False
+    _HAS_PADDLE = False
     if _IS_PY2 and "{}".format(e) != "No module named paddle":
         logger.warning("import paddle error:\n{}".format(e))
     if _IS_PY3 and "{}".format(e) != "No module named 'paddle'":

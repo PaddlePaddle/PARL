@@ -79,7 +79,7 @@ def parse_port_range(log_server_port_range):
     return start, end
 
 
-def is_log_server_started(ip_address, port):
+def check_log_server_started(ip_address, port):
     started = False
     for _ in range(3):
         try:
@@ -91,7 +91,11 @@ def is_log_server_started(ip_address, port):
             pass
         time.sleep(3)
         click.echo("Checking status of log_server...")
-    return started
+
+    if started:
+        click.echo("# Start the log server sucessfully.")
+    else:
+        click.echo("# Fail to start the log server.")
 
 
 @click.group()
@@ -121,6 +125,8 @@ def cli():
     default="8000-9000",
     type=str)
 def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
+    if cpu_num is not None:
+        assert cpu_num >= 0, "cpu_num should be greater than or equal to 0."
     if debug:
         os.environ['DEBUG'] = 'True'
 
@@ -170,17 +176,12 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     FNULL = open(os.devnull, 'w')
 
     # Redirect the output to DEVNULL to solve the warning log.
-    _ = subprocess.Popen(
-        master_command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+    _ = subprocess.Popen(master_command, stdout=FNULL, close_fds=True)
 
     if cpu_num > 0:
         # Sleep 1s for master ready
         time.sleep(1)
-        _ = subprocess.Popen(
-            worker_command,
-            stdout=FNULL,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
+        _ = subprocess.Popen(worker_command, stdout=FNULL, close_fds=True)
 
     if _IS_WINDOWS:
         # TODO(@zenghsh3) redirecting stdout of monitor subprocess to FNULL will cause occasional failure
@@ -188,11 +189,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         _ = subprocess.Popen(monitor_command, stdout=tmp_file, close_fds=True)
         tmp_file.close()
     else:
-        _ = subprocess.Popen(
-            monitor_command,
-            stdout=FNULL,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
+        _ = subprocess.Popen(monitor_command, stdout=FNULL, close_fds=True)
     FNULL.close()
 
     if cpu_num > 0:
@@ -253,8 +250,8 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
-    if not is_log_server_started(master_ip, log_server_port):
-        click.echo("# Fail to start the log server.")
+    if cpu_num > 0:
+        check_log_server_started(master_ip, log_server_port)
 
 
 @click.command("connect", short_help="Start a worker node.")
@@ -274,6 +271,9 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     default="8000-9000",
     type=str)
 def start_worker(address, cpu_num, log_server_port_range):
+    if cpu_num is not None:
+        assert cpu_num > 0, "cpu_num should be greater than 0."
+
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
 
@@ -291,10 +291,11 @@ def start_worker(address, cpu_num, log_server_port_range):
         str(cpu_num), "--log_server_port",
         str(log_server_port)
     ]
-    p = subprocess.Popen(command, close_fds=True)
+    FNULL = open(os.devnull, 'w')
+    p = subprocess.Popen(command, stdout=FNULL, close_fds=True)
+    FNULL.close()
 
-    if not is_log_server_started(get_ip_address(), log_server_port):
-        click.echo("# Fail to start the log server.")
+    check_log_server_started(get_ip_address(), log_server_port)
 
 
 @click.command("stop", help="Exit the cluster.")

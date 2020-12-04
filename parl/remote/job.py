@@ -37,6 +37,7 @@ from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
 from parl.remote.utils import load_remote_class, redirect_stdout_to_file
+from parl.remote.zmq_utils import create_client_socket
 
 
 class Job(object):
@@ -106,8 +107,8 @@ class Job(object):
 
         self.ctx = zmq.Context()
         # create the job_socket
-        self.job_socket = self.ctx.socket(zmq.REQ)
-        self.job_socket.connect("tcp://{}".format(self.worker_address))
+        self.job_socket = create_client_socket(
+            self.ctx, self.worker_address, heartbeat_timeout=True)
 
         # a thread that reply ping signals from the client
         ping_heartbeat_socket, ping_heartbeat_address = self._create_heartbeat_server(
@@ -138,10 +139,19 @@ class Job(object):
             self.job_address, worker_heartbeat_address,
             client_heartbeat_address, ping_heartbeat_address, None, self.pid,
             self.job_id, self.log_server_address)
-        self.job_socket.send_multipart(
-            [remote_constants.NORMAL_TAG,
-             cloudpickle.dumps(initialized_job)])
-        message = self.job_socket.recv_multipart()
+
+        try:
+            self.job_socket.send_multipart([
+                remote_constants.NORMAL_TAG,
+                cloudpickle.dumps(initialized_job)
+            ])
+            message = self.job_socket.recv_multipart()
+        except zmq.error.Again as e:
+            logger.warning("[Job] Cannot connect to the worker{}. ".format(
+                self.worker_address) + "Job will quit.")
+            self.job_socket.close(0)
+            os._exit(0)
+
         worker_thread.start()
 
         tag = message[0]

@@ -37,7 +37,7 @@ config = {
     'exploration_start': 1.0,
     'min_exploration': 0.1,
     'exploration_decay': 5e-6,
-    'update_target_interval': 600,
+    'update_target_interval': 400,
     'batch_size': 64,
     'training_steps': 5000000,
     'test_steps': 3000,
@@ -82,16 +82,20 @@ def run_train_episode(env, agent, rpm):
     rpm.add(episode_experience)
     is_win = env.win_counted
 
-    mean_loss = None
-    mean_td_error = None
+    mean_loss = []
+    mean_td_error = []
     if rpm.count > config['memory_warmup_size']:
-        s_batch, a_batch, r_batch, t_batch, obs_batch, available_actions_batch,\
-                filled_batch = rpm.sample_batch(config['batch_size'])
-        mean_loss, mean_td_error = agent.learn(
-            s_batch, a_batch, r_batch, t_batch, obs_batch,
-            available_actions_batch, filled_batch)
-        #print('learn loss: {}'.format(mean_loss))
+        for _ in range(2):
+            s_batch, a_batch, r_batch, t_batch, obs_batch, available_actions_batch,\
+                    filled_batch = rpm.sample_batch(config['batch_size'])
+            loss, td_error = agent.learn(s_batch, a_batch, r_batch, t_batch,
+                                         obs_batch, available_actions_batch,
+                                         filled_batch)
+            mean_loss.append(loss)
+            mean_td_error.append(td_error)
 
+    mean_loss = np.mean(mean_loss) if mean_loss else None
+    mean_td_error = np.mean(mean_td_error) if mean_td_error else None
     return episode_reward, episode_step, is_win, mean_loss, mean_td_error
 
 

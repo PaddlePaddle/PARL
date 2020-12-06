@@ -28,6 +28,7 @@ elif _HAS_PADDLE:
     from parl.core.paddle import *
 elif _HAS_TORCH:
     from parl.core.torch import *
+    from parl.core.torch.utils.rng import set_seed
 
 from parl.remote import remote_class, connect
 from parl import algorithms

@@ -64,10 +64,10 @@ def run_train_episode(env, agent, rpm):
 
 
 def run_evaluate_episode(env, agent):
-    obs = env.reset()
     episode_reward = []
     for _ in range(5):
         total_reward = 0
+        obs = env.reset()
         while True:
             action = agent.predict(np.array(obs))
             obs, reward, done, _ = env.step(action)

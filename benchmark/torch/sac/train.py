@@ -38,16 +38,13 @@ def run_train_episode(env, agent, rpm):
     obs = env.reset()
     total_reward = 0
     steps = 0
-    max_action = float(env.action_space.high[0])
     while True:
         steps += 1
 
         if rpm.size() < WARMUP_SIZE:
             action = env.action_space.sample()
         else:
-            action = np.random.normal(
-                agent.predict(np.array(obs)), max_action * EXPL_NOISE).clip(
-                    -max_action, max_action)
+            action = agent.sample(obs)
 
         next_obs, reward, done, info = env.step(action)
         rpm.append(obs, action, reward, next_obs, done)
@@ -70,14 +67,14 @@ def run_evaluate_episode(env, agent):
     obs = env.reset()
     episode_reward = []
     for _ in range(5):
-      total_reward = 0
-      while True:
-          action = agent.predict(np.array(obs))
-          obs, reward, done, _ = env.step(action)
-          total_reward += reward
-          if done:
-              break
-      episode_reward.append(total_reward)
+        total_reward = 0
+        while True:
+            action = agent.predict(np.array(obs))
+            obs, reward, done, _ = env.step(action)
+            total_reward += reward
+            if done:
+                break
+        episode_reward.append(total_reward)
     return np.mean(episode_reward)
 
 
@@ -94,12 +91,16 @@ def main():
     algorithm = SAC(
         actor,
         critic,
-        max_action=max_action,
         gamma=GAMMA,
         tau=TAU,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, obs_dim, act_dim)
+    agent = MujocoAgent(
+        algorithm,
+        obs_dim,
+        act_dim,
+        expl_noise=EXPL_NOISE,
+        max_action=max_action)
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
 
@@ -119,6 +120,7 @@ def main():
                 total_steps, evaluate_reward))
             summary.add_scalar('eval/episode_reward', evaluate_reward,
                                total_steps)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -142,6 +144,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     parl.set_seed(args.seed)
-    logger.set_dir(os.path.join('./train_log', args.env, 'seed_{}'.format(args.seed)))
+    logger.set_dir(
+        os.path.join('./train_log', args.env, 'seed_{}'.format(args.seed)))
 
     main()

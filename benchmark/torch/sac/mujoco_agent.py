@@ -18,7 +18,7 @@ import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim):
+    def __init__(self, algorithm, obs_dim, act_dim, expl_noise, max_action):
         assert isinstance(obs_dim, int)
         assert isinstance(act_dim, int)
         super(MujocoAgent, self).__init__(algorithm)
@@ -26,11 +26,22 @@ class MujocoAgent(parl.Agent):
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 
+        self.expl_noise = expl_noise
+        self.max_action = max_action
         self.alg.sync_target(decay=0)
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        return self.alg.predict(obs).cpu().data.numpy().flatten()
+        action = self.alg.predict(obs).cpu().data.numpy().flatten()
+        action *= self.max_action
+        return action
+
+    def sample(self, obs):
+        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        action = self.alg.predict(obs).cpu().data.numpy().flatten()
+        noise = np.random.normal(0, self.expl_noise)
+        action = (action + noise).clip(-self.max_action, self.max_action)
+        return action
 
     def learn(self, obs, act, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)

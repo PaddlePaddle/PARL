@@ -25,12 +25,11 @@ __all__ = ['SAC']
 epsilon = 1e-6
 
 class SAC(parl.Algorithm):
-  def __init__(self, actor, critic, max_action, alpha=0.2, gamma=None, tau=None, actor_lr=None, critic_lr=None):
+  def __init__(self, actor, critic, alpha=0.2, gamma=None, tau=None, actor_lr=None, critic_lr=None):
     """ SAC algorithm
     Args:
         actor (parl.Model): forward network of actor.
         critic (patl.Model): forward network of the critic.
-        max_action (float): the largest value that an action can be, env.action_space.high[0]
         alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
         gamma (float): discounted factor for reward computation.
         tau (float): decay coefficient when updating the weights of self.target_model with self.model
@@ -42,7 +41,6 @@ class SAC(parl.Algorithm):
     assert isinstance(actor_lr, float)
     assert isinstance(critic_lr, float)
     assert isinstance(alpha, float)
-    self.max_action = max_action
     self.gamma = gamma
     self.tau = tau
     self.alpha = alpha
@@ -57,7 +55,7 @@ class SAC(parl.Algorithm):
     """ use actor model of self.policy to predict the action
     """
     mean, _ = self.actor(obs)
-    mean = torch.tanh(mean) * self.max_action
+    mean = torch.tanh(mean)
     return mean
 
   def sample(self, obs):
@@ -66,9 +64,9 @@ class SAC(parl.Algorithm):
     normal = Normal(mean, std)
     x_t = normal.rsample()
     y_t = torch.tanh(x_t)
-    action = y_t * self.max_action
+    action = y_t
     log_prob = normal.log_prob(x_t)
-    log_prob -= torch.log(self.max_action * (1 - y_t * y_t) + epsilon)
+    log_prob -= torch.log((1 - y_t * y_t) + epsilon)
     log_prob = log_prob.sum(dim=1, keepdim=True)
     return action, log_prob
   

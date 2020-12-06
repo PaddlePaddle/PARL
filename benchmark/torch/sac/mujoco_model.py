@@ -35,8 +35,6 @@ class ActorModel(parl.Model):
         self.l2 = nn.Linear(256, 256)
         self.mean_linear = nn.Linear(256, act_dim)
         self.log_std_linear = nn.Linear(256, act_dim)
-        #self.log_std_linear.weight.data.uniform_(-1e-3, 1e-3)
-        #self.log_std_linear.bias.data.uniform_(-1e-3, 1e-3)
         self.apply(weights_init_)
 
     def forward(self, obs):

@@ -19,7 +19,8 @@ import time
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.utils import logger, action_mapping, ReplayMemory
+from parl.utils import logger, ReplayMemory
+from parl.env.continuous_wrappers import ActionMappingWrapper
 
 ACTOR_LR = 1e-4
 CRITIC_LR = 1e-3
@@ -41,8 +42,6 @@ def run_train_episode(env, agent, rpm):
 
         # Add exploration noise, and clip to [-1.0, 1.0]
         action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 
@@ -68,8 +67,6 @@ def run_evaluate_episode(env, agent):
     while True:
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 
@@ -84,6 +81,7 @@ def run_evaluate_episode(env, agent):
 def main():
     env = gym.make(args.env)
     env.seed(ENV_SEED)
+    env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]

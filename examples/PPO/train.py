@@ -18,8 +18,9 @@ import numpy as np
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.utils import logger, action_mapping
+from parl.utils import logger
 from parl.utils.rl_utils import calc_gae, calc_discount_sum_rewards
+from parl.env.continuous_wrappers import ActionMappingWrapper
 from scaler import Scaler
 
 
@@ -40,8 +41,6 @@ def run_train_episode(env, agent, scaler):
 
         action = agent.policy_sample(obs)
         action = np.clip(action, -1.0, 1.0)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         action = action.reshape((1, -1)).astype('float32')
         actions.append(action)
@@ -71,8 +70,6 @@ def run_evaluate_episode(env, agent, scaler):
         obs = obs.astype('float32')
 
         action = agent.policy_predict(obs)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         obs, reward, done, _ = env.step(np.squeeze(action))
         rewards.append(reward)
@@ -134,6 +131,7 @@ def build_train_data(trajectories, agent):
 
 def main():
     env = gym.make(args.env)
+    env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]

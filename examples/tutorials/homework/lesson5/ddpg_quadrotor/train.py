@@ -21,8 +21,8 @@ import parl
 from parl import layers
 from paddle import fluid
 from parl.utils import logger
-from parl.utils import action_mapping  # 将神经网络输出映射到对应的 实际动作取值范围 内
 from parl.utils import ReplayMemory  # 经验回放
+from parl.env.continuous_wrappers import ActionMappingWrapper  # 将神经网络输出映射到对应的实际动作取值范围内
 
 from rlschool import make_env  # 使用 RLSchool 创建飞行器环境
 from quadrotor_model import QuadrotorModel
@@ -52,8 +52,6 @@ def run_episode(env, agent, rpm):
 
         # Add exploration noise, and clip to [-1.0, 1.0]
         action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
         rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
@@ -83,9 +81,6 @@ def evaluate(env, agent, render=False):
             action = agent.predict(batch_obs.astype('float32'))
             action = np.squeeze(action)
             action = np.clip(action, -1.0, 1.0)  ## special
-            action = action_mapping(action, env.action_space.low[0],
-                                    env.action_space.high[0])
-            # action = np.clip(action, -1.0, 1.0) ## special
 
             next_obs, reward, done, info = env.step(action)
 
@@ -104,6 +99,9 @@ def evaluate(env, agent, render=False):
 
 # 创建飞行器环境
 env = make_env("Quadrotor", task="hovering_control")
+# 将神经网络输出（取值范围为[-1, 1]）映射到对应的实际动作取值范围内
+env = ActionMappingWrapper(env)
+
 env.reset()
 obs_dim = env.observation_space.shape[0]
 act_dim = env.action_space.shape[0]

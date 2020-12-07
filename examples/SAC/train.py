@@ -21,7 +21,7 @@ import time
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import ActorModel, CriticModel
-from parl.utils import logger, summary, action_mapping, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
 
 ACTOR_LR = 1e-3
 CRITIC_LR = 1e-3

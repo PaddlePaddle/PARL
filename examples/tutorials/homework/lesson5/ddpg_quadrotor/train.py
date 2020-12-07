@@ -22,7 +22,7 @@ from parl import layers
 from paddle import fluid
 from parl.utils import logger
 from parl.utils import ReplayMemory  # 经验回放
-from parl.env.continuous_wrappers import ActionMappingWrapper  # 将神经网络输出映射到对应的 实际动作取值范围 内
+from parl.env.continuous_wrappers import ActionMappingWrapper  # 将神经网络输出映射到对应的实际动作取值范围内
 
 from rlschool import make_env  # 使用 RLSchool 创建飞行器环境
 from quadrotor_model import QuadrotorModel
@@ -99,6 +99,7 @@ def evaluate(env, agent, render=False):
 
 # 创建飞行器环境
 env = make_env("Quadrotor", task="hovering_control")
+# 将神经网络输出（取值范围为[-1, 1]）映射到对应的实际动作取值范围内
 env = ActionMappingWrapper(env)
 
 env.reset()

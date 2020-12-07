@@ -18,8 +18,8 @@ import numpy as np
 
 class ActionMappingWrapper(gym.Wrapper):
     def __init__(self, env):
-        """Mapping action space [-1, 1] of model output 
-        to new action space [low_bound, high_bound].
+        """Map action space [-1, 1] of model output to new action space
+        [low_bound, high_bound].
         """
         gym.Wrapper.__init__(self, env)
         assert isinstance(self.env.action_space, gym.spaces.Box)
@@ -33,7 +33,7 @@ class ActionMappingWrapper(gym.Wrapper):
     def step(self, model_output_act):
         """
         Args:
-            model_output_act: np.array, which value is in [-1, 1]
+            model_output_act(np.array): The values must be in in [-1, 1].
         """
 
         assert np.all(((model_output_act<=1.0 + 1e-3), (model_output_act>=-1.0 - 1e-3))), \

@@ -30,7 +30,7 @@ config = {
     'scenario': '3m',
     'replay_buffer_size': 5000,
     'mixing_embed_dim': 64,
-    'rnn_hidden_dim': 64,
+    'rnn_hidden_dim': 32,
     'lr': 0.0005,
     'memory_warmup_size': 500,
     'gamma': 0.99,
@@ -39,8 +39,8 @@ config = {
     'exploration_decay': 5e-6,
     'update_target_interval': 400,
     'batch_size': 64,
-    'training_steps': 5000000,
-    'test_steps': 3000,
+    'training_steps': 1000000,
+    'test_steps': 1000,
     'clip_grad_norm': 10,
 }
 

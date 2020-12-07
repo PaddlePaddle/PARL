@@ -121,7 +121,7 @@ class QMIX(parl.Algorithm):
 
         target = reward_batch + self.gamma * (
             1 - terminated_batch) * target_global_max_qs
-        td_error = chosen_action_local_qs - target.detach()
+        td_error = target.detach() - chosen_action_global_qs
         mask = mask.expand_as(td_error)
         masked_td_error = td_error * mask
         mean_td_error = masked_td_error.sum() / mask.sum()

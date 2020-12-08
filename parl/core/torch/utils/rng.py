@@ -15,6 +15,7 @@ import random
 import numpy as np
 import torch
 
+
 def set_seed(seed):
     """
     Set the seed for all the possible random number generators

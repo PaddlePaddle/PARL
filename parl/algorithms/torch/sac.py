@@ -90,7 +90,6 @@ class SAC(parl.Algorithm):
         action, log_pi = self.sample(obs)
         q1_pred, q2_pred = self.critic(obs, action)
         q_pred = torch.min(q1_pred, q2_pred)
-        #print("pi", log_pi.shape, "q_pred", q_pred.shape)
         policy_loss = (self.alpha * log_pi - q_pred).mean()
         self.actor_optimizer.zero_grad()
         policy_loss.backward()

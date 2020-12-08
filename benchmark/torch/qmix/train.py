@@ -29,19 +29,21 @@ logger.set_dir('./log_path')
 config = {
     'scenario': '3m',
     'replay_buffer_size': 5000,
-    'mixing_embed_dim': 64,
-    'rnn_hidden_dim': 32,
+    'mixing_embed_dim': 32,
+    'rnn_hidden_dim': 64,
     'lr': 0.0005,
-    'memory_warmup_size': 500,
+    'memory_warmup_size': 16,
     'gamma': 0.99,
     'exploration_start': 1.0,
     'min_exploration': 0.1,
     'exploration_decay': 5e-6,
-    'update_target_interval': 400,
-    'batch_size': 64,
+    'update_target_interval': 200,
+    'batch_size': 16,
     'training_steps': 1000000,
     'test_steps': 1000,
     'clip_grad_norm': 10,
+    'hypernet_layers': 2,
+    'hypernet_embed_dim': 64,
 }
 
 
@@ -130,8 +132,9 @@ def main():
     rpm = EpisodeReplayBuffer(config['replay_buffer_size'])
     agent_model = RNNModel(config['obs_shape'], config['n_actions'],
                            config['rnn_hidden_dim'])
-    qmixer_model = QMixerModel(config['n_agents'], config['state_shape'],
-                               config['mixing_embed_dim'])
+    qmixer_model = QMixerModel(
+        config['n_agents'], config['state_shape'], config['mixing_embed_dim'],
+        config['hypernet_layers'], config['hypernet_embed_dim'])
 
     algorithm = QMIX(agent_model, qmixer_model, config['gamma'], config['lr'],
                      config['clip_grad_norm'])

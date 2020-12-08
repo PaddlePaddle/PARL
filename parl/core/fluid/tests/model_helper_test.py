@@ -14,7 +14,7 @@
 
 import threading
 import unittest
-from parl.core.model_helper import global_model_helper
+from parl.core.fluid.model_helper import global_model_helper
 from six.moves.queue import Queue
 
 

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.core.model_helper import global_model_helper
-
 
 class ModelBase(object):
     """`ModelBase` is the base class of the `parl.Model` in different frameworks.
@@ -23,58 +21,20 @@ class ModelBase(object):
         2. Defines common APIs that `parl.Model` should implement in different frameworks.
     """
 
-    def __init__(self, model_id=None):
-        """
-        Args:
-            model_id (String): user-specified model_id (default: None)
-        """
-        if model_id is not None:
-            global_model_helper.register_model_id(model_id)
-            self.__model_id = model_id
-        else:
-            self.__model_id = global_model_helper.generate_model_id()
-
-    @property
-    def model_id(self):
-        return self.get_model_id()
-
-    @model_id.setter
-    def model_id(self, model_id):
-        self.set_model_id(model_id)
-
-    def get_model_id(self):
-        """Get model_id of `ModelBase`.
-        If not created, will create a new model_id.
-
-        Returns:
-            String of model_id.
-        """
-        try:
-            return self.__model_id
-        except AttributeError:
-            self.__model_id = global_model_helper.generate_model_id()
-            return self.__model_id
-
-    def set_model_id(self, model_id):
-        """Set model_id of `ModelBase` with given model_id.
-        
-        Args:
-            model_id (string): string of model_id.
-        """
-        global_model_helper.register_model_id(model_id)
-        self.__model_id = model_id
+    def __init__(self):
+        pass
 
     def forward(self, *args, **kwargs):
         """Define forward network of the model.
         """
         raise NotImplementedError
 
-    def get_weights(self):
+    def get_weights(self, *args, **kwargs):
         """Get weights of the model.
         """
         raise NotImplementedError
 
-    def set_weights(self, weights):
+    def set_weights(self, weights, *args, **kwargs):
         """Set weights of the model with given weights.
         """
         raise NotImplementedError

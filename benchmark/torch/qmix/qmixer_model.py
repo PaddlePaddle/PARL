@@ -79,4 +79,4 @@ class QMixerModel(nn.Module):
         return q_total
 
     def update(self, model):
-        self.load_state_dict(model.state_dict)
+        self.load_state_dict(model.state_dict())

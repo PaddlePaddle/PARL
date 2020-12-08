@@ -38,4 +38,4 @@ class RNNModel(nn.Module):
         return q, h
 
     def update(self, model):
-        self.load_state_dict(model.state_dict)
+        self.load_state_dict(model.state_dict())

@@ -19,7 +19,8 @@ import time
 import parl
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
-from parl.utils import logger, summary, action_mapping, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
+from parl.env.continuous_wrappers import ActionMappingWrapper
 
 MAX_EPISODES = 5000
 ACTOR_LR = 3e-4
@@ -78,8 +79,6 @@ def run_evaluate_episode(env, agent):
         batch_obs = np.expand_dims(obs, axis=0)
         action = agent.predict(batch_obs.astype('float32'))
         action = np.squeeze(action)
-        action = action_mapping(action, env.action_space.low[0],
-                                env.action_space.high[0])
 
         next_obs, reward, done, info = env.step(action)
 
@@ -94,6 +93,7 @@ def run_evaluate_episode(env, agent):
 def main():
     env = gym.make(args.env)
     env.seed(ENV_SEED)
+    env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]

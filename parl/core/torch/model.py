@@ -128,6 +128,7 @@ class Model(nn.Module, ModelBase):
         Args:
             weights (dict): a Python dict containing the parameters.
         """
+        new_weights = dict()
         for key in weights.keys():
-            weights[key] = torch.from_numpy(weights[key])
-        self.load_state_dict(weights)
+            new_weights[key] = torch.from_numpy(weights[key])
+        self.load_state_dict(new_weights)

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import gym
 import numpy as np
+import paddle
 import parl
 from parl.utils import logger
 
@@ -108,4 +110,10 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--use_xpu", type=bool, default=False, help="whether to use xpu.")
+    FLAGS = parser.parse_args()
+    if FLAGS.use_xpu:
+        paddle.enable_static()
     main()

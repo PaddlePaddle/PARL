@@ -81,8 +81,7 @@ class Agent(AgentBase):
         self.build_program()
 
         if machine_info.is_xpu_available():
-            paddle.enable_static()
-            self.place = fluid.XPUPlace(0)
+            self.place = fluid.XPUPlace(int(os.getenv("FLAGS_selected_xpus")))
         elif machine_info.is_gpu_available():
             self.place = fluid.CUDAPlace(0)
         else:

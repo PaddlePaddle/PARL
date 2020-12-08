@@ -64,7 +64,8 @@ class QMixAgent(parl.Agent):
                 available_actions, dtype=torch.float32)
             actions = torch.distributions.Categorical(
                 available_actions).sample().long().cpu().detach().numpy()
-        self.exploration = max(self.min_exploration, self.exploration - 1e-6)
+        self.exploration = max(self.min_exploration,
+                               self.exploration - self.exploration_decay)
         return actions
 
     def predict(self, obs, available_actions):

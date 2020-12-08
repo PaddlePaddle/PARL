@@ -36,7 +36,7 @@ config = {
     'gamma': 0.99,
     'exploration_start': 1.0,
     'min_exploration': 0.1,
-    'exploration_decay': 1e-5,
+    'exploration_decay': 5e-6,
     'update_target_interval': 200,
     'batch_size': 16,
     'training_steps': 1000000,

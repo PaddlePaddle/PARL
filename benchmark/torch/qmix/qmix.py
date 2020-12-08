@@ -24,6 +24,7 @@ class QMIX(parl.Algorithm):
     def __init__(self,
                  agent_model,
                  qmixer_model,
+                 double_q=True,
                  gamma=0.99,
                  lr=0.0005,
                  clip_grad_norm=None):
@@ -35,6 +36,7 @@ class QMIX(parl.Algorithm):
         self.n_agents = self.qmixer_model.n_agents
         assert isinstance(gamma, float)
         assert isinstance(lr, float)
+        self.double_q = double_q
         self.gamma = gamma
         self.lr = lr
         self.clip_grad_norm = clip_grad_norm
@@ -103,16 +105,25 @@ class QMIX(parl.Algorithm):
             target_local_qs.append(target_local_q)
 
         local_qs = torch.stack(
-            local_qs[:-1], dim=1)  # (batch_size, T, n_agents, n_actions)
+            local_qs, dim=1)  # (batch_size, T, n_agents, n_actions)
         target_local_qs = torch.stack(
-            target_local_qs[1:], dim=1)  # (batch_size, T, n_agents, n_actions)
+            target_local_qs[1:],
+            dim=1)  # (batch_size, T-1, n_agents, n_actions)
 
         chosen_action_local_qs = torch.gather(
-            local_qs, dim=3, index=actions_batch).squeeze(3)
+            local_qs[:, :-1, :, :], dim=3, index=actions_batch).squeeze(3)
         # mask unavailable actions
         target_local_qs[available_actions_batch[:, 1:, :] == 0] = -1e10
-        target_local_max_qs = target_local_qs.max(
-            dim=3)[0]  # idx0: value, idx1: index
+        if self.double_q:
+            local_qs_detach = local_qs.clone().detach()
+            local_qs_detach[available_actions_batch == 0] = -1e10
+            cur_max_actions = local_qs_detach[:, 1:].max(
+                dim=3, keepdim=True)[1]
+            target_local_max_qs = torch.gather(target_local_qs, 3,
+                                               cur_max_actions).squeeze(3)
+        else:
+            target_local_max_qs = target_local_qs.max(
+                dim=3)[0]  # idx0: value, idx1: index
 
         chosen_action_global_qs = self.qmixer_model(chosen_action_local_qs,
                                                     state_batch[:, :-1, :])

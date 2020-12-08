@@ -36,7 +36,7 @@ config = {
     'gamma': 0.99,
     'exploration_start': 1.0,
     'min_exploration': 0.1,
-    'exploration_decay': 5e-6,
+    'exploration_decay': 1e-5,
     'update_target_interval': 200,
     'batch_size': 16,
     'training_steps': 1000000,
@@ -44,6 +44,7 @@ config = {
     'clip_grad_norm': 10,
     'hypernet_layers': 2,
     'hypernet_embed_dim': 64,
+    'double_q': True,
 }
 
 
@@ -136,8 +137,8 @@ def main():
         config['n_agents'], config['state_shape'], config['mixing_embed_dim'],
         config['hypernet_layers'], config['hypernet_embed_dim'])
 
-    algorithm = QMIX(agent_model, qmixer_model, config['gamma'], config['lr'],
-                     config['clip_grad_norm'])
+    algorithm = QMIX(agent_model, qmixer_model, config['double_q'],
+                     config['gamma'], config['lr'], config['clip_grad_norm'])
 
     qmix_agent = QMixAgent(
         algorithm, config['exploration_start'], config['min_exploration'],

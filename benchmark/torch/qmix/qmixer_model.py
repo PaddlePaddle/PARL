@@ -79,5 +79,4 @@ class QMixerModel(nn.Module):
         return q_total
 
     def update(self, model):
-        for param, target_param in zip(model.parameters(), self.parameters()):
-            target_param.data.copy_(param.data)
+        self.load_state_dict(model.state_dict)

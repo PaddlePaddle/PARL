@@ -73,21 +73,24 @@ def run_train_episode(env, agent, rpm):
 
 
 def run_evaluate_episode(env, agent):
-    obs = env.reset()
-    total_reward = 0
-    while True:
-        batch_obs = np.expand_dims(obs, axis=0)
-        action = agent.predict(batch_obs.astype('float32'))
-        action = np.squeeze(action)
+    eval_rewards = []
+    for i in range(5):
+        obs = env.reset()
+        total_reward = 0
+        while True:
+            batch_obs = np.expand_dims(obs, axis=0)
+            action = agent.predict(batch_obs.astype('float32'))
+            action = np.squeeze(action)
 
-        next_obs, reward, done, info = env.step(action)
+            next_obs, reward, done, info = env.step(action)
 
-        obs = next_obs
-        total_reward += reward
+            obs = next_obs
+            total_reward += reward
 
-        if done:
-            break
-    return total_reward
+            if done:
+                break
+        eval_rewards.append(total_reward)
+    return np.mean(eval_rewards)
 
 
 def main():

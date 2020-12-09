@@ -198,12 +198,14 @@ class Client(object):
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             client_parl_version = parl.__version__
-            client_python_version = str(sys.version_info.major)
-            assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
-                '''Version mismatch: the 'master' is of version 'parl={}, python={}'. However, 
-                'parl={}, python={}'is provided in your environment.'''.format(
-                        to_str(message[1]), to_str(message[2]),
-                        client_parl_version, client_python_version
+            client_python_version_major = str(sys.version_info.major)
+            client_python_version_minor = str(sys.version_info.minor)
+            assert client_parl_version == to_str(message[1]) and client_python_version_major == to_str(message[2])\
+                and client_python_version_minor == to_str(message[3]),\
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}.{}'. However,
+                'parl={}, python={}.{}'is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]), to_str(message[3]),
+                        client_parl_version, client_python_version_major, client_python_version_minor
                     )
         else:
             raise NotImplementedError

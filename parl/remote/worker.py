@@ -111,12 +111,14 @@ class Worker(object):
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             worker_parl_version = parl.__version__
-            worker_python_version = str(sys.version_info.major)
-            assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
-                '''Version mismatch: the "master" is of version "parl={}, python={}". However, 
-                "parl={}, python={}"is provided in your environment.'''.format(
-                        to_str(message[1]), to_str(message[2]),
-                        worker_parl_version, worker_python_version
+            worker_python_version_major = str(sys.version_info.major)
+            worker_python_version_minor = str(sys.version_info.minor)
+            assert worker_parl_version == to_str(message[1]) and worker_python_version_major == to_str(message[2])\
+                and worker_python_version_minor == to_str(message[3]),\
+                '''Version mismatch: the "master" is of version "parl={}, python={}.{}". However,
+                "parl={}, python={}.{}"is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]), to_str(message[3]),
+                        worker_parl_version, worker_python_version_major, worker_python_version_minor
                     )
         else:
             raise NotImplementedError

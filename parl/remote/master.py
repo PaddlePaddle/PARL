@@ -232,7 +232,8 @@ class Master(object):
             self.client_socket.send_multipart([
                 remote_constants.NORMAL_TAG,
                 to_byte(parl.__version__),
-                to_byte(str(sys.version_info.major))
+                to_byte(str(sys.version_info.major)),
+                to_byte(str(sys.version_info.minor))
             ])
 
         # a client submits a job to the master

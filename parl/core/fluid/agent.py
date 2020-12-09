@@ -16,6 +16,7 @@ import warnings
 warnings.simplefilter('default')
 
 import os
+import paddle
 import paddle.fluid as fluid
 from parl.core.fluid import layers
 from parl.core.agent_base import AgentBase
@@ -79,8 +80,12 @@ class Agent(AgentBase):
 
         self.build_program()
 
-        self.place = fluid.CUDAPlace(
-            0) if machine_info.is_gpu_available() else fluid.CPUPlace()
+        if machine_info.is_xpu_available():
+            self.place = fluid.XPUPlace(int(os.getenv("FLAGS_selected_xpus")))
+        elif machine_info.is_gpu_available():
+            self.place = fluid.CUDAPlace(0)
+        else:
+            self.place = fluid.CPUPlace()
         self.fluid_executor = fluid.Executor(self.place)
         self.fluid_executor.run(fluid.default_startup_program())
 

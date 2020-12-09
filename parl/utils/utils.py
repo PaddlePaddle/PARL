@@ -21,7 +21,7 @@ from parl.utils import logger
 __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-    'kill_process', 'get_fluid_version', 'isnotebook'
+    'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu'
 ]
 
 
@@ -129,3 +129,15 @@ def isnotebook():
             return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
+
+
+def check_version_for_xpu():
+    """check paddle version if the code want to use xpu
+    """
+    err = "To use xpu, PARL requires paddle version >= 2.0.0." \
+          "Please make sure the version is good with your code."
+    import paddle
+    from paddle import fluid
+
+    paddle_version = get_fluid_version()
+    assert paddle_version >= 200 or paddle_version == 0, err

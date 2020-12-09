@@ -53,7 +53,7 @@ class QMixAgent(parl.Agent):
 
     def sample(self, obs, available_actions):
         '''Args:
-            obs: (n_agents, obs_shape)
+            obs:               (n_agents, obs_shape)
             available_actions: (n_agents, n_actions)
         '''
         epsilon = np.random.random()
@@ -71,7 +71,7 @@ class QMixAgent(parl.Agent):
     def predict(self, obs, available_actions):
         '''take greedy actions
         Args:
-            obs: (n_agents, obs_shape)
+            obs:               (n_agents, obs_shape)
             available_actions: (n_agents, n_actions)
         '''
         obs = torch.tensor(obs, dtype=torch.float32, device=self.device)
@@ -79,7 +79,9 @@ class QMixAgent(parl.Agent):
             available_actions, dtype=torch.long, device=self.device)
         agents_q, self.alg.hidden_states = self.alg.predict_local_q(
             obs, self.alg.hidden_states)
-        agents_q = agents_q.squeeze(0)
+        print('agents_q.shape', agents_q.shape)
+        print('agents_q.shape', agents_q.shape)
+        assert False
         # mask unavailable actions
         agents_q[available_actions == 0] = -1e10
         actions = agents_q.max(dim=1)[1].detach().cpu().numpy()

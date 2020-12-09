@@ -60,16 +60,16 @@ class QMIX(parl.Algorithm):
         ).unsqueeze(0).expand(batch_size, self.n_agents, -1)
 
     def predict_local_q(self, obs, hidden_state):
-        '''obs: (batch_size * n_agents, obs_shape)'''
+        '''obs: (n_agents, obs_shape)'''
         return self.agent_model(obs, hidden_state)
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
-        ''' state:                   (batch_size, T, state_shape)
-            actions:                 (batch_size, T, n_agents)
-            reward:                  (batch_size, T, 1)
-            terminated:              (batch_size, T, 1)
-            obs:                     (batch_size, T, n_agents, obs_shape)
+        ''' state_batch:             (batch_size, T, state_shape)
+            actions_batch:           (batch_size, T, n_agents)
+            reward_batch:            (batch_size, T, 1)
+            terminated_batch:        (batch_size, T, 1)
+            obs_batch:               (batch_size, T, n_agents, obs_shape)
             available_actions_batch: (batch_size, T, n_agents, n_actions)
             filled_batch:            (batch_size, T, 1)
         '''
@@ -133,7 +133,6 @@ class QMIX(parl.Algorithm):
         target = reward_batch + self.gamma * (
             1 - terminated_batch) * target_global_max_qs
         td_error = target.detach() - chosen_action_global_qs
-        mask = mask.expand_as(td_error)
         masked_td_error = td_error * mask
         mean_td_error = masked_td_error.sum() / mask.sum()
         loss = (masked_td_error**2).sum() / mask.sum()

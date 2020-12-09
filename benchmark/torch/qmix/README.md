@@ -1,9 +1,9 @@
 ## QMIX based on Pytorch
 We reproduce the QMIX based on **PARL** and **Pytorch**, reaching the same level of indicators as the paper in StarCraftII benchmarks.
-## QMIX
+### QMIX
 QMIX is a **value-based** multi-agent reinforcement learning algorithm.  
 See more information about QMIX in: [QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning](https://arxiv.org/abs/1803.11485)
-## StarCraftII Environment
+### StarCraftII Environment
 Paper: [The StarCraft Multi-Agent Challenge](https://arxiv.org/pdf/1902.04043)  
 Github Repositories: [smac](https://github.com/oxwhirl/smac)  
 ## Benchmark Results

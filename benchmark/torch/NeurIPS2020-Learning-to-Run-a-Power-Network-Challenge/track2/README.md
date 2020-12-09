@@ -14,5 +14,5 @@
 	```
   4. evaluate the result:  
 	```
-	python evaluate.py --num_episodes=10
+	python evaluate.py --nb_episode=10
 	```

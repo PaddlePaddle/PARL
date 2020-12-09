@@ -113,6 +113,22 @@ def redirect_stdout_to_file(file_path):
         logger.remove_handler(handler)
 
 
+@contextmanager
+def redirect_stderr_to_devnull():
+    """Redirect stderr (e.g., `warning/error`) to devnull.
+    """
+
+    tmp = sys.stderr
+    f = open(os.devnull, 'w')
+    sys.stderr = f
+
+    try:
+        yield
+    finally:
+        sys.stderr = tmp
+        f.close()
+
+
 def locate_remote_file(module_path):
     """xparl has to locate the file that has the class decorated by parl.remote_class. 
     This function returns the relative path between this file and the entry file.

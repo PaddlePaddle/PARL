@@ -50,14 +50,14 @@ class UnitaryActionModel(nn.Module):
         self.hour_embedding = nn.Embedding(24, 64)
 
     def forward(self, input):
-        input = input[:, :-2]
+        dense_input = input[:, :-2]
         month = input[:, -2].long()
         hour = input[:, -1].long()
 
         month_emb = self.month_embedding(month)
         hour_emb = self.hour_embedding(hour)
 
-        output = torch.cat((input, month_emb, hour_emb), dim=1)
+        output = torch.cat((dense_input, month_emb, hour_emb), dim=1)
 
         output = self.linear_1(output)
         output = self.linear_2(output)

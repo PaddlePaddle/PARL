@@ -18,8 +18,8 @@ import os
 from parl.utils import isnotebook, logger
 
 __all__ = [
-    'load_remote_class', 'redirect_stdout_stderr_to_file',
-    'locate_remote_file', 'get_subfiles_recursively'
+    'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
+    'get_subfiles_recursively'
 ]
 
 

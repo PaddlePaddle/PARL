@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,14 +28,72 @@ class AlgorithmBase(object):
         pass
 
     def get_weights(self):
-        """Get weights of all `ModelBase`
+        """Get weights of all `ModelBase` in self.__dict__.
+        
+        Note:
+            `ModelBase` in list, tuple and dict will be included. But `ModelBase` in
+            nested list, tuple and dict won't be included.
+
+        Returns:
+            Dict of weights ({attribute name: numpy array/List/Dict})
         """
-        raise NotImplementedError
+        model_weights = {}
+        for key in self.__dict__.keys():
+            value = getattr(self, key)
+            if isinstance(value, ModelBase):
+                model_weights[key] = value.get_weights()
+            elif isinstance(value, list) or isinstance(value, tuple):
+                weights_list = []
+                for x in value:
+                    if isinstance(x, ModelBase):
+                        weights_list.append(x.get_weights())
+                if weights_list:
+                    model_weights[key] = weights_list
+            elif isinstance(value, dict):
+                weights_dict = {}
+                for sub_k, sub_v in value.items():
+                    if isinstance(sub_v, ModelBase):
+                        weights_dict[sub_k] = sub_v.get_weights()
+                if weights_dict:
+                    model_weights[key] = weights_dict
+        return model_weights
 
     def set_weights(self, weights):
-        """Set weights of all `ModelBase`
+        """Set weights of all `ModelBase` in self.__dict__.
+
+        Note:
+            `ModelBase` in list, tuple and dict will be included. But `ModelBase` in
+            nested list, tuple and dict won't be included.
+
+        Args:
+            weights (Dict): Dict of weights ({attribute name: numpy array/List/Dict})
+        
         """
-        raise NotImplementedError
+        for key in self.__dict__.keys():
+            value = getattr(self, key)
+            if isinstance(value, ModelBase):
+                assert key in weights, "weights is inconsistent with current algorithm."
+                value.set_weights(weights[key])
+            elif isinstance(value, list) or isinstance(value, tuple):
+                model_list = []
+                for x in value:
+                    if isinstance(x, ModelBase):
+                        model_list.append(x)
+                if model_list:
+                    assert key in weights and len(model_list) == len(weights[key]), \
+                        "weights is inconsistent with current algorithm."
+                    for i, model in enumerate(model_list):
+                        model.set_weights(weights[key][i])
+            elif isinstance(value, dict):
+                model_dict = {}
+                for sub_k, sub_v in value.items():
+                    if isinstance(sub_v, ModelBase):
+                        model_dict[sub_k] = sub_v
+                if model_dict:
+                    assert key in weights and set(model_dict.keys()) == set(weights[key].keys()), \
+                        "weights is inconsistent with current algorithm."
+                    for sub_k, model in model_dict.items():
+                        model.set_weights(weights[key][sub_k])
 
     def learn(self, *args, **kwargs):
         """ define learning process, such as how to optimize the model.

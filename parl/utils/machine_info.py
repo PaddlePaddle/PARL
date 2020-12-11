@@ -121,23 +121,26 @@ def is_xpu_available():
       True if paddle was complied with XPU.
     """
     xpu_count = int(os.getenv("FLAGS_selected_xpus", "-1"))
-    ret = xpu_count >= 0
+    if xpu_count < 0:
+        logger.info(
+            'Cannot find available XPU devices, using other devices now.')
+        return False
 
     if _HAS_FLUID:
         from paddle import fluid
-        if ret is True and not fluid.is_compiled_with_xpu():
+        if not fluid.is_compiled_with_xpu():
             logger.warning("Found non-empty XPU_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with XPU, which may cause issues. \
                 Thus PARL will not use XPU.")
             return False
     if _HAS_PADDLE:
         import paddle
-        if ret is True and not paddle.is_compiled_with_xpu():
+        if not paddle.is_compiled_with_xpu():
             logger.warning("Found non-empty XPU_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with XPU, which may cause issues. \
                 Thus PARL will not use XPU.")
             return False
-    return ret
+    return True
 
 
 def get_free_tcp_port():

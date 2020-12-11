@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import gym
 import numpy as np
 import paddle
@@ -30,6 +29,8 @@ MEMORY_WARMUP_SIZE = 200  # store some experiences in the replay memory in advan
 BATCH_SIZE = 32
 LEARNING_RATE = 0.0005
 GAMMA = 0.99  # discount factor of reward
+
+paddle.enable_static()
 
 
 def run_episode(agent, env, rpm):
@@ -110,11 +111,5 @@ def main():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--use_xpu", type=bool, default=False, help="whether to use xpu.")
-    FLAGS = parser.parse_args()
-    if FLAGS.use_xpu:
-        check_version_for_xpu()
-        paddle.enable_static()
+    check_version_for_xpu()
     main()

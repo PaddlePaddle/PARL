@@ -175,6 +175,8 @@ class QMixAgent(parl.Agent):
             self.alg.sync_target()
             self.target_update_count += 1
 
+        self.global_step += 1
+
         feed = {
             'init_hidden_states': init_hidden_states,
             'target_init_hidden_states': target_init_hidden_states,
@@ -186,7 +188,6 @@ class QMixAgent(parl.Agent):
             'available_actions_batch': available_actions_batch,
             'filled_batch': filled_batch,
         }
-        ##########
         mean_loss, mean_td_error = self.fluid_executor.run(
             self.learn_program,
             feed=feed,

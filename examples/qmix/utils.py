@@ -27,6 +27,9 @@ class OneHotTransform(object):
 
 
 class DiscreteDistributions(object):
+    ''' Sample available actions uniformly.
+    '''
+
     def __init__(self, data):
         '''data: np.ndarray (batch_size, len_distributions)'''
         assert len(data.shape) == 2
@@ -34,7 +37,7 @@ class DiscreteDistributions(object):
         for i in range(data.shape[0]):
             elements = set()
             for j in range(data.shape[1]):
-                if data[i, j]:
+                if np.abs(data[i, j] - 1.0) < 1e-5:
                     # add action idx
                     elements.add(j)
             self.batch_list.append(list(elements))

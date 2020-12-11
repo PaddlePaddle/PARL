@@ -117,7 +117,7 @@ class QMixAgent(parl.Agent):
                 name='filled_batch',
                 shape=[self.batch_size, self.episode_limit, 1],
                 dtype='float32')
-            self.loss, self.mean_td_error = self.alg.learn(
+            self.loss, self.mean_td_error, = self.alg.learn(
                 init_hidden_states, target_init_hidden_states, state_batch,
                 actions_batch, reward_batch, terminated_batch, obs_batch,
                 available_actions_batch, filled_batch)
@@ -186,8 +186,11 @@ class QMixAgent(parl.Agent):
             'available_actions_batch': available_actions_batch,
             'filled_batch': filled_batch,
         }
+        ##########
         mean_loss, mean_td_error = self.fluid_executor.run(
             self.learn_program,
             feed=feed,
             fetch_list=[self.loss, self.mean_td_error])
+        mean_loss = mean_loss[0]
+        mean_td_error = mean_td_error[0]
         return mean_loss, mean_td_error

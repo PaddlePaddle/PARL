@@ -43,9 +43,6 @@ class QMIX(parl.Algorithm):
         self.lr = lr
         self.clip_grad_norm = clip_grad_norm
 
-        self.optimizer = fluid.optimizer.RMSPropOptimizer(
-            learning_rate=lr, rho=0.99, epsilon=1e-6)
-
     def predict_local_q(self, obs, hidden_state):
         ''' obs:           (n_agents, obs_shape)
             hidden_states: (n_agents, rnn_hidden_dim)
@@ -172,10 +169,15 @@ class QMIX(parl.Algorithm):
         loss = layers.reduce_sum(
             layers.square(masked_td_error)) / layers.reduce_sum(mask)
         if self.clip_grad_norm:
-            fluid.clip.set_gradient_clip(
-                clip=fluid.clip.GradientClipByGlobalNorm(self.clip_grad_norm))
+            clip = fluid.clip.GradientClipByGlobalNorm(
+                clip_norm=self.clip_grad_norm)
+            optimizer = fluid.optimizer.RMSPropOptimizer(
+                learning_rate=self.lr, rho=0.99, epsilon=1e-6, grad_clip=clip)
+        else:
+            optimizer = fluid.optimizer.RMSPropOptimizer(
+                learning_rate=self.lr, rho=0.99, epsilon=1e-6)
 
-        self.optimizer.minimize(loss)
+        optimizer.minimize(loss)
         return loss, mean_td_error
 
     def sync_target(self):

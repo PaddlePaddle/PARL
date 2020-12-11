@@ -94,7 +94,6 @@ def run_train_episode(env, agent, rpm):
             loss, td_error = agent.learn(s_batch, a_batch, r_batch, t_batch,
                                          obs_batch, available_actions_batch,
                                          filled_batch)
-            print('finsh a learn~~~~~~~~~~~~~~~~~~~~~~~~~~')
             mean_loss.append(loss)
             mean_td_error.append(td_error)
 
@@ -170,6 +169,8 @@ def main():
                 eval_reward_buffer.append(eval_reward)
                 eval_steps_buffer.append(eval_step)
                 eval_is_win_buffer.append(eval_is_win)
+                print('--------------------------eval_reward: {}'.format(
+                    eval_reward))
 
             summary.add_scalar('train_loss', train_loss, total_steps)
             summary.add_scalar('eval_reward', np.mean(eval_reward_buffer),

@@ -123,8 +123,9 @@ class RemoteWrapper(object):
     def __del__(self):
         """Delete the remote class object and release remote resources."""
         try:
-            self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
             if not self.job_shutdown:
+                self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
+
                 self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
                 _ = self.job_socket.recv_multipart()
                 self.job_socket.close(0)

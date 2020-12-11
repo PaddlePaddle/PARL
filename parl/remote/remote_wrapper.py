@@ -124,19 +124,17 @@ class RemoteWrapper(object):
         """Delete the remote class object and release remote resources."""
         try:
             self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
-        except AttributeError:
-            pass
-        if not self.job_shutdown:
-            try:
+            if not self.job_shutdown:
                 self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
                 _ = self.job_socket.recv_multipart()
                 self.job_socket.close(0)
-            except AttributeError:
-                pass
-            except zmq.error.ZMQError:
-                pass
-            except TypeError:
-                pass
+
+        except AttributeError:
+            pass
+        except zmq.error.ZMQError:
+            pass
+        except TypeError:
+            pass
 
     def has_attr(self, attr):
         has_attr = attr in self.remote_attribute_keys_set

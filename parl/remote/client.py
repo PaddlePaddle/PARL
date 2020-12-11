@@ -25,6 +25,7 @@ from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 import time
 import glob
+from parl.remote.utils import has_module
 
 
 class Client(object):
@@ -68,7 +69,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
-        self.check_version()
+        self.check_version_and_package()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -190,7 +191,7 @@ class Client(object):
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
 
-    def check_version(self):
+    def check_version_and_package(self):
         '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
         self.submit_job_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
@@ -207,6 +208,19 @@ class Client(object):
                         to_str(message[1]), to_str(message[2]), to_str(message[3]),
                         client_parl_version, client_python_version_major, client_python_version_minor
                     )
+            client_has_pyarrow = str(has_module('pyarrow'))
+            if client_has_pyarrow != to_str(message[4]):
+                if client_has_pyarrow == 'True':
+                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not
+                        found in "master"'s environment. To use "pyarrow" for serialization, please install
+                        "pyarrow" in "master"'s environment!
+                        """
+                else:
+                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
+                        found in your current environment. To use "pyarrow" for serialization, please install
+                        "pyarrow" in your current environment!
+                        """
+                raise Exception(error_message)
         else:
             raise NotImplementedError
 

@@ -33,6 +33,7 @@ from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from six.moves import queue
+from parl.remote.utils import has_module
 
 
 class Worker(object):
@@ -76,7 +77,7 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
-        self.check_version()
+        self.check_version_and_package()
         # create log server
         self.log_server_proc, self.log_server_address = self._create_log_server(
             port=log_server_port)
@@ -103,7 +104,7 @@ class Worker(object):
         else:
             self.cpu_num = multiprocessing.cpu_count()
 
-    def check_version(self):
+    def check_version_and_package(self):
         '''Verify that the parl & python version in 'worker' process matches that of the 'master' process'''
         self.request_master_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
@@ -120,6 +121,19 @@ class Worker(object):
                         to_str(message[1]), to_str(message[2]), to_str(message[3]),
                         worker_parl_version, worker_python_version_major, worker_python_version_minor
                     )
+            worker_has_pyarrow = str(has_module('pyarrow'))
+            if worker_has_pyarrow != to_str(message[4]):
+                if worker_has_pyarrow == 'True':
+                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not
+                        found in "master"'s environment. To use "pyarrow" for serialization, please install
+                        "pyarrow" in "master"'s environment!
+                        """
+                else:
+                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
+                        found in your current environment. To use "pyarrow" for serialization, please install
+                        "pyarrow" in your current environment!
+                        """
+                raise Exception(error_message)
         else:
             raise NotImplementedError
 

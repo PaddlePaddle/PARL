@@ -21,34 +21,32 @@ from parl.utils import machine_info
 
 
 class QMixAgent(parl.Agent):
-    def __init__(self, algorithm, obs_shape, state_shape, episode_limit,
-                 batch_size, exploration_start, min_exploration,
-                 exploration_decay, update_target_interval):
-        self.alg = algorithm
+    def __init__(self, algorithm, config):
         self.global_step = 0
-        self.obs_shape = obs_shape
-        self.state_shape = state_shape
-        self.batch_size = batch_size
-        self.episode_limit = episode_limit
-        self.exploration = exploration_start
-        self.min_exploration = min_exploration
-        self.exploration_decay = exploration_decay
+        self.obs_shape = config['obs_shape']
+        self.state_shape = config['state_shape']
+        self.batch_size = config['batch_size']
+        self.episode_limit = config['episode_limit']
+        self.exploration = config['exploration_start']
+        self.min_exploration = config['min_exploration']
+        self.exploration_decay = config['exploration_decay']
         self.target_update_count = 0
-        self.update_target_interval = update_target_interval
+        self.update_target_interval = config['update_target_interval']
+        self.n_agents = config['n_agents']
+        self.n_actions = config['n_actions']
+        self.rnn_hidden_dim = config['rnn_hidden_dim']
         super(QMixAgent, self).__init__(algorithm)
 
     def reset_agent(self):
         self.last_hidden_states = np.zeros(
-            (self.alg.n_agents, self.alg.agent_model.rnn_hidden_dim),
-            dtype='float32')
+            (self.n_agents, self.rnn_hidden_dim), dtype='float32')
 
     def _get_hidden_states(self):
-        init_hidden_states = np.zeros((self.batch_size, self.alg.n_agents,
-                                       self.alg.agent_model.rnn_hidden_dim),
-                                      dtype='float32')
+        init_hidden_states = np.zeros(
+            (self.batch_size, self.n_agents, self.rnn_hidden_dim),
+            dtype='float32')
         target_init_hidden_states = np.zeros(
-            (self.batch_size, self.alg.n_agents,
-             self.alg.agent_model.rnn_hidden_dim),
+            (self.batch_size, self.n_agents, self.rnn_hidden_dim),
             dtype='float32')
         return init_hidden_states, target_init_hidden_states
 
@@ -59,11 +57,11 @@ class QMixAgent(parl.Agent):
         with fluid.program_guard(self.pred_program):
             last_hidden_states = fluid.data(
                 name='last_hidden_states',
-                shape=[self.alg.n_agents, self.alg.agent_model.rnn_hidden_dim],
+                shape=[self.n_agents, self.rnn_hidden_dim],
                 dtype='float32')
             obs = fluid.data(
                 name='obs',
-                shape=[self.alg.n_agents, self.obs_shape],
+                shape=[self.n_agents, self.obs_shape],
                 dtype='float32')
             self.agents_q, self.current_hidden_states = self.alg.predict_local_q(
                 obs, last_hidden_states)
@@ -71,17 +69,11 @@ class QMixAgent(parl.Agent):
         with fluid.program_guard(self.learn_program):
             init_hidden_states = fluid.data(
                 name='init_hidden_states',
-                shape=[
-                    self.batch_size, self.alg.n_agents,
-                    self.alg.agent_model.rnn_hidden_dim
-                ],
+                shape=[self.batch_size, self.n_agents, self.rnn_hidden_dim],
                 dtype='float32')
             target_init_hidden_states = fluid.data(
                 name='target_init_hidden_states',
-                shape=[
-                    self.batch_size, self.alg.n_agents,
-                    self.alg.agent_model.rnn_hidden_dim
-                ],
+                shape=[self.batch_size, self.n_agents, self.rnn_hidden_dim],
                 dtype='float32')
             state_batch = fluid.data(
                 name='state_batch',
@@ -89,7 +81,7 @@ class QMixAgent(parl.Agent):
                 dtype='float32')
             actions_batch = fluid.data(
                 name='actions_batch',
-                shape=[self.batch_size, self.episode_limit, self.alg.n_agents],
+                shape=[self.batch_size, self.episode_limit, self.n_agents],
                 dtype='long')
             reward_batch = fluid.data(
                 name='reward_batch',
@@ -102,15 +94,15 @@ class QMixAgent(parl.Agent):
             obs_batch = fluid.data(
                 name='obs_batch',
                 shape=[
-                    self.batch_size, self.episode_limit, self.alg.n_agents,
+                    self.batch_size, self.episode_limit, self.n_agents,
                     self.obs_shape
                 ],
                 dtype='float32')
             available_actions_batch = fluid.data(
                 name='available_actions_batch',
                 shape=[
-                    self.batch_size, self.episode_limit, self.alg.n_agents,
-                    self.alg.agent_model.n_actions
+                    self.batch_size, self.episode_limit, self.n_agents,
+                    self.n_actions
                 ],
                 dtype='long')
             filled_batch = fluid.data(

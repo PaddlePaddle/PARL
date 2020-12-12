@@ -131,21 +131,12 @@ def main():
     config['n_actions'] = env.n_actions
 
     rpm = EpisodeReplayBuffer(config['replay_buffer_size'])
-    agent_model = RNNModel(config['n_actions'], config['rnn_hidden_dim'])
-    qmixer_model = QMixerModel(config['n_agents'], config['mixing_embed_dim'],
-                               config['batch_size'], config['episode_limit'],
-                               config['hypernet_layers'],
-                               config['hypernet_embed_dim'])
+    agent_model = RNNModel(config)
+    qmixer_model = QMixerModel(config)
 
-    algorithm = QMIX(agent_model, qmixer_model, config['batch_size'],
-                     config['double_q'], config['gamma'], config['lr'],
-                     config['clip_grad_norm'])
+    algorithm = QMIX(agent_model, qmixer_model, config)
 
-    qmix_agent = QMixAgent(
-        algorithm, config['obs_shape'], config['state_shape'],
-        config['episode_limit'], config['batch_size'],
-        config['exploration_start'], config['min_exploration'],
-        config['exploration_decay'], config['update_target_interval'])
+    qmix_agent = QMixAgent(algorithm, config)
 
     while rpm.count < config['memory_warmup_size']:
         train_reward, train_step, train_is_win, train_loss, train_td_error\
@@ -169,8 +160,6 @@ def main():
                 eval_reward_buffer.append(eval_reward)
                 eval_steps_buffer.append(eval_step)
                 eval_is_win_buffer.append(eval_is_win)
-                print('--------------------------eval_reward: {}'.format(
-                    eval_reward))
 
             summary.add_scalar('train_loss', train_loss, total_steps)
             summary.add_scalar('eval_reward', np.mean(eval_reward_buffer),

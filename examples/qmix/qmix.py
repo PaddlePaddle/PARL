@@ -20,28 +20,25 @@ import paddle.fluid as fluid
 
 
 class QMIX(parl.Algorithm):
-    def __init__(self,
-                 agent_model,
-                 qmixer_model,
-                 batch_size,
-                 double_q=True,
-                 gamma=0.99,
-                 lr=0.0005,
-                 clip_grad_norm=None):
+    def __init__(self, agent_model, qmixer_model, config):
+
         self.agent_model = agent_model
         self.qmixer_model = qmixer_model
         self.target_agent_model = deepcopy(self.agent_model)
         self.target_qmixer_model = deepcopy(self.qmixer_model)
 
-        self.batch_size = batch_size
-        self.n_agents = self.qmixer_model.n_agents
-        self.n_actions = self.agent_model.n_actions
-        assert isinstance(gamma, float)
-        assert isinstance(lr, float)
-        self.double_q = double_q
-        self.gamma = gamma
-        self.lr = lr
-        self.clip_grad_norm = clip_grad_norm
+        self.batch_size = config['batch_size']
+        self.n_agents = config['n_agents']
+        self.n_actions = config['n_actions']
+        self.double_q = config['double_q']
+        self.gamma = config['gamma']
+        self.lr = config['lr']
+        self.clip_grad_norm = config['clip_grad_norm']
+        self.episode_limit = config['episode_limit']
+        self.obs_shape = config['obs_shape']
+        self.rnn_hidden_dim = config['rnn_hidden_dim']
+        assert isinstance(self.gamma, float)
+        assert isinstance(self.lr, float)
 
     def predict_local_q(self, obs, hidden_state):
         ''' obs:           (n_agents, obs_shape)
@@ -64,9 +61,6 @@ class QMIX(parl.Algorithm):
         '''
         hidden_states = init_hidden_states
         target_hidden_states = target_init_hidden_states
-        batch_size = self.batch_size
-        episode_len = state_batch.shape[1]
-        obs_shape = obs_batch.shape[-1]
 
         reward_batch = layers.slice(
             reward_batch, axes=[1], starts=[0], ends=[-1])
@@ -82,28 +76,27 @@ class QMIX(parl.Algorithm):
 
         local_qs = []
         target_local_qs = []
-        for t in range(episode_len):
+        for t in range(self.episode_limit):
             obs = obs_batch[:, t, :, :]
             obs = layers.reshape(
-                obs, shape=(self.batch_size * self.n_agents, obs_shape))
+                obs, shape=(self.batch_size * self.n_agents, self.obs_shape))
             hidden_states = layers.reshape(
                 hidden_states,
-                shape=(self.batch_size * self.n_agents,
-                       self.agent_model.rnn_hidden_dim))
+                shape=(self.batch_size * self.n_agents, self.rnn_hidden_dim))
             local_q, hidden_states = self.agent_model(obs, hidden_states)
             local_q = layers.reshape(
-                local_q, shape=(batch_size, self.n_agents, self.n_actions))
+                local_q,
+                shape=(self.batch_size, self.n_agents, self.n_actions))
             local_qs.append(local_q)
 
             target_hidden_states = layers.reshape(
                 target_hidden_states,
-                shape=(self.batch_size * self.n_agents,
-                       self.agent_model.rnn_hidden_dim))
+                shape=(self.batch_size * self.n_agents, self.rnn_hidden_dim))
             target_local_q, target_hidden_states = self.target_agent_model(
                 obs, target_hidden_states)
             target_local_q = layers.reshape(
                 target_local_q,
-                shape=(batch_size, self.n_agents, self.n_actions))
+                shape=(self.batch_size, self.n_agents, self.n_actions))
             target_local_qs.append(target_local_q)
 
         local_qs = layers.stack(local_qs, axis=1)

@@ -18,33 +18,29 @@ import paddle.fluid as fluid
 
 
 class QMixerModel(parl.Model):
-    def __init__(self,
-                 n_agents,
-                 mixing_embed_dim,
-                 batch_size,
-                 episode_limit,
-                 hypernet_layers=2,
-                 hypernet_embed_dim=64):
-        self.n_agents = n_agents
-        self.batch_size = batch_size
-        self.episode_limit = episode_limit
-        self.embed_dim = mixing_embed_dim
-        self.hypernet_layers = hypernet_layers
+    def __init__(self, config):
+        self.n_agents = config['n_agents']
+        self.batch_size = config['batch_size']
+        self.episode_limit = config['episode_limit']
+        self.embed_dim = config['mixing_embed_dim']
+        self.hypernet_layers = config['hypernet_layers']
+        self.hypernet_embed_dim = config['hypernet_embed_dim']
+        self.state_shape = config['state_shape']
 
-        if hypernet_layers == 1:
+        if self.hypernet_layers == 1:
             self.hyper_w_1 = layers.fc(
                 size=self.embed_dim * self.n_agents,
                 act=None,
                 name='hyper_w_1')
             self.hyper_w_2 = layers.fc(
                 size=self.embed_dim, act=None, name='hyper_w_2')
-        elif hypernet_layers == 2:
+        elif self.hypernet_layers == 2:
             self.hyper_w_1_1 = layers.fc(
-                size=hypernet_embed_dim, name='hyper_w_1_1')
+                size=self.hypernet_embed_dim, name='hyper_w_1_1')
             self.hyper_w_1_2 = layers.fc(
                 size=self.embed_dim * self.n_agents, name='hyper_w_1_2')
             self.hyper_w_2_1 = layers.fc(
-                size=hypernet_embed_dim, name='hyper_w_2_1')
+                size=self.hypernet_embed_dim, name='hyper_w_2_1')
             self.hyper_w_2_2 = layers.fc(
                 size=self.embed_dim, name='hyper_w_2_2')
         else:
@@ -62,12 +58,10 @@ class QMixerModel(parl.Model):
             agent_qs: (batch_size, T, n_agents)
             states: (batch_size, T, state_shape)
         '''
-        batch_size = agent_qs.shape[0]
-        state_shape = states.shape[-1]
         episode_len = self.episode_limit - 1
         assert agent_qs.shape[1] == episode_len
         states = fluid.layers.reshape(
-            states, shape=(self.batch_size * episode_len, state_shape))
+            states, shape=(self.batch_size * episode_len, self.state_shape))
         agent_qs = fluid.layers.reshape(
             agent_qs, shape=(self.batch_size * episode_len, 1, self.n_agents))
 
@@ -101,5 +95,6 @@ class QMixerModel(parl.Model):
 
         hidden = fluid.layers.elu(fluid.layers.matmul(agent_qs, w1) + b1)
         y = fluid.layers.matmul(hidden, w2) + b2
-        q_total = fluid.layers.reshape(y, shape=(batch_size, episode_len, 1))
+        q_total = fluid.layers.reshape(
+            y, shape=(self.batch_size, episode_len, 1))
         return q_total

@@ -19,13 +19,13 @@ import paddle.fluid as fluid
 
 
 class RNNModel(parl.Model):
-    def __init__(self, n_actions, rnn_hidden_dim=32):
-        self.rnn_hidden_dim = rnn_hidden_dim
-        self.n_actions = n_actions
+    def __init__(self, config):
+        self.rnn_hidden_dim = config['rnn_hidden_dim']
+        self.n_actions = config['n_actions']
 
-        self.fc1 = layers.fc(size=rnn_hidden_dim, act=None, name='fc1')
-        self.gru = layers.GRUCell(hidden_size=rnn_hidden_dim, name='gru')
-        self.fc2 = layers.fc(size=n_actions, act=None, name='fc2')
+        self.fc1 = layers.fc(size=self.rnn_hidden_dim, act=None, name='fc1')
+        self.gru = layers.GRUCell(hidden_size=self.rnn_hidden_dim, name='gru')
+        self.fc2 = layers.fc(size=self.n_actions, act=None, name='fc2')
 
     def __call__(self, inputs, hidden_state):
         """Args:

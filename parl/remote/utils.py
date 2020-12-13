@@ -184,7 +184,7 @@ def get_subfiles_recursively(folder_path):
 
 
 def has_module(module_name):
-    ''' package check
+    '''
     Args:
         module_name: module to be checked
     Returns:

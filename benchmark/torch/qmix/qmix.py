@@ -87,28 +87,20 @@ class QMIX(parl.Algorithm):
         local_qs = []
         target_local_qs = []
         for t in range(episode_len):
-            obs = obs_batch[:, t, :, :]  # (batch_size, n_agents, obs_shape)
-            obs = obs.reshape(
-                -1, obs_batch.shape[-1])  #(batch_size * n_agents, obs_shape)
+            obs = obs_batch[:, t, :, :]
+            obs = obs.reshape(-1, obs_batch.shape[-1])
             local_q, self.hidden_states = self.agent_model(
-                obs, self.hidden_states)  # (batch_size * n_agents, n_actions)
-            local_q = local_q.reshape(batch_size, self.n_agents,
-                                      -1)  # (batch_size, n_agents, n_actions)
+                obs, self.hidden_states)
+            local_q = local_q.reshape(batch_size, self.n_agents, -1)
             local_qs.append(local_q)
 
             target_local_q, self.target_hidden_states = self.target_agent_model(
-                obs, self.
-                target_hidden_states)  # (batch_size * n_agents, n_actions)
-            target_local_q = target_local_q.view(
-                batch_size, self.n_agents,
-                -1)  # (batch_size, n_agents, n_actions)
+                obs, self.target_hidden_states)
+            target_local_q = target_local_q.view(batch_size, self.n_agents, -1)
             target_local_qs.append(target_local_q)
 
-        local_qs = torch.stack(
-            local_qs, dim=1)  # (batch_size, T, n_agents, n_actions)
-        target_local_qs = torch.stack(
-            target_local_qs[1:],
-            dim=1)  # (batch_size, T-1, n_agents, n_actions)
+        local_qs = torch.stack(local_qs, dim=1)
+        target_local_qs = torch.stack(target_local_qs[1:], dim=1)
 
         chosen_action_local_qs = torch.gather(
             local_qs[:, :-1, :, :], dim=3, index=actions_batch).squeeze(3)

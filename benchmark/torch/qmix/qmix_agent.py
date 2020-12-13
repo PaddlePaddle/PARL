@@ -79,9 +79,6 @@ class QMixAgent(parl.Agent):
             available_actions, dtype=torch.long, device=self.device)
         agents_q, self.alg.hidden_states = self.alg.predict_local_q(
             obs, self.alg.hidden_states)
-        print('agents_q.shape', agents_q.shape)
-        print('agents_q.shape', agents_q.shape)
-        assert False
         # mask unavailable actions
         agents_q[available_actions == 0] = -1e10
         actions = agents_q.max(dim=1)[1].detach().cpu().numpy()

@@ -59,17 +59,15 @@ class QMixerModel(nn.Module):
             states: (batch_size, T, state_shape)
         '''
         batch_size = agent_qs.size(0)
-        states = states.reshape(
-            -1, self.state_shape)  # (batch_size*T, state_shape)
-        agent_qs = agent_qs.view(-1, 1,
-                                 self.n_agents)  # (batch_size*T, 1, n_agents)
+        states = states.reshape(-1, self.state_shape)
+        agent_qs = agent_qs.view(-1, 1, self.n_agents)
 
-        w1 = torch.abs(self.hyper_w_1(states))  # keep non-negative
+        w1 = torch.abs(self.hyper_w_1(states))
         w1 = w1.view(-1, self.n_agents, self.embed_dim)
         b1 = self.hyper_b_1(states)
         b1 = b1.view(-1, 1, self.embed_dim)
 
-        w2 = torch.abs(self.hyper_w_2(states))  # keep non-negative
+        w2 = torch.abs(self.hyper_w_2(states))
         w2 = w2.view(-1, self.embed_dim, 1)
         b2 = self.hyper_b_2(states).view(-1, 1, 1)
 

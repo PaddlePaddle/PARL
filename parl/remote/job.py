@@ -131,7 +131,7 @@ class Job(object):
         worker_thread.setDaemon(True)
 
         # This function will be called only after the heartbeat server thread is started
-        def client_heartbeat_failed_callback_func():
+        def client_heartbeat_exit_callback_func():
             with self.lock:
                 self.remove_job_socket.send_multipart(
                     [remote_constants.KILLJOB_TAG,
@@ -145,7 +145,7 @@ class Job(object):
 
         # a thread that reply heartbeat signals from the client
         self.client_heartbeat_server_thread = HeartbeatServerThread(
-            heartbeat_failed_callback_func=client_heartbeat_failed_callback_func
+            heartbeat_exit_callback_func=client_heartbeat_exit_callback_func
         )
 
         # sends job information to the worker

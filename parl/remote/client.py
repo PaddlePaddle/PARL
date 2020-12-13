@@ -272,7 +272,7 @@ class Client(object):
             return False
         job_heartbeat_socket.close(0)
 
-        def heartbeat_failed_callback_func():
+        def heartbeat_exit_callback_func():
             self.lock.acquire()
             self.actor_num -= 1
             logger.error(
@@ -283,7 +283,7 @@ class Client(object):
         # a thread for sending heartbeat signals to job
         self.job_heartbeat_thread = HeartbeatClientThread(
             job_heartbeat_address,
-            heartbeat_failed_callback_func=heartbeat_failed_callback_func)
+            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         self.job_heartbeat_thread.start()
 
         if actor_ref_monitor is not None:

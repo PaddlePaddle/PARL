@@ -145,8 +145,7 @@ class Job(object):
 
         # a thread that reply heartbeat signals from the client
         self.client_heartbeat_server_thread = HeartbeatServerThread(
-            heartbeat_exit_callback_func=client_heartbeat_exit_callback_func
-        )
+            heartbeat_exit_callback_func=client_heartbeat_exit_callback_func)
 
         # sends job information to the worker
         initialized_job = InitializedJob(

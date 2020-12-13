@@ -291,13 +291,14 @@ class Client(object):
             # the `actor_ref_monitor` is not None. And we need start a thread to
             # detect whether the actor has been deleted according to the reference
             # count of the actor.
-            thread = threading.Thread(target=self._check_actor_is_alive)
+            thread = threading.Thread(
+                target=self._check_actor_is_alive, args=(actor_ref_monitor, ))
             thread.setDaemon(True)
             thread.start()
 
         return True
 
-    def _check_actor_is_alive(actor_ref_monitor):
+    def _check_actor_is_alive(self, actor_ref_monitor):
         """A loop to check whether the actor has been deleted.
 
         Args:
@@ -308,7 +309,7 @@ class Client(object):
         while self.client_is_alive:
             if actor_ref_monitor.is_deleted():
                 # terminate the heartbeat of the job and release the cpu resource.
-                self.job_heartbeat_thread.stop()
+                self.job_heartbeat_thread.exit()
                 break
 
             time.sleep(5)

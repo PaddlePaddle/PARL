@@ -26,7 +26,7 @@ class HeartbeatClientThread(threading.Thread):
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
 
-        threading.Thread.__init__(self, daemon=True)
+        threading.Thread.__init__(self)
         self.heartbeat_server_addr = heartbeat_server_addr
         self.heartbeat_exit_callback_func = heartbeat_exit_callback_func
         self.exit_flag = False

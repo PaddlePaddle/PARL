@@ -66,6 +66,7 @@ class Client(object):
         self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
+        self.all_job_heartbeat_threads = []
 
         self.actor_num = 0
 
@@ -281,10 +282,12 @@ class Client(object):
             self.lock.release()
 
         # a thread for sending heartbeat signals to job
-        self.job_heartbeat_thread = HeartbeatClientThread(
+        job_heartbeat_thread = HeartbeatClientThread(
             job_heartbeat_address,
             heartbeat_exit_callback_func=heartbeat_exit_callback_func)
-        self.job_heartbeat_thread.start()
+        self.all_job_heartbeat_threads.append(job_heartbeat_thread)
+        job_heartbeat_thread.start()
+        job_heartbeat_thread.setDaemon(True)
 
         if actor_ref_monitor is not None:
             # If `wait` argument is False in `@parl.remote_class` (future mode),
@@ -292,24 +295,27 @@ class Client(object):
             # detect whether the actor has been deleted according to the reference
             # count of the actor.
             thread = threading.Thread(
-                target=self._check_actor_is_alive, args=(actor_ref_monitor, ))
+                target=self._check_actor_is_alive,
+                args=(actor_ref_monitor, job_heartbeat_thread))
             thread.setDaemon(True)
             thread.start()
 
         return True
 
-    def _check_actor_is_alive(self, actor_ref_monitor):
+    def _check_actor_is_alive(self, actor_ref_monitor, job_heartbeat_thread):
         """A loop to check whether the actor has been deleted.
 
         Args:
             actor_ref_monitor (ActorRefMonitor): used for detecting whether the actor 
                                                  has been deleted or out of scope;
+            job_heartbeat_thread(HeartbeatClientThread): thread used to send the heartbeat signal to the
+                                                         job. We will exit the thread after the actor is
+                                                         deleted.
         """
-
         while self.client_is_alive:
             if actor_ref_monitor.is_deleted():
                 # terminate the heartbeat of the job and release the cpu resource.
-                self.job_heartbeat_thread.exit()
+                job_heartbeat_thread.exit()
                 break
 
             time.sleep(5)
@@ -435,7 +441,8 @@ def disconnect():
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is not None:
         GLOBAL_CLIENT.client_is_alive = False
-        GLOBAL_CLIENT.job_heartbeat_thread.exit()
+        for thread in GLOBAL_CLIENT.all_job_heartbeat_threads:
+            thread.exit()
         GLOBAL_CLIENT = None
     else:
         logger.info(

@@ -84,7 +84,7 @@ class HeartbeatServerThread(threading.Thread):
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
 
-        threading.Thread.__init__(self, daemon=True)
+        threading.Thread.__init__(self)
         self.grpc_server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=1),
             options=[('grpc.max_receive_message_length', -1),

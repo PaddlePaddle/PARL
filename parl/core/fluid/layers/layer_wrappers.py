@@ -160,7 +160,7 @@ class GRULayerFunc(LayerFunc):
             if attr:
                 assert attr.name, "attr should have a name already!"
                 name_key = 'PARL_target_' + attr.name
-                if '_gate' in name_key and 'weight' in name_key:
+                if '_gate' in name_key and 'param' in name_key:
                     if self.param_prefix is not None:
                         name_key = self.param_prefix
                     else:
@@ -176,7 +176,7 @@ class GRULayerFunc(LayerFunc):
                         name_key = unique_name.generate(name_key)
                         self.bias_prefix = name_key
                     name_key += '_gate'
-                elif '_candidate' in name_key and 'weight' in name_key:
+                elif '_candidate' in name_key and 'param' in name_key:
                     if self.param_prefix is not None:
                         name_key = self.param_prefix
                     else:

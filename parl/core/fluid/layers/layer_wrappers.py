@@ -205,6 +205,34 @@ class GRULayerFunc(LayerFunc):
         ## it cannot be called during the execution.
         return copied
 
+    @property
+    def param_candidate_name(self):
+        if self.attr_holder.param_candidate_attr:
+            return self.attr_holder.param_candidate_attr.name
+        else:
+            return None
+
+    @property
+    def param_gate_name(self):
+        if self.attr_holder.param_gate_attr:
+            return self.attr_holder.param_gate_attr.name
+        else:
+            return None
+
+    @property
+    def bias_candidate_name(self):
+        if self.attr_holder.bias_candidate_attr:
+            return self.attr_holder.bias_candidate_attr.name
+        else:
+            return None
+
+    @property
+    def bias_gate_name(self):
+        if self.attr_holder.bias_gate_attr:
+            return self.attr_holder.bias_gate_attr.name
+        else:
+            return None
+
 
 def fc(size,
        num_flatten_dims=1,
@@ -247,7 +275,7 @@ def GRUCell(hidden_size,
     default_name = 'GRUCell'
     if name is None:
         name = default_name
-    w_name = unique_name.generate(name + '_weight')
+    w_name = unique_name.generate(name + '_param')
     b_name = unique_name.generate(name + '_bias')
 
     param_gate_attr = ParamAttr(name=w_name + '_gate')

@@ -51,7 +51,7 @@ class RLAgent(BaseAgent):
                 "rb") as f:
             self.action_to_sub_id = pickle.load(f)
 
-        self.after_line56_disconnect_actions = []
+        self.after_line56_or_line45_disconnect_actions = []
         self.three_sub_action_to_sub_ids = {}
 
         actions_vec = np.load(
@@ -59,7 +59,7 @@ class RLAgent(BaseAgent):
                          "v10_merge_three_sub_actions.npz"))["actions"]
         for i in range(actions_vec.shape[0]):
             action = action_space.from_vect(actions_vec[i])
-            self.after_line56_disconnect_actions.append(action)
+            self.after_line56_or_line45_disconnect_actions.append(action)
 
         with open(
                 os.path.join('saved_files',
@@ -226,7 +226,7 @@ class RLAgent(BaseAgent):
 
         sub_ids = []
         for best_idx in sorted_idx:
-            best_act = self.after_line56_disconnect_actions[best_idx]
+            best_act = self.after_line56_or_line45_disconnect_actions[best_idx]
             sub_ids = self.three_sub_action_to_sub_ids[best_idx]
 
             if not np.all(

@@ -18,9 +18,11 @@ from grid2op.Runner import Runner
 from l2rpn_baselines.utils.save_log_gif import save_log_gif
 from rl_agent import RLAgent
 import argparse
+import grid2op
+from lightsim2grid.LightSimBackend import LightSimBackend
 
 
-def cli():
+def parse_args():
     parser = argparse.ArgumentParser(description="Eval baseline RLAgent")
     parser.add_argument(
         "--load_path",
@@ -66,46 +68,7 @@ def evaluate(env,
              verbose=False,
              save_gif=False,
              **kwargs):
-    """
-    In order to submit a valid basline, it is mandatory to provide a "evaluate" function with the same signature as this one.
 
-    Parameters
-    ----------
-    env: :class:`grid2op.Environment.Environment`
-        The environment on which the baseline will be evaluated.
-
-    load_path: ``str``
-        The path where the model is stored. This is used by the agent when calling "agent.load)
-
-    logs_path: ``str``
-        The path where the agents results will be stored.
-
-    nb_episode: ``int``
-        Number of episodes to run for the assessment of the performance.
-        By default it's 1.
-
-    nb_process: ``int``
-        Number of process to be used for the assessment of the performance.
-        Should be an integer greater than 1. By defaults it's 1.
-
-    max_steps: ``int``
-        Maximum number of timestep each episode can last. It should be a positive integer or -1.
-        -1 means that the entire episode is run (until the chronics is out of data or until a game over).
-        By default it's -1.
-
-    verbose: ``bool``
-        verbosity of the output
-
-    save_gif: ``bool``
-        Whether or not to save a gif into each episode folder corresponding to the representation of the said episode.
-
-    kwargs:
-        Other key words arguments that you are free to use for either building the agent save it etc.
-
-    Returns
-    -------
-    ``None``
-    """
     runner_params = env.get_params_for_runner()
     runner_params["verbose"] = verbose
 
@@ -145,10 +108,7 @@ if __name__ == "__main__":
     """
     This is a possible implementation of the eval script.
     """
-    import grid2op
-    from lightsim2grid.LightSimBackend import LightSimBackend
-    from l2rpn_baselines.utils import cli_eval
-    args = cli()
+    args = parse_args()
     backend = LightSimBackend()
     env = grid2op.make('l2rpn_neurips_2020_track1_small', backend=backend)
     evaluate(

@@ -59,14 +59,14 @@ class Track1PowerNetAgent(BaseAgent):
         with open("./saved_files/action_to_sub_id.pickle", "rb") as f:
             self.action_to_sub_id = pickle.load(f)
 
-        self.after_line56_disconnect_actions = []
+        self.after_line56_or_line45_disconnect_actions = []
         self.three_sub_action_to_sub_ids = {}
 
         actions_vec = np.load(
             "./saved_files/v10_merge_three_sub_actions.npz")["actions"]
         for i in range(actions_vec.shape[0]):
             action = action_space.from_vect(actions_vec[i])
-            self.after_line56_disconnect_actions.append(action)
+            self.after_line56_or_line45_disconnect_actions.append(action)
 
         with open("saved_files/three_sub_action_to_sub_ids.pickle", "rb") as f:
             self.three_sub_action_to_sub_ids = pickle.load(f)
@@ -194,7 +194,7 @@ class Track1PowerNetAgent(BaseAgent):
 
         sub_ids = []
         for best_idx in sorted_idx:
-            best_act = self.after_line56_disconnect_actions[best_idx]
+            best_act = self.after_line56_or_line45_disconnect_actions[best_idx]
             sub_ids = self.three_sub_action_to_sub_ids[best_idx]
 
             if not np.all(

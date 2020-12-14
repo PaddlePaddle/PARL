@@ -1,7 +1,7 @@
 ## Dependencies
 - python3.6
 - [parl==1.3.2](https://github.com/PaddlePaddle/PARL)
-- [paddlepaddle==1.6.1](https://github.com/PaddlePaddle/Paddle)
+- Pytorch==1.6.0
 - [grid2op==1.2.2](https://github.com/rte-france/Grid2Op)
 - [lightsim2grid==0.2.4](https://github.com/BDonnot/lightsim2grid)
 

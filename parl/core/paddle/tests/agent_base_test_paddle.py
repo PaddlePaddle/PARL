@@ -88,8 +88,8 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_save(self):
         agent = TestAgent(self.alg)
-        save_path1 = 'mymodel.ckpt'
-        save_path2 = os.path.join('my_model', 'model-2.ckpt')
+        save_path1 = 'mymodel1.ckpt'
+        save_path2 = os.path.join('my_model1', 'model-2.ckpt')
         agent.save(save_path1)
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
@@ -97,8 +97,8 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_save_with_model(self):
         agent = TestAgent(self.alg)
-        save_path1 = 'mymodel.ckpt'
-        save_path2 = os.path.join('my_model', 'model-2.ckpt')
+        save_path1 = 'mymodel2.ckpt'
+        save_path2 = os.path.join('my_model2', 'model-2.ckpt')
         agent.save(save_path1, agent.alg.model)
         agent.save(save_path2, agent.alg.model)
         self.assertTrue(os.path.exists(save_path1))
@@ -107,7 +107,7 @@ class AgentBaseTest(unittest.TestCase):
     def test_restore(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'mymodel.ckpt'
+        save_path1 = 'mymodel3.ckpt'
         previous_output = agent.predict(obs)
         agent.save(save_path1)
         agent.restore(save_path1)
@@ -123,7 +123,7 @@ class AgentBaseTest(unittest.TestCase):
     def test_restore_with_model(self):
         agent = TestAgent(self.alg)
         obs = np.random.random([10, 4]).astype('float32')
-        save_path1 = 'mymodel.ckpt'
+        save_path1 = 'mymodel4.ckpt'
         previous_output = agent.predict(obs)
         agent.save(save_path1, agent.alg.model)
         agent.restore(save_path1, agent.alg.model)

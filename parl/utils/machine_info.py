@@ -21,7 +21,7 @@ from parl.utils import logger, _HAS_FLUID, _HAS_PADDLE, _IS_WINDOWS
 
 __all__ = [
     'get_gpu_count', 'get_ip_address', 'is_gpu_available', 'get_free_tcp_port',
-    'is_port_available', 'get_port_from_range'
+    'is_port_available', 'get_port_from_range', 'is_xpu_available'
 ]
 
 
@@ -110,6 +110,32 @@ def is_gpu_available():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues. \
                 Thus PARL will not use GPU.")
+            return False
+    return ret
+
+
+def is_xpu_available():
+    """ check whether parl can access a XPU
+
+    Returns:
+      True if paddle was complied with XPU.
+    """
+    xpu_count = int(os.getenv("FLAGS_selected_xpus", "-1"))
+    ret = xpu_count >= 0
+
+    if _HAS_FLUID:
+        from paddle import fluid
+        if ret is True and not fluid.is_compiled_with_xpu():
+            logger.warning("Found non-empty XPU_VISIBLE_DEVICES. \
+                But PARL found that Paddle was not complied with XPU, which may cause issues. \
+                Thus PARL will not use XPU.")
+            return False
+    if _HAS_PADDLE:
+        import paddle
+        if ret is True and not paddle.is_compiled_with_xpu():
+            logger.warning("Found non-empty XPU_VISIBLE_DEVICES. \
+                But PARL found that Paddle was not complied with XPU, which may cause issues. \
+                Thus PARL will not use XPU.")
             return False
     return ret
 

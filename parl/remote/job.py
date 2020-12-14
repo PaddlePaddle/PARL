@@ -36,7 +36,7 @@ from parl.remote.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
-from parl.remote.utils import load_remote_class, redirect_stdout_to_file
+from parl.remote.utils import load_remote_class, redirect_output_to_file
 from parl.remote.zmq_utils import create_client_socket
 
 
@@ -327,8 +327,8 @@ class Job(object):
                     message[1])
                 cls = load_remote_class(file_name, class_name, end_of_file)
                 args, kwargs = cloudpickle.loads(message[2])
-                logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                with redirect_stdout_to_file(logfile_path):
+
+                with redirect_output_to_file(self.logfile_path, os.devnull):
                     obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())
@@ -371,6 +371,8 @@ class Job(object):
         job_id = job_address.replace(':', '_') + '_' + str(int(time.time()))
         self.log_dir = os.path.expanduser('~/.parl_data/job/{}'.format(job_id))
         logger.set_dir(self.log_dir)
+        self.logfile_path = os.path.join(self.log_dir, 'stdout.log')
+
         logger.info(
             "[Job] Job {} initialized. Reply heartbeat socket Address: {}.".
             format(job_id, job_address))
@@ -425,8 +427,8 @@ class Job(object):
                         args, kwargs = loads_argument(data)
 
                         # Redirect stdout to stdout.log temporarily
-                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                        with redirect_stdout_to_file(logfile_path):
+                        with redirect_output_to_file(self.logfile_path,
+                                                     os.devnull):
                             ret = getattr(obj, function_name)(*args, **kwargs)
 
                         ret = dumps_return(ret)
@@ -437,8 +439,8 @@ class Job(object):
 
                     elif tag == remote_constants.GET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
-                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                        with redirect_stdout_to_file(logfile_path):
+                        with redirect_output_to_file(self.logfile_path,
+                                                     os.devnull):
                             ret = getattr(obj, attribute_name)
                         ret = dumps_return(ret)
                         reply_socket.send_multipart(
@@ -446,8 +448,8 @@ class Job(object):
                     elif tag == remote_constants.SET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
                         attribute_value = loads_return(message[2])
-                        logfile_path = os.path.join(self.log_dir, 'stdout.log')
-                        with redirect_stdout_to_file(logfile_path):
+                        with redirect_output_to_file(self.logfile_path,
+                                                     os.devnull):
                             setattr(obj, attribute_name, attribute_value)
                         reply_socket.send_multipart([
                             remote_constants.NORMAL_TAG,

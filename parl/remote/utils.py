@@ -83,24 +83,30 @@ def load_remote_class(file_name, class_name, end_of_file):
 
 
 @contextmanager
-def redirect_stdout_to_file(file_path):
-    """Redirect stdout (e.g., `print`) to specified file.
+def redirect_output_to_file(stdout_file_path, stderr_file_path):
+    """Redirect stdout (e.g., `print`) and stderr (e.g., `warning/error`) to given files respectively.
 
     Args:
-        file_path: Path of the file to output the stdout.
+        stdout_file_path: Path of the file to output the stdout.
+        stderr_file_path: Path of the file to output the stderr.
 
     Example:
     >>> print('test')
     test
-    >>> with redirect_stdout_to_file('test.log'):
-    ...     print('test')  # Output nothing, `test` is printed to `test.log`.
+    >>> with redirect_output_to_file('stdout.log', 'stderr.log'):
+    ...     print('test')  # Output nothing, `test` is printed to `stdout.log`.
     >>> print('test')
     test
     """
 
-    tmp = sys.stdout
-    f = open(file_path, 'a')
-    sys.stdout = f
+    origin_stdout = sys.stdout
+    origin_stderr = sys.stderr
+
+    stdout_f = open(stdout_file_path, 'a')
+    stderr_f = open(stderr_file_path, 'a')
+
+    sys.stdout = stdout_f
+    sys.stderr = stderr_f
 
     # NOTE: we should add the handler after executing the above code.
     handler = logger.add_stdout_handler()
@@ -108,8 +114,12 @@ def redirect_stdout_to_file(file_path):
     try:
         yield
     finally:
-        sys.stdout = tmp
-        f.close()
+        sys.stdout = origin_stdout
+        sys.stderr = origin_stderr
+
+        stdout_f.close()
+        stderr_f.close()
+
         logger.remove_handler(handler)
 
 

@@ -1,4 +1,4 @@
-## QMIX based on Pytorch
+## QMIX based on PARL and PaddlePaddle
 We reproduce the QMIX based on **PARL** and **PaddlePaddle**, reaching the same level of indicators as the paper in StarCraft2 benchmarks.
 ### QMIX
 QMIX is a **value-based** multi-agent reinforcement learning algorithm.  

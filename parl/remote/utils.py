@@ -84,7 +84,7 @@ def load_remote_class(file_name, class_name, end_of_file):
 
 @contextmanager
 def redirect_output_to_file(stdout_file_path, stderr_file_path):
-    """Redirect stdout (e.g., `print`) and stderr (e.g., `warning/error`) to givend files respectively.
+    """Redirect stdout (e.g., `print`) and stderr (e.g., `warning/error`) to given files respectively.
 
     Args:
         stdout_file_path: Path of the file to output the stdout.

@@ -286,8 +286,8 @@ class Client(object):
             job_heartbeat_address,
             heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         self.all_job_heartbeat_threads.append(job_heartbeat_thread)
-        job_heartbeat_thread.start()
         job_heartbeat_thread.setDaemon(True)
+        job_heartbeat_thread.start()
 
         if actor_ref_monitor is not None:
             # If `wait` argument is False in `@parl.remote_class` (future mode),

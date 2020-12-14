@@ -125,13 +125,12 @@ class Worker(object):
             if worker_has_pyarrow != to_str(message[4]):
                 if worker_has_pyarrow == 'True':
                     error_message = """"pyarrow" is provided in your current enviroment, however, it is not
-                        found in "master"'s environment. To use "pyarrow" for serialization, please install
-                        "pyarrow" in "master"'s environment!
-                        """
+ found in "master"'s environment. To use "pyarrow" for serialization, please install
+ "pyarrow" in "master"'s environment!"""
                 else:
                     error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
-                        found in your current environment. To use "pyarrow" for serialization, please install
-                        "pyarrow" in your current environment!
+ found in your current environment. To use "pyarrow" for serialization, please install
+ "pyarrow" in your current environment!
                         """
                 raise Exception(error_message)
         else:

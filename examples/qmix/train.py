@@ -23,34 +23,13 @@ import parl
 from parl.utils import logger
 from parl.utils import summary
 import numpy as np
+from copy import deepcopy
+from qmix_config import QMixConfig
 
 logger.set_dir('./log_path')
 
-config = {
-    'scenario': '3m',
-    'replay_buffer_size': 5000,
-    'mixing_embed_dim': 32,
-    'rnn_hidden_dim': 64,
-    'lr': 0.0005,
-    'memory_warmup_size': 16,
-    'gamma': 0.99,
-    'exploration_start': 1.0,
-    'min_exploration': 0.1,
-    'exploration_decay': 2e-6,
-    'update_target_interval': 2000,
-    'batch_size': 16,
-    'training_steps': 1000000,
-    'test_steps': 1000,
-    'clip_grad_norm': 10,
-    'hypernet_layers': 2,
-    'hypernet_embed_dim': 64,
-    'double_q': True,
-    'difficulty': "7",
-}
 
-
-def run_train_episode(env, agent, rpm):
-    global config
+def run_train_episode(env, agent, rpm, config):
     episode_limit = config['episode_limit']
     agent.reset_agent()
     episode_reward = 0.0
@@ -122,7 +101,7 @@ def run_evaluate_episode(env, agent):
 
 
 def main():
-    global config
+    config = deepcopy(QMixConfig)
     env = StarCraft2Env(
         map_name=config['scenario'], difficulty=config['difficulty'])
     env = SC2EnvWrapper(env)
@@ -140,13 +119,13 @@ def main():
 
     while rpm.count < config['memory_warmup_size']:
         train_reward, train_step, train_is_win, train_loss, train_td_error\
-                = run_train_episode(env, qmix_agent, rpm)
+                = run_train_episode(env, qmix_agent, rpm, config)
 
     total_steps = 0
     last_test_step = -1e10
     while total_steps < config['training_steps']:
         train_reward, train_step, train_is_win, train_loss, train_td_error\
-                = run_train_episode(env, qmix_agent, rpm)
+                = run_train_episode(env, qmix_agent, rpm, config)
         total_steps += train_step
 
         if total_steps - last_test_step >= config['test_steps']:

@@ -72,13 +72,13 @@ class GRUModelTest(unittest.TestCase):
                             self.target_model.gru.bias_gate_name)
 
     def test_model_copy_with_multi_copy(self):
-        self.assertNotEqual(self.gru_model.gru.param_candidate_name,
+        self.assertNotEqual(self.target_model.gru.param_candidate_name,
                             self.target_model_2.gru.param_candidate_name)
-        self.assertNotEqual(self.gru_model.gru.param_gate_name,
+        self.assertNotEqual(self.target_model.gru.param_gate_name,
                             self.target_model_2.gru.param_gate_name)
-        self.assertNotEqual(self.gru_model.gru.bias_candidate_name,
+        self.assertNotEqual(self.target_model.gru.bias_candidate_name,
                             self.target_model_2.gru.bias_candidate_name)
-        self.assertNotEqual(self.gru_model.gru.bias_gate_name,
+        self.assertNotEqual(self.target_model.gru.bias_gate_name,
                             self.target_model_2.gru.bias_gate_name)
 
     def test_sync_weights_in_one_program(self):

@@ -14,6 +14,7 @@
 
 import gym
 import numpy as np
+import os
 import paddle
 import parl
 from parl.utils import logger, check_version_for_xpu

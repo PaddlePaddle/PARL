@@ -30,8 +30,6 @@ BATCH_SIZE = 32
 LEARNING_RATE = 0.0005
 GAMMA = 0.99  # discount factor of reward
 
-paddle.enable_static()
-
 
 def run_episode(agent, env, rpm):
     total_reward = 0
@@ -112,4 +110,10 @@ def main():
 
 if __name__ == '__main__':
     check_version_for_xpu()
+    paddle.enable_static()
+
+    xpu_count = int(os.getenv("FLAGS_selected_xpus", "-1"))
+    if xpu_count < 0:
+        logger.info(
+            'Cannot find available XPU devices, using other devices now.')
     main()

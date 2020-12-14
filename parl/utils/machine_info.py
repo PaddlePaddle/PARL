@@ -126,8 +126,6 @@ def is_xpu_available():
     """
     xpu_count = int(os.getenv("FLAGS_selected_xpus", "-1"))
     if xpu_count < 0:
-        logger.info(
-            'Cannot find available XPU devices, using other devices now.')
         return False
 
     if _HAS_FLUID:

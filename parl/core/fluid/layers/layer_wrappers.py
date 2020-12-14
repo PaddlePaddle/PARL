@@ -263,9 +263,9 @@ def GRUCell(hidden_size,
                     param_candidate_attr=param_candidate_attr,
                     bias_gate_attr=bias_gate_attr,
                     bias_candidate_attr=bias_candidate_attr))
-            self.first_call = False
 
         def __call__(self, inputs, states):
+            # get the prefix name of the parameters first
             param_name_idx = self.attr_holder.param_gate_attr.name.find(
                 '_gate')
             bias_name_idx = self.attr_holder.bias_gate_attr.name.find('_gate')

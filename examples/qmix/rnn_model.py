@@ -19,9 +19,12 @@ import paddle.fluid as fluid
 
 
 class RNNModel(parl.Model):
+    ''' GRU-based policy model.
+    '''
+
     def __init__(self, config):
-        self.rnn_hidden_dim = config['rnn_hidden_dim']
         self.n_actions = config['n_actions']
+        self.rnn_hidden_dim = config['rnn_hidden_dim']
 
         self.fc1 = layers.fc(size=self.rnn_hidden_dim, act=None, name='fc1')
         self.gru = layers.GRUCell(hidden_size=self.rnn_hidden_dim, name='gru')
@@ -29,7 +32,7 @@ class RNNModel(parl.Model):
 
     def __call__(self, inputs, hidden_state):
         """Args:
-            inputs: (batch_size * n_agents, rnn_hidden_dim)
+            inputs:       (batch_size * n_agents, rnn_hidden_dim)
             hidden_state: (batch_size, rnn_hidden_dim)
         """
         x = fluid.layers.relu(self.fc1(inputs))

@@ -26,7 +26,7 @@ class OneHotTransform(object):
         return one_hot_id
 
 
-class DiscreteDistributions(object):
+class AvailableActionsSampler(object):
     ''' Sample available actions uniformly.
     '''
 

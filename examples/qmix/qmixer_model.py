@@ -18,14 +18,17 @@ import paddle.fluid as fluid
 
 
 class QMixerModel(parl.Model):
+    ''' A hyper-network to generate paramters for mixing model.
+    '''
+
     def __init__(self, config):
         self.n_agents = config['n_agents']
         self.batch_size = config['batch_size']
-        self.episode_limit = config['episode_limit']
+        self.state_shape = config['state_shape']
         self.embed_dim = config['mixing_embed_dim']
+        self.episode_limit = config['episode_limit']
         self.hypernet_layers = config['hypernet_layers']
         self.hypernet_embed_dim = config['hypernet_embed_dim']
-        self.state_shape = config['state_shape']
 
         if self.hypernet_layers == 1:
             self.hyper_w_1 = layers.fc(

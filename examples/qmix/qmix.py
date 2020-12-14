@@ -27,21 +27,23 @@ class QMIX(parl.Algorithm):
         self.target_agent_model = deepcopy(self.agent_model)
         self.target_qmixer_model = deepcopy(self.qmixer_model)
 
-        self.batch_size = config['batch_size']
+        self.lr = config['lr']
+        self.gamma = config['gamma']
+        self.double_q = config['double_q']
         self.n_agents = config['n_agents']
         self.n_actions = config['n_actions']
-        self.double_q = config['double_q']
-        self.gamma = config['gamma']
-        self.lr = config['lr']
-        self.clip_grad_norm = config['clip_grad_norm']
-        self.episode_limit = config['episode_limit']
         self.obs_shape = config['obs_shape']
+        self.batch_size = config['batch_size']
+        self.episode_limit = config['episode_limit']
         self.rnn_hidden_dim = config['rnn_hidden_dim']
+        self.clip_grad_norm = config['clip_grad_norm']
         assert isinstance(self.gamma, float)
         assert isinstance(self.lr, float)
 
     def predict_local_q(self, obs, hidden_state):
-        ''' obs:           (n_agents, obs_shape)
+        ''' Predict local q values for each agent.
+        Args:
+            obs:           (n_agents, obs_shape)
             hidden_states: (n_agents, rnn_hidden_dim)
         '''
         return self.agent_model(obs, hidden_state)
@@ -112,15 +114,16 @@ class QMIX(parl.Algorithm):
             layers.elementwise_mul(actions_batch_one_hot, sliced_local_qs),
             dim=-1)
 
-        # mask unavailable actions
         available_actions_batch = layers.cast(
             available_actions_batch, dtype='float32')
         action_mask = -1e10 * (1.0 - available_actions_batch)
         target_action_mask = layers.slice(
             action_mask, axes=[1], starts=[1], ends=[10000])
+        # mask unavailable actions
         target_local_qs = target_local_qs + target_action_mask
 
         if self.double_q:
+            # mask unavailable actions
             masked_local_qs = local_qs + action_mask
             masked_local_qs.stop_gradient = True
             masked_local_qs = layers.slice(

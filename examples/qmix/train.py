@@ -45,6 +45,7 @@ config = {
     'hypernet_layers': 2,
     'hypernet_embed_dim': 64,
     'double_q': True,
+    'difficulty': "7",
 }
 
 
@@ -122,7 +123,8 @@ def run_evaluate_episode(env, agent):
 
 def main():
     global config
-    env = StarCraft2Env(map_name=config['scenario'], replay_dir='./replay/')
+    env = StarCraft2Env(
+        map_name=config['scenario'], difficulty=config['difficulty'])
     env = SC2EnvWrapper(env)
     config['episode_limit'] = env.episode_limit
     config['obs_shape'] = env.obs_shape
@@ -133,9 +135,7 @@ def main():
     rpm = EpisodeReplayBuffer(config['replay_buffer_size'])
     agent_model = RNNModel(config)
     qmixer_model = QMixerModel(config)
-
     algorithm = QMIX(agent_model, qmixer_model, config)
-
     qmix_agent = QMixAgent(algorithm, config)
 
     while rpm.count < config['memory_warmup_size']:

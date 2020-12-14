@@ -16,32 +16,36 @@ import parl
 from parl import layers
 import paddle.fluid as fluid
 import numpy as np
-from utils import DiscreteDistributions
+from utils import AvailableActionsSampler
 from parl.utils import machine_info
 
 
 class QMixAgent(parl.Agent):
     def __init__(self, algorithm, config):
         self.global_step = 0
-        self.obs_shape = config['obs_shape']
-        self.state_shape = config['state_shape']
-        self.batch_size = config['batch_size']
-        self.episode_limit = config['episode_limit']
-        self.exploration = config['exploration_start']
-        self.min_exploration = config['min_exploration']
-        self.exploration_decay = config['exploration_decay']
-        self.target_update_count = 0
-        self.update_target_interval = config['update_target_interval']
         self.n_agents = config['n_agents']
         self.n_actions = config['n_actions']
+        self.obs_shape = config['obs_shape']
+        self.batch_size = config['batch_size']
+        self.state_shape = config['state_shape']
+        self.episode_limit = config['episode_limit']
+        self.exploration = config['exploration_start']
         self.rnn_hidden_dim = config['rnn_hidden_dim']
+        self.min_exploration = config['min_exploration']
+        self.exploration_decay = config['exploration_decay']
+        self.update_target_interval = config['update_target_interval']
+        self.target_update_count = 0
         super(QMixAgent, self).__init__(algorithm)
 
     def reset_agent(self):
+        '''Generate GRU's initial hidden states for prediction (batch_size=1)
+        '''
         self.last_hidden_states = np.zeros(
             (self.n_agents, self.rnn_hidden_dim), dtype='float32')
 
     def _get_hidden_states(self):
+        ''' Generate GRU's initial hidden states for learning (batch_size=batch_size)
+        '''
         init_hidden_states = np.zeros(
             (self.batch_size, self.n_agents, self.rnn_hidden_dim),
             dtype='float32')
@@ -115,7 +119,8 @@ class QMixAgent(parl.Agent):
                 available_actions_batch, filled_batch)
 
     def sample(self, obs, available_actions):
-        '''Args:
+        ''' Sample actions via epsilon-greedy.
+        Args:
             obs:               (n_agents, obs_shape)
             available_actions: (n_agents, n_actions)
         '''
@@ -123,7 +128,7 @@ class QMixAgent(parl.Agent):
         if epsilon > self.exploration:
             actions = self.predict(obs, available_actions)
         else:
-            actions = DiscreteDistributions(available_actions).sample()
+            actions = AvailableActionsSampler(available_actions).sample()
         self.exploration = max(self.min_exploration,
                                self.exploration - self.exploration_decay)
         return actions
@@ -137,7 +142,6 @@ class QMixAgent(parl.Agent):
         feed = {
             'last_hidden_states': self.last_hidden_states,
             'obs': obs,
-            #'available_actions': available_actions
         }
         agents_q, self.last_hidden_states = self.fluid_executor.run(
             self.pred_program,
@@ -159,7 +163,6 @@ class QMixAgent(parl.Agent):
             available_actions_batch:  (batch_size, T, n_agents, n_actions)
             filled_batch:             (batch_size, T, 1)
         '''
-        batch_size = self.alg.batch_size
         init_hidden_states, target_init_hidden_states = self._get_hidden_states(
         )
 

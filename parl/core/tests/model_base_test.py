@@ -16,18 +16,20 @@ import unittest
 from parl.core.model_base import ModelBase
 
 
+class TestBaseModel(ModelBase):
+    def forward(self, x, y):
+        return x + y
+
+
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
-        self.model = ModelBase()
+        self.model = TestBaseModel()
 
-    def test_set_and_get_model_id(self):
-        model_id = 'id1'
-        self.model.set_model_id(model_id)
-        self.assertEqual(model_id, self.model.get_model_id())
-
-        model_id2 = 'id2'
-        self.model.model_id = model_id2
-        self.assertEqual(model_id2, self.model.model_id)
+    def test_forward(self):
+        x, y = 10, 20
+        expected_out = x + y
+        forward_out = self.model(x, y)
+        self.assertEqual(forward_out, expected_out)
 
 
 if __name__ == '__main__':

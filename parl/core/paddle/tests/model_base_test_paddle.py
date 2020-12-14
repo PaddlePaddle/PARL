@@ -37,19 +37,6 @@ class TestModel(Model):
         return out
 
 
-class ACModel(Model):  # TODO: use a new file to test this model
-    def __init__(self):
-        super(ACModel, self).__init__()
-        self.actor = Actor()
-        self.critic = Critic()
-
-    def predict(self, obs):
-        return self.actor(obs)
-
-    def Q(self, obs):
-        return self.critic(obs)
-
-
 class Actor(Model):
     def __init__(self):
         super(Actor, self).__init__()

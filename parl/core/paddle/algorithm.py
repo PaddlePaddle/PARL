@@ -78,20 +78,18 @@ class Algorithm(AlgorithmBase):
         """
         raise NotImplementedError
 
-    def get_weights(self, model_ids=None):
+    def get_weights(self):
         """ Get weights of self.model.
 
         Returns:
-            weights (dict): a Python dict containing the parameters of
-            self.model.
+            weights (dict): a Python dict containing the parameters of self.model.
         """
         return self.model.get_weights()
 
-    def set_weights(self, params, model_ids=None):
+    def set_weights(self, params):
         """ Set weights from ``get_weights`` to the model.
 
         Args:
-            weights (dict): a Python dict containing the parameters of
-            self.model.
+            weights (dict): a Python dict containing the parameters of self.model.
         """
         self.model.set_weights(params)

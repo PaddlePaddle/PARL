@@ -18,6 +18,7 @@ from parl.core.fluid.layers.layer_wrappers import LayerFunc
 from parl.core.fluid.plutils import *
 from parl.core.model_base import ModelBase
 from parl.utils import machine_info
+from parl.core.fluid.model_helper import global_model_helper
 
 __all__ = ['Model']
 
@@ -65,6 +66,48 @@ class Model(ModelBase):
         - ``get_model_id``: return the ``model_id`` of current model.
 
     """
+
+    def __init__(self, model_id=None):
+        """
+        Args:
+            model_id (String): user-specified model_id (default: None)
+        """
+        super(Model, self).__init__()
+        if model_id is not None:
+            global_model_helper.register_model_id(model_id)
+            self.__model_id = model_id
+        else:
+            self.__model_id = global_model_helper.generate_model_id()
+
+    @property
+    def model_id(self):
+        return self.get_model_id()
+
+    @model_id.setter
+    def model_id(self, model_id):
+        self.set_model_id(model_id)
+
+    def get_model_id(self):
+        """Get model_id of `ModelBase`.
+        If not created, will create a new model_id.
+
+        Returns:
+            String of model_id.
+        """
+        try:
+            return self.__model_id
+        except AttributeError:
+            self.__model_id = global_model_helper.generate_model_id()
+            return self.__model_id
+
+    def set_model_id(self, model_id):
+        """Set model_id of `ModelBase` with given model_id.
+        
+        Args:
+            model_id (string): string of model_id.
+        """
+        global_model_helper.register_model_id(model_id)
+        self.__model_id = model_id
 
     def sync_weights_to(self,
                         target_model,

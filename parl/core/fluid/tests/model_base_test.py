@@ -133,6 +133,15 @@ class ModelBaseTest(unittest.TestCase):
             place = fluid.CPUPlace()
         self.executor = fluid.Executor(place)
 
+    def test_set_and_get_model_id(self):
+        model_id = 'id1'
+        self.model.set_model_id(model_id)
+        self.assertEqual(model_id, self.model.get_model_id())
+
+        model_id2 = 'id2'
+        self.model.model_id = model_id2
+        self.assertEqual(model_id2, self.model.model_id)
+
     def test_model_copy(self):
         self.assertNotEqual(self.model.fc1.param_name,
                             self.target_model.fc1.param_name)

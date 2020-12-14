@@ -35,7 +35,7 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
         if self.stop_tag is not None:
             self.has_asked_client_to_stop = True
             return heartbeat_pb2.Reply(
-                tag=stop_tag, extra_message=self.stop_message)
+                tag=self.stop_tag, extra_message=self.stop_message)
 
         self.last_heartbeat_time = time.time()
         return heartbeat_pb2.Reply(tag=remote_constants.HEARTBEAT_TAG)

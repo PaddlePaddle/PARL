@@ -21,7 +21,7 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 - Pytorch>=1.6.0
 
 ## Start Training
-1. Modify the config in `train.py`.
+1. Modify the config in `qmix_config.py`.
 2. Start training:
     ```bash
     python train.py

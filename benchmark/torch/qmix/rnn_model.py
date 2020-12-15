@@ -14,9 +14,10 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
+import parl
 
 
-class RNNModel(nn.Module):
+class RNNModel(parl.Model):
     def __init__(self, input_shape, n_actions, rnn_hidden_dim=64):
         super(RNNModel, self).__init__()
         self.rnn_hidden_dim = rnn_hidden_dim

@@ -15,9 +15,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import parl
 
 
-class QMixerModel(nn.Module):
+class QMixerModel(parl.Model):
     '''
     input: n_agents' agent_qs (a scalar for each agent)
     output: a scalar (Q)

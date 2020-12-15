@@ -12,63 +12,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import torch
 import numpy as np
 import pickle
+import os
 from grid2op.Agent import BaseAgent
-from grid2op.dtypes import dt_int
 from copy import deepcopy
-from powernet_model import CombinedActionsModel, UnitaryActionModel
-from es import ES, EnsembleES
-from es_agent import CombineESAgent, UnitaryESAgent
+from powernet_model import CombinedActionModel, UnitaryActionModel
+from utils import FeatureProcessor, UnitaryFeatureProcessor
 
 
-class Track1PowerNetAgent(BaseAgent):
+class RLAgent(BaseAgent):
     def __init__(self, action_space):
         BaseAgent.__init__(self, action_space=action_space)
         self.simulate_times = 0
 
-        unitary_action_model = UnitaryActionModel()
-        algorithm = ES(unitary_action_model)
-        self.unitary_es_agent = UnitaryESAgent(algorithm)
-
-        combined_actions_model_1 = CombinedActionsModel()
-        combined_actions_model_2 = CombinedActionsModel()
-        ensemble_algorithm = EnsembleES(combined_actions_model_1,
-                                        combined_actions_model_2)
-        self.combine_es_agent = CombineESAgent(ensemble_algorithm)
-
-        self.unitary_es_agent.restore('./saved_files',
-                                      'unitary_action_model.ckpt')
-        self.combine_es_agent.restore('./saved_files',
-                                      'combined_actions_model.ckpt')
+        self.combined_model_1 = CombinedActionModel()
+        self.combined_model_2 = CombinedActionModel()
+        self.unitary_model = UnitaryActionModel()
 
         unitary_actions_vec = np.load(
-            "./saved_files/v6_top500_unitary_actions.npz")["actions"]
+            os.path.join('saved_files',
+                         "v6_top500_unitary_actions.npz"))["actions"]
         self.unitary_actions = []
         for i in range(unitary_actions_vec.shape[0]):
             action = action_space.from_vect(unitary_actions_vec[i])
             self.unitary_actions.append(action)
 
         redispatch_actions_vec = np.load(
-            "./saved_files/redispatch_actions.npz")["actions"]
+            os.path.join('saved_files', "redispatch_actions.npz"))["actions"]
         self.redispatch_actions = []
         for i in range(redispatch_actions_vec.shape[0]):
             action = action_space.from_vect(redispatch_actions_vec[i])
             self.redispatch_actions.append(action)
 
-        with open("./saved_files/action_to_sub_id.pickle", "rb") as f:
+        with open(
+                os.path.join('saved_files', "action_to_sub_id.pickle"),
+                "rb") as f:
             self.action_to_sub_id = pickle.load(f)
 
         self.after_line56_or_line45_disconnect_actions = []
         self.three_sub_action_to_sub_ids = {}
 
         actions_vec = np.load(
-            "./saved_files/v10_merge_three_sub_actions.npz")["actions"]
+            os.path.join('saved_files',
+                         "v10_merge_three_sub_actions.npz"))["actions"]
         for i in range(actions_vec.shape[0]):
             action = action_space.from_vect(actions_vec[i])
             self.after_line56_or_line45_disconnect_actions.append(action)
 
-        with open("saved_files/three_sub_action_to_sub_ids.pickle", "rb") as f:
+        with open(
+                os.path.join('saved_files',
+                             "three_sub_action_to_sub_ids.pickle"), "rb") as f:
             self.three_sub_action_to_sub_ids = pickle.load(f)
 
         self.used_combine_actions = False
@@ -86,6 +81,10 @@ class Track1PowerNetAgent(BaseAgent):
             offset += sub_elem_num
 
         self.observation = None
+        self.feature_processor = FeatureProcessor(
+            os.path.join('saved_files', "track1_scalar.npz"))
+        self.unitary_feature_processor = UnitaryFeatureProcessor(
+            os.path.join('saved_files', "track1_unitary_scalar.npz"))
 
         self.redispatch_months = set([3])
 
@@ -98,6 +97,22 @@ class Track1PowerNetAgent(BaseAgent):
             action = self._try_combine_with_redispatch(observation, action)
 
         return action
+
+    def load(self, path):
+        self.combined_model_1.load_state_dict(
+            torch.load(os.path.join(path, 'combined_model_1.pth')))
+        self.combined_model_2.load_state_dict(
+            torch.load(os.path.join(path, 'combined_model_2.pth')))
+        self.unitary_model.load_state_dict(
+            torch.load(os.path.join(path, 'unitary_model.pth')))
+
+    def save(self, path):
+        torch.save(self.combined_model_1.state_dict(),
+                   os.path.join(path, 'combined_model_1.pth'))
+        torch.save(self.combined_model_2.state_dict(),
+                   os.path.join(path, 'combined_model_2.pth'))
+        torch.save(self.unitary_model.state_dict(),
+                   os.path.join(path, 'unitary_model.pth'))
 
     def _try_combine_with_redispatch(self, observation, action):
         if (observation.line_status[45] == False or observation.line_status[56] == False) \
@@ -149,7 +164,6 @@ class Track1PowerNetAgent(BaseAgent):
         if action is not None:
             return action
 
-        # update global variables
         if np.all(self.observation.topo_vect != -1):
             self.used_combine_actions = False
             self.redispatch_cnt = 0
@@ -188,9 +202,27 @@ class Track1PowerNetAgent(BaseAgent):
 
         return self.do_nothing_action
 
+    def _predict_combined_action_rho(self, observation):
+        processed_obs = self.feature_processor.process(observation)
+        processed_obs = torch.as_tensor(processed_obs).view(1, -1)
+        predicted_rho1 = self.combined_model_1(
+            processed_obs).detach().cpu().numpy()
+        predicted_rho2 = self.combined_model_2(
+            processed_obs).detach().cpu().numpy()
+        predicted_rho = (predicted_rho1 + predicted_rho2) / 2.0
+        return predicted_rho
+
+    def _predict_unitary_action_rho(self, observation):
+        processed_obs = self.unitary_feature_processor.process(
+            self.observation)
+        processed_obs = torch.as_tensor(processed_obs).view(1, -1)
+        predicted_rho = self.unitary_model(
+            processed_obs).detach().cpu().numpy()[0]
+        return predicted_rho
+
     def _three_sub_action(self):
-        predicted_rho = self.combine_es_agent.predict(self.observation)
-        sorted_idx = np.argsort(predicted_rho)
+        predicted_rho = self._predict_combined_action_rho(self.observation)
+        sorted_idx = np.argsort(predicted_rho[0])
 
         sub_ids = []
         for best_idx in sorted_idx:
@@ -296,7 +328,7 @@ class Track1PowerNetAgent(BaseAgent):
         if obs_simulate is not None and not any(np.isnan(obs_simulate.rho)):
             least_overflow = float(np.max(obs_simulate.rho))
 
-        predicted_rho = self.unitary_es_agent.predict(self.observation)
+        predicted_rho = self._predict_unitary_action_rho(self.observation)
         sorted_idx = np.argsort(predicted_rho).tolist()
         top_idx = sorted_idx[:350]
         top_idx.sort()
@@ -318,6 +350,7 @@ class Track1PowerNetAgent(BaseAgent):
                         "int")  # reference
                     action_topo[np.where(
                         sub_topo == -1)[0]] = 0  # done't change bus=-1
+
                     legal_action_vec[start:end] = action_topo
 
                 legal_action = self.action_space.from_vect(legal_action_vec)

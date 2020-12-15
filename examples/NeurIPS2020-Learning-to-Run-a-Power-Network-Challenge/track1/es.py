@@ -25,7 +25,7 @@ class ES(parl.Algorithm):
         in this algorithm.
 
         Args:
-            model(`parl.Model`): policy model of ES algorithm.
+            model (`parl.Model`): policy model of ES algorithm.
         """
         self.model = model
 

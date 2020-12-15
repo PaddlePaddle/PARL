@@ -30,6 +30,16 @@ class QMIX(parl.Algorithm):
                  gamma=0.99,
                  lr=0.0005,
                  clip_grad_norm=None):
+        """ QMIX algorithm
+        Args:
+            agent_model (parl.Model): agents' local q network for decision making.
+            qmixer_model (parl.Model): A mixing network which takes local q values as input
+                to construct a global Q network.
+            double_q (bool): Double-DQN.
+            gamma (float): discounted factor for reward computation.
+            lr (float): learning rate.
+            clip_grad_norm (None, or float): clipped value of gradients' global norm.
+        """
         self.agent_model = agent_model
         self.qmixer_model = qmixer_model
         self.target_agent_model = deepcopy(self.agent_model)
@@ -51,7 +61,6 @@ class QMIX(parl.Algorithm):
 
         self.params = list(self.agent_model.parameters())
         self.params += self.qmixer_model.parameters()
-        #self.optimizer = optim.Adam(self.params, lr=self.lr)
         self.optimizer = torch.optim.RMSprop(
             params=self.params, lr=self.lr, alpha=0.99, eps=0.00001)
 

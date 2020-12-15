@@ -17,7 +17,7 @@ from env_wrapper import SC2EnvWrapper
 from replay_buffer import EpisodeExperience, EpisodeReplayBuffer
 from qmixer_model import QMixerModel
 from rnn_model import RNNModel
-from qmix import QMIX
+from parl.algorithms import QMIX
 from qmix_agent import QMixAgent
 import parl
 from parl.utils import logger

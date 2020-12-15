@@ -19,6 +19,8 @@ import parl
 import numpy as np
 from copy import deepcopy
 
+__all__ = ['QMIX']
+
 
 class QMIX(parl.Algorithm):
     def __init__(self,

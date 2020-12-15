@@ -19,3 +19,4 @@ from parl.algorithms.torch.td3 import *
 from parl.algorithms.torch.coma import *
 from parl.algorithms.torch.ppo import *
 from parl.algorithms.torch.policy_gradient import *
+from parl.algorithms.torch.qmix import *

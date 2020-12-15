@@ -16,7 +16,7 @@ import torch
 import os
 import gym
 import six
-import queue
+from six.moves import queue
 import parl
 import time
 import threading

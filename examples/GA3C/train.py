@@ -15,7 +15,7 @@
 import gym
 import numpy as np
 import os
-import queue
+from six.moves import queue
 import six
 import time
 import threading

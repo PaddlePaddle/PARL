@@ -198,7 +198,7 @@ def has_module(module_name):
     Args:
         module_name: module to be checked
     Returns:
-        has_module:  bool, True or False
+        has_module: bool, True or False
     '''
     assert isinstance(module_name, str), '"module_name" should be a string!'
     try:

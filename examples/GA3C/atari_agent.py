@@ -49,6 +49,7 @@ class AtariAgent(parl.Agent):
         # Use ParallelExecutor to make learn program run faster
         self.learn_exe = fluid.ParallelExecutor(
             use_cuda=machine_info.is_gpu_available(),
+            loss_name=self.learn_outputs[0],
             main_program=self.learn_program,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)

@@ -23,7 +23,7 @@ def update(fname, ver):
     for i, line in enumerate(lines):
         if 'paddlepaddle>=' in line:
             lines[i] = re.sub("paddlepaddle>=[\d+\.]+",
-                              "paddlepaddle>={}".format(ver), line)
+                              "paddlepaddle=={}".format(ver), line)
 
     with open(fname, 'w') as f:
         for line in lines:
@@ -31,14 +31,15 @@ def update(fname, ver):
 
 
 if __name__ == '__main__':
-    new_version = '1.6.1'
+    new_version = '1.8.5'
 
     readme_files = ['../README.md', '../README.cn.md']
 
     exclude_examples = [
         'NeurIPS2019-Learn-to-Move-Challenge',
         'NeurIPS2018-AI-for-Prosthetics-Challenge', 'LiftSim_baseline',
-        'EagerMode'
+        'EagerMode', 'NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge',
+        'others'
     ]
     for example in os.listdir('../examples/'):
         if example not in exclude_examples:

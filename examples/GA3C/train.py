@@ -127,7 +127,10 @@ class Learner(object):
                 target_values_np = batch['target_values'].astype('float32')
 
                 self.lr = self.lr_scheduler.step()
+                self.lr = np.array(self.lr, dtype='float32')
                 self.entropy_coeff = self.entropy_coeff_scheduler.step()
+                self.entropy_coeff = np.array(
+                    self.entropy_coeff, dtype='float32')
 
                 yield [
                     obs_np, actions_np, advantages_np, target_values_np,

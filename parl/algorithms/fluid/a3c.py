@@ -67,13 +67,15 @@ class A3C(Algorithm):
         total_loss = (
             pi_loss + vf_loss * self.vf_loss_coeff + entropy * entropy_coeff)
 
+        reduced_total_loss = layers.reduce_sum(total_loss)
+
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=40.0))
 
         optimizer = fluid.optimizer.AdamOptimizer(learning_rate)
-        optimizer.minimize(total_loss)
+        optimizer.minimize(reduced_total_loss)
 
-        return total_loss, pi_loss, vf_loss, entropy
+        return reduced_total_loss, pi_loss, vf_loss, entropy
 
     def sample(self, obs):
         """

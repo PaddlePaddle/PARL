@@ -19,7 +19,7 @@ Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 
 ## How to use
 ### Dependencies
-+ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7

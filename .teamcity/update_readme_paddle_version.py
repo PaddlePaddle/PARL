@@ -23,7 +23,7 @@ def update(fname, ver):
     for i, line in enumerate(lines):
         if 'paddlepaddle>=' in line:
             lines[i] = re.sub("paddlepaddle>=[\d+\.]+",
-                              "paddlepaddle=={}".format(ver), line)
+                              "paddlepaddle>={}".format(ver), line)
 
     with open(fname, 'w') as f:
         for line in lines:

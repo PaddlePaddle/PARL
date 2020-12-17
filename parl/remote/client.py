@@ -249,29 +249,28 @@ class Client(object):
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")
 
-    def _check_and_monitor_job(self, job_heartbeat_address,
-                               ping_heartbeat_address, max_memory,
-                               actor_ref_monitor):
+    def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
+                               max_memory, actor_ref_monitor):
         """ Sometimes the client may receive a job that is dead, thus 
         we have to check if this job is still alive before adding it to the `actor_num`.
         """
-        # job_heartbeat_socket: sends heartbeat signal to job
-        job_heartbeat_socket = self.ctx.socket(zmq.REQ)
-        job_heartbeat_socket.linger = 0
-        job_heartbeat_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
-        job_heartbeat_socket.connect("tcp://" + ping_heartbeat_address)
+        # job_ping_socket: sends ping signal to job
+        job_ping_socket = self.ctx.socket(zmq.REQ)
+        job_ping_socket.linger = 0
+        job_ping_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
+        job_ping_socket.connect("tcp://" + job_ping_address)
         try:
-            job_heartbeat_socket.send_multipart(
+            job_ping_socket.send_multipart(
                 [remote_constants.HEARTBEAT_TAG,
                  to_byte(str(max_memory))])
-            job_heartbeat_socket.recv_multipart()
+            job_ping_socket.recv_multipart()
         except zmq.error.Again:
-            job_heartbeat_socket.close(0)
+            job_ping_socket.close(0)
             logger.error(
-                "[Client] connects to a finished job, will try again, ping_heartbeat_address:{}"
-                .format(ping_heartbeat_address))
+                "[Client] connects to a finished job, will try again, job_ping_address:{}"
+                .format(job_ping_address))
             return False
-        job_heartbeat_socket.close(0)
+        job_ping_socket.close(0)
 
         def heartbeat_exit_callback_func():
             self.lock.acquire()
@@ -356,11 +355,11 @@ class Client(object):
                 if tag == remote_constants.NORMAL_TAG:
                     job_address = to_str(message[1])
                     job_heartbeat_address = to_str(message[2])
-                    ping_heartbeat_address = to_str(message[3])
+                    job_ping_address = to_str(message[3])
 
                     check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, ping_heartbeat_address,
-                        max_memory, proxy_wrapper_nowait_object)
+                        job_heartbeat_address, job_ping_address, max_memory,
+                        proxy_wrapper_nowait_object)
                     if check_result:
                         self.lock.acquire()
                         self.actor_num += 1
@@ -442,7 +441,8 @@ def disconnect():
     if GLOBAL_CLIENT is not None:
         GLOBAL_CLIENT.client_is_alive = False
         for thread in GLOBAL_CLIENT.all_job_heartbeat_threads:
-            thread.exit()
+            if thread.is_alive():
+                thread.exit()
         GLOBAL_CLIENT = None
     else:
         logger.info(

@@ -23,6 +23,15 @@ from parl.utils import logger
 
 class HeartbeatClientThread(threading.Thread):
     def __init__(self, heartbeat_server_addr, heartbeat_exit_callback_func):
+        """Create a thread to run the heartbeat client.
+
+            Args:
+                heartbeat_server_addr(str): the address of the heartbeat server.
+                heartbeat_exit_callback_func(function): A callback function, which will be called after the 
+                                                        heartbeat exit. There should be no arguments in the 
+                                                        function.
+        """
+        assert isinstance(heartbeat_server_addr, str)
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
 
@@ -51,9 +60,13 @@ class HeartbeatClientThread(threading.Thread):
                             tag=remote_constants.HEARTBEAT_TAG),
                         timeout=remote_constants.HEARTBEAT_RCVTIMEO_S)
 
-                    if response.tag == remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG:
+                    if response.tag == remote_constants.HEARTBEAT_TAG:
+                        pass
+                    elif response.tag == remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG:
                         logger.error(response.extra_message)
                         break
+                    else:
+                        raise NotImplementedError
 
                 except grpc._channel._InactiveRpcError as e:
                     break

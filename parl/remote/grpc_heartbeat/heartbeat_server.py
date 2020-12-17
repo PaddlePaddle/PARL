@@ -74,12 +74,11 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
 class HeartbeatServerThread(threading.Thread):
     def __init__(self, heartbeat_exit_callback_func):
         """Create a thread to run the heartbeat server.
-            Note that the process will exit directly if the heartbeat detection fails.
 
             Args:
                 heartbeat_exit_callback_func(function): A callback function, which will be called after the 
-                                                          heartbeat exit. There should be no arguments in the 
-                                                          function.
+                                                        heartbeat exit. There should be no arguments in the 
+                                                        function.
         """
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
@@ -104,7 +103,7 @@ class HeartbeatServerThread(threading.Thread):
         return self.address
 
     def stop(self, stop_tag, stop_message):
-        """stop the heartbeat server.
+        """stop the heartbeat server and send the stop_message to the client.
         
         Args:
             stop_tag(byte): tag to inform why stop the heartbeat.
@@ -118,7 +117,7 @@ class HeartbeatServerThread(threading.Thread):
     def run(self):
         self.grpc_server.start()
 
-        # a while loop
+        # a life-long while loop
         self.heartbeat_server.timeout_timer()
 
         # The heartbeat is exit, try to stop the grpc server.

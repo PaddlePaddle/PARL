@@ -93,7 +93,7 @@ class Job(object):
             os._exit(0)
 
     def _create_sockets(self):
-        """Create three sockets for each job in main process.
+        """Create three sockets for each job in the main process.
 
         (1) job_socket(functional socket): sends job_address and heartbeat_address to worker.
         (2) ping_heartbeat_socket: replies ping message of client.
@@ -186,7 +186,7 @@ class Job(object):
                 used_memory = float(process.memory_info()[0]) / (1024**2)
                 if used_memory > self.max_memory + self.init_memory:
                     break
-            time.sleep(10)  # sleep 10s
+            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
         # out of memory
         logger.error(

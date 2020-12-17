@@ -18,9 +18,9 @@ import torch
 import gym
 import argparse
 from parl.utils import logger, tensorboard, ReplayMemory
-from model import DDPGMODEL
-from algorithm import DDPG
-from agent import Agent
+from mujoco_model import MujocoModel
+from mujoco_agent import MujocoAgent
+from parl.algorithms import DDPG
 
 
 # Runs policy for X episodes and returns average reward
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     max_action = float(env.action_space.high[0])
 
     # Initialize model, algorithm, agent, replay_memory
-    model = DDPGMODEL(state_dim, action_dim, max_action)
+    model = MujocoModel(state_dim, action_dim, max_action)
     algorithm = DDPG(
         model,
         max_action,
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         actor_lr=args.actor_lr,
         critic_lr=args.critic_lr,
         policy_freq=args.policy_freq)
-    agent = Agent(algorithm, state_dim, action_dim)
+    agent = MujocoAgent(algorithm, state_dim, action_dim)
     replay_memory = ReplayMemory(
         max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)
 

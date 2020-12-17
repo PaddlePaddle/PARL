@@ -20,16 +20,16 @@ import torch.nn.functional as F
 Model of DDPG:  defines an Actor/policy network given obs as input,
                       & a Critic/value network given obs and action as input.
 
-Contributions:  policy(obs):        return action
+Attributions:  policy(obs):        return action
                 value(obs, action): return value
                 get_actor_params()
                 get_critic_params()
 '''
 
 
-class DDPGMODEL(parl.Model):
+class MujocoModel(parl.Model):
     def __init__(self, obs_dim, action_dim, max_action):
-        super(DDPGMODEL, self).__init__()
+        super(MujocoModel, self).__init__()
         self.actor_model = Actor(obs_dim, action_dim, max_action)
         self.critic_model = Critic(obs_dim, action_dim)
 

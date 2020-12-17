@@ -82,7 +82,6 @@ if __name__ == "__main__":
     env = gym.make(args.env)
 
     # Set seeds
-    setup_seed(args.seed)
     env.seed(args.seed)
 
     state_dim = env.observation_space.shape[0]

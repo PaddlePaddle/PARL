@@ -26,6 +26,7 @@ from parl.remote.job_center import JobCenter
 from parl.remote.cluster_monitor import ClusterMonitor
 import cloudpickle
 import time
+from parl.remote.utils import has_module
 
 
 class Master(object):
@@ -232,7 +233,9 @@ class Master(object):
             self.client_socket.send_multipart([
                 remote_constants.NORMAL_TAG,
                 to_byte(parl.__version__),
-                to_byte(str(sys.version_info.major))
+                to_byte(str(sys.version_info.major)),
+                to_byte(str(sys.version_info.minor)),
+                to_byte(str(has_module('pyarrow')))
             ])
 
         # a client submits a job to the master

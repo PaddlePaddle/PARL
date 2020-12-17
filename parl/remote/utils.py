@@ -19,7 +19,7 @@ from parl.utils import isnotebook, logger
 
 __all__ = [
     'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
-    'get_subfiles_recursively'
+    'get_subfiles_recursively', 'has_module'
 ]
 
 
@@ -191,3 +191,19 @@ def get_subfiles_recursively(folder_path):
             elif len(dirs) == 0:
                 empty_subfolders.append(os.path.normpath(root))
         return python_files, other_files, empty_subfolders
+
+
+def has_module(module_name):
+    ''' Check if the python environment has installed the module or package.
+    Args:
+        module_name: module to be checked
+    Returns:
+        has_module: (bool), True or False
+    '''
+    assert isinstance(module_name, str), '"module_name" should be a string!'
+    try:
+        __import__(module_name)
+    except ImportError:
+        return False
+    else:
+        return True

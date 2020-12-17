@@ -1,11 +1,9 @@
 ## Reproduce DDPG with PARL
 Based on PARL, the DDPG algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Mujoco benchmarks.
 
-> DDPG in
->
 > **Continuous control with Deep Reinforcement Learning**
 >
->  [Continuous control with Deep Reinforcement Learning](https://arxiv.org/abs/1509.02971)
+> [Continuous control with Deep Reinforcement Learning](https://arxiv.org/abs/1509.02971)
 
 About DDPG:
 

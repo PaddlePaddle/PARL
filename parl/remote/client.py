@@ -69,7 +69,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
-        self.check_version_and_package()
+        self.check_env_consistency()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -191,8 +191,9 @@ class Client(object):
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
 
-    def check_version_and_package(self):
-        '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
+    def check_env_consistency(self):
+        '''Verify that the parl & python version as well as some other packages in 'worker' process
+            matches that of the 'master' process'''
         self.submit_job_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.submit_job_socket.recv_multipart()

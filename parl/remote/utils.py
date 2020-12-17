@@ -194,7 +194,7 @@ def get_subfiles_recursively(folder_path):
 
 
 def has_module(module_name):
-    '''
+    ''' Check if the python environment has installed the module or package.
     Args:
         module_name: module to be checked
     Returns:

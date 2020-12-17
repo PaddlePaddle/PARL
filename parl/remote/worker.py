@@ -77,7 +77,7 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
-        self.check_version_and_package()
+        self.check_env_consistency()
         # create log server
         self.log_server_proc, self.log_server_address = self._create_log_server(
             port=log_server_port)
@@ -104,8 +104,9 @@ class Worker(object):
         else:
             self.cpu_num = multiprocessing.cpu_count()
 
-    def check_version_and_package(self):
-        '''Verify that the parl & python version in 'worker' process matches that of the 'master' process'''
+    def check_env_consistency(self):
+        '''Verify that the parl & python version as well as some other packages in 'worker' process
+            matches that of the 'master' process'''
         self.request_master_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.request_master_socket.recv_multipart()
@@ -130,8 +131,7 @@ class Worker(object):
                 else:
                     error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
  found in your current environment. To use "pyarrow" for serialization, please install
- "pyarrow" in your current environment!
-                        """
+ "pyarrow" in your current environment!"""
                 raise Exception(error_message)
         else:
             raise NotImplementedError

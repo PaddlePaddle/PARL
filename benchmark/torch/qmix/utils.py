@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.algorithms.torch.ddqn import *
-from parl.algorithms.torch.dqn import *
-from parl.algorithms.torch.a2c import *
-from parl.algorithms.torch.td3 import *
-from parl.algorithms.torch.coma import *
-from parl.algorithms.torch.ppo import *
-from parl.algorithms.torch.policy_gradient import *
-from parl.algorithms.torch.qmix import *
+import numpy as np
+
+
+class OneHotTransform(object):
+    def __init__(self, out_dim):
+        self.out_dim = out_dim
+
+    def __call__(self, agent_id):
+        assert agent_id < self.out_dim
+        one_hot_id = np.zeros(self.out_dim, dtype='float32')
+        one_hot_id[agent_id] = 1.0
+        return one_hot_id

@@ -24,7 +24,7 @@
 
 ### 安装依赖
 
-+ [paddlepaddle==1.6.3](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
 + [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
 + gym
 

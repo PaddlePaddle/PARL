@@ -184,7 +184,7 @@ function main() {
         test)
           # test code compability in environments with various python versions
           #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
-          declare -a envs=("py27" "py36" "py37")
+          declare -a envs=("py27" "py36" "py37" "py38")
           for env in "${envs[@]}";do
               cd /work
               source ~/.bashrc
@@ -196,7 +196,7 @@ function main() {
               echo `which pip`
               echo ========================================
               pip install .
-              if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" \) ]
+              if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
               then
                 pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env

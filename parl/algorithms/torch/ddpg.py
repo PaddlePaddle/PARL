@@ -18,13 +18,7 @@ from copy import deepcopy
 import parl
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-'''
-Algorithm of DDPG: describes the mechanism of updating parameters in Model
 
-Contributions: predict(obs): return act         # choose action based on actor net
-               learn(replay_memory_batch)       # 
-               sync_target()                    # update networks
-'''
 __all__ = ['DDPG']
 
 

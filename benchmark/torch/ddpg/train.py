@@ -138,7 +138,6 @@ if __name__ == "__main__":
                         batch_terminal)
 
         if done:
-            # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
             logger.info('Episode: {} Steps: {} Reward: {}'.format(
                 episode_num + 1, t + 1, episode_reward))
             tensorboard.add_scalar('train/episode_reward', episode_reward, t)

@@ -18,7 +18,7 @@ PARL提供了将训练过程中的指标输出到CSV的工具。工具导入方�
 
 `csv_logger.log_dict({"loss": 1, "reward": 2})`
 
-完整例子：
+### 完整例子
 ```python
 from parl.utils import CSVLogger
 
@@ -27,7 +27,7 @@ csv_logger.log_dict({"loss": 1, "reward": 2})
 csv_logger.log_dict({"loss": 3, "reward": 4})
 
 ```
-预期结果：
+#### 预期结果
 
 result.csv文件内容如下：
 

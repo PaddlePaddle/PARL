@@ -76,7 +76,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("---------------------------------------")
-    print(f"Policy: {args.policy}, Env: {args.env}, Seed: {args.seed}")
+    logger.info('Policy: {}, Env: {}, Seed: {}'.format(args.policy, avgs.env,
+                                                       args.seed))
     print("---------------------------------------")
 
     env = gym.make(args.env)

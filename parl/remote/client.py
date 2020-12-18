@@ -20,11 +20,13 @@ import sys
 import threading
 import zmq
 import parl
+import time
+import glob
+
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
-import time
-import glob
+from parl.remote.grpc_heartbeat import HeartbeatClientThread
 from parl.remote.utils import has_module
 
 
@@ -65,6 +67,7 @@ class Client(object):
         self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
+        self.all_job_heartbeat_threads = []
 
         self.actor_num = 0
 
@@ -261,89 +264,75 @@ found in your current environment. To use "pyarrow" for serialization, please in
         socket.close(0)
         logger.warning("Client exit replying heartbeat for master.")
 
-    def _check_and_monitor_job(self, job_heartbeat_address,
-                               ping_heartbeat_address, max_memory,
-                               actor_ref_monitor):
+    def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
+                               max_memory, actor_ref_monitor):
         """ Sometimes the client may receive a job that is dead, thus 
         we have to check if this job is still alive before adding it to the `actor_num`.
         """
-        # job_heartbeat_socket: sends heartbeat signal to job
-        job_heartbeat_socket = self.ctx.socket(zmq.REQ)
-        job_heartbeat_socket.linger = 0
-        job_heartbeat_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
-        job_heartbeat_socket.connect("tcp://" + ping_heartbeat_address)
+        # job_ping_socket: sends ping signal to job
+        job_ping_socket = self.ctx.socket(zmq.REQ)
+        job_ping_socket.linger = 0
+        job_ping_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
+        job_ping_socket.connect("tcp://" + job_ping_address)
         try:
-            job_heartbeat_socket.send_multipart(
+            job_ping_socket.send_multipart(
                 [remote_constants.HEARTBEAT_TAG,
                  to_byte(str(max_memory))])
-            job_heartbeat_socket.recv_multipart()
+            job_ping_socket.recv_multipart()
         except zmq.error.Again:
-            job_heartbeat_socket.close(0)
+            job_ping_socket.close(0)
             logger.error(
-                "[Client] connects to a finished job, will try again, ping_heartbeat_address:{}"
-                .format(ping_heartbeat_address))
+                "[Client] connects to a finished job, will try again, job_ping_address:{}"
+                .format(job_ping_address))
             return False
-        job_heartbeat_socket.disconnect("tcp://" + ping_heartbeat_address)
-        job_heartbeat_socket.connect("tcp://" + job_heartbeat_address)
-        job_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
+        job_ping_socket.close(0)
+
+        def heartbeat_exit_callback_func():
+            self.lock.acquire()
+            self.actor_num -= 1
+            logger.error(
+                '[xparl] lost connection with a job, current actor num: {}'.
+                format(self.actor_num))
+            self.lock.release()
 
         # a thread for sending heartbeat signals to job
-        thread = threading.Thread(
-            target=self._create_job_monitor,
-            args=(job_heartbeat_socket, actor_ref_monitor))
-        thread.setDaemon(True)
-        thread.start()
+        job_heartbeat_thread = HeartbeatClientThread(
+            job_heartbeat_address,
+            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+        self.all_job_heartbeat_threads.append(job_heartbeat_thread)
+        job_heartbeat_thread.setDaemon(True)
+        job_heartbeat_thread.start()
+
+        if actor_ref_monitor is not None:
+            # If `wait` argument is False in `@parl.remote_class` (future mode),
+            # the `actor_ref_monitor` is not None. And we need start a thread to
+            # detect whether the actor has been deleted according to the reference
+            # count of the actor.
+            thread = threading.Thread(
+                target=self._check_actor_is_alive,
+                args=(actor_ref_monitor, job_heartbeat_thread))
+            thread.setDaemon(True)
+            thread.start()
+
         return True
 
-    def _create_job_monitor(self, job_heartbeat_socket, actor_ref_monitor):
-        """Send heartbeat signals to check target's status
+    def _check_actor_is_alive(self, actor_ref_monitor, job_heartbeat_thread):
+        """A loop to check whether the actor has been deleted.
 
         Args:
-            job_heartbeat_socket: socket of heartbeat server
-            actor_ref_monitor:
-                if `wait` argument is True in `@parl.remote_class`, the actor_ref_monitor is None;
-                if `wait` argument is False in `@parl.remote_class` (future mode), the actor_ref_monitor
-                        is an instance of `ActorRefMonitor`, used for detecting whether the actor has been
-                        deleted or out of scope;
+            actor_ref_monitor (ActorRefMonitor): used for detecting whether the actor 
+                                                 has been deleted or out of scope;
+            job_heartbeat_thread(HeartbeatClientThread): thread used to send the heartbeat signal to the
+                                                         job. We will exit the thread after the actor is
+                                                         deleted.
         """
-        job_is_alive = True
-        while job_is_alive and self.client_is_alive:
-            if actor_ref_monitor is not None and actor_ref_monitor.is_deleted(
-            ):
+        while self.client_is_alive:
+            if actor_ref_monitor.is_deleted():
                 # terminate the heartbeat of the job and release the cpu resource.
-                break
-            try:
-                job_heartbeat_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
-                job_message = job_heartbeat_socket.recv_multipart()
-                stop_job = to_str(job_message[1])
-                job_address = to_str(job_message[2])
-
-                if stop_job == 'True':
-                    logger.error(
-                        'Job {} exceeds max memory usage, will stop this job.'.
-                        format(job_address))
-                    self.lock.acquire()
-                    self.actor_num -= 1
-                    self.lock.release()
-                    job_is_alive = False
-                else:
-                    time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-
-            except zmq.error.Again as e:
-                job_is_alive = False
-                self.lock.acquire()
-                self.actor_num -= 1
-                logger.error(
-                    '[xparl] lost connection with a job, current actor num: {}'
-                    .format(self.actor_num))
-                self.lock.release()
-
-            except zmq.error.ZMQError as e:
+                job_heartbeat_thread.exit()
                 break
 
-        job_heartbeat_socket.close(0)
+            time.sleep(5)
 
     def submit_job(self, max_memory, proxy_wrapper_nowait_object):
         """Send a job to the Master node.
@@ -381,11 +370,11 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 if tag == remote_constants.NORMAL_TAG:
                     job_address = to_str(message[1])
                     job_heartbeat_address = to_str(message[2])
-                    ping_heartbeat_address = to_str(message[3])
+                    job_ping_address = to_str(message[3])
 
                     check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, ping_heartbeat_address,
-                        max_memory, proxy_wrapper_nowait_object)
+                        job_heartbeat_address, job_ping_address, max_memory,
+                        proxy_wrapper_nowait_object)
                     if check_result:
                         self.lock.acquire()
                         self.actor_num += 1
@@ -466,6 +455,9 @@ def disconnect():
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is not None:
         GLOBAL_CLIENT.client_is_alive = False
+        for thread in GLOBAL_CLIENT.all_job_heartbeat_threads:
+            if thread.is_alive():
+                thread.exit()
         GLOBAL_CLIENT = None
     else:
         logger.info(

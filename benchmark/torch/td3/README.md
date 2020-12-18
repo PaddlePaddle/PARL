@@ -31,5 +31,4 @@ python train.py
 
 # To train for different game and different loss type
 # python train.py --env [ENV_NAME]
-
 ```

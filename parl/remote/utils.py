@@ -15,7 +15,7 @@
 import sys
 from contextlib import contextmanager
 import os
-from parl.utils import isnotebook, logger
+from parl.utils import isnotebook, logger, format_uniform_path
 
 __all__ = [
     'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
@@ -124,7 +124,7 @@ def redirect_output_to_file(stdout_file_path, stderr_file_path):
 
 
 def locate_remote_file(module_path):
-    """xparl has to locate the file that has the class decorated by parl.remote_class. 
+    """xparl has to locate the file that has the class decorated by parl.remote_class.
     This function returns the relative path between this file and the entry file.
     Note that this function should support the jupyter-notebook environment.
 
@@ -150,10 +150,15 @@ def locate_remote_file(module_path):
     # transfer the relative path to the absolute path
     if not os.path.isabs(module_path):
         module_path = os.path.abspath(module_path)
+
+    # fix pycharm issue: https://github.com/PaddlePaddle/PARL/issues/350
+    module_path = format_uniform_path(module_path)
+    entry_path = format_uniform_path(entry_path)
+
     if entry_path is None or \
-        (module_path.startswith(os.sep) and entry_path != module_path[:len(entry_path)]):
+        (os.sep in module_path and entry_path != module_path[:len(entry_path)]):
         raise FileNotFoundError("cannot locate the remote file")
-    if module_path.startswith(os.sep):
+    if os.sep in module_path:
         relative_module_path = '.' + module_path[len(entry_path):]
     else:
         relative_module_path = module_path

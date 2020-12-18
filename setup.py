@@ -83,7 +83,7 @@ setup(
         "flask_cors",
         "requests",
         "grpcio>=1.27.2",
-        "protobuf>=3.14.0"
+        "protobuf>=3.14.0",
         "visualdl>=2.0.0b;python_version>='3.8' and platform_system=='Linux'",
     ],
     classifiers=[

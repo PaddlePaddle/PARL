@@ -23,9 +23,9 @@ from mujoco_agent import MujocoAgent
 from parl.algorithms import DDPG
 
 
-# Runs policy for X episodes and returns average reward
+# Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def eval_policy(agent, env_name, seed, eval_episodes):
+def eval_policy(agent, env_name, seed, eval_episodes=5):
     eval_env = gym.make(env_name)
     eval_env.seed(seed + 100)
 
@@ -43,7 +43,6 @@ def eval_policy(agent, env_name, seed, eval_episodes):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--policy", default="DDPG")  # Policy name
     parser.add_argument(
         "--env", default="HalfCheetah-v1")  # OpenAI gym environment name
     parser.add_argument(
@@ -55,7 +54,7 @@ if __name__ == "__main__":
         "--eval_freq", default=5e3,
         type=int)  # How often (time steps) we evaluate
     parser.add_argument(
-        "--eval_episodes", default=10,
+        "--eval_episodes", default=5,
         type=int)  # How many episodes during evaluation
     parser.add_argument(
         "--max_timesteps", default=1e6,
@@ -75,10 +74,9 @@ if __name__ == "__main__":
         type=int)  # Frequency to train actor and update params
     args = parser.parse_args()
 
-    print("---------------------------------------")
-    logger.info('Policy: {}, Env: {}, Seed: {}'.format(args.policy, args.env,
-                                                       args.seed))
-    print("---------------------------------------")
+    logger.info("------------------ DDPG ---------------------")
+    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
+    logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
 

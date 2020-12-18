@@ -19,11 +19,6 @@ import torch.nn.functional as F
 '''
 Model of DDPG:  defines an Actor/policy network given obs as input,
                       & a Critic/value network given obs and action as input.
-
-Attributions:  policy(obs):        return action
-                value(obs, action): return value
-                get_actor_params()
-                get_critic_params()
 '''
 
 

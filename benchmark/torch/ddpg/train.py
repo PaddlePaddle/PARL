@@ -76,7 +76,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("---------------------------------------")
-    logger.info('Policy: {}, Env: {}, Seed: {}'.format(args.policy, avgs.env,
+    logger.info('Policy: {}, Env: {}, Seed: {}'.format(args.policy, args.env,
                                                        args.seed))
     print("---------------------------------------")
 

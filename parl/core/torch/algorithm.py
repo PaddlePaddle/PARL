@@ -62,7 +62,7 @@ class Algorithm(AlgorithmBase):
         assert isinstance(model, Model)
         self.model = model
 
-    def get_weights(self, model_ids=None):
+    def get_weights(self):
         """ Get weights of self.model.
 
         Returns:
@@ -71,7 +71,7 @@ class Algorithm(AlgorithmBase):
         """
         return self.model.get_weights()
 
-    def set_weights(self, params, model_ids=None):
+    def set_weights(self, params):
         """ Set weights from ``get_weights`` to the model.
 
         Args:

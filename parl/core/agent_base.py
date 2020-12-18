@@ -27,54 +27,21 @@ class AgentBase(object):
         """
         self.alg = algorithm
 
-    def get_weights(self, model_ids=None):
+    def get_weights(self, *args, **kwargs):
         """Get weights of the agent.
-
-        If `model_ids` is not None, will only return weights of
-        models whose model_id are in `model_ids`.
-
-        Note:
-            `ModelBase` in list, tuple and dict will be included. But `ModelBase` in
-            nested list, tuple and dict won't be included.
-
-         Args:
-            model_ids (List/Set): list/set of model_id, will only return weights of models
-                              whiose model_id in the `model_ids`.
         
         Returns:
             (Dict): Dict of weights ({attribute name: numpy array/List/Dict})
         """
-        return self.alg.get_weights(model_ids=model_ids)
+        return self.alg.get_weights(*args, **kwargs)
 
-    def set_weights(self, weights, model_ids=None):
+    def set_weights(self, weights, *args, **kwargs):
         """Set weights of the agent with given weights.
 
-        If `model_ids` is not None, will only set weights of
-        models whose model_id are in `model_ids`.
-
-        Note:
-            `ModelBase` in list, tuple and dict will be included. But `ModelBase` in
-            nested list, tuple and dict won't be included.
-
         Args:
-            weights (Dict): Dict of weights ({attribute name: numpy array/List/Dict})
-            model_ids (List/Set): list/set of model_id, will only set weights of models
-                              whiose model_id in the `model_ids`.
-        
+            weights (Dict): Dict of weights
         """
-        self.alg.set_weights(weights, model_ids=model_ids)
-
-    def get_model_ids(self):
-        """Get all model ids of the self.alg in the agent.
-
-        Returns:
-            List of model_id 
-        """
-        return self.alg.get_model_ids()
-
-    @property
-    def model_ids(self):
-        return self.get_model_ids()
+        self.alg.set_weights(weights, *args, **kwargs)
 
     def learn(self, *args, **kwargs):
         """The training interface for Agent.

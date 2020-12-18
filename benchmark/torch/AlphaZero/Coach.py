@@ -15,7 +15,7 @@
 import os
 import sys
 import threading
-import queue
+from six.moves import queue
 import pickle
 from pickle import Pickler, Unpickler
 from random import shuffle

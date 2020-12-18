@@ -13,7 +13,7 @@ Results have been reproduced with [Double DQN](https://arxiv.org/abs/1509.06461v
 ## How to use
 
 ### Dependencies:
-+ [paddlepaddle>=1.6.1](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym[atari]==0.17.2
 + atari-py==0.2.6

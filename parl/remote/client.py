@@ -27,6 +27,7 @@ from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 from parl.remote.grpc_heartbeat import HeartbeatClientThread
+from parl.remote.utils import has_module
 
 
 class Client(object):
@@ -71,7 +72,7 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
-        self.check_version()
+        self.check_env_consistency()
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -193,21 +194,35 @@ class Client(object):
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
 
-    def check_version(self):
-        '''Verify that the parl & python version in 'client' process matches that of the 'master' process'''
+    def check_env_consistency(self):
+        '''Verify that the parl & python version as well as some other packages in 'worker' process
+            matches that of the 'master' process'''
         self.submit_job_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.submit_job_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             client_parl_version = parl.__version__
-            client_python_version = str(sys.version_info.major)
-            assert client_parl_version == to_str(message[1]) and client_python_version == to_str(message[2]),\
-                '''Version mismatch: the 'master' is of version 'parl={}, python={}'. However, 
-                'parl={}, python={}'is provided in your environment.'''.format(
-                        to_str(message[1]), to_str(message[2]),
-                        client_parl_version, client_python_version
+            client_python_version_major = str(sys.version_info.major)
+            client_python_version_minor = str(sys.version_info.minor)
+            assert client_parl_version == to_str(message[1]) and client_python_version_major == to_str(message[2])\
+                and client_python_version_minor == to_str(message[3]),\
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}.{}'. However,
+                'parl={}, python={}.{}'is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]), to_str(message[3]),
+                        client_parl_version, client_python_version_major, client_python_version_minor
                     )
+            client_has_pyarrow = str(has_module('pyarrow'))
+            if client_has_pyarrow != to_str(message[4]):
+                if client_has_pyarrow == 'True':
+                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not
+found in "master"'s environment. To use "pyarrow" for serialization, please install
+"pyarrow" in "master"'s environment!"""
+                else:
+                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
+found in your current environment. To use "pyarrow" for serialization, please install
+"pyarrow" in your current environment!"""
+                raise Exception(error_message)
         else:
             raise NotImplementedError
 

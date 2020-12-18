@@ -117,6 +117,18 @@ class Agent(AgentBase):
         """
         raise NotImplementedError
 
+    def get_model_ids(self):
+        """Get all model ids of the self.alg in the agent.
+
+        Returns:
+            List of model_id 
+        """
+        return self.alg.get_model_ids()
+
+    @property
+    def model_ids(self):
+        return self.get_model_ids()
+
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
         This function feeds the training data into the learn_program defined in ``build_program()``.

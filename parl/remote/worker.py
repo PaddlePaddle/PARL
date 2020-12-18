@@ -33,6 +33,7 @@ from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from six.moves import queue
+from parl.remote.utils import has_module
 
 
 class Worker(object):
@@ -78,7 +79,7 @@ class Worker(object):
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
-        self.check_version()
+        self.check_env_consistency()
         # create log server
         self.log_server_proc, self.log_server_address = self._create_log_server(
             port=log_server_port)
@@ -106,21 +107,35 @@ class Worker(object):
         else:
             self.cpu_num = multiprocessing.cpu_count()
 
-    def check_version(self):
-        '''Verify that the parl & python version in 'worker' process matches that of the 'master' process'''
+    def check_env_consistency(self):
+        '''Verify that the parl & python version as well as some other packages in 'worker' process
+            matches that of the 'master' process'''
         self.request_master_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
         message = self.request_master_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             worker_parl_version = parl.__version__
-            worker_python_version = str(sys.version_info.major)
-            assert worker_parl_version == to_str(message[1]) and worker_python_version == to_str(message[2]),\
-                '''Version mismatch: the "master" is of version "parl={}, python={}". However, 
-                "parl={}, python={}"is provided in your environment.'''.format(
-                        to_str(message[1]), to_str(message[2]),
-                        worker_parl_version, worker_python_version
+            worker_python_version_major = str(sys.version_info.major)
+            worker_python_version_minor = str(sys.version_info.minor)
+            assert worker_parl_version == to_str(message[1]) and worker_python_version_major == to_str(message[2])\
+                and worker_python_version_minor == to_str(message[3]),\
+                '''Version mismatch: the "master" is of version "parl={}, python={}.{}". However,
+                "parl={}, python={}.{}"is provided in your environment.'''.format(
+                        to_str(message[1]), to_str(message[2]), to_str(message[3]),
+                        worker_parl_version, worker_python_version_major, worker_python_version_minor
                     )
+            worker_has_pyarrow = str(has_module('pyarrow'))
+            if worker_has_pyarrow != to_str(message[4]):
+                if worker_has_pyarrow == 'True':
+                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not
+ found in "master"'s environment. To use "pyarrow" for serialization, please install
+ "pyarrow" in "master"'s environment!"""
+                else:
+                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
+ found in your current environment. To use "pyarrow" for serialization, please install
+ "pyarrow" in your current environment!"""
+                raise Exception(error_message)
         else:
             raise NotImplementedError
 

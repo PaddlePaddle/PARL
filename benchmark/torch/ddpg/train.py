@@ -23,9 +23,48 @@ from mujoco_agent import MujocoAgent
 from parl.algorithms import DDPG
 
 
+# Run episode for training
+def run_train_episode(agent, env, replay_memory, args):
+    action_dim = env.action_space.shape[0]
+    max_action = float(env.action_space.high[0])
+    obs, done = env.reset(), False
+    episode_reward, episode_steps = 0, 0
+    while not done:
+
+        episode_steps += 1
+        # Select action randomly or according to policy
+        if replay_memory.size() < args.start_timesteps:
+            action = env.action_space.sample()
+        else:
+            action = (agent.predict(np.array(obs)) + np.random.normal(
+                0, max_action * args.expl_noise, size=action_dim)).clip(
+                -max_action, max_action)
+
+        # Perform action
+        next_obs, reward, done, _ = env.step(action)
+        terminal = float(
+            done) if episode_steps < env._max_episode_steps else 0
+        terminal = 1. - terminal
+
+        # Store data in replay memory
+        replay_memory.append(obs, action, reward, next_obs, terminal)
+
+        obs = next_obs
+        episode_reward += reward
+
+        # Train agent after collecting sufficient data
+        if replay_memory.size() >= args.start_timesteps:
+            batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = replay_memory.sample_batch(
+                args.batch_size)
+            agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
+                        batch_terminal)
+
+    return episode_reward, episode_steps
+
+
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def eval_policy(agent, env_name, seed, eval_episodes=5):
+def run_evaluate_episodes(agent, env_name, seed, eval_episodes=5):
     eval_env = gym.make(env_name)
     eval_env.seed(seed + 100)
 
@@ -40,8 +79,61 @@ def eval_policy(agent, env_name, seed, eval_episodes=5):
     return avg_reward
 
 
-if __name__ == "__main__":
+def main(args):
+    logger.info("------------------ DDPG ---------------------")
+    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
+    logger.info("---------------------------------------------")
 
+    env = gym.make(args.env)
+
+    # Set seeds
+    env.seed(args.seed)
+
+    state_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.shape[0]
+    max_action = float(env.action_space.high[0])
+
+    # Initialize model, algorithm, agent, replay_memory
+    model = MujocoModel(state_dim, action_dim, max_action)
+    algorithm = DDPG(
+        model,
+        max_action,
+        discount=args.discount,
+        tau=args.tau,
+        actor_lr=args.actor_lr,
+        critic_lr=args.critic_lr,
+        policy_freq=args.policy_freq)
+    agent = MujocoAgent(algorithm, state_dim, action_dim)
+    replay_memory = ReplayMemory(
+        max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)
+
+    episode_num = 0
+    total_steps = 0
+    test_flag = 0
+
+    while total_steps < args.max_timesteps:
+
+        # Train episode
+        episode_num += 1
+        episode_reward, episode_steps = run_train_episode(agent, env, replay_memory, args)
+        total_steps += episode_steps
+
+        tensorboard.add_scalar('train/episode_reward', episode_reward, total_steps)
+        logger.info('Total Steps: {} Episode: {} Reward: {}'.format(
+            total_steps, episode_num, episode_reward))
+
+        # Evaluate episode
+        if (total_steps + 1) // args.eval_freq >= test_flag:
+            while (total_steps + 1) // args.eval_freq >= test_flag:
+                test_flag += 1
+            avg_reward = run_evaluate_episodes(agent, args.env, args.seed,
+                                               args.eval_episodes)
+            tensorboard.add_scalar('eval/episode_reward', avg_reward, total_steps)
+            logger.info('Evaluation over: {} episodes, Reward: {}'.format(
+                args.eval_episodes, avg_reward))
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--env", default="HalfCheetah-v1")  # OpenAI gym environment name
@@ -74,84 +166,4 @@ if __name__ == "__main__":
         type=int)  # Frequency to train actor and update params
     args = parser.parse_args()
 
-    logger.info("------------------ DDPG ---------------------")
-    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
-    logger.info("---------------------------------------------")
-
-    env = gym.make(args.env)
-
-    # Set seeds
-    env.seed(args.seed)
-
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0]
-    max_action = float(env.action_space.high[0])
-
-    # Initialize model, algorithm, agent, replay_memory
-    model = MujocoModel(state_dim, action_dim, max_action)
-    algorithm = DDPG(
-        model,
-        max_action,
-        discount=args.discount,
-        tau=args.tau,
-        actor_lr=args.actor_lr,
-        critic_lr=args.critic_lr,
-        policy_freq=args.policy_freq)
-    agent = MujocoAgent(algorithm, state_dim, action_dim)
-    replay_memory = ReplayMemory(
-        max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)
-
-    obs, done = env.reset(), False
-    episode_reward = 0
-    episode_timesteps = 0
-    episode_num = 0
-
-    for t in range(int(args.max_timesteps)):
-
-        episode_timesteps += 1
-
-        # Select action randomly or according to policy
-        if t < args.start_timesteps:
-            action = env.action_space.sample()
-        else:
-            action = (agent.predict(np.array(obs)) + np.random.normal(
-                0, max_action * args.expl_noise, size=action_dim)).clip(
-                    -max_action, max_action)
-
-        # Perform action
-        next_obs, reward, done, _ = env.step(action)
-        terminal = float(
-            done) if episode_timesteps < env._max_episode_steps else 0
-        terminal = 1. - terminal
-
-        # Store data in replay memory
-        replay_memory.append(obs, action, reward, next_obs, terminal)
-
-        obs = next_obs
-        episode_reward += reward
-
-        # Train agent after collecting sufficient data
-        if t >= args.start_timesteps:
-            batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = replay_memory.sample_batch(
-                args.batch_size)
-            agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
-                        batch_terminal)
-
-        if done:
-            logger.info('Episode: {} Steps: {} Reward: {}'.format(
-                episode_num + 1, t + 1, episode_reward))
-            tensorboard.add_scalar('train/episode_reward', episode_reward, t)
-
-            # Reset environment
-            obs, done = env.reset(), False
-            episode_reward = 0
-            episode_timesteps = 0
-            episode_num += 1
-
-        # Evaluate episode
-        if (t + 1) % args.eval_freq == 0:
-            avg_reward = eval_policy(agent, args.env, args.seed,
-                                     args.eval_episodes)
-            logger.info('Evaluation over: {} episodes, Reward: {}'.format(
-                args.eval_episodes, avg_reward))
-            tensorboard.add_scalar('eval/episode_reward', avg_reward, t)
+    main(args)

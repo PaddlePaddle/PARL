@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils.exceptions import *
-from parl.utils.utils import *
-from parl.utils.csv_logger import *
-from parl.utils.machine_info import *
-from parl.utils.np_utils import *
-from parl.utils.replay_memory import *
-from parl.utils.rl_utils import *
-from parl.utils.scheduler import *
-from parl.utils.path_utils import *
+__all__ = ['format_uniform_path']
+
+import os
+
+
+def format_uniform_path(path):
+    """format the path to a new path which seperated by os.sep.
+    """
+    path = path.replace("//", os.sep)
+    path = path.replace("/", os.sep)
+    path = path.replace("\\", os.sep)
+    return path

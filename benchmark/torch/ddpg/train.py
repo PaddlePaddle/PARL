@@ -38,12 +38,11 @@ def run_train_episode(agent, env, replay_memory, args):
         else:
             action = (agent.predict(np.array(obs)) + np.random.normal(
                 0, max_action * args.expl_noise, size=action_dim)).clip(
-                -max_action, max_action)
+                    -max_action, max_action)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
-        terminal = float(
-            done) if episode_steps < env._max_episode_steps else 0
+        terminal = float(done) if episode_steps < env._max_episode_steps else 0
         terminal = 1. - terminal
 
         # Store data in replay memory
@@ -115,10 +114,12 @@ def main(args):
 
         # Train episode
         episode_num += 1
-        episode_reward, episode_steps = run_train_episode(agent, env, replay_memory, args)
+        episode_reward, episode_steps = run_train_episode(
+            agent, env, replay_memory, args)
         total_steps += episode_steps
 
-        tensorboard.add_scalar('train/episode_reward', episode_reward, total_steps)
+        tensorboard.add_scalar('train/episode_reward', episode_reward,
+                               total_steps)
         logger.info('Total Steps: {} Episode: {} Reward: {}'.format(
             total_steps, episode_num, episode_reward))
 
@@ -128,7 +129,8 @@ def main(args):
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, args.env, args.seed,
                                                args.eval_episodes)
-            tensorboard.add_scalar('eval/episode_reward', avg_reward, total_steps)
+            tensorboard.add_scalar('eval/episode_reward', avg_reward,
+                                   total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
                 args.eval_episodes, avg_reward))
 

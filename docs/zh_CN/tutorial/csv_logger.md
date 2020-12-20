@@ -1,5 +1,5 @@
-# **教程：打印CSV日志**
-PARL提供了将训练过程中的指标输出到CSV的工具。工具导入方法：
+# **教程：表格输出实验数据**
+PARL提供了将训练过程中的指标输出到CSV表格的工具。工具导入方法：
 
 `from parl.utils import CSVLogger`
 

@@ -27,6 +27,7 @@ QMixConfig:
     'gamma': (float) Discount factor in reinforcement learning.
     'exploration_start': (float) Initial 'epsilon' in epsilon-greedy based exploration.
     'min_exploration': (float) Min 'epsilon' in epsilon-greedy.
+    'exploration_decay': (float).
     'update_target_interval': (int) Synchronize paramters to the target model after
         the model has been learned 'update_target_interval' times.
     'batch_size': (int) Training batch_size.

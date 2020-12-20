@@ -31,9 +31,13 @@ class RNNModel(parl.Model):
         self.fc2 = layers.fc(size=self.n_actions, act=None, name='fc2')
 
     def __call__(self, inputs, hidden_state):
-        """Args:
+        """
+        Args:
             inputs:       (batch_size * n_agents, rnn_hidden_dim)
             hidden_state: (batch_size, rnn_hidden_dim)
+        Returns:
+            q: local q values
+            h: hidden states
         """
         x = fluid.layers.relu(self.fc1(inputs))
         h, _ = self.gru(x, hidden_state)

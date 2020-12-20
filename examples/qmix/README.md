@@ -11,6 +11,7 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 
 - We trained our model in 5 different scenarios: *"3m", "8m", "2s_3z", "3s_5z"* and *"1c_3s_5z"*.
 - The **difficulty** in all scenarios are set to be "7" (very difficult).  
+- We trained our model 3 times for each scenario.
 
 ## How to Use
 ### Dependencies
@@ -19,7 +20,7 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 - [smac](https://github.com/oxwhirl/smac)
 - [PaddlePaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
 
-## Start Training
+### Start Training
 1. Modify the config in `qmix_config.py`.
 2. Start training:
     ```bash

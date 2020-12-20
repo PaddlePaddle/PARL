@@ -18,10 +18,17 @@ from copy import deepcopy
 from paddle.fluid import layers
 import paddle.fluid as fluid
 
+__all__ = ['QMIX']
+
 
 class QMIX(parl.Algorithm):
     def __init__(self, agent_model, qmixer_model, config):
-
+        """ QMIX algorithm
+        Args:
+            agent_model (parl.Model): agents' local q network for decision making.
+            qmixer_model (parl.Model): A mixing network which takes local q values as input
+            config (dict): config of the algorithm.
+        """
         self.agent_model = agent_model
         self.qmixer_model = qmixer_model
         self.target_agent_model = deepcopy(self.agent_model)
@@ -119,12 +126,14 @@ class QMIX(parl.Algorithm):
         action_mask = -1e10 * (1.0 - available_actions_batch)
         target_action_mask = layers.slice(
             action_mask, axes=[1], starts=[1], ends=[10000])
+        target_action_zero_mask = layers.slice(
+            available_actions_batch, axes=[1], starts=[1], ends=[10000])
         # mask unavailable actions
-        target_local_qs = target_local_qs + target_action_mask
+        target_local_qs = target_local_qs * target_action_zero_mask + target_action_mask
 
         if self.double_q:
             # mask unavailable actions
-            masked_local_qs = local_qs + action_mask
+            masked_local_qs = local_qs * available_actions_batch + action_mask
             masked_local_qs.stop_gradient = True
             masked_local_qs = layers.slice(
                 masked_local_qs, axes=[1], starts=[1], ends=[100000])

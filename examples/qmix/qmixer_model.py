@@ -57,9 +57,12 @@ class QMixerModel(parl.Model):
         self.hyper_b_2_2 = layers.fc(size=1, act=None, name='hyper_b_2_2')
 
     def forward(self, agent_qs, states):
-        '''Args:
+        '''
+        Args:
             agent_qs: (batch_size, T, n_agents)
             states: (batch_size, T, state_shape)
+        Returns:
+            q_total: global q value
         '''
         episode_len = self.episode_limit - 1
         assert agent_qs.shape[1] == episode_len

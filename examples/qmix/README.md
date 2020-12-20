@@ -18,7 +18,7 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 - python
 - [parl](https://github.com/PaddlePaddle/PARL)
 - [smac](https://github.com/oxwhirl/smac)
-- [PaddlePaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
+- [PaddlePaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
 
 ### Start Training
 1. Modify the config in `qmix_config.py`.

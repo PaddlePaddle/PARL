@@ -15,7 +15,7 @@
 
 # A dev image based on paddle production image
 
-FROM parl/parl-test:cuda9.0-cudnn7-v3
+FROM parl/parl-test:cuda9.0-cudnn7-v3-tensorrt
 
 COPY ./requirements.txt /root/
 

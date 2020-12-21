@@ -24,7 +24,7 @@ from parl.algorithms import DDPG
 
 
 # Run episode for training
-def run_train_episode(agent, env, rpm, args):
+def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])
     obs, done = env.reset(), False

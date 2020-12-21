@@ -57,13 +57,13 @@ class DDPG(parl.Algorithm):
     def predict(self, obs):
         return self.model.policy(obs)
 
-    def learn(self, obs, action, reward, next_obs, ternimal):
+    def learn(self, obs, action, reward, next_obs, terminal):
 
         self.total_it += 1
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
             next_obs, self.target_model.actor_model(next_obs))
-        target_Q = reward + (ternimal * self.discount * target_Q).detach()
+        target_Q = reward + (terminal * self.discount * target_Q).detach()
 
         # Get current Q estimate
         current_Q = self.model.critic_model(obs, action)

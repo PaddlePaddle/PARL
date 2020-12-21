@@ -117,7 +117,7 @@ def main():
         # Train episode
         episode_num += 1
         episode_reward, episode_steps = run_train_episode(
-            agent, env, rpm, args)
+            agent, env, rpm)
         total_steps += episode_steps
 
         tensorboard.add_scalar('train/episode_reward', episode_reward,

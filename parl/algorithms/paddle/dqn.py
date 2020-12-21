@@ -54,7 +54,8 @@ class DQN(parl.Algorithm):
         # Q
         pred_values = self.model.value(obs)
         action_dim = pred_values.shape[-1]
-        action_onehot = paddle.fluid.layers.one_hot(input=action, depth=action_dim)
+        action_onehot = paddle.fluid.layers.one_hot(
+            input=action, depth=action_dim)
         pred_value = paddle.multiply(pred_values, action_onehot)
         pred_value = paddle.sum(pred_value, axis=1, keepdim=True)
 

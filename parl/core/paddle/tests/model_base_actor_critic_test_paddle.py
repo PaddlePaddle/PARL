@@ -31,6 +31,7 @@ class TestModel(Model):
         out = self.actor(obs)
         return out
 
+
 class Actor(Model):
     def __init__(self):
         super(Actor, self).__init__()
@@ -65,16 +66,23 @@ class ModelBaseTest(unittest.TestCase):
         self.target_model3 = deepcopy(self.model)
 
     def test_model_copy(self):
-        self.assertEqual(len(self.model.state_dict()), len(self.target_model2.state_dict()))
-        for (name1, var1), (name2, var2) in zip(self.model.named_parameters(), self.target_model2.named_parameters()):
+        self.assertEqual(
+            len(self.model.state_dict()), len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.model.named_parameters(),
+                self.target_model2.named_parameters()):
             self.assertEqual(name1, name2)
             var1_np = var1.numpy().sum()
             var2_np = var2.numpy().sum()
             self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
 
     def test_model_copy_with_multi_copy(self):
-        self.assertEqual(len(self.target_model2.state_dict()), len(self.target_model2.state_dict()))
-        for (name1, var1), (name2, var2) in zip(self.target_model2.named_parameters(), self.target_model3.named_parameters()):
+        self.assertEqual(
+            len(self.target_model2.state_dict()),
+            len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.target_model2.named_parameters(),
+                self.target_model3.named_parameters()):
             self.assertEqual(name1, name2)
             var1_np = var1.numpy().sum()
             var2_np = var2.numpy().sum()
@@ -87,7 +95,8 @@ class ModelBaseTest(unittest.TestCase):
             x = random_obs[i]
             model_output = self.model.predict(x).numpy().sum()
             target_model_output = self.target_model.predict(x).numpy().sum()
-            self.assertGreater(float(np.abs(model_output - target_model_output)), 1e-5)
+            self.assertGreater(
+                float(np.abs(model_output - target_model_output)), 1e-5)
 
         self.model.sync_weights_to(self.target_model)
 
@@ -96,7 +105,8 @@ class ModelBaseTest(unittest.TestCase):
             x = random_obs[i]
             model_output = self.model.predict(x).numpy().sum()
             target_model_output = self.target_model.predict(x).numpy().sum()
-            self.assertLess(float(np.abs(model_output - target_model_output)), 1e-5)
+            self.assertLess(
+                float(np.abs(model_output - target_model_output)), 1e-5)
 
     def _numpy_update(self, target_model, decay):
         target_parameters = dict(target_model.named_parameters())

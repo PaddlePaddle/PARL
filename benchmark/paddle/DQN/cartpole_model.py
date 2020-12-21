@@ -17,6 +17,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 import parl
 
+
 class CartpoleModel(parl.Model):
     """ Linear network to solve Cartpole problem.
 

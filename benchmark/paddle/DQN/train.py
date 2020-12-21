@@ -48,8 +48,7 @@ def run_episode(env, agent, rpm):
             (batch_obs, batch_action, batch_reward, batch_next_obs,
              batch_done) = rpm.sample(BATCH_SIZE)
             train_loss = agent.learn(batch_obs, batch_action, batch_reward,
-                                     batch_next_obs,
-                                     batch_done)
+                                     batch_next_obs, batch_done)
 
         total_reward += reward
         obs = next_obs
@@ -88,10 +87,7 @@ def main():
     model = CartpoleModel(obs_dim=obs_dim, act_dim=act_dim)
     alg = DQN(model, gamma=GAMMA, lr=LEARNING_RATE)
     agent = CartpoleAgent(
-        alg,
-        act_dim=act_dim,
-        e_greed=0.1,
-        e_greed_decrement=1e-6)
+        alg, act_dim=act_dim, e_greed=0.1, e_greed_decrement=1e-6)
 
     # warmup memory
     while len(rpm) < MEMORY_WARMUP_SIZE:

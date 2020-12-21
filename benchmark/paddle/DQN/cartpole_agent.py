@@ -16,6 +16,7 @@ import parl
 import paddle
 import numpy as np
 
+
 class CartpoleAgent(parl.Agent):
     """Agent of Cartpole env.
 
@@ -24,11 +25,7 @@ class CartpoleAgent(parl.Agent):
 
     """
 
-    def __init__(self,
-                 algorithm,
-                 act_dim,
-                 e_greed=0.1,
-                 e_greed_decrement=0):
+    def __init__(self, algorithm, act_dim, e_greed=0.1, e_greed_decrement=0):
         super(CartpoleAgent, self).__init__(algorithm)
         assert isinstance(act_dim, int)
         self.act_dim = act_dim

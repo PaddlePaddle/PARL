@@ -34,6 +34,7 @@ class TestModel(Model):
         out = self.fc3(out)
         return out
 
+
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
@@ -42,16 +43,23 @@ class ModelBaseTest(unittest.TestCase):
         self.target_model3 = deepcopy(self.model)
 
     def test_model_copy(self):
-        self.assertEqual(len(self.model.state_dict()), len(self.target_model2.state_dict()))
-        for (name1, var1), (name2, var2) in zip(self.model.named_parameters(), self.target_model2.named_parameters()):
+        self.assertEqual(
+            len(self.model.state_dict()), len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.model.named_parameters(),
+                self.target_model2.named_parameters()):
             self.assertEqual(name1, name2)
             var1_np = var1.numpy().sum()
             var2_np = var2.numpy().sum()
             self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
 
     def test_model_copy_with_multi_copy(self):
-        self.assertEqual(len(self.target_model2.state_dict()), len(self.target_model2.state_dict()))
-        for (name1, var1), (name2, var2) in zip(self.target_model2.named_parameters(), self.target_model3.named_parameters()):
+        self.assertEqual(
+            len(self.target_model2.state_dict()),
+            len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.target_model2.named_parameters(),
+                self.target_model3.named_parameters()):
             self.assertEqual(name1, name2)
             var1_np = var1.numpy().sum()
             var2_np = var2.numpy().sum()

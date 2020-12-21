@@ -7,7 +7,7 @@ Learn more about QMIX from: [QMIX: Monotonic Value Function Factorisation for De
 Paper: [The StarCraft Multi-Agent Challenge](https://arxiv.org/pdf/1902.04043)  
 Github Repositories: [smac](https://github.com/oxwhirl/smac)  
 ## Benchmark Results
-<img src="images/paddle-qmix-result.png" width = "1500"  alt="Performance" />  
+<img src="images/paddle-qmix-result.png" width = "1200"  alt="Performance" />  
 
 - We trained our model in 5 different scenarios: *"3m", "8m", "2s_3z", "3s_5z"* and *"1c_3s_5z"*.
 - The **difficulty** in all scenarios are set to be "7" (very difficult).  

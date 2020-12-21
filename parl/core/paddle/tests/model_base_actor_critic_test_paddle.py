@@ -24,15 +24,38 @@ from parl.core.paddle.model import Model
 class TestModel(Model):
     def __init__(self):
         super(TestModel, self).__init__()
-        self.fc1 = nn.Linear(4, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.fc3 = nn.Linear(128, 1)
+        self.critic = Critic()
+        self.actor = Actor()
 
     def predict(self, obs):
-        out = self.fc1(obs)
+        out = self.actor(obs)
+        return out
+
+class Actor(Model):
+    def __init__(self):
+        super(Actor, self).__init__()
+        self.fc1 = nn.Linear(4, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 2)
+
+    def forward(self, x):
+        out = self.fc1(x)
         out = self.fc2(out)
         out = self.fc3(out)
         return out
+
+
+class Critic(Model):
+    def __init__(self):
+        super(Critic, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.fc2(out)
+        return out
+
 
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
@@ -62,18 +85,18 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32))
         for i in range(N):
             x = random_obs[i]
-            model_output = self.model.predict(x)
-            target_model_output = self.target_model.predict(x)
-            self.assertNotEqual(model_output, target_model_output)
+            model_output = self.model.predict(x).numpy().sum()
+            target_model_output = self.target_model.predict(x).numpy().sum()
+            self.assertGreater(float(np.abs(model_output - target_model_output)), 1e-5)
 
         self.model.sync_weights_to(self.target_model)
 
         random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32))
         for i in range(N):
             x = random_obs[i]
-            model_output = self.model.predict(x).numpy()
-            target_model_output = self.target_model.predict(x).numpy()
-            self.assertEqual(model_output, target_model_output)
+            model_output = self.model.predict(x).numpy().sum()
+            target_model_output = self.target_model.predict(x).numpy().sum()
+            self.assertLess(float(np.abs(model_output - target_model_output)), 1e-5)
 
     def _numpy_update(self, target_model, decay):
         target_parameters = dict(target_model.named_parameters())
@@ -89,12 +112,12 @@ class ModelBaseTest(unittest.TestCase):
             updated_parameters = self._numpy_update(self.target_model, decay)
             (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
              target_model_fc2_b, target_model_fc3_w,
-             target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                    updated_parameters['fc1.bias'],
-                                    updated_parameters['fc2.weight'],
-                                    updated_parameters['fc2.bias'],
-                                    updated_parameters['fc3.weight'],
-                                    updated_parameters['fc3.bias'])
+             target_model_fc3_b) = (updated_parameters['actor.fc1.weight'],
+                                    updated_parameters['actor.fc1.bias'],
+                                    updated_parameters['actor.fc2.weight'],
+                                    updated_parameters['actor.fc2.bias'],
+                                    updated_parameters['actor.fc3.weight'],
+                                    updated_parameters['actor.fc3.bias'])
 
             self.model.sync_weights_to(self.target_model, decay)
             N = 10
@@ -119,12 +142,12 @@ class ModelBaseTest(unittest.TestCase):
             updated_parameters = self._numpy_update(the_target_model, decay)
             (target_model_fc1_w, target_model_fc1_b, target_model_fc2_w,
              target_model_fc2_b, target_model_fc3_w,
-             target_model_fc3_b) = (updated_parameters['fc1.weight'],
-                                    updated_parameters['fc1.bias'],
-                                    updated_parameters['fc2.weight'],
-                                    updated_parameters['fc2.bias'],
-                                    updated_parameters['fc3.weight'],
-                                    updated_parameters['fc3.bias'])
+             target_model_fc3_b) = (updated_parameters['actor.fc1.weight'],
+                                    updated_parameters['actor.fc1.bias'],
+                                    updated_parameters['actor.fc2.weight'],
+                                    updated_parameters['actor.fc2.bias'],
+                                    updated_parameters['actor.fc3.weight'],
+                                    updated_parameters['actor.fc3.bias'])
 
             self.model.sync_weights_to(the_target_model, decay)
             N = 10
@@ -184,24 +207,24 @@ class ModelBaseTest(unittest.TestCase):
 
     def test_set_weights_with_wrong_params_num(self):
         params = self.model.get_weights()
-        del params['fc2.bias']
+        del params['actor.fc2.bias']
         with self.assertRaises(AssertionError):
             self.model.set_weights(params)
 
     def test_set_weights_with_wrong_params_shape(self):
         params = self.model.get_weights()
-        params['fc1.weight'] = params['fc2.bias']
+        params['actor.fc1.weight'] = params['actor.fc2.bias']
         with self.assertRaises(AssertionError):
             self.model.set_weights(params)
 
     def test_set_weights_with_modified_params(self):
         params = self.model.get_weights()
-        params['fc1.weight'][0][0] = 100
-        params['fc1.bias'][0] = 100
-        params['fc2.weight'][0][0] = 100
-        params['fc2.bias'][0] = 100
-        params['fc3.weight'][0][0] = 100
-        params['fc3.bias'][0] = 100
+        params['actor.fc1.weight'][0][0] = 100
+        params['actor.fc1.bias'][0] = 100
+        params['actor.fc2.weight'][0][0] = 100
+        params['actor.fc2.bias'][0] = 100
+        params['actor.fc3.weight'][0][0] = 100
+        params['actor.fc3.bias'][0] = 100
         self.model.set_weights(params)
         new_params = self.model.get_weights()
         for i, j in zip(params.values(), new_params.values()):

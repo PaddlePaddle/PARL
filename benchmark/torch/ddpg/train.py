@@ -80,7 +80,7 @@ def run_evaluate_episodes(agent, env_name, seed, eval_episodes=5):
     return avg_reward
 
 
-def main(args):
+def main():
     logger.info("------------------ DDPG ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")

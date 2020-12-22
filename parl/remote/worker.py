@@ -271,13 +271,15 @@ class Worker(object):
             new_jobs.append(initialized_job)
 
             def get_job_heartbeat_exit_callback_func():
-                job_address = initialized_job.job_address
+                job = initialized_job
 
                 def exit_func():
-                    logger.warning("[Worker] lost connection with the job:{}".
-                                   format(job_address))
+                    job.is_alive = False
+                    logger.warning(
+                        "[Worker] lost connection with the job:{}".format(
+                            job.job_address))
                     if self.master_is_alive and self.worker_is_alive:
-                        self._remove_job(job_address)
+                        self._remove_job(job.job_address)
 
                 return exit_func
 

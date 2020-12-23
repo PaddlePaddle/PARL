@@ -72,16 +72,22 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
 
 
 class HeartbeatServerThread(threading.Thread):
-    def __init__(self, heartbeat_exit_callback_func):
+    def __init__(self,
+                 heartbeat_exit_callback_func,
+                 exit_func_args=(),
+                 exit_func_kwargs={}):
         """Create a thread to run the heartbeat server.
 
             Args:
                 heartbeat_exit_callback_func(function): A callback function, which will be called after the 
-                                                        heartbeat exit. There should be no arguments in the 
-                                                        function.
+                                                        heartbeat exit.
+                exit_func_args(tuple): the argument tuple for the heartbeat_exit_callback_func invocation. Defaults to ().
+                exit_func_kwargs(dict): the argument tuple for the heartbeat_exit_callback_func invocation. Defaults to {}.
         """
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
+        assert isinstance(exit_func_args, tuple)
+        assert isinstance(exit_func_kwargs, dict)
 
         threading.Thread.__init__(self)
         self.grpc_server = grpc.server(
@@ -98,6 +104,8 @@ class HeartbeatServerThread(threading.Thread):
         self.address = "{}:{}".format(get_ip_address(), port)
 
         self.heartbeat_exit_callback_func = heartbeat_exit_callback_func
+        self._exit_func_args = exit_func_args
+        self._exit_func_kwargs = exit_func_kwargs
 
     def get_address(self):
         return self.address
@@ -123,8 +131,9 @@ class HeartbeatServerThread(threading.Thread):
         # The heartbeat is exit, try to stop the grpc server.
         self.grpc_server.stop(0)
 
-        self.heartbeat_exit_callback_func(
-        )  # heartbeat is exit, call the exit function.
+        # heartbeat is exit, call the exit function.
+        self.heartbeat_exit_callback_func(*self._exit_func_args,
+                                          **self._exit_func_kwargs)
 
     def exit(self):
         self.heartbeat_server.exit()

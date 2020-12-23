@@ -270,26 +270,19 @@ class Worker(object):
             initialized_job = cloudpickle.loads(job_message[1])
             new_jobs.append(initialized_job)
 
-            def get_job_heartbeat_exit_callback_func():
-                job = initialized_job
-
-                def exit_func():
-                    job.is_alive = False
-                    logger.warning(
-                        "[Worker] lost connection with the job:{}".format(
-                            job.job_address))
-                    if self.master_is_alive and self.worker_is_alive:
-                        self._remove_job(job.job_address)
-
-                return exit_func
-
-            heartbeat_exit_callback_func = get_job_heartbeat_exit_callback_func(
-            )
+            def heartbeat_exit_callback_func(job):
+                job.is_alive = False
+                logger.warning(
+                    "[Worker] lost connection with the job:{}".format(
+                        job.job_address))
+                if self.master_is_alive and self.worker_is_alive:
+                    self._remove_job(job.job_address)
 
             # a thread for sending heartbeat signals to job
             thread = HeartbeatClientThread(
                 initialized_job.worker_heartbeat_address,
-                heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+                heartbeat_exit_callback_func=heartbeat_exit_callback_func,
+                exit_func_args=(initialized_job, ))
             thread.setDaemon(True)
             thread.start()
 

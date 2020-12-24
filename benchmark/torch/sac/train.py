@@ -83,7 +83,7 @@ def main():
 
     # Set seeds
     env.seed(args.seed)
-    eval_env.seed(seed + 100)
+    eval_env.seed(args.seed + 100)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]

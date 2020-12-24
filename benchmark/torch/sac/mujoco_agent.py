@@ -18,9 +18,9 @@ import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim):
+    def __init__(self, algorithm, obs_dim, action_dim):
         assert isinstance(obs_dim, int)
-        assert isinstance(act_dim, int)
+        assert isinstance(action_dim, int)
         super(MujocoAgent, self).__init__(algorithm)
 
         self.device = torch.device("cuda" if torch.cuda.
@@ -30,15 +30,17 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        return self.alg.predict(obs).cpu().data.numpy().flatten()
+        action, _ = self.alg.predict(obs)
+        action_numpy = action.cpu().data.numpy().flatten()
+        return action_numpy
 
-    def learn(self, obs, act, reward, next_obs, terminal):
+    def learn(self, obs, action, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)
         reward = np.expand_dims(reward, -1)
 
         obs = torch.FloatTensor(obs).to(self.device)
-        act = torch.FloatTensor(act).to(self.device)
+        action = torch.FloatTensor(action).to(self.device)
         reward = torch.FloatTensor(reward).to(self.device)
         next_obs = torch.FloatTensor(next_obs).to(self.device)
         terminal = torch.FloatTensor(terminal).to(self.device)
-        self.alg.learn(obs, act, reward, next_obs, terminal)
+        self.alg.learn(obs, action, reward, next_obs, terminal)

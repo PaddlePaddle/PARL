@@ -81,8 +81,8 @@ class HeartbeatServerThread(threading.Thread):
             Args:
                 heartbeat_exit_callback_func(function): A callback function, which will be called after the 
                                                         heartbeat exit.
-                exit_func_args(tuple): the argument tuple for the heartbeat_exit_callback_func invocation. Defaults to ().
-                exit_func_kwargs(dict): the argument tuple for the heartbeat_exit_callback_func invocation. Defaults to {}.
+                exit_func_args(tuple): the argument tuple for calling the heartbeat_exit_callback_func. Defaults to ().
+                exit_func_kwargs(dict): the argument dict for calling the heartbeat_exit_callback_func. Defaults to {}.
         """
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."

@@ -1,0 +1,8 @@
+# requirements for windows unittest
+rarfile==3.1
+opencv-python<=4.3.0.34;python_version>="3"
+opencv-python==4.2.0.32;python_version<"3"
+paddlepaddle==1.8.5
+gym
+details
+parameterized

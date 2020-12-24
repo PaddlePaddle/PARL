@@ -79,7 +79,7 @@ def main():
     logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
-    eval_env = gym.make(env_name)
+    eval_env = gym.make(args.env)
 
     # Set seeds
     env.seed(args.seed)

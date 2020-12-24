@@ -60,9 +60,7 @@ def run_train_episode(agent, env, rpm):
 
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def run_evaluate_episodes(agent, env_name, seed, eval_episodes=5):
-    eval_env = gym.make(env_name)
-    eval_env.seed(seed + 100)
+def run_evaluate_episodes(agent, eval_env, eval_episodes=5):
 
     avg_reward = 0.
     for _ in range(eval_episodes):
@@ -81,9 +79,11 @@ def main():
     logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
+    eval_env = gym.make(env_name)
 
     # Set seeds
     env.seed(args.seed)
+    eval_env.seed(seed + 100)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
@@ -127,7 +127,7 @@ def main():
         if (total_steps + 1) // args.eval_freq >= test_flag:
             while (total_steps + 1) // args.eval_freq >= test_flag:
                 test_flag += 1
-            avg_reward = run_evaluate_episodes(agent, args.env, args.seed,
+            avg_reward = run_evaluate_episodes(agent, eval_env,
                                                args.eval_episodes)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)

@@ -19,8 +19,6 @@ import torch.nn.functional as F
 from copy import deepcopy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# To enforcing Action Bound
-epsilon = 1e-6
 
 __all__ = ['SAC']
 
@@ -66,7 +64,6 @@ class SAC(parl.Algorithm):
             self.model.get_critic_params(), lr=critic_lr)
 
         if self.automatic_entropy_tuning is True:
-            # target entropy = - dim(action_space) as given in the paper (e.g. -6 for HalfCheetah)
             self.target_entropy = -torch.prod(
                 torch.Tensor(action_space).to(device))
             self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
@@ -83,7 +80,7 @@ class SAC(parl.Algorithm):
 
         log_prob = normal.log_prob(x_t)
         # Enforcing Action Bound
-        log_prob -= torch.log(self.max_action * (1 - y_t.pow(2)) + epsilon)
+        log_prob -= torch.log(self.max_action * (1 - y_t.pow(2)) + 1e-6)
         log_prob = log_prob.sum(1, keepdims=True)
         return action, log_prob
 

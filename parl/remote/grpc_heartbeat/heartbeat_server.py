@@ -123,6 +123,12 @@ class HeartbeatServerThread(threading.Thread):
         self.heartbeat_server.stop(stop_tag, stop_message)
 
     def run(self):
+        # unset http_proxy and https_proxy
+        if 'http_proxy' in os.environ:
+            del os.environ['http_proxy']
+        if 'https_proxy' in os.environ:
+            del os.environ['https_proxy']
+
         self.grpc_server.start()
 
         # a life-long while loop

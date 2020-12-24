@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import grpc
 import time
 import threading
@@ -55,6 +56,12 @@ class HeartbeatClientThread(threading.Thread):
         self.exit_flag = True
 
     def run(self):
+        # unset http_proxy and https_proxy
+        if 'http_proxy' in os.environ:
+            del os.environ['http_proxy']
+        if 'https_proxy' in os.environ:
+            del os.environ['https_proxy']
+
         with grpc.insecure_channel(
                 self.heartbeat_server_addr,
                 options=[('grpc.max_receive_message_length', -1),

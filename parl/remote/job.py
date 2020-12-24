@@ -37,7 +37,7 @@ from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
 from parl.remote.utils import load_remote_class, redirect_output_to_file
-from parl.remote.zmq_utils import create_client_socket
+from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread
 
 
@@ -96,7 +96,7 @@ class Job(object):
         """Create three sockets for each job in the main process.
 
         (1) job_socket(functional socket): sends job_address and heartbeat_address to worker.
-        (2) ping_heartbeat_socket: replies ping message of client.
+        (2) reply_client_ping_socket: replies ping message of client.
         (3) remove_job_socket: sends a command to the corresponding worker to remove the job.
                                Used to ask the worker removing the dead job immediately 
                                instead of waiting for the heartbeat failure.
@@ -115,20 +115,22 @@ class Job(object):
             self.ctx, self.worker_address, heartbeat_timeout=True)
 
         # a thread that reply ping signals from the client
-        ping_heartbeat_socket, ping_heartbeat_address = self._create_heartbeat_server(
-            timeout=False)
+        reply_client_ping_socket, port = create_server_socket(self.ctx)
+        reply_client_ping_address = "{}:{}".format(self.job_ip, port)
         ping_thread = threading.Thread(
-            target=self._reply_ping, args=(ping_heartbeat_socket, ))
+            target=self._reply_ping, args=(reply_client_ping_socket, ))
         ping_thread.setDaemon(True)
         ping_thread.start()
 
         # a thread that reply heartbeat signals from the worker
-        worker_heartbeat_socket, worker_heartbeat_address = self._create_heartbeat_server(
-        )
-        worker_thread = threading.Thread(
-            target=self._reply_worker_heartbeat,
-            args=(worker_heartbeat_socket, ))
-        worker_thread.setDaemon(True)
+        def worker_heartbeat_exit_callback_func():
+            logger.warning("[Job]lost connection with the worker, will exit")
+            os._exit(1)
+
+        worker_heartbeat_server_thread = HeartbeatServerThread(
+            heartbeat_exit_callback_func=worker_heartbeat_exit_callback_func)
+        worker_heartbeat_server_thread.setDaemon(True)
+        worker_heartbeat_server_thread.start()
 
         # This function will be called only after the heartbeat server thread is started
         def client_heartbeat_exit_callback_func():
@@ -150,9 +152,9 @@ class Job(object):
 
         # sends job information to the worker
         initialized_job = InitializedJob(
-            self.job_address, worker_heartbeat_address,
+            self.job_address, worker_heartbeat_server_thread.get_address(),
             self.client_heartbeat_server_thread.get_address(),
-            ping_heartbeat_address, None, self.pid, self.job_id,
+            reply_client_ping_address, None, self.pid, self.job_id,
             self.log_server_address)
 
         try:
@@ -166,8 +168,6 @@ class Job(object):
                 self.worker_address) + "Job will quit.")
             self.job_socket.close(0)
             os._exit(0)
-
-        worker_thread.start()
 
         tag = message[0]
         assert tag == remote_constants.NORMAL_TAG
@@ -216,33 +216,6 @@ class Job(object):
         memory_monitor_thread.start()
 
         socket.close(0)
-
-    def _create_heartbeat_server(self, timeout=True):
-        """Create a socket server that will raises timeout exception.
-        """
-        heartbeat_socket = self.ctx.socket(zmq.REP)
-        if timeout:
-            heartbeat_socket.setsockopt(
-                zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-        heartbeat_socket.linger = 0
-        heartbeat_port = heartbeat_socket.bind_to_random_port(addr="tcp://*")
-        heartbeat_address = "{}:{}".format(self.job_ip, heartbeat_port)
-        return heartbeat_socket, heartbeat_address
-
-    def _reply_worker_heartbeat(self, socket):
-        """create a socket that replies heartbeat signals from the worker.
-        If the worker has exited, the job will exit automatically.
-        """
-        while True:
-            try:
-                message = socket.recv_multipart()
-                socket.send_multipart([remote_constants.HEARTBEAT_TAG])
-            except zmq.error.Again as e:
-                logger.warning("[Job] Cannot connect to the worker{}. ".format(
-                    self.worker_address) + "Job will quit.")
-                break
-        socket.close(0)
-        os._exit(1)
 
     def wait_for_files(self, reply_socket, job_address):
         """Wait for python files from remote object.

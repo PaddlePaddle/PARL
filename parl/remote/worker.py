@@ -434,8 +434,7 @@ class Worker(object):
 
         def heartbeat_exit_callback_func():
             # only output warning
-            logger.warning("[Worker] lost connection with the log_server:{}".
-                           format(log_server_heartbeat_addr))
+            logger.warning("[Worker] lost connection with the log_server.")
 
         # a thread for sending heartbeat signals to log_server
         thread = HeartbeatClientThread(

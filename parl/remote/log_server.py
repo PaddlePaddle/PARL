@@ -20,7 +20,7 @@ import zmq
 from flask import Flask, current_app, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from parl.remote import remote_constants
-from parl.utils import to_byte
+from parl.utils import to_byte, logger
 from parl.remote.grpc_heartbeat import HeartbeatServerThread
 from parl.remote.zmq_utils import create_client_socket
 
@@ -101,7 +101,7 @@ def send_heartbeat_addr_to_worker(worker_addr, heartbeat_server_addr):
     except zmq.error.Again as e:
         err_str = "Can not connect to the worker please " \
                   "check if the worker is started and ensure the input " \
-                  "address {} is correct.".format(self.worker_addr)
+                  "address {} is correct.".format(worker_addr)
         logger.warning(err_str)
         raise Exception(err_str)
 

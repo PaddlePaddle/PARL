@@ -17,7 +17,7 @@ from parl.utils import logger
 
 if _HAS_FLUID:
     from parl.algorithms.fluid import *
-if _HAS_PADDLE:
+elif _HAS_PADDLE:
     from parl.algorithms.paddle import *
 elif _HAS_TORCH:
     from parl.algorithms.torch import *

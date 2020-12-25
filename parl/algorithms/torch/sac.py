@@ -63,7 +63,6 @@ class SAC(parl.Algorithm):
         self.alpha = alpha
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
-        self.decay = decay
         self.policy_freq = policy_freq
         self.automatic_entropy_tuning = automatic_entropy_tuning
         self.entropy_lr = entropy_lr

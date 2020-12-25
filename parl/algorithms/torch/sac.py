@@ -85,7 +85,10 @@ class SAC(parl.Algorithm):
         return action, log_prob
 
     def learn(self, obs, action, reward, next_obs, terminal):
+        self._critic_learn(obs, action, reward, next_obs, terminal)
+        self._actor_learn(obs)
 
+    def _critic_learn(self, obs, action, reward, next_obs, terminal):
         self.total_it += 1
 
         with torch.no_grad():
@@ -103,6 +106,7 @@ class SAC(parl.Algorithm):
         critic_loss.backward()
         self.critic_optimizer.step()
 
+    def _actor_learn(self, obs):
         if self.total_it % self.policy_freq == 0:
             act, log_pi = self.predict(obs)
             q1_pi, q2_pi = self.model.critic_model(obs, act)

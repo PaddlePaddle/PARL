@@ -25,11 +25,9 @@ from parl.algorithms import SAC
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):
-
     obs, done = env.reset(), False
     episode_reward, episode_steps = 0, 0
     while not done:
-
         episode_steps += 1
         # Select action randomly or according to policy
         if rpm.size() < args.start_timesteps:
@@ -61,7 +59,6 @@ def run_train_episode(agent, env, rpm):
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
 def run_evaluate_episodes(agent, eval_env, eval_episodes=5):
-
     avg_reward = 0.
     for _ in range(eval_episodes):
         state, done = eval_env.reset(), False
@@ -112,7 +109,6 @@ def main():
     test_flag = 0
 
     while total_steps < args.max_timesteps:
-
         # Train episode
         episode_num += 1
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
@@ -138,40 +134,55 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v1")  # Mujoco gym environment name
+        "--env", default="HalfCheetah-v1", help='Mujoco gym environment name')
     parser.add_argument(
-        "--seed", default=0, type=int)  # Sets Gym, PyTorch and Numpy seeds
+        "--seed",
+        default=0,
+        type=int,
+        help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
-        "--start_timesteps", default=1e4,
-        type=int)  # Time steps initial random policy is used
+        "--start_timesteps",
+        default=1e4,
+        type=int,
+        help='Time steps initial, random policy is used')
     parser.add_argument(
-        "--eval_freq", default=5e3,
-        type=int)  # How often (time steps) we evaluate
+        "--eval_freq", default=5e3, type=int, help='How often to evaluate')
     parser.add_argument(
-        "--eval_episodes", default=5,
-        type=int)  # How many episodes during evaluation
+        "--eval_episodes",
+        default=5,
+        type=int,
+        help='How many episodes during evaluation')
     parser.add_argument(
-        "--max_timesteps", default=1e6,
-        type=int)  # Max time steps to run environment
+        "--max_timesteps",
+        default=1e6,
+        type=int,
+        help='Max time steps to run environment')
     parser.add_argument(
-        "--alpha", default=0.2
-    )  # Temperature parameter, determines the relative importance of entropy term against the reward
+        "--alpha", default=0.2, help='Temperature parameter'
+    )  # determines the relative importance of entropy term against the reward
     parser.add_argument(
-        "--batch_size", default=256, type=int)  # Batch size for learning
-    parser.add_argument("--discount", default=0.99)  # Discount factor
-    parser.add_argument("--tau", default=5e-3)  # Target network update rate
+        "--batch_size", default=256, type=int, help='Batch size for learning')
+    parser.add_argument("--discount", default=0.99, help='Discount factor')
     parser.add_argument(
-        "--actor_lr", default=3e-4)  # Learning rate of actor network
+        "--tau", default=5e-3, help='Target network update rate')
     parser.add_argument(
-        "--critic_lr", default=3e-4)  # Learning rate of critic network
+        "--actor_lr", default=3e-4, help='Learning rate of actor network')
     parser.add_argument(
-        "--policy_freq", default=1,
-        type=int)  # Frequency to train actor and update params
+        "--critic_lr", default=3e-4, help='Learning rate of critic network')
     parser.add_argument(
-        "--automatic_entropy_tuning", default=False,
-        type=bool)  # Automatically adjust α
+        "--policy_freq",
+        default=1,
+        type=int,
+        help=
+        'Frequency to train actor(& adjust alpha if necessary) and update params'
+    )
     parser.add_argument(
-        "--entropy_lr", default=3e-4)  # Learning rate of entropy
+        "--automatic_entropy_tuning",
+        default=False,
+        type=bool,
+        help='Automatically adjust alpha')
+    parser.add_argument(
+        "--entropy_lr", default=3e-4, help='Learning rate of entropy')
 
     args = parser.parse_args()
 

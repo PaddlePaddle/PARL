@@ -58,7 +58,10 @@ class DDPG(parl.Algorithm):
         return self.model.policy(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
+        self._critic_learn(obs, action, reward, next_obs, terminal)
+        self._actor_learn(obs)
 
+    def _critic_learn(self, obs, action, reward, next_obs, terminal):
         self.total_it += 1
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
@@ -76,6 +79,7 @@ class DDPG(parl.Algorithm):
         critic_loss.backward()
         self.critic_optimizer.step()
 
+    def _actor_learn(self, obs):
         # Update the frozen target models
         if self.total_it % self.policy_freq == 0:
             # Compute actor loss

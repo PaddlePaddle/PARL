@@ -29,8 +29,8 @@ def run_train_episode(agent, env, rpm):
     max_action = float(env.action_space.high[0])
     obs, done = env.reset(), False
     episode_reward, episode_steps = 0, 0
-    while not done:
 
+    while not done:
         episode_steps += 1
         # Select action randomly or according to policy
         if rpm.size() < args.start_timesteps:
@@ -49,7 +49,6 @@ def run_train_episode(agent, env, rpm):
 
         # Store data in replay memory
         rpm.append(obs, action, reward, next_obs, terminal)
-
         obs = next_obs
         episode_reward += reward
 
@@ -113,7 +112,6 @@ def main():
     test_flag = 0
 
     while total_steps < args.max_timesteps:
-
         # Train episode
         episode_num += 1
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
@@ -139,34 +137,48 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v1")  # OpenAI gym environment name
+        "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
     parser.add_argument(
-        "--seed", default=0, type=int)  # Sets Gym, PyTorch and Numpy seeds
+        "--seed",
+        default=0,
+        type=int,
+        help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
-        "--start_timesteps", default=1e4,
-        type=int)  # Time steps initial random policy is used
+        "--start_timesteps",
+        default=1e4,
+        type=int,
+        help='Time steps initial random policy is used')
     parser.add_argument(
-        "--eval_freq", default=5e3,
-        type=int)  # How often (time steps) we evaluate
+        "--eval_freq",
+        default=5e3,
+        type=int,
+        help='How often (time steps) to evaluate')
     parser.add_argument(
-        "--eval_episodes", default=5,
-        type=int)  # How many episodes during evaluation
+        "--eval_episodes",
+        default=5,
+        type=int,
+        help='How many episodes during evaluation')
     parser.add_argument(
-        "--max_timesteps", default=1e6,
-        type=int)  # Max time steps to run environment
+        "--max_timesteps",
+        default=1e6,
+        type=int,
+        help='Max time steps to run environment')
     parser.add_argument(
-        "--expl_noise", default=0.1)  # Std of Gaussian exploration noise
+        "--expl_noise", default=0.1, help='Std of Gaussian exploration noise')
     parser.add_argument(
-        "--batch_size", default=100, type=int)  # Batch size for learning
-    parser.add_argument("--discount", default=0.99)  # Discount factor
-    parser.add_argument("--tau", default=0.005)  # Target network update rate
+        "--batch_size", default=100, type=int, help='Batch size for learning')
+    parser.add_argument("--discount", default=0.99, help='Discount factor')
     parser.add_argument(
-        "--actor_lr", default=1e-3)  # Learning rate of actor network
+        "--tau", default=0.005, help='Target network update rate')
     parser.add_argument(
-        "--critic_lr", default=1e-3)  # Learning rate of critic network
+        "--actor_lr", default=1e-3, help='Learning rate of actor network')
     parser.add_argument(
-        "--policy_freq", default=1,
-        type=int)  # Frequency to train actor and update params
+        "--critic_lr", default=1e-3, help='Learning rate of critic network')
+    parser.add_argument(
+        "--policy_freq",
+        default=1,
+        type=int,
+        help='Frequency to train actor and update params')
     args = parser.parse_args()
 
     main()

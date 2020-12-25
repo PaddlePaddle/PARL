@@ -32,11 +32,24 @@ class SAC(parl.Algorithm):
                  alpha=None,
                  actor_lr=None,
                  critic_lr=None,
-                 decay=None,
                  policy_freq=1,
                  automatic_entropy_tuning=False,
                  entropy_lr=None,
-                 action_space=None):
+                 action_dim=None):
+        """ SAC algorithm
+            Args:
+                model(parl.Model): forward network of actor and critic.
+                max_action (float): the largest value that an action can be, env.action_space.high[0]
+                discount(float): discounted factor for reward computation
+                tau (float): decay coefficient when updating the weights of self.target_model with self.model
+                alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+                actor_lr (float): learning rate of the actor model
+                critic_lr (float): learning rate of the critic model
+                policy_freq(int): frequency to train actor(& adjust alpha if necessary) and update params
+                automatic_entropy_tuning(bool): whether or not to adjust alpha automatically
+                entropy_lr: learning rate of entropy
+                action_dim: the dimension of an action, env.action_space.shape[0], to calculate target_entropy
+        """
         assert isinstance(discount, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
@@ -65,7 +78,7 @@ class SAC(parl.Algorithm):
 
         if self.automatic_entropy_tuning is True:
             self.target_entropy = -torch.prod(
-                torch.Tensor(action_space).to(device))
+                torch.Tensor(action_dim).to(device))
             self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
             self.alpha_optimizer = torch.optim.Adam([self.log_alpha],
                                                     lr=self.entropy_lr)

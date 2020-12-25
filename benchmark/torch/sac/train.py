@@ -99,7 +99,7 @@ def main():
         policy_freq=args.policy_freq,
         automatic_entropy_tuning=False,
         entropy_lr=args.entropy_lr,
-        action_space=action_dim)
+        action_dim=action_dim)
     agent = MujocoAgent(algorithm, state_dim, action_dim)
     rpm = ReplayMemory(
         max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         "--automatic_entropy_tuning",
         default=False,
         type=bool,
-        help='Automatically adjust alpha')
+        help='Whether or not to adjust alpha automatically ')
     parser.add_argument(
         "--entropy_lr", default=3e-4, help='Learning rate of entropy')
 

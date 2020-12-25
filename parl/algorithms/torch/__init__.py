@@ -21,4 +21,3 @@ from parl.algorithms.torch.ppo import *
 from parl.algorithms.torch.policy_gradient import *
 from parl.algorithms.torch.qmix import *
 from parl.algorithms.torch.ddpg import *
-from parl.algorithms.torch.sac import *

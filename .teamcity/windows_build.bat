@@ -30,7 +30,8 @@ set NONE="\033[0m"
 
 
 rem ------basic unittest
-for %%v in (3.6 3.7 3.8) do (
+rem ------ test in python 3.7 and 3.8 environments
+for %%v in (3.7 3.8) do (
 	rem ------pre install python requirement----------
 	call conda env remove --name parl_unittest_py%%v
 	call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages

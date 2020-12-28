@@ -111,9 +111,10 @@ echo    ===========================================================
 echo    run_test_with_cpu IS_TESTING_SERIALLY=%IS_TESTING_SERIALLY%
 echo    ===========================================================
 
-if not exist %REPO_ROOT%\build (
-    mkdir %REPO_ROOT%\build
+if exist %REPO_ROOT%\build (
+    rmdir %REPO_ROOT%\build /s/q
 )
+mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
@@ -138,9 +139,11 @@ echo    ===========================================================
 echo    run_import_test
 echo    ===========================================================
 
-if not exist %REPO_ROOT%\build (
-    mkdir %REPO_ROOT%\build
+
+if exist %REPO_ROOT%\build (
+    rmdir %REPO_ROOT%\build /s/q
 )
+mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64

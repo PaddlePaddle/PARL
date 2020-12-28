@@ -217,8 +217,8 @@ function main() {
           run_test_with_gpu
           run_test_with_dygraph_paddle
 
-          #
-          /root/miniconda3/envs/empty_env/bin/pip install .
+          source activate empty_env
+          pip install .
           run_import_test
           run_docs_test
           ;;

@@ -253,7 +253,7 @@ class Job(object):
             # save other files to current directory
             for file, content in pyfiles['other_files'].items():
                 # create directory (i.e. ./rom_files/)
-                if '/' in file:
+                if os.sep in file:
                     try:
                         sep = os.sep
                         recursive_dirs = os.path.join(*(file.split(sep)[:-1]))
@@ -348,14 +348,15 @@ class Job(object):
         job_address_sender.send(job_address)
         job_id_sender.send(job_id)
 
-        try:
-            # receive source code from the actor and append them to the environment variables.
-            envdir = self.wait_for_files(reply_socket, job_address)
-            sys.path.insert(0, envdir)
-            os.chdir(envdir)
+        # receive source code from the actor and append them to the environment variables.
+        envdir = self.wait_for_files(reply_socket, job_address)
+        sys.path.insert(0, envdir)
+        os.chdir(envdir)
 
+        try:
             obj = self.wait_for_connection(reply_socket)
             assert obj is not None
+
             self.single_task(obj, reply_socket, job_address)
         except Exception as e:
             logger.error(

@@ -29,6 +29,27 @@ set BOLD="\033[1m"
 set NONE="\033[0m"
 
 
+rem ------paddle dygraph unittest
+rem ------pre install python requirement----------
+cd %REPO_ROOT%
+call conda env remove --name parl_paddle_dygraph_unittest
+call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
+call conda activate parl_paddle_dygraph_unittest
+
+where python
+where pip
+
+pip install -U .
+pip install -r .teamcity\windows_requirements_paddle.txt
+if %ERRORLEVEL% NEQ 0 (
+		goto pip_error
+)
+
+
+call :run_paddle_dygraph_test || goto unittest_error
+rem ----------------------------------------------
+
+
 rem ------basic unittest
 rem ------ test in python 3.7 and 3.8 environments
 for %%v in (3.7 3.8) do (
@@ -79,33 +100,8 @@ call :run_import_test || goto unittest_error
 rem ----------------------------------------------
 
 
-rem ------paddle dygraph unittest
-rem ------pre install python requirement----------
-cd %REPO_ROOT%
-call conda env remove --name parl_paddle_dygraph_unittest
-call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
-call conda activate parl_paddle_dygraph_unittest
-
-where python
-where pip
-
-pip install -U .
-pip install -r .teamcity\windows_requirements_paddle.txt
-if %ERRORLEVEL% NEQ 0 (
-		goto pip_error
-)
-
-call :run_paddle_dygraph_test || goto unittest_error
-rem ----------------------------------------------
-
-
 rem ------all unittests are successful
 goto :success
-
-
-
-
-
 
 
 rem ------functions

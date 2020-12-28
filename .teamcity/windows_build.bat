@@ -33,6 +33,7 @@ rem ------basic unittest
 rem ------ test in python 3.7 and 3.8 environments
 for %%v in (3.7 3.8) do (
 	rem ------pre install python requirement----------
+	cd %REPO_ROOT%
 	call conda env remove --name parl_unittest_py%%v
 	call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages
 	call conda activate parl_unittest_py%%v
@@ -61,6 +62,7 @@ rem ----------------------------------------------
 
 rem ------import unittest
 rem ------pre install python requirement----------
+cd %REPO_ROOT%
 call conda env remove --name parl_import_unittest
 call echo y | conda create -n parl_import_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_import_unittest
@@ -79,6 +81,7 @@ rem ----------------------------------------------
 
 rem ------paddle dygraph unittest
 rem ------pre install python requirement----------
+cd %REPO_ROOT%
 call conda env remove --name parl_paddle_dygraph_unittest
 call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_paddle_dygraph_unittest
@@ -125,13 +128,10 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 if "%IS_TESTING_SERIALLY%"=="ON" (
-    ctest -C Debug --output-on-failure
+    ctest -C Release --output-on-failure
 ) else (
-    ctest -C Debug --output-on-failure -j20 --verbose 
+    ctest -C Release --output-on-failure -j10 --verbose 
 )
-
-cd %REPO_ROOT%
-rmdir %REPO_ROOT%\build /s/q
 goto:eof
 rem ------------------------------------------------
 
@@ -154,10 +154,7 @@ if %ERRORLEVEL% NEQ 0 (
 		goto cmake_error
 )
 
-ctest -C Debug --output-on-failure
-
-cd %REPO_ROOT%
-rmdir %REPO_ROOT%\build /s/q
+ctest -C Release --output-on-failure
 goto:eof
 rem ------------------------------------------------
 
@@ -181,9 +178,7 @@ if %ERRORLEVEL% NEQ 0 (
 		goto cmake_error
 )
 
-ctest -C Debug --output-on-failure
-
-cd %REPO_ROOT%
+ctest -C Release --output-on-failure
 goto:eof
 rem ------------------------------------------------
 

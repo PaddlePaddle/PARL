@@ -27,8 +27,6 @@ set RED="\033[0;31m"
 set BLUE="\033[0;34m"
 set BOLD="\033[1m"
 set NONE="\033[0m"
-call conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-call conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
 
 
 rem ------basic unittest
@@ -36,14 +34,14 @@ for %%v in (3.6 3.7 3.8) do (
 	rem ------pre install python requirement----------
 	set env_name=parl_unittest_py%%v
 	call conda env remove --name %env_name%
-	call echo y | conda create -n %env_name% python=%%v --no-default-packages
+	call echo y | conda create -n %env_name% python=%%v pip=20.2.1 --no-default-packages
 	call conda activate %env_name%
 
 	where python
 	where pip
 
-	pip install  -i https://mirror.baidu.com/pypi/simple -U .
-	pip install -i https://mirror.baidu.com/pypi/simple -r .teamcity\windows_requirements.txt
+	pip install -U .
+	pip install -r .teamcity\windows_requirements.txt
 	if %ERRORLEVEL% NEQ 0 (
 	    goto pip_error
 	)
@@ -64,14 +62,13 @@ rem ----------------------------------------------
 rem ------import unittest
 rem ------pre install python requirement----------
 call conda env remove --name parl_import_unittest
-call echo y | conda create -n parl_import_unittest python=3.8.5 --no-default-packages
+call echo y | conda create -n parl_import_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_import_unittest
 
 where python
 where pip
 
-pip install  -i https://mirror.baidu.com/pypi/simple -U .
-pip install -i https://mirror.baidu.com/pypi/simple -r .teamcity\windows_requirements.txt
+pip install -U .
 if %ERRORLEVEL% NEQ 0 (
 		goto pip_error
 )
@@ -83,14 +80,14 @@ rem ----------------------------------------------
 rem ------paddle dygraph unittest
 rem ------pre install python requirement----------
 call conda env remove --name parl_paddle_dygraph_unittest
-call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 --no-default-packages
+call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_paddle_dygraph_unittest
 
 where python
 where pip
 
-pip install  -i https://mirror.baidu.com/pypi/simple -U .
-pip install -i https://mirror.baidu.com/pypi/simple -r .teamcity\windows_requirements_paddle.txt
+pip install -U .
+pip install -r .teamcity\windows_requirements_paddle.txt
 if %ERRORLEVEL% NEQ 0 (
 		goto pip_error
 )
@@ -130,7 +127,7 @@ if %ERRORLEVEL% NEQ 0 (
 if "%IS_TESTING_SERIALLY%"=="ON" (
     ctest -C Debug --output-on-failure
 ) else (
-    ctest -C Debug --output-on-failure -j10 --verbose 
+    ctest -C Debug --output-on-failure -j20 --verbose 
 )
 
 cd %REPO_ROOT%

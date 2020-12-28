@@ -28,6 +28,8 @@ set BLUE="\033[0;34m"
 set BOLD="\033[1m"
 set NONE="\033[0m"
 
+rem ------ environment variables of cmake and ctest
+call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 rem ------paddle dygraph unittest
 rem ------pre install python requirement----------
@@ -117,7 +119,6 @@ if exist %REPO_ROOT%\build (
 mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 cmake .. -DIS_TESTING_SERIALLY=%IS_TESTING_SERIALLY%
 if %ERRORLEVEL% NEQ 0 (
@@ -146,8 +147,6 @@ if exist %REPO_ROOT%\build (
 mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
-
 cmake .. -DIS_TESTING_IMPORT=ON
 if %ERRORLEVEL% NEQ 0 (
 		goto cmake_error
@@ -170,7 +169,6 @@ if exist %REPO_ROOT%\build (
 mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 cmake .. -DIS_TESTING_PADDLE=ON
 if %ERRORLEVEL% NEQ 0 (

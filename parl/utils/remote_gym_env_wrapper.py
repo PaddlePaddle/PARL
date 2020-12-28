@@ -42,11 +42,17 @@ class RemoteGymEnv(object):
         support both Continuous action space and Discrete action space environments
 
     """
+
     def __init__(self, env_name=None):
         assert isinstance(env_name, str)
 
         class ActionSpace(object):
-            def __init__(self, action_space=None, low=None, high=None, shape=None, n=None):
+            def __init__(self,
+                         action_space=None,
+                         low=None,
+                         high=None,
+                         shape=None,
+                         n=None):
                 self.action_space = action_space
                 self.low = low
                 self.high = high
@@ -67,17 +73,15 @@ class RemoteGymEnv(object):
         self._max_episode_steps = int(self.env._max_episode_steps)
         self._elapsed_steps = int(self.env._elapsed_steps)
 
-        self.observation_space = ObservationSpace(self.env.observation_space,
-                                                  self.env.observation_space.low,
-                                                  self.env.observation_space.high,
-                                                  self.env.observation_space.shape)
+        self.observation_space = ObservationSpace(
+            self.env.observation_space, self.env.observation_space.low,
+            self.env.observation_space.high, self.env.observation_space.shape)
         if isinstance(self.env.action_space, Discrete):
             self.action_space = ActionSpace(n=self.env.action_space.n)
         elif isinstance(self.env.action_space, Box):
-            self.action_space = ActionSpace(self.env.action_space,
-                                            self.env.action_space.low,
-                                            self.env.action_space.high,
-                                            self.env.action_space.shape)
+            self.action_space = ActionSpace(
+                self.env.action_space, self.env.action_space.low,
+                self.env.action_space.high, self.env.action_space.shape)
 
     def reset(self):
         return self.env.reset()

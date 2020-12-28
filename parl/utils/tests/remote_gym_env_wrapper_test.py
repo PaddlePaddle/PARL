@@ -34,7 +34,8 @@ def main():
         action = env.action_space.sample()
         next_obs, reward, done, info = env.step(action)
         episode_reward += reward
-    logger.info('Episode done, total_steps {}, episode_reward {}'.format(total_steps, episode_reward))
+    logger.info('Episode done, total_steps {}, episode_reward {}'.format(
+        total_steps, episode_reward))
 
 
 # # Example 2, Discrete action space
@@ -51,7 +52,6 @@ def main():
 #         next_obs, reward, done, info = env.step(action)
 #         episode_reward += reward
 #     logger.info('Episode done, total_steps {}, episode_reward {}'.format(total_steps, episode_reward))
-
 
 if __name__ == '__main__':
     main()

@@ -93,4 +93,6 @@ class RemoteGymEnv(object):
         return self.env.seed(seed)
 
     def render(self):
-        return logger.warning('Using remote env, no need to render')
+        return logger.warning(
+            'Can not render in remote environment, render() have been skipped.'
+        )

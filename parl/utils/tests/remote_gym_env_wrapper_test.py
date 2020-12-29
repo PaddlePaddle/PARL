@@ -20,66 +20,13 @@ import numpy as np
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import logger
+from parl.utils import logger, RemoteGymEnv
 import gym
 from gym.spaces import Box, Discrete
 
 
-@parl.remote_class
-class RemoteGymEnv(object):
-    def __init__(self, env_name=None):
-        assert isinstance(env_name, str)
-
-        class ActionSpace(object):
-            def __init__(self,
-                         action_space=None,
-                         low=None,
-                         high=None,
-                         shape=None,
-                         n=None):
-                self.action_space = action_space
-                self.low = low
-                self.high = high
-                self.shape = shape
-                self.n = n
-
-            def sample(self):
-                return self.action_space.sample()
-
-        class ObservationSpace(object):
-            def __init__(self, observation_space, low, high, shape=None):
-                self.observation_space = observation_space
-                self.low = low
-                self.high = high
-                self.shape = shape
-
-        self.env = gym.make(env_name)
-        self._max_episode_steps = int(self.env._max_episode_steps)
-        self._elapsed_steps = int(self.env._elapsed_steps)
-
-        self.observation_space = ObservationSpace(
-            self.env.observation_space, self.env.observation_space.low,
-            self.env.observation_space.high, self.env.observation_space.shape)
-        if isinstance(self.env.action_space, Discrete):
-            self.action_space = ActionSpace(n=self.env.action_space.n)
-        elif isinstance(self.env.action_space, Box):
-            self.action_space = ActionSpace(
-                self.env.action_space, self.env.action_space.low,
-                self.env.action_space.high, self.env.action_space.shape)
-
-    def reset(self):
-        return self.env.reset()
-
-    def step(self, action):
-        return self.env.step(action)
-
-    def seed(self, seed):
-        return self.env.seed(seed)
-
-    def render(self):
-        return logger.warning('Using remote env, no need to render')
-
-
+# Test RemoteGymEnv
+# for both discrete and continuous action space
 class TestRemoteEnv(unittest.TestCase):
     def tearDown(self):
         disconnect()

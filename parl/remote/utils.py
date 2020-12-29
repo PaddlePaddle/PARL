@@ -186,11 +186,11 @@ def locate_remote_file(module_path):
 
     if entry_path is None:
         raise FileNotFoundError("cannot locate the remote file")
-      
+
     # fix pycharm issue: https://github.com/PaddlePaddle/PARL/issues/350
     module_path = format_uniform_path(module_path)
     entry_path = format_uniform_path(entry_path)
-    
+
     # transfer the relative path to the absolute path
     abs_module_path = module_path
     if not os.path.isabs(abs_module_path):

@@ -97,12 +97,12 @@ class SAC(parl.Algorithm):
         return action, log_prob
 
     def learn(self, obs, action, reward, next_obs, terminal):
+        self.total_it += 1
         self._critic_learn(obs, action, reward, next_obs, terminal)
-        self._actor_learn(obs)
+        if self.total_it % self.policy_freq == 0:
+            self._actor_learn(obs)
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
-        self.total_it += 1
-
         with torch.no_grad():
             next_action, next_log_pro = self.predict(next_obs)
             q1_next, q2_next = self.target_model.critic_model(
@@ -119,27 +119,26 @@ class SAC(parl.Algorithm):
         self.critic_optimizer.step()
 
     def _actor_learn(self, obs):
-        if self.total_it % self.policy_freq == 0:
-            act, log_pi = self.predict(obs)
-            q1_pi, q2_pi = self.model.critic_model(obs, act)
-            min_q_pi = torch.min(q1_pi, q2_pi)
-            actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
+        act, log_pi = self.predict(obs)
+        q1_pi, q2_pi = self.model.critic_model(obs, act)
+        min_q_pi = torch.min(q1_pi, q2_pi)
+        actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
 
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
 
-            self.sync_target(decay=self.decay)
+        self.sync_target(decay=self.decay)
 
-            if self.automatic_entropy_tuning is True:
-                alpha_loss = -(self.log_alpha *
-                               (log_pi + self.target_entropy).detach()).mean()
+        if self.automatic_entropy_tuning is True:
+            alpha_loss = -(self.log_alpha *
+                           (log_pi + self.target_entropy).detach()).mean()
 
-                self.alpha_optimizer.zero_grad()
-                alpha_loss.backward()
-                self.alpha_optimizer.step()
+            self.alpha_optimizer.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
 
-                self.alpha = self.log_alpha.exp()
+            self.alpha = self.log_alpha.exp()
 
     def sync_target(self, decay=None):
         if decay is None:

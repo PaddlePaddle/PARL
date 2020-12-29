@@ -13,14 +13,14 @@
 # limitations under the License.
 
 import gym
-import parl
 from parl.utils import logger
+from parl.remote.remote_decorator import remote_class
 from gym.spaces import Box, Discrete
 
 __all__ = ['RemoteGymEnv']
 
 
-@parl.remote_class
+@remote_class
 class RemoteGymEnv(object):
     """
 

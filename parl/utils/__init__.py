@@ -20,3 +20,4 @@ from parl.utils.np_utils import *
 from parl.utils.replay_memory import *
 from parl.utils.rl_utils import *
 from parl.utils.scheduler import *
+from parl.utils.path_utils import *

@@ -71,7 +71,7 @@ setup(
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
-        "pyzmq==18.0.1",
+        "pyzmq==18.1.1",
         "scipy>=1.0.0",
         'cloudpickle==1.3.0; python_version<"3"',
         'cloudpickle==1.6.0; python_version>="3"',
@@ -82,6 +82,8 @@ setup(
         "psutil>=5.6.2",
         "flask_cors",
         "requests",
+        "grpcio>=1.27.2",
+        "protobuf>=3.14.0",
         "visualdl>=2.0.0b;python_version>='3.8' and platform_system=='Linux'",
     ],
     classifiers=[

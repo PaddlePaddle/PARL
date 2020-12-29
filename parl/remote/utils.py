@@ -15,11 +15,11 @@
 import sys
 from contextlib import contextmanager
 import os
-from parl.utils import isnotebook, logger
+from parl.utils import isnotebook, logger, format_uniform_path
 
 __all__ = [
     'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
-    'get_subfiles_recursively'
+    'get_subfiles_recursively', 'has_module'
 ]
 
 
@@ -186,18 +186,22 @@ def locate_remote_file(module_path):
 
     if entry_path is None:
         raise FileNotFoundError("cannot locate the remote file")
-
+      
+    # fix pycharm issue: https://github.com/PaddlePaddle/PARL/issues/350
+    module_path = format_uniform_path(module_path)
+    entry_path = format_uniform_path(entry_path)
+    
     # transfer the relative path to the absolute path
     abs_module_path = module_path
     if not os.path.isabs(abs_module_path):
         abs_module_path = os.path.abspath(abs_module_path)
 
-    if abs_module_path.startswith(
-            os.sep) and entry_path != abs_module_path[:len(entry_path)]:
+    if os.sep in abs_module_path \
+            and entry_path != abs_module_path[:len(entry_path)]:
         # the file of the module is not in the directory of entry or its subdirectories
         return module_path, True
 
-    if abs_module_path.startswith(os.sep):
+    if os.sep in abs_module_path:
         relative_module_path = '.' + abs_module_path[len(entry_path):]
     else:
         relative_module_path = abs_module_path
@@ -236,3 +240,19 @@ def get_subfiles_recursively(folder_path):
             elif len(dirs) == 0:
                 empty_subfolders.append(os.path.normpath(root))
         return python_files, other_files, empty_subfolders
+
+
+def has_module(module_name):
+    ''' Check if the python environment has installed the module or package.
+    Args:
+        module_name: module to be checked
+    Returns:
+        has_module: (bool), True or False
+    '''
+    assert isinstance(module_name, str), '"module_name" should be a string!'
+    try:
+        __import__(module_name)
+    except ImportError:
+        return False
+    else:
+        return True

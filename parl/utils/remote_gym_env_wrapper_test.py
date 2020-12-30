@@ -20,7 +20,8 @@ import numpy as np
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import logger, RemoteGymEnv
+from parl.utils import logger
+from env_utils import RemoteGymEnv
 import gym
 from gym.spaces import Box, Discrete
 
@@ -39,7 +40,7 @@ class TestRemoteEnv(unittest.TestCase):
         time.sleep(3)
         woker1 = Worker('localhost:8267', 1)
 
-        parl.connect('localhost:8267')
+        parl.connect('localhost:8267', distributed_files=[''])
         logger.info("Running: test discrete_env_wrapper: 1")
 
         env = RemoteGymEnv(env_name='MountainCar-v0')

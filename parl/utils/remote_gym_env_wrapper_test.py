@@ -40,7 +40,7 @@ class TestRemoteEnv(unittest.TestCase):
         time.sleep(3)
         woker1 = Worker('localhost:8267', 1)
 
-        parl.connect('localhost:8267', distributed_files=[''])
+        parl.connect('localhost:8267')
         logger.info("Running: test discrete_env_wrapper: 1")
 
         env = RemoteGymEnv(env_name='MountainCar-v0')

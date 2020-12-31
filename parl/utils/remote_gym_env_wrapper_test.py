@@ -21,7 +21,7 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import logger
-from parl.utils.env_utils import *
+from env_utils import RemoteGymEnv
 import gym
 from gym.spaces import Box, Discrete
 

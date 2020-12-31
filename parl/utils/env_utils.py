@@ -33,13 +33,15 @@ class RemoteGymEnv(object):
         env = RemoteGymEnv(env_name='HalfCheetah-v1')
 
     Attributes:
-        env_name: Mujoco gym environment name
+        env_name: gym environment name
 
     Public Functions: the same as gym (mainly action_space, observation_space, reset, step, seed ...)
 
     Note:
-        ``RemoteGymEnv`` defines a remote environment wrapper for machines that do not support mujoco,
-        support both Continuous action space and Discrete action space environments
+        ``RemoteGymEnv`` defines a remote environment wrapper for running the environment remotely and
+        enables large-scale parallel collection of environmental data.
+
+        Support both Continuous action space and Discrete action space environments.
 
     """
 
@@ -71,7 +73,8 @@ class RemoteGymEnv(object):
 
         self.env = gym.make(env_name)
         self._max_episode_steps = int(self.env._max_episode_steps)
-        self._elapsed_steps = int(self.env._elapsed_steps)
+        try:
+            self._elapsed_steps = int(self.env._elapsed_steps)
 
         self.observation_space = ObservationSpace(
             self.env.observation_space, self.env.observation_space.low,

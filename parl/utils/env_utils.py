@@ -75,6 +75,8 @@ class RemoteGymEnv(object):
         self._max_episode_steps = int(self.env._max_episode_steps)
         try:
             self._elapsed_steps = int(self.env._elapsed_steps)
+        except:
+            logger.info('object has no attribute _elspaed_steps')
 
         self.observation_space = ObservationSpace(
             self.env.observation_space, self.env.observation_space.low,

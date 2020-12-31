@@ -51,7 +51,7 @@ class TestRemoteEnv(unittest.TestCase):
         observation_space = env.observation_space
         obs_space_high = observation_space.high
         obs_space_low = observation_space.low
-        self.assertEqual(obs_space_high[0], 0.6)
+        self.assertEqual(obs_space_high[1], 0.07)
         self.assertEqual(obs_space_low[0], -1.2)
 
         action_space = env.action_space

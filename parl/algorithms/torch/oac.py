@@ -39,13 +39,12 @@ class OAC(parl.Algorithm):
                  policy_freq=1,
                  automatic_entropy_tuning=False,
                  entropy_lr=None,
-                 action_space=None):
+                 action_dim=None):
         assert isinstance(discount, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
-        assert isinstance(entropy_lr, float)
 
         self.max_action = max_action
         self.discount = discount
@@ -71,7 +70,7 @@ class OAC(parl.Algorithm):
 
         if self.automatic_entropy_tuning is True:
             self.target_entropy = -torch.prod(
-                torch.Tensor(action_space).to(device))
+                torch.Tensor(action_dim).to(device))
             self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
             self.alpha_optimizer = torch.optim.Adam([self.log_alpha],
                                                     lr=self.entropy_lr)
@@ -87,7 +86,6 @@ class OAC(parl.Algorithm):
         log_prob = normal.log_prob(x_t)
         log_prob -= torch.log(self.max_action * (1 - y_t.pow(2)) + 1e-6)
         log_prob = log_prob.sum(1, keepdims=True)
-        # log_prob = torch.squeeze(log_prob, dim=1)
         return action, log_prob
 
     def sample(self, obs):
@@ -95,22 +93,23 @@ class OAC(parl.Algorithm):
         act_mean.requires_grad_()
         tanh_mean = torch.tanh(act_mean)
 
-        # Get upper bound of Q
+        # To get upper bound of the Q estimate
+        # mu_Q: mean belief of Q
+        # sigma_Q: an epistemic uncertainty estimate about true Q
         q1, q2 = self.model.critic_model(obs, tanh_mean)
         mu_Q = (q1 + q2) / 2.0
         sigma_Q = torch.abs(q1 - q2) / 2.0
-
-        # Upper Bound Q
         Q_UB = mu_Q + self.beta * sigma_Q
 
-        # Obtain the gradient of Q_UB wrt to a with a evaluated at mu_t
+        # Obtain the gradient of upper bound Q wrt to a with a evaluated at mu_t
         grad = torch.autograd.grad(Q_UB, act_mean)
         grad = grad[0]
 
-        # the covariance of normal distribution
+        # sigma_T: the covariance of normal distribution
         sigma_T = torch.pow(act_log_std, 2)
         denominator = torch.sqrt(
             torch.sum(torch.mul(torch.pow(grad, 2), sigma_T))) + 10e-6
+        # mu_C: change in mean for optimistic exploration
         mu_C = math.sqrt(2.0 * self.delta) * torch.mul(sigma_T,
                                                        grad) / denominator
         mu_E = act_mean + mu_C

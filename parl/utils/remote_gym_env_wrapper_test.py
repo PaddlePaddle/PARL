@@ -20,7 +20,7 @@ import numpy as np
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import logger
+from parl.utils import logger, get_free_tcp_port
 from env_utils import RemoteGymEnv
 import gym
 from gym.spaces import Box, Discrete
@@ -41,13 +41,14 @@ class TestRemoteEnv(unittest.TestCase):
 
     def test_discrete_env_wrapper(self):
         logger.info("Running: test discrete_env_wrapper")
-        master = Master(port=8267)
+        port = get_free_tcp_port()
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        woker1 = Worker('localhost:8267', 1)
+        woker1 = Worker('localhost:{}'.format(port), 1)
 
-        parl.connect('localhost:8267')
+        parl.connect('localhost:{}'.format(port))
         logger.info("Running: test discrete_env_wrapper: 1")
 
         env = RemoteGymEnv(env_name='MountainCar-v0')
@@ -79,13 +80,14 @@ class TestRemoteEnv(unittest.TestCase):
 
     def test_continuous_env_wrapper(self):
         logger.info("Running: test continuous_env_wrapper")
-        master = Master(port=8268)
+        port = get_free_tcp_port()
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        woker1 = Worker('localhost:8268', 1)
+        woker1 = Worker('localhost:{}'.format(port), 1)
 
-        parl.connect('localhost:8268')
+        parl.connect('localhost:{}'.format(port))
         logger.info("Running: test continuous_env_wrapper: 1")
 
         env = RemoteGymEnv(env_name='Pendulum-v0')

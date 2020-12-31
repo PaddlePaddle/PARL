@@ -21,9 +21,16 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import logger
-from env_utils import RemoteGymEnv
+from parl.utils.env_utils import *
 import gym
 from gym.spaces import Box, Discrete
+
+
+def float_equal(x1, x2):
+    if np.abs(x1 - x2) < 1e-6:
+        return True
+    else:
+        return False
 
 
 # Test RemoteGymEnv
@@ -51,8 +58,8 @@ class TestRemoteEnv(unittest.TestCase):
         observation_space = env.observation_space
         obs_space_high = observation_space.high
         obs_space_low = observation_space.low
-        self.assertEqual(obs_space_high[1], 0.07)
-        self.assertEqual(obs_space_low[0], -1.2)
+        self.assertTrue(float_equal(obs_space_high[1], 0.07))
+        self.assertTrue(float_equal(obs_space_low[0], -1.2))
 
         action_space = env.action_space
         act_dim = action_space.n
@@ -89,8 +96,8 @@ class TestRemoteEnv(unittest.TestCase):
         observation_space = env.observation_space
         obs_space_high = observation_space.high
         obs_space_low = observation_space.low
-        self.assertEqual(obs_space_high[1], 1.)
-        self.assertEqual(obs_space_low[1], -1.)
+        self.assertTrue(float_equal(obs_space_high[1], 1.))
+        self.assertTrue(float_equal(obs_space_low[1], -1.))
 
         action_space = env.action_space
         action_space_high = action_space.high

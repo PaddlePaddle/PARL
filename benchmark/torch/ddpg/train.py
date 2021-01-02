@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-import random
-import torch
 import gym
 import argparse
 from parl.utils import logger, tensorboard, ReplayMemory

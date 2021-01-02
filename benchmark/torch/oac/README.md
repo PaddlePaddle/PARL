@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/OAC_results.png" width = "800" height ="300" alt="OAC_results"/>
+<img src=".benchmark/OAC_results.png" width = "800" height ="400" alt="OAC_results"/>
 
 ## How to use
 ### Dependencies:

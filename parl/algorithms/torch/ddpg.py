@@ -58,11 +58,12 @@ class DDPG(parl.Algorithm):
         return self.model.policy(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
+        self.total_it += 1
         self._critic_learn(obs, action, reward, next_obs, terminal)
-        self._actor_learn(obs)
+        if self.total_it % self.policy_freq == 0:
+            self._actor_learn(obs)
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
-        self.total_it += 1
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
             next_obs, self.target_model.actor_model(next_obs))
@@ -80,18 +81,16 @@ class DDPG(parl.Algorithm):
         self.critic_optimizer.step()
 
     def _actor_learn(self, obs):
-        # Update the frozen target models
-        if self.total_it % self.policy_freq == 0:
-            # Compute actor loss
-            actor_loss = -self.model.critic_model(
-                obs, self.model.actor_model(obs)).mean()
+        # Compute actor loss and Update the frozen target models
+        actor_loss = -self.model.critic_model(
+            obs, self.model.actor_model(obs)).mean()
 
-            # Optimize the actor
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
+        # Optimize the actor
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
 
-            self.sync_target(decay=self.decay)
+        self.sync_target(decay=self.decay)
 
     def sync_target(self, decay=None):
         if decay is None:

@@ -69,8 +69,8 @@ try:
     from paddle import fluid
 
     paddle_version = get_fluid_version()
-    if paddle_version < 200:
-        assert paddle_version >= 161 or paddle_version == 0, "PARL requires paddle >= 1.6.1 and paddle < 2.0.0"
+    if paddle_version < 200 and paddle_version != 0:
+        assert paddle_version >= 161, "PARL requires paddle >= 1.6.1 and paddle < 2.0.0"
         _HAS_FLUID = True
     else:
         logger.warning(

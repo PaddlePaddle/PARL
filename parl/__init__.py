@@ -29,7 +29,10 @@ if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
         'paddle': 'Dynamic Graph-based PARL',
         'torch': 'Torch-based PARL'
     }
-    logger.info('Have found environment variable `PARL_BACKEND`==\'{}\', switching framework to [{}]'.format(os.environ['PARL_BACKEND'], backend_dict[os.environ['PARL_BACKEND']]))
+    logger.info(
+        'Have found environment variable `PARL_BACKEND`==\'{}\', switching framework to [{}]'
+        .format(os.environ['PARL_BACKEND'],
+                backend_dict[os.environ['PARL_BACKEND']]))
     if os.environ['PARL_BACKEND'] == 'fluid':
         assert _HAS_FLUID, 'Static Graph-based PARL requires paddlepaddle version <= 1.8.5'
         from parl.core.fluid import *

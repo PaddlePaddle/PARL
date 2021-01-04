@@ -35,6 +35,7 @@ rem ------paddle dygraph unittest
 rem ------pre install python requirement----------
 cd %REPO_ROOT%
 call conda env remove --name parl_paddle_dygraph_unittest
+rmdir "C:\ProgramData\Miniconda3\envs\parl_paddle_dygraph_unittest" /s/q
 call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_paddle_dygraph_unittest
 
@@ -58,6 +59,7 @@ for %%v in (3.7 3.8) do (
 	rem ------pre install python requirement----------
 	cd %REPO_ROOT%
 	call conda env remove --name parl_unittest_py%%v
+  rmdir "C:\ProgramData\Miniconda3\envs\parl_unittest_py"%%v /s/q
 	call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages
 	call conda activate parl_unittest_py%%v
 
@@ -87,6 +89,7 @@ rem ------import unittest
 rem ------pre install python requirement----------
 cd %REPO_ROOT%
 call conda env remove --name parl_import_unittest
+rmdir "C:\ProgramData\Miniconda3\envs\parl_import_unittest" /s/q
 call echo y | conda create -n parl_import_unittest python=3.8.5 pip=20.2.1 --no-default-packages
 call conda activate parl_import_unittest
 

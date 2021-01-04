@@ -14,8 +14,8 @@
 
 # Refer to https://github.com/pranz24/pytorch-soft-actor-critic
 
-import os
-os.environ['PARL_BACKEND'] = 'fluid'
+from parl.utils import check_version_for_fluid # requires parl >= 1.4.1
+check_version_for_fluid()
 
 import argparse
 import gym

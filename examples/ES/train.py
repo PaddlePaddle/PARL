@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-os.environ['PARL_BACKEND'] = 'fluid'
+from parl.utils import check_version_for_fluid # requires parl >= 1.4.1
+check_version_for_fluid()
 
 import gym
 import parl

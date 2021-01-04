@@ -16,6 +16,7 @@ from parl.utils import check_version_for_fluid # requires parl >= 1.4.1
 check_version_for_fluid()
 
 import gym
+import os
 import parl
 import numpy as np
 import threading

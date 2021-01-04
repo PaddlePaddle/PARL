@@ -15,7 +15,6 @@
 from parl.utils import check_version_for_fluid # requires parl >= 1.4.1
 check_version_for_fluid()
 
-import os
 import gym
 import numpy as np
 import paddle.fluid as fluid

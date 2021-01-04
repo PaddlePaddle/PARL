@@ -67,7 +67,7 @@ for %%v in (3.7 3.8) do (
 	where pip
 
 	pip install -U .
-	pip install -r .teamcity\windows_requirements.txt
+	pip install -r .teamcity\windows_requirements_fluid.txt
 	if %ERRORLEVEL% NEQ 0 (
 	    goto pip_error
 	)

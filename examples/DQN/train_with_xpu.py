@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
 import gym
 import numpy as np
-import os
 import paddle
 import parl
 from parl.utils import logger, check_version_for_xpu
+check_version_for_xpu()
+paddle.enable_static()
 
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
@@ -110,9 +114,6 @@ def main():
 
 
 if __name__ == '__main__':
-    check_version_for_xpu()
-    paddle.enable_static()
-
     xpu_count = int(os.getenv("FLAGS_selected_xpus", "-1"))
     if xpu_count < 0:
         logger.info(

@@ -20,10 +20,8 @@ from parl.utils import logger
 if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
     assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
     if os.environ['PARL_BACKEND'] == 'fluid':
-        assert _HAS_FLUID, 'Static Graph-based PARL requires paddlepaddle version <= 1.8.5'
         from parl.algorithms.fluid import *
     elif os.environ['PARL_BACKEND'] == 'paddle':
-        assert _HAS_PADDLE, 'Dynamic Graph-based PARL requires paddlepaddle version >= 2.0.0'
         from parl.algorithms.paddle import *
     elif os.environ['PARL_BACKEND'] == 'torch':
         assert _HAS_TORCH, 'Torch-based PARL requires torch, which is not installed.'

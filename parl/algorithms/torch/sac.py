@@ -32,10 +32,7 @@ class SAC(parl.Algorithm):
                  alpha=None,
                  actor_lr=None,
                  critic_lr=None,
-                 policy_freq=1,
-                 automatic_entropy_tuning=False,
-                 entropy_lr=None,
-                 action_dim=None):
+                 policy_freq=1):
         """ SAC algorithm
             Args:
                 model(parl.Model): forward network of actor and critic.
@@ -46,16 +43,12 @@ class SAC(parl.Algorithm):
                 actor_lr (float): learning rate of the actor model
                 critic_lr (float): learning rate of the critic model
                 policy_freq(int): frequency to train actor(& adjust alpha if necessary) and update params
-                automatic_entropy_tuning(bool): whether or not to adjust alpha automatically
-                entropy_lr: learning rate of entropy
-                action_dim: the dimension of an action, env.action_space.shape[0], to calculate target_entropy
         """
         assert isinstance(discount, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
-        assert isinstance(entropy_lr, float)
 
         self.max_action = max_action
         self.discount = discount
@@ -64,8 +57,6 @@ class SAC(parl.Algorithm):
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
         self.policy_freq = policy_freq
-        self.automatic_entropy_tuning = automatic_entropy_tuning
-        self.entropy_lr = entropy_lr
         self.total_it = 0
 
         self.model = model.to(device)
@@ -74,13 +65,6 @@ class SAC(parl.Algorithm):
             self.model.get_actor_params(), lr=actor_lr)
         self.critic_optimizer = torch.optim.Adam(
             self.model.get_critic_params(), lr=critic_lr)
-
-        if self.automatic_entropy_tuning is True:
-            self.target_entropy = -torch.prod(
-                torch.Tensor(action_dim).to(device))
-            self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
-            self.alpha_optimizer = torch.optim.Adam([self.log_alpha],
-                                                    lr=self.entropy_lr)
 
     def predict(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
@@ -129,16 +113,6 @@ class SAC(parl.Algorithm):
         self.actor_optimizer.step()
 
         self.sync_target(decay=self.decay)
-
-        if self.automatic_entropy_tuning is True:
-            alpha_loss = -(self.log_alpha *
-                           (log_pi + self.target_entropy).detach()).mean()
-
-            self.alpha_optimizer.zero_grad()
-            alpha_loss.backward()
-            self.alpha_optimizer.step()
-
-            self.alpha = self.log_alpha.exp()
 
     def sync_target(self, decay=None):
         if decay is None:

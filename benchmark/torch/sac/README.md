@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/SAC_results.png" width = "800" height ="400" alt="SAC_HalfCheetah-v1"/>
+<img src=".benchmark/SAC_results.png" width = "800" height ="400" alt="SAC_results"/>
 
 + Each experiment was run three times with different seeds
 
@@ -26,5 +26,5 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 # To train an agent for HalfCheetah-v1 game
 python train.py
 
-# To train for other game & for automatic entropy tuning
-# python train.py --env [ENV_NAME] --automatic_entropy_tuning True
+# To train for other game
+# python train.py --env [ENV_NAME]

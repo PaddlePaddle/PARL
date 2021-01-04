@@ -96,10 +96,7 @@ def main():
         alpha=args.alpha,
         actor_lr=args.actor_lr,
         critic_lr=args.critic_lr,
-        policy_freq=args.policy_freq,
-        automatic_entropy_tuning=False,
-        entropy_lr=args.entropy_lr,
-        action_dim=action_dim)
+        policy_freq=args.policy_freq)
     agent = MujocoAgent(algorithm, state_dim, action_dim)
     rpm = ReplayMemory(
         max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
 import time
 import argparse
 import numpy as np

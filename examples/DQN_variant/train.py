@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
 import argparse
 import gym
 import paddle.fluid as fluid

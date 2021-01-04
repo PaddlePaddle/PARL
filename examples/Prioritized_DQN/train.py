@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
+import argparse
 import pickle
 from collections import deque
 from datetime import datetime

@@ -14,6 +14,9 @@
 
 # Refer to https://github.com/pranz24/pytorch-soft-actor-critic
 
+import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
 import argparse
 import gym
 import numpy as np

@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['PARL_BACKEND'] = 'fluid'
+
 import gym
 import numpy as np
-import os
 from six.moves import queue
 import six
 import time

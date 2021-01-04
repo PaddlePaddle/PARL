@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gym
 from parl.utils import logger
 from parl.remote.remote_decorator import remote_class
-from gym.spaces import Box, Discrete
+try:
+    import gym
+    gym_installed = True
+except ImportError:
+    gym_installed = False
+    logger.error('ImportError: No module named gym')
+if gym_installed:
+    from gym.spaces import Box, Discrete
 
 __all__ = ['RemoteGymEnv']
 
@@ -76,7 +82,7 @@ class RemoteGymEnv(object):
         try:
             self._elapsed_steps = int(self.env._elapsed_steps)
         except:
-            logger.info('object has no attribute _elspaed_steps')
+            logger.error('object has no attribute _elspaed_steps')
 
         self.observation_space = ObservationSpace(
             self.env.observation_space, self.env.observation_space.low,

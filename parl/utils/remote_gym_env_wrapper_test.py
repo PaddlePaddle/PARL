@@ -22,8 +22,6 @@ from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import logger, get_free_tcp_port
 from env_utils import RemoteGymEnv
-import gym
-from gym.spaces import Box, Discrete
 
 
 def float_equal(x1, x2):

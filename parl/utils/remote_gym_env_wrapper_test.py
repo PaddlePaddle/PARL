@@ -34,7 +34,7 @@ def float_equal(x1, x2):
 
 
 # Test RemoteGymEnv
-# for both discrete and continuous action space
+# for both discrete and continuous action space environment
 class TestRemoteEnv(unittest.TestCase):
     def tearDown(self):
         disconnect()

@@ -23,5 +23,5 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 # To train an agent for HalfCheetah-v1 game
 python train.py
 
-# To train for other games
+# To train for other game
 # python train.py --env [ENV_NAME]

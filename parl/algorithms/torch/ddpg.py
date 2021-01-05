@@ -23,29 +23,20 @@ __all__ = ['DDPG']
 
 
 class DDPG(parl.Algorithm):
-    def __init__(
-            self,
-            model,
-            max_action,
-            discount=None,
-            tau=None,
-            actor_lr=None,
-            critic_lr=None,
-            decay=None,
-            policy_freq=1,
-    ):  # Frequency of delayed policy updates
+    def __init__(self,
+                 model,
+                 discount=None,
+                 tau=None,
+                 actor_lr=None,
+                 critic_lr=None):
         assert isinstance(discount, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
-        self.max_action = max_action
         self.discount = discount
         self.tau = tau
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
-        self.decay = decay
-        self.policy_freq = policy_freq
-        self.total_it = 0
 
         self.model = model.to(device)
         self.target_model = deepcopy(self.model)
@@ -58,10 +49,8 @@ class DDPG(parl.Algorithm):
         return self.model.policy(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self.total_it += 1
         self._critic_learn(obs, action, reward, next_obs, terminal)
-        if self.total_it % self.policy_freq == 0:
-            self._actor_learn(obs)
+        self._actor_learn(obs)
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         # Compute the target Q value
@@ -90,7 +79,7 @@ class DDPG(parl.Algorithm):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        self.sync_target(decay=self.decay)
+        self.sync_target()
 
     def sync_target(self, decay=None):
         if decay is None:

@@ -94,14 +94,13 @@ def send_heartbeat_addr_to_worker(worker_addr, heartbeat_server_addr):
 
     try:
         socket.send_multipart([
-            remote_constants.HEARTBEAT_TAG,
+            remote_constants.NORMAL_TAG,
             to_byte(heartbeat_server_addr),
         ])
         message = socket.recv_multipart()
     except zmq.error.Again as e:
         err_str = "Can not connect to the worker please " \
-                  "check if the worker is started and ensure the input " \
-                  "address {} is correct.".format(worker_addr)
+                  "check if the worker is running."
         logger.warning(err_str)
         raise Exception(err_str)
 

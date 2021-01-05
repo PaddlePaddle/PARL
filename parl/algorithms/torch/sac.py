@@ -26,23 +26,19 @@ __all__ = ['SAC']
 class SAC(parl.Algorithm):
     def __init__(self,
                  model,
-                 max_action,
                  discount=None,
                  tau=None,
                  alpha=None,
                  actor_lr=None,
-                 critic_lr=None,
-                 policy_freq=1):
+                 critic_lr=None):
         """ SAC algorithm
             Args:
                 model(parl.Model): forward network of actor and critic.
-                max_action (float): the largest value that an action can be, env.action_space.high[0]
                 discount(float): discounted factor for reward computation
                 tau (float): decay coefficient when updating the weights of self.target_model with self.model
                 alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
                 actor_lr (float): learning rate of the actor model
                 critic_lr (float): learning rate of the critic model
-                policy_freq(int): frequency to train actor(& adjust alpha if necessary) and update params
         """
         assert isinstance(discount, float)
         assert isinstance(tau, float)
@@ -50,14 +46,11 @@ class SAC(parl.Algorithm):
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 
-        self.max_action = max_action
         self.discount = discount
         self.tau = tau
         self.alpha = alpha
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
-        self.policy_freq = policy_freq
-        self.total_it = 0
 
         self.model = model.to(device)
         self.target_model = deepcopy(self.model)
@@ -71,20 +64,17 @@ class SAC(parl.Algorithm):
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))
         x_t = normal.rsample()
-        y_t = torch.tanh(x_t)
-        action = y_t * self.max_action
+        action = torch.tanh(x_t)
 
         log_prob = normal.log_prob(x_t)
         # Enforcing Action Bound
-        log_prob -= torch.log(self.max_action * (1 - y_t.pow(2)) + 1e-6)
+        log_prob -= torch.log((1 - action.pow(2)) + 1e-6)
         log_prob = log_prob.sum(1, keepdims=True)
         return action, log_prob
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self.total_it += 1
         self._critic_learn(obs, action, reward, next_obs, terminal)
-        if self.total_it % self.policy_freq == 0:
-            self._actor_learn(obs)
+        self._actor_learn(obs)
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
@@ -112,7 +102,7 @@ class SAC(parl.Algorithm):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        self.sync_target(decay=self.decay)
+        self.sync_target()
 
     def sync_target(self, decay=None):
         if decay is None:

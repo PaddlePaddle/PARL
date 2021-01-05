@@ -62,7 +62,7 @@ def run_train_episode(agent, env, rpm):
         # Train agent after collecting sufficient data
         if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
-                BATCH_SIZEbatc)
+                BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_terminal)
 

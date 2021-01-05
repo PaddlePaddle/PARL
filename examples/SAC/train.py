@@ -14,7 +14,7 @@
 
 # Refer to https://github.com/pranz24/pytorch-soft-actor-critic
 
-from parl.utils import check_version_for_fluid # requires parl >= 1.4.1
+from parl.utils import check_version_for_fluid  # requires parl >= 1.4.1
 check_version_for_fluid()
 
 import argparse

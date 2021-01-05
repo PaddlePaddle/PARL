@@ -143,6 +143,7 @@ def check_version_for_xpu():
     paddle_version = get_fluid_version()
     assert paddle_version >= 200 or paddle_version == 0, err
 
+
 def check_version_for_fluid():
     """check paddle version if the code want to use fluid parl
     """

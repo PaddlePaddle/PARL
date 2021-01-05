@@ -12,16 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from parl.utils.utils import _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
 from parl.utils import logger
 
-if _HAS_FLUID:
-    from parl.algorithms.fluid import *
-elif _HAS_PADDLE:
-    from parl.algorithms.paddle import *
-elif _HAS_TORCH:
-    from parl.algorithms.torch import *
+if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+    assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
+    if os.environ['PARL_BACKEND'] == 'fluid':
+        from parl.algorithms.fluid import *
+    elif os.environ['PARL_BACKEND'] == 'paddle':
+        from parl.algorithms.paddle import *
+    elif os.environ['PARL_BACKEND'] == 'torch':
+        assert _HAS_TORCH, 'Torch-based PARL requires torch, which is not installed.'
+        from parl.algorithms.torch import *
 else:
-    logger.warning(
-        "No deep learning framework was found, but it's ok for parallel computation."
-    )
+    if _HAS_FLUID:
+        from parl.algorithms.fluid import *
+    elif _HAS_PADDLE:
+        from parl.algorithms.paddle import *
+    elif _HAS_TORCH:
+        from parl.algorithms.torch import *
+    else:
+        logger.warning(
+            "No deep learning framework was found, but it's ok for parallel computation."
+        )

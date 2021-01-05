@@ -133,10 +133,10 @@ def isnotebook():
 
 
 def check_version_for_xpu():
-    """check paddle version if the code want to use xpu
+    """check paddle version if the code requires to run on xpu
     """
     err = "To use xpu, PARL requires paddle version >= 2.0.0. " \
-          "Please make sure the version is good with your code."
+          "Please make sure the version is consistent with your code."
     import paddle
     from paddle import fluid
 
@@ -145,10 +145,10 @@ def check_version_for_xpu():
 
 
 def check_version_for_fluid():
-    """check paddle version if the code want to use fluid parl
+    """check the paddle version if the code requires fluid-based implementation.
     """
     err = "To use fluid version of examples, PARL requires paddle version < 2.0.0. " \
-          "Please make sure the version is good with your code."
+          "Please make sure the version is consistent with your code."
     import paddle
     from paddle import fluid
 

@@ -22,7 +22,7 @@ from mujoco_agent import MujocoAgent
 from parl.algorithms import DDPG
 
 WARMUP_STEPS = 1e4
-EVAL_STEPS = 5e3
+EVAL_EVERY_STEPS = 5e3
 EVAL_EPISODES = 5
 MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 100
@@ -126,8 +126,8 @@ def main():
             total_steps, episode_reward))
 
         # Evaluate episode
-        if (total_steps + 1) // EVAL_STEPS >= test_flag:
-            while (total_steps + 1) // EVAL_STEPS >= test_flag:
+        if (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
+            while (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, eval_env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,

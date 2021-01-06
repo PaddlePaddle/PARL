@@ -30,7 +30,7 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        return self.alg.predict(obs).cpu().data.numpy().flatten()
+        return self.alg.predict(obs).cpu().detach().numpy().flatten()
 
     def learn(self, obs, act, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)

@@ -100,11 +100,7 @@ def main():
     # Initialize model, algorithm, agent, replay_memory
     model = MujocoModel(state_dim, action_dim)
     algorithm = DDPG(
-        model,
-        gamma=GAMMA,
-        tau=TAU,
-        actor_lr=ACTOR_LR,
-        critic_lr=CRITIC_LR)
+        model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm, state_dim, action_dim)
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)

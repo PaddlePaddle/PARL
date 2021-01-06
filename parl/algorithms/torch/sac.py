@@ -26,7 +26,7 @@ __all__ = ['SAC']
 class SAC(parl.Algorithm):
     def __init__(self,
                  model,
-                 discount=None,
+                 gamma=None,
                  tau=None,
                  alpha=None,
                  actor_lr=None,
@@ -34,19 +34,19 @@ class SAC(parl.Algorithm):
         """ SAC algorithm
             Args:
                 model(parl.Model): forward network of actor and critic.
-                discount(float): discounted factor for reward computation
+                gamma(float): discounted factor for reward computation
                 tau (float): decay coefficient when updating the weights of self.target_model with self.model
                 alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
                 actor_lr (float): learning rate of the actor model
                 critic_lr (float): learning rate of the critic model
         """
-        assert isinstance(discount, float)
+        assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 
-        self.discount = discount
+        self.gamma = gamma
         self.tau = tau
         self.alpha = alpha
         self.actor_lr = actor_lr
@@ -82,7 +82,7 @@ class SAC(parl.Algorithm):
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
-            target_Q = reward + self.discount * terminal * target_Q
+            target_Q = reward + self.gamma * terminal * target_Q
         cur_q1, cur_q2 = self.model.critic_model(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(

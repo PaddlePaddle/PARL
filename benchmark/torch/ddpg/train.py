@@ -26,7 +26,7 @@ EVAL_EVERY_STEPS = 5e3
 EVAL_EPISODES = 5
 MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 100
-DISCOUNT = 0.99
+GAMMA = 0.99
 TAU = 0.005
 ACTOR_LR = 1e-3
 CRITIC_LR = 1e-3
@@ -36,7 +36,8 @@ EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 # Run episode for training
 def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
-    obs, done = env.reset(), False
+    obs = env.reset()
+    done = False
     episode_reward, episode_steps = 0, 0
 
     while not done:
@@ -71,13 +72,14 @@ def run_train_episode(agent, env, rpm):
 
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def run_evaluate_episodes(agent, eval_env, eval_episodes):
+def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        state, done = eval_env.reset(), False
+        state = env.reset()
+        done = False
         while not done:
             action = agent.predict(np.array(state))
-            state, reward, done, _ = eval_env.step(action)
+            state, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward
@@ -89,13 +91,8 @@ def main():
     logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
-    env = ActionMappingWrapper(env)
-    eval_env = gym.make(args.env)
-    eval_env = ActionMappingWrapper(eval_env)
-
-    # Set seeds
     env.seed(args.seed)
-    eval_env.seed(args.seed + 100)
+    env = ActionMappingWrapper(env)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
@@ -104,7 +101,7 @@ def main():
     model = MujocoModel(state_dim, action_dim)
     algorithm = DDPG(
         model,
-        discount=DISCOUNT,
+        gamma=GAMMA,
         tau=TAU,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
@@ -129,7 +126,7 @@ def main():
         if (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
             while (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
                 test_flag += 1
-            avg_reward = run_evaluate_episodes(agent, eval_env, EVAL_EPISODES)
+            avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(

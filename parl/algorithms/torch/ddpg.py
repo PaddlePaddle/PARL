@@ -25,15 +25,15 @@ __all__ = ['DDPG']
 class DDPG(parl.Algorithm):
     def __init__(self,
                  model,
-                 discount=None,
+                 gamma=None,
                  tau=None,
                  actor_lr=None,
                  critic_lr=None):
-        assert isinstance(discount, float)
+        assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
-        self.discount = discount
+        self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
@@ -56,7 +56,7 @@ class DDPG(parl.Algorithm):
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
             next_obs, self.target_model.actor_model(next_obs))
-        target_Q = reward + (terminal * self.discount * target_Q).detach()
+        target_Q = reward + (terminal * self.gamma * target_Q).detach()
 
         # Get current Q estimate
         current_Q = self.model.critic_model(obs, action)

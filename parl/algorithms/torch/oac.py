@@ -27,27 +27,23 @@ __all__ = ['OAC']
 class OAC(parl.Algorithm):
     def __init__(self,
                  model,
-                 max_action,
-                 discount=None,
+                 gamma=None,
                  tau=None,
                  alpha=None,
                  beta=None,
                  delta=None,
                  actor_lr=None,
                  critic_lr=None,
-                 decay=None,
-                 policy_freq=1,
                  automatic_entropy_tuning=False,
                  entropy_lr=None,
                  action_dim=None):
-        assert isinstance(discount, float)
+        assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 
-        self.max_action = max_action
-        self.discount = discount
+        self.gamma = gamma
         self.tau = tau
         self.alpha = alpha
         self.beta = beta
@@ -55,11 +51,8 @@ class OAC(parl.Algorithm):
 
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
-        self.decay = decay
-        self.policy_freq = policy_freq
         self.automatic_entropy_tuning = automatic_entropy_tuning
         self.entropy_lr = entropy_lr
-        self.total_it = 0
 
         self.model = model.to(device)
         self.target_model = deepcopy(self.model)
@@ -80,11 +73,10 @@ class OAC(parl.Algorithm):
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))
         x_t = normal.rsample()
-        y_t = torch.tanh(x_t)
-        action = y_t * self.max_action
+        action = torch.tanh(x_t)
 
         log_prob = normal.log_prob(x_t)
-        log_prob -= torch.log(self.max_action * (1 - y_t.pow(2)) + 1e-6)
+        log_prob -= torch.log((1 - action.pow(2)) + 1e-6)
         log_prob = log_prob.sum(1, keepdims=True)
         return action, log_prob
 
@@ -116,15 +108,12 @@ class OAC(parl.Algorithm):
 
         act_dist = Normal(mu_E, act_log_std)
         x_t = act_dist.rsample()
-        y_t = torch.tanh(x_t)
-        action = y_t * self.max_action
+        action = torch.tanh(x_t)
         return action
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self.total_it += 1
         self._critic_learn(obs, action, reward, next_obs, terminal)
-        if self.total_it % self.policy_freq == 0:
-            self._actor_learn(obs)
+        self._actor_learn(obs)
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
@@ -132,7 +121,7 @@ class OAC(parl.Algorithm):
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
-            target_Q = reward + self.discount * terminal * target_Q
+            target_Q = reward + self.gamma * terminal * target_Q
         cur_q1, cur_q2 = self.model.critic_model(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
@@ -152,7 +141,7 @@ class OAC(parl.Algorithm):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        self.sync_target(decay=self.decay)
+        self.sync_target()
 
         if self.automatic_entropy_tuning is True:
             alpha_loss = -(self.log_alpha *

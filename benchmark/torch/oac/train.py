@@ -19,20 +19,36 @@ import parl
 import gym
 import argparse
 from parl.utils import logger, tensorboard, ReplayMemory
+from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import OAC
 
+WARMUP_STEPS = 1e4
+EVAL_EVERY_STEPS = 5e3
+EVAL_EPISODES = 5
+MEMORY_SIZE = int(1e6)
+BATCH_SIZE = 256
+GAMMA = 0.99
+TAU = 0.005
+ALPHA = 0.2  # determines the relative importance of entropy term against the reward
+BETA = 4.66  # determines the relative importance of sigma_Q
+DELTA = 23.53  # determines the relative changes of exploration`s mean
+ACTOR_LR = 3e-4
+CRITIC_LR = 3e-4
+
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):
-    obs, done = env.reset(), False
-    episode_reward, episode_steps = 0, 0
+    obs = env.reset()
+    done = False
+    episode_reward = 0
+    episode_steps = 0
 
     while not done:
         episode_steps += 1
         # Select action use optimistic exploration or according to policy
-        if rpm.size() < args.start_timesteps:
+        if rpm.size() < WARMUP_STEPS:
             action = agent.sample(np.array(obs))
         else:
             action = agent.predict(np.array(obs))
@@ -49,9 +65,9 @@ def run_train_episode(agent, env, rpm):
         episode_reward += reward
 
         # Train agent after collecting sufficient data
-        if rpm.size() >= args.start_timesteps:
+        if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
-                args.batch_size)
+                BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_terminal)
 
@@ -60,13 +76,14 @@ def run_train_episode(agent, env, rpm):
 
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def run_evaluate_episodes(agent, eval_env, eval_episodes=5):
+def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        state, done = eval_env.reset(), False
+        state = env.reset()
+        done = False
         while not done:
             action = agent.predict(np.array(state))
-            state, reward, done, _ = eval_env.step(action)
+            state, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward
@@ -79,61 +96,50 @@ def main():
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
-    eval_env = gym.make(args.env)
-
-    # Set seeds
     env.seed(args.seed)
-    eval_env.seed(args.seed + 100)
+    env = ActionMappingWrapper(env)
 
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
-    max_action = float(env.action_space.high[0])
 
     # Initialize model, algorithm, agent, replay_memory
     model = MujocoModel(state_dim, action_dim)
     algorithm = OAC(
         model,
-        max_action,
-        discount=args.discount,
-        tau=args.tau,
-        alpha=args.alpha,
-        beta=args.beta,
-        delta=args.delta,
-        actor_lr=args.actor_lr,
-        critic_lr=args.critic_lr,
-        policy_freq=args.policy_freq,
+        gamma=GAMMA,
+        tau=TAU,
+        alpha=ALPHA,
+        beta=BETA,
+        delta=DELTA,
+        actor_lr=ACTOR_LR,
+        critic_lr=CRITIC_LR,
         automatic_entropy_tuning=False,
         entropy_lr=args.entropy_lr,
         action_dim=action_dim)
     agent = MujocoAgent(algorithm, state_dim, action_dim)
-    rpm = ReplayMemory(
-        max_size=int(1e6), obs_dim=state_dim, act_dim=action_dim)
+    rpm = ReplayMemory(MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)
 
-    episode_num = 0
     total_steps = 0
     test_flag = 0
-
     while total_steps < args.max_timesteps:
         # Train episode
-        episode_num += 1
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
         total_steps += episode_steps
 
         tensorboard.add_scalar('train/episode_reward', episode_reward,
                                total_steps)
-        logger.info('Total Steps: {} Episode: {} Reward: {}'.format(
-            total_steps, episode_num, episode_reward))
+        logger.info('Total Steps: {} Reward: {}'.format(
+            total_steps, episode_reward))
 
         # Evaluate episode
-        if (total_steps + 1) // args.eval_freq >= test_flag:
-            while (total_steps + 1) // args.eval_freq >= test_flag:
+        if (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
+            while (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
                 test_flag += 1
-            avg_reward = run_evaluate_episodes(agent, eval_env,
-                                               args.eval_episodes)
+            avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
-                args.eval_episodes, avg_reward))
+                EVAL_EPISODES, avg_reward))
 
 
 if __name__ == "__main__":
@@ -146,53 +152,10 @@ if __name__ == "__main__":
         type=int,
         help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
-        "--start_timesteps",
-        default=1e4,
-        type=int,
-        help='Time steps initial, exploration policy is used')
-    parser.add_argument(
-        "--eval_freq",
-        default=5e3,
-        type=int,
-        help='How often (time steps) to evaluate')
-    parser.add_argument(
-        "--eval_episodes",
-        default=5,
-        type=int,
-        help='How many episodes during evaluation')
-    parser.add_argument(
         "--max_timesteps",
-        default=3e6,
+        default=5e6,
         type=int,
         help='Max time steps to run environment')
-    parser.add_argument(
-        "--alpha",
-        default=0.2,
-        help=
-        'Temperature parameter, determines the relative importance of entropy term against the reward'
-    )
-    parser.add_argument(
-        "--beta",
-        default=4.66,
-        help='determines the relative importance of sigma_Q')
-    parser.add_argument(
-        "--delta",
-        default=23.53,
-        help='determines the relative changes of exploration`s mean')
-    parser.add_argument(
-        "--batch_size", default=256, type=int, help='Batch size for learning')
-    parser.add_argument("--discount", default=0.99, help='Discount factor')
-    parser.add_argument(
-        "--tau", default=5e-3, help='Target network update rate')
-    parser.add_argument(
-        "--actor_lr", default=3e-4, help='Learning rate of actor network')
-    parser.add_argument(
-        "--critic_lr", default=3e-4, help='Learning rate of critic network')
-    parser.add_argument(
-        "--policy_freq",
-        default=1,
-        type=int,
-        help='Frequency to train actor and update params')
     parser.add_argument(
         "--automatic_entropy_tuning",
         default=False,

@@ -46,9 +46,9 @@ def run_train_episode(agent, env, rpm):
         if rpm.size() < WARMUP_STEPS:
             action = env.action_space.sample()
         else:
-            predict_action = agent.predict(np.array(obs))
+            sample_action = agent.sample(np.array(obs))
             action_noise = np.random.normal(0, EXPL_NOISE, size=action_dim)
-            action = (predict_action + action_noise).clip(-1, 1)
+            action = (sample_action + action_noise).clip(-1, 1)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
@@ -78,7 +78,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
         state = env.reset()
         done = False
         while not done:
-            action = agent.predict(np.array(state))
+            action = agent.sample(np.array(state))
             state, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes

@@ -28,9 +28,9 @@ class MujocoAgent(parl.Agent):
 
         self.alg.sync_target(decay=0)
 
-    def predict(self, obs):
+    def sample(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        action = self.alg.predict(obs)
+        action = self.alg.sample(obs)
         action_numpy = action.cpu().detach().numpy().flatten()
         return action_numpy
 

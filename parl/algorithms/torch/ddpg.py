@@ -45,7 +45,7 @@ class DDPG(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             self.model.get_critic_params(), lr=critic_lr)
 
-    def predict(self, obs):
+    def sample(self, obs):
         return self.model.policy(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):

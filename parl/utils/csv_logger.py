@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import csv
+import threading
+from parl.utils.utils import _IS_PY2
 
 __all__ = ['CSVLogger']
 
@@ -23,9 +25,31 @@ class CSVLogger(object):
 
         Args:
             output_file(str): filename of the csv file.
+
+        Examples:
+            ```python
+            from parl.utils import CSVLogger
+
+            csv_logger = CSVLogger("result.csv")
+            csv_logger.log_dict({"loss": 1, "reward": 2})
+            csv_logger.log_dict({"loss": 3, "reward": 4})
+            ```
+
+            The content of the `result.csv`:
+            loss,reward
+            1,2
+            3,4
         """
-        self.output_file = open(output_file, "w")
+
+        # reference: https://stackoverflow.com/questions/1170214/python-2-csv-writer-produces-wrong-line-terminator-on-windows/1170297#1170297
+        if _IS_PY2:
+            self.output_file = open(output_file, "wb")
+        else:
+            self.output_file = open(output_file, "w", newline="")
+
         self.csv_writer = None
+        self.lock = threading.Lock()
+        self.keys_set = None
 
     def log_dict(self, result):
         """Ouput result to the csv file.
@@ -36,23 +60,33 @@ class CSVLogger(object):
         Args:
             result(dict)
         """
-        assert isinstance(result, dict), "the input should be a dict."
-        if self.csv_writer is None:
-            self.csv_writer = csv.DictWriter(self.output_file, result.keys())
-            self.csv_writer.writeheader()
+        with self.lock:
+            assert isinstance(result, dict), "the input should be a dict."
+            if self.csv_writer is None:
+                self.csv_writer = csv.DictWriter(self.output_file,
+                                                 result.keys())
+                self.csv_writer.writeheader()
+                self.keys_set = set(result.keys())
 
-        self.csv_writer.writerow({
-            k: v
-            for k, v in result.items() if k in self.csv_writer.fieldnames
-        })
+            assert set(
+                result.keys()
+            ) == self.keys_set, "The keys of the dict should be the same as before."
+
+            self.csv_writer.writerow({
+                k: v
+                for k, v in result.items() if k in self.csv_writer.fieldnames
+            })
 
     def flush(self):
-        self.output_file.flush()
+        with self.lock:
+            self.output_file.flush()
 
     def close(self):
-        if not self.output_file.closed:
-            self.output_file.close()
+        with self.lock:
+            if not self.output_file.closed:
+                self.output_file.close()
 
     def __del__(self):
-        if not self.output_file.closed:
-            self.output_file.close()
+        with self.lock:
+            if not self.output_file.closed:
+                self.output_file.close()

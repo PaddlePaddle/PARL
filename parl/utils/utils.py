@@ -21,7 +21,8 @@ from parl.utils import logger
 __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-    'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu'
+    'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
+    'check_version_for_fluid'
 ]
 
 
@@ -69,8 +70,8 @@ try:
     from paddle import fluid
 
     paddle_version = get_fluid_version()
-    if paddle_version < 200:
-        assert paddle_version >= 161 or paddle_version == 0, "PARL requires paddle >= 1.6.1 and paddle < 2.0.0"
+    if paddle_version < 200 and paddle_version != 0:
+        assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 and paddle < 2.0.0"
         _HAS_FLUID = True
     else:
         logger.warning(
@@ -132,12 +133,24 @@ def isnotebook():
 
 
 def check_version_for_xpu():
-    """check paddle version if the code want to use xpu
+    """check paddle version if the code requires to run on xpu
     """
-    err = "To use xpu, PARL requires paddle version >= 2.0.0." \
-          "Please make sure the version is good with your code."
+    err = "To use xpu, PARL requires paddle version >= 2.0.0. " \
+          "Please make sure the version is consistent with your code."
     import paddle
     from paddle import fluid
 
     paddle_version = get_fluid_version()
     assert paddle_version >= 200 or paddle_version == 0, err
+
+
+def check_version_for_fluid():
+    """check the paddle version if the code requires fluid-based implementation.
+    """
+    err = "To use fluid version of examples, PARL requires paddle version < 2.0.0. " \
+          "Please make sure the version is consistent with your code."
+    import paddle
+    from paddle import fluid
+
+    paddle_version = get_fluid_version()
+    assert paddle_version >= 185 and paddle_version < 200, err

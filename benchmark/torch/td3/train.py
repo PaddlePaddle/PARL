@@ -34,6 +34,7 @@ EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 
 
 def run_train_episode(env, agent, rpm):
+    act_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
     total_reward = 0
@@ -43,7 +44,7 @@ def run_train_episode(env, agent, rpm):
         steps += 1
 
         if rpm.size() < WARMUP_SIZE:
-            action = env.action_space.sample()
+            action = np.random.uniform(-1, 1, size=act_dim)
         else:
             action = np.random.normal(
                 agent.predict(np.array(obs)), EXPL_NOISE).clip(-1, 1)

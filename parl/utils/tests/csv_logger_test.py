@@ -19,7 +19,7 @@ from parl.utils import CSVLogger
 
 class TestCSVLogger(unittest.TestCase):
     def test_log_dict(self):
-        tmp_file = "./test_log_dict_tmp.csv"
+        tmp_file = "test_log_dict_tmp.csv"
         csv_logger = CSVLogger(tmp_file)
 
         data = [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
@@ -36,7 +36,7 @@ class TestCSVLogger(unittest.TestCase):
         os.remove(tmp_file)
 
     def test_log_dict_with_different_keys(self):
-        tmp_file = "./test_log_dict_with_different_keys_tmp.csv"
+        tmp_file = "test_log_dict_with_different_keys_tmp.csv"
         csv_logger = CSVLogger(tmp_file)
 
         data1 = {"a": 1, "b": 2}

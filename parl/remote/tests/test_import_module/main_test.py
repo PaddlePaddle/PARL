@@ -52,7 +52,10 @@ class TestImport(unittest.TestCase):
         time.sleep(10)
         parl.connect(
             "localhost:8443",
-            distributed_files=['./subdir/Module.py', './subdir/__init__.py'])
+            distributed_files=[
+                os.path.join('subdir', 'Module.py'),
+                os.path.join('subdir', '__init__.py')
+            ])
         obj = Module.A()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
@@ -70,7 +73,10 @@ class TestImport(unittest.TestCase):
         time.sleep(10)
         parl.connect(
             "localhost:8444",
-            distributed_files=['./subdir/Module.py', './subdir/__init__.py'])
+            distributed_files=[
+                os.path.join('subdir', 'Module.py'),
+                os.path.join('subdir', '__init__.py')
+            ])
         obj = A()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)

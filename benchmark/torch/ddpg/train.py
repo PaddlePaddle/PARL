@@ -47,8 +47,6 @@ def run_train_episode(agent, env, rpm):
             action = np.random.uniform(-1, 1, size=action_dim)
         else:
             action = agent.sample(np.array(obs))
-            action_noise = np.random.normal(0, EXPL_NOISE, size=action_dim)
-            action = (action + action_noise).clip(-1, 1)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
@@ -78,7 +76,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
         state = env.reset()
         done = False
         while not done:
-            action = agent.sample(np.array(state))
+            action = agent.predict(np.array(state))
             state, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
@@ -101,7 +99,8 @@ def main():
     model = MujocoModel(state_dim, action_dim)
     algorithm = DDPG(
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, state_dim, action_dim)
+    agent = MujocoAgent(
+        algorithm, state_dim, action_dim, expl_noise=EXPL_NOISE)
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)
 

@@ -35,6 +35,7 @@ CRITIC_LR = 3e-4
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):
+    action_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
     episode_reward, episode_steps = 0, 0
@@ -42,9 +43,9 @@ def run_train_episode(agent, env, rpm):
         episode_steps += 1
         # Select action randomly or according to policy
         if rpm.size() < WARMUP_STEPS:
-            action = env.action_space.sample()
+            action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            action = agent.predict(np.array(obs))
+            action = agent.sample(np.array(obs))
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
@@ -75,7 +76,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
         state = env.reset()
         done = False
         while not done:
-            action = agent.predict(np.array(state))
+            action = agent.sample(np.array(state))
             state, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
@@ -109,7 +110,6 @@ def main():
 
     total_steps = 0
     test_flag = 0
-
     while total_steps < args.max_timesteps:
         # Train episode
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)

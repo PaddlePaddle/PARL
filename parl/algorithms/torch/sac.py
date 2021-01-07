@@ -59,7 +59,7 @@ class SAC(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             self.model.get_critic_params(), lr=critic_lr)
 
-    def predict(self, obs):
+    def sample(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))
@@ -78,7 +78,7 @@ class SAC(parl.Algorithm):
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
-            next_action, next_log_pro = self.predict(next_obs)
+            next_action, next_log_pro = self.sample(next_obs)
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
@@ -93,7 +93,7 @@ class SAC(parl.Algorithm):
         self.critic_optimizer.step()
 
     def _actor_learn(self, obs):
-        act, log_pi = self.predict(obs)
+        act, log_pi = self.sample(obs)
         q1_pi, q2_pi = self.model.critic_model(obs, act)
         min_q_pi = torch.min(q1_pi, q2_pi)
         actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()

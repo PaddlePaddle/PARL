@@ -44,11 +44,11 @@ def run_train_episode(agent, env, rpm):
         episode_steps += 1
         # Select action randomly or according to policy
         if rpm.size() < WARMUP_STEPS:
-            action = env.action_space.sample()
+            action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            sample_action = agent.sample(np.array(obs))
+            action = agent.sample(np.array(obs))
             action_noise = np.random.normal(0, EXPL_NOISE, size=action_dim)
-            action = (sample_action + action_noise).clip(-1, 1)
+            action = (action + action_noise).clip(-1, 1)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)

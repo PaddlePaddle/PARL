@@ -46,8 +46,7 @@ def run_train_episode(env, agent, rpm):
         if rpm.size() < WARMUP_SIZE:
             action = np.random.uniform(-1, 1, size=act_dim)
         else:
-            action = np.random.normal(
-                agent.predict(np.array(obs)), EXPL_NOISE).clip(-1, 1)
+            action = agent.sample(np.array(obs))
 
         next_obs, reward, done, info = env.step(action)
         done = float(done) if steps < env._max_episode_steps else 0
@@ -87,7 +86,7 @@ def main():
     model = MujocoModel(obs_dim, act_dim)
     algorithm = TD3(
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, obs_dim, act_dim)
+    agent = MujocoAgent(algorithm, obs_dim, act_dim, expl_noise=EXPL_NOISE)
 
     rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
 

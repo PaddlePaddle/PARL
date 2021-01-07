@@ -59,7 +59,7 @@ class SAC(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             self.model.get_critic_params(), lr=critic_lr)
 
-    def sample(self, obs):
+    def predict(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))

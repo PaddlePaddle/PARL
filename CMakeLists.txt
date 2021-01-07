@@ -54,7 +54,7 @@ function(import_test TARGET_NAME)
     cmake_parse_arguments(py_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     add_test(NAME ${TARGET_NAME}_with_empty_env
-        COMMAND /root/miniconda3/envs/empty_env/bin/python -u ${py_test_SRCS} ${py_test_ARGS}
+        COMMAND python -u ${py_test_SRCS} ${py_test_ARGS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 endfunction()

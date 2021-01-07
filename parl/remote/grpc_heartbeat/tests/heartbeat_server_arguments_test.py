@@ -19,19 +19,22 @@ from parl.remote.grpc_heartbeat import HeartbeatClientThread
 from parl.remote import remote_constants
 
 
-class TestHeartbeat(unittest.TestCase):
+class TestHeartbeatServerArguments(unittest.TestCase):
     def setUp(self):
         self.server_exited = False
         self.client_exited = False
 
-    def test_heartbeat_connection(self):
-        def server_exit_func():
+    def test_heartbeat_server_exit_with_args(self):
+        arg1_value = 10
+
+        def server_exit_func(arg1):
             print("exit heartbeat server")
+            assert arg1 == arg1_value
             self.server_exited = True
 
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
+        heartbeat_server_thread = HeartbeatServerThread(
+            server_exit_func, exit_func_args=(arg1_value, ))
         heartbeat_server_thread.start()
-        time.sleep(1)
 
         server_address = heartbeat_server_thread.get_address()
 
@@ -50,7 +53,6 @@ class TestHeartbeat(unittest.TestCase):
         assert heartbeat_client_thread.is_alive()
 
         heartbeat_server_thread.exit()  # manually exit the server
-        heartbeat_client_thread.exit()  # manually exit the client
 
         # wait for threads exiting
         for _ in range(6):
@@ -66,38 +68,16 @@ class TestHeartbeat(unittest.TestCase):
         assert self.server_exited == True
         assert self.client_exited == True
 
-    def test_heartbeat_server_will_exit_if_client_is_not_started(self):
-        def server_exit_func():
+    def test_heartbeat_server_exit_with_wrong_args(self):
+        arg1_value = 10
+
+        def server_exit_func(arg1):
             print("exit heartbeat server")
+            assert arg1 == arg1_value
             self.server_exited = True
 
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
-        heartbeat_server_thread.start()
-
-        time.sleep(remote_constants.HEARTBEAT_RCVTIMEO_S * 2)
-
-        assert not heartbeat_server_thread.is_alive()
-        assert self.server_exited == True
-
-    def test_heartbeat_client_will_exit_if_server_is_not_started(self):
-        def client_exit_func():
-            print("exit heartbeat client")
-            self.client_exited = True
-
-        heartbeat_client_thread = HeartbeatServerThread(client_exit_func)
-        heartbeat_client_thread.start()
-
-        time.sleep(remote_constants.HEARTBEAT_RCVTIMEO_S * 2)
-
-        assert not heartbeat_client_thread.is_alive()
-        assert self.client_exited == True
-
-    def test_heartbeat_server_will_exit_after_client_is_exited(self):
-        def server_exit_func():
-            print("exit heartbeat server")
-            self.server_exited = True
-
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
+        heartbeat_server_thread = HeartbeatServerThread(
+            server_exit_func, exit_func_args=(arg1_value, "wrong_args"))
         heartbeat_server_thread.start()
 
         server_address = heartbeat_server_thread.get_address()
@@ -116,9 +96,10 @@ class TestHeartbeat(unittest.TestCase):
         assert heartbeat_server_thread.is_alive()
         assert heartbeat_client_thread.is_alive()
 
-        heartbeat_client_thread.exit()  # manually exit the client
+        heartbeat_server_thread.exit()  # manually exit the server
+        # will raise an exception in the backend thread
 
-        # wait for heartbeat server exiting
+        # wait for threads exiting
         for _ in range(6):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
@@ -129,15 +110,19 @@ class TestHeartbeat(unittest.TestCase):
         assert not heartbeat_server_thread.is_alive()
         assert not heartbeat_client_thread.is_alive()
 
-        assert self.server_exited == True
+        assert self.server_exited == False  # the heartbeat server cannot exit normally
         assert self.client_exited == True
 
-    def test_heartbeat_client_will_exit_after_server_is_exited(self):
-        def server_exit_func():
+    def test_heartbeat_server_exit_with_kwargs(self):
+        arg1_value = 10
+
+        def server_exit_func(arg1):
             print("exit heartbeat server")
+            assert arg1 == arg1_value
             self.server_exited = True
 
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
+        heartbeat_server_thread = HeartbeatServerThread(
+            server_exit_func, exit_func_kwargs={"arg1": arg1_value})
         heartbeat_server_thread.start()
 
         server_address = heartbeat_server_thread.get_address()
@@ -158,7 +143,7 @@ class TestHeartbeat(unittest.TestCase):
 
         heartbeat_server_thread.exit()  # manually exit the server
 
-        # wait for heartbeat server exiting
+        # wait for threads exiting
         for _ in range(6):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
@@ -172,12 +157,16 @@ class TestHeartbeat(unittest.TestCase):
         assert self.server_exited == True
         assert self.client_exited == True
 
-    def test_heartbeat_client_will_exit_after_server_is_stopped(self):
-        def server_exit_func():
+    def test_heartbeat_server_exit_with_wrong_kwargs(self):
+        arg1_value = 10
+
+        def server_exit_func(arg1):
             print("exit heartbeat server")
+            assert arg1 == arg1_value
             self.server_exited = True
 
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
+        heartbeat_server_thread = HeartbeatServerThread(
+            server_exit_func, exit_func_kwargs={"wrong_args": arg1_value})
         heartbeat_server_thread.start()
 
         server_address = heartbeat_server_thread.get_address()
@@ -196,12 +185,10 @@ class TestHeartbeat(unittest.TestCase):
         assert heartbeat_server_thread.is_alive()
         assert heartbeat_client_thread.is_alive()
 
-        # manually stop the server
-        heartbeat_server_thread.stop(
-            remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG,
-            "heartbeat server is stopped.")
+        heartbeat_server_thread.exit()  # manually exit the server
+        # will raise an exception in the backend thread
 
-        # wait for heartbeat server exiting
+        # wait for threads exiting
         for _ in range(6):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
@@ -212,7 +199,7 @@ class TestHeartbeat(unittest.TestCase):
         assert not heartbeat_server_thread.is_alive()
         assert not heartbeat_client_thread.is_alive()
 
-        assert self.server_exited == True
+        assert self.server_exited == False  # the heartbeat server cannot exit normally
         assert self.client_exited == True
 
 

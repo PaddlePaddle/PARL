@@ -18,9 +18,7 @@ import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, action_dim):
-        assert isinstance(obs_dim, int)
-        assert isinstance(action_dim, int)
+    def __init__(self, algorithm):
         super(MujocoAgent, self).__init__(algorithm)
 
         self.device = torch.device("cuda" if torch.cuda.

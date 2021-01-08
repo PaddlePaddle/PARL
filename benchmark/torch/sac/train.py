@@ -104,7 +104,7 @@ def main():
         alpha=ALPHA,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, state_dim, action_dim)
+    agent = MujocoAgent(algorithm)
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)
 

@@ -45,7 +45,7 @@ def run_train_episode(agent, env, rpm):
         if rpm.size() < WARMUP_STEPS:
             action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            action = agent.predict(np.array(obs))
+            action = agent.predict(obs)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
@@ -73,11 +73,11 @@ def run_train_episode(agent, env, rpm):
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        state = env.reset()
+        obs = env.reset()
         done = False
         while not done:
-            action = agent.predict(np.array(state))
-            state, reward, done, _ = env.step(action)
+            action = agent.predict(obs)
+            obs, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward
@@ -92,11 +92,11 @@ def main():
     env.seed(args.seed)
     env = ActionMappingWrapper(env)
 
-    state_dim = env.observation_space.shape[0]
+    obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
     # Initialize model, algorithm, agent, replay_memory
-    model = MujocoModel(state_dim, action_dim)
+    model = MujocoModel(obs_dim, action_dim)
     algorithm = SAC(
         model,
         gamma=GAMMA,
@@ -106,7 +106,7 @@ def main():
         critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm)
     rpm = ReplayMemory(
-        max_size=MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)
+        max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 
     total_steps = 0
     test_flag = 0

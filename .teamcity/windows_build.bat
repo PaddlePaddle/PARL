@@ -33,11 +33,14 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary
 
 rem ------paddle dygraph unittest
 rem ------pre install python requirement----------
+call :clean_env
+
 cd %REPO_ROOT%
 call conda env remove --name parl_paddle_dygraph_unittest
 rmdir "C:\ProgramData\Miniconda3\envs\parl_paddle_dygraph_unittest" /s/q
 call echo y | conda create -n parl_paddle_dygraph_unittest python=3.8.5 pip=20.2.1 --no-default-packages
-call conda activate parl_paddle_dygraph_unittest
+call conda activate parl_paddle_dygraph_unittest || goto conda_error
+
 
 where python
 where pip
@@ -57,11 +60,12 @@ rem ------basic unittest
 rem ------ test in python 3.7 and 3.8 environments
 for %%v in (3.7 3.8) do (
 	rem ------pre install python requirement----------
+  call :clean_env
 	cd %REPO_ROOT%
 	call conda env remove --name parl_unittest_py%%v
   rmdir "C:\ProgramData\Miniconda3\envs\parl_unittest_py"%%v /s/q
 	call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages
-	call conda activate parl_unittest_py%%v
+  call conda activate parl_unittest_py%%v || goto conda_error
 
 	where python
 	where pip
@@ -88,10 +92,11 @@ rem ----------------------------------------------
 rem ------import unittest
 rem ------pre install python requirement----------
 cd %REPO_ROOT%
+call :clean_env
 call conda env remove --name parl_import_unittest
 rmdir "C:\ProgramData\Miniconda3\envs\parl_import_unittest" /s/q
 call echo y | conda create -n parl_import_unittest python=3.8.5 pip=20.2.1 --no-default-packages
-call conda activate parl_import_unittest
+call conda activate parl_import_unittest || goto conda_error
 
 where python
 where pip
@@ -131,7 +136,7 @@ if %ERRORLEVEL% NEQ 0 (
 if "%IS_TESTING_SERIALLY%"=="ON" (
     ctest -C Release --output-on-failure
 ) else (
-    ctest -C Release --output-on-failure -j10 --verbose 
+    ctest -C Release --output-on-failure -j5 --verbose 
 )
 goto:eof
 rem ------------------------------------------------
@@ -182,11 +187,31 @@ ctest -C Release --output-on-failure
 goto:eof
 rem ------------------------------------------------
 
+rem ------------------------------------------------
+:clean_env
+echo    ========================================
+echo    Clean up environment!
+echo    ========================================
+
+taskkill /f /im python.exe 2>NUL
+taskkill /f /im pip.exe 2>NUL
+taskkill /f /im conda.exe 2>NUL
+goto:eof
+rem ------------------------------------------------
+
 
 rem ------------------------------------------------
 :pip_error
 echo    ========================================
 echo    pip install failed!
+echo    ========================================
+exit /b 7
+rem ------------------------------------------------
+
+rem ------------------------------------------------
+:conda_error
+echo    ========================================
+echo    conda activate failed!
 echo    ========================================
 exit /b 7
 rem ------------------------------------------------

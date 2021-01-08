@@ -31,7 +31,7 @@ class MujocoAgent(parl.Agent):
 
     def sample(self, obs):
         action = np.random.normal(
-            agent.predict(np.array(obs)), self.expl_noise).clip(-1, 1)
+            self.predict(np.array(obs)), self.expl_noise).clip(-1, 1)
         return action
 
     def predict(self, obs):

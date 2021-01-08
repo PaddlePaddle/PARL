@@ -52,6 +52,8 @@ class DDPG(parl.Algorithm):
         self._critic_learn(obs, action, reward, next_obs, terminal)
         self._actor_learn(obs)
 
+        self.sync_target()
+
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
@@ -78,8 +80,6 @@ class DDPG(parl.Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
-
-        self.sync_target()
 
     def sync_target(self, decay=None):
         if decay is None:

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import grpc
 import time
 import threading
@@ -22,28 +23,45 @@ from parl.utils import logger
 
 
 class HeartbeatClientThread(threading.Thread):
-    def __init__(self, heartbeat_server_addr, heartbeat_exit_callback_func):
+    def __init__(self,
+                 heartbeat_server_addr,
+                 heartbeat_exit_callback_func,
+                 exit_func_args=(),
+                 exit_func_kwargs={}):
         """Create a thread to run the heartbeat client.
 
             Args:
                 heartbeat_server_addr(str): the address of the heartbeat server.
                 heartbeat_exit_callback_func(function): A callback function, which will be called after the 
-                                                        heartbeat exit. There should be no arguments in the 
-                                                        function.
+                                                        heartbeat exit.
+                exit_func_args(tuple): the argument tuple for calling the heartbeat_exit_callback_func. Defaults to ().
+                exit_func_kwargs(dict): the argument dict for calling the heartbeat_exit_callback_func. Defaults to {}.
         """
         assert isinstance(heartbeat_server_addr, str)
         assert callable(
             heartbeat_exit_callback_func), "It should be a function."
+        assert isinstance(exit_func_args, tuple)
+        assert isinstance(exit_func_kwargs, dict)
 
         threading.Thread.__init__(self)
         self.heartbeat_server_addr = heartbeat_server_addr
+
         self.heartbeat_exit_callback_func = heartbeat_exit_callback_func
+        self._exit_func_args = exit_func_args
+        self._exit_func_kwargs = exit_func_kwargs
+
         self.exit_flag = False
 
     def exit(self):
         self.exit_flag = True
 
     def run(self):
+        # unset http_proxy and https_proxy
+        if 'http_proxy' in os.environ:
+            del os.environ['http_proxy']
+        if 'https_proxy' in os.environ:
+            del os.environ['https_proxy']
+
         with grpc.insecure_channel(
                 self.heartbeat_server_addr,
                 options=[('grpc.max_receive_message_length', -1),
@@ -73,4 +91,6 @@ class HeartbeatClientThread(threading.Thread):
 
                 time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
-        self.heartbeat_exit_callback_func()
+        # heartbeat is exit, call the exit function.
+        self.heartbeat_exit_callback_func(*self._exit_func_args,
+                                          **self._exit_func_kwargs)

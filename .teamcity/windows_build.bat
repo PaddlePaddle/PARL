@@ -193,6 +193,9 @@ echo    ========================================
 echo    Clean up environment!
 echo    ========================================
 
+taskkill /f /im cmake.exe 2>NUL
+taskkill /f /im msbuild.exe 2>NUL
+taskkill /f /im git.exe 2>NUL
 taskkill /f /im python.exe 2>NUL
 taskkill /f /im pip.exe 2>NUL
 taskkill /f /im conda.exe 2>NUL

@@ -48,7 +48,7 @@ where pip
 pip install -U .
 pip install -r .teamcity\windows_requirements_paddle.txt
 if %ERRORLEVEL% NEQ 0 (
-		goto pip_error
+    goto pip_error
 )
 
 
@@ -59,32 +59,32 @@ rem ----------------------------------------------
 rem ------basic unittest
 rem ------ test in python 3.7 and 3.8 environments
 for %%v in (3.7 3.8) do (
-	rem ------pre install python requirement----------
-  call :clean_env
-	cd %REPO_ROOT%
-	call conda env remove --name parl_unittest_py%%v
-  rmdir "C:\ProgramData\Miniconda3\envs\parl_unittest_py"%%v /s/q
-	call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages
-  call conda activate parl_unittest_py%%v || goto conda_error
+    rem ------pre install python requirement----------
+    call :clean_env
+    cd %REPO_ROOT%
+    call conda env remove --name parl_unittest_py%%v
+    rmdir "C:\ProgramData\Miniconda3\envs\parl_unittest_py"%%v /s/q
+    call echo y | conda create -n parl_unittest_py%%v python=%%v pip=20.2.1 --no-default-packages
+    call conda activate parl_unittest_py%%v || goto conda_error
 
-	where python
-	where pip
+    where python
+    where pip
 
-	pip install -U .
-	pip install -r .teamcity\windows_requirements_fluid.txt
-	if %ERRORLEVEL% NEQ 0 (
-	    goto pip_error
-	)
+    pip install -U .
+    pip install -r .teamcity\windows_requirements_fluid.txt
+    if %ERRORLEVEL% NEQ 0 (
+      goto pip_error
+    )
 
-	call xparl stop
+    call xparl stop
 
-	rem ------run parallel unittests
-	set IS_TESTING_SERIALLY=OFF
-	call :run_test_with_cpu || goto unittest_error
+    rem ------run parallel unittests
+    set IS_TESTING_SERIALLY=OFF
+    call :run_test_with_cpu || goto unittest_error
 
-	rem ------run serial unittests
-	set IS_TESTING_SERIALLY=ON
-	call :run_test_with_cpu || goto unittest_error
+    rem ------run serial unittests
+    set IS_TESTING_SERIALLY=ON
+    call :run_test_with_cpu || goto unittest_error
 )
 rem ----------------------------------------------
 
@@ -103,7 +103,7 @@ where pip
 
 pip install -U .
 if %ERRORLEVEL% NEQ 0 (
-		goto pip_error
+    goto pip_error
 )
 
 call :run_import_test || goto unittest_error
@@ -130,7 +130,7 @@ cd %REPO_ROOT%\build
 
 cmake .. -DIS_TESTING_SERIALLY=%IS_TESTING_SERIALLY%
 if %ERRORLEVEL% NEQ 0 (
-		goto cmake_error
+    goto cmake_error
 )
 
 if "%IS_TESTING_SERIALLY%"=="ON" (
@@ -157,7 +157,7 @@ cd %REPO_ROOT%\build
 
 cmake .. -DIS_TESTING_IMPORT=ON
 if %ERRORLEVEL% NEQ 0 (
-		goto cmake_error
+    goto cmake_error
 )
 
 ctest -C Release --output-on-failure
@@ -180,7 +180,7 @@ cd %REPO_ROOT%\build
 
 cmake .. -DIS_TESTING_PADDLE=ON
 if %ERRORLEVEL% NEQ 0 (
-		goto cmake_error
+    goto cmake_error
 )
 
 ctest -C Release --output-on-failure

@@ -32,6 +32,12 @@ class MujocoAgent(parl.Agent):
         action_numpy = action.cpu().detach().numpy().flatten()
         return action_numpy
 
+    def sample(self, obs):
+        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        action, _ = self.alg.sample(obs)
+        action_numpy = action.cpu().detach().numpy().flatten()
+        return action_numpy
+
     def learn(self, obs, action, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)
         reward = np.expand_dims(reward, -1)

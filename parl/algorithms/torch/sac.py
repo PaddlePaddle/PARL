@@ -60,6 +60,11 @@ class SAC(parl.Algorithm):
             self.model.get_critic_params(), lr=critic_lr)
 
     def predict(self, obs):
+        act_mean, _ = self.model.policy(obs)
+        action = torch.tanh(act_mean)
+        return action
+
+    def sample(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))

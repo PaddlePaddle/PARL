@@ -45,7 +45,7 @@ def run_train_episode(agent, env, rpm):
         if rpm.size() < WARMUP_STEPS:
             action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            action = agent.predict(obs)
+            action = agent.sample(obs)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)

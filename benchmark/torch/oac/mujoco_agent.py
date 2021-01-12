@@ -18,11 +18,8 @@ import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, action_dim):
-        assert isinstance(obs_dim, int)
-        assert isinstance(action_dim, int)
+    def __init__(self, algorithm):
         super(MujocoAgent, self).__init__(algorithm)
-
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 
@@ -30,13 +27,13 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        action, _ = self.alg.predict(obs)
+        action = self.alg.predict(obs)
         action_numpy = action.cpu().detach().numpy().flatten()
         return action_numpy
 
     def sample(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        action = self.alg.sample(obs)
+        action = self.alg.get_optimistic_exploration_action(obs)
         action_numpy = action.cpu().detach().numpy().flatten()
         return action_numpy
 

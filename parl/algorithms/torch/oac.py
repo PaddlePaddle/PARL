@@ -33,10 +33,7 @@ class OAC(parl.Algorithm):
                  beta=None,
                  delta=None,
                  actor_lr=None,
-                 critic_lr=None,
-                 automatic_entropy_tuning=False,
-                 entropy_lr=None,
-                 action_dim=None):
+                 critic_lr=None):
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
@@ -51,8 +48,6 @@ class OAC(parl.Algorithm):
 
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
-        self.automatic_entropy_tuning = automatic_entropy_tuning
-        self.entropy_lr = entropy_lr
 
         self.model = model.to(device)
         self.target_model = deepcopy(self.model)
@@ -61,14 +56,12 @@ class OAC(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             self.model.get_critic_params(), lr=critic_lr)
 
-        if self.automatic_entropy_tuning is True:
-            self.target_entropy = -torch.prod(
-                torch.Tensor(action_dim).to(device))
-            self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
-            self.alpha_optimizer = torch.optim.Adam([self.log_alpha],
-                                                    lr=self.entropy_lr)
-
     def predict(self, obs):
+        act_mean, _ = self.model.policy(obs)
+        action = torch.tanh(act_mean)
+        return action
+
+    def sample(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std*N(0,1))
@@ -80,44 +73,59 @@ class OAC(parl.Algorithm):
         log_prob = log_prob.sum(1, keepdims=True)
         return action, log_prob
 
-    def sample(self, obs):
+    def get_optimistic_exploration_action(self, obs):
         act_mean, act_log_std = self.model.policy(obs)
-        act_mean.requires_grad_()
-        tanh_mean = torch.tanh(act_mean)
+        act_std = torch.exp(act_log_std)
+        normal = Normal(act_mean, act_std)
+        pre_tanh_mu_T = normal.rsample()
 
-        # To get upper bound of the Q estimate
-        # mu_Q: mean belief of Q
-        # sigma_Q: an epistemic uncertainty estimate about true Q
-        q1, q2 = self.model.critic_model(obs, tanh_mean)
-        mu_Q = (q1 + q2) / 2.0
-        sigma_Q = torch.abs(q1 - q2) / 2.0
+        pre_tanh_mu_T.requires_grad_()
+        tanh_mu_T = torch.tanh(pre_tanh_mu_T)
+
+        # Get the upper bound of the Q estimate
+        Q1, Q2 = self.model.critic_model(obs, tanh_mu_T)
+        mu_Q = (Q1 + Q2) / 2.0
+        sigma_Q = torch.abs(Q1 - Q2) / 2.0
+
         Q_UB = mu_Q + self.beta * sigma_Q
 
-        # Obtain the gradient of upper bound Q wrt to a with a evaluated at mu_t
-        grad = torch.autograd.grad(Q_UB, act_mean)
+        # Obtain the gradient of Q_UB wrt to a with a evaluated at mu_t
+        grad = torch.autograd.grad(Q_UB, pre_tanh_mu_T)
         grad = grad[0]
+        assert grad is not None
+        assert pre_tanh_mu_T.shape == grad.shape
 
-        # sigma_T: the covariance of normal distribution
-        sigma_T = torch.pow(act_log_std, 2)
-        denominator = torch.sqrt(
-            torch.sum(torch.mul(torch.pow(grad, 2), sigma_T))) + 10e-6
-        # mu_C: change in mean for optimistic exploration
-        mu_C = math.sqrt(2.0 * self.delta) * torch.mul(sigma_T,
-                                                       grad) / denominator
-        mu_E = act_mean + mu_C
+        # Obtain Sigma_T (the covariance of the normal distribution)
+        Sigma_T = torch.pow(act_std, 2)
 
-        act_dist = Normal(mu_E, act_log_std)
-        x_t = act_dist.rsample()
-        action = torch.tanh(x_t)
+        # The dividor is (g^T Sigma g) ** 0.5
+        # Sigma is diagonal, so this works out to be
+        # ( sum_{i=1}^k (g^(i))^2 (sigma^(i))^2 ) ** 0.5
+        denom = torch.sqrt(torch.sum(torch.mul(torch.pow(grad, 2),
+                                               Sigma_T))) + 10e-6
+
+        # Obtain the change in mu
+        mu_C = math.sqrt(2.0 * self.delta) * torch.mul(Sigma_T, grad) / denom
+        assert mu_C.shape == pre_tanh_mu_T.shape
+
+        mu_E = pre_tanh_mu_T + mu_C
+        # Construct the tanh normal distribution and sample the exploratory action from it
+        assert mu_E.shape == act_std.shape
+
+        dist = Normal(mu_E, act_std)
+        z = dist.sample().detach()
+        action = torch.tanh(z) * self.max_action
         return action
 
     def learn(self, obs, action, reward, next_obs, terminal):
         self._critic_learn(obs, action, reward, next_obs, terminal)
         self._actor_learn(obs)
 
+        self.sync_target()
+
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
-            next_action, next_log_pro = self.predict(next_obs)
+            next_action, next_log_pro = self.sample(next_obs)
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
@@ -140,18 +148,6 @@ class OAC(parl.Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
-
-        self.sync_target()
-
-        if self.automatic_entropy_tuning is True:
-            alpha_loss = -(self.log_alpha *
-                           (log_pi + self.target_entropy).detach()).mean()
-
-            self.alpha_optimizer.zero_grad()
-            alpha_loss.backward()
-            self.alpha_optimizer.step()
-
-            self.alpha = self.log_alpha.exp()
 
     def sync_target(self, decay=None):
         if decay is None:

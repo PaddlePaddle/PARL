@@ -40,6 +40,7 @@ CRITIC_LR = 3e-4
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):
+    action_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
     episode_reward = 0
@@ -49,9 +50,9 @@ def run_train_episode(agent, env, rpm):
         episode_steps += 1
         # Select action use optimistic exploration or according to policy
         if rpm.size() < WARMUP_STEPS:
-            action = agent.sample(np.array(obs))
+            action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            action = agent.predict(np.array(obs))
+            action = agent.sample(obs)
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
@@ -63,7 +64,6 @@ def run_train_episode(agent, env, rpm):
 
         obs = next_obs
         episode_reward += reward
-
         # Train agent after collecting sufficient data
         if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
@@ -79,11 +79,11 @@ def run_train_episode(agent, env, rpm):
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        state = env.reset()
+        obs = env.reset()
         done = False
         while not done:
-            action = agent.predict(np.array(state))
-            state, reward, done, _ = env.step(action)
+            action = agent.predict(obs)
+            obs, reward, done, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward
@@ -99,11 +99,11 @@ def main():
     env.seed(args.seed)
     env = ActionMappingWrapper(env)
 
-    state_dim = env.observation_space.shape[0]
+    obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
     # Initialize model, algorithm, agent, replay_memory
-    model = MujocoModel(state_dim, action_dim)
+    model = MujocoModel(obs_dim, action_dim)
     algorithm = OAC(
         model,
         gamma=GAMMA,
@@ -112,12 +112,9 @@ def main():
         beta=BETA,
         delta=DELTA,
         actor_lr=ACTOR_LR,
-        critic_lr=CRITIC_LR,
-        automatic_entropy_tuning=False,
-        entropy_lr=args.entropy_lr,
-        action_dim=action_dim)
-    agent = MujocoAgent(algorithm, state_dim, action_dim)
-    rpm = ReplayMemory(MEMORY_SIZE, obs_dim=state_dim, act_dim=action_dim)
+        critic_lr=CRITIC_LR)
+    agent = MujocoAgent(algorithm)
+    rpm = ReplayMemory(MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 
     total_steps = 0
     test_flag = 0
@@ -156,13 +153,6 @@ if __name__ == "__main__":
         default=5e6,
         type=int,
         help='Max time steps to run environment')
-    parser.add_argument(
-        "--automatic_entropy_tuning",
-        default=False,
-        type=bool,
-        help='Whether or not adjust alpha automatically')
-    parser.add_argument(
-        "--entropy_lr", default=3e-4, help='Learning rate of entropy')
     args = parser.parse_args()
 
     main()

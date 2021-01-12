@@ -108,7 +108,8 @@ def kill_process(regex_pattern):
         regex_pattern = regex_pattern.replace('/', '\\\\')
         command = r'''for /F "skip=2 tokens=2 delims=," %a in ('wmic process where "commandline like '%{}%'" get processid^,status /format:csv') do taskkill /F /T /pid %a'''.format(
             regex_pattern)
-        os.popen(command).read()
+        with os.popen(command) as p:
+            p.read()
     else:
         command = "ps aux | grep {} | awk '{{print $2}}' | xargs kill -9".format(
             regex_pattern)

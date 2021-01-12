@@ -43,7 +43,7 @@ function(py_test TARGET_NAME)
         add_test(NAME ${TARGET_NAME}
             COMMAND python -u ${FILE_NAME} ${py_test_ARGS}
             WORKING_DIRECTORY ${COMBINED_PATH})
-        set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 800)
+        set_tests_properties(${TARGET_NAME} PROPERTIES TIMEOUT 1200)
     endif()
 endfunction()
 

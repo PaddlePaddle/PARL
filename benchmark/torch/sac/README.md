@@ -23,8 +23,9 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Start Training:
 #### Train
 ```
-# To train an agent for HalfCheetah-v1 game
-python train.py
+# To train for HalfCheetah-v1(default),Hopper-v1,Walker2d-v1,Ant-v1
+# --alpha 0.2(default)
+python train.py --env [ENV_NAME]
 
-# To train for other game
-# python train.py --env [ENV_NAME]
+# To train for Humanoid-v1
+python train.py --env Humanoid-v1 --alpha 0.05

@@ -28,7 +28,7 @@ MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 256
 GAMMA = 0.99
 TAU = 0.005
-ALPHA = 0.2  # determines the relative importance of entropy term against the reward
+
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
 
@@ -101,7 +101,7 @@ def main():
         model,
         gamma=GAMMA,
         tau=TAU,
-        alpha=ALPHA,
+        alpha=args.alpha,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm)
@@ -145,6 +145,11 @@ if __name__ == "__main__":
         default=5e6,
         type=int,
         help='Max time steps to run environment')
+    parser.add_argument(
+        "--alpha",
+        default=0.2,
+        type=float,
+        help='Determines the relative importance of entropy term against the reward')
     args = parser.parse_args()
 
     main()

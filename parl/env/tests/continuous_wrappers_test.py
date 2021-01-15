@@ -21,6 +21,7 @@ from parl.env.continuous_wrappers import ActionMappingWrapper
 class MockEnv(gym.Env):
     def __init__(self, low, high):
         self.action_space = gym.spaces.Box(low=low, high=high, shape=(3, ))
+        self._max_episode_steps = 1000
 
     def step(self, action):
         self.action = action

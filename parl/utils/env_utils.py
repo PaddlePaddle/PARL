@@ -19,7 +19,6 @@ try:
     gym_installed = True
 except ImportError:
     gym_installed = False
-    logger.error('ImportError: No module named gym')
 if gym_installed:
     from gym.spaces import Box, Discrete
 

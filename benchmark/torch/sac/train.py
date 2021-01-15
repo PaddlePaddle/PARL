@@ -28,7 +28,6 @@ MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 256
 GAMMA = 0.99
 TAU = 0.005
-
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
 
@@ -149,7 +148,9 @@ if __name__ == "__main__":
         "--alpha",
         default=0.2,
         type=float,
-        help='Determines the relative importance of entropy term against the reward')
+        help=
+        'Determines the relative importance of entropy term against the reward'
+    )
     args = parser.parse_args()
 
     main()

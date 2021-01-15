@@ -136,7 +136,7 @@ if %ERRORLEVEL% NEQ 0 (
 if "%IS_TESTING_SERIALLY%"=="ON" (
     ctest -C Release --output-on-failure
 ) else (
-    ctest -C Release --output-on-failure -j5 --verbose 
+    ctest -C Release --output-on-failure -j5
 )
 goto:eof
 rem ------------------------------------------------

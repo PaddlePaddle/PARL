@@ -46,4 +46,6 @@ class MujocoAgent(parl.Agent):
         reward = torch.FloatTensor(reward).to(self.device)
         next_obs = torch.FloatTensor(next_obs).to(self.device)
         terminal = torch.FloatTensor(terminal).to(self.device)
-        self.alg.learn(obs, action, reward, next_obs, terminal)
+        critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
+                                                 terminal)
+        return critic_loss, actor_loss

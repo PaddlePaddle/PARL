@@ -34,6 +34,17 @@ class OAC(parl.Algorithm):
                  delta=None,
                  actor_lr=None,
                  critic_lr=None):
+        """ OAC algorithm
+                    Args:
+                        model(parl.Model): forward network of actor and critic.
+                        gamma(float): discounted factor for reward computation
+                        tau (float): decay coefficient when updating the weights of self.target_model with self.model
+                        alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+                        beta (float): determines the relative importance of sigma_Q
+                        delta (float): determines the relative changes of exploration`s mean
+                        actor_lr (float): learning rate of the actor model
+                        critic_lr (float): learning rate of the critic model
+        """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
@@ -118,10 +129,12 @@ class OAC(parl.Algorithm):
         return action
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self._critic_learn(obs, action, reward, next_obs, terminal)
-        self._actor_learn(obs)
+        critic_loss = self._critic_learn(obs, action, reward, next_obs,
+                                         terminal)
+        actor_loss = self._actor_learn(obs)
 
         self.sync_target()
+        return critic_loss, actor_loss
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
@@ -129,7 +142,7 @@ class OAC(parl.Algorithm):
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
-            target_Q = reward + self.gamma * terminal * target_Q
+            target_Q = reward + self.gamma * (1. - terminal) * target_Q
         cur_q1, cur_q2 = self.model.critic_model(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
@@ -138,6 +151,7 @@ class OAC(parl.Algorithm):
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
+        return critic_loss
 
     def _actor_learn(self, obs):
         act, log_pi = self.predict(obs)
@@ -148,6 +162,7 @@ class OAC(parl.Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+        return actor_loss
 
     def sync_target(self, decay=None):
         if decay is None:

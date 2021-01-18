@@ -42,7 +42,7 @@
            <ul>
           <li><a href="tutorial/quick_start.md">入门：解决cartpole问题</a></li>
           <li><a href="tutorial/module.md">子模块说明</a></li>
-          <li><a href="tutorial/param.md">模型参数管理</a></li>
+          <li><a href="tutorial/param.md">参数保存与加载</a></li>
           <li><a href="tutorial/summary.md">绘制训练曲线</a></li>
           <li><a href="tutorial/csv_logger.md">表格输出实验数据</a></li>
            </ul>

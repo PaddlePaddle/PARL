@@ -70,7 +70,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j20 --verbose
+    ctest --output-on-failure -j20
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -91,7 +91,7 @@ function run_test_with_cpu() {
     =====================================================
 EOF
     if [ $# -eq 1 ];then
-      ctest --output-on-failure -j20 --verbose
+      ctest --output-on-failure -j20
     else
       ctest --output-on-failure 
     fi
@@ -103,7 +103,7 @@ function run_single_paddle_test() {
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake .. -$1=ON
-    ctest --output-on-failure -j20 --verbose
+    ctest --output-on-failure -j20
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }

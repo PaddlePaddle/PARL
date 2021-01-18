@@ -125,7 +125,7 @@ class OAC(parl.Algorithm):
 
         dist = Normal(mu_E, act_std)
         z = dist.sample().detach()
-        action = torch.tanh(z) * self.max_action
+        action = torch.tanh(z)
         return action
 
     def learn(self, obs, action, reward, next_obs, terminal):

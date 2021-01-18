@@ -28,7 +28,7 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        action, _ = self.alg.predict(obs)
+        action = self.alg.predict(obs)
         action_numpy = action.cpu().detach().numpy().flatten()
         return action_numpy
 

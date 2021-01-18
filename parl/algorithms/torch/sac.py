@@ -78,10 +78,12 @@ class SAC(parl.Algorithm):
         return action, log_prob
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self._critic_learn(obs, action, reward, next_obs, terminal)
-        self._actor_learn(obs)
+        critic_loss = self._critic_learn(obs, action, reward, next_obs,
+                                         terminal)
+        actor_loss = self._actor_learn(obs)
 
         self.sync_target()
+        return critic_loss, actor_loss
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
@@ -89,7 +91,7 @@ class SAC(parl.Algorithm):
             q1_next, q2_next = self.target_model.critic_model(
                 next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
-            target_Q = reward + self.gamma * terminal * target_Q
+            target_Q = reward + self.gamma * (1. - terminal) * target_Q
         cur_q1, cur_q2 = self.model.critic_model(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
@@ -98,6 +100,7 @@ class SAC(parl.Algorithm):
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
+        return critic_loss
 
     def _actor_learn(self, obs):
         act, log_pi = self.sample(obs)
@@ -108,6 +111,7 @@ class SAC(parl.Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+        return actor_loss
 
     def sync_target(self, decay=None):
         if decay is None:

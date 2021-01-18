@@ -22,7 +22,6 @@ from mujoco_agent import MujocoAgent
 from parl.algorithms import SAC
 
 WARMUP_STEPS = 1e4
-EVAL_EVERY_STEPS = 5e3
 EVAL_EPISODES = 5
 MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 256
@@ -49,7 +48,6 @@ def run_train_episode(agent, env, rpm):
         # Perform action
         next_obs, reward, done, _ = env.step(action)
         terminal = float(done) if episode_steps < env._max_episode_steps else 0
-        terminal = 1. - terminal
 
         # Store data in replay memory
         rpm.append(obs, action, reward, next_obs, terminal)
@@ -109,7 +107,7 @@ def main():
 
     total_steps = 0
     test_flag = 0
-    while total_steps < args.max_timesteps:
+    while total_steps < args.train_total_steps:
         # Train episode
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
         total_steps += episode_steps
@@ -120,8 +118,8 @@ def main():
             total_steps, episode_reward))
 
         # Evaluate episode
-        if (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
-            while (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
+        if (total_steps + 1) // args.test_every_steps >= test_flag:
+            while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
@@ -140,10 +138,15 @@ if __name__ == "__main__":
         type=int,
         help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
-        "--max_timesteps",
+        "--train_total_steps",
         default=5e6,
         type=int,
         help='Max time steps to run environment')
+    parser.add_argument(
+        '--test_every_steps',
+        type=int,
+        default=int(5e3),
+        help='The step interval between two consecutive evaluations')
     parser.add_argument(
         "--alpha",
         default=0.2,

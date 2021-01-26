@@ -28,10 +28,6 @@ class ActionMappingWrapper(gym.Wrapper):
         self.high_bound = self.env.action_space.high[0]
         assert self.high_bound > self.low_bound
         self._max_episode_steps = int(self.env._max_episode_steps)
-        try:
-            self._elapsed_steps = int(self.env._elapsed_steps)
-        except:
-            logger.error('object has no attribute _elspaed_steps')
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)

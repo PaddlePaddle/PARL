@@ -30,9 +30,6 @@ MEMORY_SIZE = int(1e6)
 BATCH_SIZE = 256
 GAMMA = 0.99
 TAU = 0.005
-ALPHA = 0.2  # determines the relative importance of entropy term against the reward
-BETA = 4.66  # determines the relative importance of sigma_Q
-DELTA = 23.53  # determines the relative changes of exploration`s mean
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
 

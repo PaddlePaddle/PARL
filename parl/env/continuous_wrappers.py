@@ -27,7 +27,8 @@ class ActionMappingWrapper(gym.Wrapper):
         self.low_bound = self.env.action_space.low[0]
         self.high_bound = self.env.action_space.high[0]
         assert self.high_bound > self.low_bound
-        self._max_episode_steps = int(self.env._max_episode_steps)
+        if hasattr(env, '_max_episode_steps'):
+            self._max_episode_steps = int(self.env._max_episode_steps)
 
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
@@ -37,7 +38,6 @@ class ActionMappingWrapper(gym.Wrapper):
         Args:
             model_output_act(np.array): The values must be in in [-1, 1].
         """
-
         assert np.all(((model_output_act<=1.0 + 1e-3), (model_output_act>=-1.0 - 1e-3))), \
             'the action should be in range [-1.0, 1.0]'
         mapped_action = self.low_bound + (model_output_act - (-1.0)) * (

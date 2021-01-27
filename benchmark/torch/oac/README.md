@@ -25,5 +25,5 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 # To train an agent for HalfCheetah-v1 game
 python train.py
 
-# To train for other game & for automatic entropy tuning
-# python train.py --env [ENV_NAME] ---automatic_entropy_tuning True
+# To train for other game & params
+python train.py --env [ENV_NAME] --alpha [float] --beta [float] --delta [float]

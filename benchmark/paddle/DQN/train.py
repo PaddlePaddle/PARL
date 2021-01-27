@@ -32,7 +32,7 @@ GAMMA = 0.99
 
 
 # train an episode
-def run_episode(env, agent, rpm):
+def run_train_episode(agent, env, rpm):
     total_reward = 0
     obs = env.reset()
     step = 0
@@ -58,9 +58,9 @@ def run_episode(env, agent, rpm):
 
 
 # evaluate 5 episodes
-def evaluate(env, agent, episode_num=5, render=False):
+def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
     eval_reward = []
-    for i in range(episode_num):
+    for i in range(eval_episodes):
         obs = env.reset()
         episode_reward = 0
         while True:
@@ -91,7 +91,7 @@ def main():
 
     # warmup memory
     while len(rpm) < MEMORY_WARMUP_SIZE:
-        run_episode(env, agent, rpm)
+        run_train_episode(agent, env, rpm)
 
     max_episode = 800
 
@@ -100,11 +100,11 @@ def main():
     while episode < max_episode:
         # train part
         for i in range(50):
-            total_reward = run_episode(env, agent, rpm)
+            total_reward = run_train_episode(agent, env, rpm)
             episode += 1
 
         # test part
-        eval_reward = evaluate(env, agent, render=False)
+        eval_reward = run_evaluate_episodes(agent, env, render=False)
         logger.info('episode:{}    e_greed:{}   Test reward:{}'.format(
             episode, agent.e_greed, eval_reward))
 

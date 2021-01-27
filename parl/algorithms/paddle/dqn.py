@@ -13,11 +13,8 @@
 # limitations under the License.
 
 import copy
-import numpy as np
 import parl
 import paddle
-import paddle.fluid as fluid
-from cartpole_model import CartpoleModel
 
 __all__ = ['DQN']
 
@@ -54,21 +51,22 @@ class DQN(parl.Algorithm):
         # Q
         pred_values = self.model.value(obs)
         action_dim = pred_values.shape[-1]
-        action_onehot = paddle.fluid.layers.one_hot(
-            input=action, depth=action_dim)
+        action = paddle.squeeze(action, axis=-1)
+        action_onehot = paddle.nn.functional.one_hot(
+            action, num_classes=action_dim)
         pred_value = paddle.multiply(pred_values, action_onehot)
         pred_value = paddle.sum(pred_value, axis=1, keepdim=True)
 
         # target Q
-        with fluid.dygraph.no_grad():
+        with paddle.no_grad():
             max_v = self.target_model.value(next_obs).max(1, keepdim=True)
             target = reward + (1 - terminal) * self.gamma * max_v
         loss = self.mse_loss(pred_value, target)
 
         # optimize
+        self.optimizer.clear_grad()
         loss.backward()
         self.optimizer.step()
-        self.optimizer.clear_grad()
         return loss
 
     def sync_target(self):

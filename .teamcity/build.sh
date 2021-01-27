@@ -70,7 +70,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j20 --verbose
+    ctest --output-on-failure -j20
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -91,7 +91,7 @@ function run_test_with_cpu() {
     =====================================================
 EOF
     if [ $# -eq 1 ];then
-      ctest --output-on-failure -j20 --verbose
+      ctest --output-on-failure -j20
     else
       ctest --output-on-failure 
     fi
@@ -103,7 +103,7 @@ function run_single_paddle_test() {
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake .. -$1=ON
-    ctest --output-on-failure -j20 --verbose
+    ctest --output-on-failure -j20
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
@@ -214,12 +214,19 @@ function main() {
               export LANG=C.UTF-8
               xparl stop
           done
+
           run_test_with_gpu
+
           run_test_with_dygraph_paddle
 
-          #
-          /root/miniconda3/envs/empty_env/bin/pip install .
+          # import test
+          source ~/.bashrc
+          export PATH="/root/miniconda3/bin:$PATH"
+          source activate empty_env
+          pip install .
           run_import_test
+          ############
+
           run_docs_test
           ;;
         *)

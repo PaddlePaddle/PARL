@@ -106,9 +106,9 @@ def main():
         model,
         gamma=GAMMA,
         tau=TAU,
-        alpha=ALPHA,
-        beta=BETA,
-        delta=DELTA,
+        alpha=args.alpha,
+        beta=args.beta,
+        delta=args.delta,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
     agent = MujocoAgent(algorithm)
@@ -156,6 +156,23 @@ if __name__ == "__main__":
         type=int,
         default=int(5e3),
         help='The step interval between two consecutive evaluations')
+    parser.add_argument(
+        "--alpha",
+        default=0.2,
+        type=float,
+        help=
+        'Determines the relative importance of entropy term against the reward'
+    )
+    parser.add_argument(
+        "--beta",
+        default=4.66,
+        type=float,
+        help='Determines the relative importance of sigma_Q')
+    parser.add_argument(
+        "--delta",
+        default=23.53,
+        type=float,
+        help='Determines the relative changes of exploration`s mean')
     args = parser.parse_args()
 
     main()

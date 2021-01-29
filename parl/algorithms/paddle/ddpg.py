@@ -15,6 +15,7 @@
 import parl
 import paddle
 import paddle.nn.functional as F
+from copy import deepcopy
 
 __all__ = ['DDPG']
 
@@ -22,7 +23,6 @@ __all__ = ['DDPG']
 class DDPG(parl.Algorithm):
     def __init__(self,
                  model,
-                 target_model,
                  gamma=None,
                  tau=None,
                  actor_lr=None,
@@ -37,7 +37,7 @@ class DDPG(parl.Algorithm):
         self.critic_lr = critic_lr
 
         self.model = model
-        self.target_model = target_model
+        self.target_model = deepcopy(self.model)
         self.actor_optimizer = paddle.optimizer.Adam(
             learning_rate=actor_lr, parameters=self.model.get_actor_params())
         self.critic_optimizer = paddle.optimizer.Adam(

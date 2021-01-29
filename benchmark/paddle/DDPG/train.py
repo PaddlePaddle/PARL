@@ -96,10 +96,8 @@ def main():
 
     # Initialize model, algorithm, agent, replay_memory
     model = MujocoModel(obs_dim, action_dim)
-    target_model = MujocoModel(obs_dim, action_dim)
     algorithm = DDPG(
         model,
-        target_model,
         gamma=GAMMA,
         tau=TAU,
         actor_lr=ACTOR_LR,

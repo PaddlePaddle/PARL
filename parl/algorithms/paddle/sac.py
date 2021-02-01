@@ -24,7 +24,6 @@ __all__ = ['SAC']
 class SAC(parl.Algorithm):
     def __init__(self,
                  model,
-                 target_model,
                  gamma=None,
                  tau=None,
                  alpha=None,
@@ -52,8 +51,7 @@ class SAC(parl.Algorithm):
         self.critic_lr = critic_lr
 
         self.model = model
-        self.target_model = target_model
-        # self.target_model = deepcopy(self.model)      # Deepcopy can be used with paddle nightly(0.0.0)
+        self.target_model = deepcopy(self.model)
         self.actor_optimizer = paddle.optimizer.Adam(
             learning_rate=actor_lr,
             parameters=self.model.actor_model.parameters())

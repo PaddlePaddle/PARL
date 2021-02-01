@@ -95,10 +95,8 @@ def main():
 
     # Initialize model, algorithm, agent, replay_memory
     model = MujocoModel(obs_dim, action_dim)
-    target_model = MujocoModel(obs_dim, action_dim)
     algorithm = SAC(
         model,
-        target_model,
         gamma=GAMMA,
         tau=TAU,
         alpha=args.alpha,

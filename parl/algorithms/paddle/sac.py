@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class SAC(parl.Algorithm):
                 model(parl.Model): forward network of actor and critic.
                 gamma(float): discounted factor for reward computation
                 tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+                alpha (float): temperature parameter determines the relative importance of the entropy against the reward
                 actor_lr (float): learning rate of the actor model
                 critic_lr (float): learning rate of the critic model
         """

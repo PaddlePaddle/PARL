@@ -1,0 +1,5 @@
+gym==0.12.5
+pygame==1.9.6
+opencv-python
+parl==1.4.1
+paddlepaddle-gpu

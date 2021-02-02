@@ -14,9 +14,9 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ## How to use
 ### Dependencies:
 + python3.5+
-+ [parl==1.4.1](https://github.com/PaddlePaddle/PARL)
++ [parl>=1.4.2](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + gym==0.9.1
-+ [paddlepaddle==2.0.0](https://github.com/PaddlePaddle/Paddle)
 + mujoco-py==0.5.7
 
 ### Start Training:

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,14 @@ class DDPG(parl.Algorithm):
                  tau=None,
                  actor_lr=None,
                  critic_lr=None):
+        """ DDPG algorithm
+            Args:
+                model(parl.Model): forward network of actor and critic.
+                gamma(float): discounted factor for reward computation
+                tau (float): decay coefficient when updating the weights of self.target_model with self.model
+                actor_lr (float): learning rate of the actor model
+                critic_lr (float): learning rate of the critic model
+        """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -129,11 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
-    parser.add_argument(
-        "--seed",
-        default=0,
-        type=int,
-        help='Sets Gym, PyTorch and Numpy seeds')
+    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
         default=5e6,

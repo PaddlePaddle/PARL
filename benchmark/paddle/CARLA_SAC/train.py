@@ -26,7 +26,6 @@ from carla_agent import CarlaAgent
 from parl.algorithms import SAC
 
 WARMUP_STEPS = 2e3
-EVAL_EVERY_STEPS = 1e3
 EVAL_EPISODES = 3
 MEMORY_SIZE = int(1e4)
 BATCH_SIZE = 256
@@ -101,6 +100,7 @@ def main():
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 
     total_steps = 0
+    last_save_steps = 0
     test_flag = 0
     obs_list = [env.reset() for env in env_list]
     obs_list = [obs.get() for obs in obs_list]
@@ -109,7 +109,7 @@ def main():
     episode_reward_list = [0] * len(env_list)
     episode_steps_list = [0] * len(env_list)
 
-    while total_steps < args.max_timesteps:
+    while total_steps < args.train_total_steps:
         # Train episode
         if rpm.size() < WARMUP_STEPS:
             action_list = [
@@ -157,12 +157,13 @@ def main():
                         batch_terminal)
 
         # Save agent
-        if total_steps > int(1e5) and total_steps % int(1e4) == 0:
-            agent.save('./model/{}_model.ckpt'.format(total_steps))
+        if total_steps > int(1e5) and total_steps > last_save_steps + int(1e4):
+            agent.save('./model/step_{}_model.ckpt'.format(total_steps))
+            last_save_steps = total_steps
 
         # Evaluate episode
-        if (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
-            while (total_steps + 1) // EVAL_EVERY_STEPS >= test_flag:
+        if (total_steps + 1) // args.test_every_steps >= test_flag:
+            while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
@@ -185,10 +186,15 @@ if __name__ == "__main__":
         type=int,
         help='sets carla env seed for evaluation')
     parser.add_argument(
-        "--max_timesteps",
+        "--train_total_steps",
         default=5e5,
         type=int,
         help='max time steps to run environment')
+    parser.add_argument(
+        "--test_every_steps",
+        default=1e3,
+        type=int,
+        help='the step interval between two consecutive evaluations')
     args = parser.parse_args()
 
     main()

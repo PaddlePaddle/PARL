@@ -70,8 +70,8 @@ def main():
     env.seed(args.seed)
     env = ActionMappingWrapper(env)
 
-    obs_dim = self.env.state_space.shape[0]
-    action_dim = self.env.action_space.shape[0]
+    obs_dim = env.state_space.shape[0]
+    action_dim = env.action_space.shape[0]
 
     # Initialize model, algorithm, agent
     model = CarlaModel(obs_dim, action_dim)

@@ -1,6 +1,6 @@
 ## SAC in Carla simulator
-Based on [parl](https://github.com/PaddlePaddle/PARL) and [PaddlePaddle](https://github.com/PaddlePaddle/Paddle), 
-the SAC algorithm of deep reinforcement learning has been used in Carla simulator environment.
+Based on [PARL](https://github.com/PaddlePaddle/PARL) and [PaddlePaddle](https://github.com/PaddlePaddle/Paddle), 
+a parallel version of SAC was implemented and achieved high performance in the CARLA environment.
 > Paper: SAC in [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290)
 
 ### Carla simulator introduction
@@ -10,7 +10,7 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
 <img src=".benchmark/carla_sac.png" width = "800" height ="400" alt="carla_sac"/>
 <img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
 
-+ Result was run with seed `0`, mode `Lane`
++ Result was evaluated with seed `0`, mode `Lane`
 
 ## How to use
 ### Dependencies:
@@ -19,8 +19,8 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [CARLA_0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
   ```CARLA
-  Download CARLA_0.9.6, extract it to some folder, 
-  and add CARLA to `PYTHONPATH` environment variable
+  # Download CARLA_0.9.6, extract it to a folder, 
+  # and add the folder path to `PYTHONPATH` environment variable
   
   # add python path
   export PYTHONPATH="SOMEFOLDER/CARLA_0.9.6/PythonAPI/carla/dist/carla-0.9.6-py3.5-linux-x86_64.egg:$PYTHONPATH"

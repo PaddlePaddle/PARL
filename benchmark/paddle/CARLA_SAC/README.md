@@ -43,8 +43,8 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
    ```start_env
    $ ./CarlaUE4.sh -windowed -carla-port=2021
    ```
-   + Start three CARLA service (ports: 2021,2023,2025) for collecting data and training, 
-     one environment (2027) for evaluating.
+   + Start three CARLA services (ports: 2021,2023,2025) for collecting data and training, 
+     one service (port: 2027) for evaluating.
    
 2. For parallel training, we can execute the following [xparl](https://parl.readthedocs.io/en/stable/parallel_training/setup.html) command to start a PARL cluster：
    ```Parallelization

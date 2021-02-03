@@ -60,6 +60,5 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
    $ python train.py ----localhost [xparl address] --seed [int] --task_mode [mode]
    ```
 #### Rerun trained agent
-```load
-$ python evaluate.py
 ```
+$ python evaluate.py

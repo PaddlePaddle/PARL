@@ -118,7 +118,7 @@ function run_test_with_dygraph_paddle() {
         source activate $env
         python -m pip install --upgrade pip
         echo "========================================"
-        echo "Running tests in $env with paddle 2.0.0rc0 .."
+        echo "Running tests in $env with paddle 2.0.0 .."
         echo `which pip`
         echo "========================================"
         pip install .

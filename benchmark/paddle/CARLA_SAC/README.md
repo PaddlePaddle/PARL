@@ -22,8 +22,7 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
   # Download CARLA_0.9.6, extract it to a folder, 
   # and add the folder path to `PYTHONPATH` environment variable
   
-  # add python path
-  export PYTHONPATH="SOMEFOLDER/CARLA_0.9.6/PythonAPI/carla/dist/carla-0.9.6-py3.5-linux-x86_64.egg:$PYTHONPATH"
+  $ export PYTHONPATH="${YOURFLODER}/CARLA_0.9.6/PythonAPI/carla/dist/carla-0.9.6-py3.5-linux-x86_64.egg:$PYTHONPATH"
   ```
 + [gym_carla](https://github.com/ShuaibinLi/gym_carla.git)
   ```gym_carla
@@ -34,31 +33,32 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
   ```
 
 ### Start Training
-1. Enter the CARLA root folder, launch the CARLA server in different terminals 
-   with non-display mode
+1. Open another(new) terminals, enter the CARLA root folder and launch CARLA service. 
+   There are two modes to start the CARLA server: <br>
+   (1) non-display mode
     ```start env
     $ DISPLAY= ./CarlaUE4.sh -opengl -carla-port=2021
     ```
-   or with display mode
+   (2) display mode
    ```start_env
    $ ./CarlaUE4.sh -windowed -carla-port=2021
    ```
-   + Start three environments (ports: 2021,2023,2025) for collecting data and training, 
+   + Start three CARLA service (ports: 2021,2023,2025) for collecting data and training, 
      one environment (2027) for evaluating.
    
-2. Open a new terminal and start [parl](https://github.com/PaddlePaddle/PARL) port for parallelization by
+2. For parallel training, we can execute the following [xparl](https://parl.readthedocs.io/en/stable/parallel_training/setup.html) command to start a PARL cluster：
    ```Parallelization
-   $ xparl start --port 8765
+   $ xparl start --port 8080
    ```
-   checkout xparl connect --address in the terminal
+   check xparl cluster status by `$ xparl status`
 
-3. Enter the cloned repository
+3. Start training
    ```train
-   $ python train.py ----localhost [xparl address]
+   $ python train.py --localhost [xparl address]
    
    # Train for other settings
-   $ python train.py ----localhost [xparl address] --seed [int] --task_mode [mode]
+   $ python train.py --localhost [xparl address] --seed [int] --task_mode [mode]
    ```
-#### Rerun trained agent
+#### Evaluate trained agent
 ```
 $ python evaluate.py

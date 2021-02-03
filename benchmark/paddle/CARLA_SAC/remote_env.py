@@ -43,7 +43,7 @@ class CarlaEnv(object):
             'dt': 0.025,  # time interval between two frames
             'ego_vehicle_filter':
             'vehicle.lincoln*',  # filter for defining ego vehicle
-            'port': port,  # connection port
+            'port': port,  # CARLA service's port
             'task_mode':
             'Lane',  # mode of the task, [random, roundabout (only for Town03)]
             'code_mode': 'train',

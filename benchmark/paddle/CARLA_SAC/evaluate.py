@@ -22,7 +22,8 @@ from parl.utils import logger, tensorboard
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
-from carla_sac import SAC
+from sac import SAC
+# from parl.algorithms import SAC # parl >= 1.4.2
 
 EVAL_EPISODES = 3
 GAMMA = 0.99
@@ -30,18 +31,18 @@ TAU = 0.005
 ALPHA = 0.2  # determines the relative importance of entropy term against the reward
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
-_max_episode_steps = 250
+MAX_EPISODE_STEPS = 250
 
 
-def run_evaluate_episodes(agent, env):
+def run_evaluate_episodes(agent, eval_env):
     episode_reward = 0.
-    obs, _ = env.reset()
+    obs, _ = eval_env.reset()
     done = False
     steps = 0
-    while not done and steps < _max_episode_steps:
+    while not done and steps < MAX_EPISODE_STEPS:
         steps += 1
         action = agent.predict(obs)
-        obs, reward, done, _ = env.step(action)
+        obs, reward, done, _ = eval_env.step(action)
         episode_reward += reward
     return episode_reward
 
@@ -58,20 +59,20 @@ def main():
         'dt': 0.025,  # time interval between two frames
         'ego_vehicle_filter':
         'vehicle.lincoln*',  # filter for defining ego vehicle
-        'port': 2027,  # connection port
+        'port': 2027,  # CARLA service's port
         'task_mode':
         'Lane',  # mode of the task, [random, roundabout (only for Town03)]
         'code_mode': 'test',
-        'max_time_episode': 250,  # maximum timesteps per episode
+        'max_time_episode': MAX_EPISODE_STEPS,  # maximum timesteps per episode
         'desired_speed': 15,  # desired speed (m/s)
         'max_ego_spawn_times': 100,  # maximum times to spawn ego vehicle
     }
-    env = gym.make('carla-v0', params=params)
-    env.seed(args.seed)
-    env = ActionMappingWrapper(env)
+    eval_env = gym.make('carla-v0', params=params)
+    eval_env.seed(args.seed)
+    eval_env = ActionMappingWrapper(eval_env)
 
-    obs_dim = env.state_space.shape[0]
-    action_dim = env.action_space.shape[0]
+    obs_dim = eval_env.state_space.shape[0]
+    action_dim = eval_env.action_space.shape[0]
 
     # Initialize model, algorithm, agent
     model = CarlaModel(obs_dim, action_dim)
@@ -86,9 +87,9 @@ def main():
     agent.restore('./model.ckpt')
 
     # Evaluate episode
-    for _ in range(args.evaluate_episodes):
-        episode_reward = run_evaluate_episodes(agent, env)
-        tensorboard.add_scalar('eval/episode_reward', episode_reward, _)
+    for episode in range(args.evaluate_episodes):
+        episode_reward = run_evaluate_episodes(agent, eval_env)
+        tensorboard.add_scalar('eval/episode_reward', episode_reward, episode)
         logger.info('Evaluation episode reward: {}'.format(episode_reward))
 
 

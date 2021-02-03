@@ -154,7 +154,7 @@ class OAC(parl.Algorithm):
         return critic_loss
 
     def _actor_learn(self, obs):
-        act, log_pi = self.predict(obs)
+        act, log_pi = self.sample(obs)
         q1_pi, q2_pi = self.model.critic_model(obs, act)
         min_q_pi = torch.min(q1_pi, q2_pi)
         actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()

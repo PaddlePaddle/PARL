@@ -37,7 +37,8 @@ def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
-    episode_reward, episode_steps = 0, 0
+    episode_reward = 0
+    episode_steps = 0
     while not done:
         episode_steps += 1
         # Select action randomly or according to policy
@@ -82,7 +83,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 
 def main():
-    logger.info("------------------- SAC ---------------------")
+    logger.info("------------------- TD3 ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         '--policy_freq',
         type=int,
         default=2,
-        help='frequency of delayed policy updates')
+        help='Frequency of delayed policy updates')
     args = parser.parse_args()
 
     main()

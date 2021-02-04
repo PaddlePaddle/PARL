@@ -29,7 +29,7 @@ The main abstractions introduced by PARL that are used to build an agent recursi
 `Algorithm` describes the mechanism to update parameters in `Model` and often contains at least one model.
 
 ### Agent
-`Agent`, a data bridge between the environment and the algorithm, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.  
+`Agent`, a data bridge between the environment and the algorithm, is test for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.  
 
 Note: For more information about base classes, please visit our [tutorial](https://parl.readthedocs.io/en/latest/getting_started.html) and [API documentation](https://parl.readthedocs.io/en/latest/model.html).
 

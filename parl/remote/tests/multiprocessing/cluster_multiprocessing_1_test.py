@@ -63,7 +63,6 @@ class TestCluster(unittest.TestCase):
         time.sleep(1)
 
         worker1 = Worker('localhost:8238', 4)
-        parl.connect('localhost:8238')
 
         proc1 = multiprocessing.Process(
             target=self._connect_and_create_actor, args=('localhost:8238', ))
@@ -76,6 +75,7 @@ class TestCluster(unittest.TestCase):
         proc2.join()
 
         # make sure that the client of the main process still works
+        parl.connect('localhost:8238')
         self._create_actor()
 
         worker1.exit()

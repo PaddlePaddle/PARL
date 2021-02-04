@@ -22,3 +22,4 @@ from parl.algorithms.fluid.ppo import *
 from parl.algorithms.fluid.td3 import *
 from parl.algorithms.fluid.sac import *
 from parl.algorithms.fluid.impala.impala import *
+from parl.algorithms.fluid.qmix import *

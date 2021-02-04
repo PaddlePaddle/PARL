@@ -14,6 +14,7 @@
 
 import cloudpickle
 import inspect
+import sys
 import threading
 import zmq
 
@@ -96,7 +97,7 @@ class RemoteWrapper(object):
             raise FileNotFoundError(
                 "cannot not find the module:{}".format(module_path))
         res = inspect.getfile(cls)
-        file_path = locate_remote_file(module_path)
+        file_path, in_sys_path = locate_remote_file(module_path)
         cls_source = inspect.getsourcelines(cls)
         end_of_file = cls_source[1] + len(cls_source[0])
         class_name = cls.__name__
@@ -106,8 +107,10 @@ class RemoteWrapper(object):
                 del kwargs[key]
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
-            cloudpickle.dumps([file_path, class_name, end_of_file]),
+            cloudpickle.dumps(
+                [file_path, class_name, end_of_file, in_sys_path]),
             cloudpickle.dumps([args, kwargs]),
+            cloudpickle.dumps(sys.path)
         ])
         message = self.job_socket.recv_multipart()
         tag = message[0]

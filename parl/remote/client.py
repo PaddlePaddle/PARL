@@ -419,6 +419,9 @@ def connect(master_address, distributed_files=[]):
 
     assert len(master_address.split(":")) == 2, "Please input address in " +\
         "{ip}:{port} format"
+    assert isinstance(distributed_files,
+                      list), "`distributed_files` should be a list."
+
     global GLOBAL_CLIENT
     addr = master_address.split(":")[0]
     cur_process_id = os.getpid()

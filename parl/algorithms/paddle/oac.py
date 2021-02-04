@@ -19,8 +19,6 @@ import paddle.nn.functional as F
 from copy import deepcopy
 import math
 
-epsilon = 1e-6
-
 __all__ = ['OAC']
 
 
@@ -55,7 +53,6 @@ class OAC(parl.Algorithm):
 
         self.gamma = gamma
         self.tau = tau
-        self.alpha = alpha
         self.alpha = alpha
         self.beta = beta
         self.delta = delta

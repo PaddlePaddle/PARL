@@ -37,10 +37,11 @@ def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
-    episode_reward, episode_steps = 0, 0
+    episode_reward = 0
+    episode_steps = 0
     while not done:
         episode_steps += 1
-        # Select action randomly or according to policy
+        # Select action randomly or sample using optimistic exploration
         if rpm.size() < WARMUP_STEPS:
             action = np.random.uniform(-1, 1, size=action_dim)
         else:
@@ -82,7 +83,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 
 def main():
-    logger.info("------------------- SAC ---------------------")
+    logger.info("------------------- OAC ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
     logger.set_dir('./{}_{}'.format(args.env, args.seed))

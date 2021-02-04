@@ -54,7 +54,6 @@ class TestCluster(unittest.TestCase):
         time.sleep(1)
 
         worker1 = Worker('localhost:8240', 4)
-        parl.connect('localhost:8240')
 
         if not _IS_WINDOWS:  # In windows, fork process cannot access client created in main process.
             proc1 = multiprocessing.Process(target=self._create_actor)
@@ -67,6 +66,7 @@ class TestCluster(unittest.TestCase):
             print("[test_create_actor_in_multiprocessing]  Join")
 
         # make sure that the client of the main process still works
+        parl.connect('localhost:8240')
         self._create_actor()
 
         worker1.exit()

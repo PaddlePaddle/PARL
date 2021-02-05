@@ -18,7 +18,7 @@ import parl
 import argparse
 import carla
 import gym_carla
-from remote_env import ParallelEnv, EvalEnv
+from remote_env import ParallelEnv, LocalEnv
 from parl.utils import logger, tensorboard, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel
@@ -67,7 +67,7 @@ def main():
 
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
-    eval_env = EvalEnv(args.env, eval_env_params)
+    eval_env = LocalEnv(args.env, eval_env_params)
     eval_env.seed(args.seed)
 
     obs_dim = eval_env.obs_dim

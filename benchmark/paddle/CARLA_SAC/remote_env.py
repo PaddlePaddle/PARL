@@ -75,7 +75,7 @@ class ParallelEnv(object):
         return self.obs_list
 
 
-class EvalEnv(object):
+class LocalEnv(object):
     def __init__(self, env_name, params):
         self.env = gym.make(env_name, params=params)
         self.env = ActionMappingWrapper(self.env)

@@ -24,6 +24,7 @@ from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from sac import SAC
 # from parl.algorithms import SAC # parl >= 1.4.2
+from env_config import EnvConfig
 
 EVAL_EPISODES = 3
 GAMMA = 0.99
@@ -31,7 +32,6 @@ TAU = 0.005
 ALPHA = 0.2  # determines the relative importance of entropy term against the reward
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
-MAX_EPISODE_STEPS = 250
 
 
 def run_evaluate_episodes(agent, eval_env):
@@ -39,7 +39,7 @@ def run_evaluate_episodes(agent, eval_env):
     obs, _ = eval_env.reset()
     done = False
     steps = 0
-    while not done and steps < MAX_EPISODE_STEPS:
+    while not done and steps < eval_env._max_episode_steps:
         steps += 1
         action = agent.predict(obs)
         obs, reward, done, _ = eval_env.step(action)
@@ -54,25 +54,12 @@ def main():
     logger.set_dir('./{}_eval_{}'.format(args.env, args.seed))
 
     # env for eval
-    params = {
-        'obs_size': (160, 100),  # screen size of cv2 window
-        'dt': 0.025,  # time interval between two frames
-        'ego_vehicle_filter':
-        'vehicle.lincoln*',  # filter for defining ego vehicle
-        'port': 2027,  # CARLA service's port
-        'task_mode':
-        'Lane',  # mode of the task, [random, roundabout (only for Town03)]
-        'code_mode': 'test',
-        'max_time_episode': MAX_EPISODE_STEPS,  # maximum timesteps per episode
-        'desired_speed': 15,  # desired speed (m/s)
-        'max_ego_spawn_times': 100,  # maximum times to spawn ego vehicle
-    }
-    eval_env = gym.make('carla-v0', params=params)
+    eval_env_params = EnvConfig['eval_env_params']
+    eval_env = EvalEnv(args.env, eval_env_params)
     eval_env.seed(args.seed)
-    eval_env = ActionMappingWrapper(eval_env)
 
-    obs_dim = eval_env.state_space.shape[0]
-    action_dim = eval_env.action_space.shape[0]
+    obs_dim = eval_env.obs_dim
+    action_dim = eval_env.action_dim
 
     # Initialize model, algorithm, agent
     model = CarlaModel(obs_dim, action_dim)

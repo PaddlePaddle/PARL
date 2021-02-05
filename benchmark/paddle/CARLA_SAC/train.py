@@ -18,13 +18,14 @@ import parl
 import argparse
 import carla
 import gym_carla
-from remote_env import CarlaEnv
+from remote_env import ParallelEnv, EvalEnv
 from parl.utils import logger, tensorboard, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from sac import SAC
 # from parl.algorithms import SAC # parl >= 1.4.2
+from env_config import EnvConfig
 
 WARMUP_STEPS = 2e3
 EVAL_EPISODES = 3
@@ -35,7 +36,6 @@ TAU = 0.005
 ALPHA = 0.2  # determines the relative importance of entropy term against the reward
 ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
-MAX_EPISODE_STEPS = 250
 
 
 # Runs policy for 3 episodes by default and returns average reward
@@ -43,10 +43,10 @@ MAX_EPISODE_STEPS = 250
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for k in range(eval_episodes):
-        obs, _ = env.reset()
+        obs = env.reset()
         done = False
         steps = 0
-        while not done and steps < MAX_EPISODE_STEPS:
+        while not done and steps < env._max_episode_steps:
             steps += 1
             action = agent.predict(obs)
             obs, reward, done, _ = env.step(action)
@@ -61,31 +61,17 @@ def main():
     logger.info("---------------------------------------------")
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
-    # envs for training
-    ports = [2021, 2023, 2025]
-    parl.connect(args.localhost)
-    env_list = [CarlaEnv(port=port) for port in ports]
+    # Parallel environments for training
+    train_envs_params = EnvConfig['train_envs_params']
+    env_list = ParallelEnv(args.env, args.localhost, train_envs_params)
 
     # env for eval
-    params = {
-        'obs_size': (160, 100),  # screen size of cv2 window
-        'dt': 0.025,  # time interval between two frames
-        'ego_vehicle_filter':
-        'vehicle.lincoln*',  # filter for defining ego vehicle
-        'port': 2027,  # CARLA service's port
-        'task_mode':
-        'Lane',  # mode of the task, [random, roundabout (only for Town03)]
-        'code_mode': 'test',
-        'max_time_episode': MAX_EPISODE_STEPS,  # maximum timesteps per episode
-        'desired_speed': 15,  # desired speed (m/s)
-        'max_ego_spawn_times': 100,  # maximum times to spawn ego vehicle
-    }
-    eval_env = gym.make('carla-v0', params=params)
+    eval_env_params = EnvConfig['eval_env_params']
+    eval_env = EvalEnv(args.env, eval_env_params)
     eval_env.seed(args.seed)
-    eval_env = ActionMappingWrapper(eval_env)
 
-    obs_dim = eval_env.state_space.shape[0]
-    action_dim = eval_env.action_space.shape[0]
+    obs_dim = eval_env.obs_dim
+    action_dim = eval_env.action_dim
 
     # Initialize model, algorithm, agent, replay_memory
     model = CarlaModel(obs_dim, action_dim)
@@ -103,53 +89,28 @@ def main():
     total_steps = 0
     last_save_steps = 0
     test_flag = 0
-    obs_list = [env.reset() for env in env_list]
-    obs_list = [obs.get() for obs in obs_list]
-    obs_list = np.array(obs_list)
-    done_list = [False] * len(env_list)
-    episode_reward_list = [0] * len(env_list)
-    episode_steps_list = [0] * len(env_list)
+
+    obs_list = env_list.reset()
 
     while total_steps < args.train_total_steps:
         # Train episode
         if rpm.size() < WARMUP_STEPS:
             action_list = [
                 np.random.uniform(-1, 1, size=action_dim)
-                for _ in range(len(env_list))
+                for _ in range(len(train_envs_params))
             ]
         else:
             action_list = [agent.sample(obs) for obs in obs_list]
-        return_list = [
-            env_list[i].step(action_list[i]) for i in range(len(env_list))
-        ]
-        return_list = [return_.get() for return_ in return_list]
-        return_list = np.array(return_list, dtype=object)
+        next_obs_list, reward_list, done_list, info_list = env_list.step(
+            action_list)
 
-        done_list = return_list[:, 2]
         # Store data in replay memory
-        for i in range(len(return_list)):
-            next_obs, reward, done, _ = return_list[i, 0], return_list[
-                i, 1], return_list[i, 2], return_list[i, 3]
-            rpm.append(obs_list[i], action_list[i], reward, next_obs, done)
+        for i in range(len(train_envs_params)):
+            rpm.append(obs_list[i], action_list[i], reward_list[i],
+                       next_obs_list[i], done_list[i])
 
-            obs_list[i] = return_list[i, 0]
-
-            total_steps += 1
-            episode_steps_list[i] += 1
-            episode_reward_list[i] += reward
-            if done or episode_steps_list[i] >= MAX_EPISODE_STEPS:
-                tensorboard.add_scalar('train/episode_reward_env{}'.format(i),
-                                       episode_reward_list[i], total_steps)
-                logger.info('Total Steps: {} Reward: {}'.format(
-                    total_steps, episode_reward_list[i]))
-
-                # reset env if done
-                episode_steps_list[i] = 0
-                episode_reward_list[i] = 0
-                obs_list_i = env_list[i].reset()
-                obs_list[i] = obs_list_i.get()
-                obs_list[i] = np.array(obs_list[i])
-
+        obs_list = env_list.get_obs()
+        total_steps = env_list.total_steps
         # Train agent after collecting sufficient data
         if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
@@ -169,8 +130,9 @@ def main():
             avg_reward = run_evaluate_episodes(agent, eval_env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
-            logger.info('Evaluation over: {} episodes, Reward: {}'.format(
-                EVAL_EPISODES, avg_reward))
+            logger.info(
+                'Total steps {}, Evaluation over {} episodes, Average reward: {}'
+                .format(total_steps, EVAL_EPISODES, avg_reward))
 
 
 if __name__ == "__main__":

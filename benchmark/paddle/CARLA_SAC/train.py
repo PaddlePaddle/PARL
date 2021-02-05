@@ -39,7 +39,6 @@ CRITIC_LR = 3e-4
 
 
 # Runs policy for 3 episodes by default and returns average reward
-# A fixed seed is used for the eval environment
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for k in range(eval_episodes):
@@ -57,9 +56,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 def main():
     logger.info("-----------------Carla_SAC-------------------")
-    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
-    logger.info("---------------------------------------------")
-    logger.set_dir('./{}_{}'.format(args.env, args.seed))
+    logger.set_dir('./{}_train'.format(args.env))
 
     # Parallel environments for training
     train_envs_params = EnvConfig['train_envs_params']
@@ -68,7 +65,6 @@ def main():
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
     eval_env = LocalEnv(args.env, eval_env_params)
-    eval_env.seed(args.seed)
 
     obs_dim = eval_env.obs_dim
     action_dim = eval_env.action_dim
@@ -142,11 +138,6 @@ if __name__ == "__main__":
         default='localhost:8080',
         help='xparl address for parallel training')
     parser.add_argument("--env", default="carla-v0")
-    parser.add_argument(
-        "--seed",
-        default=0,
-        type=int,
-        help='sets carla env seed for evaluation')
     parser.add_argument(
         "--train_total_steps",
         default=5e5,

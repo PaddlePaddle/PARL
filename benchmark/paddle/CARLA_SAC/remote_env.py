@@ -90,9 +90,6 @@ class LocalEnv(object):
     def step(self, action):
         return self.env.step(action)
 
-    def seed(self, seed):
-        return self.env.seed(seed)
-
 
 @parl.remote_class(wait=False)
 class CarlaRemoteEnv(object):
@@ -115,7 +112,6 @@ class CarlaRemoteEnv(object):
 
         self.env = gym.make(env_name, params=params)
         self.env = ActionMappingWrapper(self.env)
-        self.env.seed(params['port'])
         self._max_episode_steps = int(params['max_time_episode'])
         self.action_space = ActionSpace(
             self.env.action_space, self.env.action_space.low,
@@ -127,6 +123,3 @@ class CarlaRemoteEnv(object):
 
     def step(self, action):
         return self.env.step(action)
-
-    def seed(self, seed):
-        return self.env.seed(seed)

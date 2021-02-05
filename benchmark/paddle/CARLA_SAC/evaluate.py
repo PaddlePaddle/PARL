@@ -35,7 +35,7 @@ ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
 
 
-def run_episodes(agent, env):
+def run_episode(agent, env):
     episode_reward = 0.
     obs = env.reset()
     done = False
@@ -50,14 +50,11 @@ def run_episodes(agent, env):
 
 def main():
     logger.info("-----------------Carla_SAC-------------------")
-    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
-    logger.info("---------------------------------------------")
-    logger.set_dir('./{}_eval_{}'.format(args.env, args.seed))
+    logger.set_dir('./{}_eval'.format(args.env))
 
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
     eval_env = LocalEnv(args.env, eval_env_params)
-    eval_env.seed(args.seed)
 
     obs_dim = eval_env.obs_dim
     action_dim = eval_env.action_dim
@@ -76,7 +73,7 @@ def main():
 
     # Evaluate episode
     for episode in range(args.eval_episodes):
-        episode_reward = run_episodes(agent, eval_env)
+        episode_reward = run_episode(agent, eval_env)
         tensorboard.add_scalar('eval/episode_reward', episode_reward, episode)
         logger.info('Evaluation episode reward: {}'.format(episode_reward))
 
@@ -85,11 +82,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default="carla-v0")
     parser.add_argument("--task_mode", default='Lane', help='mode of the task')
-    parser.add_argument(
-        "--seed",
-        default=0,
-        type=int,
-        help='sets carla env seed for evaluation')
     parser.add_argument(
         "--eval_episodes",
         default=10,

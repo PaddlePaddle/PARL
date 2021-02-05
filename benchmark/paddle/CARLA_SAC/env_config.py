@@ -20,23 +20,30 @@ from copy import deepcopy
 TASK_MODE = 'Lane'
 MAX_EPISODE_STEPS = 250
 params = {
-    'obs_size': (160, 100),  # screen size of cv2 window
-    'dt': 0.025,  # time interval between two frames
-    'ego_vehicle_filter':  # filter for defining ego vehicle
-    'vehicle.lincoln*',
-    'port': 2000,  # CARLA service's port
-    'task_mode':  # mode of the task, [random, roundabout (only for Town03)]
-    TASK_MODE,
+    # screen size of cv2 window
+    'obs_size': (160, 100),
+    # time interval between two frames
+    'dt': 0.025,
+    # filter for defining ego vehicle
+    'ego_vehicle_filter': 'vehicle.lincoln*',
+    # CARLA service's port
+    'port': 2000,
+    # mode of the task, [random, roundabout (only for Town03)]
+    'task_mode': TASK_MODE,
+    # mode of env (test/train)
     'code_mode': 'test',
-    'max_time_episode': MAX_EPISODE_STEPS,  # maximum timesteps per episode
-    'desired_speed': 15,  # desired speed (m/s)
-    'max_ego_spawn_times': 100,  # maximum times to spawn ego vehicle
+    # maximum timesteps per episode
+    'max_time_episode': MAX_EPISODE_STEPS,
+    # desired speed (m/s)
+    'desired_speed': 15,
+    # maximum times to spawn ego vehicle
+    'max_ego_spawn_times': 100,
 }
 
 # train env params
 """
 Set ports of CARLA services for parallel data collecting and training.
-You can start CARLA services in different  new terminals with respect to the ports list.
+You can start CARLA services in different new terminals with respect to the ports list.
 
 e.g.1
     set three ports --> parallel training with three envs

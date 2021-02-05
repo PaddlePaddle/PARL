@@ -10,7 +10,7 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
 <img src=".benchmark/carla_sac.png" width = "1100" height ="400" alt="carla_sac"/>
 <img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
 
-+ Result was evaluated with seed `0`, mode `Lane`
++ Result was evaluated with mode `Lane`
 
 ## How to use
 + System: Ubuntu 16.04
@@ -54,7 +54,7 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
 
 3. Start training
    ```train
-   $ python train.py --xparl_add localhost:8080
+   $ python train.py --xparl_addr localhost:8080
    ```
 #### Evaluate trained agent
 ```

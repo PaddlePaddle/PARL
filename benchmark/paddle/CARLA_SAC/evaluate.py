@@ -18,6 +18,7 @@ import parl
 import argparse
 import carla
 import gym_carla
+from remote_env import EvalEnv
 from parl.utils import logger, tensorboard
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel

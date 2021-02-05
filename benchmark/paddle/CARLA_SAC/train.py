@@ -63,7 +63,7 @@ def main():
 
     # Parallel environments for training
     train_envs_params = EnvConfig['train_envs_params']
-    env_list = ParallelEnv(args.env, args.localhost, train_envs_params)
+    env_list = ParallelEnv(args.env, args.xparl_addr, train_envs_params)
 
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
@@ -138,11 +138,10 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--localhost",
+        "--xparl_addr",
         default='localhost:8080',
-        help='localhost to provide carla environment')
+        help='xparl address for parallel training')
     parser.add_argument("--env", default="carla-v0")
-    parser.add_argument("--task_mode", default='Lane', help='mode of the task')
     parser.add_argument(
         "--seed",
         default=0,

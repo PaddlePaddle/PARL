@@ -7,14 +7,14 @@ a parallel version of SAC was implemented and achieved high performance in the C
 Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/tag/0.9.6) to know more about Carla simulator.
 
 ### Benchmark result
-<img src=".benchmark/carla_sac.png" width = "800" height ="400" alt="carla_sac"/>
+<img src=".benchmark/carla_sac.png" width = "1100" height ="400" alt="carla_sac"/>
 <img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
 
 + Result was evaluated with seed `0`, mode `Lane`
 
 ## How to use
-### Dependencies:
 + System: Ubuntu 16.04
+### Dependencies:
 + [parl>=1.4.2](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [CARLA_0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
@@ -33,8 +33,8 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
   ```
 
 ### Start Training
-1. Open another(new) terminals, enter the CARLA root folder and launch CARLA service. 
-   There are two modes to start the CARLA server: <br>
+1. Open another(new) terminal, enter the CARLA root folder and launch CARLA service. 
+   There are two modes to start CARLA service: <br>
    (1) non-display mode
     ```start env
     $ DISPLAY= ./CarlaUE4.sh -opengl -carla-port=2021
@@ -43,21 +43,18 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
    ```start_env
    $ ./CarlaUE4.sh -windowed -carla-port=2021
    ```
-   + Start three CARLA services (ports: 2021,2023,2025) for collecting data and training, 
+   + Start three CARLA services (ports: 2021,2023,2025) for data collecting and training, 
      one service (port: 2027) for evaluating.
    
 2. For parallel training, we can execute the following [xparl](https://parl.readthedocs.io/en/stable/parallel_training/setup.html) command to start a PARL cluster：
    ```Parallelization
    $ xparl start --port 8080
    ```
-   check xparl cluster status by `$ xparl status`
+   check xparl cluster status by `xparl status`
 
 3. Start training
    ```train
-   $ python train.py --localhost [xparl address]
-   
-   # Train for other settings
-   $ python train.py --localhost [xparl address] --seed [int] --task_mode [mode]
+   $ python train.py --xparl_add localhost:8080
    ```
 #### Evaluate trained agent
 ```

@@ -35,15 +35,15 @@ ACTOR_LR = 3e-4
 CRITIC_LR = 3e-4
 
 
-def run_evaluate_episodes(agent, eval_env):
+def run_episodes(agent, env):
     episode_reward = 0.
-    obs, _ = eval_env.reset()
+    obs = env.reset()
     done = False
     steps = 0
     while not done and steps < eval_env._max_episode_steps:
         steps += 1
         action = agent.predict(obs)
-        obs, reward, done, _ = eval_env.step(action)
+        obs, reward, done, _ = env.step(action)
         episode_reward += reward
     return episode_reward
 
@@ -75,8 +75,8 @@ def main():
     agent.restore('./model.ckpt')
 
     # Evaluate episode
-    for episode in range(args.evaluate_episodes):
-        episode_reward = run_evaluate_episodes(agent, eval_env)
+    for episode in range(args.eval_episodes):
+        episode_reward = run_episodes(agent, eval_env)
         tensorboard.add_scalar('eval/episode_reward', episode_reward, episode)
         logger.info('Evaluation episode reward: {}'.format(episode_reward))
 
@@ -91,8 +91,8 @@ if __name__ == "__main__":
         type=int,
         help='sets carla env seed for evaluation')
     parser.add_argument(
-        "--evaluate_episodes",
-        default=1e4,
+        "--eval_episodes",
+        default=10,
         type=int,
         help='max time steps to run environment')
     args = parser.parse_args()

@@ -22,15 +22,15 @@ from parl.env.continuous_wrappers import ActionMappingWrapper
 
 
 class ParallelEnv(object):
-    def __init__(self, env_name, localhost, train_envs_params):
-        parl.connect(localhost)
+    def __init__(self, env_name, xparl_addr, train_envs_params):
+        parl.connect(xparl_addr)
         self.env_list = [
-            CarlaEnv(env_name=env_name, params=params)
+            CarlaRemoteEnv(env_name=env_name, params=params)
             for params in train_envs_params
         ]
         self.episode_reward_list = [0] * len(self.env_list)
         self.episode_steps_list = [0] * len(self.env_list)
-        self.max_episode_steps = train_envs_params[0]['max_time_episode']
+        self._max_episode_steps = train_envs_params[0]['max_time_episode']
         self.total_steps = 0
 
     def reset(self):
@@ -46,11 +46,10 @@ class ParallelEnv(object):
         ]
         return_list = [return_.get() for return_ in return_list]
         return_list = np.array(return_list, dtype=object)
-        self.next_obs_list, self.reward_list, self.done_list, self.info_list = return_list[:,
-                                                                                           0], return_list[:,
-                                                                                                           1], return_list[:,
-                                                                                                                           2], return_list[:,
-                                                                                                                                           3]
+        self.next_obs_list = return_list[:, 0]
+        self.reward_list = return_list[:, 1]
+        self.done_list = return_list[:, 2]
+        self.info_list = return_list[:, 3]
         return self.next_obs_list, self.reward_list, self.done_list, self.info_list
 
     def get_obs(self):
@@ -60,8 +59,8 @@ class ParallelEnv(object):
             self.episode_reward_list[i] += self.reward_list[i]
 
             self.obs_list[i] = self.next_obs_list[i]
-            if self.done_list[
-                    i] or self.episode_steps_list[i] >= self.max_episode_steps:
+            if self.done_list[i] or self.episode_steps_list[
+                    i] >= self._max_episode_steps:
                 tensorboard.add_scalar('train/episode_reward_env{}'.format(i),
                                        self.episode_reward_list[i],
                                        self.total_steps)
@@ -78,25 +77,25 @@ class ParallelEnv(object):
 
 class EvalEnv(object):
     def __init__(self, env_name, params):
-        self.eval_env = gym.make(env_name, params=params)
-        self.eval_env = ActionMappingWrapper(self.eval_env)
+        self.env = gym.make(env_name, params=params)
+        self.env = ActionMappingWrapper(self.env)
         self._max_episode_steps = int(params['max_time_episode'])
-        self.obs_dim = self.eval_env.state_space.shape[0]
-        self.action_dim = self.eval_env.action_space.shape[0]
+        self.obs_dim = self.env.state_space.shape[0]
+        self.action_dim = self.env.action_space.shape[0]
 
     def reset(self):
-        obs, _ = self.eval_env.reset()
+        obs, _ = self.env.reset()
         return obs
 
     def step(self, action):
-        return self.eval_env.step(action)
+        return self.env.step(action)
 
     def seed(self, seed):
-        return self.eval_env.seed(seed)
+        return self.env.seed(seed)
 
 
 @parl.remote_class(wait=False)
-class CarlaEnv(object):
+class CarlaRemoteEnv(object):
     def __init__(self, env_name, params):
         class ActionSpace(object):
             def __init__(self,

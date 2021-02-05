@@ -22,11 +22,11 @@ MAX_EPISODE_STEPS = 250
 params = {
     'obs_size': (160, 100),  # screen size of cv2 window
     'dt': 0.025,  # time interval between two frames
-    'ego_vehicle_filter':
-    'vehicle.lincoln*',  # filter for defining ego vehicle
+    'ego_vehicle_filter':  # filter for defining ego vehicle
+    'vehicle.lincoln*',
     'port': 2000,  # CARLA service's port
-    'task_mode':
-    TASK_MODE,  # mode of the task, [random, roundabout (only for Town03)]
+    'task_mode':  # mode of the task, [random, roundabout (only for Town03)]
+    TASK_MODE,
     'code_mode': 'test',
     'max_time_episode': MAX_EPISODE_STEPS,  # maximum timesteps per episode
     'desired_speed': 15,  # desired speed (m/s)
@@ -34,6 +34,17 @@ params = {
 }
 
 # train env params
+"""
+Set ports of CARLA services for parallel data collecting and training.
+You can start CARLA services in different  new terminals with respect to the ports list.
+
+e.g.1
+    set three ports --> parallel training with three envs
+    train_env_ports = [2021, 2023, 2025]
+e.g.2
+    set five ports --> parallel training with five envs
+    train_env_ports = [2017, 2019, 2021, 2023, 2025]
+"""
 train_env_ports = [2021, 2023, 2025]
 train_code_mode = 'train'
 train_envs_params = []

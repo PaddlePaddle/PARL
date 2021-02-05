@@ -69,10 +69,21 @@ temp_params['port'] = eval_port
 temp_params['code_mode'] = eval_code_mode
 eval_env_params = temp_params
 
+# test env params
+test_port = 2029
+test_code_mode = 'test'
+temp_params = deepcopy(params)
+temp_params['port'] = test_port
+temp_params['code_mode'] = test_code_mode
+test_env_params = temp_params
+
 EnvConfig = {
     # train envs config
     'train_envs_params': train_envs_params,
 
     # eval env config
     'eval_env_params': eval_env_params,
+
+    # eval env config
+    'test_env_params': test_env_params,
 }

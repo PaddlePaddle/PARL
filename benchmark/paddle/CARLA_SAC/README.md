@@ -57,5 +57,10 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
    $ python train.py --xparl_addr localhost:8080
    ```
 #### Evaluate trained agent
+Open another(new) terminal, enter the CARLA root folder and launch CARLA service with display mode. 
+```start_test
+$ ./CarlaUE4.sh -windowed -carla-port=2029
 ```
-$ python evaluate.py
+Restore saved model to see performance.
+```
+$ python evaluate.py --restore_model model.ckpt

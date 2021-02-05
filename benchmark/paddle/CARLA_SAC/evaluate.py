@@ -53,7 +53,7 @@ def main():
     logger.set_dir('./{}_eval'.format(args.env))
 
     # env for eval
-    eval_env_params = EnvConfig['eval_env_params']
+    eval_env_params = EnvConfig['test_env_params']
     eval_env = LocalEnv(args.env, eval_env_params)
 
     obs_dim = eval_env.obs_dim
@@ -69,7 +69,7 @@ def main():
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
     agent = CarlaAgent(algorithm)
-    agent.restore('./model.ckpt')
+    agent.restore('./{}'.format(args.restore_model))
 
     # Evaluate episode
     for episode in range(args.eval_episodes):
@@ -87,6 +87,11 @@ if __name__ == "__main__":
         default=10,
         type=int,
         help='max time steps to run environment')
+    parser.add_argument(
+        "--restore_model",
+        default='model.ckpt',
+        type=str,
+        help='restore saved model')
     args = parser.parse_args()
 
     main()

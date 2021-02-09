@@ -115,7 +115,7 @@ class Actor(object):
     def test_locate_remote_file_with_relative_env_path_without_distributing_files(
             self):
         #TODO(@zenghsh3): remove following code after using latest paddlepaddle version
-        time.sleep(20) # wait for last unittest case finishing
+        time.sleep(20)  # wait for last unittest case finishing
 
         port = get_free_tcp_port()
         master = Master(port=port)

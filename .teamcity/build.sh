@@ -90,10 +90,11 @@ function run_test_with_cpu() {
     Running unit tests with CPU in the environment: $1
     =====================================================
 EOF
-    if [ $# -eq 1 ];then
-      ctest --output-on-failure -j20
-    else
+    if [ "$#" == 2 ] && [ "$2" == "DIS_TESTING_SERIALLY" ]
+    then
       ctest --output-on-failure 
+    else
+      ctest --output-on-failure -j20
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -202,6 +203,9 @@ function main() {
                 pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                # uninstall paddlepaddle when testing remote module
+                pip uninstall -y paddlepaddle-gpu
+                run_test_with_cpu $env "DIS_TESTING_REMOTE"
               else
                 echo ========================================
                 echo "in torch environment"
@@ -215,6 +219,7 @@ function main() {
               xparl stop
           done
 
+          pip install -r .teamcity/requirements.txt
           run_test_with_gpu
 
           run_test_with_dygraph_paddle

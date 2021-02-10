@@ -64,7 +64,12 @@ function run_test_with_gpu() {
     
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
-    cmake .. -DIS_TESTING_GPU=ON
+
+    if [ $# -eq 1 ];then
+        cmake ..
+    else
+        cmake .. -$2=ON
+    fi
     cat <<EOF
     ========================================
     Running unit tests with GPU...
@@ -220,7 +225,8 @@ function main() {
           done
 
           pip install -r .teamcity/requirements.txt
-          run_test_with_gpu
+          run_test_with_gpu $env
+          run_test_with_gpu $env "DIS_TESTING_SERIALLY"
 
           run_test_with_dygraph_paddle
 

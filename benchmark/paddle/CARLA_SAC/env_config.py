@@ -84,6 +84,6 @@ EnvConfig = {
     # eval env config
     'eval_env_params': eval_env_params,
 
-    # eval env config
+    # env config for evaluate.py
     'test_env_params': test_env_params,
 }

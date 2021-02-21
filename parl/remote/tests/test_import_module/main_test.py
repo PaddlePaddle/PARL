@@ -19,13 +19,15 @@ import threading
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-
+from parl.utils import logger
 
 class TestImport(unittest.TestCase):
     def tearDown(self):
+        logger.info("tearDown")
         disconnect()
 
     def test_import_local_module(self):
+        logger.info("test_import_local_module")
         from Module2 import B
         port = 8442
         master = Master(port=port)
@@ -39,9 +41,12 @@ class TestImport(unittest.TestCase):
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
         worker.exit()
+        logger.info("worker exit")
         master.exit()
+        logger.info("master exit")
 
     def test_import_subdir_module_0(self):
+        logger.info("test_import_local_module_0")
         from subdir import Module
         port = 8443
         master = Master(port=port)
@@ -60,9 +65,12 @@ class TestImport(unittest.TestCase):
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
         worker.exit()
+        logger.info("worker exit")
         master.exit()
+        logger.info("master exit")
 
     def test_import_subdir_module_1(self):
+        logger.info("test_import_local_module_1")
         from subdir.Module import A
         port = 8444
         master = Master(port=port)
@@ -81,7 +89,9 @@ class TestImport(unittest.TestCase):
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
         worker.exit()
+        logger.info("worker exit")
         master.exit()
+        logger.info("master exit")
 
 
 if __name__ == '__main__':

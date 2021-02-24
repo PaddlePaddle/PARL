@@ -200,11 +200,14 @@ class Master(object):
                 heartbeat_exit_callback_func=heartbeat_exit_callback_func,
                 exit_func_args=(client_heartbeat_address, ))
             self.all_client_heartbeat_threads.append(thread)
+            logger.info("thread setDaemon")
             thread.setDaemon(True)
+            logger.info("thread start")
             thread.start()
 
             log_monitor_address = "{}/logs?client_id={}".format(
                 self.monitor_url, client_id)
+            logger.info("send log_monitor address")
             self.client_socket.send_multipart(
                 [remote_constants.NORMAL_TAG,
                  to_byte(log_monitor_address)])

@@ -71,13 +71,17 @@ class Client(object):
         self.actor_num = 0
 
         self._create_sockets(master_address)
+        logger.info("finished _create_sockets")
         self.check_env_consistency()
+        logger.info("finished check_env_consistency")
 
         thread = threading.Thread(target=self._update_client_status_to_master)
         thread.setDaemon(True)
         thread.start()
+        logger.info("update client status to master thread started")
 
         self.pyfiles = self.read_local_files(distributed_files)
+
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -191,6 +195,7 @@ class Client(object):
 
         # check if the master is connected properly
         try:
+            logger.info("client connect tag")
             self.submit_job_socket.send_multipart([
                 remote_constants.CLIENT_CONNECT_TAG,
                 to_byte(self.reply_master_heartbeat_address),
@@ -198,6 +203,7 @@ class Client(object):
                 to_byte(self.client_id),
             ])
             message = self.submit_job_socket.recv_multipart()
+            logger.info("client receive message")
             self.log_monitor_url = to_str(message[1])
         except zmq.error.Again as e:
             logger.warning("[Client] Can not connect to the master, please "
@@ -211,9 +217,12 @@ class Client(object):
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
             matches that of the 'master' process'''
+        logger.info("check_env_consistency: send check_version_tag")
         self.submit_job_socket.send_multipart(
             [remote_constants.CHECK_VERSION_TAG])
+        logger.info("check_env_consistency: send check_version_tag finished")
         message = self.submit_job_socket.recv_multipart()
+        logger.info("check_env_consistency: recv check_version_tag finished")
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             client_parl_version = parl.__version__
@@ -226,7 +235,9 @@ class Client(object):
                         to_str(message[1]), to_str(message[2]), to_str(message[3]),
                         client_parl_version, client_python_version_major, client_python_version_minor
                     )
+            logger.info("check_env_consistency: has_module pyarrow")
             client_has_pyarrow = str(has_module('pyarrow'))
+            logger.info("check_env_consistency: has_module pyarrow finished")
             if client_has_pyarrow != to_str(message[4]):
                 if client_has_pyarrow == 'True':
                     error_message = """"pyarrow" is provided in your current enviroment, however, it is not

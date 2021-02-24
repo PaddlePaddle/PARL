@@ -79,13 +79,16 @@ class TestImport(unittest.TestCase):
         time.sleep(1)
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(10)
+        logger.info("parl connect")
         parl.connect(
             "localhost:8444",
             distributed_files=[
                 os.path.join('subdir', 'Module.py'),
                 os.path.join('subdir', '__init__.py')
             ])
+        logger.info("A()")
         obj = A()
+        logger.info("A() created")
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
         worker.exit()

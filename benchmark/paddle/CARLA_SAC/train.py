@@ -59,8 +59,13 @@ def main():
     logger.set_dir('./{}_train'.format(args.env))
 
     # Parallel environments for training
+    # Connect to xparl address for parallel training
+    parl.connect('localhost:8080')
     train_envs_params = EnvConfig['train_envs_params']
-    env_list = ParallelEnv(args.env, args.xparl_addr, train_envs_params)
+    env_num = EnvConfig['env_num']
+    logger.info("---------Training on {} environments---------".format(env_num))
+
+    env_list = ParallelEnv(args.env, train_envs_params)
 
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
@@ -87,26 +92,32 @@ def main():
     test_flag = 0
 
     obs_list = env_list.reset()
+    episode_reward_list = [0] * env_num
 
     while total_steps < args.train_total_steps:
         # Train episode
         if rpm.size() < WARMUP_STEPS:
             action_list = [
                 np.random.uniform(-1, 1, size=action_dim)
-                for _ in range(len(train_envs_params))
+                for _ in range(env_num)
             ]
         else:
             action_list = [agent.sample(obs) for obs in obs_list]
-        next_obs_list, reward_list, done_list, info_list = env_list.step(
-            action_list)
+        next_obs_list, reward_list, done_list, info_list = env_list.step(action_list)
 
-        # Store data in replay memory
-        for i in range(len(train_envs_params)):
-            rpm.append(obs_list[i], action_list[i], reward_list[i],
-                       next_obs_list[i], done_list[i])
+        # Store effective data in replay memory
+        for i in range(env_num):
+            total_steps += 1
+            episode_reward_list[i] += reward_list[i]
+            # When timeout, next_obs is not the actual next_obs
+            if not info_list[i]['timeout']:
+                rpm.append(obs_list[i], action_list[i], reward_list[i], next_obs_list[i], done_list[i])
+            if done_list[i]:
+                tensorboard.add_scalar('train/episode_reward', episode_reward_list[i], total_steps)
+                logger.info('Train episode done, Reward: {}'.format(episode_reward_list[i]))
+                episode_reward_list[i] = 0
 
-        obs_list = env_list.get_obs()
-        total_steps = env_list.total_steps
+        obs_list = next_obs_list
         # Train agent after collecting sufficient data
         if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
@@ -133,10 +144,6 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--xparl_addr",
-        default='localhost:8080',
-        help='xparl address for parallel training')
     parser.add_argument("--env", default="carla-v0")
     parser.add_argument(
         "--train_total_steps",

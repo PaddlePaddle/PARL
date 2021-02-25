@@ -22,57 +22,46 @@ from parl.env.continuous_wrappers import ActionMappingWrapper
 
 
 class ParallelEnv(object):
-    def __init__(self, env_name, xparl_addr, train_envs_params):
-        parl.connect(xparl_addr)
+    def __init__(self, env_name, train_envs_params):
         self.env_list = [
             CarlaRemoteEnv(env_name=env_name, params=params)
             for params in train_envs_params
         ]
-        self.episode_reward_list = [0] * len(self.env_list)
-        self.episode_steps_list = [0] * len(self.env_list)
+        self.env_num = len(self.env_list)
+
+        self.episode_steps_list = [0] * self.env_num
         self._max_episode_steps = train_envs_params[0]['max_time_episode']
-        self.total_steps = 0
 
     def reset(self):
         obs_list = [env.reset() for env in self.env_list]
         obs_list = [obs.get() for obs in obs_list]
-        self.obs_list = np.array(obs_list)
-        return self.obs_list
+        obs_list = np.array(obs_list)
+        return obs_list
 
     def step(self, action_list):
         return_list = [
             self.env_list[i].step(action_list[i])
-            for i in range(len(self.env_list))
+            for i in range(self.env_num)
         ]
         return_list = [return_.get() for return_ in return_list]
         return_list = np.array(return_list, dtype=object)
-        self.next_obs_list = return_list[:, 0]
-        self.reward_list = return_list[:, 1]
-        self.done_list = return_list[:, 2]
-        self.info_list = return_list[:, 3]
-        return self.next_obs_list, self.reward_list, self.done_list, self.info_list
+        next_obs_list = return_list[:, 0]
+        reward_list = return_list[:, 1]
+        done_list = return_list[:, 2]
+        info_list = return_list[:, 3]
 
-    def get_obs(self):
-        for i in range(len(self.env_list)):
-            self.total_steps += 1
+        for i in range(self.env_num):
             self.episode_steps_list[i] += 1
-            self.episode_reward_list[i] += self.reward_list[i]
+            info_list[i]['timeout'] = False
 
-            self.obs_list[i] = self.next_obs_list[i]
-            if self.done_list[i] or self.episode_steps_list[
-                    i] >= self._max_episode_steps:
-                tensorboard.add_scalar('train/episode_reward_env{}'.format(i),
-                                       self.episode_reward_list[i],
-                                       self.total_steps)
-                logger.info('Train env {} done, Reward: {}'.format(
-                    i, self.episode_reward_list[i]))
-
+            if done_list[i] or self.episode_steps_list[i] >= self._max_episode_steps:
+                if self.episode_steps_list[i] >= self._max_episode_steps:
+                    info_list[i]['timeout'] = True
                 self.episode_steps_list[i] = 0
-                self.episode_reward_list[i] = 0
                 obs_list_i = self.env_list[i].reset()
-                self.obs_list[i] = obs_list_i.get()
-                self.obs_list[i] = np.array(self.obs_list[i])
-        return self.obs_list
+                next_obs_list[i] = obs_list_i.get()
+                next_obs_list[i] = np.array(next_obs_list[i])
+        return next_obs_list, reward_list, done_list, info_list
 
 
 class LocalEnv(object):

@@ -80,6 +80,7 @@ test_env_params = temp_params
 EnvConfig = {
     # train envs config
     'train_envs_params': train_envs_params,
+    'env_num': len(train_envs_params),
 
     # eval env config
     'eval_env_params': eval_env_params,

@@ -7,8 +7,7 @@ a parallel version of SAC was implemented and achieved high performance in the C
 Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/tag/0.9.6) to know more about Carla simulator.
 
 ### Benchmark result
-<img src=".benchmark/carla_sac.png" width = "1100" height ="400" alt="carla_sac"/>
-<img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
+<img src=".benchmark/carla_sac.png" width = "660" height ="240" alt="carla_sac"/><img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
 
 + Result was evaluated with mode `Lane`
 

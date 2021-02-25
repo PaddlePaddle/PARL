@@ -63,7 +63,8 @@ def main():
     parl.connect('localhost:8080')
     train_envs_params = EnvConfig['train_envs_params']
     env_num = EnvConfig['env_num']
-    logger.info("---------Training on {} environments---------".format(env_num))
+    logger.info(
+        "---------Training on {} environments---------".format(env_num))
 
     env_list = ParallelEnv(args.env, train_envs_params)
 
@@ -103,7 +104,8 @@ def main():
             ]
         else:
             action_list = [agent.sample(obs) for obs in obs_list]
-        next_obs_list, reward_list, done_list, info_list = env_list.step(action_list)
+        next_obs_list, reward_list, done_list, info_list = env_list.step(
+            action_list)
 
         # Store effective data in replay memory
         for i in range(env_num):
@@ -111,10 +113,13 @@ def main():
             episode_reward_list[i] += reward_list[i]
             # When timeout, next_obs is not the actual next_obs
             if not info_list[i]['timeout']:
-                rpm.append(obs_list[i], action_list[i], reward_list[i], next_obs_list[i], done_list[i])
+                rpm.append(obs_list[i], action_list[i], reward_list[i],
+                           next_obs_list[i], done_list[i])
             if done_list[i]:
-                tensorboard.add_scalar('train/episode_reward', episode_reward_list[i], total_steps)
-                logger.info('Train episode done, Reward: {}'.format(episode_reward_list[i]))
+                tensorboard.add_scalar('train/episode_reward',
+                                       episode_reward_list[i], total_steps)
+                logger.info('Train episode done, Reward: {}'.format(
+                    episode_reward_list[i]))
                 episode_reward_list[i] = 0
 
         obs_list = next_obs_list

@@ -17,7 +17,6 @@ import carla
 import gym
 import gym_carla
 import numpy as np
-from parl.utils import logger, tensorboard
 from parl.env.continuous_wrappers import ActionMappingWrapper
 
 
@@ -40,8 +39,7 @@ class ParallelEnv(object):
 
     def step(self, action_list):
         return_list = [
-            self.env_list[i].step(action_list[i])
-            for i in range(self.env_num)
+            self.env_list[i].step(action_list[i]) for i in range(self.env_num)
         ]
         return_list = [return_.get() for return_ in return_list]
         return_list = np.array(return_list, dtype=object)
@@ -54,7 +52,8 @@ class ParallelEnv(object):
             self.episode_steps_list[i] += 1
             info_list[i]['timeout'] = False
 
-            if done_list[i] or self.episode_steps_list[i] >= self._max_episode_steps:
+            if done_list[i] or self.episode_steps_list[
+                    i] >= self._max_episode_steps:
                 if self.episode_steps_list[i] >= self._max_episode_steps:
                     info_list[i]['timeout'] = True
                 self.episode_steps_list[i] = 0

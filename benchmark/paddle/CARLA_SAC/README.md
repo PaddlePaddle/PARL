@@ -53,7 +53,8 @@ Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/t
 
 3. Start training
    ```train
-   $ python train.py --xparl_addr localhost:8080
+   # Make sure 'localhost:8080' in train.py is the same as xparl address
+   $ python train.py
    ```
 #### Evaluate trained agent
 Open another(new) terminal, enter the CARLA root folder and launch CARLA service with display mode. 

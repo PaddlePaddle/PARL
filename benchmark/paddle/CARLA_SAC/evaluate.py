@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gym
-import numpy as np
-import parl
 import argparse
-import carla
-import gym_carla
 from env_utils import LocalEnv
 from parl.utils import logger, tensorboard
-from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from sac import SAC
@@ -69,6 +63,7 @@ def main():
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR)
     agent = CarlaAgent(algorithm)
+    # Restore trained agent
     agent.restore('./{}'.format(args.restore_model))
 
     # Evaluate episode
@@ -80,8 +75,6 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", default="carla-v0")
-    parser.add_argument("--task_mode", default='Lane', help='mode of the task')
     parser.add_argument(
         "--eval_episodes",
         default=10,

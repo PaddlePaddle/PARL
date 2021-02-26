@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gym
 import numpy as np
 import parl
 import argparse
-import carla
-import gym_carla
 from env_utils import ParallelEnv, LocalEnv
 from parl.utils import logger, tensorboard, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
@@ -63,8 +60,7 @@ def main():
     parl.connect('localhost:8080')
     train_envs_params = EnvConfig['train_envs_params']
     env_num = EnvConfig['env_num']
-    logger.info(
-        "---------Training on {} environments---------".format(env_num))
+    logger.info("Training on {} environments".format(env_num))
 
     env_list = ParallelEnv(args.env, train_envs_params)
 
@@ -149,7 +145,6 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", default="carla-v0")
     parser.add_argument(
         "--train_total_steps",
         default=5e5,

@@ -44,11 +44,11 @@ def run_episode(agent, env):
 
 def main():
     logger.info("-----------------Carla_SAC-------------------")
-    logger.set_dir('./{}_eval'.format(args.env))
+    logger.set_dir('./{}_eval'.format(EnvConfig['env_name']))
 
     # env for eval
     eval_env_params = EnvConfig['test_env_params']
-    eval_env = LocalEnv(args.env, eval_env_params)
+    eval_env = LocalEnv(EnvConfig['env_name'], eval_env_params)
 
     obs_dim = eval_env.obs_dim
     action_dim = eval_env.action_dim

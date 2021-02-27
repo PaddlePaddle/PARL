@@ -17,7 +17,6 @@ import parl
 import argparse
 from env_utils import ParallelEnv, LocalEnv
 from parl.utils import logger, tensorboard, ReplayMemory
-from parl.env.continuous_wrappers import ActionMappingWrapper
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from sac import SAC
@@ -53,7 +52,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 def main():
     logger.info("-----------------Carla_SAC-------------------")
-    logger.set_dir('./{}_train'.format(args.env))
+    logger.set_dir('./{}_train'.format(EnvConfig['env_name']))
 
     # Parallel environments for training
     # Connect to xparl address for parallel training
@@ -62,11 +61,11 @@ def main():
     env_num = EnvConfig['env_num']
     logger.info("Training on {} environments".format(env_num))
 
-    env_list = ParallelEnv(args.env, train_envs_params)
+    env_list = ParallelEnv(EnvConfig['env_name'], train_envs_params)
 
     # env for eval
     eval_env_params = EnvConfig['eval_env_params']
-    eval_env = LocalEnv(args.env, eval_env_params)
+    eval_env = LocalEnv(EnvConfig['env_name'], eval_env_params)
 
     obs_dim = eval_env.obs_dim
     action_dim = eval_env.action_dim

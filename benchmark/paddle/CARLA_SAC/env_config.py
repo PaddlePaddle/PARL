@@ -78,6 +78,8 @@ temp_params['code_mode'] = test_code_mode
 test_env_params = temp_params
 
 EnvConfig = {
+    'env_name': 'carla-v0',
+
     # train envs config
     'train_envs_params': train_envs_params,
     'env_num': len(train_envs_params),

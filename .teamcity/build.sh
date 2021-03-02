@@ -64,7 +64,12 @@ function run_test_with_gpu() {
     
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
-    cmake .. -DIS_TESTING_GPU=ON
+
+    if [ $# -eq 1 ];then
+        cmake ..
+    else
+        cmake .. -$2=ON
+    fi
     cat <<EOF
     ========================================
     Running unit tests with GPU...
@@ -90,10 +95,11 @@ function run_test_with_cpu() {
     Running unit tests with CPU in the environment: $1
     =====================================================
 EOF
-    if [ $# -eq 1 ];then
-      ctest --output-on-failure -j20
-    else
+    if [ "$#" == 2 ] && [ "$2" == "DIS_TESTING_SERIALLY" ]
+    then
       ctest --output-on-failure 
+    else
+      ctest --output-on-failure -j20
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -201,7 +207,10 @@ function main() {
               then
                 pip install -r .teamcity/requirements.txt
                 run_test_with_cpu $env
+                # uninstall paddlepaddle when testing remote module
+                pip uninstall -y paddlepaddle-gpu
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                run_test_with_cpu $env "DIS_TESTING_REMOTE"
               else
                 echo ========================================
                 echo "in torch environment"
@@ -215,7 +224,8 @@ function main() {
               xparl stop
           done
 
-          run_test_with_gpu
+          pip install -r .teamcity/requirements.txt
+          run_test_with_gpu $env
 
           run_test_with_dygraph_paddle
 

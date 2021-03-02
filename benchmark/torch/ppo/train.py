@@ -81,7 +81,7 @@ def main():
             # Sample actions
             with torch.no_grad():
                 value, action, action_log_prob = agent.sample(
-                    rollouts.obs[step])  # why use obs from rollouts???有病吧
+                    rollouts.obs[step])
 
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)

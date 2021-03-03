@@ -34,6 +34,12 @@ class CarlaModel(parl.Model):
     def value(self, obs, action):
         return self.critic_model(obs, action)
 
+    def get_actor_params(self):
+        return self.actor_model.parameters()
+
+    def get_critic_params(self):
+        return self.critic_model.parameters()
+
 
 class Actor(parl.Model):
     def __init__(self, obs_dim, action_dim):

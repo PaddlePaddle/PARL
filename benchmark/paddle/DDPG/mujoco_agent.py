@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import parl
-import torch
+import paddle
 import numpy as np
 
 
@@ -24,8 +24,6 @@ class MujocoAgent(parl.Agent):
 
         self.act_dim = act_dim
         self.expl_noise = expl_noise
-        self.device = torch.device("cuda" if torch.cuda.
-                                   is_available() else "cpu")
 
         self.alg.sync_target(decay=0)
 
@@ -36,20 +34,20 @@ class MujocoAgent(parl.Agent):
         return action
 
     def predict(self, obs):
-        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        obs = paddle.to_tensor(obs.reshape(1, -1)).astype(np.float32)
         action = self.alg.predict(obs)
-        action_numpy = action.cpu().detach().numpy().flatten()
+        action_numpy = action.cpu().numpy()[0]
         return action_numpy
 
     def learn(self, obs, action, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)
         reward = np.expand_dims(reward, -1)
 
-        obs = torch.FloatTensor(obs).to(self.device)
-        action = torch.FloatTensor(action).to(self.device)
-        reward = torch.FloatTensor(reward).to(self.device)
-        next_obs = torch.FloatTensor(next_obs).to(self.device)
-        terminal = torch.FloatTensor(terminal).to(self.device)
+        obs = paddle.to_tensor(obs)
+        action = paddle.to_tensor(action)
+        reward = paddle.to_tensor(reward)
+        next_obs = paddle.to_tensor(next_obs)
+        terminal = paddle.to_tensor(terminal)
         critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
                                                  terminal)
         return critic_loss, actor_loss

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import gym
 import argparse
+import numpy as np
 from parl.utils import logger, tensorboard, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel
@@ -85,6 +85,7 @@ def main():
     logger.info("------------------ DDPG ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
+    logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
     env.seed(args.seed)
@@ -103,7 +104,6 @@ def main():
 
     total_steps = 0
     test_flag = 0
-
     while total_steps < args.train_total_steps:
         # Train episode
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
@@ -129,11 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
-    parser.add_argument(
-        "--seed",
-        default=0,
-        type=int,
-        help='Sets Gym, PyTorch and Numpy seeds')
+    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
         default=5e6,

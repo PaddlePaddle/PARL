@@ -26,7 +26,7 @@ import glob
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
-from parl.remote.grpc_heartbeat import HeartbeatClientThread
+from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 from parl.remote.utils import has_module
 
 
@@ -61,7 +61,6 @@ class Client(object):
         self.process_id = process_id
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
-        self.heartbeat_socket_initialized = threading.Event()
         self.master_is_alive = True
         self.client_is_alive = True
         self.log_monitor_url = None
@@ -73,6 +72,11 @@ class Client(object):
 
         self._create_sockets(master_address)
         self.check_env_consistency()
+
+        thread = threading.Thread(target=self._update_client_status_to_master)
+        thread.setDaemon(True)
+        thread.start()
+
         self.pyfiles = self.read_local_files(distributed_files)
 
     def get_executable_path(self):
@@ -167,10 +171,20 @@ class Client(object):
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
         self.start_time = time.time()
-        thread = threading.Thread(target=self._reply_heartbeat)
-        thread.setDaemon(True)
-        thread.start()
-        self.heartbeat_socket_initialized.wait()
+
+        def master_heartbeat_exit_callback_func():
+            logger.warning("[Client] Cannot connect to the master. "
+                           "Please check if it is still alive.")
+            logger.warning("Client exit replying heartbeat for master.")
+            self.master_is_alive = False
+            pass
+
+        self.master_heartbeat_thread = HeartbeatServerThread(
+            heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
+        self.master_heartbeat_thread.setDaemon(True)
+        self.master_heartbeat_thread.start()
+        self.reply_master_heartbeat_address = self.master_heartbeat_thread.get_address(
+        )
 
         self.client_id = self.reply_master_heartbeat_address.replace(':', '_') + \
                             '_' + str(int(time.time()))
@@ -226,43 +240,31 @@ found in your current environment. To use "pyarrow" for serialization, please in
         else:
             raise NotImplementedError
 
-    def _reply_heartbeat(self):
-        """Reply heartbeat signals to the master node."""
+    def _update_client_status_to_master(self):
+        while self.master_is_alive:
+            elapsed_time = datetime.timedelta(
+                seconds=int(time.time() - self.start_time))
+            client_status = {
+                'file_path': self.executable_path,
+                'actor_num': self.actor_num,
+                'time': str(elapsed_time),
+                'log_monitor_url': self.log_monitor_url,
+            }
 
-        socket = self.ctx.socket(zmq.REP)
-        socket.linger = 0
-        socket.setsockopt(zmq.RCVTIMEO,
-                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-        reply_master_heartbeat_port =\
-            socket.bind_to_random_port(addr="tcp://*")
-        self.reply_master_heartbeat_address = "{}:{}".format(
-            get_ip_address(), reply_master_heartbeat_port)
-        self.heartbeat_socket_initialized.set()
-        connected = False
-        while self.client_is_alive and self.master_is_alive:
+            self.lock.acquire()
             try:
-                message = socket.recv_multipart()
-                elapsed_time = datetime.timedelta(
-                    seconds=int(time.time() - self.start_time))
-                socket.send_multipart([
-                    remote_constants.HEARTBEAT_TAG,
-                    to_byte(self.executable_path),
-                    to_byte(str(self.actor_num)),
-                    to_byte(str(elapsed_time)),
-                    to_byte(str(self.log_monitor_url)),
-                ])  # TODO: remove additional information
+                self.submit_job_socket.send_multipart([
+                    remote_constants.CLIENT_STATUS_UPDATE_TAG,
+                    to_byte(self.reply_master_heartbeat_address),
+                    cloudpickle.dumps(client_status)
+                ])
+                message = self.submit_job_socket.recv_multipart()
             except zmq.error.Again as e:
-                if connected:
-                    logger.warning("[Client] Cannot connect to the master."
-                                   "Please check if it is still alive.")
-                else:
-                    logger.warning(
-                        "[Client] Cannot connect to the master."
-                        "Please check the firewall between client and master.(e.g., ping the master IP)"
-                    )
                 self.master_is_alive = False
-        socket.close(0)
-        logger.warning("Client exit replying heartbeat for master.")
+            finally:
+                self.lock.release()
+
+            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
     def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
                                max_memory, actor_ref_monitor):
@@ -417,6 +419,9 @@ def connect(master_address, distributed_files=[]):
 
     assert len(master_address.split(":")) == 2, "Please input address in " +\
         "{ip}:{port} format"
+    assert isinstance(distributed_files,
+                      list), "`distributed_files` should be a list."
+
     global GLOBAL_CLIENT
     addr = master_address.split(":")[0]
     cur_process_id = os.getpid()
@@ -458,6 +463,10 @@ def disconnect():
         for thread in GLOBAL_CLIENT.all_job_heartbeat_threads:
             if thread.is_alive():
                 thread.exit()
+
+        if GLOBAL_CLIENT.master_heartbeat_thread.is_alive():
+            GLOBAL_CLIENT.master_heartbeat_thread.exit()
+
         GLOBAL_CLIENT = None
     else:
         logger.info(

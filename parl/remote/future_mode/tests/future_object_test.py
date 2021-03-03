@@ -36,6 +36,10 @@ class Actor(object):
     def get_arg2(self):
         return self.arg2
 
+    def get_arg1_after_sleep(self, sleep_seconds):
+        time.sleep(sleep_seconds)
+        return self.arg1
+
 
 class TestFutureObject(unittest.TestCase):
     def tearDown(self):
@@ -89,6 +93,88 @@ class TestFutureObject(unittest.TestCase):
         result = future_obj.get()
         with self.assertRaises(exceptions.FutureGetRepeatedlyError):
             result = future_obj.get()
+
+        master.exit()
+        worker1.exit()
+
+    def test_calling_get_function_with_block_false(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+        for _ in range(3):
+            if master.cpu_num == 1:
+                break
+            time.sleep(10)
+        self.assertEqual(1, master.cpu_num)
+        parl.connect('localhost:{}'.format(port))
+
+        actor = Actor(arg1="arg1")
+        sleep_seconds = 3
+        future_obj = actor.get_arg1_after_sleep(sleep_seconds=sleep_seconds)
+        with self.assertRaises(exceptions.FutureObjectEmpty):
+            result = future_obj.get(block=False)
+
+        time.sleep(sleep_seconds + 1)
+
+        result = future_obj.get(block=False)
+        assert result == "arg1"
+
+        master.exit()
+        worker1.exit()
+
+    def test_calling_get_nowait_function(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+        for _ in range(3):
+            if master.cpu_num == 1:
+                break
+            time.sleep(10)
+        self.assertEqual(1, master.cpu_num)
+        parl.connect('localhost:{}'.format(port))
+
+        actor = Actor(arg1="arg1")
+        sleep_seconds = 3
+        future_obj = actor.get_arg1_after_sleep(sleep_seconds=sleep_seconds)
+        with self.assertRaises(exceptions.FutureObjectEmpty):
+            result = future_obj.get_nowait()
+
+        time.sleep(sleep_seconds + 1)
+
+        result = future_obj.get_nowait()
+        assert result == "arg1"
+
+        master.exit()
+        worker1.exit()
+
+    def test_calling_get_function_with_timeout(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 1)
+        for _ in range(3):
+            if master.cpu_num == 1:
+                break
+            time.sleep(10)
+        self.assertEqual(1, master.cpu_num)
+        parl.connect('localhost:{}'.format(port))
+
+        actor = Actor(arg1="arg1")
+        sleep_seconds = 3
+        future_obj = actor.get_arg1_after_sleep(sleep_seconds=sleep_seconds)
+        with self.assertRaises(exceptions.FutureObjectEmpty):
+            result = future_obj.get(timeout=1)
+
+        result = future_obj.get(timeout=sleep_seconds + 1)
+        assert result == "arg1"
 
         master.exit()
         worker1.exit()

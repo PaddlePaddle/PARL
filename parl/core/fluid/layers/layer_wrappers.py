@@ -29,7 +29,7 @@ Here is an example:
 
         def policy1(self, obs):
             out = self.fc(obs) # Really create parameters with parameters names "fc_0.w" and "fc_0.b"
-        
+
         def policy2(self, obs):
             out = self.fc(obs) # Reusing parameters
     ```
@@ -134,6 +134,106 @@ class LayerFunc(object):
         return params_names
 
 
+class GRULayerFunc(LayerFunc):
+    '''LayerFunc for GRUCell
+    '''
+
+    def __init__(self, attr_holder):
+        super(GRULayerFunc, self).__init__(attr_holder)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        ## __new__ won't init the class, we need to do that ourselves
+        copied = cls.__new__(cls)
+        ## record in the memo that self has been copied to avoid recursive copying
+        memo[id(self)] = copied
+
+        ## first copy all content
+        for k, v in six.iteritems(self.__dict__):
+            setattr(copied, k, deepcopy(v, memo))
+
+        ## then we need to create new para names for param_attr in self.attr_holder
+        self.param_prefix = None
+        self.bias_prefix = None
+
+        def create_new_para_name(attr):
+            if attr:
+                assert attr.name, "attr should have a name already!"
+                name_key = 'PARL_target_' + attr.name
+                if '_gate' in name_key and 'param' in name_key:
+                    if self.param_prefix is not None:
+                        name_key = self.param_prefix
+                    else:
+                        name_key = name_key.replace('_gate', '')
+                        name_key = unique_name.generate(name_key)
+                        self.param_prefix = name_key
+                    name_key += '_gate'
+                elif '_gate' in name_key and 'bias' in name_key:
+                    if self.bias_prefix is not None:
+                        name_key = self.bias_prefix
+                    else:
+                        name_key = name_key.replace('_gate', '')
+                        name_key = unique_name.generate(name_key)
+                        self.bias_prefix = name_key
+                    name_key += '_gate'
+                elif '_candidate' in name_key and 'param' in name_key:
+                    if self.param_prefix is not None:
+                        name_key = self.param_prefix
+                    else:
+                        name_key = name_key.replace('_candidate', '')
+                        name_key = unique_name.generate(name_key)
+                        self.param_prefix = name_key
+                    name_key += '_candidate'
+                elif '_candidate' in name_key and 'bias' in name_key:
+                    if self.bias_prefix is not None:
+                        name_key = self.bias_prefix
+                    else:
+                        name_key = name_key.replace('_candidate', '')
+                        name_key = unique_name.generate(name_key)
+                        self.bias_prefix = name_key
+                    name_key += '_candidate'
+                else:
+                    name_key = unique_name.generate(name_key)
+                attr.name = name_key
+
+        for attr in copied.attr_holder.tolist():
+            create_new_para_name(attr)
+
+        ## We require the user to sync the parameter values later, because
+        ## this deepcopy is supposed to be called only before the startup
+        ## program. This function will cause the computation graph change, so
+        ## it cannot be called during the execution.
+        return copied
+
+    @property
+    def param_candidate_name(self):
+        if self.attr_holder.param_candidate_attr:
+            return self.attr_holder.param_candidate_attr.name
+        else:
+            return None
+
+    @property
+    def param_gate_name(self):
+        if self.attr_holder.param_gate_attr:
+            return self.attr_holder.param_gate_attr.name
+        else:
+            return None
+
+    @property
+    def bias_candidate_name(self):
+        if self.attr_holder.bias_candidate_attr:
+            return self.attr_holder.bias_candidate_attr.name
+        else:
+            return None
+
+    @property
+    def bias_gate_name(self):
+        if self.attr_holder.bias_gate_attr:
+            return self.attr_holder.bias_gate_attr.name
+        else:
+            return None
+
+
 def fc(size,
        num_flatten_dims=1,
        param_attr=None,
@@ -162,6 +262,56 @@ def fc(size,
                 act=act)
 
     return FC_()
+
+
+def GRUCell(hidden_size,
+            gate_activation=None,
+            activation=None,
+            dtype="float32",
+            name=None):
+    """
+    Return a function that creates a paddle.fluid.layers.GRUCell.
+    """
+    default_name = 'GRUCell'
+    if name is None:
+        name = default_name
+    w_name = unique_name.generate(name + '_param')
+    b_name = unique_name.generate(name + '_bias')
+
+    param_gate_attr = ParamAttr(name=w_name + '_gate')
+    param_candidate_attr = ParamAttr(name=w_name + '_candidate')
+    bias_gate_attr = ParamAttr(name=b_name + '_gate')
+    bias_candidate_attr = ParamAttr(name=b_name + '_candidate')
+
+    class GRUCell_(GRULayerFunc):
+        def __init__(self):
+            super(GRUCell_, self).__init__(
+                AttrHolder(
+                    param_gate_attr=param_gate_attr,
+                    param_candidate_attr=param_candidate_attr,
+                    bias_gate_attr=bias_gate_attr,
+                    bias_candidate_attr=bias_candidate_attr))
+
+        def __call__(self, inputs, states):
+            # get the prefix name of the parameters first
+            param_name_idx = self.attr_holder.param_gate_attr.name.find(
+                '_gate')
+            bias_name_idx = self.attr_holder.bias_gate_attr.name.find('_gate')
+            assert param_name_idx is not -1 and bias_name_idx is not -1
+            param_name = self.attr_holder.param_gate_attr.name[:param_name_idx]
+            bias_name = self.attr_holder.bias_gate_attr.name[:bias_name_idx]
+            param_attr = ParamAttr(name=param_name)
+            bias_attr = ParamAttr(name=bias_name)
+            gru_cell = layers.GRUCell(
+                hidden_size=hidden_size,
+                param_attr=param_attr,
+                bias_attr=bias_attr,
+                gate_activation=gate_activation,
+                activation=activation,
+                dtype=dtype)
+            return gru_cell(inputs, states)
+
+    return GRUCell_()
 
 
 def embedding(size,

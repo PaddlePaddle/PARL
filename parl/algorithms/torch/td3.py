@@ -28,7 +28,6 @@ class TD3(parl.Algorithm):
     def __init__(
             self,
             model,
-            max_action,
             gamma=None,
             tau=None,
             actor_lr=None,
@@ -40,7 +39,7 @@ class TD3(parl.Algorithm):
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
-        self.max_action = max_action
+
         self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr
@@ -63,12 +62,17 @@ class TD3(parl.Algorithm):
 
     def learn(self, obs, action, reward, next_obs, terminal):
         self.total_it += 1
+        self._critic_learn(obs, action, reward, next_obs, terminal)
+        if self.total_it % self.policy_freq == 0:
+            self._actor_learn(obs)
+
+    def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
             noise = (torch.randn_like(action) * self.policy_noise).clamp(
                 -self.noise_clip, self.noise_clip)
 
             next_action = (self.target_model.policy(next_obs) + noise).clamp(
-                -self.max_action, self.max_action)
+                -1, 1)
 
             target_Q1, target_Q2 = self.target_model.value(
                 next_obs, next_action)
@@ -84,15 +88,14 @@ class TD3(parl.Algorithm):
         critic_loss.backward()
         self.critic_optimizer.step()
 
-        if self.total_it % self.policy_freq == 0:
+    def _actor_learn(self, obs):
+        actor_loss = -self.model.Q1(obs, self.model.policy(obs)).mean()
 
-            actor_loss = -self.model.Q1(obs, self.model.policy(obs)).mean()
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
 
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
-
-            self.sync_target()
+        self.sync_target()
 
     def sync_target(self, decay=None):
         if decay is None:

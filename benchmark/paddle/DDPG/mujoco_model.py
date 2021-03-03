@@ -16,6 +16,10 @@ import parl
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
+'''
+Model of DDPG:  defines an Actor/policy network given obs as input,
+                      & a Critic/value network given obs and action as input.
+'''
 
 
 class MujocoModel(parl.Model):
@@ -30,9 +34,6 @@ class MujocoModel(parl.Model):
     def value(self, obs, action):
         return self.critic_model(obs, action)
 
-    def Q1(self, obs, action):
-        return self.critic_model.Q1(obs, action)
-
     def get_actor_params(self):
         return self.actor_model.parameters()
 
@@ -44,47 +45,25 @@ class Actor(parl.Model):
     def __init__(self, obs_dim, action_dim):
         super(Actor, self).__init__()
 
-        self.l1 = nn.Linear(obs_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, action_dim)
+        self.l1 = nn.Linear(obs_dim, 400)
+        self.l2 = nn.Linear(400, 300)
+        self.l3 = nn.Linear(300, action_dim)
 
     def forward(self, obs):
-        x = F.relu(self.l1(obs))
-        x = F.relu(self.l2(x))
-        action = paddle.tanh(self.l3(x))
-        return action
+        a = F.relu(self.l1(obs))
+        a = F.relu(self.l2(a))
+        return paddle.tanh(self.l3(a))
 
 
 class Critic(parl.Model):
     def __init__(self, obs_dim, action_dim):
         super(Critic, self).__init__()
 
-        # Q1 architecture
-        self.l1 = nn.Linear(obs_dim + action_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, 1)
-
-        # Q2 architecture
-        self.l4 = nn.Linear(obs_dim + action_dim, 256)
-        self.l5 = nn.Linear(256, 256)
-        self.l6 = nn.Linear(256, 1)
+        self.l1 = nn.Linear(obs_dim, 400)
+        self.l2 = nn.Linear(400 + action_dim, 300)
+        self.l3 = nn.Linear(300, 1)
 
     def forward(self, obs, action):
-        sa = paddle.concat([obs, action], 1)
-
-        q1 = F.relu(self.l1(sa))
-        q1 = F.relu(self.l2(q1))
-        q1 = self.l3(q1)
-
-        q2 = F.relu(self.l4(sa))
-        q2 = F.relu(self.l5(q2))
-        q2 = self.l6(q2)
-        return q1, q2
-
-    def Q1(self, obs, action):
-        sa = paddle.concat([obs, action], 1)
-
-        q1 = F.relu(self.l1(sa))
-        q1 = F.relu(self.l2(q1))
-        q1 = self.l3(q1)
-        return q1
+        q = F.relu(self.l1(obs))
+        q = F.relu(self.l2(paddle.concat([q, action], 1)))
+        return self.l3(q)

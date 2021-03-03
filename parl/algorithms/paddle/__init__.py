@@ -14,3 +14,4 @@
 
 from parl.algorithms.paddle.policy_gradient import *
 from parl.algorithms.paddle.sac import *
+from parl.algorithms.paddle.ddpg import *

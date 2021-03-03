@@ -52,24 +52,16 @@ class ClusterMonitor(object):
         self.status['client_jobs'][client_id].update(job_info)
         self.lock.release()
 
-    def update_client_status(self, client_status, client_address,
-                             client_hostname):
+    def update_client_status(self, client_address, client_status):
         """Update client status with message send from client heartbeat.
         
         Args:
-            client_status (tuple): client status information
-                                   (file_path, actor_num, elapsed_time).
             client_address (str): client ip address.
-            client_hostname (str): client hostname.
+            client_status (dict): client status information
+                                  (hostname, file_path, actor_num, elapsed_time).
         """
         self.lock.acquire()
-        self.status['clients'][client_address] = {
-            'client_address': client_hostname,
-            'file_path': to_str(client_status[1]),
-            'actor_num': int(to_str(client_status[2])),
-            'time': to_str(client_status[3]),
-            'log_monitor_url': to_str(client_status[4]),
-        }
+        self.status['clients'][client_address] = client_status
         self.lock.release()
 
     def update_worker_status(self, update_status, worker_address, vacant_cpus,

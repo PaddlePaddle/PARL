@@ -54,7 +54,7 @@ class TestHeartbeatClientArguments(unittest.TestCase):
         heartbeat_client_thread.exit()  # manually exit the client
 
         # wait for threads exiting
-        for _ in range(6):
+        for _ in range(10):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
                 break
@@ -100,7 +100,7 @@ class TestHeartbeatClientArguments(unittest.TestCase):
         # will raise an exception in the backend thread
 
         # wait for threads exiting
-        for _ in range(6):
+        for _ in range(10):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
                 break
@@ -145,7 +145,7 @@ class TestHeartbeatClientArguments(unittest.TestCase):
         heartbeat_client_thread.exit()  # manually exit the client
 
         # wait for threads exiting
-        for _ in range(6):
+        for _ in range(10):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
                 break
@@ -191,7 +191,7 @@ class TestHeartbeatClientArguments(unittest.TestCase):
         # will raise an exception in the backend thread
 
         # wait for threads exiting
-        for _ in range(6):
+        for _ in range(10):
             if not heartbeat_server_thread.is_alive(
             ) and not heartbeat_client_thread.is_alive():
                 break

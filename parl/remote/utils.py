@@ -51,7 +51,7 @@ def simplify_code(code, end_of_file):
     return to_write_lines
 
 
-def load_remote_class(file_name, class_name, end_of_file):
+def load_remote_class(file_name, class_name, end_of_file, in_sys_path):
     """
   load a class given its file_name and class_name.
 
@@ -59,6 +59,7 @@ def load_remote_class(file_name, class_name, end_of_file):
     file_name: specify the file to load the class
     class_name: specify the class to be loaded
     end_of_file: line ID to indicate the last line that defines the class.
+    in_sys_path: whether the path of the remote class is in the environment path (sys.path).
 
   Return:
     cls: the class to load
@@ -76,9 +77,18 @@ def load_remote_class(file_name, class_name, end_of_file):
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
-    module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
-    mod = __import__(module_name, globals(), locals(), [class_name], 0)
+
+    if in_sys_path:
+        new_file_name = "xparl_" + file_name[-1]
+        # the path of the remote class is in the sys.path, we can import it directly.
+        mod = __import__(new_file_name)
+    else:
+        module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
+        mod = __import__(module_name, globals(), locals(), [class_name], 0)
+
     cls = getattr(mod, class_name)
+
+    os.remove(tmp_file_name)
     return cls
 
 
@@ -124,18 +134,44 @@ def redirect_output_to_file(stdout_file_path, stderr_file_path):
 
 
 def locate_remote_file(module_path):
-    """xparl has to locate the file that has the class decorated by parl.remote_class.
-    This function returns the relative path between this file and the entry file.
+    """xparl has to locate the file that has the class decorated by parl.remote_class. 
+
+    If the entry_path is the prefix of the absolute path of the module, which means the 
+    file of the module is in the directory of entry or its subdirectories, this function
+    will return the relative path between this file and the entry file.
+
+    Otherwise, it means that the user accesses the module by adding the path of the
+    module to the environment path (sys.path), this function will return the module_path
+    directly and the remote job also need access the module by adding the path of the 
+    module to the sys.path.
+
     Note that this function should support the jupyter-notebook environment.
 
     Args:
-        module_path: Absolute path of the module.
+        module_path: Absolute path of the module, where the class decorated by
+                     parl.remote_class is located.
+    
+    Returns:
+        (return_path, in_sys_path)
 
+        return_path(str): relative path of the module, if the entry_path is the prefix of the absolute
+                          path of the module, else module_path.
+
+        in_sys_path(bool): False, if the entry_path is the prefix of the absolute path of the module,
+                           else True.
     Example:
         module_path: /home/user/dir/subdir/my_module (or) ./dir/main
         entry_file: /home/user/dir/main.py
-        --------> relative_path: subdir/my_module
-  """
+        --------> return_path: subdir/my_module
+
+        module_path: /home/user/other_dir/subdir/my_module
+        entry_file: /home/user/dir/main.py
+        --------> return_path: /home/user/other_dir/subdir/my_module
+
+        module_path: ../other_dir/subdir/my_module
+        entry_file: /home/user/dir/main.py
+        --------> return_path: ../other_dir/subdir/my_module
+    """
     if isnotebook():
         entry_path = os.getcwd()
     else:
@@ -147,22 +183,30 @@ def locate_remote_file(module_path):
             if os.path.isfile(to_check_path):
                 entry_path = path
                 break
-    # transfer the relative path to the absolute path
-    if not os.path.isabs(module_path):
-        module_path = os.path.abspath(module_path)
+
+    if entry_path is None:
+        raise FileNotFoundError("cannot locate the remote file")
 
     # fix pycharm issue: https://github.com/PaddlePaddle/PARL/issues/350
     module_path = format_uniform_path(module_path)
     entry_path = format_uniform_path(entry_path)
 
-    if entry_path is None or \
-        (os.sep in module_path and entry_path != module_path[:len(entry_path)]):
-        raise FileNotFoundError("cannot locate the remote file")
-    if os.sep in module_path:
-        relative_module_path = '.' + module_path[len(entry_path):]
+    # transfer the relative path to the absolute path
+    abs_module_path = module_path
+    if not os.path.isabs(abs_module_path):
+        abs_module_path = os.path.abspath(abs_module_path)
+
+    if os.sep in abs_module_path \
+            and entry_path != abs_module_path[:len(entry_path)]:
+        # the file of the module is not in the directory of entry or its subdirectories
+        return module_path, True
+
+    if os.sep in abs_module_path:
+        relative_module_path = '.' + abs_module_path[len(entry_path):]
     else:
-        relative_module_path = module_path
-    return relative_module_path
+        relative_module_path = abs_module_path
+
+    return relative_module_path, False
 
 
 def get_subfiles_recursively(folder_path):

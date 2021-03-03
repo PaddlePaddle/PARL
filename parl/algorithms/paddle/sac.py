@@ -53,11 +53,9 @@ class SAC(parl.Algorithm):
         self.model = model
         self.target_model = deepcopy(self.model)
         self.actor_optimizer = paddle.optimizer.Adam(
-            learning_rate=actor_lr,
-            parameters=self.model.actor_model.parameters())
+            learning_rate=actor_lr, parameters=self.model.get_actor_params())
         self.critic_optimizer = paddle.optimizer.Adam(
-            learning_rate=critic_lr,
-            parameters=self.model.critic_model.parameters())
+            learning_rate=critic_lr, parameters=self.model.get_critic_params())
 
     def predict(self, obs):
         act_mean, _ = self.model.policy(obs)

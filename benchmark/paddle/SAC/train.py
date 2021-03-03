@@ -36,7 +36,8 @@ def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
     obs = env.reset()
     done = False
-    episode_reward, episode_steps = 0, 0
+    episode_reward = 0
+    episode_steps = 0
     while not done:
         episode_steps += 1
         # Select action randomly or according to policy

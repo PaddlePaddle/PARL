@@ -432,38 +432,18 @@ class Worker(object):
         self.reply_log_server_socket.send_multipart(
             [remote_constants.NORMAL_TAG])
 
+        def heartbeat_exit_callback_func():
+            # only output warning
+            logger.warning("[Worker] lost connection with the log_server.")
+
         # a thread for sending heartbeat signals to log_server
-        thread = threading.Thread(
-            target=self._create_log_server_monitor,
-            args=(log_server_heartbeat_addr, ))
+        thread = HeartbeatClientThread(
+            log_server_heartbeat_addr,
+            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         thread.setDaemon(True)
         thread.start()
 
         return log_server_proc, log_server_address
-
-    def _create_log_server_monitor(self, log_server_heartbeat_addr):
-        """Send heartbeat signals to check target's status"""
-
-        # heartbeat_socket: sends heartbeat signal to log_server
-        heartbeat_socket = create_client_socket(
-            self.ctx, log_server_heartbeat_addr, heartbeat_timeout=True)
-
-        while self.master_is_alive and self.worker_is_alive:
-            try:
-                heartbeat_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
-                _ = heartbeat_socket.recv_multipart()
-                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-            except zmq.error.Again as e:
-                logger.warning(
-                    "[Worker] lost connection with the log_server:{}".format(
-                        log_server_heartbeat_addr))
-                break
-
-            except zmq.error.ZMQError as e:
-                break
-
-        heartbeat_socket.close(0)
 
     def exit(self):
         """close the worker"""

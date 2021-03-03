@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import inspect
 import numpy as np
 
 from parl.utils import logger
@@ -67,6 +68,9 @@ def remote_class(*args, **kwargs):
     """
 
     def decorator(cls):
+        assert inspect.isclass(
+            cls), "Only class can be decorated by `parl.remote_class`."
+
         # we are not going to create a remote actor in job.py
         if 'XPARL' in os.environ and os.environ['XPARL'] == 'True':
             logger.warning(

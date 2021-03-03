@@ -21,6 +21,7 @@ import multiprocessing
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -54,20 +55,48 @@ class TestCluster(unittest.TestCase):
             ret = actor.add_one(1)
             self.assertEqual(ret, 2)
 
-    def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
-            self):
-        # start the master
-        master = Master(port=8239)
+    def _create_master(self, port, exit_event):
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
+
+        exit_event.wait()
+        master.exit()
+        th.join()
+
+    def _create_worker(self, port, exit_event):
+        worker = Worker('localhost:{}'.format(port), 4)
+        th = threading.Thread(target=worker.run)
+        th.start()
+
+        exit_event.wait()
+        worker.exit()
+        th.join()
+
+    def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
+            self):
+        port = get_free_tcp_port()
+
+        # start the master
+        master_exit_event = multiprocessing.Event()
+        master_proc = multiprocessing.Process(
+            target=self._create_master, args=(port, master_exit_event))
+        master_proc.start()
+
         time.sleep(1)
 
-        worker1 = Worker('localhost:8239', 4)
+        # start the worker
+        worker_exit_event = multiprocessing.Event()
+        worker_proc = multiprocessing.Process(
+            target=self._create_worker, args=(port, worker_exit_event))
+        worker_proc.start()
 
         proc1 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8239', ))
+            target=self._connect_and_create_actor,
+            args=('localhost:{}'.format(port), ))
         proc2 = multiprocessing.Process(
-            target=self._connect_and_create_actor, args=('localhost:8239', ))
+            target=self._connect_and_create_actor,
+            args=('localhost:{}'.format(port), ))
         proc1.start()
         proc2.start()
 
@@ -75,9 +104,10 @@ class TestCluster(unittest.TestCase):
         proc2.join()
 
         self.assertRaises(AssertionError, self._create_actor)
-
-        worker1.exit()
-        master.exit()
+        worker_exit_event.set()
+        master_exit_event.set()
+        worker_proc.join()
+        master_proc.join()
 
 
 if __name__ == '__main__':

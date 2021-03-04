@@ -69,17 +69,18 @@ class ClusterMonitor(object):
         """Update a worker status.
 
         Args:
-            update_status (tuple): master status information (vacant_memory, used_memory, load_time, load_value).
+            update_status (dict): worker updated status information 
+                                (vacant_memory, used_memory, load_time, load_value).
             worker_address (str): worker ip address.
             vacant_cpus (int): vacant cpu number.
             total_cpus (int): total cpu number.
         """
         self.lock.acquire()
         worker_status = self.status['workers'][worker_address]
-        worker_status['vacant_memory'] = float(to_str(update_status[1]))
-        worker_status['used_memory'] = float(to_str(update_status[2]))
-        worker_status['load_time'].append(to_str(update_status[3]))
-        worker_status['load_value'].append(float(update_status[4]))
+        worker_status['vacant_memory'] = update_status['vacant_memory']
+        worker_status['used_memory'] = update_status['used_memory']
+        worker_status['load_time'].append(update_status['load_time'])
+        worker_status['load_value'].append(update_status['load_value'])
 
         worker_status['vacant_cpus'] = vacant_cpus
         worker_status['used_cpus'] = total_cpus - vacant_cpus

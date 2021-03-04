@@ -105,7 +105,7 @@ class FutureObjectEmpty(Exception):
     """
 
     def __init__(self):
-        self.error_info = "The `FutureObject` is empty."
+        self.error_info = "The result is currently unavailable."
 
     def __str__(self):
         return self.error_info

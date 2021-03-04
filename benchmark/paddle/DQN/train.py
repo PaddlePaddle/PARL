@@ -16,12 +16,11 @@ import os
 import gym
 import numpy as np
 import parl
-from parl.utils import logger
+from parl.utils import logger, ReplayMemory
 
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
-from replay_memory import ReplayMemory
 
 LEARN_FREQ = 5  # training frequency
 MEMORY_SIZE = 200000
@@ -40,13 +39,13 @@ def run_train_episode(agent, env, rpm):
         step += 1
         action = agent.sample(obs)
         next_obs, reward, done, _ = env.step(action)
-        rpm.append((obs, action, reward, next_obs, done))
+        rpm.append(obs, action, reward, next_obs, done)
 
         # train model
         if (len(rpm) > MEMORY_WARMUP_SIZE) and (step % LEARN_FREQ == 0):
             # s,a,r,s',done
             (batch_obs, batch_action, batch_reward, batch_next_obs,
-             batch_done) = rpm.sample(BATCH_SIZE)
+             batch_done) = rpm.sample_batch(BATCH_SIZE)
             train_loss = agent.learn(batch_obs, batch_action, batch_reward,
                                      batch_next_obs, batch_done)
 
@@ -81,7 +80,7 @@ def main():
     act_dim = env.action_space.n
     logger.info('obs_dim {}, act_dim {}'.format(obs_dim, act_dim))
 
-    rpm = ReplayMemory(MEMORY_SIZE)
+    rpm = ReplayMemory(MEMORY_SIZE, obs_dim, 0) # set action shape = 0 while in discrete control environment
 
     # build an agent
     model = CartpoleModel(obs_dim=obs_dim, act_dim=act_dim)

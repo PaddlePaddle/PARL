@@ -25,7 +25,10 @@ class ReplayMemory(object):
         self.act_dim = act_dim
 
         self.obs = np.zeros((max_size, obs_dim), dtype='float32')
-        self.action = np.zeros((max_size, act_dim), dtype='float32')
+        if act_dim == 0: # Discrete control environment
+            self.action = np.zeros((max_size, ), dtype='int32')
+        else: # Continuous control environment
+            self.action = np.zeros((max_size, act_dim), dtype='float32')
         self.reward = np.zeros((max_size, ), dtype='float32')
         self.terminal = np.zeros((max_size, ), dtype='bool')
         self.next_obs = np.zeros((max_size, obs_dim), dtype='float32')
@@ -66,6 +69,9 @@ class ReplayMemory(object):
         self._curr_pos = (self._curr_pos + 1) % self.max_size
 
     def size(self):
+        return self._curr_size
+
+    def __len__(self):
         return self._curr_size
 
     def save(self, pathname):

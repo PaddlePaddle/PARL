@@ -1,5 +1,5 @@
 ## Reproduce DQN with PARL
-Based on PARL, we provide a simple demonstration of DQN.
+Based on PARL, we provide a simple example of the DQN algorithm.
 
 + Paper: DQN in [Human-level Control Through Deep Reinforcement Learning](http://www.nature.com/nature/journal/v518/n7540/full/nature14236.html)
 
@@ -17,7 +17,6 @@ Performance of DQN playing CartPole-v0
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [parl>=1.4.2](https://github.com/PaddlePaddle/PARL)
 + gym
-+ tqdm
 
 
 ### Start Training:

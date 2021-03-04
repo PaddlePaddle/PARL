@@ -37,7 +37,7 @@ class CartpoleAgent(parl.Agent):
         self.e_greed_decrement = e_greed_decrement
 
     def sample(self, obs):
-        """Sample an action when given an observation
+        """Sample an action `for exploration` when given an observation
 
         Args:
             obs(np.float32): shape of (obs_dim,)
@@ -65,7 +65,7 @@ class CartpoleAgent(parl.Agent):
         Returns:
             act(int): action
         """
-        obs = paddle.to_tensor(obs.astype(np.float32))
+        obs = paddle.to_tensor(obs, dtype='float32')
         pred_q = self.alg.predict(obs)
         act = pred_q.argmax().numpy()[0]
         return act
@@ -75,7 +75,7 @@ class CartpoleAgent(parl.Agent):
 
         Args:
             obs(np.float32): shape of (batch_size, obs_dim)
-            act(np.int64): shape of (batch_size)
+            act(np.int32): shape of (batch_size)
             reward(np.float32): shape of (batch_size)
             next_obs(np.float32): shape of (batch_size, obs_dim)
             terminal(np.float32): shape of (batch_size)
@@ -92,10 +92,10 @@ class CartpoleAgent(parl.Agent):
         reward = np.expand_dims(reward, axis=-1)
         terminal = np.expand_dims(terminal, axis=-1)
 
-        obs = paddle.to_tensor(obs.astype(np.float32))
-        act = paddle.to_tensor(act.astype(np.int32))
-        reward = paddle.to_tensor(reward.astype(np.float32))
-        next_obs = paddle.to_tensor(next_obs.astype(np.float32))
-        terminal = paddle.to_tensor(terminal.astype(np.float32))
+        obs = paddle.to_tensor(obs, dtype='float32')
+        act = paddle.to_tensor(act, dtype='int32')
+        reward = paddle.to_tensor(reward, dtype='float32')
+        next_obs = paddle.to_tensor(next_obs, dtype='float32')
+        terminal = paddle.to_tensor(terminal, dtype='float32')
         loss = self.alg.learn(obs, act, reward, next_obs, terminal)
         return loss.numpy()[0]

@@ -24,8 +24,8 @@ class DQN(parl.Algorithm):
         """ DQN algorithm
 
         Args:
-            model (parl.Model): model defining forward network of Q function.
-            gamma (float): discounted factor for reward computation.
+            model (parl.Model): forward neural network representing the Q function.
+            gamma (float): discounted factor for `accumulative` reward computation
             lr (float): learning rate.
         """
         self.model = model
@@ -41,12 +41,12 @@ class DQN(parl.Algorithm):
             learning_rate=lr, parameters=self.model.parameters())
 
     def predict(self, obs):
-        """ use value model self.model to predict the action value
+        """ use self.model (Q function) to predict the action values
         """
         return self.model.value(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        """ update value model self.model with DQN algorithm
+        """ update the Q function (self.model) with DQN algorithm
         """
         # Q
         pred_values = self.model.value(obs)

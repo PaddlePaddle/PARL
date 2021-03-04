@@ -24,13 +24,13 @@ class MujocoAgent(parl.Agent):
         self.alg.sync_target(decay=0)
 
     def predict(self, obs):
-        obs = paddle.to_tensor(obs.reshape(1, -1).astype(np.float32))
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
         action = self.alg.predict(obs)
         action_numpy = action.cpu().numpy()[0]
         return action_numpy
 
     def sample(self, obs):
-        obs = paddle.to_tensor(obs.reshape(1, -1).astype(np.float32))
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
         action, _ = self.alg.sample(obs)
         action_numpy = action.cpu().numpy()[0]
         return action_numpy

@@ -26,7 +26,7 @@ class MujocoAgent(parl.Agent):
         self.action_dim = act_dim
 
     def predict(self, obs):
-        obs = paddle.to_tensor(obs.reshape(1, -1)).astype(np.float32)
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
         action = self.alg.predict(obs)
         action_numpy = action.cpu().numpy()[0]
         return action_numpy

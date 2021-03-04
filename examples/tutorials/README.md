@@ -22,9 +22,9 @@
 
 ## 使用说明
 
-### 安装依赖
+### 安装依赖（注意：请务必安装对应的版本）
 
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
 + [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
 + gym
 

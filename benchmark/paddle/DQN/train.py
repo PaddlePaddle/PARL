@@ -80,7 +80,8 @@ def main():
     act_dim = env.action_space.n
     logger.info('obs_dim {}, act_dim {}'.format(obs_dim, act_dim))
 
-    rpm = ReplayMemory(MEMORY_SIZE, obs_dim, 0) # set action shape = 0 while in discrete control environment
+    # set action_shape = 0 while in discrete control environment
+    rpm = ReplayMemory(MEMORY_SIZE, obs_dim, 0)
 
     # build an agent
     model = CartpoleModel(obs_dim=obs_dim, act_dim=act_dim)

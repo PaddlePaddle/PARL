@@ -39,11 +39,11 @@ class MujocoAgent(parl.Agent):
         terminal = np.expand_dims(terminal, -1)
         reward = np.expand_dims(reward, -1)
 
-        obs = paddle.to_tensor(obs)
-        action = paddle.to_tensor(action)
-        reward = paddle.to_tensor(reward)
-        next_obs = paddle.to_tensor(next_obs)
-        terminal = paddle.to_tensor(terminal)
+        obs = paddle.to_tensor(obs, dtype='float32')
+        action = paddle.to_tensor(action, dtype='float32')
+        reward = paddle.to_tensor(reward, dtype='float32')
+        next_obs = paddle.to_tensor(next_obs, dtype='float32')
+        terminal = paddle.to_tensor(terminal, dtype='float32')
         critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
                                                  terminal)
         return critic_loss, actor_loss

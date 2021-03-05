@@ -97,3 +97,15 @@ class FutureFunctionError(Exception):
 
     def __str__(self):
         return self.error_info
+
+
+class FutureObjectEmpty(Exception):
+    """
+    Exception raised when non-blocking get() (or get_nowait()) is called on a `FutureObject` which is empty.
+    """
+
+    def __init__(self):
+        self.error_info = "The result is currently unavailable."
+
+    def __str__(self):
+        return self.error_info

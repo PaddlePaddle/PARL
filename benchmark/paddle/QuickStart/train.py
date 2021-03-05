@@ -24,7 +24,7 @@ LEARNING_RATE = 1e-3
 
 
 # train an episode
-def run_episode(env, agent):
+def run_train_episode(agent, env):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
     while True:
@@ -41,9 +41,9 @@ def run_episode(env, agent):
 
 
 # evaluate 5 episodes
-def evaluate(env, agent, episode_num=5, render=False):
+def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
     eval_reward = []
-    for i in range(episode_num):
+    for i in range(eval_episodes):
         obs = env.reset()
         episode_reward = 0
         while True:
@@ -80,11 +80,11 @@ def main():
     # load model and evaluate
     # if os.path.exists('./model.ckpt'):
     #     agent.restore('./model.ckpt')
-    #     evaluate(env, agent, render=True)
+    #     run_evaluate_episodes(agent, env, render=True)
     #     exit()
 
     for i in range(1000):
-        obs_list, action_list, reward_list = run_episode(env, agent)
+        obs_list, action_list, reward_list = run_train_episode(agent, env)
         if i % 10 == 0:
             logger.info("Episode {}, Reward Sum {}.".format(
                 i, sum(reward_list)))
@@ -95,7 +95,7 @@ def main():
 
         agent.learn(batch_obs, batch_action, batch_reward)
         if (i + 1) % 100 == 0:
-            total_reward = evaluate(env, agent, render=False)
+            total_reward = run_evaluate_episodes(agent, env, render=False)
             logger.info('Test reward: {}'.format(total_reward))
 
     # save the parameters to ./model.ckpt

@@ -177,7 +177,6 @@ class Client(object):
                            "Please check if it is still alive.")
             logger.warning("Client exit replying heartbeat for master.")
             self.master_is_alive = False
-            pass
 
         self.master_heartbeat_thread = HeartbeatServerThread(
             heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)

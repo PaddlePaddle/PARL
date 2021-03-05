@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import paddle
 import parl
+import paddle
 from paddle.distribution import Categorical
 
 __all__ = ['PolicyGradient']
@@ -62,7 +61,7 @@ class PolicyGradient(parl.Algorithm):
         log_prob = Categorical(prob).log_prob(action)
         loss = paddle.mean(-1 * log_prob * reward)
 
+        self.optimizer.clear_grad()
         loss.backward()
         self.optimizer.step()
-        self.optimizer.clear_grad()
         return loss

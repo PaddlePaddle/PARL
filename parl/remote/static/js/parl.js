@@ -182,7 +182,7 @@ function autoTable(res) {
     var tr = document.createElement('tr');
     var s1 = `<th scope="row">${i+1}</th>`;
     var s2 = `<td>${res.clients[i].file_path}</td>`;
-    var s3 = `<td>${res.clients[i].client_address}</td>`;
+    var s3 = `<td>${res.clients[i].client_hostname}</td>`;
     var s4 = `<td>${res.clients[i].actor_num}</td>`;
     var s5 = `<td>${res.clients[i].time}</td>`;
     var s6 = `<td><a href=${res.clients[i].log_monitor_url}>link</a></td>`;

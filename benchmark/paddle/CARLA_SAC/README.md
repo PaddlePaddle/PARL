@@ -4,7 +4,7 @@ a parallel version of SAC was implemented and achieved high performance in the C
 > Paper: SAC in [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290)
 
 ### Carla simulator introduction
-Please see [Carla simulator](https://github.com/carla-simulator/carla/releases/tag/0.9.6) to know more about Carla simulator.
+Please view [Carla simulator](https://github.com/carla-simulator/carla/releases/tag/0.9.6) to know more about Carla simulator.
 
 ### Benchmark result
 <img src=".benchmark/carla_sac.png" width = "660" height ="240" alt="carla_sac"/><img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
@@ -61,6 +61,6 @@ Open another(new) terminal, enter the CARLA root folder and launch CARLA service
 ```start_test
 $ ./CarlaUE4.sh -windowed -carla-port=2029
 ```
-Restore saved model to see performance.
+Visualize the evaluation with the trained model.
 ```
 $ python evaluate.py --restore_model model.ckpt

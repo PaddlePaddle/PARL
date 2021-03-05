@@ -14,7 +14,8 @@
 
 import time
 import threading
-from parl.remote.exceptions import FutureGetRepeatedlyError, FutureFunctionError
+from six.moves import queue
+from parl.remote.exceptions import FutureGetRepeatedlyError, FutureFunctionError, FutureObjectEmpty
 
 
 class FutureObject(object):
@@ -53,14 +54,27 @@ class FutureObject(object):
         self._already_get = False
         self.internal_lock = threading.Lock()
 
-    def get(self):
+    def get(self, block=True, timeout=None):
         """
+        Remove and return the data from the `FutureObject`. 
+        If optional args block is true and timeout is None (the default), block if 
+        necessary until an item is available. If timeout is a positive number, it 
+        blocks at most timeout seconds and raises the `parl.remote.exceptions.FutureObjectEmpty`
+        exception if no itemwas available within that time. Otherwise (block is false), return an item
+        if one is immediately available, else raise the `parl.remote.exceptions.FutureObjectEmpty`
+        exception (timeout is ignored in that case).
         """
+        if timeout is not None:
+            assert timeout > 0, "`timeout` must be a non-negative number"
+
         with self.internal_lock:
             if self._already_get:
                 raise FutureGetRepeatedlyError()
 
-            result = self._output_queue.get()
+            try:
+                result = self._output_queue.get(block=block, timeout=timeout)
+            except queue.Empty:
+                raise FutureObjectEmpty
 
             if isinstance(result, FutureFunctionError):
                 time.sleep(
@@ -69,3 +83,15 @@ class FutureObject(object):
                 raise result
             self._already_get = True
             return result
+
+    def get_nowait(self):
+        """Equivalent to get(block=False).
+        """
+        return self.get(block=False)
+
+    def empty(self):
+        """
+        Return True if the `FutureObject` is empty, False otherwise.
+        if empty() returns False it doesn’t guarantee that a subsequent call to get() will not block.
+        """
+        return self._output_queue.empty()

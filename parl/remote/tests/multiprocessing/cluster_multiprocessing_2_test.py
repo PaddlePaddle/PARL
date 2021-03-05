@@ -75,6 +75,11 @@ class TestCluster(unittest.TestCase):
 
     def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
             self):
+        if _IS_WINDOWS:
+            # In windows, create master in multiprocessing will raise the error:
+            #`TypeError: cannot serialize '_io.TextIOWrapper' object`
+            return
+
         port = get_free_tcp_port()
 
         # start the master
@@ -91,18 +96,17 @@ class TestCluster(unittest.TestCase):
             target=self._create_worker, args=(port, worker_exit_event))
         worker_proc.start()
 
-        if not _IS_WINDOWS:  # In windows, fork process cannot access client created in main process.
-            proc1 = multiprocessing.Process(
-                target=self._connect_and_create_actor,
-                args=('localhost:{}'.format(port), ))
-            proc2 = multiprocessing.Process(
-                target=self._connect_and_create_actor,
-                args=('localhost:{}'.format(port), ))
-            proc1.start()
-            proc2.start()
+        proc1 = multiprocessing.Process(
+            target=self._connect_and_create_actor,
+            args=('localhost:{}'.format(port), ))
+        proc2 = multiprocessing.Process(
+            target=self._connect_and_create_actor,
+            args=('localhost:{}'.format(port), ))
+        proc1.start()
+        proc2.start()
 
-            proc1.join()
-            proc2.join()
+        proc1.join()
+        proc2.join()
 
         self.assertRaises(AssertionError, self._create_actor)
         worker_exit_event.set()

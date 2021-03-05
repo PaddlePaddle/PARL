@@ -15,10 +15,14 @@
 import argparse
 import linecache
 import os
+import zmq
 
 from flask import Flask, current_app, jsonify, make_response, request, send_file
 from flask_cors import CORS
-from parl.remote.heartbeat_server import HeartbeatServerThread
+from parl.remote import remote_constants
+from parl.utils import to_byte, logger
+from parl.remote.grpc_heartbeat import HeartbeatServerThread
+from parl.remote.zmq_utils import create_client_socket
 
 app = Flask(__name__)
 CORS(app)
@@ -84,6 +88,23 @@ def download_log():
         return send_file(log_file_path, as_attachment=True)
 
 
+def send_heartbeat_addr_to_worker(worker_addr, heartbeat_server_addr):
+    ctx = zmq.Context()
+    socket = create_client_socket(ctx, worker_addr, heartbeat_timeout=True)
+
+    try:
+        socket.send_multipart([
+            remote_constants.NORMAL_TAG,
+            to_byte(heartbeat_server_addr),
+        ])
+        message = socket.recv_multipart()
+    except zmq.error.Again as e:
+        err_str = "Can not connect to the worker please " \
+                  "check if the worker is running."
+        logger.warning(err_str)
+        raise Exception(err_str)
+
+
 if __name__ == "__main__":
     import logging
     log = logging.getLogger('werkzeug')
@@ -101,8 +122,18 @@ if __name__ == "__main__":
         LINE_NUM=args.line_num,
     )
 
+    def heartbeat_exit_callback_func():
+        logger.warning(
+            "[log_server] lost connnect with the worker. Please check if it is still alive."
+        )
+        os._exit(1)
+
     heartbeat_server_thread = HeartbeatServerThread(
-        args.worker_address, server_type="log_server", client_type="worker")
+        heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+    heartbeat_server_thread.setDaemon(True)
     heartbeat_server_thread.start()
+
+    send_heartbeat_addr_to_worker(args.worker_address,
+                                  heartbeat_server_thread.get_address())
 
     app.run(host="0.0.0.0", port=args.port)

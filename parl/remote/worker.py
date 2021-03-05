@@ -32,7 +32,7 @@ from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
-from parl.remote.grpc_heartbeat import HeartbeatClientThread
+from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 from six.moves import queue
 from parl.remote.utils import has_module
 
@@ -71,7 +71,6 @@ class Worker(object):
 
     def __init__(self, master_address, cpu_num=None, log_server_port=None):
         self.lock = threading.Lock()
-        self.heartbeat_socket_initialized = threading.Event()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
         self.master_is_alive = True
@@ -97,6 +96,10 @@ class Worker(object):
         job_thread = threading.Thread(target=self._fill_job_buffer)
         job_thread.setDaemon(True)
         job_thread.start()
+
+        thread = threading.Thread(target=self._update_worker_status_to_master)
+        thread.setDaemon(True)
+        thread.start()
 
     def _set_cpu_num(self, cpu_num=None):
         """set useable cpu number for worker"""
@@ -199,11 +202,28 @@ class Worker(object):
         self.request_master_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
-        self.reply_master_hearbeat_thread = threading.Thread(
-            target=self._reply_heartbeat,
-            args=("master {}".format(self.master_address), ))
-        self.reply_master_hearbeat_thread.start()
-        self.heartbeat_socket_initialized.wait()
+        def master_heartbeat_exit_callback_func():
+            logger.warning(
+                "[Worker] lost connection with the master, will exit reply heartbeat for master."
+            )
+            self.worker_status.clear()
+            self.log_server_proc.kill()
+            self.log_server_proc.wait()
+            # exit the worker
+            self.exit()
+
+        self.master_heartbeat_thread = HeartbeatServerThread(
+            heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
+        self.master_heartbeat_thread.setDaemon(True)
+        self.master_heartbeat_thread.start()
+        self.master_heartbeat_address = self.master_heartbeat_thread.get_address(
+        )
+
+        logger.set_dir(
+            os.path.expanduser('~/.parl_data/worker/{}'.format(
+                self.master_heartbeat_address.replace(':', '_'))))
+        logger.info("[Worker] Connect to the master node successfully. "
+                    "({} CPUs)".format(self.cpu_num))
 
         for job in initialized_jobs:
             job.worker_address = self.master_heartbeat_address
@@ -347,53 +367,33 @@ class Worker(object):
             load_average = round(psutil.getloadavg()[0], 2)
         else:
             load_average = round(os.getloadavg()[0], 2)
-        return (vacant_memory, used_memory, now, load_average)
 
-    def _reply_heartbeat(self, target):
-        """Worker will kill its jobs when it lost connection with the master.
-        """
+        update_status = {
+            "vacant_memory": vacant_memory,
+            "used_memory": used_memory,
+            "load_time": now,
+            "load_value": load_average
+        }
+        return update_status
 
-        socket = self.ctx.socket(zmq.REP)
-        socket.linger = 0
-        socket.setsockopt(zmq.RCVTIMEO,
-                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
-        heartbeat_master_port =\
-            socket.bind_to_random_port("tcp://*")
-        self.master_heartbeat_address = "{}:{}".format(self.worker_ip,
-                                                       heartbeat_master_port)
-
-        logger.set_dir(
-            os.path.expanduser('~/.parl_data/worker/{}'.format(
-                self.master_heartbeat_address.replace(':', '_'))))
-
-        self.heartbeat_socket_initialized.set()
-        logger.info("[Worker] Connect to the master node successfully. "
-                    "({} CPUs)".format(self.cpu_num))
+    def _update_worker_status_to_master(self):
         while self.master_is_alive and self.worker_is_alive:
+            worker_status = self._get_worker_status()
+
+            self.lock.acquire()
             try:
-                message = socket.recv_multipart()
-                worker_status = self._get_worker_status()
-                socket.send_multipart([
-                    remote_constants.HEARTBEAT_TAG,
-                    to_byte(str(worker_status[0])),
-                    to_byte(str(worker_status[1])),
-                    to_byte(worker_status[2]),
-                    to_byte(str(worker_status[3]))
+                self.request_master_socket.send_multipart([
+                    remote_constants.WORKER_STATUS_UPDATE_TAG,
+                    to_byte(self.master_heartbeat_address),
+                    cloudpickle.dumps(worker_status)
                 ])
+                message = self.request_master_socket.recv_multipart()
             except zmq.error.Again as e:
                 self.master_is_alive = False
-            except zmq.error.ContextTerminated as e:
-                break
-        socket.close(0)
-        logger.warning(
-            "[Worker] lost connection with the master, will exit reply heartbeat for master."
-        )
-        self.worker_status.clear()
-        self.log_server_proc.kill()
-        self.log_server_proc.wait()
-        # exit the worker
-        self.worker_is_alive = False
-        self.exit()
+            finally:
+                self.lock.release()
+
+            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
     def _create_log_server(self, port):
         log_server_file = __file__.replace('worker.pyc', 'log_server.py')
@@ -432,43 +432,25 @@ class Worker(object):
         self.reply_log_server_socket.send_multipart(
             [remote_constants.NORMAL_TAG])
 
+        def heartbeat_exit_callback_func():
+            # only output warning
+            logger.warning("[Worker] lost connection with the log_server.")
+
         # a thread for sending heartbeat signals to log_server
-        thread = threading.Thread(
-            target=self._create_log_server_monitor,
-            args=(log_server_heartbeat_addr, ))
+        thread = HeartbeatClientThread(
+            log_server_heartbeat_addr,
+            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         thread.setDaemon(True)
         thread.start()
 
         return log_server_proc, log_server_address
 
-    def _create_log_server_monitor(self, log_server_heartbeat_addr):
-        """Send heartbeat signals to check target's status"""
-
-        # heartbeat_socket: sends heartbeat signal to log_server
-        heartbeat_socket = create_client_socket(
-            self.ctx, log_server_heartbeat_addr, heartbeat_timeout=True)
-
-        while self.master_is_alive and self.worker_is_alive:
-            try:
-                heartbeat_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
-                _ = heartbeat_socket.recv_multipart()
-                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-            except zmq.error.Again as e:
-                logger.warning(
-                    "[Worker] lost connection with the log_server:{}".format(
-                        log_server_heartbeat_addr))
-                break
-
-            except zmq.error.ZMQError as e:
-                break
-
-        heartbeat_socket.close(0)
-
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
         kill_process('remote/job.py.*{}'.format(self.reply_job_address))
+        if self.master_heartbeat_thread.is_alive():
+            self.master_heartbeat_thread.exit()
 
     def run(self):
         """Keep running until it lost connection with the master.

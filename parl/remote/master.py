@@ -24,6 +24,7 @@ from parl.utils import to_str, to_byte, logger, get_ip_address
 from parl.remote import remote_constants
 from parl.remote.job_center import JobCenter
 from parl.remote.cluster_monitor import ClusterMonitor
+from parl.remote.grpc_heartbeat import HeartbeatClientThread
 import cloudpickle
 import time
 from parl.remote.utils import has_module
@@ -63,6 +64,8 @@ class Master(object):
     def __init__(self, port, monitor_port=None):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
+        self.all_client_heartbeat_threads = []
+        self.all_worker_heartbeat_threads = []
         self.monitor_url = "http://{}:{}".format(self.master_ip, monitor_port)
         logger.set_dir(
             os.path.expanduser('~/.parl_data/master/{}_{}'.format(
@@ -79,78 +82,6 @@ class Master(object):
 
     def _get_status(self):
         return self.cluster_monitor.get_status()
-
-    def _create_worker_monitor(self, worker_address):
-        """When a new worker connects to the master, a socket is created to
-        send heartbeat signals to the worker.
-        """
-        worker_heartbeat_socket = self.ctx.socket(zmq.REQ)
-        worker_heartbeat_socket.linger = 0
-        worker_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
-        worker_heartbeat_socket.connect("tcp://" + worker_address)
-
-        connected = True
-        while connected and self.master_is_alive:
-            try:
-                worker_heartbeat_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
-                worker_status = worker_heartbeat_socket.recv_multipart()
-                vacant_cpus = self.job_center.get_vacant_cpu(worker_address)
-                total_cpus = self.job_center.get_total_cpu(worker_address)
-                self.cluster_monitor.update_worker_status(
-                    worker_status, worker_address, vacant_cpus, total_cpus)
-                time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-            except zmq.error.Again as e:
-                self.job_center.drop_worker(worker_address)
-                self.cluster_monitor.drop_worker_status(worker_address)
-                logger.warning("\n[Master] Cannot connect to the worker " +
-                               "{}. ".format(worker_address) +
-                               "Worker_pool will drop this worker.")
-                self._print_workers()
-                connected = False
-            except zmq.error.ZMQError as e:
-                break
-
-        worker_heartbeat_socket.close(0)
-        logger.warning("Exit worker monitor from master.")
-
-    def _create_client_monitor(self, client_heartbeat_address):
-        """When a new client connects to the master, a socket is created to
-        send heartbeat signals to the client.
-        """
-
-        client_heartbeat_socket = self.ctx.socket(zmq.REQ)
-        client_heartbeat_socket.linger = 0
-        client_heartbeat_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
-        client_heartbeat_socket.connect("tcp://" + client_heartbeat_address)
-
-        client_is_alive = True
-        while client_is_alive and self.master_is_alive:
-            try:
-                client_heartbeat_socket.send_multipart(
-                    [remote_constants.HEARTBEAT_TAG])
-                client_status = client_heartbeat_socket.recv_multipart()
-
-                self.cluster_monitor.update_client_status(
-                    client_status, client_heartbeat_address,
-                    self.client_hostname[client_heartbeat_address])
-
-            except zmq.error.Again as e:
-                client_is_alive = False
-                self.cluster_monitor.drop_client_status(
-                    client_heartbeat_address)
-                logger.warning("[Master] cannot connect to the client " +
-                               "{}. ".format(client_heartbeat_address) +
-                               "Please check if it is still alive.")
-            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-        logger.warning("Master exits client monitor for {}.\n".format(
-            client_heartbeat_address))
-        logger.info(
-            "Master connects to {} workers and have {} vacant CPUs.\n".format(
-                self.worker_num, self.cpu_num))
-        client_heartbeat_socket.close(0)
 
     def _print_workers(self):
         """Display `worker_pool` infomation."""
@@ -199,10 +130,22 @@ class Master(object):
             logger.info("A new worker {} is added, ".format(worker_address) +
                         "the cluster has {} CPUs.\n".format(self.cpu_num))
 
-            # a thread for sending heartbeat signals to `worker.address`
-            thread = threading.Thread(
-                target=self._create_worker_monitor,
-                args=(initialized_worker.worker_address, ))
+            def heartbeat_exit_callback_func(worker_address):
+                self.job_center.drop_worker(worker_address)
+                self.cluster_monitor.drop_worker_status(worker_address)
+                logger.warning("\n[Master] Cannot connect to the worker " +
+                               "{}. ".format(worker_address) +
+                               "Worker_pool will drop this worker.")
+                self._print_workers()
+                logger.warning("Exit worker monitor from master.")
+
+            # a thread for sending heartbeat signals to the client
+            thread = HeartbeatClientThread(
+                worker_address,
+                heartbeat_exit_callback_func=heartbeat_exit_callback_func,
+                exit_func_args=(worker_address, ))
+            self.all_worker_heartbeat_threads.append(thread)
+            thread.setDaemon(True)
             thread.start()
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -219,10 +162,25 @@ class Master(object):
             logger.info(
                 "Client {} is connected.".format(client_heartbeat_address))
 
-            thread = threading.Thread(
-                target=self._create_client_monitor,
-                args=(client_heartbeat_address, ))
+            def heartbeat_exit_callback_func(client_heartbeat_address):
+                self.cluster_monitor.drop_client_status(
+                    client_heartbeat_address)
+                logger.warning("[Master] cannot connect to the client " +
+                               "{}. ".format(client_heartbeat_address) +
+                               "Please check if it is still alive.")
+                logger.info(
+                    "Master connects to {} workers and have {} vacant CPUs.\n".
+                    format(self.worker_num, self.cpu_num))
+
+            # a thread for sending heartbeat signals to the client
+            thread = HeartbeatClientThread(
+                client_heartbeat_address,
+                heartbeat_exit_callback_func=heartbeat_exit_callback_func,
+                exit_func_args=(client_heartbeat_address, ))
+            self.all_client_heartbeat_threads.append(thread)
+            thread.setDaemon(True)
             thread.start()
+
             log_monitor_address = "{}/logs?client_id={}".format(
                 self.monitor_url, client_id)
             self.client_socket.send_multipart(
@@ -269,6 +227,29 @@ class Master(object):
 
             self._print_workers()
 
+        # client update status periodically
+        elif tag == remote_constants.CLIENT_STATUS_UPDATE_TAG:
+            client_heartbeat_address = to_str(message[1])
+            client_status = cloudpickle.loads(message[2])
+
+            client_status['client_hostname'] = self.client_hostname[
+                client_heartbeat_address]
+            self.cluster_monitor.update_client_status(client_heartbeat_address,
+                                                      client_status)
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+
+        # worker update status periodically
+        elif tag == remote_constants.WORKER_STATUS_UPDATE_TAG:
+            worker_address = to_str(message[1])
+            worker_status = cloudpickle.loads(message[2])
+
+            vacant_cpus = self.job_center.get_vacant_cpu(worker_address)
+            total_cpus = self.job_center.get_total_cpu(worker_address)
+            self.cluster_monitor.update_worker_status(
+                worker_status, worker_address, vacant_cpus, total_cpus)
+
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+
         # check before start a worker
         elif tag == remote_constants.NORMAL_TAG:
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -280,6 +261,14 @@ class Master(object):
         """ Close the master.
         """
         self.master_is_alive = False
+
+        for thread in self.all_client_heartbeat_threads:
+            if thread.is_alive():
+                thread.exit()
+
+        for thread in self.all_worker_heartbeat_threads:
+            if thread.is_alive():
+                thread.exit()
 
     def run(self):
         """An infinite loop waiting for messages from the workers and

@@ -37,7 +37,7 @@ class CartpoleAgent(parl.Agent):
         Returns:
             act(int): action
         """
-        obs = paddle.to_tensor(obs.astype(np.float32))
+        obs = paddle.to_tensor(obs, dtype='float32')
         prob = self.alg.predict(obs)
         prob = prob.numpy()
         act = np.random.choice(len(prob), 1, p=prob)[0]
@@ -52,7 +52,7 @@ class CartpoleAgent(parl.Agent):
         Returns:
             act(int): action
         """
-        obs = paddle.to_tensor(obs.astype(np.float32))
+        obs = paddle.to_tensor(obs, dtype='float32')
         prob = self.alg.predict(obs)
         act = prob.argmax().numpy()[0]
         return act
@@ -62,7 +62,7 @@ class CartpoleAgent(parl.Agent):
 
         Args:
             obs(np.float32): shape of (batch_size, obs_dim)
-            act(np.int64): shape of (batch_size)
+            act(np.int32): shape of (batch_size)
             reward(np.float32): shape of (batch_size)
         
         Returns:
@@ -72,9 +72,9 @@ class CartpoleAgent(parl.Agent):
         act = np.expand_dims(act, axis=-1)
         reward = np.expand_dims(reward, axis=-1)
 
-        obs = paddle.to_tensor(obs.astype(np.float32))
-        act = paddle.to_tensor(act.astype(np.int32))
-        reward = paddle.to_tensor(reward.astype(np.float32))
+        obs = paddle.to_tensor(obs, dtype='float32')
+        act = paddle.to_tensor(act, dtype='int32')
+        reward = paddle.to_tensor(reward, dtype='float32')
 
         loss = self.alg.learn(obs, act, reward)
         return loss.numpy()[0]

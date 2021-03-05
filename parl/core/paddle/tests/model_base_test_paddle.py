@@ -20,8 +20,6 @@ import unittest
 from copy import deepcopy
 from parl.core.paddle.model import Model
 
-paddle.disable_static()
-
 
 class TestModel(Model):
     def __init__(self):
@@ -37,40 +35,37 @@ class TestModel(Model):
         return out
 
 
-class Actor(Model):
-    def __init__(self):
-        super(Actor, self).__init__()
-        self.fc1 = nn.Linear(4, 300)
-        self.fc2 = nn.Linear(300, 2)
-
-    def forward(self, x):
-        out = self.fc1(x)
-        out = self.fc2(out)
-        return out
-
-
-class Critic(Model):
-    def __init__(self):
-        super(Critic, self).__init__()
-        self.fc1 = nn.Linear(4, 300)
-        self.fc2 = nn.Linear(300, 1)
-
-    def forward(self, x):
-        out = self.fc1(x)
-        out = self.fc2(out)
-        return out
-
-
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
         self.target_model = TestModel()
-        self.target_model2 = TestModel()
-        self.target_model3 = TestModel()
+        self.target_model2 = deepcopy(self.model)
+        self.target_model3 = deepcopy(self.model)
+
+    def test_model_copy(self):
+        self.assertEqual(
+            len(self.model.state_dict()), len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.model.named_parameters(),
+                self.target_model2.named_parameters()):
+            self.assertEqual(name1, name2)
+            var1_np = var1.numpy().sum()
+            var2_np = var2.numpy().sum()
+            self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
+
+    def test_model_copy_with_multi_copy(self):
+        self.assertEqual(
+            len(self.target_model2.state_dict()),
+            len(self.target_model2.state_dict()))
+        for (name1, var1), (name2, var2) in zip(
+                self.target_model2.named_parameters(),
+                self.target_model3.named_parameters()):
+            self.assertEqual(name1, name2)
+            var1_np = var1.numpy().sum()
+            var2_np = var2.numpy().sum()
+            self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
 
     def test_sync_weights_in_one_model(self):
-        obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32))
-
         N = 10
         random_obs = paddle.to_tensor(np.random.rand(N, 4).astype(np.float32))
         for i in range(N):
@@ -115,12 +110,13 @@ class ModelBaseTest(unittest.TestCase):
             for i in range(N):
                 obs = random_obs[i]
                 real_target_outputs = self.target_model.predict(
-                    paddle.to_tensor(obs)).numpy()
+                    paddle.to_tensor(obs)).numpy().sum()
                 out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
                 out_np = np.dot(out_np,
                                 target_model_fc2_w) + target_model_fc2_b
                 out_np = np.dot(out_np,
                                 target_model_fc3_w) + target_model_fc3_b
+                out_np = out_np.sum()
 
                 self.assertLess(
                     float(np.abs(real_target_outputs - out_np)), 1e-5)
@@ -144,12 +140,13 @@ class ModelBaseTest(unittest.TestCase):
             for i in range(N):
                 obs = random_obs[i]
                 real_target_outputs = the_target_model.predict(
-                    paddle.to_tensor(obs)).numpy()
+                    paddle.to_tensor(obs)).numpy().sum()
                 out_np = np.dot(obs, target_model_fc1_w) + target_model_fc1_b
                 out_np = np.dot(out_np,
                                 target_model_fc2_w) + target_model_fc2_b
                 out_np = np.dot(out_np,
                                 target_model_fc3_w) + target_model_fc3_b
+                out_np = out_np.sum()
 
                 self.assertLess(
                     float(np.abs(real_target_outputs - out_np)), 1e-5)
@@ -179,8 +176,8 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = np.random.randn(N, 4).astype(np.float32)
         for i in range(N):
             x = paddle.to_tensor(random_obs[i])
-            model1_output = model1.predict(x).numpy()
-            model2_output = model2.predict(x).numpy()
+            model1_output = model1.predict(x).numpy().sum()
+            model2_output = model2.predict(x).numpy().sum()
             self.assertNotEqual(model1_output, model2_output)
 
         params = model1.get_weights()
@@ -189,8 +186,8 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = np.random.randn(N, 4).astype(np.float32)
         for i in range(N):
             x = paddle.to_tensor(random_obs[i])
-            model1_output = model1.predict(x).numpy()
-            model2_output = model2.predict(x).numpy()
+            model1_output = model1.predict(x).numpy().sum()
+            model2_output = model2.predict(x).numpy().sum()
             self.assertEqual(model1_output, model2_output)
 
     def test_set_weights_with_wrong_params_num(self):

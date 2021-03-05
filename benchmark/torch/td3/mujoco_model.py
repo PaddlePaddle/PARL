@@ -19,9 +19,9 @@ import torch.nn.functional as F
 
 
 class MujocoModel(parl.Model):
-    def __init__(self, obs_dim, act_dim, max_action):
+    def __init__(self, obs_dim, act_dim):
         super(MujocoModel, self).__init__()
-        self.actor_model = Actor(obs_dim, act_dim, max_action)
+        self.actor_model = Actor(obs_dim, act_dim)
         self.critic_model = Critic(obs_dim, act_dim)
 
     def policy(self, obs):
@@ -41,19 +41,17 @@ class MujocoModel(parl.Model):
 
 
 class Actor(parl.Model):
-    def __init__(self, obs_dim, action_dim, max_action):
+    def __init__(self, obs_dim, action_dim):
         super(Actor, self).__init__()
 
         self.l1 = nn.Linear(obs_dim, 256)
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, action_dim)
 
-        self.max_action = max_action
-
     def forward(self, obs):
         a = F.relu(self.l1(obs))
         a = F.relu(self.l2(a))
-        return self.max_action * torch.tanh(self.l3(a))
+        return torch.tanh(self.l3(a))
 
 
 class Critic(parl.Model):

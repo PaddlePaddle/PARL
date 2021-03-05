@@ -49,16 +49,18 @@ class DDPG(parl.Algorithm):
         return self.model.policy(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
-        self._critic_learn(obs, action, reward, next_obs, terminal)
-        self._actor_learn(obs)
+        critic_loss = self._critic_learn(obs, action, reward, next_obs,
+                                         terminal)
+        actor_loss = self._actor_learn(obs)
 
         self.sync_target()
+        return critic_loss, actor_loss
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         # Compute the target Q value
         target_Q = self.target_model.critic_model(
             next_obs, self.target_model.actor_model(next_obs))
-        target_Q = reward + (terminal * self.gamma * target_Q).detach()
+        target_Q = reward + ((1. - terminal) * self.gamma * target_Q).detach()
 
         # Get current Q estimate
         current_Q = self.model.critic_model(obs, action)
@@ -70,6 +72,7 @@ class DDPG(parl.Algorithm):
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
+        return critic_loss
 
     def _actor_learn(self, obs):
         # Compute actor loss and Update the frozen target models
@@ -80,6 +83,7 @@ class DDPG(parl.Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+        return actor_loss
 
     def sync_target(self, decay=None):
         if decay is None:

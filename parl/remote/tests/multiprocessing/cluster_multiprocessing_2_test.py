@@ -21,7 +21,7 @@ import multiprocessing
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import get_free_tcp_port
+from parl.utils import get_free_tcp_port, _IS_WINDOWS
 
 
 @parl.remote_class

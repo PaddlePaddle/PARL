@@ -80,11 +80,19 @@ for %%v in (3.7 3.8) do (
 
     rem ------run parallel unittests
     set IS_TESTING_SERIALLY=OFF
+    set IS_TESTING_REMOTE=OFF
     call :run_test_with_cpu || goto unittest_error
 
     rem ------run serial unittests
     set IS_TESTING_SERIALLY=ON
+    set IS_TESTING_REMOTE=OFF
     call :run_test_with_cpu || goto unittest_error
+
+    rem ------run remote unittests
+    set IS_TESTING_SERIALLY=OFF
+    set IS_TESTING_REMOTE=ON
+    call :run_test_with_cpu || goto unittest_error
+
 )
 rem ----------------------------------------------
 
@@ -128,7 +136,14 @@ mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
 
-cmake .. -DIS_TESTING_SERIALLY=%IS_TESTING_SERIALLY%
+if "%IS_TESTING_SERIALLY%"=="ON" (
+	cmake .. -DIS_TESTING_SERIALLY=%IS_TESTING_SERIALLY%
+) else if "%IS_TESTING_REMOTE%"=="ON" (
+	cmake .. -DIS_TESTING_REMOTE=%IS_TESTING_REMOTE%
+) else (
+	cmake ..
+)
+
 if %ERRORLEVEL% NEQ 0 (
     goto cmake_error
 )

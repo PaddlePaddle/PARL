@@ -91,17 +91,18 @@ class TestCluster(unittest.TestCase):
             target=self._create_worker, args=(port, worker_exit_event))
         worker_proc.start()
 
-        proc1 = multiprocessing.Process(
-            target=self._connect_and_create_actor,
-            args=('localhost:{}'.format(port), ))
-        proc2 = multiprocessing.Process(
-            target=self._connect_and_create_actor,
-            args=('localhost:{}'.format(port), ))
-        proc1.start()
-        proc2.start()
+	if not _IS_WINDOWS:  # In windows, fork process cannot access client created in main process.
+		proc1 = multiprocessing.Process(
+		    target=self._connect_and_create_actor,
+		    args=('localhost:{}'.format(port), ))
+		proc2 = multiprocessing.Process(
+		    target=self._connect_and_create_actor,
+		    args=('localhost:{}'.format(port), ))
+		proc1.start()
+		proc2.start()
 
-        proc1.join()
-        proc2.join()
+		proc1.join()
+		proc2.join()
 
         self.assertRaises(AssertionError, self._create_actor)
         worker_exit_event.set()

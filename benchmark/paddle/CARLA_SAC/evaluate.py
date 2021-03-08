@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-os.environ['PARL_BACKEND'] = 'paddle'
-
 import argparse
 from env_utils import LocalEnv
 from parl.utils import logger, tensorboard

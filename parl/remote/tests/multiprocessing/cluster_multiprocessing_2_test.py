@@ -76,7 +76,7 @@ class TestCluster(unittest.TestCase):
     def test_connect_and_create_actor_in_multiprocessing_without_connected_in_main_process(
             self):
         if _IS_WINDOWS:
-            # In windows, create master in multiprocessing will raise the error:
+            # In windows, creating master in multiprocessing will raise the error:
             #`TypeError: cannot serialize '_io.TextIOWrapper' object`
             return
 

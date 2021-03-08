@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['PARL_BACKEND'] = 'paddle'
+
 import numpy as np
 import parl
 import argparse
@@ -19,8 +22,7 @@ from env_utils import ParallelEnv, LocalEnv
 from parl.utils import logger, tensorboard, ReplayMemory
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
-from sac import SAC
-# from parl.algorithms import SAC # parl >= 1.4.2
+from parl.algorithms import SAC
 from env_config import EnvConfig
 
 WARMUP_STEPS = 2e3

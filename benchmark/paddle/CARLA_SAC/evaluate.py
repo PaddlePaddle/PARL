@@ -17,8 +17,7 @@ from env_utils import LocalEnv
 from parl.utils import logger, tensorboard
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
-from sac import SAC
-# from parl.algorithms import SAC # parl >= 1.4.2
+from parl.algorithms import SAC
 from env_config import EnvConfig
 
 EVAL_EPISODES = 3

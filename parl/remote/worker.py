@@ -456,4 +456,4 @@ class Worker(object):
         """Keep running until it lost connection with the master.
         """
         if self.worker_is_alive:
-            self.reply_master_hearbeat_thread.join()
+            self.master_heartbeat_thread.join()

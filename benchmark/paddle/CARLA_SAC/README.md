@@ -7,14 +7,14 @@ a parallel version of SAC was implemented and achieved high performance in the C
 Please view [Carla simulator](https://github.com/carla-simulator/carla/releases/tag/0.9.6) to know more about Carla simulator.
 
 ### Benchmark result
-<img src=".benchmark/carla_sac.png" width = "660" height ="240" alt="carla_sac"/><img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
+<img src=".benchmark/carla_sac.png" width = "660" height ="260" alt="carla_sac"/><img src=".benchmark/Lane_bend.gif" width = "300" height ="200" alt="result"/>
 
 + Result was evaluated with mode `Lane`
 
 ## How to use
 + System: Ubuntu 16.04
 ### Dependencies:
-+ [parl>=1.4.2](https://github.com/PaddlePaddle/PARL)
++ [parl>=1.4.3](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [CARLA_0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
   ```CARLA

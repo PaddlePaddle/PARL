@@ -9,6 +9,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Benchmark result
 
 <img src=".benchmark/OAC_results.png" width = "1000" height ="280" alt="OAC_results"/>
+
 + Each experiment was run three times with different seeds
 
 ## How to use

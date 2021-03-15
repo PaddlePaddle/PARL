@@ -48,6 +48,8 @@ class OAC(parl.Algorithm):
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
+        assert isinstance(beta, float)
+        assert isinstance(delta, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 

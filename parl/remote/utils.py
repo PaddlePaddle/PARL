@@ -20,7 +20,7 @@ from parl.utils import isnotebook, logger, format_uniform_path
 
 __all__ = [
     'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
-    'get_subfiles_recursively', 'has_module'
+    'get_subfiles_recursively', 'get_version'
 ]
 
 

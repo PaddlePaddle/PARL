@@ -64,19 +64,12 @@ class QMIX(parl.Algorithm):
                 rho=0.99,
                 epsilon=1e-5,
                 grad_clip=clip)
-            #self.optimizer = paddle.optimizer.Adam(
-            #    parameters=self.params,
-            #    learning_rate=self.lr,
-            #    grad_clip=clip)
         else:
             self.optimizer = paddle.optimizer.RMSProp(
                 parameters=self.params,
                 learning_rate=self.lr,
                 rho=0.99,
                 epsilon=1e-5)
-            #self.optimizer = paddle.optimizer.Adam(
-            #    parameters=self.params,
-            #    learning_rate=self.lr)
 
     def _init_hidden_states(self, batch_size):
         self.hidden_states = self.agent_model.init_hidden().unsqueeze(

@@ -16,6 +16,7 @@ import paddle
 import parl
 import numpy as np
 from utils import AvailableActionsSampler
+import os
 
 
 class QMixAgent(parl.Agent):
@@ -28,6 +29,24 @@ class QMixAgent(parl.Agent):
         self.exploration_decay = exploration_decay
         self.target_update_count = 0
         self.update_target_interval = update_target_interval
+
+    def save(self, save_dir, agent_model_name, qmixer_model_name):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        agent_model_path = os.path.join(save_dir, agent_model_name)
+        qmixer_model_path = os.path.join(save_dir, qmixer_model_name)
+        paddle.save(self.alg.agent_model.state_dict(), agent_model_path)
+        paddle.save(self.alg.qmixer_model.state_dict(), qmixer_model_path)
+        print('save model successfully!')
+
+    def restore(self, save_dir, agent_model_name, qmixer_model_name):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        agent_model_path = os.path.join(save_dir, agent_model_name)
+        qmixer_model_path = os.path.join(save_dir, qmixer_model_name)
+        self.alg.agent_model.set_state_dict(paddle.load(agent_model_path))
+        self.alg.qmixer_model.set_state_dict(paddle.load(qmixer_model_path))
+        print('restore model successfully!')
 
     def reset_agent(self, batch_size=1):
         self.alg._init_hidden_states(batch_size)

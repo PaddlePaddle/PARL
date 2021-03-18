@@ -14,18 +14,17 @@
 
 import unittest
 import parl
-import time
-import subprocess
-import threading
-
 from parl.remote.master import Master
 from parl.remote.worker import Worker
+import time
+import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
-from parl.utils import get_free_tcp_port
+import subprocess
+from parl.utils import logger
 
 
-@parl.remote_class(wait=False)
+@parl.remote_class
 class Actor(object):
     def __init__(self, arg1=None, arg2=None):
         self.arg1 = arg1
@@ -58,65 +57,38 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(60)  # wait for test case finishing
 
-    def test_actor_exception(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
+    def test_add_worker(self):
+        logger.info("running: test_add_worker")
+        master = Master(port=8234)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        time.sleep(1)
+
+        worker1 = Worker('localhost:8234', 4)
         for _ in range(3):
-            if master.cpu_num == 1:
+            if master.cpu_num == 4:
                 break
             time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
+        self.assertEqual(master.cpu_num, 4)
 
-        with self.assertRaises(exceptions.FutureFunctionError):
-            actor = Actor(abcd='a bug')
-            actor.get_arg1()  # calling any function will raise an exception
-
-        actor2 = Actor()
+        worker2 = Worker('localhost:8234', 4)
         for _ in range(3):
-            if master.cpu_num == 0:
+            if master.cpu_num == 8:
                 break
             time.sleep(10)
+        self.assertEqual(master.cpu_num, 8)
 
-        future_result = actor2.add_one(1)
-        self.assertEqual(future_result.get(), 2)
-        self.assertEqual(0, master.cpu_num)
+        worker2.exit()
+
+        for _ in range(10):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
+        self.assertEqual(master.cpu_num, 4)
 
         master.exit()
         worker1.exit()
-
-    def test_actor_exception_2(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
-        actor = Actor()
-        with self.assertRaises(exceptions.FutureFunctionError):
-            future_object = actor.will_raise_exception_func()
-            future_object.get()  # raise exception
-
-        actor2 = Actor()
-        for _ in range(5):
-            if master.cpu_num == 0:
-                break
-            time.sleep(10)
-        future_result = actor2.add_one(1)
-        self.assertEqual(future_result.get(), 2)
-        self.assertEqual(0, master.cpu_num)
-        del actor
-        del actor2
-        worker1.exit()
-        master.exit()
 
 
 if __name__ == '__main__':

@@ -206,7 +206,8 @@ class Worker(object):
             logger.warning(
                 "[Worker] lost connection with the master, will exit reply heartbeat for master."
             )
-            self.worker_status.clear()
+            if self.worker_status is not None:
+                self.worker_status.clear()
             self.log_server_proc.kill()
             self.log_server_proc.wait()
             # exit the worker
@@ -456,4 +457,4 @@ class Worker(object):
         """Keep running until it lost connection with the master.
         """
         if self.worker_is_alive:
-            self.master_heartbeat_thread.join()
+            self.reply_master_hearbeat_thread.join()

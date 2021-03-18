@@ -57,60 +57,29 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(60) # wait for test case finishing
 
-    def test_actor_exception(self):
-        logger.info("running:test_actor_exception")
-        master = Master(port=8235)
+    def test_reset_actor(self):
+        logger.info("running: test_reset_actor")
+        # start the master
+        master = Master(port=8237)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8235', 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        logger.info("running:test_actor_exception: 0")
-        parl.connect('localhost:8235')
-        logger.info("running:test_actor_exception: 1")
 
-        with self.assertRaises(exceptions.RemoteError):
-            actor = Actor(abcd='a bug')
-        logger.info("running:test_actor_exception: 2")
-
-        actor2 = Actor()
-        for _ in range(3):
-            if master.cpu_num == 0:
-                break
-            time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(0, master.cpu_num)
-
-        master.exit()
-        worker1.exit()
-
-    def test_actor_exception_2(self):
-        logger.info("running: test_actor_exception_2")
-        master = Master(port=8236)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:8236', 1)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:8236')
-        actor = Actor()
-        with self.assertRaises(exceptions.RemoteError):
-            actor.will_raise_exception_func()
-        actor2 = Actor()
-        for _ in range(5):
-            if master.cpu_num == 0:
-                break
-            time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(0, master.cpu_num)
+        worker1 = Worker('localhost:8237', 4)
+        parl.connect('localhost:8237')
+        for _ in range(10):
+            actor = Actor()
+            ret = actor.add_one(1)
+            self.assertEqual(ret, 2)
         del actor
-        del actor2
+
+        for _ in range(10):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
+
+        self.assertEqual(master.cpu_num, 4)
         worker1.exit()
         master.exit()
 

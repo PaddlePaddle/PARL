@@ -83,6 +83,9 @@ for %%v in (3.7 3.8) do (
     set IS_TESTING_REMOTE=OFF
     call :run_test_with_cpu || goto unittest_error
 
+    rem uninstall paddle when testing remote module
+    pip uninstall -y paddlepaddle
+
     rem ------run serial unittests
     set IS_TESTING_SERIALLY=ON
     set IS_TESTING_REMOTE=OFF

@@ -26,7 +26,7 @@ from parl.remote.worker import Worker
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class
+@parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, arg1, arg2, arg3, arg4):
         self.arg1 = arg1
@@ -49,9 +49,10 @@ class Test_get_and_set_attribute(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_get_attribute(self):
+    def test_non_existing_attribute_same_with_existing_method(self):
         port = get_free_tcp_port()
-        logger.info("running:test_get_attirbute")
+        logger.info(
+            "running:test_non_existing_attribute_same_with_existing_method")
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -63,37 +64,16 @@ class Test_get_and_set_attribute(unittest.TestCase):
         arg4 = 100
         parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
+        actor.new_attr_2 = 300
+        self.assertEqual(300, actor.new_attr_2)
+        actor.set_new_attr()
+        self.assertEqual(200, actor.new_attr_1)
+        self.assertTrue(callable(actor.arg5))
 
-        self.assertTrue(arg1 == actor.arg1)
-        self.assertTrue(arg2 == actor.arg2)
-        self.assertTrue((arg3 == actor.arg3).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
+        def call_non_existing_method():
+            return actor.arg2(10)
 
-        master.exit()
-        worker1.exit()
-
-    def test_set_attribute(self):
-        port = get_free_tcp_port()
-        logger.info("running:test_set_attirbute")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        arg1 = 3
-        arg2 = 3.5
-        arg3 = np.random.randn(3, 3)
-        arg4 = 100
-        parl.connect('localhost:{}'.format(port))
-        actor = Actor(arg1, arg2, arg3, arg4)
-        actor.arg1 = arg1
-        actor.arg2 = arg2
-        actor.arg3 = arg3
-        actor.GLOBAL_CLIENT = arg4
-        self.assertTrue(arg1 == actor.arg1)
-        self.assertTrue(arg2 == actor.arg2)
-        self.assertTrue((arg3 == actor.arg3).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
+        self.assertRaises(TypeError, call_non_existing_method)
         master.exit()
         worker1.exit()
 

@@ -57,7 +57,7 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(60) # wait for test case finishing
+        time.sleep(60)  # wait for test case finishing
 
     def test_actor_exception(self):
         logger.info("running:test_actor_exception")

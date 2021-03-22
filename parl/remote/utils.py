@@ -15,11 +15,12 @@
 import sys
 from contextlib import contextmanager
 import os
+import pkg_resources
 from parl.utils import isnotebook, logger, format_uniform_path
 
 __all__ = [
     'load_remote_class', 'redirect_output_to_file', 'locate_remote_file',
-    'get_subfiles_recursively', 'has_module'
+    'get_subfiles_recursively', 'get_version'
 ]
 
 
@@ -242,17 +243,20 @@ def get_subfiles_recursively(folder_path):
         return python_files, other_files, empty_subfolders
 
 
-def has_module(module_name):
+def get_version(module_name):
     ''' Check if the python environment has installed the module or package.
+        return the version of the module if the module is installed,
+        return None otherwise.
     Args:
-        module_name: module to be checked
+        module_name (str): module to be checked
     Returns:
-        has_module: (bool), True or False
+        has_module: str (if the module is installed) or None
     '''
     assert isinstance(module_name, str), '"module_name" should be a string!'
     try:
         __import__(module_name)
     except ImportError:
-        return False
+        return None
     else:
-        return True
+        module_version = pkg_resources.get_distribution(module_name).version
+        return module_version

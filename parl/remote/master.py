@@ -27,7 +27,7 @@ from parl.remote.cluster_monitor import ClusterMonitor
 from parl.remote.grpc_heartbeat import HeartbeatClientThread
 import cloudpickle
 import time
-from parl.remote.utils import has_module
+from parl.remote.utils import get_version
 
 
 class Master(object):
@@ -193,7 +193,7 @@ class Master(object):
                 to_byte(parl.__version__),
                 to_byte(str(sys.version_info.major)),
                 to_byte(str(sys.version_info.minor)),
-                to_byte(str(has_module('pyarrow')))
+                to_byte(str(get_version('pyarrow')))
             ])
 
         # a client submits a job to the master

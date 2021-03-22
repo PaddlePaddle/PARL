@@ -27,7 +27,7 @@ from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
-from parl.remote.utils import has_module
+from parl.remote.utils import get_version
 
 
 class Client(object):
@@ -220,21 +220,26 @@ class Client(object):
             client_python_version_minor = str(sys.version_info.minor)
             assert client_parl_version == to_str(message[1]) and client_python_version_major == to_str(message[2])\
                 and client_python_version_minor == to_str(message[3]),\
-                '''Version mismatch: the 'master' is of version 'parl={}, python={}.{}'. However,
+                '''Version mismatch: the 'master' is of version 'parl={}, python={}.{}'. However, \
                 'parl={}, python={}.{}'is provided in your environment.'''.format(
                         to_str(message[1]), to_str(message[2]), to_str(message[3]),
                         client_parl_version, client_python_version_major, client_python_version_minor
                     )
-            client_has_pyarrow = str(has_module('pyarrow'))
-            if client_has_pyarrow != to_str(message[4]):
-                if client_has_pyarrow == 'True':
-                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not
-found in "master"'s environment. To use "pyarrow" for serialization, please install
-"pyarrow" in "master"'s environment!"""
+            client_pyarrow_version = str(get_version('pyarrow'))
+            master_pyarrow_version = to_str(message[4])
+            if client_pyarrow_version != master_pyarrow_version:
+                if master_pyarrow_version == 'None':
+                    error_message = """"pyarrow" is provided in your current enviroment, however, it is not \
+found in "master"'s environment. To use "pyarrow" for serialization, please install \
+"pyarrow={}" in "master"'s environment!""".format(client_pyarrow_version)
+                elif client_pyarrow_version == 'None':
+                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not \
+found in your current environment. To use "pyarrow" for serialization, please install \
+"pyarrow={}" in your current environment!""".format(master_pyarrow_version)
                 else:
-                    error_message = """"pyarrow" is provided in "master"'s enviroment, however, it is not
-found in your current environment. To use "pyarrow" for serialization, please install
-"pyarrow" in your current environment!"""
+                    error_message = '''Version mismatch: the 'master' is of version 'pyarrow={}'. However, \
+'pyarrow={}'is provided in your current environment.'''.format(
+                        master_pyarrow_version, client_pyarrow_version)
                 raise Exception(error_message)
         else:
             raise NotImplementedError

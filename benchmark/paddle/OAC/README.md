@@ -20,7 +20,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Start Training:
 ```
-# To train an agent for HalfCheetah-v1 game
+# To train an agent for Humanoid-v1 game
 python train.py
 
 # To train for other game

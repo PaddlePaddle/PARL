@@ -135,11 +135,11 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v1", help='Mujoco gym environment name')
+        "--env", default="Humanoid-v1", help='Mujoco gym environment name')
     parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
-        default=3e6,
+        default=1e7,
         type=int,
         help='Max time steps to run environment')
     parser.add_argument(

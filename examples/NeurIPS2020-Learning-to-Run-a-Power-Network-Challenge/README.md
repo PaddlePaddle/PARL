@@ -7,4 +7,4 @@ The **PARL** team gets the first place for all tracks (both Robustness Track and
 </p>
 
 ## Note
-We release the code with trained policy for our top submission at the moment. Regarding the training the code, we are still working on a technical report and will release it as soon as possible.
+We release the code with trained policy for our top submission at the moment. Regarding the training code, we are still working on a technical report and will release it as soon as possible.

@@ -143,6 +143,6 @@ class QMIX(parl.Algorithm):
         self.optimizer.zero_grad()
         loss.backward()
         if self.clip_grad_norm:
-            torch.nn.utils.clip_grad_norm_(self.params, 10)
+            torch.nn.utils.clip_grad_norm_(self.params, self.clip_grad_norm)
         self.optimizer.step()
         return loss.item(), mean_td_error.item()

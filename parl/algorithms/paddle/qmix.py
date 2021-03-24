@@ -51,8 +51,6 @@ class QMIX(parl.Algorithm):
         self.gamma = gamma
         self.lr = lr
         self.clip_grad_norm = clip_grad_norm
-        if self.clip_grad_norm:
-            clip = nn.ClipGradByNorm(clip_norm=self.clip_grad_norm)
 
         self.params = list(self.agent_model.parameters())
         self.params += self.qmixer_model.parameters()

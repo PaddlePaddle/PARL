@@ -21,7 +21,7 @@ import multiprocessing
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
-from parl.utils import get_free_tcp_port
+from parl.utils import get_free_tcp_port, _IS_WINDOWS
 
 
 @parl.remote_class
@@ -75,6 +75,11 @@ class TestCluster(unittest.TestCase):
 
     def test_connect_and_create_actor_in_multiprocessing_with_connected_in_main_process(
             self):
+        if _IS_WINDOWS:
+            # In windows, creating master in multiprocessing will raise the error:
+            #`TypeError: cannot serialize '_io.TextIOWrapper' object`
+            return
+
         port = get_free_tcp_port()
 
         # start the master

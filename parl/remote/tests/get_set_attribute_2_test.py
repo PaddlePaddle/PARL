@@ -49,9 +49,9 @@ class Test_get_and_set_attribute(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_get_attribute(self):
+    def test_create_new_attribute_same_with_wrapper(self):
         port = get_free_tcp_port()
-        logger.info("running:test_get_attirbute")
+        logger.info("running:test_create_new_attribute_same_with_wrapper")
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -64,36 +64,31 @@ class Test_get_and_set_attribute(unittest.TestCase):
         parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
 
-        self.assertTrue(arg1 == actor.arg1)
-        self.assertTrue(arg2 == actor.arg2)
-        self.assertTrue((arg3 == actor.arg3).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
-
+        actor.internal_lock = 50
+        self.assertTrue(actor.internal_lock == 50)
         master.exit()
         worker1.exit()
 
-    def test_set_attribute(self):
+    def test_same_name_of_attribute_and_method(self):
         port = get_free_tcp_port()
-        logger.info("running:test_set_attirbute")
+        logger.info("running:test_same_name_of_attribute_and_method")
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
         worker1 = Worker('localhost:{}'.format(port), 1)
-        arg1 = 3
-        arg2 = 3.5
+        arg1 = np.random.randint(100)
+        arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
         parl.connect('localhost:{}'.format(port))
         actor = Actor(arg1, arg2, arg3, arg4)
-        actor.arg1 = arg1
-        actor.arg2 = arg2
-        actor.arg3 = arg3
-        actor.GLOBAL_CLIENT = arg4
-        self.assertTrue(arg1 == actor.arg1)
-        self.assertTrue(arg2 == actor.arg2)
-        self.assertTrue((arg3 == actor.arg3).all())
-        self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
+        self.assertEqual(arg1, actor.arg1)
+
+        def call_method():
+            return actor.arg1(1, 2)
+
+        self.assertRaises(TypeError, call_method)
         master.exit()
         worker1.exit()
 

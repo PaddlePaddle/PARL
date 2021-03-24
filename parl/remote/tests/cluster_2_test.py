@@ -57,62 +57,38 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(60)  # wait for test case finishing
 
-    def test_actor_exception(self):
-        logger.info("running:test_actor_exception")
-        master = Master(port=8235)
+    def test_add_worker(self):
+        logger.info("running: test_add_worker")
+        master = Master(port=8234)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:8235', 1)
+        time.sleep(1)
+
+        worker1 = Worker('localhost:8234', 4)
         for _ in range(3):
-            if master.cpu_num == 1:
+            if master.cpu_num == 4:
                 break
             time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        logger.info("running:test_actor_exception: 0")
-        parl.connect('localhost:8235')
-        logger.info("running:test_actor_exception: 1")
+        self.assertEqual(master.cpu_num, 4)
 
-        with self.assertRaises(exceptions.RemoteError):
-            actor = Actor(abcd='a bug')
-        logger.info("running:test_actor_exception: 2")
-
-        actor2 = Actor()
+        worker2 = Worker('localhost:8234', 4)
         for _ in range(3):
-            if master.cpu_num == 0:
+            if master.cpu_num == 8:
                 break
             time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(0, master.cpu_num)
+        self.assertEqual(master.cpu_num, 8)
+
+        worker2.exit()
+
+        for _ in range(10):
+            if master.cpu_num == 4:
+                break
+            time.sleep(10)
+        self.assertEqual(master.cpu_num, 4)
 
         master.exit()
         worker1.exit()
-
-    def test_actor_exception_2(self):
-        logger.info("running: test_actor_exception_2")
-        master = Master(port=8236)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:8236', 1)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:8236')
-        actor = Actor()
-        with self.assertRaises(exceptions.RemoteError):
-            actor.will_raise_exception_func()
-        actor2 = Actor()
-        for _ in range(5):
-            if master.cpu_num == 0:
-                break
-            time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(0, master.cpu_num)
-        del actor
-        del actor2
-        worker1.exit()
-        master.exit()
 
 
 if __name__ == '__main__':

@@ -268,7 +268,7 @@ class Job(object):
             return envdir
         else:
             logger.error("NotImplementedError:{}, received tag:{}".format(
-                job_address, ))
+                job_address, tag))
             raise NotImplementedError
 
     def wait_for_connection(self, reply_socket):

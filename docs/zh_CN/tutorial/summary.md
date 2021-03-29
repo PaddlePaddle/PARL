@@ -24,13 +24,13 @@ for i in x:
 
 <img src="../../tutorial/add_scalar.jpg" width="300"/>
 
-### 柱形接口：add_scalar
+### 柱形接口：add_histogram
 
-summary.add_scalar(tag, scalar_value, global_step=None)
+summary.add_histogram(tag, values, global_step=None)
 
 常用的参数
 - tag (string) – Data identifier
-- scalar_value (float or string/blobname) – Value to save
+- values (np.ndarray) – histogram of which to be saved
 - global_step (int) – Global step value to record
 
 例子：

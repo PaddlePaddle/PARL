@@ -60,7 +60,7 @@ class QMixerModel(parl.Model):
         '''
         Args:
             agent_qs: (batch_size, T, n_agents)
-            states: (batch_size, T, state_shape)
+            states:   (batch_size, T, state_shape)
         Returns:
             q_total: global q value
         '''

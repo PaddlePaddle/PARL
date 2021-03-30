@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 import parl
 
 
 class QMixerModel(parl.Model):
     '''
-    input: n_agents' agent_qs (a scalar for each agent)
+    input: n agents' agent_qs (a scalar for each agent)
     output: a scalar (Q)
     '''
 
@@ -57,28 +57,25 @@ class QMixerModel(parl.Model):
     def forward(self, agent_qs, states):
         '''
         Args:
-            agent_qs (torch.Tensor): (batch_size, T, n_agents)
-            states (torch.Tensor):   (batch_size, T, state_shape)
+            agent_qs (paddle.Tensor): (batch_size, T, n_agents)
+            states (paddle.Tensor):   (batch_size, T, state_shape)
         Returns:
-            q_total (torch.Tensor):  (batch_size, T, 1)
+            q_total (paddle.Tensor):  (batch_size, T, 1)
         '''
-        batch_size = agent_qs.size(0)
-        states = states.reshape(-1, self.state_shape)
-        agent_qs = agent_qs.view(-1, 1, self.n_agents)
+        batch_size = agent_qs.shape[0]
+        states = states.reshape(shape=(-1, self.state_shape))
+        agent_qs = agent_qs.reshape(shape=(-1, 1, self.n_agents))
 
-        w1 = torch.abs(self.hyper_w_1(states))
-        w1 = w1.view(-1, self.n_agents, self.embed_dim)
+        w1 = paddle.abs(self.hyper_w_1(states))
+        w1 = w1.reshape(shape=(-1, self.n_agents, self.embed_dim))
         b1 = self.hyper_b_1(states)
-        b1 = b1.view(-1, 1, self.embed_dim)
+        b1 = b1.reshape(shape=(-1, 1, self.embed_dim))
 
-        w2 = torch.abs(self.hyper_w_2(states))
-        w2 = w2.view(-1, self.embed_dim, 1)
-        b2 = self.hyper_b_2(states).view(-1, 1, 1)
+        w2 = paddle.abs(self.hyper_w_2(states))
+        w2 = w2.reshape(shape=(-1, self.embed_dim, 1))
+        b2 = self.hyper_b_2(states).reshape(shape=(-1, 1, 1))
 
-        hidden = F.elu(torch.bmm(agent_qs, w1) + b1)
-        y = torch.bmm(hidden, w2) + b2
-        q_total = y.view(batch_size, -1, 1)
+        hidden = F.elu(paddle.bmm(agent_qs, w1) + b1)
+        y = paddle.bmm(hidden, w2) + b2
+        q_total = y.reshape(shape=(batch_size, -1, 1))
         return q_total
-
-    def update(self, model):
-        self.load_state_dict(model.state_dict())

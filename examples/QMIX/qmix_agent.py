@@ -121,8 +121,10 @@ class QMixAgent(parl.Agent):
     def sample(self, obs, available_actions):
         ''' Sample actions via epsilon-greedy.
         Args:
-            obs:               (n_agents, obs_shape)
-            available_actions: (n_agents, n_actions)
+            obs (np.ndarray):               (n_agents, obs_shape)
+            available_actions (np.ndarray): (n_agents, n_actions)
+        Returns:
+            actions (np.ndarray):           (n_agents, )
         '''
         epsilon = np.random.random()
         if epsilon > self.exploration:
@@ -134,10 +136,12 @@ class QMixAgent(parl.Agent):
         return actions
 
     def predict(self, obs, available_actions):
-        '''take greedy actions
+        ''' take greedy actions
         Args:
-            obs:               (n_agents, obs_shape)
-            available_actions: (n_agents, n_actions)
+            obs (np.ndarray):               (n_agents, obs_shape)
+            available_actions (np.ndarray): (n_agents, n_actions)
+        Returns:
+            actions (np.ndarray):           (n_agents, )
         '''
         feed = {
             'last_hidden_states': self.last_hidden_states,
@@ -153,15 +157,20 @@ class QMixAgent(parl.Agent):
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
-        ''' init_hidden_states:       (batch_size, n_agents, rnn_hidden_dim)
-            target_init_hidden_states:(batch_size, n_agents, rnn_hidden_dim)
-            state_batch:              (batch_size, T, state_shape)
-            actions_batch:            (batch_size, T, n_agents)
-            reward_batch:             (batch_size, T, 1)
-            terminated_batch:         (batch_size, T, 1)
-            obs_batch:                (batch_size, T, n_agents, obs_shape)
-            available_actions_batch:  (batch_size, T, n_agents, n_actions)
-            filled_batch:             (batch_size, T, 1)
+        '''
+        Args:
+            init_hidden_states (np.ndarray):       (batch_size, n_agents, rnn_hidden_dim)
+            target_init_hidden_states (np.ndarray):(batch_size, n_agents, rnn_hidden_dim)
+            state_batch (np.ndarray):              (batch_size, T, state_shape)
+            actions_batch (np.ndarray):            (batch_size, T, n_agents)
+            reward_batch (np.ndarray):             (batch_size, T, 1)
+            terminated_batch (np.ndarray):         (batch_size, T, 1)
+            obs_batch (np.ndarray):                (batch_size, T, n_agents, obs_shape)
+            available_actions_batch (np.ndarray):  (batch_size, T, n_agents, n_actions)
+            filled_batch (np.ndarray):             (batch_size, T, 1)
+        Returns:
+            mean_loss (float): train loss
+            mean_td_error (float): train TD error
         '''
         init_hidden_states, target_init_hidden_states = self._get_hidden_states(
         )

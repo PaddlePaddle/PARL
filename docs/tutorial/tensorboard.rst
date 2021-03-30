@@ -33,7 +33,7 @@ add_histogram
 
 Common used arguments:
 
-* summary.add_scalar(tag, scalar_value, global_step=None)
+* summary.add_histogram(tag, values, global_step=None)
     * tag *(string)* – Data identifier
     * values *(torch.Tensor, numpy.array, or string/blobname)* – Values to build histogram
     * global_step *(int)* – Global step value to record

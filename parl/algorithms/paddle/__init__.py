@@ -18,3 +18,4 @@ from parl.algorithms.paddle.sac import *
 from parl.algorithms.paddle.dqn import *
 from parl.algorithms.paddle.ddpg import *
 from parl.algorithms.paddle.oac import *
+from parl.algorithms.paddle.qmix import *

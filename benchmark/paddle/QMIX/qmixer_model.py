@@ -57,8 +57,10 @@ class QMixerModel(parl.Model):
     def forward(self, agent_qs, states):
         '''
         Args:
-            agent_qs: (batch_size, T, n_agents)
-            states: (batch_size, T, state_shape)
+            agent_qs (paddle.Tensor): (batch_size, T, n_agents)
+            states (paddle.Tensor):   (batch_size, T, state_shape)
+        Returns:
+            q_total (paddle.Tensor):  (batch_size, T, 1)
         '''
         batch_size = agent_qs.shape[0]
         states = states.reshape(shape=(-1, self.state_shape))

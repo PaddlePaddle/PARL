@@ -71,18 +71,28 @@ class QMIX(parl.Algorithm):
         ).unsqueeze(0).expand(batch_size, self.n_agents, -1)
 
     def predict_local_q(self, obs, hidden_state):
-        '''obs: (n_agents, obs_shape)'''
+        '''
+        Args:
+            obs (torch.Tensor): (n_agents, obs_shape)
+        Returns:
+            self.agent_model(obs, hidden_state)
+        '''
         return self.agent_model(obs, hidden_state)
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
-        ''' state_batch:             (batch_size, T, state_shape)
-            actions_batch:           (batch_size, T, n_agents)
-            reward_batch:            (batch_size, T, 1)
-            terminated_batch:        (batch_size, T, 1)
-            obs_batch:               (batch_size, T, n_agents, obs_shape)
-            available_actions_batch: (batch_size, T, n_agents, n_actions)
-            filled_batch:            (batch_size, T, 1)
+        '''
+        Args:
+            state_batch (torch.Tensor):             (batch_size, T, state_shape)
+            actions_batch (torch.Tensor):           (batch_size, T, n_agents)
+            reward_batch (torch.Tensor):            (batch_size, T, 1)
+            terminated_batch (torch.Tensor):        (batch_size, T, 1)
+            obs_batch (torch.Tensor):               (batch_size, T, n_agents, obs_shape)
+            available_actions_batch (torch.Tensor): (batch_size, T, n_agents, n_actions)
+            filled_batch (torch.Tensor):            (batch_size, T, 1)
+        Returns:
+            loss (float): train loss
+            td_error (float): train TD error
         '''
         batch_size = state_batch.shape[0]
         episode_len = state_batch.shape[1]

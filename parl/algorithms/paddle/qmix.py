@@ -80,13 +80,18 @@ class QMIX(parl.Algorithm):
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
-        """ state_batch:             (batch_size, T, state_shape)
-            actions_batch:           (batch_size, T, n_agents)
-            reward_batch:            (batch_size, T, 1)
-            terminated_batch:        (batch_size, T, 1)
-            obs_batch:               (batch_size, T, n_agents, obs_shape)
-            available_actions_batch: (batch_size, T, n_agents, n_actions)
-            filled_batch:            (batch_size, T, 1)
+        """
+        Args:
+            state_batch (paddle.Tensor):             (batch_size, T, state_shape)
+            actions_batch (paddle.Tensor):           (batch_size, T, n_agents)
+            reward_batch (paddle.Tensor):            (batch_size, T, 1)
+            terminated_batch (paddle.Tensor):        (batch_size, T, 1)
+            obs_batch (paddle.Tensor):               (batch_size, T, n_agents, obs_shape)
+            available_actions_batch (paddle.Tensor): (batch_size, T, n_agents, n_actions)
+            filled_batch (paddle.Tensor):            (batch_size, T, 1)
+        Returns:
+            loss (float): train loss
+            td_error (float): train TD error
         """
         batch_size = state_batch.shape[0]
         episode_len = state_batch.shape[1]

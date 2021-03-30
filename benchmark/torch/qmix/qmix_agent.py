@@ -52,9 +52,12 @@ class QMixAgent(parl.Agent):
         self.alg._init_hidden_states(batch_size)
 
     def sample(self, obs, available_actions):
-        '''Args:
-            obs:               (n_agents, obs_shape)
-            available_actions: (n_agents, n_actions)
+        ''' sample actions via epsilon-greedy
+        Args:
+            obs (np.ndarray):               (n_agents, obs_shape)
+            available_actions (np.ndarray): (n_agents, n_actions)
+        Returns:
+            actions (np.ndarray): sampled actions of agents
         '''
         epsilon = np.random.random()
         if epsilon > self.exploration:
@@ -71,8 +74,10 @@ class QMixAgent(parl.Agent):
     def predict(self, obs, available_actions):
         '''take greedy actions
         Args:
-            obs:               (n_agents, obs_shape)
-            available_actions: (n_agents, n_actions)
+            obs (np.ndarray):               (n_agents, obs_shape)
+            available_actions (np.ndarray): (n_agents, n_actions)
+        Returns:
+            actions (np.ndarray): greedy actions of agents
         '''
         obs = torch.tensor(obs, dtype=torch.float32, device=self.device)
         available_actions = torch.tensor(
@@ -90,13 +95,18 @@ class QMixAgent(parl.Agent):
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
-        ''' state:                   (batch_size, T, state_shape)
-            actions:                 (batch_size, T, n_agents)
-            reward:                  (batch_size, T, 1)
-            terminated:              (batch_size, T, 1)
-            obs:                     (batch_size, T, n_agents, obs_shape)
-            available_actions_batch: (batch_size, T, n_agents, n_actions)
-            filled_batch:            (batch_size, T, 1)
+        '''
+        Args:
+            state (np.ndarray):                   (batch_size, T, state_shape)
+            actions (np.ndarray):                 (batch_size, T, n_agents)
+            reward (np.ndarray):                  (batch_size, T, 1)
+            terminated (np.ndarray):              (batch_size, T, 1)
+            obs (np.ndarray):                     (batch_size, T, n_agents, obs_shape)
+            available_actions_batch (np.ndarray): (batch_size, T, n_agents, n_actions)
+            filled_batch (np.ndarray):            (batch_size, T, 1)
+        Returns:
+            mean_loss (float): train loss
+            mean_td_error (float): train TD error
         '''
         if self.global_step % self.update_target_interval == 0:
             self.update_target()

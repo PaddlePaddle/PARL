@@ -52,13 +52,17 @@ class QMIX(parl.Algorithm):
         Args:
             obs:           (n_agents, obs_shape)
             hidden_states: (n_agents, rnn_hidden_dim)
+        Returns:
+            self.agent_model(obs, hidden_state)
         '''
         return self.agent_model(obs, hidden_state)
 
     def learn(self, init_hidden_states, target_init_hidden_states, state_batch,
               actions_batch, reward_batch, terminated_batch, obs_batch,
               available_actions_batch, filled_batch):
-        ''' init_hidden_states:       (batch_size, n_agents, rnn_hidden_dim)
+        '''
+        Args:
+            init_hidden_states:       (batch_size, n_agents, rnn_hidden_dim)
             target_init_hidden_states:(batch_size, n_agents, rnn_hidden_dim)
             state_batch:              (batch_size, T, state_shape)
             actions_batch:            (batch_size, T, n_agents)
@@ -67,6 +71,9 @@ class QMIX(parl.Algorithm):
             obs_batch:                (batch_size, T, n_agents, obs_shape)
             available_actions_batch:  (batch_size, T, n_agents, n_actions)
             filled_batch:             (batch_size, T, 1)
+        Returns:
+            loss (float): train loss
+            td_erro (float): train TD error
         '''
         hidden_states = init_hidden_states
         target_hidden_states = target_init_hidden_states

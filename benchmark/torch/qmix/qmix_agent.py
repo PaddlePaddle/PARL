@@ -77,7 +77,7 @@ class QMixAgent(parl.Agent):
             obs (np.ndarray):               (n_agents, obs_shape)
             available_actions (np.ndarray): (n_agents, n_actions)
         Returns:
-            actions (np.ndarray): greedy actions of agents
+            actions (np.ndarray):           (n_agents, )
         '''
         obs = torch.tensor(obs, dtype=torch.float32, device=self.device)
         available_actions = torch.tensor(

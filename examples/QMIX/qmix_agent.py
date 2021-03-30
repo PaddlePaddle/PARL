@@ -124,7 +124,7 @@ class QMixAgent(parl.Agent):
             obs (np.ndarray):               (n_agents, obs_shape)
             available_actions (np.ndarray): (n_agents, n_actions)
         Returns:
-            actions (np.ndarray): sampled actions of agents
+            actions (np.ndarray):           (n_agents, )
         '''
         epsilon = np.random.random()
         if epsilon > self.exploration:
@@ -141,7 +141,7 @@ class QMixAgent(parl.Agent):
             obs (np.ndarray):               (n_agents, obs_shape)
             available_actions (np.ndarray): (n_agents, n_actions)
         Returns:
-            actions (np.ndarray): greedy actions of agents
+            actions (np.ndarray):           (n_agents, )
         '''
         feed = {
             'last_hidden_states': self.last_hidden_states,

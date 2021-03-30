@@ -57,7 +57,7 @@ class QMixAgent(parl.Agent):
             obs (np.ndarray):                (n_agents, obs_shape)
             available_actions (np.ndarray):  (n_agents, n_actions)
         Returns:
-            actions (np.ndarray): sampled actions of agents
+            actions (np.ndarray):            (n_agents, )
         """
         epsilon = np.random.random()
         if epsilon > self.exploration:
@@ -74,7 +74,7 @@ class QMixAgent(parl.Agent):
             obs (np.ndarray):                (n_agents, obs_shape)
             available_actions (np.ndarray):  (n_agents, n_actions)
         Returns:
-            actions (np.ndarray): greedy actions of agents
+            actions (np.ndarray):            (n_agents, )
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         available_actions = paddle.to_tensor(available_actions, dtype='int32')

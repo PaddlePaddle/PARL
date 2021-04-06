@@ -28,7 +28,6 @@ config = {
     'sample_batch_steps': 50,
 
     #==========  learner config ==========
-    'max_sample_steps': int(1e7),
     'train_batch_size': 1000,
     'sample_queue_max_size': 8,
     'gamma': 0.99,

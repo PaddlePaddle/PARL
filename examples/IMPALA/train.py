@@ -251,9 +251,6 @@ class Learner(object):
 
         logger.info(metric)
 
-    def should_stop(self):
-        return self.sample_total_steps >= self.config['max_sample_steps']
-
 
 if __name__ == '__main__':
     from impala_config import config
@@ -261,7 +258,7 @@ if __name__ == '__main__':
     learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0
 
-    while not learner.should_stop():
+    while True:
         time.sleep(config['log_metrics_interval_s'])
 
         learner.log_metrics()

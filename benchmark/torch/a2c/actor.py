@@ -27,7 +27,7 @@ from parl.algorithms import A2C
 from atari_agent import Agent
 
 
-@parl.remote_class
+@parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, config):
         # the cluster may not have gpu

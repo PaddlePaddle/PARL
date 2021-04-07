@@ -216,4 +216,4 @@ if __name__ == '__main__':
             learner.step()
             cnt += 1
             if cnt % learner.config['get_remote_metrics_interval'] == 0:
-                learner.log_metrics(
+                learner.log_metrics()

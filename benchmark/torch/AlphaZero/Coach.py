@@ -14,8 +14,6 @@
 
 import os
 import sys
-import threading
-from six.moves import queue
 import pickle
 from pickle import Pickler, Unpickler
 from random import shuffle
@@ -34,7 +32,7 @@ from alphazero_agent import create_agent
 
 class Coach():
     """
-    This class executes the self-play, learning and evaluating. 
+    This class executes the self-play, learning and evaluating.
     """
 
     def __init__(self, game, args):
@@ -49,56 +47,14 @@ class Coach():
         # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.trainExamplesHistory = []
 
-        self.remote_actors_signal_queues = []
-        self.remote_actors_return_queue = queue.Queue()
-
         self.test_dataset = get_test_dataset()
-
-    def _run_remote_tasks(self, signal_queue, seed):
-        # The remote actor will actually run on the local machine or other machines of xparl cluster
-        remote_actor = Actor(self.game, self.args, seed)
-
-        while True:
-            # receive running task signal
-            # signal: specify task type and task input data (optional)
-            signal = signal_queue.get()
-
-            if signal["task"] == "self-play":
-                episode_num_each_actor = self.args.numEps // self.args.actors_num
-                result = remote_actor.self_play(
-                    self.current_agent.get_weights(), episode_num_each_actor)
-                self.remote_actors_return_queue.put({"self-play": result})
-
-            elif signal["task"] == "pitting":
-                games_num_each_actor = self.args.arenaCompare // self.args.actors_num
-                result = remote_actor.pitting(
-                    self.previous_agent.get_weights(),
-                    self.current_agent.get_weights(), games_num_each_actor)
-                self.remote_actors_return_queue.put({"pitting": result})
-
-            elif signal["task"] == "evaluate_test_dataset":
-                test_dataset = signal["test_dataset"]
-                result = remote_actor.evaluate_test_dataset(
-                    self.current_agent.get_weights(), test_dataset)
-                self.remote_actors_return_queue.put({
-                    "evaluate_test_dataset":
-                    result
-                })
-            else:
-                raise NotImplementedError
 
     def _create_remote_actors(self):
         # connect to xparl cluster to submit jobs
         parl.connect(self.args.master_address)
-
-        for seed in range(self.args.actors_num):
-            signal_queue = queue.Queue()
-            self.remote_actors_signal_queues.append(signal_queue)
-
-            remote_thread = threading.Thread(
-                target=self._run_remote_tasks, args=(signal_queue, seed))
-            remote_thread.setDaemon(True)
-            remote_thread.start()
+        # creating the actors synchronizely.
+        self.remote_actors = [Actor(self.game, self.args, seed) \
+            for seed in range(self.args.actors_num)]
 
     def learn(self):
         """Each iteration:
@@ -120,12 +76,15 @@ class Coach():
             logger.info('Step1: self-play in parallel...')
             iterationTrainExamples = []
             # update weights of remote actors to the latest weights, and ask them to run self-play task
-            for signal_queue in self.remote_actors_signal_queues:
-                signal_queue.put({"task": "self-play"})
-            # wait for all remote actors (a total of self.args.actors_num) to return the self-play results
-            for _ in range(self.args.actors_num):
-                result = self.remote_actors_return_queue.get()
-                iterationTrainExamples.extend(result["self-play"])
+            # and get the total self play data example of all the actors for training.
+            episode_num_each_actor = self.args.numEps // self.args.actors_num
+
+            future_object_ids  = [remote_actor.self_play(
+                self.current_agent.get_weights(), episode_num_each_actor) \
+                for remote_actor in self.remote_actors]
+            results = [future_object.get() for future_object in future_object_ids]
+            for result in results:
+                iterationTrainExamples.extend(result)
 
             # save the iteration examples to the history
             self.trainExamplesHistory.append(iterationTrainExamples)
@@ -155,23 +114,22 @@ class Coach():
             logger.info('Step3: evaluate test dataset in parallel...')
             cnt = 0
             # update weights of remote actors to the latest weights, and ask them to evaluate assigned test dataset
+            split_datas = []
             for i, data in enumerate(
                     split_group(
                         self.test_dataset,
                         len(self.test_dataset) // self.args.actors_num)):
-                self.remote_actors_signal_queues[i].put({
-                    "task":
-                    "evaluate_test_dataset",
-                    "test_dataset":
-                    data
-                })
+                split_datas.append(data)
                 cnt += len(data)
+
+            future_object_ids  = [remote_actor.evaluate_test_dataset(
+                self.current_agent.get_weights(), data) \
+                for data, remote_actor in zip(split_datas, self.remote_actors)]
+            results = [future_object.get() for future_object in future_object_ids]
             perfect_moves_cnt, good_moves_cnt = 0, 0
             # wait for all remote actors (a total of self.args.actors_num) to return the evaluating results
-            for _ in range(self.args.actors_num):
-                (perfect_moves,
-                 good_moves) = self.remote_actors_return_queue.get(
-                 )["evaluate_test_dataset"]
+            for result in results:
+                (perfect_moves, good_moves) = result
                 perfect_moves_cnt += perfect_moves
                 good_moves_cnt += good_moves
             logger.info('perfect moves rate: {}, good moves rate: {}'.format(
@@ -185,12 +143,17 @@ class Coach():
             logger.info(
                 'Step4: pitting against previous generation in parallel...')
             # transfer weights of previous generation and current generation to the remote actors, and ask them to pit.
-            for signal_queue in self.remote_actors_signal_queues:
-                signal_queue.put({"task": "pitting"})
+            games_num_each_actor = self.args.arenaCompare // self.args.actors_num
+            future_object_ids  = [remote_actor.pitting(
+                self.previous_agent.get_weights(),
+                self.current_agent.get_weights(), games_num_each_actor) \
+                    for remote_actor in self.remote_actors]
+            results = [future_object.get() for future_object in future_object_ids]
+
             previous_wins, current_wins, draws = 0, 0, 0
-            for _ in range(self.args.actors_num):
+            for result in results:
                 (pwins_, cwins_,
-                 draws_) = self.remote_actors_return_queue.get()["pitting"]
+                 draws_) = result
                 previous_wins += pwins_
                 current_wins += cwins_
                 draws += draws_

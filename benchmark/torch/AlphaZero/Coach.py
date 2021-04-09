@@ -82,7 +82,9 @@ class Coach():
             future_object_ids  = [remote_actor.self_play(
                 self.current_agent.get_weights(), episode_num_each_actor) \
                 for remote_actor in self.remote_actors]
-            results = [future_object.get() for future_object in future_object_ids]
+            results = [
+                future_object.get() for future_object in future_object_ids
+            ]
             for result in results:
                 iterationTrainExamples.extend(result)
 
@@ -125,7 +127,9 @@ class Coach():
             future_object_ids  = [remote_actor.evaluate_test_dataset(
                 self.current_agent.get_weights(), data) \
                 for data, remote_actor in zip(split_datas, self.remote_actors)]
-            results = [future_object.get() for future_object in future_object_ids]
+            results = [
+                future_object.get() for future_object in future_object_ids
+            ]
             perfect_moves_cnt, good_moves_cnt = 0, 0
             # wait for all remote actors (a total of self.args.actors_num) to return the evaluating results
             for result in results:
@@ -148,12 +152,13 @@ class Coach():
                 self.previous_agent.get_weights(),
                 self.current_agent.get_weights(), games_num_each_actor) \
                     for remote_actor in self.remote_actors]
-            results = [future_object.get() for future_object in future_object_ids]
+            results = [
+                future_object.get() for future_object in future_object_ids
+            ]
 
             previous_wins, current_wins, draws = 0, 0, 0
             for result in results:
-                (pwins_, cwins_,
-                 draws_) = result
+                (pwins_, cwins_, draws_) = result
                 previous_wins += pwins_
                 current_wins += cwins_
                 draws += draws_

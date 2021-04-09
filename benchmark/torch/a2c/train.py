@@ -81,11 +81,12 @@ class Learner(object):
 
     def create_actors(self):
         parl.connect(self.config['master_address'])
-        self.remote_actors = [Actor(self.config) for _ in range(self.config['actor_num'])]
+        self.remote_actors = [
+            Actor(self.config) for _ in range(self.config['actor_num'])
+        ]
         logger.info('Creating {} remote actors to connect.'.format(
             self.config['actor_num']))
         self.start_time = time.time()
-
 
     def step(self):
         """
@@ -96,12 +97,19 @@ class Learner(object):
 
         latest_params = self.agent.get_weights()
         # setting the actor to the latest_params
-        [remote_actor.set_weights(latest_params) for remote_actor in self.remote_actors]
+        [
+            remote_actor.set_weights(latest_params)
+            for remote_actor in self.remote_actors
+        ]
 
         train_batch = defaultdict(list)
         # get the total train data of all the actors.
-        future_object_ids  = [remote_actor.sample() for remote_actor in self.remote_actors]
-        sample_datas = [future_object.get() for future_object in future_object_ids]
+        future_object_ids = [
+            remote_actor.sample() for remote_actor in self.remote_actors
+        ]
+        sample_datas = [
+            future_object.get() for future_object in future_object_ids
+        ]
         for sample_data in sample_datas:
             for key, value in sample_data.items():
                 train_batch[key].append(value)
@@ -136,7 +144,9 @@ class Learner(object):
 
         metrics = []
         # get the total metrics data
-        future_object_ids = [remote_actor.get_metrics() for remote_actor in self.remote_actors]
+        future_object_ids = [
+            remote_actor.get_metrics() for remote_actor in self.remote_actors
+        ]
         metrics = [future_object.get() for future_object in future_object_ids]
 
         # if the metric of all the metrics are empty, return nothing.
@@ -197,7 +207,6 @@ class Learner(object):
 
     def should_stop(self):
         return self.sample_total_steps >= self.config['max_sample_steps']
-
 
 
 if __name__ == '__main__':

@@ -76,11 +76,11 @@ class Coach():
             logger.info('Step1: self-play in parallel...')
             iterationTrainExamples = []
             # update weights of remote actors to the latest weights, and ask them to run self-play task
-            # and get the total self play data example of all the actors for training.
             episode_num_each_actor = self.args.numEps // self.args.actors_num
 
+            weights = self.current_agent.get_weights()
             future_object_ids  = [remote_actor.self_play(
-                self.current_agent.get_weights(), episode_num_each_actor) \
+                weights, episode_num_each_actor) \
                 for remote_actor in self.remote_actors]
             results = [
                 future_object.get() for future_object in future_object_ids
@@ -123,9 +123,9 @@ class Coach():
                         len(self.test_dataset) // self.args.actors_num)):
                 split_datas.append(data)
                 cnt += len(data)
-
+            weights = self.current_agent.get_weights()
             future_object_ids  = [remote_actor.evaluate_test_dataset(
-                self.current_agent.get_weights(), data) \
+                weights, data) \
                 for data, remote_actor in zip(split_datas, self.remote_actors)]
             results = [
                 future_object.get() for future_object in future_object_ids
@@ -148,9 +148,11 @@ class Coach():
                 'Step4: pitting against previous generation in parallel...')
             # transfer weights of previous generation and current generation to the remote actors, and ask them to pit.
             games_num_each_actor = self.args.arenaCompare // self.args.actors_num
+            pre_weights = self.previous_agent.get_weights()
+            cur_weights = self.current_agent.get_weights()
             future_object_ids  = [remote_actor.pitting(
-                self.previous_agent.get_weights(),
-                self.current_agent.get_weights(), games_num_each_actor) \
+                pre_weights,
+                cur_weights, games_num_each_actor) \
                     for remote_actor in self.remote_actors]
             results = [
                 future_object.get() for future_object in future_object_ids

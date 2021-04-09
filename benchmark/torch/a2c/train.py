@@ -16,10 +16,8 @@ import torch
 import os
 import gym
 import six
-from six.moves import queue
 import parl
 import time
-import threading
 import numpy as np
 
 from collections import defaultdict
@@ -40,8 +38,8 @@ from statistics import mean
 
 class Learner(object):
     def __init__(self, config, cuda):
-        self.cuda = cuda
 
+        self.cuda = cuda
         self.config = config
         env = gym.make(config['env_name'])
         env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
@@ -78,59 +76,39 @@ class Learner(object):
         #========== Remote Actor ===========
         self.remote_count = 0
         self.sample_total_steps = 0
-        self.sample_data_queue = queue.Queue()
-        self.remote_metrics_queue = queue.Queue()
-        self.params_queues = []
 
         self.create_actors()
 
     def create_actors(self):
         parl.connect(self.config['master_address'])
-
-        logger.info('Waiting for {} remote actors to connect.'.format(
+        self.remote_actors = [
+            Actor(self.config) for _ in range(self.config['actor_num'])
+        ]
+        logger.info('Creating {} remote actors to connect.'.format(
             self.config['actor_num']))
-
-        for i in six.moves.range(self.config['actor_num']):
-            params_queue = queue.Queue()
-            self.params_queues.append(params_queue)
-
-            self.remote_count += 1
-            logger.info('Remote actor count: {}'.format(self.remote_count))
-
-            remote_thread = threading.Thread(
-                target=self.run_remote_sample, args=(params_queue, ))
-            remote_thread.setDaemon(True)
-            remote_thread.start()
-
-        logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
 
-    def run_remote_sample(self, params_queue):
-        remote_actor = Actor(self.config)
-
-        cnt = 0
-        while True:
-            latest_params = params_queue.get()
-
-            remote_actor.set_weights(latest_params)
-            batch = remote_actor.sample()
-            self.sample_data_queue.put(batch)
-
-            cnt += 1
-            if cnt % self.config['get_remote_metrics_interval'] == 0:
-                metrics = remote_actor.get_metrics()
-                if metrics:
-                    self.remote_metrics_queue.put(metrics)
-
     def step(self):
-        latest_params = self.agent.get_weights()
+        """
+        1.setting latest_params to each actor model
+        2.getting the sample data from all the actors synchronizely
+        3.traing the model with the sample data and the params is upgraded, and goto step 1
+        """
 
-        for params_queue in self.params_queues:
-            params_queue.put(latest_params)
+        latest_params = self.agent.get_weights()
+        # setting the actor to the latest_params
+        for remote_actor in self.remote_actors:
+            remote_actor.set_weights(latest_params)
 
         train_batch = defaultdict(list)
-        for i in range(self.config['actor_num']):
-            sample_data = self.sample_data_queue.get()
+        # get the total train data of all the actors.
+        future_object_ids = [
+            remote_actor.sample() for remote_actor in self.remote_actors
+        ]
+        sample_datas = [
+            future_object.get() for future_object in future_object_ids
+        ]
+        for sample_data in sample_datas:
             for key, value in sample_data.items():
                 train_batch[key].append(value)
             self.sample_total_steps += len(sample_data['obs'])
@@ -163,12 +141,16 @@ class Learner(object):
             return
 
         metrics = []
-        while True:
-            try:
-                metric = self.remote_metrics_queue.get_nowait()
-                metrics.append(metric)
-            except queue.Empty:
-                break
+        # get the total metrics data
+        future_object_ids = [
+            remote_actor.get_metrics() for remote_actor in self.remote_actors
+        ]
+        metrics = [future_object.get() for future_object in future_object_ids]
+
+        # if the metric of all the metrics are empty, return nothing.
+        total_length = sum(len(metric) for metric in metrics)
+        if not total_length:
+            return
 
         episode_rewards, episode_steps = [], []
         for x in metrics:
@@ -236,4 +218,4 @@ if __name__ == '__main__':
         start = time.time()
         while time.time() - start < config['log_metrics_interval_s']:
             learner.step()
-        learner.log_metrics()
+            learner.log_metrics()

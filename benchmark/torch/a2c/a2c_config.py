@@ -35,7 +35,6 @@ config = {
     'start_lr': 0.001,
     'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
-    'get_remote_metrics_interval': 10,
     'log_metrics_interval_s': 10,
     'entropy_coeff': -0.05,
     'learning_rate': 3e-4

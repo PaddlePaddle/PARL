@@ -21,7 +21,7 @@ from Arena import Arena
 from utils import win_loss_draw
 
 
-@parl.remote_class
+@parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, game, args, seed):
         np.random.seed(seed)

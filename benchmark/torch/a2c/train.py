@@ -97,10 +97,8 @@ class Learner(object):
 
         latest_params = self.agent.get_weights()
         # setting the actor to the latest_params
-        [
+        for remote_actor in self.remote_actors:
             remote_actor.set_weights(latest_params)
-            for remote_actor in self.remote_actors
-        ]
 
         train_batch = defaultdict(list)
         # get the total train data of all the actors.
@@ -216,11 +214,8 @@ if __name__ == '__main__':
     learner = Learner(config, cuda)
     assert config['log_metrics_interval_s'] > 0
 
-    cnt = 1
     while not learner.should_stop():
         start = time.time()
         while time.time() - start < config['log_metrics_interval_s']:
             learner.step()
-            cnt += 1
-            if cnt % learner.config['get_remote_metrics_interval'] == 0:
-                learner.log_metrics()
+            learner.log_metrics()

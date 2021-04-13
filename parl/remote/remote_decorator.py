@@ -89,6 +89,11 @@ def remote_class(*args, **kwargs):
         proxy_wrapper._original = cls
         return proxy_wrapper
 
+    args_names = ['max_memory', 'wait']
+    for key in kwargs:
+        assert key in args_names, "Argument `{}` is not supported in the `@parl.remote_class`, supported arguments: {}".format(
+            key, args_names)
+
     max_memory = kwargs.get('max_memory')
     wait = kwargs.get('wait', True)
     """

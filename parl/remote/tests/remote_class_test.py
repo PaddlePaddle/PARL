@@ -83,6 +83,14 @@ class TestCluster(unittest.TestCase):
         master.exit()
         worker1.exit()
 
+    def test_passing_arguments_with_unsupported_argument_names(self):
+        with self.assertRaises(AssertionError):
+
+            @parl.remote_class(xxx=10)
+            class Actor2(object):
+                def __init__(self):
+                    pass
+
 
 if __name__ == '__main__':
     unittest.main()

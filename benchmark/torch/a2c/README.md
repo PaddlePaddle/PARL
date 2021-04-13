@@ -34,8 +34,8 @@ Then we can start the distributed training by running:
 
 ```bash
 python train.py
-```
 
+```
 ### Reference
 + [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 + [Ray](https://github.com/ray-project/ray)

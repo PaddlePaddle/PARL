@@ -5,7 +5,7 @@
 
 ### Dependencies
 - python3
-- [parl==1.3.2](https://github.com/PaddlePaddle/PARL)
+- [parl>=1.4](https://github.com/PaddlePaddle/PARL)
 - torch
 - tqdm
 

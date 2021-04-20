@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import gym
 import numpy as np
 import os
@@ -46,8 +45,7 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A2C(
-            model, vf_loss_coeff=config['vf_loss_coeff'])
+        algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
         if machine_info.is_gpu_available():
@@ -74,7 +72,9 @@ class Learner(object):
         """ Connect to the cluster and start sampling of the remote actor.
         """
         parl.connect(self.config['master_address'])
-        self.remote_actors = [Actor(self.config) for _ in range(self.config['actor_num'])]
+        self.remote_actors = [
+            Actor(self.config) for _ in range(self.config['actor_num'])
+        ]
         logger.info('Creating {} remote actors to connect.'.format(
             self.config['actor_num']))
         self.start_time = time.time()

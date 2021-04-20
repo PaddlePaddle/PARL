@@ -24,8 +24,8 @@ from parl.utils.rl_utils import calc_gae
 
 from parl.algorithms import A2C
 
-@parl.remote_class(wait=False)
 
+@parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, config):
         self.config = config
@@ -46,8 +46,7 @@ class Actor(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = A2C(
-            model, vf_loss_coeff=config['vf_loss_coeff'])
+        algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
     def sample(self):

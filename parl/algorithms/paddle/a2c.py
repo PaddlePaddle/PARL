@@ -18,7 +18,6 @@ import paddle.nn.functional as F
 from paddle.distribution import Categorical
 import numpy as np
 
-
 __all__ = ['A2C']
 
 
@@ -36,7 +35,9 @@ class A2C(parl.Algorithm):
         self.vf_loss_coeff = vf_loss_coeff
         clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=40.0)
         self.optimizer = paddle.optimizer.Adam(
-            learning_rate=0.001, parameters=self.model.parameters(), grad_clip=clip)
+            learning_rate=0.001,
+            parameters=self.model.parameters(),
+            grad_clip=clip)
 
     def learn(self, obs, actions, advantages, target_values, learning_rate,
               entropy_coeff):
@@ -56,7 +57,8 @@ class A2C(parl.Algorithm):
         actions = paddle.to_tensor(actions)
         actions_onehot = F.one_hot(actions, act_dim)
         # [B, act_dim] --> [B]
-        actions_log_probs = paddle.sum(F.log_softmax(logits) * actions_onehot, axis=-1)
+        actions_log_probs = paddle.sum(
+            F.log_softmax(logits) * actions_onehot, axis=-1)
         # The policy gradient loss
         advantages = paddle.to_tensor(advantages)
         pi_loss = -1.0 * paddle.sum(actions_log_probs * advantages)
@@ -79,7 +81,8 @@ class A2C(parl.Algorithm):
         total_loss.backward()
         self.optimizer.step()
         self.optimizer.clear_grad()
-        return total_loss.numpy(), pi_loss.numpy(), vf_loss.numpy(), entropy.numpy()
+        return total_loss.numpy(), pi_loss.numpy(), vf_loss.numpy(
+        ), entropy.numpy()
 
     def sample(self, obs):
         """
@@ -91,7 +94,8 @@ class A2C(parl.Algorithm):
         probs = F.softmax(logits)
 
         probs = probs.numpy()
-        sample_actions = np.array([np.random.choice(len(prob), 1, p=prob)[0] for prob in probs])
+        sample_actions = np.array(
+            [np.random.choice(len(prob), 1, p=prob)[0] for prob in probs])
         values = values.numpy()
         return sample_actions, values
 
@@ -116,4 +120,3 @@ class A2C(parl.Algorithm):
         """
         values = self.model.value(obs)
         return values.numpy()
-

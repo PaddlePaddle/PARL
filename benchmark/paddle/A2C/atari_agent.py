@@ -18,6 +18,7 @@ from parl.utils import machine_info
 from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 import paddle
 
+
 class AtariAgent(parl.Agent):
     def __init__(self, algorithm, config):
         """
@@ -49,7 +50,7 @@ class AtariAgent(parl.Agent):
         obs_np = obs_np.astype('float32')
         obs_np = paddle.to_tensor(obs_np, dtype='float32')
         sample_actions, values = self.alg.sample(obs_np)
-        
+
         return sample_actions, values
 
     def predict(self, obs_np):
@@ -76,7 +77,7 @@ class AtariAgent(parl.Agent):
         obs_np = obs_np.astype('float32')
 
         values = self.alg.value(obs_np)
-        
+
         return values
 
     def learn(self, obs_np, actions_np, advantages_np, target_values_np):
@@ -97,6 +98,7 @@ class AtariAgent(parl.Agent):
         lr = self.lr_scheduler.step(step_num=obs_np.shape[0])
         entropy_coeff = self.entropy_coeff_scheduler.step()
         total_loss, pi_loss, vf_loss, entropy = self.alg.learn(
-                obs_np, actions_np, advantages_np, target_values_np, lr, entropy_coeff)
+            obs_np, actions_np, advantages_np, target_values_np, lr,
+            entropy_coeff)
 
         return total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff

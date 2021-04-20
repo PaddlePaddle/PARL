@@ -21,18 +21,26 @@ import paddle.nn.functional as F
 class AtariModel(parl.Model):
     def __init__(self, act_dim):
         super(AtariModel, self).__init__()
-        self.conv1 = nn.Conv2D(in_channels=4,
-            out_channels=32, kernel_size=8, stride=4, padding=1)
-        self.conv2 = nn.Conv2D(in_channels=32,
-            out_channels=64, kernel_size=4, stride=2, padding=2)
-        self.conv3 = nn.Conv2D(in_channels=64,
-            out_channels=64, kernel_size=3, stride=1, padding=0)
-        
+        self.conv1 = nn.Conv2D(
+            in_channels=4, out_channels=32, kernel_size=8, stride=4, padding=1)
+        self.conv2 = nn.Conv2D(
+            in_channels=32,
+            out_channels=64,
+            kernel_size=4,
+            stride=2,
+            padding=2)
+        self.conv3 = nn.Conv2D(
+            in_channels=64,
+            out_channels=64,
+            kernel_size=3,
+            stride=1,
+            padding=0)
+
         self.flatten = nn.Flatten()
 
         # Need to calc the size of the in_features according to the input image.
         # The default size of the input image is 84 * 84
-        self.fc = nn.Linear(in_features=64*9*9, out_features=512)
+        self.fc = nn.Linear(in_features=64 * 9 * 9, out_features=512)
 
         self.policy_fc = nn.Linear(in_features=512, out_features=act_dim)
         self.value_fc = nn.Linear(in_features=512, out_features=1)
@@ -98,6 +106,7 @@ class AtariModel(parl.Model):
         values = paddle.squeeze(values, axis=1)
         return policy_logits, values
 
+
 if __name__ == "__main__":
 
     from a2c_config import config
@@ -121,12 +130,12 @@ if __name__ == "__main__":
     model = AtariModel(act_dim)
     print(type(obs_batch))
     print(obs_batch[0].shape)
-    
+
     obs = np.array(obs_batch).astype('float32')
     # obs = paddle.to_tensor(obs)
 
     prob = model.policy(obs)
     value = model.value(obs)
-    
+
     prob2, value2 = model.policy_and_value(obs)
     __import__('ipdb').set_trace()

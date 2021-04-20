@@ -15,8 +15,7 @@
 config = {
 
     #==========  remote config ==========
-    # 'master_address': 'localhost:8010',
-    'master_address': '10.90.243.35:8012',
+    'master_address': 'localhost:8010',
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',
 

@@ -30,7 +30,7 @@ from parl.utils.window_stat import WindowStat
 from parl.utils import machine_info
 
 from actor import Actor
-from a2c import A2C
+from parl.algorithms import A2C
 
 
 class Learner(object):

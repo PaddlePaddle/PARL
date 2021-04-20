@@ -24,7 +24,7 @@ class ActorCritic(parl.Model):
     def __init__(self, act_dim):
         super(ActorCritic, self).__init__()
         self.conv1 = nn.Conv2d(
-            in_channels=4, out_channels=32, kernel_size=8, stride=4, padding=2)
+            in_channels=4, out_channels=32, kernel_size=8, stride=4, padding=1)
         self.conv2 = nn.Conv2d(
             in_channels=32,
             out_channels=64,
@@ -36,8 +36,8 @@ class ActorCritic(parl.Model):
             out_channels=64,
             kernel_size=3,
             stride=1,
-            padding=1)
-        self.fc = nn.Linear(7744, 512)
+            padding=0)
+        self.fc = nn.Linear(9*9*64, 512)
 
         self.fc_pi = nn.Linear(512, act_dim)
         self.fc_v = nn.Linear(512, 1)

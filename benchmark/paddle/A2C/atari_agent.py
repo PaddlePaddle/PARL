@@ -48,7 +48,6 @@ class AtariAgent(parl.Agent):
             values: a numpy float32 array of shape [B]
         """
         obs_np = obs_np.astype('float32')
-        obs_np = paddle.to_tensor(obs_np, dtype='float32')
         sample_actions, values = self.alg.sample(obs_np)
 
         return sample_actions, values

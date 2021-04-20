@@ -21,7 +21,6 @@ from atari_agent import AtariAgent
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 from parl.utils.rl_utils import calc_gae
-
 from parl.algorithms import A2C
 
 

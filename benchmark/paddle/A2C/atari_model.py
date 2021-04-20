@@ -86,7 +86,7 @@ class AtariModel(parl.Model):
     def policy_and_value(self, obs):
         """
         Args:
-            obs: A float32 tensor of shape [B, C, H, W]
+            obs: A float32 numpy array of shape [B, C, H, W]
 
         Returns:
             policy_logits: B * ACT_DIM
@@ -105,37 +105,3 @@ class AtariModel(parl.Model):
         values = self.value_fc(fc_output)
         values = paddle.squeeze(values, axis=1)
         return policy_logits, values
-
-
-if __name__ == "__main__":
-
-    from a2c_config import config
-    import gym
-    from parl.env.atari_wrappers import wrap_deepmind
-    import numpy as np
-    from parl.env.vector_env import VectorEnv
-
-    env = gym.make(config['env_name'])
-    env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
-    envs = []
-    for _ in range(config['env_num']):
-        env = gym.make(config['env_name'])
-        env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
-        envs.append(env)
-    vector_env = VectorEnv(envs)
-
-    obs_batch = vector_env.reset()
-    act_dim = env.action_space.n
-
-    model = AtariModel(act_dim)
-    print(type(obs_batch))
-    print(obs_batch[0].shape)
-
-    obs = np.array(obs_batch).astype('float32')
-    # obs = paddle.to_tensor(obs)
-
-    prob = model.policy(obs)
-    value = model.value(obs)
-
-    prob2, value2 = model.policy_and_value(obs)
-    __import__('ipdb').set_trace()

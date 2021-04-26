@@ -48,9 +48,6 @@ class Learner(object):
         algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
-        if machine_info.is_gpu_available():
-            assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
         #========== Learner ==========
 

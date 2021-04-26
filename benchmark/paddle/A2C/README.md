@@ -1,9 +1,7 @@
 ## Reproduce A2C with PARL
 Based on PARL, the A2C algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Atari benchmarks.
 
-A2C is a synchronous, deterministic variant of [Asynchronous Advantage Actor Critic (A3C)](https://arxiv.org/abs/1602.01783). Instead of updating asynchronously in A3C or GA3C, A2C uses a synchronous approach that waits for each actor to finish its sampling before performing an update. We use a common a2c algotrithm `parl.algorithms.A2C`(paddle version)for the A2C examples.
-
-### Atari games introduction
+### Atari game introduction
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
@@ -24,7 +22,7 @@ Performance of A2C on some envrionments in training process after 10 million sam
 
 ### Distributed Training
 
-At first, We can start a local cluster with 5 CPUs:
+At first, we can start a local cluster with 5 CPUs:
 
 ```bash
 xparl start --port 8010 --cpu_num 5

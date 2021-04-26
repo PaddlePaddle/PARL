@@ -19,6 +19,7 @@ import os
 import sys
 import time
 import threading
+from six.moves import queue
 
 from parl.remote.master import Master
 from parl.remote.worker import Worker
@@ -105,6 +106,54 @@ class Actor(object):
         actor = abs_actor.Actor()
 
         self.assertEqual(actor.add_one(1), 2)
+
+        shutil.rmtree(abs_dir)
+
+        sys.path.remove(abs_dir)
+        master.exit()
+        worker1.exit()
+
+    def test_locate_remote_file_with_absolute_env_path_in_multi_threads(self):
+        port = get_free_tcp_port()
+        master = Master(port=port)
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(3)
+        worker1 = Worker('localhost:{}'.format(port), 10)
+        for _ in range(3):
+            if master.cpu_num == 10:
+                break
+            time.sleep(10)
+        self.assertEqual(10, master.cpu_num)
+
+        parl.connect('localhost:{}'.format(port))
+
+        abs_dir = self._gen_remote_class_in_absolute_path("abs_actor2.py")
+
+        sys.path.append(abs_dir)  # add absolute environment path
+        import abs_actor2
+
+        def run(q):
+            try:
+                actor = abs_actor2.Actor()
+                self.assertEqual(actor.add_one(1), 2)
+            except Exception as e:
+                q.put(False)
+                raise e
+
+            q.put(True)
+
+        result = queue.Queue()
+        threads = []
+        for _ in range(10):
+            th = threading.Thread(target=run, args=(result, ))
+            th.start()
+            threads.append(th)
+
+        for th in threads:
+            th.join()
+            no_exception = result.get()
+            assert no_exception
 
         shutil.rmtree(abs_dir)
 

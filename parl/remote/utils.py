@@ -73,14 +73,18 @@ def load_remote_class(file_name, class_name, end_of_file, in_sys_path):
     prefix = os.sep.join(file_name[:-1])
     if prefix == "":
         prefix = '.'
-    module_name = prefix + os.sep + 'xparl_' + file_name[-1]
+
+    # Add pid to fix:
+    #    https://github.com/PaddlePaddle/PARL/issues/611
+    #    Multiple jobs may write the same file when `in_sys_path` is True.
+    new_file_name = 'xparl_{}'.format(os.getpid()) + file_name[-1]
+    module_name = prefix + os.sep + new_file_name
     tmp_file_name = module_name + '.py'
     with open(tmp_file_name, 'w') as t_file:
         for line in code:
             t_file.write(line)
 
     if in_sys_path:
-        new_file_name = "xparl_" + file_name[-1]
         # the path of the remote class is in the sys.path, we can import it directly.
         mod = __import__(new_file_name)
     else:
@@ -90,6 +94,7 @@ def load_remote_class(file_name, class_name, end_of_file, in_sys_path):
     cls = getattr(mod, class_name)
 
     os.remove(tmp_file_name)
+
     return cls
 
 

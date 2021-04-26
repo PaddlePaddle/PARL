@@ -48,7 +48,6 @@ class Learner(object):
         algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
-
         #========== Learner ==========
 
         self.total_loss_stat = WindowStat(100)

@@ -48,13 +48,12 @@ class AtariModel(parl.Model):
     def policy(self, obs):
         """
         Args:
-            obs: A float32 numpy array of shape [B, C, H, W]
+            obs: A float32 tensor array of shape [B, C, H, W]
 
         Returns:
             policy_logits: B * ACT_DIM
         """
         obs = obs / 255.0
-        obs = paddle.to_tensor(obs)
         conv1 = F.relu(self.conv1(obs))
         conv2 = F.relu(self.conv2(conv1))
         conv3 = F.relu(self.conv3(conv2))
@@ -67,13 +66,12 @@ class AtariModel(parl.Model):
     def value(self, obs):
         """
         Args:
-            obs: A float32 numpy array of shape [B, C, H, W]
+            obs: A float32 tensor of shape [B, C, H, W]
 
         Returns:
             values: B
         """
         obs = obs / 255.0
-        obs = paddle.to_tensor(obs)
         conv1 = F.relu(self.conv1(obs))
         conv2 = F.relu(self.conv2(conv1))
         conv3 = F.relu(self.conv3(conv2))
@@ -86,14 +84,13 @@ class AtariModel(parl.Model):
     def policy_and_value(self, obs):
         """
         Args:
-            obs: A float32 numpy array of shape [B, C, H, W]
+            obs: A tensor array of shape [B, C, H, W]
 
         Returns:
             policy_logits: B * ACT_DIM
             values: B
         """
         obs = obs / 255.0
-        obs = paddle.to_tensor(obs)
         conv1 = F.relu(self.conv1(obs))
         conv2 = F.relu(self.conv2(conv1))
         conv3 = F.relu(self.conv3(conv2))

@@ -43,10 +43,10 @@ class A2C(parl.Algorithm):
               entropy_coeff):
         """
         Args:
-            obs: An float32 numpy array of shape ([B] + observation_space).
+            obs: An float32 tensor of shape ([B] + observation_space).
                  E.g. [B, C, H, W] in atari.
-            actions: An int64 numpy array of shape [B].
-            advantages: A float32 numpy array of shape [B].
+            actions: An int64 tensor of shape [B].
+            advantages: A float32 tensor of shape [B].
             target_values: A float32 tensor of shape [B].
             learning_rate: float scalar of leanring rate.
             entropy_coeff: float scalar of entropy coefficient.
@@ -54,18 +54,16 @@ class A2C(parl.Algorithm):
         # shape: [B, act_dim]
         logits = self.model.policy(obs)
         act_dim = logits.shape[-1]
-        actions = paddle.to_tensor(actions)
         actions_onehot = F.one_hot(actions, act_dim)
         # [B, act_dim] --> [B]
         actions_log_probs = paddle.sum(
             F.log_softmax(logits) * actions_onehot, axis=-1)
         # The policy gradient loss
-        advantages = paddle.to_tensor(advantages)
         pi_loss = -1.0 * paddle.sum(actions_log_probs * advantages)
 
         # The value function loss
         values = self.model.value(obs)
-        delta = values - paddle.to_tensor(target_values)
+        delta = values - target_values
         vf_loss = 0.5 * paddle.sum(paddle.square(delta))
 
         # The entropy loss (We want to maximize entropy, so entropy_ceoff < 0)
@@ -81,42 +79,35 @@ class A2C(parl.Algorithm):
         total_loss.backward()
         self.optimizer.step()
         self.optimizer.clear_grad()
-        return total_loss.numpy(), pi_loss.numpy(), vf_loss.numpy(
-        ), entropy.numpy()
+        return total_loss, pi_loss, vf_loss, entropy
 
-    def sample(self, obs):
+    def prob_and_value(self, obs):
         """
         Args:
-            obs: An float32 numpy array of shape ([B] + observation_space).
+            obs: An float32 tensor of shape ([B] + observation_space).
                  E.g. [B, C, H, W] in atari.
         """
         logits, values = self.model.policy_and_value(obs)
         probs = F.softmax(logits)
 
-        probs = probs.numpy()
-        sample_actions = np.array(
-            [np.random.choice(len(prob), 1, p=prob)[0] for prob in probs])
-        values = values.numpy()
-        return sample_actions, values
+        return probs, values
 
     def predict(self, obs):
         """
         Args:
-            obs: An float32 numpy array of shape ([B] + observation_space).
+            obs: An float32 tensor of shape ([B] + observation_space).
                  E.g. [B, C, H, W] in atari.
         """
         logits = self.model.policy(obs)
         probs = F.softmax(logits)
-
         predict_actions = paddle.argmax(probs, 1)
-
-        return predict_actions.numpy()
+        return predict_actions
 
     def value(self, obs):
         """
         Args:
-            obs: An float32 numpy array of shape ([B] + observation_space).
+            obs: An float32 tensor of shape ([B] + observation_space).
                  E.g. [B, C, H, W] in atari.
         """
         values = self.model.value(obs)
-        return values.numpy()
+        return values

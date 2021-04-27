@@ -47,9 +47,12 @@ class AtariAgent(parl.Agent):
             sample_actions: a numpy  int64 array of shape [B]
             values: a numpy float32 array of shape [B]
         """
-        obs_np = obs_np.astype('float32')
-        sample_actions, values = self.alg.sample(obs_np)
-
+        obs_np = paddle.to_tensor(obs_np, dtype='float32')
+        probs, values = self.alg.prob_and_value(obs_np)
+        probs = probs.cpu().numpy()
+        values = values.cpu().numpy()
+        sample_actions = np.array(
+            [np.random.choice(len(prob), 1, p=prob)[0] for prob in probs])
         return sample_actions, values
 
     def predict(self, obs_np):
@@ -61,9 +64,9 @@ class AtariAgent(parl.Agent):
         Returns:
             predict_actions: a numpy int64 array of shape [B]
         """
-        obs_np = obs_np.astype('float32')
+        obs_np = paddle.to_tensor(obs_np, dtype='float32')
         predict_actions = self.alg.predict(obs_np)
-        return predict_actions
+        return predict_actions.cpu().numpy()
 
     def value(self, obs_np):
         """
@@ -73,11 +76,10 @@ class AtariAgent(parl.Agent):
         Returns:
             values: a numpy float32 array of shape [B]
         """
-        obs_np = obs_np.astype('float32')
-
+        obs_np = paddle.to_tensor(obs_np, dtype='float32')
         values = self.alg.value(obs_np)
 
-        return values
+        return values.cpu().numpy()
 
     def learn(self, obs_np, actions_np, advantages_np, target_values_np):
         """
@@ -89,10 +91,10 @@ class AtariAgent(parl.Agent):
             target_values_np: a numpy float32 array of shape [B]
         """
 
-        obs_np = obs_np.astype('float32')
-        actions_np = actions_np.astype('int64')
-        advantages_np = advantages_np.astype('float32')
-        target_values_np = target_values_np.astype('float32')
+        obs_np = paddle.to_tensor(obs_np, dtype='float32')
+        actions_np = paddle.to_tensor(actions_np, dtype='int64')
+        advantages_np = paddle.to_tensor(advantages_np, dtype='float32')
+        target_values_np = paddle.to_tensor(target_values_np, dtype='float32')
 
         lr = self.lr_scheduler.step(step_num=obs_np.shape[0])
         entropy_coeff = self.entropy_coeff_scheduler.step()
@@ -100,4 +102,5 @@ class AtariAgent(parl.Agent):
             obs_np, actions_np, advantages_np, target_values_np, lr,
             entropy_coeff)
 
-        return total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff
+        return total_loss.cpu().numpy(), pi_loss.cpu().numpy(), vf_loss.cpu(
+        ).numpy(), entropy.cpu().numpy(), lr, entropy_coeff

@@ -16,9 +16,8 @@ config = {
 
     #==========  remote config ==========
     'master_address': 'localhost:8010',
-
     #==========  env config ==========
-    'env_name': 'BreakoutNoFrameskip-v4',
+    'env_name': 'PongNoFrameskip-v4',
     'env_dim': 84,
 
     #==========  actor config ==========
@@ -33,9 +32,10 @@ config = {
 
     # start learning rate
     'start_lr': 0.001,
+
+    # coefficient of policy entropy adjustment schedule: (train_step, coefficient)
     'entropy_coeff_scheduler': [(0, -0.01)],
     'vf_loss_coeff': 0.5,
     'log_metrics_interval_s': 10,
-    'entropy_coeff': -0.05,
-    'learning_rate': 3e-4
+    'learning_rate': 0.001
 }

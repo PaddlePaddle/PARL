@@ -13,6 +13,7 @@ class SharedNoiseTable(object):
     With the same noise table, learner and actor can communicate the noises by
     index of noise table instead of numpy array of noises.
     """
+
     def __init__(self, noise_size, seed=1024):
         self.noise_size = noise_size
         self.seed = seed

@@ -8,6 +8,7 @@ import numpy as np
 
 class Filter(object):
     """Processes input, possibly statefully."""
+
     def apply_changes(self, other, *args, **kwargs):
         """Updates self with "new state" from other filter."""
         raise NotImplementedError

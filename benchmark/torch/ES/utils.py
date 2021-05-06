@@ -52,11 +52,12 @@ def batched_weighted_sum(weights, vecs, batch_size):
     total(np.array): aggregated gradient. 
     """
     total = 0
-    for batch_weights, batch_vecs in zip(itergroups(weights, batch_size),
-                                         itergroups(vecs, batch_size)):
+    for batch_weights, batch_vecs in zip(
+            itergroups(weights, batch_size), itergroups(vecs, batch_size)):
         assert len(batch_weights) == len(batch_vecs) <= batch_size
-        total += np.dot(np.asarray(batch_weights, dtype=np.float32),
-                        np.asarray(batch_vecs, dtype=np.float32))
+        total += np.dot(
+            np.asarray(batch_weights, dtype=np.float32),
+            np.asarray(batch_vecs, dtype=np.float32))
     return total
 
 

@@ -24,7 +24,7 @@ To replicate the performance reported above, we encourage you to train with 48 C
 If you haven't created a cluster before, enter the following command to create a cluster. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ```bash
-xparl start --port 8037 --cpu_num 48
+xparl start --port 8010 --cpu_num 48
 ```
 
 Then we can start the distributed training by running:

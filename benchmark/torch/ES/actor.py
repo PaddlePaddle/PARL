@@ -123,3 +123,4 @@ if __name__ == '__main__':
     from es_config import config
     actor = Actor(config)
     actor.as_remote(config['server_ip'], config['server_port'])
+    

@@ -19,18 +19,18 @@ from parl.utils import logger
 
 if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
     assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
-    if os.environ['PARL_BACKEND'] == 'fluid':
-        from parl.algorithms.fluid import *
-    elif os.environ['PARL_BACKEND'] == 'paddle':
+    if os.environ['PARL_BACKEND'] == 'paddle':
         from parl.algorithms.paddle import *
+    elif os.environ['PARL_BACKEND'] == 'fluid':
+        from parl.algorithms.fluid import *
     elif os.environ['PARL_BACKEND'] == 'torch':
         assert _HAS_TORCH, 'Torch-based PARL requires torch, which is not installed.'
         from parl.algorithms.torch import *
 else:
+    if _HAS_PADDLE:
+        from parl.algorithms.paddle import *
     if _HAS_FLUID:
         from parl.algorithms.fluid import *
-    elif _HAS_PADDLE:
-        from parl.algorithms.paddle import *
     elif _HAS_TORCH:
         from parl.algorithms.torch import *
     else:

@@ -92,9 +92,9 @@ class CartpoleAgent(parl.Agent):
 一般情况下，用户必须实现以下几个函数：
 - 构造函数：
 把前面定义好的algorithm传进来，作为agent的一个成员变量，用于后续的数据交互。需要注意的是，这里必须得要初始化父类：super(CartpoleAgent, self).\_\_init\_\_(algorithm)。
-- predict: 根据环境状态返回预测动作（action），一般用于评估和部署agent。
+- predict： 根据环境状态返回预测动作（action），一般用于评估和部署agent。
 - sample：根据环境状态返回动作（action），一般用于训练时候采样action进行探索。
-- learn: 输入训练数据，更新智能体的相关参数。
+- learn： 输入训练数据，更新智能体的相关参数。
 
 ## 开始训练
 首先，我们来定一个智能体。逐步定义model|algorithm|agent，然后得到一个可以和环境进行交互的智能体。

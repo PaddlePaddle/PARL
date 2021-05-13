@@ -12,8 +12,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ## How to use
 ### Dependencies
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [parl<2.0.0](https://github.com/PaddlePaddle/PARL)
 + gym==0.9.4
 + mujoco-py==0.5.1
 

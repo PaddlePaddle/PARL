@@ -16,8 +16,8 @@ Results with one learner (in a P40 GPU) and 24 simulators (in 12 CPU) in 10 mill
 
 ## How to use
 ### Dependencies
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [parl<2.0.0](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7
 

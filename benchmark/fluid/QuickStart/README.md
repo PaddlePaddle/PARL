@@ -4,8 +4,8 @@ Train an agent with PARL to solve the CartPole problem, a classical benchmark in
 ## How to use
 ### Dependencies:
 
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [parl<2.0.0](https://github.com/PaddlePaddle/PARL)
 + gym
 
 ### Start Training:

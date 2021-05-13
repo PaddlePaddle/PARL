@@ -15,10 +15,10 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 
 ## How to Use
 ### Dependencies
-- python
-- [parl](https://github.com/PaddlePaddle/PARL)
++ python3.5+
+- [PaddlePaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
+- [parl<2.0.0](https://github.com/PaddlePaddle/PARL)
 - [smac](https://github.com/oxwhirl/smac)
-- [PaddlePaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
 
 ### Start Training
 1. Modify the config in `qmix_config.py`.

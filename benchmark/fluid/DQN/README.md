@@ -14,8 +14,8 @@ Performance of DQN playing CartPole-v0
 
 ## How to use
 ### Dependencies:
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [parl<2.0.0](https://github.com/PaddlePaddle/PARL)
 + gym
 + tqdm
 

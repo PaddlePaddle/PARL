@@ -61,8 +61,8 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 
 # 安装:
 ### 依赖
-- Python 2.7 or 3.5+. (**Windows系统**目前仅支持python3.7+以上的环境）
-- [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
+- Python 3.5+. (Python 3.8+ 更适合用于并行训练)
+- [paddlepaddle>=2.0](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 
 ```
@@ -72,14 +72,11 @@ pip install parl
 # 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
-- [ES(深度进化算法)](examples/ES/)
 - [DDPG](examples/DDPG/)
-- [PPO](examples/PPO/)
-- [IMPALA](examples/IMPALA/)
 - [A2C](examples/A2C/)
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
-- [MADDPG](examples/MADDPG/)
+- [QMIX](examples/QMIX/)
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [冠军解决方案：NIPS2019强化学习仿生人控制赛事](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 - [冠军解决方案：NIPS2020强化学习电网调度赛事](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)

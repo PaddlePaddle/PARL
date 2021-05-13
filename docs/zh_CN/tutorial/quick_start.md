@@ -20,32 +20,34 @@ CartPole又叫倒立摆。小车上放了一根杆，杆会因重力而倒下。
 首先，我们构建一个包含2个全连接层的前向网络。
 
 ```python
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 import parl
-from parl import layers
 
 class CartpoleModel(parl.Model):
-    def __init__(self, act_dim):
-        act_dim = act_dim
+    def __init__(self, obs_dim, act_dim):
+        super(CartpoleModel, self).__init__()
         hid1_size = act_dim * 10
+        self.fc1 = nn.Linear(obs_dim, hid1_size)
+        self.fc2 = nn.Linear(hid1_size, act_dim)
 
-        self.fc1 = layers.fc(size=hid1_size, act='tanh')
-        self.fc2 = layers.fc(size=act_dim, act='softmax')
-
-    def forward(self, obs):
-        out = self.fc1(obs)
-        out = self.fc2(out)
-        return out
+    def forward(self, x):
+        out = paddle.tanh(self.fc1(x))
+        prob = F.softmax(self.fc2(out), axis=-1)
+        return prob
 ```
+
 定义前向网络的主要三个步骤：
 - 继承`parl.Model`类
 - 构造函数`__init__`中声明要用到的中间层
 - 在`forward`函数中搭建网络
 
-以上，我们现在构造函数中声明了两个全连接层以及其激活函数，然后在`forward`函数中定义了网络的前向计算方式：输入一个状态，然后经过两层FC，最后得到的是每个action的概率预测。
+在上面的代码中，我们先在构造函数中声明了两个全连接层以及其激活函数，然后在`forward`函数中定义了网络的前向计算方式：输入一个状态，然后经过两层FC以及softmax，得到了每个action的概率分布预测。
 
 ## Algorithm
 
-**Algorithm** 定义了具体的算法来更新前向网络(Model)，也就是通过定义损失函数来更新Model。一个Algorithm包含至少一个Model。在这个教程中，我们将使用经典的PolicyGradient算法来解决问题。由于PARL仓库已经实现了这个算法，我们只需要直接import来使用即可。
+**Algorithm** 定义了具体的算法来更新前向网络(Model)中的参数，也就是通过定义损失函数以及使用optimizer更新Model。一个Algorithm包含至少一个Model。在这个教程中，我们将使用经典的PolicyGradient算法来解决问题。由于PARL仓库已经实现了这个算法，我们只需要直接import来使用即可。
 
 ```python
 model = CartpoleModel(act_dim=2)
@@ -54,89 +56,62 @@ algorithm = parl.algorithms.PolicyGradient(model, lr=1e-3)
 在实例化了Model之后，我们把它传给algorithm。
 
 ## Agent
-**Agent** 负责算法与环境的交互，在交互过程中把生成的数据提供给Algorithm来更新模型(Model)，数据的预处理流程也一般定义在这里。
+**Agent** 负责算法与环境的交互，在交互过程中把生成的数据提供给Algorithm来更新模型(Model)，也就是数据和算法的交互一般定义在这里。
 
 我们得要继承`parl.Agent`这个类来实现自己的Agent，下面先把Agent的代码抛出来，再按照函数解释：
 ```python
 class CartpoleAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim):
-        self.obs_dim = obs_dim
-        self.act_dim = act_dim
+
+    def __init__(self, algorithm):
         super(CartpoleAgent, self).__init__(algorithm)
 
-    def build_program(self):
-        self.pred_program = fluid.Program()
-        self.train_program = fluid.Program()
-
-        with fluid.program_guard(self.pred_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            self.act_prob = self.alg.predict(obs)
-
-        with fluid.program_guard(self.train_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            act = layers.data(name='act', shape=[1], dtype='int64')
-            reward = layers.data(name='reward', shape=[], dtype='float32')
-            self.cost = self.alg.learn(obs, act, reward)
-
     def sample(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(
-            self.pred_program,
-            feed={'obs': obs.astype('float32')},
-            fetch_list=[self.act_prob])[0]
-        act_prob = np.squeeze(act_prob, axis=0)
-        act = np.random.choice(range(self.act_dim), p=act_prob)
+
+        obs = paddle.to_tensor(obs, dtype='float32')
+        prob = self.alg.predict(obs)
+        prob = prob.numpy()
+        act = np.random.choice(len(prob), 1, p=prob)[0]
         return act
 
     def predict(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(
-            self.pred_program,
-            feed={'obs': obs.astype('float32')},
-            fetch_list=[self.act_prob])[0]
-        act_prob = np.squeeze(act_prob, axis=0)
-        act = np.argmax(act_prob)
+        obs = paddle.to_tensor(obs, dtype='float32')
+        prob = self.alg.predict(obs)
+        act = prob.argmax().numpy()[0]
         return act
 
     def learn(self, obs, act, reward):
         act = np.expand_dims(act, axis=-1)
-        feed = {
-            'obs': obs.astype('float32'),
-            'act': act.astype('int64'),
-            'reward': reward.astype('float32')
-        }
-        cost = self.fluid_executor.run(
-            self.train_program, feed=feed, fetch_list=[self.cost])[0]
-        return cost
+        reward = np.expand_dims(reward, axis=-1)
+        obs = paddle.to_tensor(obs, dtype='float32')
+        act = paddle.to_tensor(act, dtype='int32')
+        reward = paddle.to_tensor(reward, dtype='float32')
+
+        loss = self.alg.learn(obs, act, reward)
+        return loss.numpy()[0]
 ```
 一般情况下，用户必须实现以下几个函数：
 - 构造函数：
-把algorithm传进来，以及相关的环境参数（用户自定义的）。需要注意的是，这里必须得要初始化父类：super(CartpoleAgent, self).\_\_init\_\_(algorithm)。
-- build_program: 定义paddle里面的program。通常需要定义两个program：一个用于训练，一个用于预测。
-- predict: 根据输入返回预测动作（action）。
-- sample：根据输入返回动作（action），带探索的动作。
-- learn: 输入训练数据，更新算法。
+把前面定义好的algorithm传进来，作为agent的一个成员变量，用于后续的数据交互。需要注意的是，这里必须得要初始化父类：super(CartpoleAgent, self).\_\_init\_\_(algorithm)。
+- predict： 根据环境状态返回预测动作（action），一般用于评估和部署agent。
+- sample：根据环境状态返回动作（action），一般用于训练时候采样action进行探索。
+- learn： 输入训练数据，更新智能体的相关参数。
 
 ## 开始训练
 首先，我们来定一个智能体。逐步定义model|algorithm|agent，然后得到一个可以和环境进行交互的智能体。
 ```python
-model = CartpoleModel(act_dim=2)
-alg = parl.algorithms.PolicyGradient(model, lr=1e-3)
-agent = CartpoleAgent(alg, obs_dim=OBS_DIM, act_dim=2)
+model = CartpoleModel(obs_dim=obs_dim, act_dim=act_dim)
+alg = parl.algorithms.PolicyGradient(model, lr=LEARNING_RATE)
+agent = CartpoleAgent(alg)
+
 ```
 然后我们用这个agent和环境进行交互，训练模型，1000个episode之后，agent就可以很好地解决Cartpole问题，拿到满分（200）。
 ```python
-def run_episode(env, agent, train_or_test='train'):
+def run_train_episode(agent, env):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
     while True:
         obs_list.append(obs)
-        if train_or_test == 'train':
-            action = agent.sample(obs)
-        else:
-            action = agent.predict(obs)
+        action = agent.sample(obs)
         action_list.append(action)
 
         obs, reward, done, info = env.step(action)
@@ -154,7 +129,7 @@ for i in range(1000):
 
       batch_obs = np.array(obs_list)
       batch_action = np.array(action_list)
-      batch_reward = calc_discount_norm_reward(reward_list, GAMMA)
+      batch_reward = calc_reward_to_go(reward_list)
 
       agent.learn(batch_obs, batch_action, batch_reward)
       if (i + 1) % 100 == 0:

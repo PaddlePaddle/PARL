@@ -52,22 +52,18 @@
         <ul>
           <li><b>前沿算法</b></li>
             <ul>
-              <li><a href="https://github.com/PaddlePaddle/PARL/tree/CN_docs/examples/MADDPG">MADDPG</a></li>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/ES">ES</a></li>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/SAC">SAC</a></li>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/TD3">TD3</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/SAC">SAC</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/TD3">TD3</a></li>
             </ul>
           <li><b>经典算法</b></li>
             <ul>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/QuickStart">PolicyGradient</a></li>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/DQN">DQN</a></li>
-            <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/DDPG">DDPG</a></li>
-            <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/PPO">PPO</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart">PolicyGradient</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN">DQN</a></li>
+            <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DDPG">DDPG</a></li>
             </ul>
           <li><b>并行算法</b></li>
             <ul>
-              <li><a href="https://github.com/PaddlePaddle/PARL/blob/CN_docs/examples/A2C">A2C</a></li>
-            <li><a href="https://github.com/PaddlePaddle/PARL/tree/CN_docs/examples/IMPALA">IMPALA</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C">A2C</a></li>
             </ul>
         </ul>
       </td>

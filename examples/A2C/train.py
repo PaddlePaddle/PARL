@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils import check_version_for_fluid  # requires parl >= 1.4.1
-check_version_for_fluid()
-
 import gym
 import numpy as np
 import os
-from six.moves import queue
-import six
 import time
-import threading
 import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
@@ -35,6 +29,7 @@ from parl.utils.window_stat import WindowStat
 from parl.utils import machine_info
 
 from actor import Actor
+from parl.algorithms import A2C
 
 
 class Learner(object):
@@ -50,13 +45,8 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = parl.algorithms.A3C(
-            model, vf_loss_coeff=config['vf_loss_coeff'])
+        algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
-
-        if machine_info.is_gpu_available():
-            assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
 
         #========== Learner ==========
 
@@ -71,56 +61,19 @@ class Learner(object):
         self.start_time = None
 
         #========== Remote Actor ===========
-        self.remote_count = 0
-        self.sample_data_queue = queue.Queue()
-
-        self.remote_metrics_queue = queue.Queue()
         self.sample_total_steps = 0
-
-        self.params_queues = []
         self.create_actors()
 
     def create_actors(self):
         """ Connect to the cluster and start sampling of the remote actor.
         """
         parl.connect(self.config['master_address'])
-
-        logger.info('Waiting for {} remote actors to connect.'.format(
+        self.remote_actors = [
+            Actor(self.config) for _ in range(self.config['actor_num'])
+        ]
+        logger.info('Creating {} remote actors to connect.'.format(
             self.config['actor_num']))
-
-        for i in six.moves.range(self.config['actor_num']):
-            params_queue = queue.Queue()
-            self.params_queues.append(params_queue)
-
-            self.remote_count += 1
-            logger.info('Remote actor count: {}'.format(self.remote_count))
-
-            remote_thread = threading.Thread(
-                target=self.run_remote_sample, args=(params_queue, ))
-            remote_thread.setDaemon(True)
-            remote_thread.start()
-
-        logger.info('All remote actors are ready, begin to learn.')
         self.start_time = time.time()
-
-    def run_remote_sample(self, params_queue):
-        """ Sample data from remote actor and update parameters of remote actor.
-        """
-        remote_actor = Actor(self.config)
-
-        cnt = 0
-        while True:
-            latest_params = params_queue.get()
-            remote_actor.set_weights(latest_params)
-            batch = remote_actor.sample()
-
-            self.sample_data_queue.put(batch)
-
-            cnt += 1
-            if cnt % self.config['get_remote_metrics_interval'] == 0:
-                metrics = remote_actor.get_metrics()
-                if metrics:
-                    self.remote_metrics_queue.put(metrics)
 
     def step(self):
         """
@@ -130,16 +83,22 @@ class Learner(object):
         """
 
         latest_params = self.agent.get_weights()
-        for params_queue in self.params_queues:
-            params_queue.put(latest_params)
+        # setting the actor to the latest_params
+        for remote_actor in self.remote_actors:
+            remote_actor.set_weights(latest_params)
 
         train_batch = defaultdict(list)
-        for i in range(self.config['actor_num']):
-            sample_data = self.sample_data_queue.get()
+        # get the total train data of all the actors.
+        sample_data_object_ids = [
+            remote_actor.sample() for remote_actor in self.remote_actors
+        ]
+        sample_datas = [
+            future_object.get() for future_object in sample_data_object_ids
+        ]
+        for sample_data in sample_datas:
             for key, value in sample_data.items():
                 train_batch[key].append(value)
-
-            self.sample_total_steps += sample_data['obs'].shape[0]
+            self.sample_total_steps += len(sample_data['obs'])
 
         for key, value in train_batch.items():
             train_batch[key] = np.concatenate(value)
@@ -149,7 +108,8 @@ class Learner(object):
                 obs_np=train_batch['obs'],
                 actions_np=train_batch['actions'],
                 advantages_np=train_batch['advantages'],
-                target_values_np=train_batch['target_values'])
+                target_values_np=train_batch['target_values'],
+            )
 
         self.total_loss_stat.add(total_loss)
         self.pi_loss_stat.add(pi_loss)
@@ -164,13 +124,16 @@ class Learner(object):
         if self.start_time is None:
             return
 
-        metrics = []
-        while True:
-            try:
-                metric = self.remote_metrics_queue.get_nowait()
-                metrics.append(metric)
-            except queue.Empty:
-                break
+        # get the total metrics data
+        metric_object_ids = [
+            remote_actor.get_metrics() for remote_actor in self.remote_actors
+        ]
+        metrics = [future_object.get() for future_object in metric_object_ids]
+
+        # if the metric of all the metrics are empty, return nothing.
+        total_length = sum(len(metric) for metric in metrics)
+        if not total_length:
+            return
 
         episode_rewards, episode_steps = [], []
         for x in metrics:

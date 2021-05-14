@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -83,14 +83,13 @@ class EpisodeReplayBuffer(object):
             available_actions_batch.append(available_actions)
             filled_batch.append(filled)
 
-        s_batch = np.array(s_batch, dtype='float32')
-        filled_batch = np.array(filled_batch, dtype='float32')
-        r_batch = np.array(r_batch, dtype='float32')
-        t_batch = np.array(t_batch, dtype='float32')
-        a_batch = np.array(a_batch, dtype='long')
-        obs_batch = np.array(obs_batch, dtype='float32')
-        available_actions_batch = np.array(
-            available_actions_batch, dtype='long')
+        filled_batch = np.array(filled_batch)
+        r_batch = np.array(r_batch)
+        t_batch = np.array(t_batch)
+        a_batch = np.array(a_batch).astype('long')
+        obs_batch = np.array(obs_batch)
+        available_actions_batch = np.array(available_actions_batch).astype(
+            'long')
 
         return s_batch, a_batch, r_batch, t_batch, obs_batch,\
                 available_actions_batch, filled_batch

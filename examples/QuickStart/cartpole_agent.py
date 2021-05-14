@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,61 +12,69 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import paddle.fluid as fluid
 import parl
-from parl import layers
+import paddle
+import numpy as np
 
 
 class CartpoleAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim):
-        self.obs_dim = obs_dim
-        self.act_dim = act_dim
+    """Agent of Cartpole env.
+
+    Args:
+        algorithm(parl.Algorithm): algorithm used to solve the problem.
+
+    """
+
+    def __init__(self, algorithm):
         super(CartpoleAgent, self).__init__(algorithm)
 
-    def build_program(self):
-        self.pred_program = fluid.Program()
-        self.learn_program = fluid.Program()
-
-        with fluid.program_guard(self.pred_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            self.act_prob = self.alg.predict(obs)
-
-        with fluid.program_guard(self.learn_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            act = layers.data(name='act', shape=[1], dtype='int64')
-            reward = layers.data(name='reward', shape=[], dtype='float32')
-            self.cost = self.alg.learn(obs, act, reward)
-
     def sample(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(
-            self.pred_program,
-            feed={'obs': obs.astype('float32')},
-            fetch_list=[self.act_prob])[0]
-        act_prob = np.squeeze(act_prob, axis=0)
-        act = np.random.choice(range(self.act_dim), p=act_prob)
+        """Sample an action when given an observation
+
+        Args:
+            obs(np.float32): shape of (obs_dim,)
+        
+        Returns:
+            act(int): action
+        """
+        obs = paddle.to_tensor(obs, dtype='float32')
+        prob = self.alg.predict(obs)
+        prob = prob.numpy()
+        act = np.random.choice(len(prob), 1, p=prob)[0]
         return act
 
     def predict(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act_prob = self.fluid_executor.run(
-            self.pred_program,
-            feed={'obs': obs.astype('float32')},
-            fetch_list=[self.act_prob])[0]
-        act_prob = np.squeeze(act_prob, axis=0)
-        act = np.argmax(act_prob)
+        """Predict an action when given an observation
+
+        Args:
+            obs(np.float32): shape of (obs_dim,)
+        
+        Returns:
+            act(int): action
+        """
+        obs = paddle.to_tensor(obs, dtype='float32')
+        prob = self.alg.predict(obs)
+        act = prob.argmax().numpy()[0]
         return act
 
     def learn(self, obs, act, reward):
+        """Update model with an episode data
+
+        Args:
+            obs(np.float32): shape of (batch_size, obs_dim)
+            act(np.int32): shape of (batch_size)
+            reward(np.float32): shape of (batch_size)
+        
+        Returns:
+            loss(float)
+
+        """
         act = np.expand_dims(act, axis=-1)
-        feed = {
-            'obs': obs.astype('float32'),
-            'act': act.astype('int64'),
-            'reward': reward.astype('float32')
-        }
-        cost = self.fluid_executor.run(
-            self.learn_program, feed=feed, fetch_list=[self.cost])[0]
-        return cost
+        reward = np.expand_dims(reward, axis=-1)
+
+        obs = paddle.to_tensor(obs, dtype='float32')
+        act = paddle.to_tensor(act, dtype='int32')
+        reward = paddle.to_tensor(reward, dtype='float32')
+
+        loss = self.alg.learn(obs, act, reward)
+        return loss.numpy()[0]

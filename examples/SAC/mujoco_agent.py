@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,76 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import parl
-from parl import layers
-from paddle import fluid
+import paddle
+import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, obs_dim, act_dim):
-        assert isinstance(obs_dim, int)
-        assert isinstance(act_dim, int)
-        self.obs_dim = obs_dim
-        self.act_dim = act_dim
+    def __init__(self, algorithm):
         super(MujocoAgent, self).__init__(algorithm)
 
-        # Attention: In the beginning, sync target model totally.
         self.alg.sync_target(decay=0)
 
-    def build_program(self):
-        self.pred_program = fluid.Program()
-        self.sample_program = fluid.Program()
-        self.learn_program = fluid.Program()
-
-        with fluid.program_guard(self.pred_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            self.pred_act = self.alg.predict(obs)
-
-        with fluid.program_guard(self.sample_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            self.sample_act, _ = self.alg.sample(obs)
-
-        with fluid.program_guard(self.learn_program):
-            obs = layers.data(
-                name='obs', shape=[self.obs_dim], dtype='float32')
-            act = layers.data(
-                name='act', shape=[self.act_dim], dtype='float32')
-            reward = layers.data(name='reward', shape=[], dtype='float32')
-            next_obs = layers.data(
-                name='next_obs', shape=[self.obs_dim], dtype='float32')
-            terminal = layers.data(name='terminal', shape=[], dtype='bool')
-            self.critic_cost, self.actor_cost = self.alg.learn(
-                obs, act, reward, next_obs, terminal)
-
     def predict(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act = self.fluid_executor.run(
-            self.pred_program, feed={'obs': obs},
-            fetch_list=[self.pred_act])[0]
-        return act
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
+        action = self.alg.predict(obs)
+        action_numpy = action.cpu().numpy()[0]
+        return action_numpy
 
     def sample(self, obs):
-        obs = np.expand_dims(obs, axis=0)
-        act = self.fluid_executor.run(
-            self.sample_program,
-            feed={'obs': obs},
-            fetch_list=[self.sample_act])[0]
-        return act
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
+        action, _ = self.alg.sample(obs)
+        action_numpy = action.cpu().numpy()[0]
+        return action_numpy
 
-    def learn(self, obs, act, reward, next_obs, terminal):
-        feed = {
-            'obs': obs,
-            'act': act,
-            'reward': reward,
-            'next_obs': next_obs,
-            'terminal': terminal
-        }
-        [critic_cost, actor_cost] = self.fluid_executor.run(
-            self.learn_program,
-            feed=feed,
-            fetch_list=[self.critic_cost, self.actor_cost])
-        self.alg.sync_target()
-        return critic_cost[0], actor_cost[0]
+    def learn(self, obs, action, reward, next_obs, terminal):
+        terminal = np.expand_dims(terminal, -1)
+        reward = np.expand_dims(reward, -1)
+
+        obs = paddle.to_tensor(obs, dtype='float32')
+        action = paddle.to_tensor(action, dtype='float32')
+        reward = paddle.to_tensor(reward, dtype='float32')
+        next_obs = paddle.to_tensor(next_obs, dtype='float32')
+        terminal = paddle.to_tensor(terminal, dtype='float32')
+        critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
+                                                 terminal)
+        return critic_loss, actor_loss

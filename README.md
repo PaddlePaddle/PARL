@@ -64,8 +64,8 @@ For users, they can write code in a simple way, just like writing multi-thread c
 
 # Install:
 ### Dependencies
-- Python 2.7 or 3.5+(On **Windows**, PARL only supprorts the enviroment with python3.7+). 
-- [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
+- Python 3.5+(Python 3.8+ is preferable for distributed training). 
+- [paddlepaddle>=2.0](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 
 ```
@@ -75,14 +75,11 @@ pip install parl
 # Examples
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
-- [ES](examples/ES/)
 - [DDPG](examples/DDPG/)
-- [PPO](examples/PPO/)
-- [IMPALA](examples/IMPALA/)
 - [A2C](examples/A2C/)
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
-- [MADDPG](examples/MADDPG/)
+- [QMIX](examples/QMIX/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 - [Winning Solution for NIPS2020: Learning to Run a Power Network Challenge](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)

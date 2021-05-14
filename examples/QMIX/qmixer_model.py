@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,95 +12,70 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 import parl
-from parl import layers
-import paddle.fluid as fluid
 
 
 class QMixerModel(parl.Model):
-    ''' A hyper-network to generate paramters for mixing model.
+    '''
+    input: n agents' agent_qs (a scalar for each agent)
+    output: a scalar (Q)
     '''
 
-    def __init__(self, config):
-        self.n_agents = config['n_agents']
-        self.batch_size = config['batch_size']
-        self.state_shape = config['state_shape']
-        self.embed_dim = config['mixing_embed_dim']
-        self.episode_limit = config['episode_limit']
-        self.hypernet_layers = config['hypernet_layers']
-        self.hypernet_embed_dim = config['hypernet_embed_dim']
+    def __init__(self,
+                 n_agents,
+                 state_shape,
+                 mixing_embed_dim=32,
+                 hypernet_layers=2,
+                 hypernet_embed_dim=64):
+        super(QMixerModel, self).__init__()
 
-        if self.hypernet_layers == 1:
-            self.hyper_w_1 = layers.fc(
-                size=self.embed_dim * self.n_agents,
-                act=None,
-                name='hyper_w_1')
-            self.hyper_w_2 = layers.fc(
-                size=self.embed_dim, act=None, name='hyper_w_2')
-        elif self.hypernet_layers == 2:
-            self.hyper_w_1_1 = layers.fc(
-                size=self.hypernet_embed_dim, name='hyper_w_1_1')
-            self.hyper_w_1_2 = layers.fc(
-                size=self.embed_dim * self.n_agents, name='hyper_w_1_2')
-            self.hyper_w_2_1 = layers.fc(
-                size=self.hypernet_embed_dim, name='hyper_w_2_1')
-            self.hyper_w_2_2 = layers.fc(
-                size=self.embed_dim, name='hyper_w_2_2')
+        self.n_agents = n_agents
+        self.state_shape = state_shape
+        self.embed_dim = mixing_embed_dim
+        if hypernet_layers == 1:
+            self.hyper_w_1 = nn.Linear(self.state_shape,
+                                       self.embed_dim * self.n_agents)
+            self.hyper_w_2 = nn.Linear(self.state_shape, self.embed_dim)
+        elif hypernet_layers == 2:
+            self.hyper_w_1 = nn.Sequential(
+                nn.Linear(self.state_shape, hypernet_embed_dim), nn.ReLU(),
+                nn.Linear(hypernet_embed_dim, self.embed_dim * self.n_agents))
+            self.hyper_w_2 = nn.Sequential(
+                nn.Linear(self.state_shape, hypernet_embed_dim), nn.ReLU(),
+                nn.Linear(hypernet_embed_dim, self.embed_dim))
         else:
             raise ValueError('hypernet_layers should be "1" or "2"!')
 
-        self.hyper_b_1 = layers.fc(
-            size=self.embed_dim, act=None, name='hyper_b_1')
-
-        self.hyper_b_2_1 = layers.fc(
-            size=self.embed_dim, act=None, name='hyper_b_2_1')
-        self.hyper_b_2_2 = layers.fc(size=1, act=None, name='hyper_b_2_2')
+        self.hyper_b_1 = nn.Linear(self.state_shape, self.embed_dim)
+        self.hyper_b_2 = nn.Sequential(
+            nn.Linear(self.state_shape, self.embed_dim), nn.ReLU(),
+            nn.Linear(self.embed_dim, 1))
 
     def forward(self, agent_qs, states):
         '''
         Args:
-            agent_qs: (batch_size, T, n_agents)
-            states:   (batch_size, T, state_shape)
+            agent_qs (paddle.Tensor): (batch_size, T, n_agents)
+            states (paddle.Tensor):   (batch_size, T, state_shape)
         Returns:
-            q_total: global q value
+            q_total (paddle.Tensor):  (batch_size, T, 1)
         '''
-        episode_len = self.episode_limit - 1
-        assert agent_qs.shape[1] == episode_len
-        states = fluid.layers.reshape(
-            states, shape=(self.batch_size * episode_len, self.state_shape))
-        agent_qs = fluid.layers.reshape(
-            agent_qs, shape=(self.batch_size * episode_len, 1, self.n_agents))
+        batch_size = agent_qs.shape[0]
+        states = states.reshape(shape=(-1, self.state_shape))
+        agent_qs = agent_qs.reshape(shape=(-1, 1, self.n_agents))
 
-        if self.hypernet_layers == 1:
-            w1 = self.hyper_w_1(states)
-            w2 = self.hyper_w_2(states)
-        elif self.hypernet_layers == 2:
-            w1 = self.hyper_w_1_2(fluid.layers.relu(self.hyper_w_1_1(states)))
-            w2 = self.hyper_w_2_2(fluid.layers.relu(self.hyper_w_2_1(states)))
-        else:
-            pass
-
-        w1 = fluid.layers.abs(w1)
-        w1 = fluid.layers.reshape(
-            w1,
-            shape=(self.batch_size * episode_len, self.n_agents,
-                   self.embed_dim))
-        w2 = fluid.layers.abs(w2)
-        w2 = fluid.layers.reshape(
-            w2, shape=(self.batch_size * episode_len, self.embed_dim, 1))
-
+        w1 = paddle.abs(self.hyper_w_1(states))
+        w1 = w1.reshape(shape=(-1, self.n_agents, self.embed_dim))
         b1 = self.hyper_b_1(states)
-        b1 = fluid.layers.reshape(
-            b1, shape=(self.batch_size * episode_len, 1, self.embed_dim))
+        b1 = b1.reshape(shape=(-1, 1, self.embed_dim))
 
-        b2 = self.hyper_b_2_1(states)
-        b2 = fluid.layers.relu(b2)
-        b2 = self.hyper_b_2_2(b2)
-        b2 = fluid.layers.reshape(
-            b2, shape=(self.batch_size * episode_len, 1, 1))
+        w2 = paddle.abs(self.hyper_w_2(states))
+        w2 = w2.reshape(shape=(-1, self.embed_dim, 1))
+        b2 = self.hyper_b_2(states).reshape(shape=(-1, 1, 1))
 
-        hidden = fluid.layers.elu(fluid.layers.matmul(agent_qs, w1) + b1)
-        y = fluid.layers.matmul(hidden, w2) + b2
-        q_total = fluid.layers.reshape(
-            y, shape=(self.batch_size, episode_len, 1))
+        hidden = F.elu(paddle.bmm(agent_qs, w1) + b1)
+        y = paddle.bmm(hidden, w2) + b2
+        q_total = y.reshape(shape=(batch_size, -1, 1))
         return q_total

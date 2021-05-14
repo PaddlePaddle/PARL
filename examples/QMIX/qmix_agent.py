@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,120 +12,53 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
 import parl
-from parl import layers
-import paddle.fluid as fluid
 import numpy as np
 from utils import AvailableActionsSampler
-from parl.utils import machine_info
+import os
 
 
 class QMixAgent(parl.Agent):
-    def __init__(self, algorithm, config):
+    def __init__(self, algorithm, exploration_start, min_exploration,
+                 exploration_decay, update_target_interval):
+        self.alg = algorithm
         self.global_step = 0
-        self.n_agents = config['n_agents']
-        self.n_actions = config['n_actions']
-        self.obs_shape = config['obs_shape']
-        self.batch_size = config['batch_size']
-        self.state_shape = config['state_shape']
-        self.episode_limit = config['episode_limit']
-        self.exploration = config['exploration_start']
-        self.rnn_hidden_dim = config['rnn_hidden_dim']
-        self.min_exploration = config['min_exploration']
-        self.exploration_decay = config['exploration_decay']
-        self.update_target_interval = config['update_target_interval']
+        self.exploration = exploration_start
+        self.min_exploration = min_exploration
+        self.exploration_decay = exploration_decay
         self.target_update_count = 0
-        super(QMixAgent, self).__init__(algorithm)
+        self.update_target_interval = update_target_interval
 
-    def reset_agent(self):
-        '''Generate GRU's initial hidden states for prediction (batch_size=1)
-        '''
-        self.last_hidden_states = np.zeros(
-            (self.n_agents, self.rnn_hidden_dim), dtype='float32')
+    def save(self, save_dir, agent_model_name, qmixer_model_name):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        agent_model_path = os.path.join(save_dir, agent_model_name)
+        qmixer_model_path = os.path.join(save_dir, qmixer_model_name)
+        paddle.save(self.alg.agent_model.state_dict(), agent_model_path)
+        paddle.save(self.alg.qmixer_model.state_dict(), qmixer_model_path)
+        print('save model successfully!')
 
-    def _get_hidden_states(self):
-        ''' Generate GRU's initial hidden states for learning (batch_size=batch_size)
-        '''
-        init_hidden_states = np.zeros(
-            (self.batch_size, self.n_agents, self.rnn_hidden_dim),
-            dtype='float32')
-        target_init_hidden_states = np.zeros(
-            (self.batch_size, self.n_agents, self.rnn_hidden_dim),
-            dtype='float32')
-        return init_hidden_states, target_init_hidden_states
+    def restore(self, save_dir, agent_model_name, qmixer_model_name):
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        agent_model_path = os.path.join(save_dir, agent_model_name)
+        qmixer_model_path = os.path.join(save_dir, qmixer_model_name)
+        self.alg.agent_model.set_state_dict(paddle.load(agent_model_path))
+        self.alg.qmixer_model.set_state_dict(paddle.load(qmixer_model_path))
+        print('restore model successfully!')
 
-    def build_program(self):
-        self.pred_program = fluid.Program()
-        self.learn_program = fluid.Program()
-
-        with fluid.program_guard(self.pred_program):
-            last_hidden_states = fluid.data(
-                name='last_hidden_states',
-                shape=[self.n_agents, self.rnn_hidden_dim],
-                dtype='float32')
-            obs = fluid.data(
-                name='obs',
-                shape=[self.n_agents, self.obs_shape],
-                dtype='float32')
-            self.agents_q, self.current_hidden_states = self.alg.predict_local_q(
-                obs, last_hidden_states)
-
-        with fluid.program_guard(self.learn_program):
-            init_hidden_states = fluid.data(
-                name='init_hidden_states',
-                shape=[self.batch_size, self.n_agents, self.rnn_hidden_dim],
-                dtype='float32')
-            target_init_hidden_states = fluid.data(
-                name='target_init_hidden_states',
-                shape=[self.batch_size, self.n_agents, self.rnn_hidden_dim],
-                dtype='float32')
-            state_batch = fluid.data(
-                name='state_batch',
-                shape=[self.batch_size, self.episode_limit, self.state_shape],
-                dtype='float32')
-            actions_batch = fluid.data(
-                name='actions_batch',
-                shape=[self.batch_size, self.episode_limit, self.n_agents],
-                dtype='long')
-            reward_batch = fluid.data(
-                name='reward_batch',
-                shape=[self.batch_size, self.episode_limit, 1],
-                dtype='float32')
-            terminated_batch = fluid.data(
-                name='terminated_batch',
-                shape=[self.batch_size, self.episode_limit, 1],
-                dtype='float32')
-            obs_batch = fluid.data(
-                name='obs_batch',
-                shape=[
-                    self.batch_size, self.episode_limit, self.n_agents,
-                    self.obs_shape
-                ],
-                dtype='float32')
-            available_actions_batch = fluid.data(
-                name='available_actions_batch',
-                shape=[
-                    self.batch_size, self.episode_limit, self.n_agents,
-                    self.n_actions
-                ],
-                dtype='long')
-            filled_batch = fluid.data(
-                name='filled_batch',
-                shape=[self.batch_size, self.episode_limit, 1],
-                dtype='float32')
-            self.loss, self.mean_td_error, = self.alg.learn(
-                init_hidden_states, target_init_hidden_states, state_batch,
-                actions_batch, reward_batch, terminated_batch, obs_batch,
-                available_actions_batch, filled_batch)
+    def reset_agent(self, batch_size=1):
+        self.alg._init_hidden_states(batch_size)
 
     def sample(self, obs, available_actions):
-        ''' Sample actions via epsilon-greedy.
+        """ sample actions via epsilon-greedy
         Args:
-            obs (np.ndarray):               (n_agents, obs_shape)
-            available_actions (np.ndarray): (n_agents, n_actions)
+            obs (np.ndarray):                (n_agents, obs_shape)
+            available_actions (np.ndarray):  (n_agents, n_actions)
         Returns:
-            actions (np.ndarray):           (n_agents, )
-        '''
+            actions (np.ndarray):            (n_agents, )
+        """
         epsilon = np.random.random()
         if epsilon > self.exploration:
             actions = self.predict(obs, available_actions)
@@ -136,66 +69,53 @@ class QMixAgent(parl.Agent):
         return actions
 
     def predict(self, obs, available_actions):
-        ''' take greedy actions
+        """ take greedy actions
         Args:
-            obs (np.ndarray):               (n_agents, obs_shape)
-            available_actions (np.ndarray): (n_agents, n_actions)
+            obs (np.ndarray):                (n_agents, obs_shape)
+            available_actions (np.ndarray):  (n_agents, n_actions)
         Returns:
-            actions (np.ndarray):           (n_agents, )
-        '''
-        feed = {
-            'last_hidden_states': self.last_hidden_states,
-            'obs': obs,
-        }
-        agents_q, self.last_hidden_states = self.fluid_executor.run(
-            self.pred_program,
-            feed=feed,
-            fetch_list=[self.agents_q, self.current_hidden_states])
-        agents_q[available_actions == 0] = -1e10
-        actions = np.argmax(agents_q, axis=1)
+            actions (np.ndarray):            (n_agents, )
+        """
+        obs = paddle.to_tensor(obs, dtype='float32')
+        available_actions = paddle.to_tensor(available_actions, dtype='int32')
+        agents_q, self.alg.hidden_states = self.alg.predict_local_q(
+            obs, self.alg.hidden_states)
+        # mask unavailable actions
+        unavailable_actions_mask = (available_actions == 0).cast('float32')
+        agents_q -= 1e8 * unavailable_actions_mask
+        actions = paddle.argmax(agents_q, axis=-1).detach().cpu().numpy()
         return actions
 
     def learn(self, state_batch, actions_batch, reward_batch, terminated_batch,
               obs_batch, available_actions_batch, filled_batch):
         '''
         Args:
-            init_hidden_states (np.ndarray):       (batch_size, n_agents, rnn_hidden_dim)
-            target_init_hidden_states (np.ndarray):(batch_size, n_agents, rnn_hidden_dim)
-            state_batch (np.ndarray):              (batch_size, T, state_shape)
-            actions_batch (np.ndarray):            (batch_size, T, n_agents)
-            reward_batch (np.ndarray):             (batch_size, T, 1)
-            terminated_batch (np.ndarray):         (batch_size, T, 1)
-            obs_batch (np.ndarray):                (batch_size, T, n_agents, obs_shape)
-            available_actions_batch (np.ndarray):  (batch_size, T, n_agents, n_actions)
-            filled_batch (np.ndarray):             (batch_size, T, 1)
+            state (np.ndarray):                   (batch_size, T, state_shape)
+            actions (np.ndarray):                 (batch_size, T, n_agents)
+            reward (np.ndarray):                  (batch_size, T, 1)
+            terminated (np.ndarray):              (batch_size, T, 1)
+            obs (np.ndarray):                     (batch_size, T, n_agents, obs_shape)
+            available_actions_batch (np.ndarray): (batch_size, T, n_agents, n_actions)
+            filled_batch (np.ndarray):            (batch_size, T, 1)
         Returns:
             mean_loss (float): train loss
             mean_td_error (float): train TD error
         '''
-        init_hidden_states, target_init_hidden_states = self._get_hidden_states(
-        )
-
         if self.global_step % self.update_target_interval == 0:
             self.alg.sync_target()
             self.target_update_count += 1
 
         self.global_step += 1
 
-        feed = {
-            'init_hidden_states': init_hidden_states,
-            'target_init_hidden_states': target_init_hidden_states,
-            'state_batch': state_batch,
-            'actions_batch': actions_batch,
-            'reward_batch': reward_batch,
-            'terminated_batch': terminated_batch,
-            'obs_batch': obs_batch,
-            'available_actions_batch': available_actions_batch,
-            'filled_batch': filled_batch,
-        }
-        mean_loss, mean_td_error = self.fluid_executor.run(
-            self.learn_program,
-            feed=feed,
-            fetch_list=[self.loss, self.mean_td_error])
-        mean_loss = mean_loss[0]
-        mean_td_error = mean_td_error[0]
+        state_batch = paddle.to_tensor(state_batch, dtype='float32')
+        actions_batch = paddle.to_tensor(actions_batch, dtype='int64')
+        reward_batch = paddle.to_tensor(reward_batch, dtype='float32')
+        terminated_batch = paddle.to_tensor(terminated_batch, dtype='float32')
+        obs_batch = paddle.to_tensor(obs_batch, dtype='float32')
+        available_actions_batch = paddle.to_tensor(
+            available_actions_batch, dtype='int64')
+        filled_batch = paddle.to_tensor(filled_batch, dtype='float32')
+        mean_loss, mean_td_error = self.alg.learn(
+            state_batch, actions_batch, reward_batch, terminated_batch,
+            obs_batch, available_actions_batch, filled_batch)
         return mean_loss, mean_td_error

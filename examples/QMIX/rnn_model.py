@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,34 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 import parl
-from parl import layers
-import paddle.fluid as fluid
 
 
 class RNNModel(parl.Model):
-    ''' GRU-based policy model.
-    '''
+    def __init__(self, input_shape, n_actions, rnn_hidden_dim=64):
+        super(RNNModel, self).__init__()
+        self.rnn_hidden_dim = rnn_hidden_dim
 
-    def __init__(self, config):
-        self.n_actions = config['n_actions']
-        self.rnn_hidden_dim = config['rnn_hidden_dim']
+        self.fc1 = nn.Linear(input_shape, rnn_hidden_dim)
+        self.rnn = nn.GRUCell(
+            input_size=rnn_hidden_dim, hidden_size=rnn_hidden_dim)
+        self.fc2 = nn.Linear(rnn_hidden_dim, n_actions)
 
-        self.fc1 = layers.fc(size=self.rnn_hidden_dim, act=None, name='fc1')
-        self.gru = layers.GRUCell(hidden_size=self.rnn_hidden_dim, name='gru')
-        self.fc2 = layers.fc(size=self.n_actions, act=None, name='fc2')
+    def init_hidden(self):
+        hidden_state = paddle.zeros((1, self.rnn_hidden_dim), dtype='float32')
+        return hidden_state
 
-    def __call__(self, inputs, hidden_state):
-        """
-        Args:
-            inputs:       (batch_size * n_agents, rnn_hidden_dim)
-            hidden_state: (batch_size, rnn_hidden_dim)
-        Returns:
-            q: local q values
-            h: hidden states
-        """
-        x = fluid.layers.relu(self.fc1(inputs))
-        h, _ = self.gru(x, hidden_state)
-        q = self.fc2(h)
+    def forward(self, inputs, hidden_state):
+        x = F.relu(self.fc1(inputs))
+        h_in = hidden_state.reshape(shape=(-1, self.rnn_hidden_dim))
+
+        _, h = self.rnn(x, h_in)
+        q = self.fc2(h)  # (batch_size, n_actions)
         return q, h

@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,9 +21,10 @@ from atari_agent import AtariAgent
 from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.env.vector_env import VectorEnv
 from parl.utils.rl_utils import calc_gae
+from parl.algorithms import A2C
 
 
-@parl.remote_class
+@parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, config):
         self.config = config
@@ -44,8 +45,7 @@ class Actor(object):
         self.config['act_dim'] = act_dim
 
         model = AtariModel(act_dim)
-        algorithm = parl.algorithms.A3C(
-            model, vf_loss_coeff=config['vf_loss_coeff'])
+        algorithm = A2C(model, vf_loss_coeff=config['vf_loss_coeff'])
         self.agent = AtariAgent(algorithm, config)
 
     def sample(self):

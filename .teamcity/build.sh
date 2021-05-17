@@ -105,7 +105,7 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_single_paddle_test() {
+function run_single_fluid_test() {
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake .. -$1=ON
@@ -114,7 +114,7 @@ function run_single_paddle_test() {
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_test_with_dygraph_paddle() {
+function run_test_with_fluid() {
     # declare -a envs=("py27" "py36" "py37")
     declare -a envs=("py37")
     for env in "${envs[@]}";do
@@ -128,13 +128,13 @@ function run_test_with_dygraph_paddle() {
         echo `which pip`
         echo "========================================"
         pip install .
-        pip install -r .teamcity/requirements_paddle.txt
+        pip install -r .teamcity/requirements_fluid.txt
 
         echo "========================================"
         echo "Running dygraph unit tests with CPU..."
         echo "========================================"
         export CUDA_VISIBLE_DEVICES=""
-        run_single_paddle_test "DIS_TESTING_PADDLE"
+        run_single_fluid_test "DIS_TESTING_FLUID"
 
         # clean env
         export LC_ALL=C.UTF-8
@@ -227,7 +227,7 @@ function main() {
           pip install -r .teamcity/requirements.txt
           run_test_with_gpu $env
 
-          run_test_with_dygraph_paddle
+          run_test_with_fluid
 
           # import test
           source ~/.bashrc

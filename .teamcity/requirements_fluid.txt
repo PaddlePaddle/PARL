@@ -1,0 +1,5 @@
+# requirements for paddle 1.8.5 unittest
+gym
+details
+parameterized
+paddlepaddle-gpu==1.8.5.post97

@@ -46,13 +46,13 @@ where python
 where pip
 
 pip install -U .
-pip install -r .teamcity\windows_requirements_paddle.txt
+pip install -r .teamcity\windows_requirements_fluid.txt
 if %ERRORLEVEL% NEQ 0 (
     goto pip_error
 )
 
 
-call :run_paddle_dygraph_test || goto unittest_error
+call :run_paddle_fluid_test || goto unittest_error
 rem ----------------------------------------------
 
 
@@ -71,7 +71,7 @@ for %%v in (3.7 3.8) do (
     where pip
 
     pip install -U .
-    pip install -r .teamcity\windows_requirements_fluid.txt
+    pip install -r .teamcity\windows_requirements_paddle.txt
     if %ERRORLEVEL% NEQ 0 (
       goto pip_error
     )
@@ -184,9 +184,9 @@ rem ------------------------------------------------
 
 
 rem ------------------------------------------------
-:run_paddle_dygraph_test
+:run_paddle_fluid_test
 echo    ===========================================================
-echo    run_paddle_dygraph_test
+echo    run_paddle_fluid_test
 echo    ===========================================================
 
 if exist %REPO_ROOT%\build (
@@ -196,7 +196,7 @@ mkdir %REPO_ROOT%\build
 cd %REPO_ROOT%\build
 
 
-cmake .. -DIS_TESTING_PADDLE=ON
+cmake .. -DIS_TESTING_FLUID=ON
 if %ERRORLEVEL% NEQ 0 (
     goto cmake_error
 )

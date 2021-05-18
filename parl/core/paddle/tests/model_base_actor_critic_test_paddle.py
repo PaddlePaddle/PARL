@@ -21,9 +21,9 @@ from copy import deepcopy
 from parl.core.paddle.model import Model
 
 
-class TestModel(Model):
+class ACModel(Model):
     def __init__(self):
-        super(TestModel, self).__init__()
+        super(ACModel, self).__init__()
         self.critic = Critic()
         self.actor = Actor()
 
@@ -60,8 +60,8 @@ class Critic(Model):
 
 class ModelBaseTest(unittest.TestCase):
     def setUp(self):
-        self.model = TestModel()
-        self.target_model = TestModel()
+        self.model = ACModel()
+        self.target_model = ACModel()
         self.target_model2 = deepcopy(self.model)
         self.target_model3 = deepcopy(self.model)
 
@@ -194,8 +194,8 @@ class ModelBaseTest(unittest.TestCase):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
 
     def test_set_weights_between_different_models(self):
-        model1 = TestModel()
-        model2 = TestModel()
+        model1 = ACModel()
+        model2 = ACModel()
 
         N = 10
         random_obs = np.random.randn(N, 4).astype(np.float32)

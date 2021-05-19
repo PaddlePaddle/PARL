@@ -40,8 +40,7 @@ class AlphaZero(parl.Algorithm):
         pi_loss = -paddle.sum(target_pis * out_log_pi) / target_pis.shape[0]
 
         out_v = paddle.reshape(out_v, [-1])
-        v_loss = paddle.sum(
-            (target_vs - out_v)**2) / target_vs.shape[0]
+        v_loss = paddle.sum((target_vs - out_v)**2) / target_vs.shape[0]
 
         total_loss = pi_loss + v_loss
 
@@ -71,7 +70,8 @@ class AlphaZeroAgent(parl.Agent):
         Args:
             examples: list of examples, each example is of form (board, pi, v)
         """
-        optimizer = paddle.optimizer.Adam(learning_rate=args.lr, parameters=self.alg.model.parameters())
+        optimizer = paddle.optimizer.Adam(
+            learning_rate=args.lr, parameters=self.alg.model.parameters())
 
         for epoch in range(args.epochs):
             print('EPOCH ::: ' + str(epoch + 1))
@@ -91,7 +91,8 @@ class AlphaZeroAgent(parl.Agent):
                     boards, target_pis, target_vs, optimizer)
 
                 # record loss with tqdm
-                pbar.set_postfix(Loss_pi=pi_loss.numpy()[0], Loss_v=v_loss.numpy()[0])
+                pbar.set_postfix(
+                    Loss_pi=pi_loss.numpy()[0], Loss_v=v_loss.numpy()[0])
 
     def predict(self, board):
         """

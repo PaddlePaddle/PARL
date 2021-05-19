@@ -23,6 +23,7 @@ from parl.utils import logger
 from utils import win_loss_draw
 from alphazero_agent import create_agent
 
+
 @parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, game, args, seed):

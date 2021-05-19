@@ -29,7 +29,8 @@ class Board():
         self.win_length = win_length or DEFAULT_WIN_LENGTH
 
         if np_pieces is None:
-            self.np_pieces = np.zeros([self.height, self.width], dtype=np.int32)
+            self.np_pieces = np.zeros([self.height, self.width],
+                                      dtype=np.int32)
         else:
             self.np_pieces = np_pieces
             assert self.np_pieces.shape == (self.height, self.width)
@@ -42,7 +43,6 @@ class Board():
                 "Can't play column %s on board %s" % (column, self))
 
         self.np_pieces[available_idx[-1]][column] = player
-
 
     def get_valid_moves(self):
         "Any zero value in top row in a valid move"

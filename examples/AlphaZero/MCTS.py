@@ -160,4 +160,3 @@ class MCTS():
                 self.Ps[s][idx] = (0.75 * self.Ps[s][idx]) + (
                     0.25 * dir_values[dir_idx])
                 dir_idx += 1
-

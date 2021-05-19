@@ -16,6 +16,7 @@ import json
 import numpy as np
 from connect4_game import Connect4Game
 
+
 class dotdict(dict):
     def __getattr__(self, name):
         try:
@@ -30,6 +31,7 @@ def win_loss_draw(score):
     if score < 0:
         return 'loss'
     return 'draw'
+
 
 def get_test_dataset():
     game = Connect4Game()

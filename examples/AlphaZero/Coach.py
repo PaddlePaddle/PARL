@@ -99,8 +99,7 @@ class Coach():
             shuffle(trainExamples)
 
             # training new network, keeping a copy of the old one
-            self.current_agent.save(
-                os.path.join(self.args.checkpoint, 'temp'))
+            self.current_agent.save(os.path.join(self.args.checkpoint, 'temp'))
             self.previous_agent.restore(
                 os.path.join(self.args.checkpoint, 'temp'))
 
@@ -133,10 +132,10 @@ class Coach():
                 good_moves_cnt += good_moves
             logger.info('perfect moves rate: {}, good moves rate: {}'.format(
                 perfect_moves_cnt / cnt, good_moves_cnt / cnt))
-            visualdl.add_scalar('perfect_moves_rate',
-                                   perfect_moves_cnt / cnt, iteration)
+            visualdl.add_scalar('perfect_moves_rate', perfect_moves_cnt / cnt,
+                                iteration)
             visualdl.add_scalar('good_moves_rate', good_moves_cnt / cnt,
-                                   iteration)
+                                iteration)
 
             ####################
             logger.info(

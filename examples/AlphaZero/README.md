@@ -53,9 +53,10 @@ visualdl --logdir .
 
 ### Play with AI
 Pit the best model against human being.
-```
-python connect4_aiplayer.py 
-```
+
+ ```
+ python connect4_aiplayer.py
+ ```
 
 ### Reference
 

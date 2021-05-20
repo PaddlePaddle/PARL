@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,11 +58,18 @@ class DDQN(parl.Algorithm):
         pred_value = paddle.multiply(pred_values, action_onehot)
         pred_value = paddle.sum(pred_value, axis=1, keepdim=True)
 
-        # target Q
+        # Q^{target}
         with paddle.no_grad():
+
+            # select greedy action base on Q: a` = argmax_a Q(x`, a)
             greedy_actions = self.model.value(next_obs).argmax(1)
+
+            # get booststrapped next state value: Q^{target}(x`, a`)
             g_action_oh = paddle.nn.functional.one_hot(greedy_actions, num_classes=action_dim)
-            max_v = self.target_model.value(next_obs).multiply(g_action_oh).sum(axis=1, keepdim=True)
+            max_v = self.target_model.value(next_obs).multiply(g_action_oh)
+            max_v = max_v.sum(axis=1, keepdim=True)
+
+            # get target value: y_i = r_i + gamma * Q^{target}(x`, a`)
             target = reward + (1 - terminal) * self.gamma * max_v
 
         loss = self.mse_loss(pred_value, target)

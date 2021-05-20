@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,19 +17,38 @@ import parl
 
 
 class AtariModel(parl.Model):
-
     def __init__(self, act_dim, dueling=False):
 
         super().__init__()
 
         self.conv1 = nn.Conv2D(
-            in_channels=4, out_channels=32, kernel_size=5, stride=1, padding=2, weight_attr=nn.initializer.KaimingNormal())
+            in_channels=4,
+            out_channels=32,
+            kernel_size=5,
+            stride=1,
+            padding=2,
+            weight_attr=nn.initializer.KaimingNormal())
         self.conv2 = nn.Conv2D(
-            in_channels=32, out_channels=32, kernel_size=5, stride=1, padding=2, weight_attr=nn.initializer.KaimingNormal())
+            in_channels=32,
+            out_channels=32,
+            kernel_size=5,
+            stride=1,
+            padding=2,
+            weight_attr=nn.initializer.KaimingNormal())
         self.conv3 = nn.Conv2D(
-            in_channels=32, out_channels=64, kernel_size=4, stride=1, padding=1, weight_attr=nn.initializer.KaimingNormal())
+            in_channels=32,
+            out_channels=64,
+            kernel_size=4,
+            stride=1,
+            padding=1,
+            weight_attr=nn.initializer.KaimingNormal())
         self.conv4 = nn.Conv2D(
-            in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, weight_attr=nn.initializer.KaimingNormal())
+            in_channels=64,
+            out_channels=64,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            weight_attr=nn.initializer.KaimingNormal())
         self.relu = nn.ReLU()
         self.max_pool = nn.MaxPool2D(kernel_size=2, stride=2)
         self.flatten = nn.Flatten()
@@ -37,11 +56,18 @@ class AtariModel(parl.Model):
         self.dueling = dueling
 
         if dueling:
-            self.linear_1_adv = nn.Linear(in_features=6400, out_features=512, weight_attr=nn.initializer.KaimingNormal())
-            self.linear_2_adv = nn.Linear(in_features=512, out_features=act_dim)
-            self.linear_1_val = nn.Linear(in_features=6400, out_features=512, weight_attr=nn.initializer.KaimingNormal())
+            self.linear_1_adv = nn.Linear(
+                in_features=6400,
+                out_features=512,
+                weight_attr=nn.initializer.KaimingNormal())
+            self.linear_2_adv = nn.Linear(
+                in_features=512, out_features=act_dim)
+            self.linear_1_val = nn.Linear(
+                in_features=6400,
+                out_features=512,
+                weight_attr=nn.initializer.KaimingNormal())
             self.linear_2_val = nn.Linear(in_features=512, out_features=1)
-        
+
         else:
             self.linear_1 = nn.Linear(in_features=6400, out_features=act_dim)
 
@@ -60,7 +86,7 @@ class AtariModel(parl.Model):
             V = self.relu(self.linear_1_val(out))
             V = self.linear_2_val(V)
             Q = As + (V - As.mean(axis=1, keepdim=True))
-        
+
         else:
             Q = self.linear_1(out)
 

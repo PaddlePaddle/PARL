@@ -1,10 +1,10 @@
 ## AlphaZero baseline for Connect4 game
 
-- In this example, we provide a fine-tuned AlphaZero baseline to solve the Connect4 game, based on the code of [alpha-zero-general](https://github.com/suragnair/alpha-zero-general) repo.
+- In this example, we provide a paddle-based AlphaZero baseline to solve the Connect4 game, based on the code of [alpha-zero-general](https://github.com/suragnair/alpha-zero-general) repo.
 - We take advantage of the parallelism capacity of [PARL](https://github.com/PaddlePaddle/PARL) to support running self-play and evaluating tasks in parallel.
 - We also provide a script to play Connect4 game against AI trained by yourself.
 
-Dependencies
+### Dependencies
 * python3
 * paddlepaddle >= 2.0.0
 * parl == 1.4.3

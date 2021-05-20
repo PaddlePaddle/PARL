@@ -38,5 +38,9 @@ Performance of DQN on various environments
 ```
 # To train a model for Pong game
 python train.py --rom ./rom_files/pong.bin
+
+# For more customized arguments
+python train.py --help
 ```
+
 > To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).

@@ -48,7 +48,6 @@ EVAL_RENDER = False
 
 # train an episode
 def run_train_episode(agent, env, rpm):
-
     total_reward = 0
     obs = env.reset()
     step = 0
@@ -67,7 +66,6 @@ def run_train_episode(agent, env, rpm):
         # train model
         if (rpm.size() > MEMORY_WARMUP_SIZE) and (step % UPDATE_FREQ == 0):
             # s,a,r,s',done
-
             (batch_all_obs, batch_action, batch_reward,
              batch_done) = rpm.sample_batch(args.batch_size)
             batch_obs = batch_all_obs[:, :4, :, :]
@@ -87,7 +85,6 @@ def run_train_episode(agent, env, rpm):
 
 
 def run_evaluate_episodes(agent, env, test=False):
-
     eval_reward = []
     eval_rounds = TEST_EPISODES if test else EVAL_EPISODES
 
@@ -114,7 +111,6 @@ def run_evaluate_episodes(agent, env, test=False):
 
 
 def main():
-
     # set training env and test env
     env = get_player(
         args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
@@ -177,12 +173,10 @@ def main():
 
         # perform evaluation
         if cum_steps // args.eval_every_steps >= test_flag:
-
             while cum_steps // args.eval_every_steps >= test_flag:
                 test_flag += 1
 
             pbar.write("testing")
-
             eval_rewards_mean, _ = run_evaluate_episodes(agent, test_env)
 
             logger.info(

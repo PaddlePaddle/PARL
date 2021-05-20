@@ -65,7 +65,8 @@ class DDQN(parl.Algorithm):
             greedy_actions = self.model.value(next_obs).argmax(1)
 
             # get booststrapped next state value: Q^{target}(x`, a`)
-            g_action_oh = paddle.nn.functional.one_hot(greedy_actions, num_classes=action_dim)
+            g_action_oh = paddle.nn.functional.one_hot(
+                greedy_actions, num_classes=action_dim)
             max_v = self.target_model.value(next_obs).multiply(g_action_oh)
             max_v = max_v.sum(axis=1, keepdim=True)
 
@@ -79,7 +80,6 @@ class DDQN(parl.Algorithm):
         loss.backward()
         self.optimizer.step()
         return loss
-
 
     def sync_target(self):
         self.model.sync_weights_to(self.target_model)

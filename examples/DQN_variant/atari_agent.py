@@ -21,9 +21,7 @@ from parl.utils.scheduler import LinearDecayScheduler
 class AtariAgent(parl.Agent):
     def __init__(self, algorithm, act_dim, start_lr, total_step,
                  update_target_step):
-
         super().__init__(algorithm)
-
         self.global_update_step = 0
         self.update_target_step = update_target_step
         self.act_dim = act_dim
@@ -35,15 +33,11 @@ class AtariAgent(parl.Agent):
         self.lr_scheduler = LinearDecayScheduler(start_lr, total_step)
 
     def sample(self, obs):
-
         explore = np.random.choice([True, False],
                                    p=[self.curr_ep, 1 - self.curr_ep])
-
         if explore:
             act = np.random.randint(self.act_dim)
-
         else:
-
             with paddle.no_grad():
                 act = self.predict(obs)
 
@@ -71,7 +65,6 @@ class AtariAgent(parl.Agent):
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):
-
         if self.global_update_step % self.update_target_step == 0:
             self.alg.sync_target()
 

@@ -47,17 +47,19 @@ visualdl --logdir .
 
 - Following are `good moves rate` and `perfect moves rate` indicators in visualdl, please refer to the [link](https://www.kaggle.com/petercnudde/scoring-connect-x-agents) for specific meaning.
 
-<img src=".pic/good_moves_rate.png" width = "300" alt="good moves rate"/> <img src=".pic/perfect_moves_rate.png" width = "300" alt="perfect moves rate"/>
+<img src="/Users/zhanghandi/Desktop/Work/PARL/examples/AlphaZero/.pic/good_moves_rate.png" width = "300" alt="good moves rate"/> <img src="/Users/zhanghandi/Desktop/Work/PARL/examples/AlphaZero/.pic/perfect_moves_rate.png" width = "300" alt="perfect moves rate"/>
 
 > It takes about 2 day to run 25 iterations on the machine with 5 cpus.
 
 ### Play with AI
+
 Pit the best model against human being.
 
- ```
- python connect4_aiplayer.py
- ```
+```
+python connect4_aiplayer.py
+```
+
 
 ### Reference
+- [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
 
-* [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)

@@ -25,7 +25,7 @@ def get_player(rom,
                context_len=1):
     env = AtariPlayer(
         rom,
-        frame_skip=frame_skip, 
+        frame_skip=frame_skip,
         viz=viz,
         live_lost_as_eoe=train,
         max_num_frames=60000)

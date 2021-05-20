@@ -60,5 +60,4 @@ Pit the best model against human being.
 
 ### Reference
 
-- [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
-
+* [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general)

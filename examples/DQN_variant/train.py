@@ -77,7 +77,6 @@ def run_train_episode(agent, env, rpm):
 
         total_reward += reward
         obs = next_obs
-
         if done:
             break
 
@@ -87,18 +86,14 @@ def run_train_episode(agent, env, rpm):
 def run_evaluate_episodes(agent, env, test=False):
     eval_reward = []
     eval_rounds = TEST_EPISODES if test else EVAL_EPISODES
-
     with paddle.no_grad():
-
         for _ in range(eval_rounds):
             obs = env.reset()
             episode_reward = 0
-
             while True:
                 action = agent.predict(obs)
                 obs, reward, done, _ = env.step(action)
                 episode_reward += reward
-
                 if EVAL_RENDER:
                     env.render()
 
@@ -143,7 +138,6 @@ def main():
     # start training, memory warm up
     with tqdm(
             total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
-
         while rpm.size() < MEMORY_WARMUP_SIZE:
             total_reward, steps, _ = run_train_episode(agent, env, rpm)
             pbar.update(steps)
@@ -152,7 +146,6 @@ def main():
     train_total_steps = args.train_total_steps
     pbar = tqdm(total=train_total_steps)
     cum_steps = 0
-
     while cum_steps < train_total_steps:
         # start epoch
         total_reward, steps, loss = run_train_episode(agent, env, rpm)

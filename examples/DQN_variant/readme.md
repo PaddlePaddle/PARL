@@ -17,19 +17,19 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 Performance of DQN on various environments
 
 <p align="center">
-<img src="experiment_results/DQN.png" alt="result" width="700"/>
+<img src="experiment_results/DQN.png" alt="result" width="1200"/>
 </p>
 
 Performance of DDQN on various environments
 
 <p align="center">
-<img src="experiment_results/DDQN.png" alt="result" width="700"/>
+<img src="experiment_results/DDQN.png" alt="result" width="1200"/>
 </p>
 
 Performance of Dueling DQN on various environments
 
 <p align="center">
-<img src="experiment_results/Dueling DQN.png" alt="result" width="700"/>
+<img src="experiment_results/Dueling DQN.png" alt="result" width="1200"/>
 </p>
 
 ## How to use

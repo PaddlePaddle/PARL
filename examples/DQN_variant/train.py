@@ -158,8 +158,8 @@ def main():
         pbar.update(steps)
 
         # perform evaluation
-        if cum_steps // args.eval_every_steps >= test_flag:
-            while cum_steps // args.eval_every_steps >= test_flag:
+        if cum_steps // args.test_every_steps >= test_flag:
+            while cum_steps // args.test_every_steps >= test_flag:
                 test_flag += 1
 
             pbar.write("testing")

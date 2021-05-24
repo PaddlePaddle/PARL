@@ -14,11 +14,26 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 ### Benchmark results
 
+<<<<<<< HEAD
 *Benchmark results are obtained using different random seeds.*
-
+=======
 Performance of DQN on various environments
 
 <p align="center">
+<img src=".benchmark/DQN.png" alt="result"/>
+</p>
+>>>>>>> b4e37d07564f19d3bad864687f2abc0dda380e25
+
+Performance of DDQN on various environments
+
+<p align="center">
+<img src=".benchmark/DDQN.png" alt="result" width="1200"/>
+</p>
+
+Performance of Dueling DQN on various environments
+
+<p align="center">
+<<<<<<< HEAD
 <img src=".benchmark/DQN.png" alt="result"/>
 </p>
 
@@ -32,6 +47,9 @@ Performance of Dueling DQN on various environments
 
 <p align="center">
 <img src=".benchmark/Dueling DQN.png" alt="result"/>
+=======
+<img src=".benchmark/Dueling DQN.png" alt="result" width="1200"/>
+>>>>>>> b4e37d07564f19d3bad864687f2abc0dda380e25
 </p>
 
 ## How to use

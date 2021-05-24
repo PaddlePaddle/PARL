@@ -35,14 +35,12 @@ FRAME_SKIP = 4
 UPDATE_TARGET_STEP = 2500
 MEMORY_SIZE = 1000000
 GAMMA = 0.99
-LR_START = 0.0003
+LR_START = 0.0003  # starting learing rate
 TOTAL_STEP = 1000000
 MEMORY_WARMUP_SIZE = 50000
 UPDATE_FREQ = 4
 
 # eval params
-EVAL_EPISODES = 3
-TEST_EPISODES = 20
 EVAL_RENDER = False
 
 
@@ -82,24 +80,22 @@ def run_train_episode(agent, env, rpm):
     return total_reward, step, np.mean(loss_lst)
 
 
-def run_evaluate_episodes(agent, env, test=False):
+def run_evaluate_episodes(agent, env, eval_rounds=3):
     eval_reward = []
-    eval_rounds = TEST_EPISODES if test else EVAL_EPISODES
-    with paddle.no_grad():
-        for _ in range(eval_rounds):
-            obs = env.reset()
-            episode_reward = 0
-            while True:
-                action = agent.predict(obs)
-                obs, reward, done, _ = env.step(action)
-                episode_reward += reward
-                if EVAL_RENDER:
-                    env.render()
+    for _ in range(eval_rounds):
+        obs = env.reset()
+        episode_reward = 0
+        while True:
+            action = agent.predict(obs)
+            obs, reward, done, _ = env.step(action)
+            episode_reward += reward
+            if EVAL_RENDER:
+                env.render()
 
-                if done:
-                    break
+            if done:
+                break
 
-            eval_reward.append(episode_reward)
+        eval_reward.append(episode_reward)
     return np.mean(eval_reward), eval_reward
 
 
@@ -126,7 +122,6 @@ def main():
     # get algorithm
     if algo_name == 'DQN':
         alg = DQN(model, gamma=GAMMA, lr=LR_START)
-
     else:
         alg = DDQN(model, gamma=GAMMA, lr=LR_START)
 
@@ -143,7 +138,7 @@ def main():
     test_flag = 0
     train_total_steps = args.train_total_steps
     pbar = tqdm(total=train_total_steps)
-    cum_steps = 0
+    cum_steps = 0  # this is the current timestep
     while cum_steps < train_total_steps:
         # start epoch
         total_reward, steps, loss = run_train_episode(agent, env, rpm)
@@ -181,11 +176,11 @@ def main():
 
     # final test score
     eval_rewards_mean, eval_rewards = run_evaluate_episodes(
-        agent, test_env, test=True)
+        agent, test_env, 20)
     std = np.std(eval_rewards)
 
     logger.info("final mean {} test rewards is {} +- {}".format(
-        TEST_EPISODES, eval_rewards_mean, std))
+        20, eval_rewards_mean, std))
 
     # save the parameters to ./model.ckpt
     save_path = './model/model.ckpt'
@@ -215,7 +210,7 @@ if __name__ == '__main__':
         default=int(1e7),
         help='maximum environmental steps of games')
     parser.add_argument(
-        '--eval_every_steps',
+        '--test_every_steps',
         type=int,
         default=100000,
         help='the step interval between two consecutive evaluations')

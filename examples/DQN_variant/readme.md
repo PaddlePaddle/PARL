@@ -21,7 +21,19 @@ Mean episode rewards for 10 million training steps.
 Performance of DQN on various environments
 
 <p align="center">
-<img src=".benchmark/table.png" alt="result" width="700"/>
+<img src="experiment_results/DQN.png" alt="result" width="700"/>
+</p>
+
+Performance of DDQN on various environments
+
+<p align="center">
+<img src="experiment_results/DDQN.png" alt="result" width="700"/>
+</p>
+
+Performance of Dueling DQN on various environments
+
+<p align="center">
+<img src="experiment_results/Dueling DQN.png" alt="result" width="700"/>
 </p>
 
 ## How to use

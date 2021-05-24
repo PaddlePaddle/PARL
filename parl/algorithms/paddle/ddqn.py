@@ -21,7 +21,7 @@ __all__ = ['DDQN']
 
 class DDQN(parl.Algorithm):
     def __init__(self, model, gamma=None, lr=None):
-        """ DQN algorithm
+        """ DDQN algorithm
 
         Args:
             model (parl.Model): forward neural network representing the Q function.

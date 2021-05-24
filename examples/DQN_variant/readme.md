@@ -17,7 +17,7 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 Performance of DQN on various environments
 
 <p align="center">
-<img src="experiment_results/DQN.png" alt="result" width="1200"/>
+<img src="experiment_results/DQN.png" alt="result"/>
 </p>
 
 Performance of DDQN on various environments

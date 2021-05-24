@@ -79,7 +79,6 @@ def run_train_episode(agent, env, rpm):
         obs = next_obs
         if done:
             break
-
     return total_reward, step, np.mean(loss_lst)
 
 
@@ -101,7 +100,6 @@ def run_evaluate_episodes(agent, env, test=False):
                     break
 
             eval_reward.append(episode_reward)
-
     return np.mean(eval_reward), eval_reward
 
 

@@ -42,7 +42,6 @@ class AtariAgent(parl.Agent):
                 act = self.predict(obs)
 
         self.curr_ep = max(self.ep_scheduler.step(1), self.ep_end)
-
         return act
 
     def predict(self, obs):
@@ -61,7 +60,6 @@ class AtariAgent(parl.Agent):
         pred_q = self.alg.predict(obs).numpy().squeeze()
         best_actions = np.where(pred_q == pred_q.max())[0]
         act = np.random.choice(best_actions)
-
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):
@@ -85,5 +83,4 @@ class AtariAgent(parl.Agent):
 
         # learning rate decay
         self.alg.optimizer.set_lr(max(self.lr_scheduler.step(1), self.lr_end))
-
         return loss.numpy()[0]

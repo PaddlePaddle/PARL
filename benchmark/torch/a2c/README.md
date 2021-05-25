@@ -8,7 +8,10 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 Mean episode reward of A2C on some atari games in training process after 10 million sample steps.
 
 <p align="center">
-<img src="result.png" alt="result" width="700"/>
+<img src="result.png" alt="result"/>
+</p>
+<p align="center">
+<img src="result2.png" alt="result"/>
 </p>
 
 

@@ -17,6 +17,13 @@ import parl
 
 
 class AtariModel(parl.Model):
+    """ Neural Network to solve Atari problem.
+
+    Args:
+        act_dim (int): Dimension of action space.
+        dueling (bool): True if use dueling architecture else False
+    """
+
     def __init__(self, act_dim, dueling=False):
         super().__init__()
         self.conv1 = nn.Conv2D(
@@ -70,6 +77,11 @@ class AtariModel(parl.Model):
             self.linear_1 = nn.Linear(in_features=6400, out_features=act_dim)
 
     def value(self, obs):
+        """ Perform forward pass 
+
+        Args:
+            obs (paddle.Tensor): shape of (batch_size, 3, 84, 84), mini batch of observations
+        """
         obs = obs / 255.0
         out = self.max_pool(self.relu(self.conv1(obs)))
         out = self.max_pool(self.relu(self.conv2(out)))

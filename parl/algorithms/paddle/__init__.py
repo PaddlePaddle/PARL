@@ -20,3 +20,4 @@ from parl.algorithms.paddle.ddpg import *
 from parl.algorithms.paddle.oac import *
 from parl.algorithms.paddle.qmix import *
 from parl.algorithms.paddle.a2c import *
+from parl.algorithms.paddle.ddqn import *

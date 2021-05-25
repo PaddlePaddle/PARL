@@ -29,7 +29,7 @@ if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
 else:
     if _HAS_PADDLE:
         from parl.algorithms.paddle import *
-    if _HAS_FLUID:
+    elif _HAS_FLUID:
         from parl.algorithms.fluid import *
     elif _HAS_TORCH:
         from parl.algorithms.torch import *

@@ -1,0 +1,437 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-25 14:16+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../parallel_training/debug.rst:2
+msgid "How to Debug"
+msgstr "如何debug"
+
+#: ../../parallel_training/debug.rst:4
+msgid ""
+"The class modified by the parallel decorator does not run locally, but "
+"runs on the cluster. Accordingly, we cannot see the printed log on the "
+"local machine, such as the previous code."
+msgstr "经过并行修饰符修饰的类，并没有在本地运行，而是跑在了集群上，相应地，我们也没法在本机上看到打印的log，比如之前的代码。"
+
+#: ../../parallel_training/debug.rst:24
+msgid ""
+"In this scenario, how can we debug and locate the problems? We recommend "
+"two solutions here:"
+msgstr "这种情况下，我们应该怎么debug，定位问题呢？ 这里推荐两个方案："
+
+#: ../../parallel_training/debug.rst:26
+
+msgid ""
+"**Comment out the parallel decorator**, first run the code locally, debug"
+" according to the log, then deploy your script on cluster by uncomment "
+"the parallel decorator. However, this method may cause the problem of "
+"repeated definition of static graphs in the static graph neural network "
+"framework, so this method is not recommended when using static version of"
+" paddle or tensorflow."
+msgstr ""
+"**注释并行修饰符** : "
+"先不在集群上跑并行，而是在本地跑起来，根据输出的日志debug，调试通过后再增加并行修饰符。但是这种方法在静态图的神经网络框架中可能会引发静态图重复定义的问题，在使用静态图版本paddle或者tensorflow的时候不建议采用这种方法。"
+
+#: ../../parallel_training/debug.rst:27
+
+msgid ""
+"**Check according to xparl's log service**. After the local script is "
+"connected to the xparl cluster, xparl will output the address of the "
+"logserver in the program. You can view the corresponding output of each "
+"parallel task in real time by visiting this website through a browser."
+msgstr ""
+"**根据xparl的日志服务查看** "
+":在本地脚本连接到xparl集群之后，xparl会在程序中输出logserver的地址，通过浏览器访问这个网站即可实时查看每个并行任务的对应输出。"
+
+#: ../../parallel_training/file_distribution.rst:2
+msgid "File Distribution"
+msgstr "分发本地文件"
+
+#: ../../parallel_training/file_distribution.rst:4
+msgid ""
+"File distribution is an important function of distributed parallel "
+"computing. It is responsible for distributing user's code and "
+"configuration files to different machines, so that all machines perform "
+"parallel computing using same code. By default, all ``.py`` files that "
+"are located in the same directory as the XPARL distribution main file "
+"(such as ``main.py`` ) will be distributed. But sometimes users need to "
+"distribute some specific files, such as model files, configuration files,"
+" and Python code in subdirectories (submodules for import). In order to "
+"meet this demand, ``parl.connect`` provides an interface where users can "
+"directly specify the files or codes that need to be distributed."
+msgstr ""
+"文件分发是分布式并行计算的重要功能。它负责把用户的代码还有配置文件分发到不同的机器上，让所有的机器都运行同样的代码进行并行计算。默认情况下，XPARL分发主文件（例如: ``main.py`` ）所在目录下"
+"所有 ``.py`` "
+"结尾文件。但是有时候用户需要分发一些特定的文件，比如模型文件、配置文件、子目录下的Python代码（用于import的子模块）。为了满足这个需求，``parl.connect``"
+" 提供了接口，用户可直接指定需要分发的文件或代码。"
+
+#: ../../parallel_training/file_distribution.rst:10
+msgid "Example:"
+msgstr "示例: "
+
+#: ../../parallel_training/file_distribution.rst:12
+msgid ""
+"The file directory structure is as follows, we want to distribute the "
+"``.py`` files in the policy folder. We can pass the files that we want to"
+" distribute to the ``distributed_files`` parameter when ``connect``, this"
+" parameter also supports regular expressions."
+msgstr ""
+"文件目录结构如下，我们想分发policy文件夹中的 ``.py`` 文件。 我们可以在 ``connect`` 的时候传入想要分发的文件到 "
+"``distributed_files`` 参数中，该参数支持正则表达式。"
+
+#: ../../parallel_training/overview.rst:2
+msgid "Overview"
+msgstr "Xparl并行概览"
+
+#: ../../parallel_training/overview.rst:5
+msgid "Easy-to-use"
+msgstr "简单易用"
+
+#: ../../parallel_training/overview.rst:8
+msgid ""
+"With a single ``@parl.remote_class`` decorator, users can implement "
+"parallel training easily, and do not have to care about stuff of multi-"
+"processes, network communication."
+msgstr ""
+"通过一个简单的修饰符 ``@parl.remote_class`` "
+"，用户就可以很简单地实现并行计算，无需关注繁琐的多进程通讯以及网络通讯，也不受Python多线程GIL锁的限制。"
+
+#: ../../parallel_training/overview.rst:11
+msgid "High performance"
+msgstr "高性能"
+
+#: ../../parallel_training/overview.rst:16
+msgid ""
+"``@parl.remote_class`` enable us to achieve real multi-thread computation"
+" efficiency without modifying our codes. As shown in figure (a), python's"
+" original multi-thread computation performs poorly due to the limitation "
+"of the GIL, while PARL empowers us to realize real parallel computation "
+"efficiency."
+msgstr ""
+"``@parl.remote_class`` "
+"可以让我们实现真正意义上的多线程并发计算（堪比C++的多线程）。正如下图a所示，python原生的多线程加速表现很糟糕（由于全局锁GIL的存在），但是我们可以看到，PARL的并行可以线性地减少运行时间，从而提升并发效率。"
+
+#: ../../parallel_training/overview.rst:19
+msgid "Web UI for computation resources"
+msgstr "Web 页面监控集群信息"
+
+#: ../../parallel_training/overview.rst:23
+msgid ""
+"PARL provides a web monitor to watch the status of any resources "
+"connected to the cluster. Users can view the cluster status at a WEB UI. "
+"It shows the detailed information for each worker(e.g, memory used) and "
+"each task submitted."
+msgstr "在多机并行计算的时候，PARL在启动集群的时候提供了web服务，用户可以通过这个页面查看每台机器上的内存、CPU使用率等，同时也可以查看每个任务占用了多少集群资源。"
+
+#: ../../parallel_training/overview.rst:27
+msgid "Supporting various frameworks"
+msgstr "全框架兼容"
+
+#: ../../parallel_training/overview.rst:31
+msgid ""
+"PARL for distributed training is compatible with any other frameworks, "
+"like tensorflow, pytorch and mxnet. By adding ``@parl.remote_class`` "
+"decorator to their codes, users can easily convert their codes to "
+"distributed computation."
+msgstr ""
+"PARL的并行可以兼容目前市场上的任何深度学习框架，比如tensorflow、pytorch、mxnet等。通过增加并行修饰符 "
+"``@parl.remote_class`` ，用户就可以把他们之前的代码转换成并行代码。"
+
+#: ../../parallel_training/overview.rst:34
+msgid "Why PARL"
+msgstr "为什么用PARL"
+
+#: ../../parallel_training/overview.rst:37
+msgid "High throughput"
+msgstr "高吞吐量、高并发"
+
+#: ../../parallel_training/overview.rst:42
+#, python-format
+msgid ""
+"PARL uses a point-to-point connection for network communication in the "
+"cluster. Unlike other framework like RLlib which replies on redis for "
+"communication, PARL is able to achieve much higher throughput. The "
+"results can be found in figure (b). With the same implementation in "
+"IMPALA, PARL achieved an increase of 160% on data throughout over "
+"Ray(RLlib)."
+msgstr "PARL在实现底层的并行计算时，是通过端到端的这种网络传输，也就是在进行并发任务时，没有额外的网络损耗。这种并行设计，相比于RLlib需要通过Redis进行数据中转，PARL在同样的时间内，有更高的数据吞吐量。根据我们之前做的实验对比，运行同样的IMPALA算法，在同样的机器上，PARL的并行性能是更优秀的。"
+
+#: ../../parallel_training/overview.rst:45
+msgid "Automatic deployment"
+msgstr "自动分发本地文件"
+
+#: ../../parallel_training/overview.rst:48
+msgid ""
+"Unlike other parallel frameworks which fail to import modules from "
+"external file, PARL will automatically package all related files and send"
+" them to remote machines."
+msgstr "市面上的并行框架大部分得要用户手动同步文件才可以跑起并行代码，比如配置文件得要手动或者通过命令分发到不同机器，parl可以自动分发当前目录下的代码文件，实现无缝的多机并行。"
+
+#: ../../parallel_training/recommended_practice.rst:2
+msgid "Recommended Practice"
+msgstr "加速案例"
+
+#: ../../parallel_training/recommended_practice.rst:7
+msgid ""
+"This tutorial shows how to use ``@parl.remote_class`` to implement "
+"parallel computation with **multi-threads**."
+msgstr "这个教程展示了如何通过并行修饰符 ``@parl.remote_class`` ，使用python的 **多线程** 也能够实现并行计算。"
+
+#: ../../parallel_training/recommended_practice.rst:9
+msgid ""
+"Python has poor performance in multi-threading because of the `GIL "
+"<https://realpython.com/python-gil/>`_ , and we always find that multi-"
+"thread programming in Python cannot bring any benefits of the running "
+"speed, unlike other program languages such as ``C++`` and ``JAVA``."
+msgstr ""
+"众所周知，python 的多线程并发性能并不好，很难达到传统的编程语言比如C++或者JAVA这种加速效果，主要的原因是python "
+"有全局锁（GIL）的限制，使得其最多只能运用单核来记性运算。"
+
+#: ../../parallel_training/recommended_practice.rst:11
+msgid ""
+"Here we reveal the performance of Python threads. At first, let's run the"
+" following code:"
+msgstr "下面我们通过一个简单的例子来看下GIL对于python的影响。首先，我们跑下这段代码："
+
+#: ../../parallel_training/recommended_practice.rst:24
+msgid ""
+"This code takes **17.46** seconds to finish counting from 1 to 1e8 for "
+"five times."
+msgstr "这段代码需要 **17.46秒** 的时间来计算5次的从1累加到1亿。"
+
+#: ../../parallel_training/recommended_practice.rst:25
+msgid ""
+"Now let's implement a thread-based code using the Python library, "
+"``threading``, as shown below."
+msgstr "接下来我们通过python的原生多线程库改造下上面的代码，让它可以多线程跑起来。"
+
+#: ../../parallel_training/recommended_practice.rst:45
+msgid ""
+"It takes **41.35** seconds, much slower than previous code that finish "
+"counting serially. As the performance is limited by the GIL, there is "
+"only a single CPU running the task, and the CPU has to spend additional "
+"time on switching tasks between different threads."
+msgstr ""
+"运行这段代码之后，居然需要 **41.35秒** "
+"，比刚才的串行运算速度更慢。主要的原因是GIL限制了python只能单核运算，使用了多线程运算之后，触发了多线程竞争CPU的问题，反而延长了计算时间。"
+
+#: ../../parallel_training/recommended_practice.rst:47
+msgid "Finally, let's try to use PARL:"
+msgstr "最后，我们尝试使用PARL: "
+
+#: ../../parallel_training/recommended_practice.rst:75
+msgid ""
+"Only **3.74** seconds are needed !!! As you can see from the code above, "
+"it is the ``@parl.remote_class`` that makes the change happen. By simply "
+"adding this decorator, we achieved real multi-thread computation."
+msgstr "这段代码只需要 **4.3秒** 就能跑完！PARL在这里做的改动只有两行代码，但是我们却看到了运算速度的极大提升，具体的效果对比可以看下图。"
+
+#: ../../parallel_training/serialization.rst:2
+msgid "Serialization Acceleration (Not Necessary)"
+msgstr "序列化加速（非必须）"
+
+#: ../../parallel_training/serialization.rst:4
+msgid ""
+"PARL uses the ``cloudpickle`` library by default for data serialization "
+"and deserialization [In xparl, data is transmitted in the form of a "
+"serialized byte stream]; If the ``pyarrow`` library is in the Python "
+"environment, the ``pyarrow`` library will be used for serialization and "
+"deserialization (due to ``pyarrow``'s compatibility, PARL will not "
+"download the library by default)."
+msgstr ""
+"PARL默认使用 ``cloudpickle`` "
+"库进行数据的序列化和反序列化【数据是以序列化后的字节流形式在xparl中进行传输】；如果Python环境有下载 ``pyarrow`` "
+"库的话，则会使用 ``pyarrow`` 库进行序列化和反序列化（由于 ``pyarrow`` 兼容性不够好，PARL不会默认下载该库）。"
+
+#: ../../parallel_training/serialization.rst:6
+msgid ""
+"Under different scenarios, ``pyarrow`` and ``cloudpickle`` have their "
+"advantages and disadvantages, users can choose among these libraries base"
+" on the need. In general, the serialization protocol that comes with "
+"``python3.8+`` can meet the needs of most scenarios."
+msgstr ""
+"不同数据场景下，``pyarrow`` 和 ``cloudpickle`` 的表现优劣不同，用户可以基于自己的使用场景选择是否要下载 "
+"``pyarrow`` 库，一般而言，使用 ``python3.8+`` 自带的序列化协议已经可以满足大部分场景的需求。"
+
+#: ../../parallel_training/serialization.rst:9
+msgid "Performance Comparison"
+msgstr "性能对比"
+
+#: ../../parallel_training/serialization.rst:11
+msgid ""
+"As reference, here is the average time taken for serialization and "
+"deserialization using ``pyarrow`` and ``cloudpickle`` on different "
+"testing data."
+msgstr "这里提供了 ``pyarrow`` 和 ``cloudpickle`` 在不同数据下的序列化和反序列化的平均耗时作为参考："
+
+#: ../../parallel_training/serialization.rst:13
+msgid "testing data 1: ``data = [np.random.RandomState(0).randn(50, 50)] * 10``"
+msgstr "测试数据一: ``data = [np.random.RandomState(0).randn(50, 50)] * 10``"
+
+#: ../../parallel_training/serialization.rst:14
+msgid "testing data 2: ``data = [np.random.RandomState(0).randn(500, 500)] * 10``"
+msgstr "测试数据二: ``data = [np.random.RandomState(0).randn(500, 500)] * 10``"
+
+#: ../../parallel_training/serialization.rst:15
+msgid ""
+"testing data 3: ``data = [np.random.RandomState(0).randn(5000, 5000)] * "
+"10``"
+msgstr "测试数据三：``data = [np.random.RandomState(0).randn(5000, 5000)] * 10``"
+
+#: ../../parallel_training/serialization.rst:16
+msgid "testing data 4: ``data = np.random.RandomState(0).randn(5000, 50000)``"
+msgstr "测试数据四: ``data = np.random.RandomState(0).randn(5000, 50000)``"
+
+#: ../../parallel_training/serialization.rst:18
+msgid "> pyarrow version: python2: pyarrow==0.16.0，python3: pyarrow==2.0.0"
+msgstr "> pyarrow版本：python2使用 pyarrow==0.16.0，python3中使用 pyarrow==2.0.0"
+
+#: ../../parallel_training/serialization.rst:29
+msgid "Conclusions"
+msgstr "对比结论"
+
+#: ../../parallel_training/serialization.rst:31
+msgid ""
+"When serializing/deserializing large ``Numpy`` matrix, ``pyarrow`` "
+"perform better than ``cloudpickle``"
+msgstr "在序列化/反序列化 **超大Numpy矩阵** 时，``pyarrow`` 表现明显比 ``cloudpickle`` 好"
+
+#: ../../parallel_training/serialization.rst:32
+msgid ""
+"Using ``python>=3.8`` can improve the serializing/deserializing "
+"performance. (Mainly because pickle is updated in ``python>=3.8``, it now"
+" supports ``protocol=5``)"
+msgstr "使用3.8+版本的Python也能提升序列化性能。（主要是python3.8+版本对pickle进行了升级，支持 ``protocol=5`` ）"
+
+#: ../../parallel_training/setup.rst:2
+msgid "Xparl Usage"
+msgstr "使用教程"
+
+#: ../../parallel_training/setup.rst:4
+msgid "Setup Command"
+msgstr "配置命令"
+
+#: ../../parallel_training/setup.rst:5
+msgid "This tutorial demonstrates how to set up a cluster."
+msgstr "这个教程将会演示如何搭建一个集群。"
+
+#: ../../parallel_training/setup.rst:7
+msgid ""
+"To start a PARL cluster, we can execute the following two ``xparl`` "
+"commands:"
+msgstr "搭建一个PARL集群，可以通过执行下面的 ``xparl`` 命令："
+
+#: ../../parallel_training/setup.rst:13
+msgid ""
+"This command starts a master node to manage computation resources and "
+"adds the local CPUs to the cluster. We use the port `6006` for "
+"demonstration, and it can be any available port."
+msgstr ""
+"这个命令会启动一个主节点（master）来管理集群的计算资源，同时会把本地机器的CPU资源加入到集群中。命令中的6006端口只是作为示例，你可以修改成任何有效的端口。启动后可通过"
+" ``xparl status`` 查看目前集群有多少CPU资源可用，你可以在 ``xparl start`` 的命令中加入选项 "
+"``--cpu_num [CPU_NUM]`` (例如：--cpu_num 10)指定本机加入集群的CPU数量。"
+
+#: ../../parallel_training/setup.rst:17
+msgid "Adding More Resources"
+msgstr "加入更多CPU资源"
+
+#: ../../parallel_training/setup.rst:20
+msgid "If you have only one machine, you can ignore this part."
+msgstr "如果您只有一个机器，您可以忽略该部分"
+
+#: ../../parallel_training/setup.rst:22
+msgid ""
+"If you would like to add more CPUs(computation resources) to the cluster,"
+" run the following command on other machines."
+msgstr ""
+"启动集群后，就可以直接使用集群了，如果CPU资源不够用，你可以在任何时候和任何机器（包括本机或其他机器）上，通过执行 ``xparl "
+"connect`` 命令把更多CPU资源加入到集群中。"
+
+#: ../../parallel_training/setup.rst:28
+msgid ""
+"It starts a worker node that provides CPUs of the machine for the master."
+" A worker will use all the CPUs by default. If you wish to specify the "
+"number of CPUs to be used, run the command with ``--cpu_num <cpu_num>`` "
+"(e.g.------cpu_num 10)."
+msgstr ""
+"它会启动一个工作节点（worker），并把当前机器的CPU资源加入到 ``--address`` "
+"指定的master集群。worker默认会把当前机器所有的可用的CPU资源加入到集群中，如果你需要指定加入的CPU数量，也可以在上述命令上加入选项"
+" ``--cpu_num [CPU_NUM]`` 。"
+
+#: ../../parallel_training/setup.rst:30
+msgid ""
+"Note that the command ``xparl connect`` can be run at any time, at any "
+"machine to add more CPUs to the cluster."
+msgstr "请注意 ``xparl connect`` 可以在任何时候用于添加更多的CPUs到集群。"
+
+#: ../../parallel_training/setup.rst:33
+msgid "Example"
+msgstr "示例"
+
+#: ../../parallel_training/setup.rst:34
+msgid ""
+"Here we give an example demonstrating how to use ``@parl.remote_class`` "
+"for parallel computation."
+msgstr "这里我们给出了一个示例来演示如何通过 ``@parl.remote_class`` 来进行并行计算。"
+
+#: ../../parallel_training/setup.rst:56
+msgid "Shutdown the Cluster"
+msgstr "关闭集群"
+
+#: ../../parallel_training/setup.rst:57
+msgid ""
+"run ``xparl stop`` at the machine that runs as a master node to stop the "
+"cluster processes. Worker nodes at different machines will exit "
+"automatically after the master node is stopped."
+msgstr ""
+"在master机器上运行 ``xparl stop`` "
+"命令即可关闭集群程序。当master节点退出后，与之关联的worker节点也会自动退出并结束相关程序。"
+
+#: ../../parallel_training/setup.rst:60
+msgid "Further Reading"
+msgstr "扩展阅读"
+
+#: ../../parallel_training/setup.rst:61
+msgid ""
+"Now we know how to set up a cluster and use this cluster by simply adding"
+" ``@parl.remote_class``."
+msgstr "我们现在已经知道了如何通过终端命令 ``xparl`` 搭建一个集群，以及如何通过修饰符 ``@parl.remote_class`` 来使用集群。"
+
+#: ../../parallel_training/setup.rst:62
+msgid ""
+"In `next_tutorial`_, we will show how this decorator help us implement "
+"the **real** multi-thread computation in Python, breaking the limitation "
+"of Python Global Interpreter Lock(GIL)."
+msgstr ""
+"在 :doc:`下一个教程 <./recommended_practice>` "
+"我们将会演示如何通过这个修饰符来打破Python的全局解释器锁（Global Interpreter Lock, "
+"GIL）限制，从而实现真正的多线程计算。"
+
+#~ msgid "Cluster Setup"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Comment out the parallel decorator, "
+#~ "first run the code locally, debug "
+#~ "according to the log, then deploy "
+#~ "your script on cluster by uncomment "
+#~ "the parallel decorator."
+#~ msgstr ""
+#~ "注释并行修饰符 "
+#~ "先不在集群上跑并行，而是在本地跑起来，根据输出的日志debug，调试通过后再增加并行修饰符。但是这种方法在静态图的神经网络框架中可能会引发静态图重复定义的问题，在使用tensorflow的时候不建议采用这种方法。"
+

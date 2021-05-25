@@ -1,7 +1,7 @@
-DDPG
+OAC
 ==========
 
-.. automodule:: parl.algorithms.paddle.ddpg
+.. automodule:: parl.algorithms.paddle.oac
     :members:
     :no-undoc-members:
     :show-inheritance:

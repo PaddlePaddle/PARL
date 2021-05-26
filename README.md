@@ -2,12 +2,24 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
-English | [简体中文](./README.cn.md)   
-[**Documentation**](https://parl.readthedocs.io/en/stable/index.html) | [**中文文档**](./docs/zh_CN/Overview.md)
+English | [简体中文](./README.cn.md)
+
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.0rc0-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
 
 > PARL is a flexible and high-efficient reinforcement learning framework.
 
-# Features
+<!-- toc -->
+
+- [About PARL](#about-parl)
+  - [Features](#features)
+  - [Abstractions](#abstractions)
+  - [Parallelization](#parallelization)
+- [Install](#install)
+- [Getting Started](#getting-started)
+- [Examples](#examples)
+
+# About PARL
+## Features
 **Reproducible**. We provide algorithms that stably reproduce the result of many influential reinforcement learning algorithms.
 
 **Large Scale**. Ability to support high-performance parallelization of training with thousands of CPUs and multi-GPUs.
@@ -17,7 +29,7 @@ English | [简体中文](./README.cn.md)
 **Extensible**. Build new algorithms quickly by inheriting the abstract class in the framework.
 
 
-# Abstractions
+## Abstractions
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>
 PARL aims to build an agent for training algorithms to perform complex tasks.   
 The main abstractions introduced by PARL that are used to build an agent recursively are the following:
@@ -31,9 +43,9 @@ The main abstractions introduced by PARL that are used to build an agent recursi
 ### Agent
 `Agent`, a data bridge between the environment and the algorithm, is responsible for data I/O with the outside environment and describes data preprocessing before feeding data into the training process.  
 
-Note: For more information about base classes, please visit our [tutorial](https://parl.readthedocs.io/en/latest/getting_started.html) and [API documentation](https://parl.readthedocs.io/en/latest/model.html).
+Note: For more information about base classes, please visit our [tutorial](https://parl.readthedocs.io/en/latest/tutorial/getting_started.html) and [API documentation](https://parl.readthedocs.io/en/latest/apis/model.html).
 
-# Parallelization
+## Parallelization
 PARL provides a compact API for distributed training, allowing users to transfer the code into a parallelized version by simply adding a decorator. For more information about our APIs for parallel training, please visit our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).  
 Here is a `Hello World` example to demonstrate how easy it is to leverage outer computation resources.
 ```python
@@ -59,7 +71,7 @@ Two steps to use outer computation resources:
 <img src=".github/decorator.png" alt="PARL" width="450"/>
 As shown in the above figure, real actors (orange circle) are running at the cpu cluster, while the learner (blue circle) is running at the local gpu with several remote actors (yellow circle with dotted edge).  
 
-For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallized algorithms like [IMPALA](examples/IMPALA), [A2C](examples/A2C) and [GA3C](examples/GA3C). For more details in usage please refer to these examples.  
+For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallized algorithms like [IMPALA](benchmark/fluid/IMPALA/), [A2C](examples/A2C/) and [GA3C](benchmark/fluid/GA3C/). For more details in usage please refer to these examples.  
 
 
 # Install:
@@ -71,6 +83,13 @@ For users, they can write code in a simple way, just like writing multi-thread c
 ```
 pip install parl
 ```
+
+# Getting Started
+Several-points to get you started:
+- [Tutorial](https://parl.readthedocs.io/en/latest/tutorial/getting_started.html) : How to solve cartpole problem.
+- [Xparl Usage](https://parl.readthedocs.io/en/latest/parallel_training/setup.html) : How to set up a cluster with `xparl` and compute in parallel.
+- [Advanced Tutorial](https://parl.readthedocs.io/en/latest/implementations/new_alg.html) : Create customized algorithms.
+- [API documentation](https://parl.readthedocs.io/en/latest/apis/model.html)
 
 # Examples
 - [QuickStart](examples/QuickStart/)

@@ -2,11 +2,25 @@
 <img src=".github/PARL-logo.png" alt="PARL" width="500"/>
 </p>
 
-[English](./README.md) | 简体中文   
-[**文档**](https://parl.readthedocs.io/en/stable/index.html)| [**中文文档**](./docs/zh_CN/Overview.md)
+[English](./README.md) | 简体中文
+
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.0rc0-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
+
 
 > PARL 是一个高性能、灵活的强化学习框架。
-# 特点
+
+<!-- toc -->
+
+- [概览](#概览)
+  - [特点](#特点)
+  - [框架结构](#框架结构)
+  - [简易高效的并行接口](#简易高效的并行接口)
+- [安装](#安装)
+- [快速开始](#快速开始)
+- [算法示例](#算法示例)
+
+# 概览
+## 特点
 **可复现性保证**。我们提供了高质量的主流强化学习算法实现，严格地复现了论文对应的指标。
 
 **大规模并行支持**。框架最高可支持上万个CPU的同时并发计算，并且支持多GPU强化学习模型的训练。
@@ -16,7 +30,7 @@
 **良好扩展性**。当用户想调研新的算法时，可以通过继承我们提供的基类可以快速实现自己的强化学习算法。
 
 
-# 框架结构
+## 框架结构
 <img src=".github/abstractions.png" alt="abstractions" width="400"/>  
 PARL的目标是构建一个可以完成复杂任务的智能体。以下是用户在逐步构建一个智能体的过程中需要了解到的结构：
 
@@ -29,11 +43,11 @@ PARL的目标是构建一个可以完成复杂任务的智能体。以下是用�
 ### Agent
 `Agent` 负责算法与环境的交互，在交互过程中把生成的数据提供给`Algorithm`来更新模型 (`Model`)，数据的预处理流程也一般定义在这里。
 
-提示： 请访问[教程](https://parl.readthedocs.io/en/latest/getting_started.html) and [API 文档](https://parl.readthedocs.io/en/latest/model.html)以获取更多关于基础类的信息。
+提示： 请访问[教程](https://parl.readthedocs.io/zh_CN/latest/tutorial/getting_started.html) and [API 文档](https://parl.readthedocs.io/zh_CN/latest/apis/model.html)以获取更多关于基础类的信息。
 
-# 简易高效的并行接口
+## 简易高效的并行接口
 在PARL中，一个**修饰符**(parl.remote_class)就可以帮助用户实现自己的并行算法。
-以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。 请访问我们的[教程文档](https://github.com/PaddlePaddle/PARL/blob/develop/docs/zh_CN/xparl/tutorial.md)以获取更多的并行训练信息。
+以下我们通过`Hello World`的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算。 请访问我们的[教程文档](https://parl.readthedocs.io/zh_CN/latest/parallel_training/setup.html)以获取更多的并行训练信息。
 ```python
 #============Agent.py=================
 @parl.remote_class
@@ -56,7 +70,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 
 <img src=".github/decorator.png" alt="PARL" width="450"/>
 
-如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考[IMPALA](examples/IMPALA), [A2C](examples/A2C) and [GA3C](examples/GA3C)。
+如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考[IMPALA](benchmark/fluid/IMPALA/), [A2C](examples/A2C/) and [GA3C](benchmark/fluid/GA3C/)。
 
 
 # 安装:
@@ -68,6 +82,13 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 ```
 pip install parl
 ```
+
+# 快速开始
+请查看一下几个教程帮助您快速上手PARL:
+- [教程](https://parl.readthedocs.io/zh_CN/latest/tutorial/getting_started.html) : 解决经典的 CartPole 问题。
+- [Xparl用法](https://parl.readthedocs.io/zh_CN/latest/parallel_training/setup.html) : 如何使用`xparl`设置集群，实现并行运算。
+- [进阶教程](https://parl.readthedocs.io/zh_CN/latest/implementations/new_alg.html) : 定制你的算法。
+- [API 文档](https://parl.readthedocs.io/zh_CN/latest/apis/model.html)
 
 # 算法示例
 - [QuickStart](examples/QuickStart/)

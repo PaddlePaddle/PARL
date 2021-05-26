@@ -22,6 +22,7 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import _IS_WINDOWS
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -38,7 +39,7 @@ class TestSendFile(unittest.TestCase):
         disconnect()
 
     def test_send_file(self):
-        port = 1239
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -67,7 +68,7 @@ class TestSendFile(unittest.TestCase):
         master.exit()
 
     def test_send_file2(self):
-        port = 1240
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

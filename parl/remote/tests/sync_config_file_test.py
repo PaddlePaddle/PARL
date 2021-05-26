@@ -23,6 +23,7 @@ import threading
 import sys
 import numpy as np
 import json
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -45,11 +46,12 @@ class TestConfigfile(unittest.TestCase):
         disconnect()
 
     def test_sync_config_file(self):
-        master = Master(port=1335)
+        port = get_free_tcp_port()
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker = Worker('localhost:1335', 1)
+        worker = Worker('localhost:{}'.format(port), 1)
 
         random_file = 'random.npy'
         random_array = np.random.randn(3, 5)
@@ -60,7 +62,7 @@ class TestConfigfile(unittest.TestCase):
             config_file = {'test': 1000}
             json.dump(config_file, f)
 
-        parl.connect('localhost:1335', ['random.npy', 'config.json'])
+        parl.connect('localhost:{}'.format(port), ['random.npy', 'config.json'])
         actor = Actor('random.npy', 'config.json')
         time.sleep(5)
         os.remove('./random.npy')

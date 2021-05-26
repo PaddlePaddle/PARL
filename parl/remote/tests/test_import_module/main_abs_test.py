@@ -19,6 +19,7 @@ import threading
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.utils import get_free_tcp_port
 
 
 class TestImport(unittest.TestCase):
@@ -27,7 +28,7 @@ class TestImport(unittest.TestCase):
 
     def test_import_local_module(self):
         from Module2 import B
-        port = 8448
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

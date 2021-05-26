@@ -23,6 +23,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -60,7 +61,7 @@ class TestClusterMonitor(unittest.TestCase):
         disconnect()
 
     def test_add_actor(self):
-        port = 1441
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

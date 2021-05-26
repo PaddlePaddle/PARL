@@ -19,9 +19,10 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 import time
 import threading
+from parl.utils import get_free_tcp_port
 
 c = 10
-port = 3002
+port = get_free_tcp_port()
 if __name__ == '__main__':
     master = Master(port=port)
     th = threading.Thread(target=master.run)

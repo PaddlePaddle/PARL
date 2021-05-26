@@ -23,6 +23,7 @@ import threading
 from parl.remote.client import disconnect
 from parl.remote import exceptions
 from parl.utils import logger
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -36,6 +37,7 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_distributed_files_with_RegExp(self):
+        port = get_free_tcp_port()
         if os.path.exists('distribute_test_dir'):
             shutil.rmtree('distribute_test_dir')
         os.mkdir('distribute_test_dir')
@@ -48,13 +50,13 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir/data2.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp")
-        master = Master(port=8435)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8435', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         parl.connect(
-            'localhost:8435',
+            'localhost:{}'.format(port),
             distributed_files=[
                 'distribute_test_dir/test*',
                 'distribute_test_dir/*npy',
@@ -70,6 +72,7 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
 
     def test_miss_match_case(self):
+        port = get_free_tcp_port()
         if os.path.exists('distribute_test_dir_2'):
             shutil.rmtree('distribute_test_dir_2')
         os.mkdir('distribute_test_dir_2')
@@ -78,15 +81,15 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir_2/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp_error_case")
-        master = Master(port=8436)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8436', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
 
         def connect_test():
             parl.connect(
-                'localhost:8436',
+                'localhost:{}'.format(port),
                 distributed_files=['distribute_test_dir_2/miss_match*'])
 
         self.assertRaises(ValueError, connect_test)
@@ -95,6 +98,7 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
 
     def test_distribute_folder(self):
+        port = get_free_tcp_port()
         if os.path.exists('distribute_test_dir_3'):
             shutil.rmtree('distribute_test_dir_3')
         os.mkdir('distribute_test_dir_3')
@@ -105,13 +109,13 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir_3/subfolder_test/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_folder")
-        master = Master(port=8437)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8437', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         parl.connect(
-            'localhost:8437', distributed_files=[
+            'localhost:{}'.format(port), distributed_files=[
                 'distribute_test_dir_3',
             ])
         actor = Actor()

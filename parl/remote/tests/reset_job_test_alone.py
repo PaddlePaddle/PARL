@@ -21,6 +21,7 @@ import os
 import threading
 import time
 import subprocess
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -58,11 +59,12 @@ class TestJobAlone(unittest.TestCase):
         disconnect()
 
     def test_job_exit_exceptionally(self):
-        master = Master(port=1334)
+        port = get_free_tcp_port()
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:1334', 4)
+        worker1 = Worker('localhost:{}'.format(port), 4)
         time.sleep(10)
         self.assertEqual(worker1.job_buffer.full(), True)
         time.sleep(1)
@@ -76,7 +78,7 @@ class TestJobAlone(unittest.TestCase):
                 "ps aux | grep remote/job.py | awk '{print $2}' | xargs kill -9"
             )
             subprocess.call([command], shell=True)
-        parl.connect('localhost:1334')
+        parl.connect('localhost:{}'.format(port))
         actor = Actor()
         self.assertEqual(actor.add_one(1), 2)
         time.sleep(20)

@@ -1,0 +1,573 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-20 13:27+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../implementations/a2c.rst:2
+msgid "A2C"
+msgstr ""
+
+#: of parl.algorithms.paddle.a2c.A2C:1 parl.algorithms.paddle.ddpg.DDPG:1
+#: parl.algorithms.paddle.dqn.DQN:1 parl.algorithms.paddle.oac.OAC:1
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient:1
+#: parl.algorithms.paddle.qmix.QMIX:1 parl.algorithms.paddle.sac.SAC:1
+#: parl.algorithms.paddle.td3.TD3:1
+msgid "Bases: :class:`parl.core.paddle.algorithm.Algorithm`"
+msgstr ""
+
+#: of parl.algorithms.paddle.a2c.A2C.__init__:1
+msgid "A2C algorithm"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__
+#: parl.algorithms.fluid.impala.impala.IMPALA.learn
+#: parl.algorithms.fluid.impala.impala.IMPALA.predict
+#: parl.algorithms.fluid.impala.impala.IMPALA.sample
+#: parl.algorithms.fluid.ppo.PPO.__init__
+#: parl.algorithms.fluid.ppo.PPO.policy_learn
+#: parl.algorithms.paddle.a2c.A2C.__init__ parl.algorithms.paddle.a2c.A2C.learn
+#: parl.algorithms.paddle.a2c.A2C.predict
+#: parl.algorithms.paddle.a2c.A2C.prob_and_value
+#: parl.algorithms.paddle.a2c.A2C.value parl.algorithms.paddle.dqn.DQN.__init__
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.qmix.QMIX.learn
+msgid "Parameters"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:3
+#: parl.algorithms.paddle.a2c.A2C.__init__:3
+msgid "forward network of policy and value"
+msgstr ""
+
+#: of parl.algorithms.paddle.a2c.A2C.__init__:5
+msgid "coefficient of the value function loss"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:1
+#: parl.algorithms.fluid.impala.impala.IMPALA.predict:1
+#: parl.algorithms.fluid.impala.impala.IMPALA.sample:1
+#: parl.algorithms.paddle.a2c.A2C.learn:1
+#: parl.algorithms.paddle.a2c.A2C.predict:1
+#: parl.algorithms.paddle.a2c.A2C.prob_and_value:1
+#: parl.algorithms.paddle.a2c.A2C.value:1
+msgid ""
+"An float32 tensor of shape ([B] + observation_space). E.g. [B, C, H, W] "
+"in atari."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:3
+#: parl.algorithms.paddle.a2c.A2C.learn:3
+msgid "An int64 tensor of shape [B]."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:5
+#: parl.algorithms.fluid.impala.impala.IMPALA.learn:6
+#: parl.algorithms.paddle.a2c.A2C.learn:4
+#: parl.algorithms.paddle.a2c.A2C.learn:5
+msgid "A float32 tensor of shape [B]."
+msgstr ""
+
+#: of parl.algorithms.paddle.a2c.A2C.learn:6
+msgid "float scalar of leanring rate."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:8
+#: parl.algorithms.paddle.a2c.A2C.learn:7
+msgid "float scalar of entropy coefficient."
+msgstr ""
+
+#: ../../implementations/a3c.rst:2
+msgid "A3C"
+msgstr ""
+
+#: ../../implementations/ddpg.rst:2
+msgid "DDPG"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:1
+msgid ""
+"DDPG algorithm :param model: forward network of actor and critic. :type "
+"model: parl.Model :param gamma: discounted factor for reward computation "
+":type gamma: float :param tau: decay coefficient when updating the "
+"weights of self.target_model with self.model :type tau: float :param "
+"actor_lr: learning rate of the actor model :type actor_lr: float :param "
+"critic_lr: learning rate of the critic model :type critic_lr: float"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.learn:1
+#: parl.algorithms.paddle.oac.OAC.learn:1
+#: parl.algorithms.paddle.sac.SAC.learn:1
+#: parl.algorithms.paddle.td3.TD3.learn:1
+msgid "Define the loss function and create an optimizer to minize the loss."
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.predict:1
+#: parl.algorithms.paddle.oac.OAC.predict:1
+#: parl.algorithms.paddle.sac.SAC.predict:1
+#: parl.algorithms.paddle.td3.TD3.predict:1
+msgid ""
+"Refine the predicting process, e.g,. use the policy model to predict "
+"actions."
+msgstr ""
+
+#: ../../implementations/ddqn.rst:2
+msgid "DDQN"
+msgstr ""
+
+#: ../../implementations/dqn.rst:2
+msgid "DQN"
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.__init__:1
+msgid "DQN algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.__init__:3
+msgid "forward neural network representing the Q function."
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.__init__:5
+msgid "discounted factor for `accumulative` reward computation"
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.__init__:7
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__:5
+msgid "learning rate."
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.learn:1
+msgid "update the Q function (self.model) with DQN algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.dqn.DQN.predict:1
+msgid "use self.model (Q function) to predict the action values"
+msgstr ""
+
+#: ../../implementations/impala.rst:2
+msgid "IMPALA"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA:1
+#: parl.algorithms.fluid.ppo.PPO:1
+msgid "Bases: :class:`parl.core.fluid.algorithm.Algorithm`"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:1
+msgid "IMPALA algorithm"
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:5
+msgid "steps of each environment sampling."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:7
+msgid "discounted factor for reward computation."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:9
+msgid "coefficient of the value function loss."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:11
+msgid "clipping threshold for importance weights (rho)."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:13
+msgid ""
+"clipping threshold on rho_s in \\rho_s \\delta log \\pi(a|x) (r + \\gamma"
+" v_{s+1} - V(x_s))."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:4
+msgid "A float32 tensor of shape [B, NUM_ACTIONS]."
+msgstr ""
+
+#: of parl.algorithms.fluid.impala.impala.IMPALA.learn:7
+msgid "float scalar of learning rate."
+msgstr ""
+
+#: ../../implementations/implementations.rst:4
+msgid "APIs"
+msgstr ""
+
+#: ../../implementations/implementations.rst:2
+msgid "Implemented Algorithms"
+msgstr "已复现算法"
+
+#: ../../implementations/new_alg.rst:2
+msgid "Create Customized Algorithms"
+msgstr "自定义新算法"
+
+#: ../../implementations/new_alg.rst:4
+msgid "Goal of this tutorial:"
+msgstr "该教程的目标:"
+
+#: ../../implementations/new_alg.rst:6
+msgid "Learn how to implement your own algorithms."
+msgstr "了解如何实现自己的算法。"
+
+#: ../../implementations/new_alg.rst:10
+msgid "Overview"
+msgstr "概览"
+
+#: ../../implementations/new_alg.rst:12
+msgid ""
+"To build a new algorithm, you need to inherit class ``parl.Algorithm`` "
+"and implement three basic functions: ``predict`` and ``learn``."
+msgstr "要构建新算法，您需要继承类 ``parl.Algorithm`` ，并实现两个基本函数: ``predict`` 和 ``learn`` "
+
+#: ../../implementations/new_alg.rst:17
+msgid "Methods"
+msgstr "函数"
+
+#: ../../implementations/new_alg.rst:19
+msgid "``__init__``"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:21
+msgid ""
+"As algorithms update weights of the models, this method needs to define "
+"some models inherited from ``parl.Model``, like ``self.model`` in this "
+"example. You can also set some hyperparameters in this method, like "
+"``learning_rate``, ``reward_decay`` and ``action_dimension``, which might"
+" be used in the following steps."
+msgstr ""
+"``Algorithms`` 更新 ``Model`` 的参数，此构造函数需要继承 ``parl.Model`` 和其中的一些函数 "
+"，例如本示例中的 ``self.model`` 。您还可以在此方法中设置一些超参数，例如 ``learning_rate`` "
+"，``reward_decay`` 和 ``action_dimension`` ，这些超参数可能在之后的步骤中使用。"
+
+#: ../../implementations/new_alg.rst:25
+msgid "``predict``"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:27
+msgid ""
+"This function defines how to choose actions. For instance, you can use a "
+"policy model to predict actions."
+msgstr "这个函数定义如何去选择 actions。比如，你可以使用一个 policy model 去预测 action"
+
+#: ../../implementations/new_alg.rst:29
+msgid "``learn``"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:31
+msgid ""
+"Define loss function in ``learn`` method, which will be used to update "
+"weights of ``self.model``."
+msgstr "损失函数应该被定义在该函数中，该函数主要用于更新 ``self.model`` 的模型参数"
+
+#: ../../implementations/new_alg.rst:35
+msgid "Example: DQN"
+msgstr "示例: DQN "
+
+#: ../../implementations/new_alg.rst:37
+msgid ""
+"This example shows how to implement DQN algorithm based on class "
+"``parl.Algorithm`` according to the steps mentioned above."
+msgstr "该示例演示了如何通过继承 ``parl.Algorithm`` 实现DQN算法"
+
+#: ../../implementations/new_alg.rst:39
+msgid "Within class ``DQN(Algorithm)``, we define the following methods:"
+msgstr "在 ``DQN(Algorithm)`` 类中，我们定义一下类函数: "
+
+#: ../../implementations/new_alg.rst:42
+msgid "\\_\\_init\\_\\_(self, model, gamma=None, lr=None)"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:44
+msgid ""
+"We define ``self.model`` and ``self.target_model`` of DQN in this method,"
+" which are instances of class ``parl.Model``. And we also set "
+"hyperparameters gamma and lr here. We will use these parameters in "
+"``learn`` method."
+msgstr ""
+"我们在这个函数中定义 DQN的 ``self.model`` 和 ``self.target_model`` , 同时，我们在该函数中定义超参数 "
+"``gamma`` 以及 ``lr`` 。 这些超参数在 ``learn`` 函数中会被用到 。"
+
+#: ../../implementations/new_alg.rst:70
+msgid "predict(self, obs)"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:72
+msgid ""
+"We use the forward network defined in ``self.model`` here, which uses "
+"observations to predict action values directly."
+msgstr ""
+"我们直接使用输入该函数的环境状态，并将该状态传输入 ``self.model`` 中，``self.model`` 会输出预测的action "
+"value function "
+
+#: ../../implementations/new_alg.rst:81
+msgid "learn(self, obs, action, reward, next_obs, terminal)"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:83
+msgid ""
+"``learn`` method calculates the cost of value function according to the "
+"predict value and the target value. ``Agent`` will use the cost to update"
+" weights in ``self.model``."
+msgstr "``learn`` 函数会根据当前的预测值和目标值输出当前的损失，并通过该损失进行反向传播更新 ``self.model`` 中的参数"
+
+#: ../../implementations/new_alg.rst:114
+msgid "sync_target(self)"
+msgstr ""
+
+#: ../../implementations/new_alg.rst:116
+msgid ""
+"Use this method to synchronize the weights in ``self.target_model`` with "
+"those in ``self.model``. This is the step used in DQN algorithm."
+msgstr "该函数同步 ``self.target_model`` 和 ``self.model`` 中的参数"
+
+#: ../../implementations/oac.rst:2
+msgid "OAC"
+msgstr ""
+
+#: of parl.algorithms.paddle.oac.OAC.__init__:1
+msgid ""
+"OAC algorithm :param model: forward network of actor and critic. :type "
+"model: parl.Model :param gamma: discounted factor for reward computation "
+":type gamma: float :param tau: decay coefficient when updating the "
+"weights of self.target_model with self.model :type tau: float :param "
+"alpha: Temperature parameter determines the relative importance of the "
+"entropy against the reward :type alpha: float :param beta: determines the"
+" relative importance of sigma_Q :type beta: float :param delta: "
+"determines the relative changes of exploration`s mean :type delta: float "
+":param actor_lr: learning rate of the actor model :type actor_lr: float "
+":param critic_lr: learning rate of the critic model :type critic_lr: "
+"float"
+msgstr ""
+
+#: of parl.algorithms.paddle.oac.OAC.sample:1
+#: parl.algorithms.paddle.sac.SAC.sample:1
+msgid ""
+"Define the sampling process. This function returns an action with noise "
+"to perform exploration."
+msgstr ""
+
+#: ../../implementations/pg.rst:2
+msgid "Policy Gradient"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__:1
+msgid "Policy gradient algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__:3
+msgid "model defining forward network of policy."
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:1
+msgid "Update model with policy gradient algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:3
+msgid "shape of (batch_size, obs_dim)"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:5
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:7
+msgid "shape of (batch_size, 1)"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.qmix.QMIX.learn
+msgid "Returns"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:10
+msgid "shape of (1)"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.qmix.QMIX.learn
+msgid "Return type"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.predict:1
+msgid "Predict the probability of actions"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.predict:3
+msgid "shape of (obs_dim,)"
+msgstr ""
+
+#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.predict:6
+msgid "shape of (action_dim,)"
+msgstr ""
+
+#: ../../implementations/ppo.rst:2
+msgid "PPO"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:1
+msgid "PPO algorithm"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:3
+msgid "model defining forward network of policy and value."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:5
+msgid "dimension of the action space."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:7
+msgid "learning rate of the policy model."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:9
+msgid "learning rate of the value model."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.__init__:11
+msgid "epsilon used in the CLIP loss (default 0.2)."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:4
+msgid "Learn policy model with:"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:2
+msgid "CLIP loss: Clipped Surrogate Objective"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:3
+msgid "KLPEN loss: Adaptive KL Penalty Objective"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:4
+msgid "See: https://arxiv.org/pdf/1707.02286.pdf"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:6
+msgid "Tensor, (batch_size, obs_dim)"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:7
+msgid "Tensor, (batch_size, act_dim)"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:8
+msgid "Tensor (batch_size, )"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.policy_learn:9
+msgid "Tensor (1) or None if None, use CLIP Loss; else, use KLPEN loss."
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.predict:1
+msgid "Use the policy model of self.model to predict means and logvars of actions"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.sample:1
+msgid "Use the policy model of self.model to sample actions"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.sync_old_policy:1
+msgid "Synchronize weights of self.model.policy_model to self.old_policy_model"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.value_learn:1
+msgid "Learn the value model with square error cost"
+msgstr ""
+
+#: of parl.algorithms.fluid.ppo.PPO.value_predict:1
+msgid "Use value model of self.model to predict value of obs"
+msgstr ""
+
+#: ../../implementations/qmix.rst:2
+msgid "QMIX"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.__init__:1
+msgid ""
+"QMIX algorithm :param agent_model: agents' local q network for decision "
+"making. :type agent_model: parl.Model :param qmixer_model: A mixing "
+"network which takes local q values as input"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.__init__:5
+msgid ""
+"to construct a global Q network double_q (bool): Double-DQN gamma "
+"(float): discounted factor for reward computation. lr (float): learning "
+"rate. clip_grad_norm (None, or float): clipped value of gradients' global"
+" norm."
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:1
+msgid "(batch_size, T, state_shape)"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:3
+msgid "(batch_size, T, n_agents)"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:5
+#: parl.algorithms.paddle.qmix.QMIX.learn:7
+#: parl.algorithms.paddle.qmix.QMIX.learn:13
+msgid "(batch_size, T, 1)"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:9
+msgid "(batch_size, T, n_agents, obs_shape)"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:11
+msgid "(batch_size, T, n_agents, n_actions)"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.learn:16
+msgid "train loss td_error (float): train TD error"
+msgstr ""
+
+#: ../../implementations/sac.rst:2
+msgid "SAC"
+msgstr ""
+
+#: of parl.algorithms.paddle.sac.SAC.__init__:1
+msgid ""
+"SAC algorithm :param model: forward network of actor and critic. :type "
+"model: parl.Model :param gamma: discounted factor for reward computation "
+":type gamma: float :param tau: decay coefficient when updating the "
+"weights of self.target_model with self.model :type tau: float :param "
+"alpha: temperature parameter determines the relative importance of the "
+"entropy against the reward :type alpha: float :param actor_lr: learning "
+"rate of the actor model :type actor_lr: float :param critic_lr: learning "
+"rate of the critic model :type critic_lr: float"
+msgstr ""
+
+#: ../../implementations/td3.rst:2
+msgid "TD3"
+msgstr ""
+
+#: of parl.algorithms.paddle.td3.TD3.__init__:1
+msgid ""
+"SAC algorithm :param model: forward network of actor and critic. :type "
+"model: parl.Model :param gamma: discounted factor for reward computation "
+":type gamma: float :param tau: decay coefficient when updating the "
+"weights of self.target_model with self.model :type tau: float :param "
+"actor_lr: learning rate of the actor model :type actor_lr: float :param "
+"critic_lr: learning rate of the critic model :type critic_lr: float "
+":param policy_noise: noise added to target policy during critic update "
+":type policy_noise: float :param noise_clip: range to clip target policy "
+"noise :type noise_clip: float :param policy_freq: frequency of delayed "
+"policy updates :type policy_freq: int"
+msgstr ""
+

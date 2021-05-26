@@ -1,7 +1,7 @@
-DDPG
+SAC
 ==========
 
-.. automodule:: parl.algorithms.paddle.ddpg
+.. automodule:: parl.algorithms.paddle.sac
     :members:
     :no-undoc-members:
     :show-inheritance:

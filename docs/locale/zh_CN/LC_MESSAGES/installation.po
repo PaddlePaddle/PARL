@@ -1,0 +1,55 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-18 17:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../installation.rst:2
+msgid "Installation"
+msgstr "安装"
+
+#: ../../installation.rst:4
+msgid "Dependencies"
+msgstr "依赖"
+
+#: ../../installation.rst:5
+msgid "Python 3.5+(Python 3.8+ is preferable for distributed training)."
+msgstr "Python 3.5+. (Python 3.8+ 更适合用于并行训练)"
+
+#: ../../installation.rst:6
+msgid ""
+"`paddlepaddle>=2.0 <https://github.com/PaddlePaddle/Paddle>`_ "
+"(**Optional**, if you only want to use APIs related to parallelization "
+"alone)"
+msgstr ""
+"`paddlepaddle>=2.0 <https://github.com/PaddlePaddle/Paddle>`_ ( **非必须的** "
+"，如果你只用并行部分的接口不需要安装paddle)"
+
+#: ../../installation.rst:9
+msgid "Install"
+msgstr "安装"
+
+#: ../../installation.rst:10
+msgid "PARL is distributed on PyPI and can be installed with pip:"
+msgstr "PARL 可以通过 ``pip`` 安装: "
+
+#: ../../installation.rst:16
+msgid "or install from source:"
+msgstr "或者从源安装:"
+
+#~ msgid "..code-block::"
+#~ msgstr ""
+

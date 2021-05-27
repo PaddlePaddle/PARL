@@ -36,7 +36,7 @@ import sys
 import parl
 release = parl.__version__
 project = 'PARL'
-copyright = '2019, nlp-ol@baidu.com'
+copyright = '2021, nlp-ol@baidu.com'
 author = 'nlp-ol@baidu.com'
 
 # The full version, including alpha/beta/rc tags

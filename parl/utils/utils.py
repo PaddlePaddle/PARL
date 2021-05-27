@@ -70,13 +70,11 @@ try:
     from paddle import fluid
 
     paddle_version = get_fluid_version()
+    logger.info("paddlepaddle version: {}.".format(paddle.__version__))
     if paddle_version < 200 and paddle_version != 0:
         assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 and paddle < 2.0.0"
         _HAS_FLUID = True
     else:
-        logger.warning(
-            "paddlepaddle version: {}. The dynamic graph version of PARL is under development, not fully tested and supported"
-            .format(paddle.__version__))
         _HAS_PADDLE = True
 except ImportError as e:
     _HAS_FLUID = False

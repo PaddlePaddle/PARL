@@ -75,7 +75,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 
 # 安装:
 ### 依赖
-- Python 3.5+. (Python 3.8+ 更适合用于并行训练)
+- Python 3.6+. (Python 3.8+ 更适合用于并行训练)
 - [paddlepaddle>=2.0](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 
@@ -87,7 +87,7 @@ pip install parl
 请查看一下几个教程帮助您快速上手PARL:
 - [教程](https://parl.readthedocs.io/zh_CN/latest/tutorial/getting_started.html) : 解决经典的 CartPole 问题。
 - [Xparl用法](https://parl.readthedocs.io/zh_CN/latest/parallel_training/setup.html) : 如何使用`xparl`设置集群，实现并行运算。
-- [进阶教程](https://parl.readthedocs.io/zh_CN/latest/implementations/new_alg.html) : 定制你的算法。
+- [进阶教程](https://parl.readthedocs.io/zh_CN/latest/implementations/new_alg.html) : 自定义新算法。
 - [API 文档](https://parl.readthedocs.io/zh_CN/latest/apis/model.html)
 
 # 算法示例

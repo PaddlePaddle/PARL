@@ -48,12 +48,8 @@ autodoc_mock_imports = ['paddle']
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'sphinx.ext.todo',
+    'sphinx.ext.napoleon', 'sphinx.ext.mathjax', 'sphinx.ext.intersphinx',
     'sphinx.ext.imgconverter'
 ]
 

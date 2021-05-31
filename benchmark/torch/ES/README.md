@@ -8,7 +8,12 @@ Based on PARL, we have implemented the Evolution Strategies (ES) algorithm and e
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
-![learninng_curve](result_es.png)
+
+<p align="center">
+<img src="./result/result_es.png" alt="result"/>
+<img src="./result/result_es1.png" alt="result"/>
+<img src="./result/result_es2.png" alt="result"/>
+</p>
 
 ## How to use
 ### Dependencies
@@ -20,11 +25,11 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Distributed Training
 
-To replicate the performance reported above, we encourage you to train with 48 CPUs.  
+To replicate the performance reported above, we encourage you to train with 24 or 48 CPUs.  
 If you haven't created a cluster before, enter the following command to create a cluster. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 ```bash
-xparl start --port 8010 --cpu_num 48
+xparl start --port 8010 --cpu_num 24
 ```
 
 Then we can start the distributed training by running:

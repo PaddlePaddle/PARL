@@ -51,6 +51,7 @@ class Learner(object):
 
         self.sample_total_episodes = 0
         self.sample_total_steps = 0
+        self.train_steps = 0
 
         self.create_actors()
 
@@ -135,6 +136,7 @@ class Learner(object):
 
         # Update the parameters of the model.
         self.agent.learn(proc_noisy_rewards, noises)
+        self.train_steps += 1
         self.latest_flat_weights = self.agent.get_flat_weights()
 
         # Update obs filter to all the actor sync.
@@ -175,7 +177,7 @@ class Learner(object):
         logger.info(metrics)
         for k, v in metrics.items():
             if v is not None:
-                summary.add_scalar(k, v, self.sample_total_steps)
+                summary.add_scalar(k, v, self.train_steps)
 
 
 if __name__ == '__main__':
@@ -184,11 +186,5 @@ if __name__ == '__main__':
         "Before training, it takes a few mimutes to initialize a noise table for exploration"
     )
     learner = Learner(config)
-    # 48 actors running for 4 hours
-    run_time_second = 4 * 3600
-    begin_time = time.time()
-    while True:
+    while learner.train_steps < config['train_steps']:
         learner.step()
-        if time.time() - begin_time > run_time_second:
-            break
-    print('time up.')

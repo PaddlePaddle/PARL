@@ -18,7 +18,7 @@ config = {
     #==========  env config ==========
     'env_name': 'Humanoid-v2',
     #==========  actor config ==========
-    'actor_num': 48,
+    'actor_num': 24,
     'action_noise_std': 0.01,
     'min_task_runtime': 0.2,
     'eval_prob': 0.003,
@@ -26,6 +26,7 @@ config = {
 
     #==========  learner config ==========
     'stepsize': 0.01,
+    'train_steps': 200,
     'min_episodes_per_batch': 1000,
     'min_steps_per_batch': 10000,
     'noise_size': 200000000,

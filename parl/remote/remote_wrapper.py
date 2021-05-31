@@ -98,7 +98,7 @@ class RemoteWrapper(object):
                 "cannot not find the module:{}".format(module_path))
 
         if ".." in module_path:
-            # In windows, append relative path (E.g. "../a/") to the sys.path,
+            # append relative path (E.g. "../a/") to the sys.path,
             # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
             module_path = module_path[module_path.index(".."):]
 

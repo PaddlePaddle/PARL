@@ -10,8 +10,10 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Benchmark result
 
 <p align="left">
-<img src="./result/result_es0.png" alt="result" width="750"/>
-<img src="./result/result_es1.png" alt="result" width="750"/>
+<img src="result/result_es0.png" alt="result">
+</p>
+<p align="left">
+<img src="./result/result_es1.png" alt="result"/>
 </p>
 
 ## How to use

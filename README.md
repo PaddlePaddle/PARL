@@ -91,7 +91,7 @@ Several-points to get you started:
 - [Advanced Tutorial](https://parl.readthedocs.io/en/latest/implementations/new_alg.html) : Create customized algorithms.
 - [API documentation](https://parl.readthedocs.io/en/latest/apis/model.html)
 
-We also provide an introductory course on reinforcement learning (RL) for zero-based developers : ( [Course](https://aistudio.baidu.com/aistudio/course/introduce/1335) | [Video](https://www.bilibili.com/video/BV1yv411i7xd) | [Code](examples/tutorials/) )
+For beginners, we also provide an introductory course on reinforcement learning (RL) : ( [Course](https://aistudio.baidu.com/aistudio/course/introduce/1335) | [Video](https://www.bilibili.com/video/BV1yv411i7xd) | [Code](examples/tutorials/) )
 
 # Examples
 - [QuickStart](examples/QuickStart/)

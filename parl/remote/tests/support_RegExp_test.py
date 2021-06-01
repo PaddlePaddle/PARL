@@ -115,7 +115,8 @@ class TestCluster(unittest.TestCase):
         time.sleep(3)
         worker1 = Worker('localhost:{}'.format(port), 1)
         parl.connect(
-            'localhost:{}'.format(port), distributed_files=[
+            'localhost:{}'.format(port),
+            distributed_files=[
                 'distribute_test_dir_3',
             ])
         actor = Actor()

@@ -62,7 +62,8 @@ class TestConfigfile(unittest.TestCase):
             config_file = {'test': 1000}
             json.dump(config_file, f)
 
-        parl.connect('localhost:{}'.format(port), ['random.npy', 'config.json'])
+        parl.connect('localhost:{}'.format(port),
+                     ['random.npy', 'config.json'])
         actor = Actor('random.npy', 'config.json')
         time.sleep(5)
         os.remove('./random.npy')

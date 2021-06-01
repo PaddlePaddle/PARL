@@ -206,6 +206,7 @@ function main() {
               if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
               then
                 pip install -r .teamcity/requirements.txt
+                pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
                 run_test_with_cpu $env
                 # uninstall paddlepaddle when testing remote module
                 pip uninstall -y paddlepaddle-gpu
@@ -225,6 +226,7 @@ function main() {
           done
 
           pip install -r .teamcity/requirements.txt
+          pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
           run_test_with_gpu $env
 
           run_test_with_fluid

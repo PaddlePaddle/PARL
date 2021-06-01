@@ -91,7 +91,7 @@ Several-points to get you started:
 - [Advanced Tutorial](https://parl.readthedocs.io/en/latest/implementations/new_alg.html) : Create customized algorithms.
 - [API documentation](https://parl.readthedocs.io/en/latest/apis/model.html)
 
-For beginners, we also provide an introductory course on reinforcement learning (RL) : ( [Course](https://www.bilibili.com/video/BV1yv411i7xd) | [Code](examples/tutorials/) )
+For absolute beginners, we also provide an introductory course on reinforcement learning (RL) : ( [Course](https://www.bilibili.com/video/BV1yv411i7xd) | [Code](examples/tutorials/) )
 
 # Examples
 - [QuickStart](examples/QuickStart/)

@@ -24,7 +24,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 + mujoco-py==2.0.2.13
 
 
-### Distributed Training
+### Distributed training
 
 To replicate the performance reported above, we encourage you to train with 24 or 48 CPUs.  
 If you haven't created a cluster before, enter the following command to create a cluster. For more information about the cluster, please refer to our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).

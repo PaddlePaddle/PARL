@@ -23,7 +23,6 @@ import time
 import threading
 import subprocess
 import sys
-from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -61,7 +60,7 @@ class TestJob(unittest.TestCase):
         disconnect()
 
     def test_acor_exit_exceptionally(self):
-        port = get_free_tcp_port()
+        port = 1337 # must use the same port in simulate_client.py
         master = Master(port)
         th = threading.Thread(target=master.run)
         th.start()

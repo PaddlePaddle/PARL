@@ -35,7 +35,7 @@ class TestImport(unittest.TestCase):
         time.sleep(1)
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(10)
-        parl.connect("localhost:8448")
+        parl.connect("localhost:{}".format(port))
         obj = B()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)

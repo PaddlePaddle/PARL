@@ -13,6 +13,7 @@
 # limitations under the License.
 import time
 import parl
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -23,7 +24,8 @@ class Actor(object):
 
 
 def train():
-    parl.connect('localhost:1337')
+    port = get_free_tcp_port()
+    parl.connect('localhost:{}'.format(port))
     actor = Actor()
     actor.add_one(1)
     time.sleep(100000)

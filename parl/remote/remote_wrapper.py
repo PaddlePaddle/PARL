@@ -18,7 +18,7 @@ import sys
 import threading
 import zmq
 
-from parl.utils import logger, to_str, to_byte, _IS_WINDOWS
+from parl.utils import logger, to_str, to_byte
 from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote.client import get_global_client
@@ -97,11 +97,10 @@ class RemoteWrapper(object):
             raise FileNotFoundError(
                 "cannot not find the module:{}".format(module_path))
 
-        if _IS_WINDOWS:
-            if ".." in module_path:
-                # In windows, append relative path (E.g. "../a/") to the sys.path,
-                # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
-                module_path = module_path[module_path.index(".."):]
+        if ".." in module_path:
+            # append relative path (E.g. "../a/") to the sys.path,
+            # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
+            module_path = module_path[module_path.index(".."):]
 
         res = inspect.getfile(cls)
         file_path, in_sys_path = locate_remote_file(module_path)

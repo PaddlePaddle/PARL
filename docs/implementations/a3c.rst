@@ -1,7 +1,7 @@
 A3C
 ==========
 
-.. automodule:: parl.algorithms.fluid.a3c
+.. automodule:: parl.algorithms.paddle.a3c
     :members:
     :no-undoc-members:
     :show-inheritance:

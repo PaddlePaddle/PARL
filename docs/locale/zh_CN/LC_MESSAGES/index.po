@@ -1,0 +1,61 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-18 14:23+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../index.rst:16
+msgid "Overview"
+msgstr "概览"
+
+#: ../../index.rst:24
+msgid "Installation"
+msgstr "安装"
+
+#: ../../index.rst:30
+msgid "Tutorial"
+msgstr "教程"
+
+#: ../../index.rst:40
+msgid "High-quality Implementations"
+msgstr "算法接口文档"
+
+#: ../../index.rst:47
+msgid "Parallel Training"
+msgstr "简易高效的并行接口"
+
+#: ../../index.rst:58
+msgid "APIs"
+msgstr ""
+
+#: ../../index.rst:66
+msgid "EvoKit"
+msgstr ""
+
+#: ../../index.rst:2
+msgid "PARL"
+msgstr ""
+
+#: ../../index.rst:8
+msgid ""
+"*PARL is a flexible, distributed and object-oriented programming "
+"reinforcement learning framework.*"
+msgstr "*PARL是一个主打高性能、稳定复现、轻量级的强化学习框架。*"
+
+#: ../../index.rst:14
+msgid "\\"
+msgstr ""
+

@@ -1,7 +1,7 @@
 DDPG
 ==========
 
-.. automodule:: parl.algorithms.fluid.ddpg
+.. automodule:: parl.algorithms.paddle.ddpg
     :members:
     :no-undoc-members:
     :show-inheritance:

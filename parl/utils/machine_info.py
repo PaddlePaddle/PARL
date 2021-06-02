@@ -88,7 +88,7 @@ def get_gpu_count():
             logger.info('nvidia-smi -L found gpu count: {}'.format(gpu_count))
         except:
             logger.info(
-                'Cannot find available GPU devices, using CPU or other devices now.'
+                'Cannot find available GPU devices, using CPU or other devices now. (Please check whether you can execute `nvidia-smi` command.)'
             )
             gpu_count = 0
     return gpu_count

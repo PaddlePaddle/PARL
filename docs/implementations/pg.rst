@@ -1,7 +1,7 @@
 Policy Gradient
 ==================
 
-.. automodule:: parl.algorithms.fluid.policy_gradient
+.. automodule:: parl.algorithms.paddle.policy_gradient
     :members:
     :no-undoc-members:
     :show-inheritance:

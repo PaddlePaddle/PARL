@@ -28,4 +28,4 @@ python train.py
 
 ## DQN-Variants
 
-For DQN variants such as Double DQN and Dueling DQN, please check [here](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)
+For DQN variants such as Double DQN and Dueling DQN, please check [here](https://github.com/PaddlePaddle/PARL/tree/develop/benchmark/fluid/DQN_variant)

@@ -1,15 +1,15 @@
 Overview
-=======
+=========
 
 Easy-to-use
 ###########
-| With a single @parl.remote_class decorator, users can implement parallel
+| With a single ``@parl.remote_class`` decorator, users can implement parallel
  training easily, and do not have to care about stuff of multi-processes,
  network communication.
 
 High performance
 ################
-| `@parl.remote_class` enable us to achieve real multi-thread computation
+| ``@parl.remote_class`` enable us to achieve real multi-thread computation
  efficiency without modifying our codes. As shown in figure (a), python's
  original multi-thread computation performs poorly due to the limitation
  of the GIL, while PARL empowers us to realize real parallel computation
@@ -23,10 +23,10 @@ Web UI for computation resources
  detailed information for each worker(e.g, memory used) and each task submitted.
 
 
-Supporting vairous frameworks
-###################
+Supporting various frameworks
+###############################
 | PARL for distributed training is compatible with any other
- frameworks, like tensorflow, pytorch and mxnet. By adding `@parl.remote_class`
+ frameworks, like tensorflow, pytorch and mxnet. By adding ``@parl.remote_class``
  decorator to their codes, users can easily convert their codes to distributed
  computation.
 

@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import sys
 import parl
 release = parl.__version__
 project = 'PARL'
-copyright = '2019, nlp-ol@baidu.com'
+copyright = '2021, nlp-ol@baidu.com'
 author = 'nlp-ol@baidu.com'
 
 # The full version, including alpha/beta/rc tags
@@ -65,7 +65,7 @@ templates_path = ['_templates']
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = 'en'
-
+locale_dirs = ['locale/']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.

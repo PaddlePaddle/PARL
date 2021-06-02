@@ -1,0 +1,366 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-18 14:23+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../apis/agent.rst:2
+msgid "parl.Agent"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:1
+msgid "`alias`: ``parl.Agent``"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:2
+msgid "`alias`: ``parl.core.paddle.agent.Agent``"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:4
+msgid "Agent is one of the three basic classes of PARL."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:6
+msgid "It is responsible for interacting with the environment and collecting"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:7
+msgid ""
+"data for training the policy. | To implement a customized ``Agent``, "
+"users can:"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent parl.core.paddle.algorithm.Algorithm
+#: parl.core.paddle.model.Model
+msgid "Variables"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:19
+msgid "algorithm of this agent."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:21
+msgid "can automatically specify device when creating a tensor."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:29 parl.core.paddle.model.Model:47
+msgid "Public Functions:"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:25
+msgid ""
+"``sample``: return a noisy action to perform exploration according to the"
+" policy."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:26
+msgid "``predict``: return an action given current observation."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:27
+msgid ""
+"``learn``: update the parameters of self.alg using the `learn_program` "
+"defined in `build_program()`."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:28
+msgid "``save``: save parameters of the ``agent`` to a given path."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:29
+msgid "``restore``: restore previous saved parameters from a given path."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:31
+msgid "Todo"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent:31
+msgid ""
+"allow users to get parameters of a specified model by specifying the "
+"model's name in ``get_weights()``."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.__init__
+#: parl.core.paddle.agent.Agent.restore parl.core.paddle.agent.Agent.save
+#: parl.core.paddle.algorithm.Algorithm.__init__
+#: parl.core.paddle.algorithm.Algorithm.set_weights
+#: parl.core.paddle.model.Model.set_weights
+#: parl.core.paddle.model.Model.sync_weights_to
+msgid "Parameters"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.__init__:1
+msgid ""
+"an instance of `parl.Algorithm`. This algorithm is then passed to "
+"`self.alg`."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.learn:1
+msgid "The training interface for ``Agent``."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.predict:1
+msgid "Predict an action when given the observation of the environment."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore:1
+msgid ""
+"Restore previously saved parameters. This method requires a program that "
+"describes the network structure. The save_path argument is typically a "
+"value previously passed to ``save_params()``."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore:5
+msgid "path where parameters were previously saved."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore:7
+#: parl.core.paddle.agent.Agent.save:5
+msgid ""
+"model that describes the neural network structure. If None, will use "
+"self.alg.model."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore parl.core.paddle.agent.Agent.save
+msgid "Raises"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore:10
+#: parl.core.paddle.agent.Agent.save:8
+msgid "if program is None and self.learn_program does not exist."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.restore:12
+#: parl.core.paddle.agent.Agent.save:10 parl.core.paddle.algorithm.Algorithm:12
+#: parl.core.paddle.model.Model:16
+#: parl.core.paddle.model.Model.sync_weights_to:13
+msgid "Example:"
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.sample:1
+msgid "Return an action with noise when given the observation of the environment."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.sample:3
+msgid ""
+"In general, this function is used in train process as noise is added to "
+"the action to preform exploration."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.save:1
+msgid "Save parameters."
+msgstr ""
+
+#: of parl.core.paddle.agent.Agent.save:3
+msgid "where to save the parameters."
+msgstr ""
+
+#: ../../apis/algorithm.rst:2
+msgid "parl.Algorithm"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:1
+msgid "`alias`: ``parl.Algorithm``"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:2
+msgid "`alias`: ``parl.core.fluid.algorithm.Algorithm``"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:4
+msgid "``Algorithm`` defines the way how to update the parameters of"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:5
+msgid ""
+"the ``Model``. This is where we define loss functions and the optimizer "
+"of the neural network. An ``Algorithm`` has at least a model."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:9
+msgid "PARL has implemented various algorithms(DQN/DDPG/PPO/A3C/IMPALA) that"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:10
+msgid "can be reused quickly, which can be accessed with ``parl.algorithms``."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:21
+msgid "a neural network that represents a policy"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:35
+msgid "Pulic Functions:"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:27
+msgid "``get_weights``: return a Python dictionary containing parameters"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm:28
+msgid ""
+"of the current model. - ``set_weights``: copy parameters from "
+"``get_weights()`` to the model. - ``sample``: return a noisy action to "
+"perform exploration according to the policy. - ``predict``: return an "
+"action given current observation. - ``learn``: define the loss function "
+"and create an optimizer to minized the loss."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.__init__:1
+msgid "a neural network that represents a policy or a Q-value function."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.get_weights:1
+msgid "Get weights of self.model."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.get_weights
+#: parl.core.paddle.model.Model.get_weights
+msgid "Returns"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.get_weights:3
+#: parl.core.paddle.algorithm.Algorithm.set_weights:3
+msgid "a Python dict containing the parameters of self.model."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.get_weights
+msgid "Return type"
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.learn:1
+msgid "Define the loss function and create an optimizer to minize the loss."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.predict:1
+msgid ""
+"Refine the predicting process, e.g,. use the policy model to predict "
+"actions."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.sample:1
+msgid ""
+"Define the sampling process. This function returns an action with noise "
+"to perform exploration."
+msgstr ""
+
+#: of parl.core.paddle.algorithm.Algorithm.set_weights:1
+msgid "Set weights from ``get_weights`` to the model."
+msgstr ""
+
+#: ../../apis/model.rst:2
+msgid "parl.Model"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:1
+msgid "`alias`: ``parl.Model``"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:2
+msgid "`alias`: ``parl.core.paddle.agent.Model``"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:4
+msgid "``Model`` is a base class of PARL for the neural network."
+msgstr ""
+
+#: of parl.core.paddle.model.Model:5
+msgid ""
+"A ``Model`` is usually a policy or Q-value function, which predicts an "
+"action or an estimate according to the environmental observation."
+msgstr ""
+
+#: of parl.core.paddle.model.Model:8
+msgid "To use the ``PaddlePaddle2.0`` backend model, user needs to call"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:9
+msgid ""
+"``super(Model, self).__init__()`` at the beginning of ``__init__`` "
+"function."
+msgstr ""
+
+#: of parl.core.paddle.model.Model:12
+msgid "``Model`` supports duplicating a ``Model`` instance in a pythonic way:"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:14
+msgid "``copied_model = copy.deepcopy(model)``"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:35
+msgid "each model instance has its unique model_id."
+msgstr ""
+
+#: of parl.core.paddle.model.Model:40
+msgid "``sync_weights_to``: synchronize parameters of the current model"
+msgstr ""
+
+#: of parl.core.paddle.model.Model:41
+msgid ""
+"to another model. - ``get_weights``: return a list containing all the "
+"parameters of the current model. - ``set_weights``: copy parameters from "
+"``set_weights()`` to the model. - ``forward``: define the computations of"
+" a neural network. **Should** be overridden by all subclasses."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.get_weights:1
+msgid "Returns a Python dict containing parameters of current model."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.get_weights:3
+msgid "a Python dict containing the parameters of current model."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.set_weights:1
+msgid "Copy parameters from ``set_weights()`` to the model."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.set_weights:3
+msgid "a Python dict containing the parameters."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:1
+msgid "Synchronize parameters of current model to another model."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:4
+msgid "target_model_weights = decay * target_model_weights"
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:4
+msgid "(1 - decay) * current_model_weights"
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:6
+msgid ""
+"an instance of ``Model`` that has the same neural network architecture as"
+" the current model."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:9
+msgid ""
+"the rate of decline in copying parameters. 0 if no parameters decay when "
+"synchronizing the parameters."
+msgstr ""
+
+#: of parl.core.paddle.model.Model.sync_weights_to:26
+msgid ""
+"Before calling ``sync_weights_to``, parameters of the model must have "
+"been initialized."
+msgstr ""
+

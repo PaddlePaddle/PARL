@@ -1,0 +1,64 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-18 14:23+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../features.rst:2
+msgid "Features"
+msgstr ""
+
+#: ../../features.rst:4
+msgid "**1. Reproducible**"
+msgstr ""
+
+#: ../../features.rst:6
+msgid ""
+"We provide algorithms that reproduce stably the results of many "
+"influential reinforcement learning algorithms."
+msgstr ""
+
+#: ../../features.rst:8
+msgid "**2. Large Scale**"
+msgstr ""
+
+#: ../../features.rst:10
+msgid ""
+"Ability to support high-performance parallelization of training with "
+"thousands of CPUs and multi-GPUs."
+msgstr ""
+
+#: ../../features.rst:12
+msgid "**3. Reusable**"
+msgstr ""
+
+#: ../../features.rst:14
+msgid ""
+"Algorithms provided in the repository can be directly adapted to new "
+"tasks by defining a forward network and training mechanism will be built "
+"automatically."
+msgstr ""
+
+#: ../../features.rst:16
+msgid "**4. Extensible**"
+msgstr ""
+
+#: ../../features.rst:18
+msgid ""
+"Build new algorithms quickly by inheriting the abstract class in the "
+"framework."
+msgstr ""
+

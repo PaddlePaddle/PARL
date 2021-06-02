@@ -24,3 +24,7 @@ Performance of DQN playing CartPole-v0
 # To train a model for CartPole-v0 game
 python train.py
 ```
+
+## DQN-Variants
+
+For DQN variants such as Double DQN and Dueling DQN, please check [here](https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN_variant)

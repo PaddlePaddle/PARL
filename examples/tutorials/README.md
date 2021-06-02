@@ -1,6 +1,6 @@
 ## 《PARL强化学习入门实践》课程示例
 
-针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例。
+针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例（注意：本课程示例均基于静态图框架编写）。
 
 ## 课程大纲
 + 一、强化学习(RL)初印象

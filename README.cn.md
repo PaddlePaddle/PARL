@@ -90,6 +90,8 @@ pip install parl
 - [进阶教程](https://parl.readthedocs.io/zh_CN/latest/implementations/new_alg.html) : 自定义新算法。
 - [API 文档](https://parl.readthedocs.io/zh_CN/latest/apis/model.html)
 
+同时，我们还为零基础开发者提供强化学习入门课程 : ( [视频](https://www.bilibili.com/video/BV1yv411i7xd) | [代码](examples/tutorials/) )
+
 # 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)

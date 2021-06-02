@@ -54,4 +54,4 @@ python train.py --rom ./rom_files/pong.bin
 python train.py --help
 ```
 
-> To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).
+> To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/s3/atari_py/atari_roms).

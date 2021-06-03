@@ -124,14 +124,14 @@ function run_test_with_fluid() {
         source activate $env
         python -m pip install --upgrade pip
         echo "========================================"
-        echo "Running tests in $env with paddle 2.0.0 .."
+        echo "Running tests in $env with paddlepaddle 1.8.5 .."
         echo `which pip`
         echo "========================================"
         pip install .
         pip install -r .teamcity/requirements_fluid.txt
 
         echo "========================================"
-        echo "Running dygraph unit tests with CPU..."
+        echo "Running fluid unit tests with CPU..."
         echo "========================================"
         export CUDA_VISIBLE_DEVICES=""
         run_single_fluid_test "DIS_TESTING_FLUID"
@@ -205,6 +205,8 @@ function main() {
               pip install .
               if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
               then
+                run_import_test # import parl test
+
                 pip install -r .teamcity/requirements.txt
                 pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
                 run_test_with_cpu $env
@@ -230,16 +232,9 @@ function main() {
           run_test_with_gpu $env
 
           run_test_with_fluid
-
-          # import test
-          source ~/.bashrc
-          export PATH="/root/miniconda3/bin:$PATH"
-          source activate empty_env
-          pip install .
-          run_import_test
           ############
 
-          run_docs_test
+          # run_docs_test
           ;;
         *)
           print_usage

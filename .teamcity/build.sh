@@ -97,9 +97,9 @@ function run_test_with_cpu() {
 EOF
     if [ "$#" == 2 ] && [ "$2" == "DIS_TESTING_SERIALLY" ]
     then
-      ctest --output-on-failure 
+        ctest --output-on-failure 
     else
-      ctest --output-on-failure -j20
+        ctest --output-on-failure -j20
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -186,60 +186,60 @@ function main() {
     init
     case $CMD in
         check_style)
-          check_style
-          ;;
+            check_style
+            ;;
         test)
-          # test code compability in environments with various python versions
-          #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
-          declare -a envs=("py36" "py37" "py38")
-          for env in "${envs[@]}";do
-              cd /work
-              source ~/.bashrc
-              export PATH="/root/miniconda3/bin:$PATH"
-              source activate $env
-              python -m pip install --upgrade pip
-              echo ========================================
-              echo Running tests in $env ..
-              echo `which pip`
-              echo ========================================
-              pip install .
-              if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
-              then
-                run_import_test # import parl test
-
-                pip install -r .teamcity/requirements.txt
-                pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
-                run_test_with_cpu $env
-                # uninstall paddlepaddle when testing remote module
-                pip uninstall -y paddlepaddle-gpu
-                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                run_test_with_cpu $env "DIS_TESTING_REMOTE"
-              else
+            # test code compability in environments with various python versions
+            #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+            declare -a envs=("py36" "py37" "py38")
+            for env in "${envs[@]}";do
+                cd /work
+                source ~/.bashrc
+                export PATH="/root/miniconda3/bin:$PATH"
+                source activate $env
+                python -m pip install --upgrade pip
                 echo ========================================
-                echo "in torch environment"
+                echo Running tests in $env ..
+                echo `which pip`
                 echo ========================================
-                pip install -r .teamcity/requirements_torch.txt
-                run_test_with_cpu $env "DIS_TESTING_TORCH"
-              fi
-              # clean env
-              export LC_ALL=C.UTF-8
-              export LANG=C.UTF-8
-              xparl stop
-          done
+                pip install .
+                if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
+                then
+                    run_import_test # import parl test
 
-          pip install -r .teamcity/requirements.txt
-          pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
-          run_test_with_gpu $env
+                    pip install -r .teamcity/requirements.txt
+                    pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
+                    run_test_with_cpu $env
+                    # uninstall paddlepaddle when testing remote module
+                    pip uninstall -y paddlepaddle-gpu
+                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                else
+                    echo ========================================
+                    echo "in torch environment"
+                    echo ========================================
+                    pip install -r .teamcity/requirements_torch.txt
+                    run_test_with_cpu $env "DIS_TESTING_TORCH"
+                fi
+                # clean env
+                export LC_ALL=C.UTF-8
+                export LANG=C.UTF-8
+                xparl stop
+            done
 
-          run_test_with_fluid
-          ############
+            pip install -r .teamcity/requirements.txt
+            pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
+            run_test_with_gpu $env
 
-          # run_docs_test
-          ;;
+            run_test_with_fluid
+            ############
+            # run_docs_test
+
+            ;;
         *)
-          print_usage
-          exit 0
-          ;;
+            print_usage
+            exit 0
+            ;;
     esac
 }
 

@@ -119,7 +119,7 @@ class Agent(AgentBase):
             os.makedirs(dirname)
         torch.save(model.state_dict(), save_path)
 
-    def restore(self, save_path, model=None):
+    def restore(self, save_path, model=None, map_location=None):
         """Restore previously saved parameters.
         This method requires a model that describes the network structure.
         The save_path argument is typically a value previously passed to ``save()``.
@@ -143,5 +143,5 @@ class Agent(AgentBase):
 
         if model is None:
             model = self.alg.model
-        checkpoint = torch.load(save_path)
+        checkpoint = torch.load(save_path, map_location=map_location)
         model.load_state_dict(checkpoint)

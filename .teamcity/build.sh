@@ -241,6 +241,8 @@ function main() {
             exit 0
             ;;
     esac
+    echo "finished: ${CMD}"
+    exit 0
 }
 
 main $@

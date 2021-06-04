@@ -30,16 +30,17 @@ class TD3(parl.Algorithm):
                  policy_noise=0.2,
                  noise_clip=0.5,
                  policy_freq=2):
-        """ SAC algorithm
-            Args:
-                model(parl.Model): forward network of actor and critic.
-                gamma(float): discounted factor for reward computation
-                tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                actor_lr (float): learning rate of the actor model
-                critic_lr (float): learning rate of the critic model
-                policy_noise(float): noise added to target policy during critic update
-                noise_clip(float): range to clip target policy noise
-                policy_freq(int): frequency of delayed policy updates
+        """ TD3 algorithm
+
+        Args:
+            model(parl.Model): forward network of actor and critic.
+            gamma(float): discounted factor for reward computation
+            tau (float): decay coefficient when updating the weights of self.target_model with self.model
+            actor_lr (float): learning rate of the actor model
+            critic_lr (float): learning rate of the critic model
+            policy_noise(float): noise added to target policy during critic update
+            noise_clip(float): range to clip target policy noise
+            policy_freq(int): frequency of delayed policy updates
         """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)

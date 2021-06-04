@@ -28,7 +28,7 @@ class DDPG(parl.Algorithm):
                  actor_lr=None,
                  critic_lr=None):
         """ DDPG algorithm
-        
+
         Args:
             model(parl.Model): forward network of actor and critic.
             gamma(float): discounted factor for reward computation

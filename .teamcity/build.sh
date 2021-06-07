@@ -143,6 +143,13 @@ function run_test_with_fluid() {
     done
 }
 
+function run_cartpole_test {
+    for exp in QuickStart DQN
+    do
+        python examples/${exp}train.py
+    done
+}
+
 function run_import_test {
     export CUDA_VISIBLE_DEVICES=""
 
@@ -230,6 +237,7 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
             run_test_with_gpu $env
+            run_cartpole_test $env
 
             run_test_with_fluid
             ############

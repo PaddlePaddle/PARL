@@ -21,7 +21,7 @@ import time
 import threading
 
 c = 10
-port = 3002 # can not use get_free_tcp_port for unidentified reason (TODO)
+port = 3002  # can not use get_free_tcp_port for unidentified reason (TODO)
 if __name__ == '__main__':
     master = Master(port=port)
     th = threading.Thread(target=master.run)

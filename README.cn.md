@@ -70,7 +70,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 
 <img src=".github/decorator.png" alt="PARL" width="450"/>
 
-如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考[IMPALA](benchmark/fluid/IMPALA/), [A2C](examples/A2C/) and [GA3C](benchmark/fluid/GA3C/)。
+如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考[IMPALA](benchmark/fluid/IMPALA/)和 [A2C](examples/A2C/)。
 
 
 # 安装:

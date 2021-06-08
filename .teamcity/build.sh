@@ -146,7 +146,7 @@ function run_test_with_fluid() {
 function run_cartpole_test {
     for exp in QuickStart DQN
     do
-        python examples/${exp}train.py
+        python examples/${exp}/train.py
     done
 }
 

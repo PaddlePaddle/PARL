@@ -33,8 +33,8 @@ class QMIX(parl.Algorithm):
 
         Args:
             agent_model (parl.Model): agents' local q network for decision making.
-            qmixer_model (parl.Model): A mixing network which takes local q values as input to construct a global Q network
-            double_q (bool): Double-DQN
+            qmixer_model (parl.Model): A mixing network which takes local q values as input to construct a global Q network.
+            double_q (bool): Double-DQN.
             gamma (float): discounted factor for reward computation.
             lr (float): learning rate.
             clip_grad_norm (None, or float): clipped value of gradients' global norm.

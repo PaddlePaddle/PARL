@@ -33,15 +33,16 @@ class OAC(parl.Algorithm):
                  actor_lr=None,
                  critic_lr=None):
         """ OAC algorithm
-            Args:
-                model(parl.Model): forward network of actor and critic.
-                gamma(float): discounted factor for reward computation
-                tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
-                beta (float): determines the relative importance of sigma_Q
-                delta (float): determines the relative changes of exploration`s mean
-                actor_lr (float): learning rate of the actor model
-                critic_lr (float): learning rate of the critic model
+
+        Args:
+            model(parl.Model): forward network of actor and critic.
+            gamma(float): discounted factor for reward computation
+            tau (float): decay coefficient when updating the weights of self.target_model with self.model
+            alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+            beta (float): determines the relative importance of sigma_Q
+            delta (float): determines the relative changes of exploration`s mean
+            actor_lr (float): learning rate of the actor model
+            critic_lr (float): learning rate of the critic model
         """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)

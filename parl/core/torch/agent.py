@@ -127,6 +127,7 @@ class Agent(AgentBase):
         Args:
             save_path(str): path where parameters were previously saved.
             model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
+            map_location: a function, torch.device, string or a dict specifying how to remap storage locations
 
         Raises:
             ValueError: if model is None and self.alg does not exist.
@@ -138,7 +139,8 @@ class Agent(AgentBase):
             agent = AtariAgent()
             agent.save('./model.ckpt')
             agent.restore('./model.ckpt')
-
+            
+            agent.restore('./model.ckpt', map_location=torch.device('cpu')) # load gpu-trained model in cpu machine
         """
 
         if model is None:

@@ -22,6 +22,7 @@ from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -59,20 +60,21 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_add_worker(self):
+        port = get_free_tcp_port()
         logger.info("running: test_add_worker")
-        master = Master(port=8234)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
 
-        worker1 = Worker('localhost:8234', 4)
+        worker1 = Worker('localhost:{}'.format(port), 4)
         for _ in range(3):
             if master.cpu_num == 4:
                 break
             time.sleep(10)
         self.assertEqual(master.cpu_num, 4)
 
-        worker2 = Worker('localhost:8234', 4)
+        worker2 = Worker('localhost:{}'.format(port), 4)
         for _ in range(3):
             if master.cpu_num == 8:
                 break

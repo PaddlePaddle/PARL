@@ -60,7 +60,8 @@ class TestJob(unittest.TestCase):
         disconnect()
 
     def test_acor_exit_exceptionally(self):
-        port = 1337
+        # reset_job_test.py will execute simulate_client.py, these two files must use the same port
+        port = 1337  # can not use get_free_tcp_port()
         master = Master(port)
         th = threading.Thread(target=master.run)
         th.start()

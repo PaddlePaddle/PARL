@@ -19,6 +19,7 @@ import threading
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.utils import get_free_tcp_port
 
 
 class TestImport(unittest.TestCase):
@@ -27,14 +28,14 @@ class TestImport(unittest.TestCase):
 
     def test_import_local_module(self):
         from Module2 import B
-        port = 8442
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(10)
-        parl.connect("localhost:8442")
+        parl.connect("localhost:{}".format(port))
         obj = B()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
@@ -43,7 +44,7 @@ class TestImport(unittest.TestCase):
 
     def test_import_subdir_module_0(self):
         from subdir import Module
-        port = 8443
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -51,7 +52,7 @@ class TestImport(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(10)
         parl.connect(
-            "localhost:8443",
+            "localhost:{}".format(port),
             distributed_files=[
                 os.path.join('subdir', 'Module.py'),
                 os.path.join('subdir', '__init__.py')
@@ -64,7 +65,7 @@ class TestImport(unittest.TestCase):
 
     def test_import_subdir_module_1(self):
         from subdir.Module import A
-        port = 8444
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
@@ -72,7 +73,7 @@ class TestImport(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(10)
         parl.connect(
-            "localhost:8444",
+            "localhost:{}".format(port),
             distributed_files=[
                 os.path.join('subdir', 'Module.py'),
                 os.path.join('subdir', '__init__.py')

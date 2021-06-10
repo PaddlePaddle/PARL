@@ -215,10 +215,10 @@ function main() {
                     run_import_test # import parl test
 
                     pip install -r .teamcity/requirements.txt
-                    pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
+                    pip install paddlepaddle==2.1.0
                     run_test_with_cpu $env
                     # uninstall paddlepaddle when testing remote module
-                    pip uninstall -y paddlepaddle-gpu
+                    pip uninstall -y paddlepaddle
                     run_test_with_cpu $env "DIS_TESTING_SERIALLY"
                     run_test_with_cpu $env "DIS_TESTING_REMOTE"
                 else
@@ -235,7 +235,7 @@ function main() {
             done
 
             pip install -r .teamcity/requirements.txt
-            pip install paddlepaddle-gpu==2.1.0.post101 -f https://paddlepaddle.org.cn/whl/mkl/stable.html
+            pip install /data/paddlepaddle_gpu-2.1.0.post101-cp38-cp38-linux_x86_64.whl
             run_test_with_gpu $env
             run_cartpole_test $env
 

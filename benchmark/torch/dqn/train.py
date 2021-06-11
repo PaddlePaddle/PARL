@@ -105,12 +105,12 @@ def run_evaluate_episode(agent, env):
 
 
 def main():
-    env = gym.make(args.env_name)
+    env = gym.make(args.env)
     env = wrap_deepmind(
         env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
-    test_env = gym.make(args.env_name)
-    test_env = wrap_deepmind(
-        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+    test_env = gym.make(args.env)
+    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+    test_env = TestEnv(test_env)
 
     rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
     act_dim = env.action_space.n
@@ -165,7 +165,7 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--env_name', default='PongNoFrameskip-v4', help='atari game name')
+        '--env', default='PongNoFrameskip-v4', help='atari game name')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument('--lr', default=3e-4, help='learning_rate')
@@ -182,5 +182,5 @@ if __name__ == '__main__':
         help='the step interval between two consecutive evaluations')
 
     args = parser.parse_args()
-    logger.set_dir(os.path.join('train_log', args.env_name))
+    logger.set_dir(os.path.join('train_log', args.env))
     main()

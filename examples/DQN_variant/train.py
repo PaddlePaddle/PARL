@@ -94,12 +94,12 @@ def run_evaluate_episodes(agent, env):
 
 def main():
     # set training env and test env
-    env = gym.make(args.env_name)
+    env = gym.make(args.env)
     env = wrap_deepmind(
         env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
-    test_env = gym.make(args.env_name)
-    test_env = wrap_deepmind(
-        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+    test_env = gym.make(args.env)
+    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+    test_env = TestEnv(test_env)
 
     env.seed(args.train_seed)
     test_env.seed(args.test_seed)
@@ -174,7 +174,7 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--env_name', help='name of the atari env', required=True)
+        '--env', help='name of the atari env', default='PongNoFrameskip-v4')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument(

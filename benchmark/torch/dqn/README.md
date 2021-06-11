@@ -26,7 +26,7 @@ Performance of **DQN** on various environments:
 ### Dependencies:
 + python>=3.6.2
 + [pytorch==1.7.1](https://pytorch.org/get-started/previous-versions/)
-+ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
 + tqdm
 + atari-py==0.2.6

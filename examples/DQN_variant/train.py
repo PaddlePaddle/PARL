@@ -100,7 +100,6 @@ def main():
     test_env = gym.make(args.env)
     test_env = wrap_deepmind(
         test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
-    test_env = TestEnv(test_env)
 
     env.seed(args.train_seed)
     test_env.seed(args.test_seed)

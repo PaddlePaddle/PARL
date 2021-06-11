@@ -23,7 +23,8 @@ class Actor(object):
 
 
 def train():
-    parl.connect('localhost:1337')
+    # reset_job_test.py will execute simulate_client.py, these two files must use the same port
+    parl.connect('localhost:1337')  # can not use get_free_tcp_port()
     actor = Actor()
     actor.add_one(1)
     time.sleep(100000)

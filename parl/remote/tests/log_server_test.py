@@ -31,6 +31,7 @@ from parl.remote.client import disconnect, get_global_client
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.utils import _IS_WINDOWS
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -71,7 +72,7 @@ class TestLogServer(unittest.TestCase):
         return outputs
 
     def test_log_server(self):
-        master_port = 8401
+        master_port = get_free_tcp_port()
         # start the master
         master = Master(port=master_port)
         th = threading.Thread(target=master.run)
@@ -79,7 +80,7 @@ class TestLogServer(unittest.TestCase):
         time.sleep(1)
 
         cluster_addr = 'localhost:{}'.format(master_port)
-        log_server_port = 8402
+        log_server_port = get_free_tcp_port()
         worker = Worker(cluster_addr, 4, log_server_port=log_server_port)
         outputs = self._connect_and_create_actor(cluster_addr)
 
@@ -118,8 +119,8 @@ class TestLogServer(unittest.TestCase):
         master.exit()
 
     def test_monitor_query_log_server(self):
-        master_port = 8403
-        monitor_port = 8404
+        master_port = get_free_tcp_port()
+        monitor_port = get_free_tcp_port()
         # start the master
         master = Master(port=master_port, monitor_port=monitor_port)
         th = threading.Thread(target=master.run)
@@ -142,7 +143,7 @@ class TestLogServer(unittest.TestCase):
 
         # Start worker
         cluster_addr = 'localhost:{}'.format(master_port)
-        log_server_port = 8405
+        log_server_port = get_free_tcp_port()
         worker = Worker(cluster_addr, 4, log_server_port=log_server_port)
 
         # Test monitor API

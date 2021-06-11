@@ -2,4 +2,4 @@
 gym
 details
 parameterized
-paddlepaddle==2.0.0
+paddlepaddle>=2.0.0

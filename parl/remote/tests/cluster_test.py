@@ -22,6 +22,7 @@ from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -60,19 +61,20 @@ class TestCluster(unittest.TestCase):
         time.sleep(60)  # wait for test case finishing
 
     def test_actor_exception(self):
+        port = get_free_tcp_port()
         logger.info("running:test_actor_exception")
-        master = Master(port=8235)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8235', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         for _ in range(3):
             if master.cpu_num == 1:
                 break
             time.sleep(10)
         self.assertEqual(1, master.cpu_num)
         logger.info("running:test_actor_exception: 0")
-        parl.connect('localhost:8235')
+        parl.connect('localhost:{}'.format(port))
         logger.info("running:test_actor_exception: 1")
 
         with self.assertRaises(exceptions.RemoteError):
@@ -91,14 +93,15 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
 
     def test_actor_exception_2(self):
+        port = get_free_tcp_port()
         logger.info("running: test_actor_exception_2")
-        master = Master(port=8236)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:8236', 1)
+        worker1 = Worker('localhost:{}'.format(port), 1)
         self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:8236')
+        parl.connect('localhost:{}'.format(port))
         actor = Actor()
         with self.assertRaises(exceptions.RemoteError):
             actor.will_raise_exception_func()

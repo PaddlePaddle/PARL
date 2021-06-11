@@ -34,4 +34,4 @@ Parallelization
 
 | As shown in the above figure, real actors (orange circle) are running at the cpu cluster, while the learner (blue circle) is running at the local gpu with several remote actors (yellow circle with dotted edge).
 
-| For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallelized algorithms like IMPALA, :doc:`A2C <../implementations/a2c>` and GA3C. For more details in usage please refer to these examples.
+| For users, they can write code in a simple way, just like writing multi-thread code, but with actors consuming remote resources. We have also provided examples of parallelized algorithms like IMPALA, :doc:`A2C <../implementations/a2c>`. For more details in usage please refer to these examples.

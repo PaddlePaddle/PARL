@@ -97,15 +97,15 @@ function run_test_with_cpu() {
 EOF
     if [ "$#" == 2 ] && [ "$2" == "DIS_TESTING_SERIALLY" ]
     then
-      ctest --output-on-failure 
+        ctest --output-on-failure 
     else
-      ctest --output-on-failure -j20
+        ctest --output-on-failure -j20
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_single_paddle_test() {
+function run_single_fluid_test() {
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
     cmake .. -$1=ON
@@ -114,7 +114,7 @@ function run_single_paddle_test() {
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_test_with_dygraph_paddle() {
+function run_test_with_fluid() {
     # declare -a envs=("py27" "py36" "py37")
     declare -a envs=("py37")
     for env in "${envs[@]}";do
@@ -124,22 +124,29 @@ function run_test_with_dygraph_paddle() {
         source activate $env
         python -m pip install --upgrade pip
         echo "========================================"
-        echo "Running tests in $env with paddle 2.0.0 .."
+        echo "Running tests in $env with paddlepaddle 1.8.5 .."
         echo `which pip`
         echo "========================================"
         pip install .
-        pip install -r .teamcity/requirements_paddle.txt
+        pip install -r .teamcity/requirements_fluid.txt
 
         echo "========================================"
-        echo "Running dygraph unit tests with CPU..."
+        echo "Running fluid unit tests with CPU..."
         echo "========================================"
         export CUDA_VISIBLE_DEVICES=""
-        run_single_paddle_test "DIS_TESTING_PADDLE"
+        run_single_fluid_test "DIS_TESTING_FLUID"
 
         # clean env
         export LC_ALL=C.UTF-8
         export LANG=C.UTF-8
         xparl stop
+    done
+}
+
+function run_cartpole_test {
+    for exp in QuickStart DQN
+    do
+        python examples/${exp}/train.py
     done
 }
 
@@ -186,64 +193,63 @@ function main() {
     init
     case $CMD in
         check_style)
-          check_style
-          ;;
+            check_style
+            ;;
         test)
-          # test code compability in environments with various python versions
-          #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
-          declare -a envs=("py27" "py36" "py37" "py38")
-          for env in "${envs[@]}";do
-              cd /work
-              source ~/.bashrc
-              export PATH="/root/miniconda3/bin:$PATH"
-              source activate $env
-              python -m pip install --upgrade pip
-              echo ========================================
-              echo Running tests in $env ..
-              echo `which pip`
-              echo ========================================
-              pip install .
-              if [ \( $env == "py27" -o $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
-              then
-                pip install -r .teamcity/requirements.txt
-                run_test_with_cpu $env
-                # uninstall paddlepaddle when testing remote module
-                pip uninstall -y paddlepaddle-gpu
-                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                run_test_with_cpu $env "DIS_TESTING_REMOTE"
-              else
+            # test code compability in environments with various python versions
+            #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
+            declare -a envs=("py36" "py37" "py38")
+            for env in "${envs[@]}";do
+                cd /work
+                source ~/.bashrc
+                export PATH="/root/miniconda3/bin:$PATH"
+                source activate $env
+                python -m pip install --upgrade pip
                 echo ========================================
-                echo "in torch environment"
+                echo Running tests in $env ..
+                echo `which pip`
                 echo ========================================
-                pip install -r .teamcity/requirements_torch.txt
-                run_test_with_cpu $env "DIS_TESTING_TORCH"
-              fi
-              # clean env
-              export LC_ALL=C.UTF-8
-              export LANG=C.UTF-8
-              xparl stop
-          done
+                pip install .
+                if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
+                then
+                    run_import_test # import parl test
 
-          pip install -r .teamcity/requirements.txt
-          run_test_with_gpu $env
+                    pip install -r .teamcity/requirements.txt
+                    pip install paddlepaddle==2.1.0
+                    run_test_with_cpu $env
+                    # uninstall paddlepaddle when testing remote module
+                    pip uninstall -y paddlepaddle
+                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                else
+                    echo ========================================
+                    echo "in torch environment"
+                    echo ========================================
+                    pip install -r .teamcity/requirements_torch.txt
+                    run_test_with_cpu $env "DIS_TESTING_TORCH"
+                fi
+                # clean env
+                export LC_ALL=C.UTF-8
+                export LANG=C.UTF-8
+                xparl stop
+            done
 
-          run_test_with_dygraph_paddle
+            pip install -r .teamcity/requirements.txt
+            pip install /data/paddle_package/paddlepaddle_gpu-2.1.0.post101-cp38-cp38-linux_x86_64.whl
+            run_test_with_gpu $env
+            run_cartpole_test $env
 
-          # import test
-          source ~/.bashrc
-          export PATH="/root/miniconda3/bin:$PATH"
-          source activate empty_env
-          pip install .
-          run_import_test
-          ############
+            run_test_with_fluid
+            ############
+            # run_docs_test
 
-          run_docs_test
-          ;;
+            ;;
         *)
-          print_usage
-          exit 0
-          ;;
+            print_usage
+            exit 0
+            ;;
     esac
+    echo "finished: ${CMD}"
 }
 
 main $@

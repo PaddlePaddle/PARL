@@ -119,7 +119,7 @@ class Agent(AgentBase):
             os.makedirs(dirname)
         torch.save(model.state_dict(), save_path)
 
-    def restore(self, save_path, model=None):
+    def restore(self, save_path, model=None, map_location=None):
         """Restore previously saved parameters.
         This method requires a model that describes the network structure.
         The save_path argument is typically a value previously passed to ``save()``.
@@ -127,6 +127,7 @@ class Agent(AgentBase):
         Args:
             save_path(str): path where parameters were previously saved.
             model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
+            map_location: a function, torch.device, string or a dict specifying how to remap storage locations
 
         Raises:
             ValueError: if model is None and self.alg does not exist.
@@ -138,10 +139,11 @@ class Agent(AgentBase):
             agent = AtariAgent()
             agent.save('./model.ckpt')
             agent.restore('./model.ckpt')
-
+            
+            agent.restore('./model.ckpt', map_location=torch.device('cpu')) # load gpu-trained model in cpu machine
         """
 
         if model is None:
             model = self.alg.model
-        checkpoint = torch.load(save_path)
+        checkpoint = torch.load(save_path, map_location=map_location)
         model.load_state_dict(checkpoint)

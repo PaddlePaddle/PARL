@@ -109,7 +109,8 @@ def main():
     env = wrap_deepmind(
         env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
     test_env = gym.make(args.env)
-    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+    test_env = wrap_deepmind(
+        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
     test_env = TestEnv(test_env)
 
     rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)

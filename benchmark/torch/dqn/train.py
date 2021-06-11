@@ -182,5 +182,5 @@ if __name__ == '__main__':
         help='the step interval between two consecutive evaluations')
 
     args = parser.parse_args()
-    logger.set_dir('train_log/{}'.format(args.env_name))
+    logger.set_dir(os.path.join('train_log', args.env_name))
     main()

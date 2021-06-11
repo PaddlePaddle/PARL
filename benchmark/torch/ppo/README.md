@@ -1,10 +1,6 @@
 ## Reproduce PPO with PARL
 Based on PARL, the PPO algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in mujoco benchmarks.
 
-Include following approach:
-+ Clipped Surrogate Objective
-+ Adaptive KL Penalty Coefficient
-
 > Paper: PPO in [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
 ### Mujoco games introduction
@@ -20,9 +16,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Dependencies:
 + python>=3.6.2
 + [pytorch==1.7.1](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.9.2
-+ tqdm
 + mujoco-py==0.5.7
 
 ### Start Training:

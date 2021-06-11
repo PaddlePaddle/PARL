@@ -25,7 +25,7 @@ Performance of **Dueling DQN** on various environments:
 ## How to use
 ### Dependencies:
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
 + tqdm
 + atari-py==0.2.6
@@ -33,7 +33,7 @@ Performance of **Dueling DQN** on various environments:
 ### Start Training:
 ```
 # To train a model for Pong game
-python train.py --env_name PongNoFrameskip-v4
+python train.py
 
 # For more customized arguments
 python train.py --help

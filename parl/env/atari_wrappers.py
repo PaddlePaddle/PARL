@@ -259,6 +259,44 @@ class FrameStack(gym.Wrapper):
             return np.array(self.frames)
 
 
+class TestEnv(gym.Wrapper):
+    def __init__(self, env, eval_episodes=3):
+        """env wrapper for test and validation."""
+        gym.Wrapper.__init__(self, env)
+        self._env = env
+        self._monitor = get_wrapper_by_cls(env, MonitorEnv)
+        self._eval_episodes = eval_episodes
+        self._was_real_done = False
+        self._eval_rewards = None
+        self._end_episode = len(env.get_episode_rewards()) + eval_episodes
+
+    def step(self, action):
+        ob, reward, done, info = self._env.step(action)
+        return ob, reward, done, info
+
+    def reset(self, **kwargs):
+        obs = self._env.reset(**kwargs)
+        if self._get_curr_episode() == self._end_episode:
+            self._was_real_done = True
+            self._eval_rewards = \
+                self._monitor.get_episode_rewards()[-self._eval_episodes:]
+            self._end_episode = self._end_episode + self._eval_episodes
+        else:
+            self._was_real_done = False
+            self._eval_rewards = None
+
+        return obs
+
+    def get_eval_rewards(self):
+        return self._eval_rewards
+
+    def get_real_done(self):
+        return self._was_real_done
+
+    def _get_curr_episode(self):
+        return len(self._monitor.get_episode_rewards())
+
+
 def wrap_deepmind(env, dim=84, framestack=True, obs_format='NHWC'):
     """Configure environment for DeepMind-style Atari.
 

@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,19 @@
 # limitations under the License.
 
 import argparse
-import cv2
-import gym
 import os
-import threading
 import torch
 import parl
+import gym
 
 import numpy as np
 from tqdm import tqdm
 from parl.utils import summary, logger
 from parl.algorithms import DQN, DDQN
-
+from parl.env.atari_wrappers import wrap_deepmind, TestEnv
 from agent import AtariAgent
-from atari_wrapper import FireResetEnv, FrameStack, LimitLength
 from model import AtariModel
 from replay_memory import ReplayMemory, Experience
-from utils import get_player
 
 MEMORY_SIZE = int(1e6)
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
@@ -38,6 +34,7 @@ CONTEXT_LEN = 4
 FRAME_SKIP = 4
 UPDATE_FREQ = 4
 GAMMA = 0.99
+EVAL_RENDER = False
 
 
 def run_train_episode(env, agent, rpm):
@@ -69,18 +66,6 @@ def run_train_episode(env, agent, rpm):
             return total_reward, steps, mean_loss
 
 
-def run_evaluate_episode(env, agent):
-    obs = env.reset()
-    total_reward = 0
-    while True:
-        pred_Q = agent.predict(obs)
-        action = pred_Q.max(1)[1].item()
-        obs, reward, isOver, _ = env.step(action)
-        total_reward += reward
-        if isOver:
-            return total_reward
-
-
 def get_fixed_obs(rpm, batch_size):
     obs = []
     for _ in range(3):
@@ -107,14 +92,27 @@ def get_grad_norm(model):
     return total_norm
 
 
+def run_evaluate_episode(agent, env):
+    obs = env.reset()
+    while not env.get_real_done():
+        pred_q = agent.predict(obs)
+        action = pred_q.max(1)[1].item()
+        obs, _, done, _ = env.step(action)
+        if EVAL_RENDER:
+            env.render()
+        if done:
+            obs = env.reset()
+    return np.mean(env.get_eval_rewards())
+
+
 def main():
-    env = get_player(
-        args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
-    test_env = get_player(
-        args.rom,
-        image_size=IMAGE_SIZE,
-        frame_skip=FRAME_SKIP,
-        context_len=CONTEXT_LEN)
+    env = gym.make(args.env_name)
+    env = wrap_deepmind(
+        env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
+    test_env = gym.make(args.env_name)
+    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW')
+    test_env = TestEnv(test_env)
+
     rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
     act_dim = env.action_space.n
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -148,13 +146,12 @@ def main():
                 while total_steps // args.test_every_steps >= test_flag:
                     test_flag += 1
 
-                eval_rewards = []
-                for _ in range(3):
-                    eval_rewards.append(run_evaluate_episode(test_env, agent))
+                eval_rewards = run_evaluate_episode(agent, test_env)
 
-                summary.add_scalar('dqn/eval', np.mean(eval_rewards),
+                summary.add_scalar('dqn/mean validation rewards', eval_rewards,
                                    total_steps)
-                summary.add_scalar('dqn/score', total_reward, total_steps)
+                summary.add_scalar('dqn/training rewards', total_reward,
+                                   total_steps)
                 summary.add_scalar('dqn/loss', loss, total_steps)
                 summary.add_scalar('dqn/exploration', agent.exploration,
                                    total_steps)
@@ -167,7 +164,8 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rom', default='rom_files/breakout.bin')
+    parser.add_argument(
+        '--env_name', default='PongNoFrameskip-v4', help='atari game name')
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument('--lr', default=3e-4, help='learning_rate')
@@ -182,7 +180,7 @@ if __name__ == '__main__':
         type=int,
         default=int(1e5),
         help='the step interval between two consecutive evaluations')
+
     args = parser.parse_args()
-    rom_name = args.rom.split('/')[-1].split('.')[0]
-    logger.set_dir(os.path.join('./train_log', rom_name))
+    logger.set_dir('train_log/{}'.format(args.env_name))
     main()

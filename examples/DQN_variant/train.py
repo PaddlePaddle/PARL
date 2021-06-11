@@ -21,8 +21,8 @@ from parl.utils import logger, summary
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from replay_memory import ReplayMemory, Experience
+from parl.env.atari_wrappers import wrap_deepmind, TestEnv
 from parl.algorithms import DQN, DDQN
-from utils import get_player
 from tqdm import tqdm
 import argparse
 
@@ -80,34 +80,26 @@ def run_train_episode(agent, env, rpm):
     return total_reward, step, np.mean(loss_lst)
 
 
-def run_evaluate_episodes(agent, env, eval_rounds=3):
-    eval_reward = []
-    for _ in range(eval_rounds):
-        obs = env.reset()
-        episode_reward = 0
-        while True:
-            action = agent.predict(obs)
-            obs, reward, done, _ = env.step(action)
-            episode_reward += reward
-            if EVAL_RENDER:
-                env.render()
-
-            if done:
-                break
-
-        eval_reward.append(episode_reward)
-    return np.mean(eval_reward), eval_reward
+def run_evaluate_episodes(agent, env):
+    obs = env.reset()
+    while not env.get_real_done():
+        action = agent.predict(obs)
+        obs, _, done, _ = env.step(action)
+        if EVAL_RENDER:
+            env.render()
+        if done:
+            obs = env.reset()
+    return np.mean(env.get_eval_rewards())
 
 
 def main():
     # set training env and test env
-    env = get_player(
-        args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
-    test_env = get_player(
-        args.rom,
-        image_size=IMAGE_SIZE,
-        frame_skip=FRAME_SKIP,
-        context_len=CONTEXT_LEN)
+    env = gym.make(args.env_name)
+    env = wrap_deepmind(
+        env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
+    test_env = gym.make(args.env_name)
+    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW')
+    test_env = TestEnv(test_env)
 
     env.seed(args.train_seed)
     test_env.seed(args.test_seed)
@@ -163,7 +155,7 @@ def main():
                 test_flag += 1
 
             pbar.write("testing")
-            eval_rewards_mean, _ = run_evaluate_episodes(agent, test_env)
+            eval_rewards_mean = run_evaluate_episodes(agent, test_env)
 
             logger.info(
                 "eval_agent done, (steps, eval_reward): ({}, {})".format(
@@ -174,14 +166,6 @@ def main():
 
     pbar.close()
 
-    # final test score
-    eval_rewards_mean, eval_rewards = run_evaluate_episodes(
-        agent, test_env, 20)
-    std = np.std(eval_rewards)
-
-    logger.info("final mean {} test rewards is {} +- {}".format(
-        20, eval_rewards_mean, std))
-
     # save the parameters to ./model.ckpt
     save_path = './model/model.ckpt'
     agent.save(save_path)
@@ -190,7 +174,7 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--rom', help='path of the rom of the atari game', required=True)
+        '--env_name', help='name of the atari env', required=True)
     parser.add_argument(
         '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument(

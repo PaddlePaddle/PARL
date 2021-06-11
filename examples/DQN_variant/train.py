@@ -21,7 +21,7 @@ from parl.utils import logger, summary
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from replay_memory import ReplayMemory, Experience
-from parl.env.atari_wrappers import wrap_deepmind, TestEnv
+from parl.env.atari_wrappers import wrap_deepmind
 from parl.algorithms import DQN, DDQN
 from tqdm import tqdm
 import argparse
@@ -98,8 +98,8 @@ def main():
     env = wrap_deepmind(
         env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
     test_env = gym.make(args.env_name)
-    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW')
-    test_env = TestEnv(test_env)
+    test_env = wrap_deepmind(
+        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
 
     env.seed(args.train_seed)
     test_env.seed(args.test_seed)

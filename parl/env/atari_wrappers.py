@@ -261,7 +261,13 @@ class FrameStack(gym.Wrapper):
 
 class TestEnv(gym.Wrapper):
     def __init__(self, env, eval_episodes=3):
-        """env wrapper for test and validation."""
+        """ env wrapper for test and validation in atari environment.
+
+        Args:
+            env (ClipRewardEnv or FrameStack): the atari env
+            eval_episodes (int): number of episodes for evaluation
+        """
+
         gym.Wrapper.__init__(self, env)
         self._env = env
         self._monitor = get_wrapper_by_cls(env, MonitorEnv)
@@ -297,7 +303,7 @@ class TestEnv(gym.Wrapper):
         return len(self._monitor.get_episode_rewards())
 
 
-def wrap_deepmind(env, dim=84, framestack=True, obs_format='NHWC'):
+def wrap_deepmind(env, dim=84, framestack=True, obs_format='NHWC', test=False):
     """Configure environment for DeepMind-style Atari.
 
     Args:
@@ -315,4 +321,6 @@ def wrap_deepmind(env, dim=84, framestack=True, obs_format='NHWC'):
     env = ClipRewardEnv(env)
     if framestack:
         env = FrameStack(env, 4, obs_format)
+    if test:
+        env = TestEnv(env)
     return env

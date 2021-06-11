@@ -22,7 +22,7 @@ import numpy as np
 from tqdm import tqdm
 from parl.utils import summary, logger
 from parl.algorithms import DQN, DDQN
-from parl.env.atari_wrappers import wrap_deepmind, TestEnv
+from parl.env.atari_wrappers import wrap_deepmind
 from agent import AtariAgent
 from model import AtariModel
 from replay_memory import ReplayMemory, Experience
@@ -95,8 +95,7 @@ def get_grad_norm(model):
 def run_evaluate_episode(agent, env):
     obs = env.reset()
     while not env.get_real_done():
-        pred_q = agent.predict(obs)
-        action = pred_q.max(1)[1].item()
+        action = agent.predict(obs)
         obs, _, done, _ = env.step(action)
         if EVAL_RENDER:
             env.render()
@@ -110,8 +109,8 @@ def main():
     env = wrap_deepmind(
         env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
     test_env = gym.make(args.env_name)
-    test_env = wrap_deepmind(test_env, dim=IMAGE_SIZE[0], obs_format='NCHW')
-    test_env = TestEnv(test_env)
+    test_env = wrap_deepmind(
+        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
 
     rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
     act_dim = env.action_space.n
@@ -160,6 +159,7 @@ def main():
                                    total_steps)
                 summary.add_scalar('dqn/grad_norm',
                                    get_grad_norm(agent.alg.model), total_steps)
+                print(eval_rewards)
 
 
 if __name__ == '__main__':

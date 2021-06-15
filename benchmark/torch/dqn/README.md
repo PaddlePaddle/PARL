@@ -16,15 +16,16 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 
 *Benchmark results are obtained using different random seeds.*
 
-Performance of **Dueling DQN** on various environments:
+Performance of **DQN** on various environments:
 
 <p align="center">
-<img src=".benchmark/Dueling DQN.png" alt="result"/>
+<img src=".benchmark/dqn.png" alt="result"/>
 </p>
 
 ## How to use
 ### Dependencies:
-+ [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
++ python>=3.6.2
++ [pytorch==1.7.1](https://pytorch.org/get-started/previous-versions/)
 + [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
 + tqdm

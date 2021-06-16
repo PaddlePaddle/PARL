@@ -87,8 +87,7 @@ class SAC(parl.Algorithm):
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with paddle.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
-            q1_next, q2_next = self.target_model.value(
-                next_obs, next_action)
+            q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = paddle.minimum(q1_next,
                                       q2_next) - self.alpha * next_log_pro
             terminal = paddle.cast(terminal, dtype='float32')

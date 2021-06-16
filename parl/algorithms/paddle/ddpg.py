@@ -85,8 +85,7 @@ class DDPG(parl.Algorithm):
 
     def _actor_learn(self, obs):
         # Compute actor loss and Update the frozen target models
-        actor_loss = -self.model.value(
-            obs, self.model.policy(obs)).mean()
+        actor_loss = -self.model.value(obs, self.model.policy(obs)).mean()
 
         # Optimize the actor
         self.actor_optimizer.clear_grad()

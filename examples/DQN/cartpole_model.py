@@ -34,7 +34,7 @@ class CartpoleModel(parl.Model):
         self.fc2 = nn.Linear(hid1_size, hid2_size)
         self.fc3 = nn.Linear(hid2_size, act_dim)
 
-    def value(self, obs):
+    def forward(self, obs):
         h1 = F.relu(self.fc1(obs))
         h2 = F.relu(self.fc2(h1))
         Q = self.fc3(h2)

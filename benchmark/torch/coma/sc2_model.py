@@ -33,10 +33,10 @@ class ComaModel(parl.Model):
         self.critic_model = CriticModel(critic_input_dim, self.n_actions)
 
     def policy(self, obs, hidden_state):
-        return self.actor_model.policy(obs, hidden_state)
+        return self.actor_model(obs, hidden_state)
 
     def value(self, inputs):
-        return self.critic_model.value(inputs)
+        return self.critic_model(inputs)
 
     def get_actor_params(self):
         return self.actor_model.parameters()
@@ -75,7 +75,7 @@ class ActorModel(parl.Model):
         # new hidden states
         return self.fc1.weight.new(1, self.hid_size).zero_()
 
-    def policy(self, obs, h0):
+    def forward(self, obs, h0):
         x = F.relu(self.fc1(obs))
         h1 = h0.reshape(-1, self.hid_size)
         h2 = self.rnn(x, h1)
@@ -95,7 +95,7 @@ class CriticModel(parl.Model):
         self.fc2 = nn.Linear(hid_size, hid_size)
         self.fc3 = nn.Linear(hid_size, act_dim)
 
-    def value(self, inputs):
+    def forward(self, inputs):
         hid1 = F.relu(self.fc1(inputs))
         hid2 = F.relu(self.fc2(hid1))
         Q = self.fc3(hid2)

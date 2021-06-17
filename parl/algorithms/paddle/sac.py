@@ -87,13 +87,12 @@ class SAC(parl.Algorithm):
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with paddle.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
-            q1_next, q2_next = self.target_model.critic_model(
-                next_obs, next_action)
+            q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = paddle.minimum(q1_next,
                                       q2_next) - self.alpha * next_log_pro
             terminal = paddle.cast(terminal, dtype='float32')
             target_Q = reward + self.gamma * (1. - terminal) * target_Q
-        cur_q1, cur_q2 = self.model.critic_model(obs, action)
+        cur_q1, cur_q2 = self.model.value(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
             cur_q2, target_Q)
@@ -105,7 +104,7 @@ class SAC(parl.Algorithm):
 
     def _actor_learn(self, obs):
         act, log_pi = self.sample(obs)
-        q1_pi, q2_pi = self.model.critic_model(obs, act)
+        q1_pi, q2_pi = self.model.value(obs, act)
         min_q_pi = paddle.minimum(q1_pi, q2_pi)
         actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
 

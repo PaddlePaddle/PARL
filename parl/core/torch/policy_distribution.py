@@ -87,7 +87,7 @@ class CategoricalDistribution(PolicyDistribution):
         z = torch.sum(e_logits, dim=1)
         prob = e_logits / z
 
-        actions = torch.unsqueeze(actions, axis=1)
+        actions = torch.unsqueeze(actions, dim=1)
         actions_onehot = F.one_hot(actions, prob.shape[1])
         actions_onehot = torch.cast(actions_onehot, dtype='float32')
         actions_prob = torch.sum(prob * actions_onehot, dim=1)

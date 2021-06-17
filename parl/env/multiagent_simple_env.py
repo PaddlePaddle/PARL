@@ -23,6 +23,11 @@ class MAenv(MultiAgentEnv):
     """
 
     def __init__(self, scenario_name):
+        assert scenario_name in [
+            'simple', 'simple_adversary', 'simple_push', 'simple_reference',
+            'simple_speaker_listener', 'simple_spread', 'simple_tag',
+            'simple_world_comm'
+        ], 'env [{}] does not exist.'.format(scenario_name)
         # load scenario from script
         scenario = scenarios.load(scenario_name + ".py").Scenario()
         # create world

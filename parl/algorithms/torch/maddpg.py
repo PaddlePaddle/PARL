@@ -122,6 +122,7 @@ class MADDPG(parl.Algorithm):
         """
         actor_cost = self._actor_learn(obs_n, act_n)
         critic_cost = self._critic_learn(obs_n, act_n, target_q)
+        self.sync_target()
         return critic_cost
 
     def _actor_learn(self, obs_n, act_n):

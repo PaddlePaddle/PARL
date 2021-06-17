@@ -32,10 +32,10 @@ class MAModel(parl.Model):
         self.critic_model = CriticModel(critic_in_dim)
 
     def policy(self, obs):
-        return self.actor_model.policy(obs)
+        return self.actor_model(obs)
 
     def value(self, obs, act):
-        return self.critic_model.value(obs, act)
+        return self.critic_model(obs, act)
 
     def get_actor_params(self):
         return self.actor_model.parameters()
@@ -54,7 +54,7 @@ class ActorModel(parl.Model):
         self.fc3 = nn.Linear(hid2_size, act_dim)
         self.apply(weights_init_)
 
-    def policy(self, obs):
+    def forward(self, obs):
         hid1 = F.relu(self.fc1(obs))
         hid2 = F.relu(self.fc2(hid1))
         means = self.fc3(hid2)
@@ -72,7 +72,7 @@ class CriticModel(parl.Model):
         self.fc3 = nn.Linear(hid2_size, out_dim)
         self.apply(weights_init_)
 
-    def value(self, obs_n, act_n):
+    def forward(self, obs_n, act_n):
         inputs = torch.cat(obs_n + act_n, dim=1)
         hid1 = F.relu(self.fc1(inputs))
         hid2 = F.relu(self.fc2(hid1))

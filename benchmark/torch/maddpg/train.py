@@ -19,9 +19,14 @@ import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
-import parl
 from parl.env.multiagent_simple_env import MAenv
 from parl.utils import logger, tensorboard
+
+CRITIC_LR = 0.01  # learning rate for the critic model
+ACTOR_LR = 0.01  # learning rate of the actor model
+GAMMA = 0.95  # reward discount factor
+TAU = 0.01  # soft update
+BATCH_SIZE = 1024
 
 
 def run_episode(env, agents):
@@ -77,6 +82,7 @@ def train_agent():
     logger.info('action_space: {}'.format(env.action_space))
     logger.info('obs_shape_n: {}'.format(env.obs_shape_n))
     logger.info('act_shape_n: {}'.format(env.act_shape_n))
+
     for i in range(env.n):
         logger.info('agent {} obs_low:{} obs_high:{}'.format(
             i, env.observation_space[i].low, env.observation_space[i].high))
@@ -94,10 +100,7 @@ def train_agent():
         assert (isinstance(space, spaces.Discrete)
                 or isinstance(space, MultiDiscrete))
 
-    critic_in_dim = 0
-    for i in range(env.n):
-        critic_in_dim += env.obs_shape_n[i]
-        critic_in_dim += env.act_shape_n[i]
+    critic_in_dim = sum(env.obs_shape_n) + sum(env.act_shape_n)
     logger.info('critic_in_dim: {}'.format(critic_in_dim))
 
     agents = []
@@ -107,16 +110,16 @@ def train_agent():
             model,
             agent_index=i,
             act_space=env.action_space,
-            gamma=args.gamma,
-            tau=args.tau,
-            critic_lr=args.critic_lr,
-            actor_lr=args.actor_lr)
+            gamma=GAMMA,
+            tau=TAU,
+            critic_lr=CRITIC_LR,
+            actor_lr=ACTOR_LR)
         agent = MAAgent(
             algorithm,
             agent_index=i,
             obs_dim_n=env.obs_shape_n,
             act_dim_n=env.act_shape_n,
-            batch_size=args.batch_size,
+            batch_size=BATCH_SIZE,
             speedup=(not args.restore))
         agents.append(agent)
     total_steps = 0
@@ -124,8 +127,6 @@ def train_agent():
 
     episode_rewards = []  # sum of rewards for all agents
     agent_rewards = [[] for _ in range(env.n)]  # individual agent reward
-    final_ep_rewards = []  # sum of rewards for training curve
-    final_ep_ag_rewards = []  # agent rewards for training curve
 
     if args.restore:
         # restore modle
@@ -145,8 +146,8 @@ def train_agent():
                                total_episodes)
         tensorboard.add_scalar('train_reward/step', ep_reward, total_steps)
         if args.show:
-            print('episode {}, reward {}, steps {}'.format(
-                total_episodes, ep_reward, steps))
+            print('episode {}, reward {}, agents rewards {}, steps {}'.format(
+                total_episodes, ep_reward, ep_agent_rewards, steps))
 
         # Record reward
         total_steps += steps
@@ -157,15 +158,17 @@ def train_agent():
 
         # Keep track of final episode reward
         if total_episodes % args.stat_rate == 0:
-            mean_episode_reward = np.mean(episode_rewards[-args.stat_rate:])
-            final_ep_rewards.append(mean_episode_reward)
+            mean_episode_reward = round(
+                np.mean(episode_rewards[-args.stat_rate:]), 3)
+            final_ep_ag_rewards = []  # agent rewards for training curve
             for rew in agent_rewards:
-                final_ep_ag_rewards.append(np.mean(rew[-args.stat_rate:]))
+                final_ep_ag_rewards.append(
+                    round(np.mean(rew[-args.stat_rate:]), 2))
             use_time = round(time.time() - t_start, 3)
             logger.info(
-                'Steps: {}, Episodes: {}, Mean episode reward: {}, Time: {}'.
-                format(total_steps, total_episodes, mean_episode_reward,
-                       use_time))
+                'Steps: {}, Episodes: {}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
+                .format(total_steps, total_episodes, mean_episode_reward,
+                        final_ep_ag_rewards, use_time))
             t_start = time.time()
             tensorboard.add_scalar('mean_episode_reward/episode',
                                    mean_episode_reward, total_episodes)
@@ -176,10 +179,11 @@ def train_agent():
 
             # save model
             if not args.restore:
-                os.makedirs(os.path.dirname(args.model_dir), exist_ok=True)
+                model_dir = args.model_dir
+                os.makedirs(os.path.dirname(model_dir), exist_ok=True)
                 for i in range(len(agents)):
                     model_name = '/agent_' + str(i)
-                    agents[i].save(args.model_dir + model_name)
+                    agents[i].save(model_dir + model_name)
 
 
 if __name__ == '__main__':
@@ -191,39 +195,20 @@ if __name__ == '__main__':
         default='simple_speaker_listener',
         help='scenario of MultiAgentEnv')
     parser.add_argument(
-        '--max_step_per_episode',
-        type=int,
-        default=25,
-        help='maximum step per episode')
-    parser.add_argument(
         '--max_episodes',
         type=int,
         default=25000,
         help='stop condition:number of episodes')
     parser.add_argument(
+        '--max_step_per_episode',
+        type=int,
+        default=25,
+        help='maximum step per episode')
+    parser.add_argument(
         '--stat_rate',
         type=int,
         default=1000,
         help='statistical interval of save model or count reward')
-    # Core training parameters
-    parser.add_argument(
-        '--critic_lr',
-        type=float,
-        default=1e-2,
-        help='learning rate for the critic model')
-    parser.add_argument(
-        '--actor_lr',
-        type=float,
-        default=1e-2,
-        help='learning rate of the actor model')
-    parser.add_argument(
-        '--gamma', type=float, default=0.95, help='discount factor')
-    parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=1024,
-        help='number of episodes to optimize at the same time')
-    parser.add_argument('--tau', type=int, default=0.01, help='soft update')
     # auto save model, optional restore model
     parser.add_argument(
         '--show', action='store_true', default=False, help='display or not')

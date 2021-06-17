@@ -63,10 +63,12 @@ class MAAgent(parl.Agent):
         """
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
         act = self.alg.predict(obs, use_target_model=use_target_model)
-        act_numpy = act.cpu().detach().numpy().flatten()
+        act_numpy = act.detach().cpu().numpy().flatten()
         return act_numpy
 
     def learn(self, agents):
+        """ sample batch, compute q_target and train
+        """
         self.global_train_step += 1
 
         # only update parameter every 100 steps
@@ -80,6 +82,7 @@ class MAAgent(parl.Agent):
         batch_act_n = []
         batch_obs_next_n = []
 
+        # sample batch
         rpm_sample_index = self.rpm.make_index(self.batch_size)
         for i in range(self.n):
             batch_obs, batch_act, _, batch_obs_next, _ \
@@ -117,7 +120,6 @@ class MAAgent(parl.Agent):
         critic_cost = self.alg.learn(batch_obs_n, batch_act_n, target_q)
         critic_cost = critic_cost.cpu().detach().numpy()
 
-        self.alg.sync_target()
         return critic_cost
 
     def add_experience(self, obs, act, reward, next_obs, terminal):

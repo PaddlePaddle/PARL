@@ -63,11 +63,11 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
-        logits = self.logits - torch.max(self.logits, axis=1)
+        logits = self.logits - torch.max(self.logits, dim=1)
         e_logits = torch.exp(logits)
-        z = torch.sum(e_logits, axis=1)
+        z = torch.sum(e_logits, dim=1)
         prob = e_logits / z
-        entropy = -1.0 * torch.sum(prob * (logits - torch.log(z)), axis=1)
+        entropy = -1.0 * torch.sum(prob * (logits - torch.log(z)), dim=1)
 
         return entropy
 
@@ -82,15 +82,15 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert len(actions.shape) == 1
 
-        logits = self.logits - torch.max(self.logits, axis=1)
+        logits = self.logits - torch.max(self.logits, dim=1)
         e_logits = torch.exp(logits)
-        z = torch.sum(e_logits, axis=1)
+        z = torch.sum(e_logits, dim=1)
         prob = e_logits / z
 
         actions = torch.unsqueeze(actions, axis=1)
         actions_onehot = F.one_hot(actions, prob.shape[1])
         actions_onehot = torch.cast(actions_onehot, dtype='float32')
-        actions_prob = torch.sum(prob * actions_onehot, axis=1)
+        actions_prob = torch.sum(prob * actions_onehot, dim=1)
 
         actions_prob = actions_prob + eps
         actions_log_prob = torch.log(actions_prob)
@@ -107,19 +107,19 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert isinstance(other, CategoricalDistribution)
 
-        logits = self.logits - torch.max(self.logits, axis=1)
-        other_logits = other.logits - torch.max(other.logits, axis=1)
+        logits = self.logits - torch.max(self.logits, dim=1)
+        other_logits = other.logits - torch.max(other.logits, dim=1)
 
         e_logits = torch.exp(logits)
         other_e_logits = torch.exp(other_logits)
 
-        z = torch.sum(e_logits, axis=1)
-        other_z = torch.sum(other_e_logits, axis=1)
+        z = torch.sum(e_logits, dim=1)
+        other_z = torch.sum(other_e_logits, dim=1)
 
         prob = e_logits / z
         kl = torch.sum(
             prob * (logits - torch.log(z) - other_logits + torch.log(other_z)),
-            axis=1)
+            dim=1)
         return kl
 
 
@@ -176,7 +176,7 @@ class SoftMultiCategoricalDistribution(PolicyDistribution):
         cate_list = []
         for i in range(len(self.categoricals)):
             cate_list.append(self.low[i] + self.categoricals[i].sample())
-        return torch.cat(cate_list, axis=-1)
+        return torch.cat(cate_list, dim=-1)
 
     def layers_add_n(self, input_list):
         """

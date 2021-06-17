@@ -77,5 +77,5 @@ class CriticModel(parl.Model):
         hid1 = F.relu(self.fc1(inputs))
         hid2 = F.relu(self.fc2(hid1))
         Q = self.fc3(hid2)
-        Q = torch.squeeze(Q, axis=1)
+        Q = torch.squeeze(Q, dim=1)
         return Q

@@ -37,8 +37,8 @@ class Agent(parl.Agent):
     def sample(self, obs):
         obs = torch.FloatTensor(obs).to(self.device)
         probs, values = self.alg.prob_and_value(obs)
-        probs = probs.cpu().numpy()
-        values = values.cpu().numpy()
+        probs = probs.cpu().detach().numpy()
+        values = values.cpu().detach().numpy()
         sample_actions = np.array(
             [np.random.choice(len(prob), 1, p=prob)[0] for prob in probs])
         return sample_actions, values
@@ -46,7 +46,7 @@ class Agent(parl.Agent):
     def predict(self, obs):
         obs = torch.FloatTensor(obs).to(self.device)
         predict_actions = self.alg.predict(obs)
-        return predict_actions.cpu().numpy()
+        return predict_actions.cpu().detach().numpy()
 
     def value(self, obs):
         obs = torch.FloatTensor(obs).to(self.device)

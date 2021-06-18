@@ -84,7 +84,6 @@ class Learner(object):
             # setting the lastest to the actors and get the fitness, noise seed sync.
             future_object_ids = [remote_actor.sample(self.latest_flat_weights) \
                 for remote_actor in self.remote_actors]
-            # __import__('ipdb').set_trace()
             results = [
                 future_object.get() for future_object in future_object_ids
             ]

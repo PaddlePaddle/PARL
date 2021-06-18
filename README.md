@@ -96,6 +96,7 @@ For absolute beginners, we also provide an introductory course on reinforcement 
 # Examples
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
+- [ES](examples/ES/)
 - [DDPG](examples/DDPG/)
 - [A2C](examples/A2C/)
 - [TD3](examples/TD3/)

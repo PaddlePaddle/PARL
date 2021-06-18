@@ -18,9 +18,7 @@ import argparse
 import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
-from maddpg import MADDPG
-# from parl.algorithms import MADDPG
-import parl
+from parl.algorithms import MADDPG
 from parl.env.multiagent_simple_env import MAenv
 from parl.utils import logger, tensorboard
 

@@ -42,9 +42,21 @@ class ActorModel(parl.Model):
         super(ActorModel, self).__init__()
         hid1_size = 64
         hid2_size = 64
-        self.fc1 = nn.Linear(obs_dim, hid1_size)
-        self.fc2 = nn.Linear(hid1_size, hid2_size)
-        self.fc3 = nn.Linear(hid2_size, act_dim)
+        self.fc1 = nn.Linear(
+            obs_dim,
+            hid1_size,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
+        self.fc2 = nn.Linear(
+            hid1_size,
+            hid2_size,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
+        self.fc3 = nn.Linear(
+            hid2_size,
+            act_dim,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
 
     def forward(self, obs):
         hid1 = F.relu(self.fc1(obs))
@@ -59,9 +71,21 @@ class CriticModel(parl.Model):
         hid1_size = 64
         hid2_size = 64
         out_dim = 1
-        self.fc1 = nn.Linear(critic_in_dim, hid1_size)
-        self.fc2 = nn.Linear(hid1_size, hid2_size)
-        self.fc3 = nn.Linear(hid2_size, out_dim)
+        self.fc1 = nn.Linear(
+            critic_in_dim,
+            hid1_size,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
+        self.fc2 = nn.Linear(
+            hid1_size,
+            hid2_size,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
+        self.fc3 = nn.Linear(
+            hid2_size,
+            out_dim,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.XavierUniform()))
 
     def forward(self, obs_n, act_n):
         inputs = paddle.concat(obs_n + act_n, axis=1)

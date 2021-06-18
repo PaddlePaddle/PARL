@@ -61,7 +61,7 @@ simple_world_comm<br>
 ### Dependencies:
 + python3.5+
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.0.2](https://github.com/PaddlePaddle/PARL)
 + [multiagent-particle-envs](https://github.com/openai/multiagent-particle-envs)
 + gym==0.10.5
 

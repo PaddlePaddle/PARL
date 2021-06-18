@@ -76,7 +76,7 @@ class AtariModel(parl.Model):
         else:
             self.linear_1 = nn.Linear(in_features=6400, out_features=act_dim)
 
-    def value(self, obs):
+    def forward(self, obs):
         """ Perform forward pass 
 
         Args:

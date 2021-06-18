@@ -19,37 +19,37 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <tr>
 <td>
 simple<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
 </td>
 <td>
 simple_reference<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src="https://github.com/PaddlePaddle/PARL/blob/r2.0.0/benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
+<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>

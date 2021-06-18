@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,151 +12,182 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils import check_version_for_fluid  # requires parl >= 1.4.1
-check_version_for_fluid()
-
-import argparse
-import gym
-import paddle.fluid as fluid
-import numpy as np
 import os
+import gym
+import numpy as np
+import paddle
 import parl
-from atari_agent import AtariAgent
+from parl.utils import logger, summary
 from atari_model import AtariModel
-from datetime import datetime
+from atari_agent import AtariAgent
 from replay_memory import ReplayMemory, Experience
-from parl.utils import summary, logger
+from parl.env.atari_wrappers import wrap_deepmind
+from parl.algorithms import DQN, DDQN
 from tqdm import tqdm
-from utils import get_player
+import argparse
 
-MEMORY_SIZE = 1e6
-MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20
+# env params
 IMAGE_SIZE = (84, 84)
 CONTEXT_LEN = 4
 FRAME_SKIP = 4
-UPDATE_FREQ = 4
+
+# model params
+UPDATE_TARGET_STEP = 2500
+MEMORY_SIZE = 1000000
 GAMMA = 0.99
-LEARNING_RATE = 3e-4
+LR_START = 0.0003  # starting learing rate
+TOTAL_STEP = 1000000
+MEMORY_WARMUP_SIZE = 50000
+UPDATE_FREQ = 4
+
+# eval params
+EVAL_RENDER = False
 
 
-def run_train_episode(env, agent, rpm):
+# train an episode
+def run_train_episode(agent, env, rpm):
     total_reward = 0
-    all_cost = []
     obs = env.reset()
-    steps = 0
+    step = 0
+    loss_lst = []
+
     while True:
-        steps += 1
+        step += 1
         context = rpm.recent_obs()
         context.append(obs)
         context = np.stack(context, axis=0)
+
         action = agent.sample(context)
-        next_obs, reward, isOver, _ = env.step(action)
-        rpm.append(Experience(obs, action, reward, isOver))
-        # start training
-        if rpm.size() > MEMORY_WARMUP_SIZE:
-            if steps % UPDATE_FREQ == 0:
-                batch_all_obs, batch_action, batch_reward, batch_isOver = rpm.sample_batch(
-                    args.batch_size)
-                batch_obs = batch_all_obs[:, :CONTEXT_LEN, :, :]
-                batch_next_obs = batch_all_obs[:, 1:, :, :]
-                cost = agent.learn(batch_obs, batch_action, batch_reward,
-                                   batch_next_obs, batch_isOver)
-                all_cost.append(float(cost))
+        next_obs, reward, done, _ = env.step(action)
+        rpm.append(Experience(obs, action, reward, done))
+
+        # train model
+        if (rpm.size() > MEMORY_WARMUP_SIZE) and (step % UPDATE_FREQ == 0):
+            # s,a,r,s',done
+            (batch_all_obs, batch_action, batch_reward,
+             batch_done) = rpm.sample_batch(args.batch_size)
+            batch_obs = batch_all_obs[:, :4, :, :]
+            batch_next_obs = batch_all_obs[:, 1:, :, :]
+
+            train_loss = agent.learn(batch_obs, batch_action, batch_reward,
+                                     batch_next_obs, batch_done)
+            loss_lst.append(train_loss)
+
         total_reward += reward
         obs = next_obs
-        if isOver:
+        if done:
             break
-    if all_cost:
-        logger.info('[Train]total_reward: {}, mean_cost: {}'.format(
-            total_reward, np.mean(all_cost)))
-    return total_reward, steps, np.mean(all_cost)
+    return total_reward, step, np.mean(loss_lst)
 
 
-def run_evaluate_episode(env, agent):
+def run_evaluate_episodes(agent, env):
     obs = env.reset()
-    total_reward = 0
-    while True:
+    while not env.get_real_done():
         action = agent.predict(obs)
-        obs, reward, isOver, info = env.step(action)
-        total_reward += reward
-        if isOver:
-            break
-    return total_reward
+        obs, _, done, _ = env.step(action)
+        if EVAL_RENDER:
+            env.render()
+        if done:
+            obs = env.reset()
+    return np.mean(env.get_eval_rewards())
 
 
 def main():
-    env = get_player(
-        args.rom, image_size=IMAGE_SIZE, train=True, frame_skip=FRAME_SKIP)
-    test_env = get_player(
-        args.rom,
-        image_size=IMAGE_SIZE,
-        frame_skip=FRAME_SKIP,
-        context_len=CONTEXT_LEN)
-    rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
+    # set training env and test env
+    env = gym.make(args.env)
+    env = wrap_deepmind(
+        env, dim=IMAGE_SIZE[0], framestack=False, obs_format='NCHW')
+    test_env = gym.make(args.env)
+    test_env = wrap_deepmind(
+        test_env, dim=IMAGE_SIZE[0], obs_format='NCHW', test=True)
+
+    env.seed(args.train_seed)
+    test_env.seed(args.test_seed)
+
     act_dim = env.action_space.n
+    algo_name = args.algo
+    rpm = ReplayMemory(MEMORY_SIZE, IMAGE_SIZE, CONTEXT_LEN)
 
-    model = AtariModel(act_dim, args.algo)
-    if args.algo == 'DDQN':
-        algorithm = parl.algorithms.DDQN(model, act_dim=act_dim, gamma=GAMMA)
-    elif args.algo in ['DQN', 'Dueling']:
-        algorithm = parl.algorithms.DQN(model, act_dim=act_dim, gamma=GAMMA)
-    agent = AtariAgent(
-        algorithm,
-        act_dim=act_dim,
-        start_lr=LEARNING_RATE,
-        total_step=args.train_total_steps,
-        update_freq=UPDATE_FREQ)
+    # build model
+    model = AtariModel(act_dim=act_dim, dueling=args.dueling)
 
+    # get algorithm
+    if algo_name == 'DQN':
+        alg = DQN(model, gamma=GAMMA, lr=LR_START)
+    else:
+        alg = DDQN(model, gamma=GAMMA, lr=LR_START)
+
+    # build Agent using model and algorithm
+    agent = AtariAgent(alg, act_dim, LR_START, TOTAL_STEP, UPDATE_TARGET_STEP)
+
+    # start training, memory warm up
     with tqdm(
             total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
         while rpm.size() < MEMORY_WARMUP_SIZE:
-            total_reward, steps, _ = run_train_episode(env, agent, rpm)
+            total_reward, steps, _ = run_train_episode(agent, env, rpm)
             pbar.update(steps)
 
-    # train
     test_flag = 0
-    pbar = tqdm(total=args.train_total_steps)
-    total_steps = 0
-    max_reward = None
-    while total_steps < args.train_total_steps:
+    train_total_steps = args.train_total_steps
+    pbar = tqdm(total=train_total_steps)
+    cum_steps = 0  # this is the current timestep
+    while cum_steps < train_total_steps:
         # start epoch
-        total_reward, steps, loss = run_train_episode(env, agent, rpm)
-        total_steps += steps
-        pbar.set_description('[train]exploration:{}'.format(agent.exploration))
-        summary.add_scalar('dqn/score', total_reward, total_steps)
-        summary.add_scalar('dqn/loss', loss, total_steps)  # mean of total loss
-        summary.add_scalar('dqn/exploration', agent.exploration, total_steps)
+        total_reward, steps, loss = run_train_episode(agent, env, rpm)
+        cum_steps += steps
+
+        pbar.set_description('[train]exploration:{}, learning_rate {}'.format(
+            agent.curr_ep, alg.optimizer.get_lr()))
+        summary.add_scalar('{}/training_rewards'.format(algo_name),
+                           total_reward, cum_steps)
+        summary.add_scalar('{}/loss'.format(algo_name), loss,
+                           cum_steps)  # mean of total loss
+        summary.add_scalar('{}/exploration'.format(algo_name), agent.curr_ep,
+                           cum_steps)
+        summary.add_scalar('{}/learning_rate'.format(algo_name),
+                           alg.optimizer.get_lr(), cum_steps)
+
         pbar.update(steps)
 
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
+        # perform evaluation
+        if cum_steps // args.test_every_steps >= test_flag:
+            while cum_steps // args.test_every_steps >= test_flag:
                 test_flag += 1
+
             pbar.write("testing")
-            eval_rewards = []
-            for _ in tqdm(range(3), desc='eval agent'):
-                eval_reward = run_evaluate_episode(test_env, agent)
-                eval_rewards.append(eval_reward)
+            eval_rewards_mean = run_evaluate_episodes(agent, test_env)
+
             logger.info(
                 "eval_agent done, (steps, eval_reward): ({}, {})".format(
-                    total_steps, np.mean(eval_rewards)))
-            eval_test = np.mean(eval_rewards)
-            summary.add_scalar('dqn/eval', eval_test, total_steps)
+                    cum_steps, eval_rewards_mean))
+
+            summary.add_scalar('{}/mean_validation_rewards'.format(algo_name),
+                               eval_rewards_mean, cum_steps)
 
     pbar.close()
+
+    # save the parameters to ./model.ckpt
+    save_path = './model/model.ckpt'
+    agent.save(save_path)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--rom', help='path of the rom of the atari game', required=True)
+        '--env', help='name of the atari env', default='PongNoFrameskip-v4')
     parser.add_argument(
-        '--batch_size', type=int, default=64, help='batch size for training')
+        '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument(
         '--algo',
         default='DQN',
+        type=str,
+        help='DQN/DDQN, represent DQN, double DQN respectively')
+    parser.add_argument(
+        '--dueling',
+        default=False,
+        type=bool,
         help=
-        'DQN/DDQN/Dueling, represent DQN, double DQN, and dueling DQN respectively',
-    )
+        'if True, represent dueling DQN or dueling DDQN, else ord DQN or DDQN')
     parser.add_argument(
         '--train_total_steps',
         type=int,
@@ -167,6 +198,16 @@ if __name__ == '__main__':
         type=int,
         default=100000,
         help='the step interval between two consecutive evaluations')
+    parser.add_argument(
+        '--train_seed',
+        type=int,
+        default=16,
+        help='set the random seed for training environment')
+    parser.add_argument(
+        '--test_seed',
+        type=int,
+        default=6,
+        help='set the random seed for test and eval environment')
 
     args = parser.parse_args()
     main()

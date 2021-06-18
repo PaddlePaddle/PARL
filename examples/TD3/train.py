@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,144 +12,145 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from parl.utils import check_version_for_fluid  # requires parl >= 1.4.1
-check_version_for_fluid()
-
-import argparse
 import gym
+import argparse
 import numpy as np
-import time
-import parl
-from mujoco_agent import MujocoAgent
-from mujoco_model import MujocoModel
-from parl.utils import logger, summary, ReplayMemory
+from parl.utils import logger, tensorboard, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
+from mujoco_model import MujocoModel
+from mujoco_agent import MujocoAgent
+from parl.algorithms import TD3
 
-MAX_EPISODES = 5000
-ACTOR_LR = 3e-4
-CRITIC_LR = 3e-4
+WARMUP_STEPS = 1e4
+EVAL_EPISODES = 5
+MEMORY_SIZE = int(1e6)
+BATCH_SIZE = 256
 GAMMA = 0.99
 TAU = 0.005
-MEMORY_SIZE = int(1e6)
-WARMUP_SIZE = 1e4
-BATCH_SIZE = 256
-ENV_SEED = 1
-EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
+ACTOR_LR = 3e-4
+CRITIC_LR = 3e-4
+EXPL_NOISE = 0.1
 
 
-def run_train_episode(env, agent, rpm):
+# Run episode for training
+def run_train_episode(agent, env, rpm):
+    action_dim = env.action_space.shape[0]
     obs = env.reset()
-    total_reward = 0
-    steps = 0
-    max_action = float(env.action_space.high[0])
-    while True:
-        steps += 1
-        batch_obs = np.expand_dims(obs, axis=0)
-
-        if rpm.size() < WARMUP_SIZE:
-            action = env.action_space.sample()
+    done = False
+    episode_reward = 0
+    episode_steps = 0
+    while not done:
+        episode_steps += 1
+        # Select action randomly or according to policy
+        if rpm.size() < WARMUP_STEPS:
+            action = np.random.uniform(-1, 1, size=action_dim)
         else:
-            action = agent.predict(batch_obs.astype('float32'))
-            action = np.squeeze(action)
+            action = agent.sample(obs)
 
-            # Add exploration noise, and clip to [-max_action, max_action]
-            action = np.clip(
-                np.random.normal(action, EXPL_NOISE * max_action), -max_action,
-                max_action)
+        # Perform action
+        next_obs, reward, done, _ = env.step(action)
+        terminal = float(done) if episode_steps < env._max_episode_steps else 0
 
-        next_obs, reward, done, info = env.step(action)
+        # Store data in replay memory
+        rpm.append(obs, action, reward, next_obs, terminal)
 
-        rpm.append(obs, action, reward, next_obs, done)
+        obs = next_obs
+        episode_reward += reward
 
-        if rpm.size() > WARMUP_SIZE:
+        # Train agent after collecting sufficient data
+        if rpm.size() >= WARMUP_STEPS:
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
                 BATCH_SIZE)
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_terminal)
 
-        obs = next_obs
-        total_reward += reward
-
-        if done:
-            break
-    return total_reward, steps
+    return episode_reward, episode_steps
 
 
-def run_evaluate_episode(env, agent):
-    eval_rewards = []
-    for i in range(5):
+# Runs policy for 5 episodes by default and returns average reward
+# A fixed seed is used for the eval environment
+def run_evaluate_episodes(agent, env, eval_episodes):
+    avg_reward = 0.
+    for _ in range(eval_episodes):
         obs = env.reset()
-        total_reward = 0
-        while True:
-            batch_obs = np.expand_dims(obs, axis=0)
-            action = agent.predict(batch_obs.astype('float32'))
-            action = np.squeeze(action)
-
-            next_obs, reward, done, info = env.step(action)
-
-            obs = next_obs
-            total_reward += reward
-
-            if done:
-                break
-        eval_rewards.append(total_reward)
-    return np.mean(eval_rewards)
+        done = False
+        while not done:
+            action = agent.predict(obs)
+            obs, reward, done, _ = env.step(action)
+            avg_reward += reward
+    avg_reward /= eval_episodes
+    return avg_reward
 
 
 def main():
+    logger.info("------------------- TD3 ---------------------")
+    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
+    logger.info("---------------------------------------------")
+    logger.set_dir('./{}_{}'.format(args.env, args.seed))
+
     env = gym.make(args.env)
-    env.seed(ENV_SEED)
+    env.seed(args.seed)
     env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]
-    act_dim = env.action_space.shape[0]
-    max_action = float(env.action_space.high[0])
+    action_dim = env.action_space.shape[0]
 
-    model = MujocoModel(act_dim, max_action)
-    algorithm = parl.algorithms.TD3(
+    # Initialize model, algorithm, agent, replay_memory
+    model = MujocoModel(obs_dim, action_dim)
+    algorithm = TD3(
         model,
-        max_action=max_action,
         gamma=GAMMA,
         tau=TAU,
         actor_lr=ACTOR_LR,
-        critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, obs_dim, act_dim)
+        critic_lr=CRITIC_LR,
+        policy_freq=args.policy_freq)
+    agent = MujocoAgent(algorithm, act_dim=action_dim, expl_noise=EXPL_NOISE)
+    rpm = ReplayMemory(
+        max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 
-    rpm = ReplayMemory(MEMORY_SIZE, obs_dim, act_dim)
-
-    test_flag = 0
     total_steps = 0
+    test_flag = 0
     while total_steps < args.train_total_steps:
-        train_reward, steps = run_train_episode(env, agent, rpm)
-        total_steps += steps
-        logger.info('Steps: {} Reward: {}'.format(total_steps, train_reward))
-        summary.add_scalar('train/episode_reward', train_reward, total_steps)
+        # Train episode
+        episode_reward, episode_steps = run_train_episode(agent, env, rpm)
+        total_steps += episode_steps
 
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
-                test_flag += 1
-            evaluate_reward = run_evaluate_episode(env, agent)
-            logger.info('Steps {}, Evaluate reward: {}'.format(
-                total_steps, evaluate_reward))
-            summary.add_scalar('eval/episode_reward', evaluate_reward,
+        tensorboard.add_scalar('train/episode_reward', episode_reward,
                                total_steps)
+        logger.info('Total Steps: {} Reward: {}'.format(
+            total_steps, episode_reward))
+
+        # Evaluate episode
+        if (total_steps + 1) // args.test_every_steps >= test_flag:
+            while (total_steps + 1) // args.test_every_steps >= test_flag:
+                test_flag += 1
+            avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
+            tensorboard.add_scalar('eval/episode_reward', avg_reward,
+                                   total_steps)
+            logger.info('Evaluation over: {} episodes, Reward: {}'.format(
+                EVAL_EPISODES, avg_reward))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--env', help='Mujoco environment name', default='HalfCheetah-v2')
+        "--env", default="HalfCheetah-v1", help='Mujoco gym environment name')
+    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
-        '--train_total_steps',
+        "--train_total_steps",
+        default=int(3e6),
         type=int,
-        default=int(1e7),
-        help='maximum training steps')
+        help='Max time steps to run environment')
     parser.add_argument(
         '--test_every_steps',
         type=int,
-        default=int(1e4),
-        help='the step interval between two consecutive evaluations')
-
+        default=int(5e3),
+        help='The step interval between two consecutive evaluations')
+    parser.add_argument(
+        '--policy_freq',
+        type=int,
+        default=2,
+        help='Frequency of delayed policy updates')
     args = parser.parse_args()
 
     main()

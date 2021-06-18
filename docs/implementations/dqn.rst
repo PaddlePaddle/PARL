@@ -1,7 +1,7 @@
 DQN
 ==========
 
-.. automodule:: parl.algorithms.fluid.dqn
+.. automodule:: parl.algorithms.paddle.dqn
     :members:
     :no-undoc-members:
     :show-inheritance:

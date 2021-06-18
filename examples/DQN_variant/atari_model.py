@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,51 +12,91 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
+import paddle.nn as nn
 import parl
-from parl import layers
 
 
 class AtariModel(parl.Model):
-    def __init__(self, act_dim, algo='DQN'):
-        self.act_dim = act_dim
+    """ Neural Network to solve Atari problem.
 
-        self.conv1 = layers.conv2d(
-            num_filters=32, filter_size=5, stride=1, padding=2, act='relu')
-        self.conv2 = layers.conv2d(
-            num_filters=32, filter_size=5, stride=1, padding=2, act='relu')
-        self.conv3 = layers.conv2d(
-            num_filters=64, filter_size=4, stride=1, padding=1, act='relu')
-        self.conv4 = layers.conv2d(
-            num_filters=64, filter_size=3, stride=1, padding=1, act='relu')
+    Args:
+        act_dim (int): Dimension of action space.
+        dueling (bool): True if use dueling architecture else False
+    """
 
-        self.algo = algo
-        if algo == 'Dueling':
-            self.fc1_adv = layers.fc(size=512, act='relu')
-            self.fc2_adv = layers.fc(size=act_dim)
-            self.fc1_val = layers.fc(size=512, act='relu')
-            self.fc2_val = layers.fc(size=1)
+    def __init__(self, act_dim, dueling=False):
+        super().__init__()
+        self.conv1 = nn.Conv2D(
+            in_channels=4,
+            out_channels=32,
+            kernel_size=5,
+            stride=1,
+            padding=2,
+            weight_attr=nn.initializer.KaimingNormal())
+        self.conv2 = nn.Conv2D(
+            in_channels=32,
+            out_channels=32,
+            kernel_size=5,
+            stride=1,
+            padding=2,
+            weight_attr=nn.initializer.KaimingNormal())
+        self.conv3 = nn.Conv2D(
+            in_channels=32,
+            out_channels=64,
+            kernel_size=4,
+            stride=1,
+            padding=1,
+            weight_attr=nn.initializer.KaimingNormal())
+        self.conv4 = nn.Conv2D(
+            in_channels=64,
+            out_channels=64,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            weight_attr=nn.initializer.KaimingNormal())
+        self.relu = nn.ReLU()
+        self.max_pool = nn.MaxPool2D(kernel_size=2, stride=2)
+        self.flatten = nn.Flatten()
+
+        self.dueling = dueling
+
+        if dueling:
+            self.linear_1_adv = nn.Linear(
+                in_features=6400,
+                out_features=512,
+                weight_attr=nn.initializer.KaimingNormal())
+            self.linear_2_adv = nn.Linear(
+                in_features=512, out_features=act_dim)
+            self.linear_1_val = nn.Linear(
+                in_features=6400,
+                out_features=512,
+                weight_attr=nn.initializer.KaimingNormal())
+            self.linear_2_val = nn.Linear(in_features=512, out_features=1)
+
         else:
-            self.fc1 = layers.fc(size=act_dim)
+            self.linear_1 = nn.Linear(in_features=6400, out_features=act_dim)
 
-    def value(self, obs):
+    def forward(self, obs):
+        """ Perform forward pass 
+
+        Args:
+            obs (paddle.Tensor): shape of (batch_size, 3, 84, 84), mini batch of observations
+        """
         obs = obs / 255.0
-        out = self.conv1(obs)
-        out = layers.pool2d(
-            input=out, pool_size=2, pool_stride=2, pool_type='max')
-        out = self.conv2(out)
-        out = layers.pool2d(
-            input=out, pool_size=2, pool_stride=2, pool_type='max')
-        out = self.conv3(out)
-        out = layers.pool2d(
-            input=out, pool_size=2, pool_stride=2, pool_type='max')
-        out = self.conv4(out)
-        out = layers.flatten(out, axis=1)
+        out = self.max_pool(self.relu(self.conv1(obs)))
+        out = self.max_pool(self.relu(self.conv2(out)))
+        out = self.max_pool(self.relu(self.conv3(out)))
+        out = self.relu(self.conv4(out))
+        out = self.flatten(out)
 
-        if self.algo == 'Dueling':
-            As = self.fc2_adv(self.fc1_adv(out))
-            V = self.fc2_val(self.fc1_val(out))
-            Q = As + (V - layers.reduce_mean(As, dim=1, keep_dim=True))
+        if self.dueling:
+            As = self.relu(self.linear_1_adv(out))
+            As = self.linear_2_adv(As)
+            V = self.relu(self.linear_1_val(out))
+            V = self.linear_2_val(V)
+            Q = As + (V - As.mean(axis=1, keepdim=True))
+
         else:
-            Q = self.fc1(out)
+            Q = self.linear_1(out)
+
         return Q

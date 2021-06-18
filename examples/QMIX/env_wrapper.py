@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,10 +29,6 @@ class SC2EnvWrapper(object):
         self.agent_id_one_hot_transform = OneHotTransform(self.n_agents)
         self.actions_one_hot_transform = OneHotTransform(self.n_actions)
         self._init_agents_id_one_hot(self.n_agents)
-        print(
-            'env_info: n_actions: {}, n_agents: {}, state_shape: {}, obs_shape: {}, episode_limit: {}'
-            .format(self.n_actions, self.n_agents, self.state_shape,
-                    self.obs_shape, self.episode_limit))
 
     @property
     def win_counted(self):

@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,55 +12,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
 import parl
-from parl import layers
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
+'''
+Model of DDPG:  defines an Actor/policy network given obs as input,
+                      & a Critic/value network given obs and action as input.
+'''
 
 
 class MujocoModel(parl.Model):
-    def __init__(self, act_dim):
-        self.actor_model = ActorModel(act_dim)
-        self.critic_model = CriticModel()
+    def __init__(self, obs_dim, action_dim):
+        super(MujocoModel, self).__init__()
+        self.actor_model = Actor(obs_dim, action_dim)
+        self.critic_model = Critic(obs_dim, action_dim)
 
     def policy(self, obs):
-        return self.actor_model.policy(obs)
+        return self.actor_model(obs)
 
-    def value(self, obs, act):
-        return self.critic_model.value(obs, act)
+    def value(self, obs, action):
+        return self.critic_model(obs, action)
 
     def get_actor_params(self):
         return self.actor_model.parameters()
 
-
-class ActorModel(parl.Model):
-    def __init__(self, act_dim):
-        hid1_size = 400
-        hid2_size = 300
-
-        self.fc1 = layers.fc(size=hid1_size, act='relu')
-        self.fc2 = layers.fc(size=hid2_size, act='relu')
-        self.fc3 = layers.fc(size=act_dim, act='tanh')
-
-    def policy(self, obs):
-        hid1 = self.fc1(obs)
-        hid2 = self.fc2(hid1)
-        means = self.fc3(hid2)
-        return means
+    def get_critic_params(self):
+        return self.critic_model.parameters()
 
 
-class CriticModel(parl.Model):
-    def __init__(self):
-        hid1_size = 400
-        hid2_size = 300
+class Actor(parl.Model):
+    def __init__(self, obs_dim, action_dim):
+        super(Actor, self).__init__()
 
-        self.fc1 = layers.fc(size=hid1_size, act='relu')
-        self.fc2 = layers.fc(size=hid2_size, act='relu')
-        self.fc3 = layers.fc(size=1, act=None)
+        self.l1 = nn.Linear(obs_dim, 400)
+        self.l2 = nn.Linear(400, 300)
+        self.l3 = nn.Linear(300, action_dim)
 
-    def value(self, obs, act):
-        hid1 = self.fc1(obs)
-        concat = layers.concat([hid1, act], axis=1)
-        hid2 = self.fc2(concat)
-        Q = self.fc3(hid2)
-        Q = layers.squeeze(Q, axes=[1])
-        return Q
+    def forward(self, obs):
+        a = F.relu(self.l1(obs))
+        a = F.relu(self.l2(a))
+        return paddle.tanh(self.l3(a))
+
+
+class Critic(parl.Model):
+    def __init__(self, obs_dim, action_dim):
+        super(Critic, self).__init__()
+
+        self.l1 = nn.Linear(obs_dim, 400)
+        self.l2 = nn.Linear(400 + action_dim, 300)
+        self.l3 = nn.Linear(300, 1)
+
+    def forward(self, obs, action):
+        q = F.relu(self.l1(obs))
+        q = F.relu(self.l2(paddle.concat([q, action], 1)))
+        return self.l3(q)

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ def run_train_episode(env, agent, rpm, config):
     while not terminated:
         available_actions = env.get_available_actions()
         actions = agent.sample(obs, available_actions)
+        #next_state, next_obs, reward, terminated = env.step(actions)
         next_state, next_obs, reward, terminated = env.step(actions)
         episode_reward += reward
         episode_step += 1
@@ -112,10 +113,18 @@ def main():
     config['n_actions'] = env.n_actions
 
     rpm = EpisodeReplayBuffer(config['replay_buffer_size'])
-    agent_model = RNNModel(config)
-    qmixer_model = QMixerModel(config)
-    algorithm = QMIX(agent_model, qmixer_model, config)
-    qmix_agent = QMixAgent(algorithm, config)
+    agent_model = RNNModel(config['obs_shape'], config['n_actions'],
+                           config['rnn_hidden_dim'])
+    qmixer_model = QMixerModel(
+        config['n_agents'], config['state_shape'], config['mixing_embed_dim'],
+        config['hypernet_layers'], config['hypernet_embed_dim'])
+
+    algorithm = QMIX(agent_model, qmixer_model, config['double_q'],
+                     config['gamma'], config['lr'], config['clip_grad_norm'])
+
+    qmix_agent = QMixAgent(
+        algorithm, config['exploration_start'], config['min_exploration'],
+        config['exploration_decay'], config['update_target_interval'])
 
     while rpm.count < config['memory_warmup_size']:
         train_reward, train_step, train_is_win, train_loss, train_td_error\

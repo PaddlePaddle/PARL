@@ -71,8 +71,7 @@ class AtariAgent(parl.Agent):
             if np.random.random() < 0.01:
                 act = np.random.randint(self.act_dim)
             else:
-                pred_q = self.predict(obs)
-                act = pred_q.max(1)[1].item()
+                act = self.predict(obs)
         self.exploration = max(0.1, self.exploration - 1e-6)
         return act
 
@@ -80,7 +79,8 @@ class AtariAgent(parl.Agent):
         obs = np.expand_dims(obs, 0)
         obs = torch.tensor(obs, dtype=torch.float, device=self.device)
         pred_q = self.alg.predict(obs)
-        return pred_q
+        action = pred_q.max(1)[1].item()
+        return action
 
     def learn(self, obs, act, reward, next_obs, terminal):
         if self.global_step % self.update_target_steps == 0:

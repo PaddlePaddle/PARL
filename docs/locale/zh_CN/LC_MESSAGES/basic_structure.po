@@ -1,0 +1,193 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-18 14:23+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../basic_structure/agent.rst:2
+msgid "Agent (*Generate Data Flow*)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:5 ../../basic_structure/algorithm.rst:5
+#: ../../basic_structure/model.rst:7
+msgid "Methods"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:6
+msgid "__init__(self, algorithm, gpu_id=None)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:8
+msgid ""
+"Call build_program here and run initialization for "
+"default_startup_program."
+msgstr ""
+
+#: ../../basic_structure/agent.rst:10
+msgid "build_program(self)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:12
+msgid ""
+"Use define_predict and define_learn in Algorithm to build training "
+"program and prediction program. This will be called by __init__ method in"
+" class Agent."
+msgstr ""
+
+#: ../../basic_structure/agent.rst:15
+msgid "predict(self, obs)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:17
+msgid ""
+"Predict the action with current observation of the enviroment. Note that "
+"this function will only do the prediction and it doesn't try any "
+"exploration. To explore in the action space, you should create your "
+"process in `sample` function below. Basically, this function is often "
+"used in test process."
+msgstr ""
+
+#: ../../basic_structure/agent.rst:21
+msgid "sample(self, obs)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:23
+msgid ""
+"Predict the action given current observation of the enviroment. "
+"Additionaly, action will be added noise here to explore a new trajectory."
+" Basically, this function is often used in training process."
+msgstr ""
+
+#: ../../basic_structure/agent.rst:27
+msgid "learn(self, obs, action, reward, next_obs, terminal)"
+msgstr ""
+
+#: ../../basic_structure/agent.rst:29
+msgid ""
+"Pass data to the training program to update model. This method is the "
+"training interface for Agent."
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:2
+msgid "Algorithm (*Backward Part*)"
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:6
+msgid "define_predict(self, obs)"
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:8
+msgid "Use method policy( ) from Agent to predict the probabilities of actions."
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:10
+msgid "define_learn(self, obs, action, reward, next_obs, terminal)"
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:12
+msgid "Define loss function and optimizer here to update the policy model."
+msgstr ""
+
+#: ../../basic_structure/algorithm.rst:15
+msgid "An Example"
+msgstr ""
+
+#: ../../basic_structure/model.rst:2
+msgid "Model (*Forward Part*)"
+msgstr ""
+
+#: ../../basic_structure/model.rst:3 ../../basic_structure/overview.rst:9
+msgid ""
+"A Model is owned by an Algorithm. Model is responsible for the entire "
+"network model (**forward part**) for the specific problems."
+msgstr ""
+
+#: ../../basic_structure/model.rst:8
+msgid "policy(self, obs)"
+msgstr ""
+
+#: ../../basic_structure/model.rst:10
+msgid ""
+"Define the structure of networks here. Algorithm will call this method to"
+" predict probabilities of actions. It is optional."
+msgstr ""
+
+#: ../../basic_structure/model.rst:13
+msgid "value(self, obs)"
+msgstr ""
+
+#: ../../basic_structure/model.rst:15
+msgid ""
+"Return: values: a dict of estimated values for the current observations "
+"and states. For example, \"q_value\" and \"v_value\"."
+msgstr ""
+
+#: ../../basic_structure/model.rst:18
+msgid ""
+"sync_params_to(self, target_net, gpu_id, decay=0.0, "
+"share_vars_parallel_executor=None)"
+msgstr ""
+
+#: ../../basic_structure/model.rst:20
+msgid ""
+"This method deepcopied the parameters from the current network to the "
+"target network, which two have the same structure."
+msgstr ""
+
+#: ../../basic_structure/model.rst:23
+msgid "An example"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:2
+msgid "Overview"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:4
+msgid "Three Components"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:5
+msgid ""
+"PARL is made up of three components: **Model, Algorithm, Agent**. They "
+"are constructed layer-by-layer to build the main body."
+msgstr ""
+
+#: ../../basic_structure/overview.rst:8
+msgid "Model"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:12
+msgid "Algorithm"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:13
+msgid ""
+"Algorithm defines the way to update the parameters in the Model "
+"(**backward part**). We already implemented some common used "
+"algorithms__, like DQN/DDPG/PPO/A3C, you can directly import and use "
+"them."
+msgstr ""
+
+#: ../../basic_structure/overview.rst:19
+msgid "Agent"
+msgstr ""
+
+#: ../../basic_structure/overview.rst:20
+msgid ""
+"Agent interates with the environment and **generate data flow** outside "
+"the Algorithm."
+msgstr ""
+

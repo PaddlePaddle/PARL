@@ -33,15 +33,16 @@ class OAC(parl.Algorithm):
                  actor_lr=None,
                  critic_lr=None):
         """ OAC algorithm
-            Args:
-                model(parl.Model): forward network of actor and critic.
-                gamma(float): discounted factor for reward computation
-                tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
-                beta (float): determines the relative importance of sigma_Q
-                delta (float): determines the relative changes of exploration`s mean
-                actor_lr (float): learning rate of the actor model
-                critic_lr (float): learning rate of the critic model
+
+        Args:
+            model(parl.Model): forward network of actor and critic.
+            gamma(float): discounted factor for reward computation
+            tau (float): decay coefficient when updating the weights of self.target_model with self.model
+            alpha (float): Temperature parameter determines the relative importance of the entropy against the reward
+            beta (float): determines the relative importance of sigma_Q
+            delta (float): determines the relative changes of exploration`s mean
+            actor_lr (float): learning rate of the actor model
+            critic_lr (float): learning rate of the critic model
         """
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
@@ -93,7 +94,7 @@ class OAC(parl.Algorithm):
         tanh_mu_T = paddle.tanh(pre_tanh_mu_T)
 
         # Get the upper bound of the Q estimate
-        Q1, Q2 = self.model.critic_model(obs, tanh_mu_T[0])
+        Q1, Q2 = self.model.value(obs, tanh_mu_T[0])
         mu_Q = (Q1 + Q2) / 2.0
         sigma_Q = paddle.abs(Q1 - Q2) / 2.0
 
@@ -140,13 +141,12 @@ class OAC(parl.Algorithm):
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with paddle.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
-            q1_next, q2_next = self.target_model.critic_model(
-                next_obs, next_action)
+            q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = paddle.minimum(q1_next,
                                       q2_next) - self.alpha * next_log_pro
             terminal = paddle.cast(terminal, dtype='float32')
             target_Q = reward + self.gamma * (1. - terminal) * target_Q
-        cur_q1, cur_q2 = self.model.critic_model(obs, action)
+        cur_q1, cur_q2 = self.model.value(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
             cur_q2, target_Q)
@@ -158,7 +158,7 @@ class OAC(parl.Algorithm):
 
     def _actor_learn(self, obs):
         act, log_pi = self.sample(obs)
-        q1_pi, q2_pi = self.model.critic_model(obs, act)
+        q1_pi, q2_pi = self.model.value(obs, act)
         min_q_pi = paddle.minimum(q1_pi, q2_pi)
         actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
 

@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 import parl
-from parl import layers
 
 
 class CartpoleModel(parl.Model):
-    def __init__(self, act_dim):
-        act_dim = act_dim
+    """ Linear network to solve Cartpole problem.
+    
+    Args:
+        obs_dim (int): Dimension of observation space.
+        act_dim (int): Dimension of action space.
+    """
+
+    def __init__(self, obs_dim, act_dim):
+        super(CartpoleModel, self).__init__()
         hid1_size = act_dim * 10
+        self.fc1 = nn.Linear(obs_dim, hid1_size)
+        self.fc2 = nn.Linear(hid1_size, act_dim)
 
-        self.fc1 = layers.fc(size=hid1_size, act='tanh')
-        self.fc2 = layers.fc(size=act_dim, act='softmax')
-
-    def forward(self, obs):
-        out = self.fc1(obs)
-        out = self.fc2(out)
-        return out
+    def forward(self, x):
+        out = paddle.tanh(self.fc1(x))
+        prob = F.softmax(self.fc2(out), axis=-1)
+        return prob

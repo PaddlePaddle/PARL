@@ -88,7 +88,7 @@ def get_gpu_count():
             logger.info('nvidia-smi -L found gpu count: {}'.format(gpu_count))
         except:
             logger.info(
-                'Cannot find available GPU devices, using CPU or other devices now.'
+                'Cannot find available GPU devices, using CPU or other devices now. (Please check whether you can execute `nvidia-smi` command.)'
             )
             gpu_count = 0
     return gpu_count
@@ -101,16 +101,16 @@ def is_gpu_available():
       True if a gpu device can be found.
     """
     ret = get_gpu_count() > 0
-    if _HAS_FLUID:
-        from paddle import fluid
-        if ret is True and not fluid.is_compiled_with_cuda():
+    if _HAS_PADDLE:
+        import paddle
+        if ret is True and not paddle.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues. \
                 Thus PARL will not use GPU.")
             return False
-    if _HAS_PADDLE:
-        import paddle
-        if ret is True and not paddle.is_compiled_with_cuda():
+    if _HAS_FLUID:
+        from paddle import fluid
+        if ret is True and not fluid.is_compiled_with_cuda():
             logger.warning("Found non-empty CUDA_VISIBLE_DEVICES. \
                 But PARL found that Paddle was not complied with CUDA, which may cause issues. \
                 Thus PARL will not use GPU.")

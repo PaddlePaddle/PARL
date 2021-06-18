@@ -1,0 +1,467 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-20 14:27+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../tutorial/getting_started.rst:2
+msgid "Getting Started"
+msgstr "快速入门：解决CartPole问题"
+
+#: ../../tutorial/getting_started.rst:5
+msgid "**Goal of this tutorial**:"
+msgstr "**本教程的目标**"
+
+#: ../../tutorial/getting_started.rst:7
+msgid "Understand PARL's abstraction at a high level"
+msgstr "简单了解PARL"
+
+#: ../../tutorial/getting_started.rst:8
+msgid ""
+"Be familiar with the modules that need to be used in the process of "
+"constructing the agent"
+msgstr "熟悉PARL构建智能体过程中需要用到的子模块。"
+
+#: ../../tutorial/getting_started.rst:10
+msgid ""
+"This tutorial will use the code from `example "
+"<https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_"
+" to explain any solution to the classic Cartpole problem by constructing "
+"an agent through PARL."
+msgstr ""
+"本教程会使用 `示例 "
+"<https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_"
+" 中的代码来解释任何通过PARL构建智能体解决经典的Cartpole问题。"
+
+#: ../../tutorial/getting_started.rst:13
+msgid "Introduction to CartPole Problem"
+msgstr "CartPole 介绍"
+
+#: ../../tutorial/getting_started.rst:15
+msgid ""
+"CartPole is also called an inverted pendulum. A pole is placed on a car, "
+"and the pole will fall due to gravity. In order to prevent the pole from "
+"falling down, we have to move the car to keep it upright. As shown below."
+" At each time step, the input of the model is a 4-dimensional vector that"
+" represents the current state of the car and the rod, and the signal "
+"output by the model is used to control the car to move to the left or "
+"right. When the pole is not down, the environment will give 1 reward "
+"point for each time step; when the pole is down, the environment will not"
+" give any reward point, and the game is over."
+msgstr ""
+"CartPole又叫倒立摆。小车上放了一根杆，杆会因重力而倒下。为了不让杆倒下，我们要通过移动小车，来保持其是直立的。如下图所示。 "
+"在每一个时间步，模型的输入是一个4维的向量,表示当前小车和杆的状态，模型输出的信号用于控制小车往左或者右移动。当杆没有倒下的时候，每个时间步，环境会给1分的奖励；当杆倒下后，环境不会给任何的奖励，游戏结束。"
+
+#: ../../tutorial/getting_started.rst:23 ../../tutorial/maa.rst:11
+msgid "Model"
+msgstr ""
+
+#: ../../tutorial/getting_started.rst:24
+msgid ""
+"``Model`` defines Forward Network, it is usually a Policy Network or a "
+"Value Function Network. The current environment status (State) is the "
+"input to the Network."
+msgstr ""
+"主要定义前向网络，这通常是一个策略网络(Policy Network)或者一个值函数网络(Value "
+"Function)，输入是当前环境状态(State)。"
+
+#: ../../tutorial/getting_started.rst:26
+msgid ""
+"First, let's build a ``Model`` that is a Forward Neural Network with two "
+"fully connected layers."
+msgstr "首先，我们构建一个包含2个全连接层的前向网络。"
+
+#: ../../tutorial/getting_started.rst:47
+msgid "There are three major steps defining a Forward Network:"
+msgstr "定义前向网络的主要三个步骤："
+
+#: ../../tutorial/getting_started.rst:49
+msgid "Inherit ``parl.Model`` class"
+msgstr "继承 ``parl.Model`` 类"
+
+#: ../../tutorial/getting_started.rst:50
+msgid "Initialize layers in ``__init__`` function"
+msgstr "构造函数 ``__init__`` 中声明要用到的中间层"
+
+#: ../../tutorial/getting_started.rst:51
+msgid "Build the Neural Network in ``forward`` function"
+msgstr "在 ``forward`` 函数中搭建网络"
+
+#: ../../tutorial/getting_started.rst:53
+msgid ""
+"In the above example code, we first initialize two ``nn.Linear`` layers "
+"and activation layers in ``__init__`` function, then we define the "
+"computation in ``forward`` function: for an input observation, it first "
+"goes through a fully connected layer followed by a tanh activation "
+"function, then the output of previous computation goes through another "
+"full connected layer followed by a softmax activation function. Finally "
+"we get the probability for each action."
+msgstr ""
+"在上面的代码中，我们先在构造函数中声明了两个全连接层，然后在 ``forward`` "
+"函数中定义了网络的前向计算方式：输入一个状态，然后经过一层FC和tanh激活函数，一层FC和softmax激活函数，得到了每个action的概率分布预测。"
+
+#: ../../tutorial/getting_started.rst:57 ../../tutorial/maa.rst:51
+msgid "Algorithm"
+msgstr ""
+
+#: ../../tutorial/getting_started.rst:58
+msgid ""
+"``Algorithm`` will update the parameters of the ``Model`` passed to it. "
+"In general, we define the loss function in ``Algorithm``. In this "
+"tutorial, we solve the benchmark `Cartpole` using the `Policy Graident` "
+"algorithm, which has been implemented in our repository. Thus, we can "
+"simply use this algorithm by importing it from ``parl.algorithms``."
+msgstr ""
+"定义了具体的算法来更新前向网络( ``Model`` )中的参数，也就是通过定义损失函数以及使用optimizer更新 ``Model`` 。一个"
+" ``Algorithm`` 包含至少一个 ``Model`` "
+"。在这个教程中，我们将使用经典的PolicyGradient算法来解决问题。由于PARL仓库已经实现了这个算法，我们只需要直接import来使用即可。"
+
+#: ../../tutorial/getting_started.rst:67
+msgid "After initialize the ``Model``, we pass the instance to the ``Algorithm``."
+msgstr "在实例化了 ``Model`` 之后，我们把它传给 ``Algorithm`` 。"
+
+#: ../../tutorial/getting_started.rst:70 ../../tutorial/maa.rst:67
+msgid "Agent"
+msgstr ""
+
+#: ../../tutorial/getting_started.rst:72
+msgid ""
+"``Agent`` is used to interact with the environment to generate training "
+"data. The training data is then passed to ``Algorithm`` to update the "
+"parameters of ``Model``."
+msgstr ""
+"负责算法与环境的交互，在交互过程中把生成的数据提供给 ``Algorithm`` 来更新模型( ``Model`` "
+")，也就是数据和算法的交互一般定义在这里。"
+
+#: ../../tutorial/getting_started.rst:74
+msgid ""
+"We need to inherit ``parl.Agent`` class to define our customized "
+"``Agent``. We first demonstrate the code, then walk through step by step."
+msgstr "我们得要继承 ``parl.Agent`` 这个类来实现自己的 ``Agent`` ，下面先把 ``Agent`` 的代码抛出来，再按照函数解释。"
+
+#: ../../tutorial/getting_started.rst:113
+msgid "In general, users have to implement the following functions:"
+msgstr "一般情况下，用户必须实现以下几个函数："
+
+#: ../../tutorial/getting_started.rst:115
+msgid ""
+"``__init__`` function: the input is previously defined ``Algorithm``. "
+"Note that we need to call ``super(CartpoleAgent, "
+"self).__init__(algorithm)``."
+msgstr ""
+"``__init__`` "
+"：把前面定义好的algorithm传进来，作为agent的一个成员变量，用于后续的数据交互。需要注意的是，这里必须得要初始化父类：``super(CartpoleAgent,"
+" self).__init__(algorithm)`` 。"
+
+#: ../../tutorial/getting_started.rst:116
+msgid ""
+"``predict`` function: return a predicted action based on current "
+"observation, this function is often used for evaluation and deployment of"
+" the ``Agent``."
+msgstr "``predict`` ：根据环境状态返回预测动作（action），一般用于评估和部署agent。"
+
+#: ../../tutorial/getting_started.rst:117
+msgid ""
+"``sample`` function: return a sampled action based on current "
+"observation, this function is often used in training to help the "
+"``Agent`` explore the observation space."
+msgstr "``sample`` ：根据环境状态返回动作（action），一般用于训练时候采样action进行探索。"
+
+#: ../../tutorial/getting_started.rst:120
+msgid "Start Training"
+msgstr "开始训练"
+
+#: ../../tutorial/getting_started.rst:122
+msgid ""
+"First, let's build a Cartpole ``Agent``. As the code shown below, we "
+"first initialize the ``Model``, then the ``Algorithm``, finally the "
+"``Agent``."
+msgstr ""
+"首先，我们来定一个智能体。逐步定义 ``model`` | ``algorithm`` | ``agent`` "
+"，然后得到一个可以和环境进行交互的智能体。"
+
+#: ../../tutorial/getting_started.rst:130
+msgid ""
+"Then we use this agent to interact with the environment, and run around "
+"1000 episodes for training, after which this agent can solve the problem."
+msgstr "然后我们用这个agent和环境进行交互，训练模型，1000个episode之后，agent就可以很好地解决Cartpole问题，拿到满分（200）。"
+
+#: ../../tutorial/getting_started.rst:173
+msgid "Summary"
+msgstr "总结"
+
+#: ../../tutorial/getting_started.rst:180
+msgid ""
+"In this tutorial, we have shown how to build an ``Agent`` step-by-step to"
+" solve the `Cartpole` problem."
+msgstr "在这个教程，我们展示了如何一步步地构建强化学习智能体，用于解决经典的Cartpole问题。"
+
+#: ../../tutorial/getting_started.rst:182
+msgid ""
+"The whole training code could be found `here "
+"<https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_."
+" Have a try quickly by running several commands:"
+msgstr ""
+"完整的训练代码可以在这个 `文件夹 "
+"<https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart>`_"
+" 中找到。赶紧执行下面的代码运行尝试下吧：）"
+
+#: ../../tutorial/maa.rst:2
+msgid "Model, Algorithm, Agent"
+msgstr "子模块说明"
+
+#: ../../tutorial/maa.rst:8
+msgid ""
+"In the previous tutorial, we quickly demonstrate three basic blocks of "
+"PARL: ``Model``, ``Algorithm``, ``Agent``, and use these basic blocks to "
+"construct final Cartpole ``Agent`` interacting with the environment. Now,"
+" in this tutorial, we will introduce in detail the specific positioning "
+"of each module, as well as the usage specifications."
+msgstr ""
+"在上一个教程中，我们快速地展示了如果通过PARL的三个基础模块：``Model`` , ``Algorithm`` , ``Agent`` "
+"来搭建智能体和环境进行交互的。在这个教程中，我们将详细介绍每个模块的具体定位，以及使用规范。"
+
+#: ../../tutorial/maa.rst:13
+msgid ""
+"**Definition**: ``Model`` defines Forward Network, it is usually a Policy"
+" Network or a Value Function Network. The current environment status "
+"(State) is the input to the Network."
+msgstr ""
+"**定义**：``Model`` 用来定义前向(Forward)网络，这通常是一个策略网络(Policy "
+"Network)或者一个值函数网络(Value Function)，输入是当前环境状态(State)。"
+
+#: ../../tutorial/maa.rst:14
+msgid "**⚠️Warning**: customized ``Model`` has to inherit ``parl.Model``."
+msgstr "**⚠️注意事项**：用户得要继承 ``parl.Model`` 这个类来构建自己的Model。"
+
+#: ../../tutorial/maa.rst:15 ../../tutorial/maa.rst:57
+#: ../../tutorial/maa.rst:74
+msgid "**Methods that must be implemented**:"
+msgstr "**需要实现的函数**:"
+
+#: ../../tutorial/maa.rst:16
+msgid ""
+"``forward``: define computation of Forward Network according to "
+"components in ``__init__``."
+msgstr "``forward`` : 根据在初始化函数中声明的计算层来搭建前向网络。"
+
+#: ../../tutorial/maa.rst:17
+msgid ""
+"**Remarks**: Implementation of Target Network is easy in PARL using "
+"``copy.deepcopy``."
+msgstr "**备注**：在PARL中，实现强化学习常用的target network很方便的，直接调用 ``copy.deepcopy`` 即可。"
+
+#: ../../tutorial/maa.rst:18 ../../tutorial/maa.rst:59
+#: ../../tutorial/maa.rst:76
+msgid "**Examples**:"
+msgstr "**示例**："
+
+#: ../../tutorial/maa.rst:53
+msgid ""
+"**Definition**: ``Algorithm`` will update the parameters of the ``Model``"
+" passed to it. In general, we define the loss function in ``Algorithm``. "
+"Each ``Algorithm`` contains at least one ``Model``."
+msgstr ""
+"**定义**：``Algorithm`` 定义了具体的算法来更新前向网络(Model)，也就是通过定义损失函数来更新 ``Model`` 。一个 "
+"``Algorithm`` 包含至少一个 ``Model`` 。"
+
+#: ../../tutorial/maa.rst:54
+msgid ""
+"**⚠️Warning**: it is recommended to directly import PARL's "
+"implementations of ``Algorithms``."
+msgstr "**⚠️注意事项**：一般不自己开发，推荐直接import 仓库中已经实现好的算法。"
+
+#: ../../tutorial/maa.rst:56 ../../tutorial/maa.rst:72
+msgid ""
+"``learn``: using training data (observations, rewards, actions, etc.) to "
+"update parameters in ``Model``."
+msgstr "``learn`` : 根据训练数据（观测量和输入的reward），定义损失函数，用于更新 ``Model`` 中的参数。"
+
+#: ../../tutorial/maa.rst:57
+msgid ""
+"``predict``: using current observation to predict the current action "
+"distribution or action value function."
+msgstr "``predict`` : 根据当前的观测量，给出动作概率分布或者Q函数的预估值。"
+
+#: ../../tutorial/maa.rst:69
+msgid ""
+"**Definition**: ``Agent`` is used to interact with the environment to "
+"generate training data. The training data is then passed to ``Algorithm``"
+" to update the parameters of ``Model``. It also handles data "
+"preprocessing."
+msgstr ""
+"**定义**：``Agent`` 负责算法与环境的交互，在交互过程中把生成的数据提供给 ``Algorithm`` 来更新模型( "
+"``Model`` )，数据的预处理流程也一般定义在这里。"
+
+#: ../../tutorial/maa.rst:70
+msgid ""
+"**⚠️Warning**: customized ``Agent`` has to inherit ``parl.Agent`` and "
+"call parent class's ``__init__`` method inside its constructor."
+msgstr "**⚠️注意事项**：需要继承 ``parl.Agent`` 来使用，要在构造函数中调用父类的构造函数。"
+
+#: ../../tutorial/maa.rst:73
+msgid ""
+"``predict``: return a predicted action based on current observation, this"
+" function is often used for evaluation and deployment of the ``Agent``."
+msgstr "``predict`` ： 根据环境状态返回预测动作（action），一般用于评估和部署agent。"
+
+#: ../../tutorial/maa.rst:74
+msgid ""
+"``sample``: return a sampled action based on current observation, this "
+"function is often used in training to help the ``Agent`` explore the "
+"observation space."
+msgstr "``sample`` ：根据环境状态返回动作（action），一般用于训练时候采样action进行探索。"
+
+#: ../../tutorial/output_as_csv.rst:2
+msgid "CSV Logger"
+msgstr "表格输出实验数据"
+
+#: ../../tutorial/output_as_csv.rst:4
+msgid ""
+"PARL provides a tool to output the indicators during the training process"
+" to a CSV table. The tool can be imported using:"
+msgstr "PARL提供了将训练过程中的指标输出到CSV表格的工具。工具导入方法："
+
+#: ../../tutorial/output_as_csv.rst:11
+msgid "How to Use"
+msgstr "使用教程"
+
+#: ../../tutorial/output_as_csv.rst:13
+msgid "Input path for saving the CSV file and initialize ``CSVLogger``:"
+msgstr "传入CSV文件保存路径，并初始化CSVLogger:"
+
+#: ../../tutorial/output_as_csv.rst:19
+msgid "Output a dictionary that contains the indicators:"
+msgstr "输出以字典形式记录的指标:"
+
+#: ../../tutorial/output_as_csv.rst:21
+msgid "`Parameters`:"
+msgstr " `参数` :"
+
+#: ../../tutorial/output_as_csv.rst:23
+msgid "result(dict) - indicators that need to be outputted as CSV file"
+msgstr "result(dict) - 需要输出到CSV文件的指标字典"
+
+#: ../../tutorial/output_as_csv.rst:25
+msgid "`Method`:"
+msgstr " `方法` :"
+
+#: ../../tutorial/output_as_csv.rst:32
+msgid "Example"
+msgstr "完整例子"
+
+#: ../../tutorial/output_as_csv.rst:42
+msgid "The CSV file will contain:"
+msgstr "``result.csv`` 文件内容如下："
+
+#: ../../tutorial/save_param.rst:2
+msgid "Save and Restore Parameters"
+msgstr "模型参数管理"
+
+#: ../../tutorial/save_param.rst:4
+msgid "Goal of this tutorial:"
+msgstr "该教程的目标:"
+
+#: ../../tutorial/save_param.rst:6
+msgid "Learn how to save and restore parameters."
+msgstr "学会保存和恢复目标参数"
+
+#: ../../tutorial/save_param.rst:8
+msgid "**Scene 1:**"
+msgstr "**场景1:**"
+
+#: ../../tutorial/save_param.rst:10
+msgid ""
+"Sometimes we need to save the parameters into a file and reuse them later"
+" on. PARL provides operators to save parameters to a file and restore "
+"parameters from a file easily. You only need several lines to implement "
+"this."
+msgstr "在训练过程中，我们有时候需要把训练好的模型参数保存到本地，用于后续的部署或者评估。当用户构建好agent之后，可以直接通过agent的相关接口来完成参数的存储。"
+
+#: ../../tutorial/save_param.rst:13
+msgid "Here is a demonstration of usage:"
+msgstr "示例:"
+
+#: ../../tutorial/save_param.rst:23
+msgid "**Scene 2:**"
+msgstr "**场景2:**"
+
+#: ../../tutorial/save_param.rst:25
+msgid ""
+"Sometimes during training procedure, we want to sync the latest model "
+"parameters to Agents (Actors) on other servers. To deal with this, we "
+"need to first move the parameters to memory then set the parameters of "
+"Agents (Actors) on other servers."
+msgstr "并行训练过程中，经常需要把最新的模型参数同步到另一台服务器上，这时候，需要把模型参数拿到内存中，然后再赋值给另一台机器上的agent（actor)。"
+
+#: ../../tutorial/tensorboard.rst:2
+msgid "Visualization Tool"
+msgstr "绘制训练曲线"
+
+#: ../../tutorial/tensorboard.rst:4
+msgid "Visualize the results with tensorboardX. To import the tool:"
+msgstr "PARL集成了tensorboardX作为可视化的工具。工具导入方法："
+
+#: ../../tutorial/tensorboard.rst:11
+msgid "add_scalar"
+msgstr "折线图接口：add_scalar"
+
+#: ../../tutorial/tensorboard.rst:17 ../../tutorial/tensorboard.rst:45
+msgid "Common used arguments:"
+msgstr "常用的参数"
+
+#: ../../tutorial/tensorboard.rst:19 ../../tutorial/tensorboard.rst:47
+msgid "tag *(string)* – Data identifier"
+msgstr ""
+
+#: ../../tutorial/tensorboard.rst:20
+msgid "scalar_value *(float or string/blobname)* – Value to save"
+msgstr ""
+
+#: ../../tutorial/tensorboard.rst:21 ../../tutorial/tensorboard.rst:49
+msgid "global_step *(int)* – Global step value to record"
+msgstr ""
+
+#: ../../tutorial/tensorboard.rst:23 ../../tutorial/tensorboard.rst:51
+msgid "Example:"
+msgstr "例子:"
+
+#: ../../tutorial/tensorboard.rst:33 ../../tutorial/tensorboard.rst:62
+msgid "Expected result:"
+msgstr "预期结果："
+
+#: ../../tutorial/tensorboard.rst:39
+msgid "add_histogram"
+msgstr "柱形接口：add_histogram"
+
+#: ../../tutorial/tensorboard.rst:48
+msgid ""
+"values *(torch.Tensor, numpy.array, or string/blobname)* – Values to "
+"build histogram"
+msgstr ""
+
+#: ../../tutorial/tensorboard.rst:68
+msgid "Modify Default Saving Path"
+msgstr "修改数据保存路径接口"
+
+#: ../../tutorial/tensorboard.rst:70
+msgid ""
+"The default summary saving path is ``./train_log``, the summary output "
+"path binds to logger path, so we only need to modify the logger path:"
+msgstr ""
+"默认的数据保存路径是: ``./train_log`` , "
+"summary的数据路径和logger绑定到一起的，所以直接修改logger的保存路径即可："
+

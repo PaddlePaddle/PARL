@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ QMixConfig:
     'gamma': (float) Discount factor in reinforcement learning.
     'exploration_start': (float) Initial 'epsilon' in epsilon-greedy based exploration.
     'min_exploration': (float) Min 'epsilon' in epsilon-greedy.
-    'exploration_decay': (float).
     'update_target_interval': (int) Synchronize paramters to the target model after
         the model has been learned 'update_target_interval' times.
     'batch_size': (int) Training batch_size.

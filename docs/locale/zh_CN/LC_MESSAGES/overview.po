@@ -1,0 +1,174 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2019, nlp-ol@baidu.com
+# This file is distributed under the same license as the PARL package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2021.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PARL \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-20 13:27+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../overview/abstractions.rst:2
+msgid "Abstractions"
+msgstr "框架结构"
+
+#: ../../overview/abstractions.rst:7
+msgid ""
+"PARL aims to build an **agent** for training algorithms to perform "
+"complex tasks."
+msgstr "PARL的目标是构建一个可以完成复杂任务的智能体。"
+
+#: ../../overview/abstractions.rst:8
+msgid ""
+"The main abstractions introduced by PARL that are used to build an agent "
+"recursively are the following:"
+msgstr "以下是用户在逐步构建一个智能体的过程中需要了解到的结构："
+
+#: ../../overview/abstractions.rst:10
+msgid ""
+"``Model`` is abstracted to construct the forward network which defines a "
+"policy network or critic network given state as input."
+msgstr ""
+"``Model`` 用来定义前向 ( ``Forward`` )网络，这通常是一个策略网络 ( ``Policy Network`` "
+")或者一个值函数网络 ( ``Value Function`` )，输入是当前环境状态 ( ``State`` )。"
+
+#: ../../overview/abstractions.rst:12
+msgid ""
+"``Algorithm`` describes the mechanism to update parameters in the *model*"
+" and often contains at least one model."
+msgstr ""
+"``Algorithm`` 定义了具体的算法来更新前向网络 ( ``Model`` )，也就是通过定义损失函数来更新 ``Model`` 。一个 "
+"``Algorithm`` 包含至少一个 ``Model`` 。"
+
+#: ../../overview/abstractions.rst:14
+msgid ""
+"``Agent``, a data bridge between the *environment* and the *algorithm*, "
+"is responsible for data I/O with the outside environment and describes "
+"data preprocessing before feeding data into the training process."
+msgstr ""
+"``Agent`` 负责算法与环境的交互，在交互过程中把生成的数据提供给 ``Algorithm`` 来更新模型 ( ``Model`` "
+")，数据的预处理流程也一般定义在这里。"
+
+#: ../../overview/abstractions.rst:16
+msgid ""
+"Note: For more information about base classes, please visit our "
+":doc:`tutorial <../tutorial/getting_started>` and :doc:`API document "
+"<../apis/model>`."
+msgstr ""
+"提示： 请访问 :doc:`教程 <../tutorial/getting_started>` 和 :doc:`API 文档 "
+"<../apis/model>` 以获取更多关于基础类的信息。"
+
+#: ../../overview/features.rst:2
+msgid "Features"
+msgstr "特点"
+
+#: ../../overview/features.rst:4
+msgid "**1. Reproducible**"
+msgstr "**1. 可复现性保证**"
+
+#: ../../overview/features.rst:6
+msgid ""
+"We provide algorithms that reproduce stably the results of many "
+"influential reinforcement learning algorithms."
+msgstr "我们提供了高质量的主流强化学习算法实现，严格地复现了论文对应的指标。"
+
+#: ../../overview/features.rst:8
+msgid "**2. Large Scale**"
+msgstr "**2. 大规模并行支持**"
+
+#: ../../overview/features.rst:10
+msgid ""
+"Ability to support high-performance parallelization of training with "
+"thousands of CPUs and multi-GPUs."
+msgstr "框架最高可支持上万个CPU的同时并发计算，并且支持多GPU强化学习模型的训练。"
+
+#: ../../overview/features.rst:12
+msgid "**3. Reusable**"
+msgstr "**3. 可复用性强**"
+
+#: ../../overview/features.rst:14
+msgid ""
+"Algorithms provided in the repository can be directly adapted to new "
+"tasks by defining a forward network and training mechanism will be built "
+"automatically."
+msgstr "用户无需自己重新实现算法，通过复用框架提供的算法可以轻松地把经典强化学习算法应用到具体的场景中。"
+
+#: ../../overview/features.rst:16
+msgid "**4. Extensible**"
+msgstr "**4. 良好扩展性**"
+
+#: ../../overview/features.rst:18
+msgid ""
+"Build new algorithms quickly by inheriting the abstract class in the "
+"framework."
+msgstr "当用户想调研新的算法时，可以通过继承我们提供的基类可以快速实现自己的强化学习算法。"
+
+#: ../../overview/parallelization.rst:2
+msgid "Parallelization"
+msgstr "简易高效的并行接口"
+
+#: ../../overview/parallelization.rst:5
+msgid ""
+"PARL provides a compact API for distributed training, allowing users to "
+"transfer the code into a parallelized version by simply adding a "
+"decorator. For more information about our APIs for parallel training, "
+"please visit our :doc:`tutorial <../parallel_training/overview>`."
+msgstr ""
+"在PARL中，一个 **修饰符** ( ``parl.remote_class`` )就可以帮助用户实现自己的并行算法。请访问我们的 "
+":doc:`教程 <../parallel_training/overview>` 以获取更多的并行训练信息。"
+
+#: ../../overview/parallelization.rst:7
+msgid ""
+"Here is a ``Hello World`` example to demonstrate how easy it is to "
+"leverage outer computation resources:"
+msgstr "以下我们通过 ``Hello World`` 的例子来说明如何简单地通过PARL来调度外部的计算资源实现并行计算: "
+
+#: ../../overview/parallelization.rst:25
+msgid "Two steps to use outer computation resources:"
+msgstr "两步调度外部的计算资源："
+
+#: ../../overview/parallelization.rst:27
+msgid ""
+"use the ``parl.remote_class`` to decorate a class at first, after which "
+"it is transferred to be a new class that can run in other CPUs or "
+"machines."
+msgstr "使用 ``parl.remote_class`` 修饰一个类，之后这个类就被转化为可以运行在其他CPU或者机器上的类。"
+
+#: ../../overview/parallelization.rst:28
+msgid ""
+"call ``parl.connect`` to initialize parallel communication before "
+"creating an object. Calling any function of the objects **does not** "
+"consume local computation resources since they are executed elsewhere."
+msgstr ""
+"调用 ``parl.connect`` "
+"函数来初始化并行通讯，通过这种方式获取到的实例和原来的类是有同样的函数的。由于这些类是在别的计算资源上运行的，执行这些函数 "
+"**不再消耗当前线程计算资源** 。"
+
+#: ../../overview/parallelization.rst:35
+msgid ""
+"As shown in the above figure, real actors (orange circle) are running at "
+"the cpu cluster, while the learner (blue circle) is running at the local "
+"gpu with several remote actors (yellow circle with dotted edge)."
+msgstr "如上图所示，真实的actor（橙色圆圈）运行在CPU集群，learner（蓝色圆圈）和remote actor（黄色圆圈）运行在本地的GPU上。"
+
+#: ../../overview/parallelization.rst:37
+msgid ""
+"For users, they can write code in a simple way, just like writing multi-"
+"thread code, but with actors consuming remote resources. We have also "
+"provided examples of parallelized algorithms like IMPALA, :doc:`A2C "
+"<../implementations/a2c>`. For more details in usage please "
+"refer to these examples."
+msgstr ""
+"对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考"
+" IMPALA , :doc:`A2C "
+"<../implementations/a2c>`。"
+

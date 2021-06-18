@@ -1,4 +1,4 @@
-Cluster Setup
+Xparl Usage
 =============
 Setup Command
 ###################
@@ -14,7 +14,7 @@ This command starts a master node to manage computation resources and adds the l
 We use the port `6006` for demonstration, and it can be any available port.
 
 Adding More Resources
-###################
+#######################
 
 .. note::
     If you have only one machine, you can ignore this part.
@@ -53,11 +53,11 @@ Here we give an example demonstrating how to use ``@parl.remote_class`` for para
   actor.add(1, 2)  # return 3
 
 Shutdown the Cluster
-###################
+#######################
 run ``xparl stop`` at the machine that runs as a master node to stop the cluster processes. Worker nodes at different machines will exit automatically after the master node is stopped.
 
 Further Reading
-###################
+#######################
 | Now we know how to set up a cluster and use this cluster by simply adding ``@parl.remote_class``. 
 | In `next_tutorial`_, we will show how this decorator help us implement the **real** multi-thread computation in Python, breaking the limitation of Python Global Interpreter Lock(GIL).
 

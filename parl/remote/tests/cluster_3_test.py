@@ -22,6 +22,7 @@ from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class
@@ -59,15 +60,16 @@ class TestCluster(unittest.TestCase):
         disconnect()
 
     def test_reset_actor(self):
+        port = get_free_tcp_port()
         logger.info("running: test_reset_actor")
         # start the master
-        master = Master(port=8237)
+        master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
 
-        worker1 = Worker('localhost:8237', 4)
-        parl.connect('localhost:8237')
+        worker1 = Worker('localhost:{}'.format(port), 4)
+        parl.connect('localhost:{}'.format(port))
         for _ in range(10):
             actor = Actor()
             ret = actor.add_one(1)

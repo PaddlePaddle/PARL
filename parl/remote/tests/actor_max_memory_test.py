@@ -24,6 +24,7 @@ from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
 
 from multiprocessing import Process
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class(max_memory=350)
@@ -54,7 +55,7 @@ class TestMaxMemory(unittest.TestCase):
         actor1.add_500mb()
 
     def test_max_memory(self):
-        port = 3001
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

@@ -96,6 +96,12 @@ class RemoteWrapper(object):
         else:
             raise FileNotFoundError(
                 "cannot not find the module:{}".format(module_path))
+
+        if ".." in module_path:
+            # append relative path (E.g. "../a/") to the sys.path,
+            # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
+            module_path = module_path[module_path.index(".."):]
+
         res = inspect.getfile(cls)
         file_path, in_sys_path = locate_remote_file(module_path)
         cls_source = inspect.getsourcelines(cls)

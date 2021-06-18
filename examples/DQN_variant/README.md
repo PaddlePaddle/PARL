@@ -12,31 +12,29 @@ Based on PARL, the DQN algorithm of deep reinforcement learning has been reprodu
 ### Atari games introduction
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
-### Benchmark result
+### Benchmark results
 
-Mean episode rewards for 10 million training steps.
+*Benchmark results are obtained using different random seeds.*
 
-<img src=".benchmark/merge.png" width = "1150" height ="230" alt="pong" /> 
-
-Performance of DQN on various environments
+Performance of **Dueling DQN** on various environments:
 
 <p align="center">
-<img src=".benchmark/table.png" alt="result" width="700"/>
+<img src=".benchmark/Dueling DQN.png" alt="result"/>
 </p>
 
 ## How to use
 ### Dependencies:
-+ [paddlepaddle>=1.8.5](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym
++ gym==0.18.0
 + tqdm
-+ atari-py
-+ [ale_python_interface](https://github.com/mgbellemare/Arcade-Learning-Environment)
-
++ atari-py==0.2.6
 
 ### Start Training:
 ```
 # To train a model for Pong game
-python train.py --rom ./rom_files/pong.bin
+python train.py
+
+# For more customized arguments
+python train.py --help
 ```
-> To train more games, you can install more rom files from [here](https://github.com/openai/atari-py/tree/master/atari_py/atari_roms).

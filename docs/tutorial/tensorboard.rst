@@ -1,14 +1,21 @@
-summary
-===============
+Visualization Tool
+==================
 
-Visualize the results with tensorboard. 
+Visualize the results with tensorboardX. To import the tool:
+
+.. code-block:: python
+
+    from parl.utils import summary
 
 add_scalar
 -------------
 
+.. code-block:: python
+
+    summary.add_scalar(tag, scalar_value, global_step=None)
+
 Common used arguments:
 
-* summary.add_scalar(tag, scalar_value, global_step=None)
     * tag *(string)* – Data identifier
     * scalar_value *(float or string/blobname)* – Value to save
     * global_step *(int)* – Global step value to record
@@ -31,9 +38,12 @@ Expected result:
 add_histogram
 ----------------
 
+.. code-block:: python
+
+    summary.add_histogram(tag, values, global_step=None)
+
 Common used arguments:
 
-* summary.add_histogram(tag, values, global_step=None)
     * tag *(string)* – Data identifier
     * values *(torch.Tensor, numpy.array, or string/blobname)* – Values to build histogram
     * global_step *(int)* – Global step value to record
@@ -53,3 +63,13 @@ Expected result:
 
     .. image:: add_histogram.jpg
         :scale: 50 %
+
+Modify Default Saving Path
+--------------------------------
+
+The default summary saving path is ``./train_log``, the summary output path binds to logger path, so we only need to modify the logger path:
+
+.. code-block:: python
+
+    from parl.utils import logger
+    logger.set_dir('./train_log/exp1')

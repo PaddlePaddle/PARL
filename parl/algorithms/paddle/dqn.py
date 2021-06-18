@@ -43,13 +43,13 @@ class DQN(parl.Algorithm):
     def predict(self, obs):
         """ use self.model (Q function) to predict the action values
         """
-        return self.model.value(obs)
+        return self.model(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
         """ update the Q function (self.model) with DQN algorithm
         """
         # Q
-        pred_values = self.model.value(obs)
+        pred_values = self.model(obs)
         action_dim = pred_values.shape[-1]
         action = paddle.squeeze(action, axis=-1)
         action_onehot = paddle.nn.functional.one_hot(
@@ -59,7 +59,7 @@ class DQN(parl.Algorithm):
 
         # target Q
         with paddle.no_grad():
-            max_v = self.target_model.value(next_obs).max(1, keepdim=True)
+            max_v = self.target_model(next_obs).max(1, keepdim=True)
             target = reward + (1 - terminal) * self.gamma * max_v
         loss = self.mse_loss(pred_value, target)
 

@@ -22,6 +22,7 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
+from parl.utils import get_free_tcp_port
 
 
 @parl.remote_class(max_memory=300)
@@ -41,7 +42,7 @@ class TestClusterStatus(unittest.TestCase):
         disconnect
 
     def test_cluster_status(self):
-        port = 4321
+        port = get_free_tcp_port()
         master = Master(port=port)
         th = threading.Thread(target=master.run)
         th.start()

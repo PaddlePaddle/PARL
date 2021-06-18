@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,80 +12,79 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import paddle.fluid as fluid
 import parl
-from parl import layers
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 
 
 class MujocoModel(parl.Model):
-    def __init__(self, act_dim, max_action):
-        self.actor_model = ActorModel(act_dim, max_action)
-        self.critic_model = CriticModel()
+    def __init__(self, obs_dim, action_dim):
+        super(MujocoModel, self).__init__()
+        self.actor_model = Actor(obs_dim, action_dim)
+        self.critic_model = Critic(obs_dim, action_dim)
 
     def policy(self, obs):
-        return self.actor_model.policy(obs)
+        return self.actor_model(obs)
 
-    def value(self, obs, act):
-        return self.critic_model.value(obs, act)
+    def value(self, obs, action):
+        return self.critic_model(obs, action)
 
-    def Q1(self, obs, act):
-        return self.critic_model.Q1(obs, act)
+    def Q1(self, obs, action):
+        return self.critic_model.Q1(obs, action)
 
     def get_actor_params(self):
         return self.actor_model.parameters()
 
-
-class ActorModel(parl.Model):
-    def __init__(self, act_dim, max_action):
-        hid1_size = 400
-        hid2_size = 300
-
-        self.fc1 = layers.fc(size=hid1_size, act='relu')
-        self.fc2 = layers.fc(size=hid2_size, act='relu')
-        self.fc3 = layers.fc(size=act_dim, act='tanh')
-
-        self.max_action = max_action
-
-    def policy(self, obs):
-        hid1 = self.fc1(obs)
-        hid2 = self.fc2(hid1)
-        means = self.fc3(hid2)
-        means = means * self.max_action
-        return means
+    def get_critic_params(self):
+        return self.critic_model.parameters()
 
 
-class CriticModel(parl.Model):
-    def __init__(self):
-        hid1_size = 400
-        hid2_size = 300
+class Actor(parl.Model):
+    def __init__(self, obs_dim, action_dim):
+        super(Actor, self).__init__()
 
-        self.fc1 = layers.fc(size=hid1_size, act='relu')
-        self.fc2 = layers.fc(size=hid2_size, act='relu')
-        self.fc3 = layers.fc(size=1, act=None)
+        self.l1 = nn.Linear(obs_dim, 256)
+        self.l2 = nn.Linear(256, 256)
+        self.l3 = nn.Linear(256, action_dim)
 
-        self.fc4 = layers.fc(size=hid1_size, act='relu')
-        self.fc5 = layers.fc(size=hid2_size, act='relu')
-        self.fc6 = layers.fc(size=1, act=None)
+    def forward(self, obs):
+        x = F.relu(self.l1(obs))
+        x = F.relu(self.l2(x))
+        action = paddle.tanh(self.l3(x))
+        return action
 
-    def value(self, obs, act):
-        hid1 = self.fc1(obs)
-        concat1 = layers.concat([hid1, act], axis=1)
-        Q1 = self.fc2(concat1)
-        Q1 = self.fc3(Q1)
-        Q1 = layers.squeeze(Q1, axes=[1])
 
-        hid2 = self.fc4(obs)
-        concat2 = layers.concat([hid2, act], axis=1)
-        Q2 = self.fc5(concat2)
-        Q2 = self.fc6(Q2)
-        Q2 = layers.squeeze(Q2, axes=[1])
-        return Q1, Q2
+class Critic(parl.Model):
+    def __init__(self, obs_dim, action_dim):
+        super(Critic, self).__init__()
 
-    def Q1(self, obs, act):
-        hid1 = self.fc1(obs)
-        concat1 = layers.concat([hid1, act], axis=1)
-        Q1 = self.fc2(concat1)
-        Q1 = self.fc3(Q1)
-        Q1 = layers.squeeze(Q1, axes=[1])
+        # Q1 architecture
+        self.l1 = nn.Linear(obs_dim + action_dim, 256)
+        self.l2 = nn.Linear(256, 256)
+        self.l3 = nn.Linear(256, 1)
 
-        return Q1
+        # Q2 architecture
+        self.l4 = nn.Linear(obs_dim + action_dim, 256)
+        self.l5 = nn.Linear(256, 256)
+        self.l6 = nn.Linear(256, 1)
+
+    def forward(self, obs, action):
+        sa = paddle.concat([obs, action], 1)
+
+        q1 = F.relu(self.l1(sa))
+        q1 = F.relu(self.l2(q1))
+        q1 = self.l3(q1)
+
+        q2 = F.relu(self.l4(sa))
+        q2 = F.relu(self.l5(q2))
+        q2 = self.l6(q2)
+        return q1, q2
+
+    def Q1(self, obs, action):
+        sa = paddle.concat([obs, action], 1)
+
+        q1 = F.relu(self.l1(sa))
+        q1 = F.relu(self.l2(q1))
+        q1 = self.l3(q1)
+        return q1

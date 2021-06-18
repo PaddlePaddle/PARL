@@ -222,10 +222,8 @@ if __name__ == '__main__':
         type=str,
         default='./model',
         help='directory for saving model')
-    parser.add_argument('--seed', type=int, default=0)
 
     args = parser.parse_args()
-    logger.set_dir('./train_log/' + str(args.env) + '_' + str(args.seed))
-    # logger.set_dir('./train_log/' + str(args.env))
+    logger.set_dir('./train_log/' + str(args.env))
 
     train_agent()

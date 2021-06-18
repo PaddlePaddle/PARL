@@ -66,8 +66,7 @@ class Actor(object):
             env_sample_data[env_id] = defaultdict(list)
         for i in range(self.config['sample_batch_steps']):
             self.obs_batch = np.stack(self.obs_batch)
-            with torch.no_grad():
-                action_batch, value_batch = self.agent.sample(self.obs_batch)
+            action_batch, value_batch = self.agent.sample(self.obs_batch)
             next_obs_batch, reward_batch, done_batch, info_batch = self.vector_env.step(
                 action_batch)
 

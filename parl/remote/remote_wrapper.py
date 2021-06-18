@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import cloudpickle
-import inspect
 import sys
 import threading
 import zmq
@@ -23,10 +22,10 @@ from parl.remote.communication import loads_argument, loads_return,\
     dumps_argument, dumps_return
 from parl.remote.client import get_global_client
 from parl.remote import remote_constants
-from parl.remote.utils import locate_remote_file
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError, FutureFunctionError
 from parl.remote.future_mode.actor_ref_monitor import ActorRefMonitor
+from parl.remote.utils import dump_remote_class
 
 XPARL_RESERVED_PREFIX = "_xparl"
 
@@ -88,35 +87,15 @@ class RemoteWrapper(object):
         self.job_shutdown = False
 
         self.send_file(self.job_socket)
-        module_path = inspect.getfile(cls)
-        if module_path.endswith('pyc'):
-            module_path = module_path[:-4]
-        elif module_path.endswith('py'):
-            module_path = module_path[:-3]
-        else:
-            raise FileNotFoundError(
-                "cannot not find the module:{}".format(module_path))
-
-        if ".." in module_path:
-            # append relative path (E.g. "../a/") to the sys.path,
-            # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
-            module_path = module_path[module_path.index(".."):]
-
-        res = inspect.getfile(cls)
-        file_path, in_sys_path = locate_remote_file(module_path)
-        cls_source = inspect.getsourcelines(cls)
-        end_of_file = cls_source[1] + len(cls_source[0])
-        class_name = cls.__name__
 
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
                 del kwargs[key]
+
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
-            cloudpickle.dumps(
-                [file_path, class_name, end_of_file, in_sys_path]),
+            dump_remote_class(cls),
             cloudpickle.dumps([args, kwargs]),
-            cloudpickle.dumps(sys.path)
         ])
         message = self.job_socket.recv_multipart()
         tag = message[0]

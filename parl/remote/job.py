@@ -291,15 +291,7 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                file_name, class_name, end_of_file, in_sys_path = cloudpickle.loads(
-                    message[1])
-
-                # append the environment paths of the client to the current environment path.
-                client_sys_path = cloudpickle.loads(message[3])
-                sys.path.extend(client_sys_path)
-
-                cls = load_remote_class(file_name, class_name, end_of_file,
-                                        in_sys_path)
+                cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
 
                 with redirect_output_to_file(self.logfile_path, os.devnull):

@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cloudpickle
 import sys
+import inspect
 from contextlib import contextmanager
 import os
 import pkg_resources
@@ -52,49 +54,116 @@ def simplify_code(code, end_of_file):
     return to_write_lines
 
 
-def load_remote_class(file_name, class_name, end_of_file, in_sys_path):
+def is_class_defined_in_file(cls):
+    """Check whether the class is defined in a python file
+
+    Args:
+        cls: class
     """
-  load a class given its file_name and class_name.
+    if hasattr(cls, '__module__'):
+        cls_module = sys.modules.get(cls.__module__)
+        if getattr(cls_module, '__file__', None):
+            return True
+    return False
 
-  Args:
-    file_name: specify the file to load the class
-    class_name: specify the class to be loaded
-    end_of_file: line ID to indicate the last line that defines the class.
-    in_sys_path: whether the path of the remote class is in the environment path (sys.path).
 
-  Return:
-    cls: the class to load
-  """
-    with open(file_name + '.py') as t_file:
-        code = t_file.readlines()
-    code = simplify_code(code, end_of_file)
-    #folder/xx.py -> folder/xparl_xx.py
-    file_name = file_name.split(os.sep)
-    prefix = os.sep.join(file_name[:-1])
-    if prefix == "":
-        prefix = '.'
+def dump_remote_class(cls):
+    """
+    Args:
+        cls: class decorated by @parl.remote_class
+    """
+    defined_in_file = is_class_defined_in_file(cls)
 
-    # Add pid to fix:
-    #    https://github.com/PaddlePaddle/PARL/issues/611
-    #    Multiple jobs may write the same file when `in_sys_path` is True.
-    new_file_name = 'xparl_{}'.format(os.getpid()) + file_name[-1]
-    module_name = prefix + os.sep + new_file_name
-    tmp_file_name = module_name + '.py'
-    with open(tmp_file_name, 'w') as t_file:
-        for line in code:
-            t_file.write(line)
+    if defined_in_file:
+        module_path = inspect.getfile(cls)
+        if module_path.endswith('pyc'):
+            module_path = module_path[:-4]
+        elif module_path.endswith('py'):
+            module_path = module_path[:-3]
+        else:
+            raise FileNotFoundError(
+                "cannot not find the module:{}".format(module_path))
 
-    if in_sys_path:
-        # the path of the remote class is in the sys.path, we can import it directly.
-        mod = __import__(new_file_name)
+        if ".." in module_path:
+            # append relative path (E.g. "../a/") to the sys.path,
+            # inspect.getfile may return an abnormal path (E.g. "/home/user/../a/").
+            module_path = module_path[module_path.index(".."):]
+
+        res = inspect.getfile(cls)
+        file_path, in_sys_path = locate_remote_file(module_path)
+        cls_source = inspect.getsourcelines(cls)
+        end_of_file = cls_source[1] + len(cls_source[0])
+        class_name = cls.__name__
+
+        dumped_class_info = [
+            file_path, class_name, end_of_file, in_sys_path, sys.path
+        ]
     else:
-        module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
-        mod = __import__(module_name, globals(), locals(), [class_name], 0)
+        dumped_class_info = cls
 
-    cls = getattr(mod, class_name)
+    return cloudpickle.dumps([defined_in_file, dumped_class_info])
 
-    os.remove(tmp_file_name)
 
+def load_remote_class(remote_class_info):
+    """load a class given related info dumped in the client.
+
+    Args:
+      remote_class_info: [defined_in_file, dumped_class_info]
+                         - defined_in_file: whether the remote class is defined in a python file
+                         - dumped_class_info: information of dumped remote class (decided by `defined_in_file`).
+
+    Return:
+      cls: the class to load
+    """
+
+    defined_in_file, dumped_class_info = cloudpickle.loads(remote_class_info)
+
+    if defined_in_file:
+        """
+        dumped_class_info:
+            file_name: specify the file to load the class
+            class_name: specify the class to be loaded
+            end_of_file: line ID to indicate the last line that defines the class.
+            in_sys_path: whether the path of the remote class is in the environment path (sys.path).
+            client_sys_path: the environment paths of the client
+        """
+        file_name, class_name, end_of_file, in_sys_path, client_sys_path = dumped_class_info
+
+        with open(file_name + '.py') as t_file:
+            code = t_file.readlines()
+        code = simplify_code(code, end_of_file)
+        #folder/xx.py -> folder/xparl_xx.py
+        file_name = file_name.split(os.sep)
+        prefix = os.sep.join(file_name[:-1])
+        if prefix == "":
+            prefix = '.'
+
+        # Add pid to fix:
+        #    https://github.com/PaddlePaddle/PARL/issues/611
+        #    Multiple jobs may write the same file when `in_sys_path` is True.
+        new_file_name = 'xparl_{}'.format(os.getpid()) + file_name[-1]
+        module_name = prefix + os.sep + new_file_name
+        tmp_file_name = module_name + '.py'
+        with open(tmp_file_name, 'w') as t_file:
+            for line in code:
+                t_file.write(line)
+
+        if in_sys_path:
+            # append the environment paths of the client to the current environment path.
+            client_sys_path = cloudpickle.loads(message[3])
+            sys.path.extend(client_sys_path)
+
+            # the path of the remote class is in the sys.path, we can import it directly.
+            mod = __import__(new_file_name)
+        else:
+            module_name = module_name.lstrip('.' + os.sep).replace(os.sep, '.')
+            mod = __import__(module_name, globals(), locals(), [class_name], 0)
+
+        cls = getattr(mod, class_name)
+
+        os.remove(tmp_file_name)
+    else:
+        cls = dumped_class_info
     return cls
 
 

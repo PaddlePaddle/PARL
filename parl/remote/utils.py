@@ -150,7 +150,6 @@ def load_remote_class(remote_class_info):
 
         if in_sys_path:
             # append the environment paths of the client to the current environment path.
-            client_sys_path = cloudpickle.loads(message[3])
             sys.path.extend(client_sys_path)
 
             # the path of the remote class is in the sys.path, we can import it directly.

@@ -41,29 +41,20 @@ LOG_INTERVAL = 1
 
 
 def evaluate(agent, ob_rms, env_name, seed):
-    if seed is not None:
-        seed += 1
-
-    eval_envs = make_env(env_name, seed, None)
-    vec_norm = get_vec_normalize(eval_envs)
-    if vec_norm is not None:
-        vec_norm.eval()
-        vec_norm.ob_rms = ob_rms
-
+    eval_env = make_env(env_name, seed + 1, GAMMA, test=True, ob_rms=ob_rms)
     eval_episode_rewards = []
-    obs = eval_envs.reset()
+    obs = eval_env.reset()
 
     while len(eval_episode_rewards) < 10:
         action = agent.predict(obs)
 
         # Observe reward and next obs
-        obs, _, done, infos = eval_envs.step(action)
+        obs, _, done, info = eval_env.step(action)
 
-        for info in infos:
-            if 'episode' in info.keys():
-                eval_episode_rewards.append(info['episode']['r'])
+        if 'episode' in info.keys():
+            eval_episode_rewards.append(info['episode']['r'])
 
-    eval_envs.close()
+    eval_env.close()
 
     print(" Evaluation using {} episodes: mean reward {:.5f}\n".format(
         len(eval_episode_rewards), np.mean(eval_episode_rewards)))
@@ -72,20 +63,20 @@ def evaluate(agent, ob_rms, env_name, seed):
 
 def main():
     paddle.seed(args.seed)
-    envs = make_env(args.env, args.seed, GAMMA)
+    env = make_env(args.env, args.seed, GAMMA)
 
-    model = MujocoModel(envs.observation_space.shape[0],
-                        envs.action_space.shape[0])
+    model = MujocoModel(env.observation_space.shape[0],
+                        env.action_space.shape[0])
 
     algorithm = PPO(model, CLIP_PARAM, VALUE_LOSS_COEF, ENTROPY_COEF, LR, EPS,
                     MAX_GRAD_NROM)
 
     agent = MujocoAgent(algorithm)
 
-    rollouts = RolloutStorage(NUM_STEPS, envs.observation_space.shape[0],
-                              envs.action_space.shape[0])
+    rollouts = RolloutStorage(NUM_STEPS, env.observation_space.shape[0],
+                              env.action_space.shape[0])
 
-    obs = envs.reset()
+    obs = env.reset()
     rollouts.obs[0] = np.copy(obs)
 
     episode_rewards = deque(maxlen=10)
@@ -97,18 +88,16 @@ def main():
             value, action, action_log_prob = agent.sample(rollouts.obs[step])
 
             # Obser reward and next obs
-            obs, reward, done, infos = envs.step(action)
+            obs, reward, done, info = env.step(action)
 
-            for info in infos:
-                if 'episode' in info.keys():
-                    episode_rewards.append(info['episode']['r'])
+            if 'episode' in info.keys():
+                episode_rewards.append(info['episode']['r'])
 
             # If done then clean the history of observations.
             masks = paddle.to_tensor(
-                [[0.0] if done_ else [1.0] for done_ in done], dtype='float32')
+                [0.0] if done else [1.0], dtype='float32')
             bad_masks = paddle.to_tensor(
-                [[0.0] if 'bad_transition' in info.keys() else [1.0]
-                 for info in infos],
+                [0.0] if 'bad_transition' in info.keys() else [1.0],
                 dtype='float32')
             rollouts.append(obs, action, action_log_prob, value, reward, masks,
                             bad_masks)
@@ -132,7 +121,7 @@ def main():
 
         if (args.test_every_steps is not None and len(episode_rewards) > 1
                 and j % args.test_every_steps == 0):
-            ob_rms = get_vec_normalize(envs).ob_rms
+            ob_rms = get_vec_normalize(env).ob_rms
             eval_mean_reward = evaluate(agent, ob_rms, args.env, args.seed)
             summary.add_scalar('ppo/mean_validation_rewards', eval_mean_reward,
                                (j + 1) * NUM_STEPS)
@@ -141,7 +130,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='RL')
     parser.add_argument(
-        '--seed', type=int, default=1, help='random seed (default: 1)')
+        '--seed', type=int, default=616, help='random seed (default: 1)')
     parser.add_argument(
         '--batch_size',
         type=int,

@@ -21,6 +21,8 @@ import time
 
 
 class TimeLimitMask(gym.Wrapper):
+    """ Env wrapper that marks bad_transition
+    """
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
         if done and self.env._max_episode_steps == self.env._elapsed_steps:
@@ -32,6 +34,8 @@ class TimeLimitMask(gym.Wrapper):
 
 
 class MonitorEnv(gym.Wrapper):
+    """ Env wrapper that keeps tracks of total raw episode rewards, length of raw episode rewards for evaluation.
+    """
     def __init__(self, env):
         Wrapper.__init__(self, env=env)
         self.tstart = time.time()
@@ -62,6 +66,8 @@ class MonitorEnv(gym.Wrapper):
 
 
 class VectorEnv(gym.Wrapper):
+    """ Env wrapper for vectoring the observation, reward, done and info
+    """
     def step(self, action):
         ob, rew, done, info = self.env.step(action)
         ob = np.array(ob)
@@ -75,7 +81,10 @@ class VectorEnv(gym.Wrapper):
 
 
 class RunningMeanStd(object):
-    # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    """ Calculating running mean and variance
+    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+
+    """
     def __init__(self, epsilon=1e-4, shape=()):
         self.mean = np.zeros(shape, 'float64')
         self.var = np.ones(shape, 'float64')
@@ -93,22 +102,9 @@ class RunningMeanStd(object):
             batch_count)
 
 
-def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
-                                       batch_count):
-    delta = batch_mean - mean
-    tot_count = count + batch_count
-
-    new_mean = mean + delta * batch_count / tot_count
-    m_a = var * count
-    m_b = batch_var * batch_count
-    M2 = m_a + m_b + np.square(delta) * count * batch_count / tot_count
-    new_var = M2 / tot_count
-    new_count = tot_count
-
-    return new_mean, new_var, new_count
-
-
 class VecNormalize(gym.Wrapper):
+    """ Env wrapper that normalize reward, observation based on running mean return and running mean variance.
+    """
     def __init__(self,
                  env,
                  ob=True,
@@ -166,7 +162,53 @@ class VecNormalize(gym.Wrapper):
         self.trainint = False
 
 
+def get_vec_normalize(venv):
+    """ Fetch VecNormalize class
+
+    Args:
+        venv (gym.Wrapper): current env
+    """
+    if isinstance(venv, VecNormalize):
+        return venv
+    elif hasattr(venv, 'venv'):
+        return get_vec_normalize(venv.venv)
+
+    return None
+
+
+def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
+                                       batch_count):
+    """ helper function that updates batch mean, variance, count
+
+    Args:
+        mean (np.array): current mean
+        var (np.array): current variance
+        count (float): current count
+        batch_mean (np.array): batch mean
+        batch_var (np.array): batch variance
+        batch_count (int): batch size
+    """
+    delta = batch_mean - mean
+    tot_count = count + batch_count
+
+    new_mean = mean + delta * batch_count / tot_count
+    m_a = var * count
+    m_b = batch_var * batch_count
+    M2 = m_a + m_b + np.square(delta) * count * batch_count / tot_count
+    new_var = M2 / tot_count
+    new_count = tot_count
+
+    return new_mean, new_var, new_count
+
+
 def make_env(env_name, seed, gamma):
+    """ Wrap original Mujoco environment with wrapper envs to provide normalization and extra functionality
+
+    Args:
+        env_name (str): Mujoco env name
+        seed (int): random seed
+        gamma (float or None): discounting factor
+    """
     env = gym.make(env_name)
     env.seed(seed)
     env = TimeLimitMask(env)

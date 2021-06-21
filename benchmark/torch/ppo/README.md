@@ -22,7 +22,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Start Training:
 ```
-# To train an agent for Hopper-v2 game
+# To train an agent for Hopper-v1 game
 python train.py
 
 # For more customized arguments

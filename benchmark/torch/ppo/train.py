@@ -17,12 +17,12 @@
 from collections import deque
 import numpy as np
 import torch
-from wrapper import make_env, get_vec_normalize
 from mujoco_model import MujocoModel
-from parl.algorithms import PPO
 from mujoco_agent import MujocoAgent
 from storage import RolloutStorage
-from parl.utils import logger, summary
+from parl.algorithms import PPO
+from parl.env.mujoco_wrappers import make_env, get_vec_normalize
+from parl.utils import summary
 import argparse
 
 LR = 3e-4
@@ -54,8 +54,7 @@ def evaluate(agent, ob_rms, env_name, seed):
     obs = eval_envs.reset()
 
     while len(eval_episode_rewards) < 10:
-        with torch.no_grad():
-            action = agent.predict(obs)
+        action = agent.predict(obs)
 
         # Observe reward and next obs
         obs, _, done, infos = eval_envs.step(action)
@@ -84,14 +83,8 @@ def main():
                         envs.action_space.shape[0])
     model.to(device)
 
-    algorithm = PPO(
-        model,
-        CLIP_PARAM,
-        VALUE_LOSS_COEF,
-        ENTROPY_COEF,
-        LR,
-        EPS,
-        MAX_GRAD_NROM)
+    algorithm = PPO(model, CLIP_PARAM, VALUE_LOSS_COEF, ENTROPY_COEF, LR, EPS,
+                    MAX_GRAD_NROM)
 
     agent = MujocoAgent(algorithm, device)
 
@@ -107,9 +100,7 @@ def main():
     for j in range(num_updates):
         for step in range(NUM_STEPS):
             # Sample actions
-            with torch.no_grad():
-                value, action, action_log_prob = agent.sample(
-                    rollouts.obs[step])
+            value, action, action_log_prob = agent.sample(rollouts.obs[step])
 
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
@@ -127,12 +118,11 @@ def main():
             rollouts.append(obs, action, action_log_prob, value, reward, masks,
                             bad_masks)
 
-        with torch.no_grad():
-            next_value = agent.value(rollouts.obs[-1])
+        next_value = agent.value(rollouts.obs[-1])
 
         value_loss, action_loss, dist_entropy = agent.learn(
-            next_value, GAMMA, GAE_LAMBDA, PPO_EPOCH,
-            args.batch_size, rollouts)
+            next_value, GAMMA, GAE_LAMBDA, PPO_EPOCH, args.batch_size,
+            rollouts)
 
         rollouts.after_update()
 
@@ -148,10 +138,9 @@ def main():
         if (args.test_every_steps is not None and len(episode_rewards) > 1
                 and j % args.test_every_steps == 0):
             ob_rms = get_vec_normalize(envs).ob_rms
-            eval_mean_reward = evaluate(agent, ob_rms, args.env,
-                                        args.seed)
-            summary.add_scalar('ppo/mean_validation_rewards',
-                               eval_mean_reward, (j + 1) * NUM_STEPS)
+            eval_mean_reward = evaluate(agent, ob_rms, args.env, args.seed)
+            summary.add_scalar('ppo/mean_validation_rewards', eval_mean_reward,
+                               (j + 1) * NUM_STEPS)
 
 
 if __name__ == "__main__":

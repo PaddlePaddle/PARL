@@ -22,13 +22,17 @@ class MujocoAgent(parl.Agent):
         self.device = device
 
     def predict(self, obs):
-        obs = torch.from_numpy(obs).float().to(self.device)
-        action = self.alg.predict(obs)
+        with torch.no_grad():
+            obs = torch.from_numpy(obs).float().to(self.device)
+            action = self.alg.predict(obs)
+
         return action.cpu().numpy()
 
     def sample(self, obs):
-        obs = torch.from_numpy(obs).to(self.device)
-        value, action, action_log_probs = self.alg.sample(obs)
+        with torch.no_grad():
+            obs = torch.from_numpy(obs).to(self.device)
+            value, action, action_log_probs = self.alg.sample(obs)
+
         return value.cpu().numpy(), action.cpu().numpy(), \
             action_log_probs.cpu().numpy()
 
@@ -74,5 +78,8 @@ class MujocoAgent(parl.Agent):
         return value_loss_epoch, action_loss_epoch, dist_entropy_epoch
 
     def value(self, obs):
-        obs = torch.from_numpy(obs).to(self.device)
-        return self.alg.value(obs).cpu().numpy()
+        with torch.no_grad():
+            obs = torch.from_numpy(obs).to(self.device)
+            val = self.alg.value(obs).cpu().numpy()
+
+        return val

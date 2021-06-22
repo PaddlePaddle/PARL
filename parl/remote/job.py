@@ -36,7 +36,8 @@ from parl.remote.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
-from parl.remote.utils import load_remote_class, redirect_output_to_file
+from parl.remote.utils import redirect_output_to_file
+from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread
 

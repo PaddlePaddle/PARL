@@ -25,7 +25,7 @@ from parl.remote import remote_constants
 from parl.remote.exceptions import RemoteError, RemoteAttributeError,\
     RemoteDeserializeError, RemoteSerializeError, ResourceError, FutureFunctionError
 from parl.remote.future_mode.actor_ref_monitor import ActorRefMonitor
-from parl.remote.utils import dump_remote_class
+from parl.remote.remote_class_serialization import dump_remote_class
 
 XPARL_RESERVED_PREFIX = "_xparl"
 

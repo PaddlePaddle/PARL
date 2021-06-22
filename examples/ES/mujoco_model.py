@@ -26,8 +26,6 @@ class MujocoModel(parl.Model):
         hid1_size = 256
         hid2_size = 256
 
-        # For Ant-v2, it is better to use the weight_init below, which is same to the torch version 1.8.1.
-        # As for the other games, you can use the default weight_init.
         value1 = np.sqrt(1.0 / obs_dim)
         value2 = np.sqrt(1.0 / hid1_size)
         value3 = np.sqrt(1.0 / hid2_size)

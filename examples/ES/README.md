@@ -12,8 +12,6 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 <img src=".result/result_ES_paddle0.png" alt="result">
 <img src=".result/result_ES_paddle1.png" alt="result">
 
-Please note that for Ant-V2, it is better to use weight initialization as what the torch uses [here](https://pytorch.org/docs/stable/generated/torch.nn.Linear.html#torch.nn.Linear), or if once the Ant flips over in the beginning with other weight initialization sometimes, the highest score of the Ant may be about just 960.
-
 ## How to use
 ### Dependencies
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
@@ -38,7 +36,7 @@ Then we can start the distributed training by running:
 python train.py
 ```
 
-Training result will be saved in `train_log` with training curve.
+Training result will be saved in `train_log` with the training curve.
 
 ### Reference
 + [Ray](https://github.com/ray-project/ray)

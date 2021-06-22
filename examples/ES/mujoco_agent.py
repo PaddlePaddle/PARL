@@ -37,7 +37,7 @@ class MujocoAgent(parl.Agent):
         obs = np.expand_dims(obs, axis=0)
         obs = paddle.to_tensor(obs, dtype='float32')
         predict_actions = self.alg.predict(obs)
-        return predict_actions
+        return predict_actions.numpy()
 
     def learn(self, noisy_rewards, noises):
         """ Update weights of the model in the numpy level.

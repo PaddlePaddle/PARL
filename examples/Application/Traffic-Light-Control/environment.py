@@ -47,19 +47,3 @@ class CityFlowEnv(gym.Env):
         self.world.reset(seed)
         obs = self.obs_reward_generator.generate_obs()
         return obs
-
-
-if __name__ == "__main__":
-
-    from world import World
-    from presslight_obs_reward import PressureLightGenerator
-    world = World("./examples/config_n.json", thread_num=1)
-    PressureLightGenerator = PressureLightGenerator(world, ["lane_count"],
-                                                    ["pressure"], False, None)
-    env = CityFlowEnv(world, PressureLightGenerator)
-    actions = [0 for _ in range(env.n_agents)]
-    for _ in range(200):
-        obs, rewards, dones, infos = env.step(actions)
-        print(obs, rewards)
-        print(env.action_space)
-        __import__('ipdb').set_trace()

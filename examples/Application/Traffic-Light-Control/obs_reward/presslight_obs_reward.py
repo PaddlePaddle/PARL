@@ -103,16 +103,3 @@ class PressureLightGenerator(object):
         for I in self.world.intersections:
             rewards.append(-pressures[I.id])
         return rewards
-
-
-if __name__ == "__main__":
-
-    from world import World
-    world = World("./examples/config.json", thread_num=1)
-    PressureLightGenerator = PressureLightGenerator(world, ["lane_count"],
-                                                    ["pressure"], False, None)
-    for _ in range(200):
-        world.step()
-        if _ % 50 == 0:
-            print(PressureLightGenerator.generate_obs())
-            print(PressureLightGenerator.generate_reward())

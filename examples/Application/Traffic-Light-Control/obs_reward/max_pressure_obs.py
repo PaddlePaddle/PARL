@@ -38,15 +38,3 @@ class MaxPressureGenerator(object):
         getting the reward of each intersections
         """
         return None
-
-
-if __name__ == "__main__":
-
-    from world import World
-    world = World("./examples/config.json", thread_num=1)
-    MPG = MPGenerator(world)
-    for _ in range(200):
-        world.step()
-        if _ % 50 == 0:
-            print(MPG.generate_obs())
-            print(MPG.generate_reward())

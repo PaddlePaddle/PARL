@@ -143,18 +143,3 @@ class PressureLightFRAPGenerator(object):
         for I in self.world.intersections:
             rewards.append(-pressures[I.id])
         return rewards
-
-
-if __name__ == "__main__":
-
-    from world import World
-    world = World("./examples/config.json", thread_num=1)
-    PressureLightGenerator = PressureLightFRAPGenerator(
-        world, ["lane_count"], ["pressure"])
-    for _ in range(2000):
-        world.step()
-        if _ % 50 == 0:
-            print(PressureLightGenerator.generate_obs())
-            print(PressureLightGenerator.generate_reward())
-            print(PressureLightGenerator.generate_relation())
-            __import__('ipdb').set_trace()

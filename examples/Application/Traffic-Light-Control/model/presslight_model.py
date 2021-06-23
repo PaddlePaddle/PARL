@@ -67,14 +67,3 @@ class PressLightModel(parl.Model):
             x2 = paddle.concat((x2, cur_phase_em), axis=-1)
             Q = self.fc3(x2)
         return Q
-
-
-if __name__ == "__main__":
-
-    import numpy as np
-    obs_dim = 24
-    act_dim = 8
-    p_model = PressLightModel(24, 8, algo='Dueling')
-    obs = np.zeros([128, obs_dim])
-    obs = paddle.to_tensor(obs, dtype='float32')
-    Q_values = p_model(obs)

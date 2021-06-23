@@ -118,18 +118,3 @@ class PressLightFRAPModel(parl.Model):
         q_values = paddle.sum(before_merge, axis=-1)
         assert q_values.shape[-1] == self.act_dim
         return q_values
-
-
-if __name__ == "__main__":
-
-    import numpy as np
-    constant = np.ones([8, 7])
-    constant = paddle.to_tensor(constant, dtype='float32')
-    constant = constant.astype('int')
-    obs_dim = 8 * 8 + 8
-    act_dim = 8
-    PL_FRAPModel = PressLightFRAPModel(
-        obs_dim, act_dim, embedding_size=4, constant=constant, algo='DQN')
-    obs = np.zeros([128, 72])
-    obs = paddle.to_tensor(obs, dtype='float32')
-    Q = PL_FRAPModel(obs)

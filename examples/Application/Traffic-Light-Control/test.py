@@ -337,14 +337,15 @@ if __name__ == '__main__':
     if args.is_test_frap:
         results = test_FRAP_light(
             is_replay=False, episode_tag=args.episode_tag)
+        path_name = 'result_frap'
     else:
         results = test_presslight(
             is_replay=False, episode_tag=args.episode_tag)
-
+        path_name = 'result_max_pressure'
     # result_sotl = test_sotl()
     result_max_pressure = test_max_pressure(is_replay=False)
 
-    result_path = 'result_frap/{}'.format(args.result_name)
+    result_path = path_name + '/{}'.format(args.result_name)
     os.makedirs(result_path, exist_ok=True)
     with open(os.path.join(result_path, 'avgtime.txt'), 'w') as f:
         if args.is_test_frap:

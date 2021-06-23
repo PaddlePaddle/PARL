@@ -38,16 +38,3 @@ class SotlGenerator(object):
         getting the reward of each intersections, defalut None for sotl.
         """
         return None
-
-
-if __name__ == "__main__":
-
-    # testing the generator.
-    from world import World
-    world = World("./examples/config.json", thread_num=1)
-    SG = SotlGenerator(world)
-    for _ in range(200):
-        world.step()
-        if _ % 50 == 0:
-            print(SG.generate_obs())
-            print(SG.generate_reward())

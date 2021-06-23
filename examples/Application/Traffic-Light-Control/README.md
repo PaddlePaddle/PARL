@@ -32,7 +32,7 @@ And results of the last two rows of the table ,`presslight*` and `FRAP*`, they a
 + cityflow==0.1
 
 ### Training 
-Run the training script, the `train_presslight.py `for the presslight, each intersection has its own model as default(you can also choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
+First, download the data from [here](https://traffic-signal-control.github.io/) or [MPLight data](https://github.com/Chacha-Chen/MPLight/tree/master/data) and put them in the `data` directory. And the run the training script. The `train_presslight.py `for the presslight, each intersection has its own model as default(you can also choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
 ```bash
 python train_presslight.py --is_share_model False
 ```

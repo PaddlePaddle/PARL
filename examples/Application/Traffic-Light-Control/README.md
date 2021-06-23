@@ -23,7 +23,7 @@ Performances of presslight and FRAP on cityflow envrionments in training process
 
 Note that for the method `sotl`, different `t_min`, `min_green_vehicle` and `max_red_vehicle` configs may cause huge different results, which may not fair for sotl to compare its result with others, so we don't list the result of the `sotl` above.
 
-And results of the last two rows of the table ,`presslight*` and `FRAP*`, they are the results of the code [tlc-baselines](https://github.com/gjzheng93/tlc-baselines) provided from the paper authors' team. We run the [code](https://github.com/gjzheng93/tlc-baselines) just changing the yellow time and the action intervals to keep them same as our cinfig as the papers without changing any other parameters. `--` in the table means the origins code doesn't performs well in the last four `anon_4X4` datas, the average travel time results of it will be more than 1000, maybe it will performs better than the `max_pressure`if you modify the other hyperparameters of the DQN agents, such as the buffer size, update_model_freq, the gamma or others.
+And results of the last two rows of the table ,`presslight*` and `FRAP*`, they are the results of the code [tlc-baselines](https://github.com/gjzheng93/tlc-baselines) provided from the paper authors' team. We run the [code](https://github.com/gjzheng93/tlc-baselines) just changing the yellow time and the action intervals to keep them same as our config as the papers without changing any other parameters. `--` in the table means the origins code doesn't perform well in the last four `anon_4X4` datas, the average travel time results of it will be more than 1000, maybe it will perform better than the `max_pressure`if you modify the other hyperparameters of the DQN agents, such as the buffer size, update_model_freq, the gamma or others.
 
 ## How to use
 ### Dependencies
@@ -32,7 +32,7 @@ And results of the last two rows of the table ,`presslight*` and `FRAP*`, they a
 + cityflow==0.1
 
 ### Training 
-Run the training script, the `train_presslight.py `for the presslight, each intersection has its own model as default(also you can choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
+Run the training script, the `train_presslight.py `for the presslight, each intersection has its own model as default(you can also choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
 ```bash
 python train_presslight.py --is_share_model False
 ```
@@ -42,7 +42,7 @@ If you want the train the `FRAR`, you can run the script below:
 python train_FRAP.py 
 ```
 
-If you want to compare the different results, you can load the right model path in the `config.py` and the right data path in the `config.json`, then run:
+If you want to compare the different results, you can load the right model path in the `config.py` and the right data path in the `config.json`, and then run:
 ```bash
 python test.py 
 ```

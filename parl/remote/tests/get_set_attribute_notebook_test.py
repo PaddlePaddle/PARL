@@ -52,7 +52,8 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
     def test_get_attribute(self):
         return_true = mock.Mock(return_value=True)
-        with mock.patch('parl.remote.remote_class_serialization.is_implemented_in_notebook',
+        with mock.patch(
+                'parl.remote.remote_class_serialization.is_implemented_in_notebook',
                 return_true):
             port = get_free_tcp_port()
             logger.info("running:test_get_attirbute")
@@ -66,7 +67,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
             arg3 = np.random.randn(3, 3)
             arg4 = 100
             parl.connect('localhost:{}'.format(port))
-            
+
             actor = Actor(arg1, arg2, arg3, arg4)
 
             self.assertTrue(arg1 == actor.arg1)
@@ -79,7 +80,8 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
     def test_set_attribute(self):
         return_true = mock.Mock(return_value=True)
-        with mock.patch('parl.remote.remote_class_serialization.is_implemented_in_notebook',
+        with mock.patch(
+                'parl.remote.remote_class_serialization.is_implemented_in_notebook',
                 return_true):
             port = get_free_tcp_port()
             logger.info("running:test_set_attirbute")
@@ -93,7 +95,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
             arg3 = np.random.randn(3, 3)
             arg4 = 100
             parl.connect('localhost:{}'.format(port))
-            
+
             actor = Actor(arg1, arg2, arg3, arg4)
             actor.arg1 = arg1
             actor.arg2 = arg2

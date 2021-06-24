@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ from gym.core import Wrapper
 import time
 
 
-class TimeLimitMask(gym.Wrapper):
+class TimeLimitMaskEnv(gym.Wrapper):
     """ Env wrapper that marks bad_transition
     """
 
@@ -91,7 +91,7 @@ class RunningMeanStd(object):
             batch_count)
 
 
-class VecNormalize(gym.Wrapper):
+class VecNormalizeEnv(gym.Wrapper):
     """ Env wrapper that normalize reward, observation based on running mean return and running mean variance.
     """
 
@@ -151,6 +151,12 @@ class VecNormalize(gym.Wrapper):
         else:
             return ob
 
+    def get_ob_rms(self):
+        return self.ob_rms
+
+    def set_ob_rms(self, ob_rms):
+        self.ob_rms = ob_rms
+
     def train(self):
         self.training = True
 
@@ -158,16 +164,16 @@ class VecNormalize(gym.Wrapper):
         self.training = False
 
 
-def get_vec_normalize(venv):
-    """ Fetch VecNormalize class
+def get_wrapper_by_cls(venv):
+    """ Fetch VecNormalizeEnv class
 
     Args:
         venv (gym.Wrapper): current env
     """
-    if isinstance(venv, VecNormalize):
+    if isinstance(venv, VecNormalizeEnv):
         return venv
     elif hasattr(venv, 'venv'):
-        return get_vec_normalize(venv.venv)
+        return get_wrapper_by_cls(venv.venv)
 
     return None
 
@@ -197,27 +203,37 @@ def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
     return new_mean, new_var, new_count
 
 
-def make_env(env_name, seed, gamma, test=False, ob_rms=None):
-    """ Wrap original Mujoco environment with wrapper envs to provide normalization and extra functionality,
+def get_ob_rms(env):
+    """ get ob_rms value from current env, if current env does not wrap VecNormalizeEnv, None will be returned
+
+    Args:
+        env (gym.Wrapper): current env
+    """
+    vec_norm_env = get_wrapper_by_cls(env)
+    ob_rms = None
+    if vec_norm_env:
+        ob_rms = vec_norm_env.get_ob_rms()
+
+    return ob_rms
+
+
+def wrap_rms(env, gamma, test=False, ob_rms=None):
+    """ Wrap original Mujoco environment with wrapper envs to provide normalization using rms and extra functionality,
     rewards information are stored in info['episode']. This is the wrapper for single agent.
 
     Args:
-        env_name (str): Mujoco env name
-        seed (int): random seed
+        env (str): Mujoco env name
         gamma (float or None): discounting factor, if test then gamma = None
         test (bool): True if test else False
         ob_rms (None or np.array): ob_rms from training environment, not None only when test is True
     """
-    env = gym.make(env_name)
-    env.seed(seed)
-    env = TimeLimitMask(env)
+    env = TimeLimitMaskEnv(env)
     env = MonitorEnv(env)
     if test:
-        assert ob_rms, 'if test, ob_rms has to be not None'
-        env = VecNormalize(env, ret=False)
+        env = VecNormalizeEnv(env, ret=False)
         env.eval()
-        env.ob_rms = ob_rms
+        env.set_ob_rms(ob_rms)
     else:
-        env = VecNormalize(env, gamma=gamma)
+        env = VecNormalizeEnv(env, gamma=gamma)
 
     return env

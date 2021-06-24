@@ -31,10 +31,9 @@ from atari_agent import Agent
 class Actor(object):
     def __init__(self, config):
         # the cluster may not have gpu
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-        self.actor_cuda = False
+        self.device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
         self.config = config
-
         self.envs = []
         for _ in range(config['env_num']):
             env = gym.make(config['env_name'])
@@ -51,8 +50,8 @@ class Actor(object):
         self.config['act_dim'] = act_dim
 
         model = ActorCritic(act_dim)
-        if self.actor_cuda:
-            model = model.cuda()
+
+        model = model.to(self.device)
 
         algorithm = A2C(model, config)
         self.agent = Agent(algorithm, config)
@@ -67,17 +66,12 @@ class Actor(object):
             env_sample_data[env_id] = defaultdict(list)
         for i in range(self.config['sample_batch_steps']):
             self.obs_batch = np.stack(self.obs_batch)
-            self.obs_batch = torch.from_numpy(self.obs_batch).float()
-            if self.actor_cuda:
-                self.obs_batch = self.obs_batch.cuda()
-
             action_batch, value_batch = self.agent.sample(self.obs_batch)
             next_obs_batch, reward_batch, done_batch, info_batch = self.vector_env.step(
-                action_batch.cpu().numpy())
+                action_batch)
 
             for env_id in range(self.config['env_num']):
-                env_sample_data[env_id]['obs'].append(
-                    self.obs_batch[env_id].cpu().numpy())
+                env_sample_data[env_id]['obs'].append(self.obs_batch[env_id])
                 env_sample_data[env_id]['actions'].append(
                     action_batch[env_id].item())
                 env_sample_data[env_id]['rewards'].append(reward_batch[env_id])
@@ -90,9 +84,6 @@ class Actor(object):
                     next_value = 0
                     if not done_batch[env_id]:
                         next_obs = np.expand_dims(next_obs_batch[env_id], 0)
-                        next_obs = torch.from_numpy(next_obs).float()
-                        if self.actor_cuda:
-                            next_obs = next_obs.cuda()
                         next_value = self.agent.value(next_obs).item()
 
                     values = env_sample_data[env_id]['values']
@@ -116,16 +107,6 @@ class Actor(object):
             sample_data[key] = np.stack(sample_data[key])
 
         return sample_data
-
-    def compute_target(self, v_final, r_lst, mask_lst):
-        G = v_final.reshape(-1)
-        td_target = list()
-
-        for r, mask in zip(r_lst[::-1], mask_lst[::-1]):
-            G = r + self.config['gamma'] * G * mask
-            td_target.append(G)
-
-        return torch.tensor(td_target[::-1]).float()
 
     def get_metrics(self):
         metrics = defaultdict(list)

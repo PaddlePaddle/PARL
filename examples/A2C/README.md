@@ -8,10 +8,10 @@ Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari g
 Performance of A2C on some envrionments in training process after 10 million sample steps.
 
 <p align="center">
-<img src="result.png" alt="result"/>
+<img src=".result/result_a2c_paddle0.png" alt="result"/>
 </p>
 <p align="center">
-<img src="result2.png" alt="result"/>
+<img src=".result/result_a2c_paddle1.png" alt="result"/>
 </p>
 
 

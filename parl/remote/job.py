@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
-os.environ[
-    'CUDA_VISIBLE_DEVICES'] = ''  # set the environment variables before importing any DL framework.
+# set the environment variables before importing any DL framework.
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 os.environ['XPARL'] = 'True'
 
 # Fix cloudpickle compatible problem we known.

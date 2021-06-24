@@ -20,13 +20,16 @@ from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
 from parl.env.multiagent_simple_env import MAenv
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 
 CRITIC_LR = 0.01  # learning rate for the critic model
 ACTOR_LR = 0.01  # learning rate of the actor model
 GAMMA = 0.95  # reward discount factor
 TAU = 0.01  # soft update
 BATCH_SIZE = 1024
+MAX_EPISODES = 25000  # stop condition:number of episodes
+MAX_STEP_PER_EPISODE = 25  # maximum step per episode
+STAT_RATE = 1000  # statistical interval of save model or count reward
 
 
 def run_episode(env, agents):
@@ -39,7 +42,7 @@ def run_episode(env, agents):
         action_n = [agent.predict(obs) for agent, obs in zip(agents, obs_n)]
         next_obs_n, reward_n, done_n, _ = env.step(action_n)
         done = all(done_n)
-        terminal = (steps >= args.max_step_per_episode)
+        terminal = (steps >= MAX_STEP_PER_EPISODE)
 
         # store experience
         for i, agent in enumerate(agents):
@@ -69,8 +72,8 @@ def run_episode(env, agents):
         for i, agent in enumerate(agents):
             critic_loss = agent.learn(agents)
             if critic_loss != 0.0:
-                tensorboard.add_scalar('critic_loss_%d' % i, critic_loss,
-                                       agent.global_train_step)
+                summary.add_scalar('critic_loss_%d' % i, critic_loss,
+                                   agent.global_train_step)
 
     return total_reward, agents_reward, steps
 
@@ -139,12 +142,11 @@ def train_agent():
 
     t_start = time.time()
     logger.info('Starting...')
-    while total_episodes <= args.max_episodes:
+    while total_episodes <= MAX_EPISODES:
         # run an episode
         ep_reward, ep_agent_rewards, steps = run_episode(env, agents)
-        tensorboard.add_scalar('train_reward/episode', ep_reward,
-                               total_episodes)
-        tensorboard.add_scalar('train_reward/step', ep_reward, total_steps)
+        summary.add_scalar('train_reward/episode', ep_reward, total_episodes)
+        summary.add_scalar('train_reward/step', ep_reward, total_steps)
         if args.show:
             print('episode {}, reward {}, agents rewards {}, steps {}'.format(
                 total_episodes, ep_reward, ep_agent_rewards, steps))
@@ -157,25 +159,24 @@ def train_agent():
             agent_rewards[i].append(ep_agent_rewards[i])
 
         # Keep track of final episode reward
-        if total_episodes % args.stat_rate == 0:
+        if total_episodes % STAT_RATE == 0:
             mean_episode_reward = round(
-                np.mean(episode_rewards[-args.stat_rate:]), 3)
+                np.mean(episode_rewards[-STAT_RATE:]), 3)
             final_ep_ag_rewards = []  # agent rewards for training curve
             for rew in agent_rewards:
-                final_ep_ag_rewards.append(
-                    round(np.mean(rew[-args.stat_rate:]), 2))
+                final_ep_ag_rewards.append(round(np.mean(rew[-STAT_RATE:]), 2))
             use_time = round(time.time() - t_start, 3)
             logger.info(
                 'Steps: {}, Episodes: {}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
                 .format(total_steps, total_episodes, mean_episode_reward,
                         final_ep_ag_rewards, use_time))
             t_start = time.time()
-            tensorboard.add_scalar('mean_episode_reward/episode',
-                                   mean_episode_reward, total_episodes)
-            tensorboard.add_scalar('mean_episode_reward/step',
-                                   mean_episode_reward, total_steps)
-            tensorboard.add_scalar('use_time/1000episode', use_time,
-                                   total_episodes)
+            summary.add_scalar('mean_episode_reward/episode',
+                               mean_episode_reward, total_episodes)
+            summary.add_scalar('mean_episode_reward/step', mean_episode_reward,
+                               total_steps)
+            summary.add_scalar('use_time/1000episode', use_time,
+                               total_episodes)
 
             # save model
             if not args.restore:
@@ -194,21 +195,6 @@ if __name__ == '__main__':
         type=str,
         default='simple_speaker_listener',
         help='scenario of MultiAgentEnv')
-    parser.add_argument(
-        '--max_episodes',
-        type=int,
-        default=25000,
-        help='stop condition:number of episodes')
-    parser.add_argument(
-        '--max_step_per_episode',
-        type=int,
-        default=25,
-        help='maximum step per episode')
-    parser.add_argument(
-        '--stat_rate',
-        type=int,
-        default=1000,
-        help='statistical interval of save model or count reward')
     # auto save model, optional restore model
     parser.add_argument(
         '--show', action='store_true', default=False, help='display or not')

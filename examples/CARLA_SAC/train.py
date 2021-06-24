@@ -111,7 +111,7 @@ def main():
                            next_obs_list[i], done_list[i])
             if done_list[i]:
                 summary.add_scalar('train/episode_reward',
-                                       episode_reward_list[i], total_steps)
+                                   episode_reward_list[i], total_steps)
                 logger.info('Train episode done, Reward: {}'.format(
                     episode_reward_list[i]))
                 episode_reward_list[i] = 0
@@ -134,8 +134,7 @@ def main():
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, eval_env, EVAL_EPISODES)
-            summary.add_scalar('eval/episode_reward', avg_reward,
-                                   total_steps)
+            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
             logger.info(
                 'Total steps {}, Evaluation over {} episodes, Average reward: {}'
                 .format(total_steps, EVAL_EPISODES, avg_reward))

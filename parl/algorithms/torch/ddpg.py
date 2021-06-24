@@ -17,8 +17,6 @@ import torch.nn.functional as F
 from copy import deepcopy
 import parl
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 __all__ = ['DDPG']
 
 
@@ -38,6 +36,7 @@ class DDPG(parl.Algorithm):
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
 
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
         self.target_model = deepcopy(self.model)
         self.actor_optimizer = torch.optim.Adam(

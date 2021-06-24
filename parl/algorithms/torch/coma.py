@@ -18,8 +18,6 @@ from copy import deepcopy
 import parl
 import numpy as np
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 __all__ = ['COMA']
 
 
@@ -54,6 +52,8 @@ class COMA(parl.Algorithm):
         assert isinstance(gamma, float)
         assert isinstance(td_lambda, float)
 
+        self.device = torch.device('cuda' if torch.cuda.
+                                   is_available() else 'cpu')
         self.n_actions = n_actions
         self.n_agents = n_agents
         self.grad_norm_clip = grad_norm_clip
@@ -62,8 +62,8 @@ class COMA(parl.Algorithm):
         self.gamma = gamma
         self.td_lambda = td_lambda
 
-        self.model = model.to(device)
-        self.target_model = deepcopy(model).to(device)
+        self.model = model.to(self.device)
+        self.target_model = deepcopy(model).to(self.device)
 
         self.sync_target()
 
@@ -153,8 +153,8 @@ class COMA(parl.Algorithm):
             action_prob.append(prob)
 
         action_prob = torch.stack(
-            action_prob,
-            dim=1).to(device)  # shape: (ep_num, tr_num, n_agents, n_actions)
+            action_prob, dim=1).to(
+                self.device)  # shape: (ep_num, tr_num, n_agents, n_actions)
         action_num = avail_actions.sum()  # how many actions are available
         action_prob = ((1 - epsilon) * action_prob +
                        torch.ones_like(action_prob) * epsilon / action_num)
@@ -163,7 +163,7 @@ class COMA(parl.Algorithm):
         action_prob = action_prob / action_prob.sum(
             dim=-1, keepdim=True)  # in case action_prob.sum != 1
         action_prob[avail_actions == 0] = 0.0
-        action_prob = action_prob.to(device)
+        action_prob = action_prob.to(self.device)
         return action_prob
 
     def _cal_td_target(self, batch, q_targets):  # compute TD(lambda)
@@ -175,15 +175,15 @@ class COMA(parl.Algorithm):
         """
         ep_num = batch['r'].shape[0]
         tr_num = batch['r'].shape[1]
-        mask = (1 - batch['padded'].float()).repeat(1, 1,
-                                                    self.n_agents).to(device)
+        mask = (1 - batch['padded'].float()).repeat(1, 1, self.n_agents).to(
+            self.device)
         isover = (1 - batch['isover'].float()).repeat(1, 1, self.n_agents).to(
-            device)  # used for setting last transition's q_target to 0
+            self.device)  # used for setting last transition's q_target to 0
         # reshape reward: from (ep_num, tr_num, 1) to (ep_num, tr_num, n_agents)
-        r = batch['r'].repeat((1, 1, self.n_agents)).to(device)
+        r = batch['r'].repeat((1, 1, self.n_agents)).to(self.device)
         # compute n_step_return
         n_step_return = torch.zeros((ep_num, tr_num, self.n_agents,
-                                     tr_num)).to(device)
+                                     tr_num)).to(self.device)
         for tr_id in range(tr_num - 1, -1, -1):
             n_step_return[:, tr_id, :, 0] = (
                 r[:, tr_id] + self.gamma * q_targets[:, tr_id] *
@@ -193,9 +193,10 @@ class COMA(parl.Algorithm):
                     r[:, tr_id] + self.gamma *
                     n_step_return[:, tr_id + 1, :, n - 1]) * mask[:, tr_id]
 
-        lambda_return = torch.zeros((ep_num, tr_num, self.n_agents)).to(device)
+        lambda_return = torch.zeros((ep_num, tr_num,
+                                     self.n_agents)).to(self.device)
         for tr_id in range(tr_num):
-            returns = torch.zeros((ep_num, self.n_agents)).to(device)
+            returns = torch.zeros((ep_num, self.n_agents)).to(self.device)
             for n in range(1, tr_num - tr_id):
                 returns += pow(self.td_lambda,
                                n - 1) * n_step_return[:, tr_id, :, n - 1]
@@ -213,8 +214,8 @@ class COMA(parl.Algorithm):
         u = batch['u']  # shape (ep_num, tr_num, agent, n_actions)
         u_next = torch.zeros_like(u, dtype=torch.long)
         u_next[:, :-1] = u[:, 1:]
-        mask = (1 - batch['padded'].float()).repeat(1, 1,
-                                                    self.n_agents).to(device)
+        mask = (1 - batch['padded'].float()).repeat(1, 1, self.n_agents).to(
+            self.device)
 
         # get q value for every agent and every action, shape (ep_num, tr_num, n_agents, n_actions)
         q_evals, q_next_target = self._get_critic_output(batch)
@@ -251,7 +252,7 @@ class COMA(parl.Algorithm):
         # mask: used to compute TD-error, filling data should not affect learning
         u = batch['u']
         mask = (1 - batch['padded'].float()).repeat(1, 1, self.n_agents).to(
-            device)  # shape (ep_num, tr_num, 3)
+            self.device)  # shape (ep_num, tr_num, 3)
 
         q_taken = torch.gather(q_values, dim=3, index=u).squeeze(3)  # Q(u_a)
         pi_taken = torch.gather(
@@ -278,7 +279,7 @@ class COMA(parl.Algorithm):
         """
         ep_num = batch['r'].shape[0]
         self.train_rnn_h = self.init_hidden(ep_num)
-        self.train_rnn_h = self.train_rnn_h.to(device)
+        self.train_rnn_h = self.train_rnn_h.to(self.device)
 
         q_values = self._critic_learn(batch)
         self._actor_learn(batch, epsilon, q_values)

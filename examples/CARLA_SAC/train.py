@@ -16,7 +16,7 @@ import numpy as np
 import parl
 import argparse
 from env_utils import ParallelEnv, LocalEnv
-from parl.utils import logger, tensorboard, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from parl.algorithms import SAC
@@ -110,7 +110,7 @@ def main():
                 rpm.append(obs_list[i], action_list[i], reward_list[i],
                            next_obs_list[i], done_list[i])
             if done_list[i]:
-                tensorboard.add_scalar('train/episode_reward',
+                summary.add_scalar('train/episode_reward',
                                        episode_reward_list[i], total_steps)
                 logger.info('Train episode done, Reward: {}'.format(
                     episode_reward_list[i]))
@@ -134,7 +134,7 @@ def main():
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, eval_env, EVAL_EPISODES)
-            tensorboard.add_scalar('eval/episode_reward', avg_reward,
+            summary.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
             logger.info(
                 'Total steps {}, Evaluation over {} episodes, Average reward: {}'

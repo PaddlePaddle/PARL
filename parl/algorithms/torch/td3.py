@@ -19,8 +19,6 @@ import torch.nn.functional as F
 from copy import deepcopy
 import parl
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 __all__ = ['TD3']
 
 
@@ -48,6 +46,7 @@ class TD3(parl.Algorithm):
         self.noise_clip = noise_clip
         self.policy_freq = policy_freq
 
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
         self.target_model = deepcopy(model).to(device)
         self.actor_optimizer = torch.optim.Adam(

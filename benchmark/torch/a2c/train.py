@@ -15,7 +15,6 @@
 import torch
 import os
 import gym
-import six
 import parl
 import time
 import numpy as np
@@ -33,13 +32,15 @@ from atari_agent import Agent
 from actor import Actor
 
 import time
-from statistics import mean
+import argparse
+import random
 
 
 class Learner(object):
-    def __init__(self, config, cuda):
+    def __init__(self, config):
 
-        self.cuda = cuda
+        self.device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
         self.config = config
         env = gym.make(config['env_name'])
         env = wrap_deepmind(env, dim=config['env_dim'], obs_format='NCHW')
@@ -49,18 +50,9 @@ class Learner(object):
         self.config['act_dim'] = act_dim
 
         model = ActorCritic(act_dim)
-        if self.cuda:
-            model = model.cuda()
-
+        model.to(self.device)
         algorithm = A2C(model, config)
         self.agent = Agent(algorithm, config)
-
-        if machine_info.is_gpu_available():
-            assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_YOU_WANT_TO_USE]` .'
-
-        else:
-            os.environ['CPU_NUM'] = str(1)
 
         #========== Learner ==========
         self.total_loss_stat = WindowStat(100)
@@ -74,7 +66,6 @@ class Learner(object):
         self.start_time = None
 
         #========== Remote Actor ===========
-        self.remote_count = 0
         self.sample_total_steps = 0
 
         self.create_actors()
@@ -115,10 +106,6 @@ class Learner(object):
 
         for key, value in train_batch.items():
             train_batch[key] = np.concatenate(value)
-            train_batch[key] = torch.tensor(train_batch[key]).float()
-            if self.cuda:
-                train_batch[key] = train_batch[key].cuda()
-
         with self.learn_time_stat:
             total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff = self.agent.learn(
                 obs=train_batch['obs'],
@@ -127,10 +114,10 @@ class Learner(object):
                 target_values=train_batch['target_values'],
             )
 
-        self.total_loss_stat.add(total_loss.item())
-        self.pi_loss_stat.add(pi_loss.item())
-        self.vf_loss_stat.add(vf_loss.item())
-        self.entropy_stat.add(entropy.item())
+        self.total_loss_stat.add(total_loss)
+        self.pi_loss_stat.add(pi_loss)
+        self.vf_loss_stat.add(vf_loss)
+        self.entropy_stat.add(entropy)
         self.lr = lr
         self.entropy_coeff = entropy_coeff
 
@@ -186,20 +173,9 @@ class Learner(object):
             'entropy_coeff': self.entropy_coeff,
         }
 
-        if metric['mean_episode_rewards'] is not None:
-            summary.add_scalar('train/mean_reward',
-                               metric['mean_episode_rewards'],
-                               self.sample_total_steps)
-            summary.add_scalar('train/total_loss', metric['total_loss'],
-                               self.sample_total_steps)
-            summary.add_scalar('train/pi_loss', metric['pi_loss'],
-                               self.sample_total_steps)
-            summary.add_scalar('train/vf_loss', metric['vf_loss'],
-                               self.sample_total_steps)
-            summary.add_scalar('train/entropy', metric['entropy'],
-                               self.sample_total_steps)
-            summary.add_scalar('train/learn_rate', metric['lr'],
-                               self.sample_total_steps)
+        for key, value in metric.items():
+            if value is not None:
+                summary.add_scalar(key, value, self.sample_total_steps)
 
         logger.info(metric)
 
@@ -209,13 +185,11 @@ class Learner(object):
 
 if __name__ == '__main__':
     from a2c_config import config
-
-    cuda = torch.cuda.is_available()
-    learner = Learner(config, cuda)
+    learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0
 
     while not learner.should_stop():
         start = time.time()
         while time.time() - start < config['log_metrics_interval_s']:
             learner.step()
-            learner.log_metrics()
+        learner.log_metrics()

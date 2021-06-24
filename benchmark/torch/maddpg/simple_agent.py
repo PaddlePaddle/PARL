@@ -49,10 +49,6 @@ class MAAgent(parl.Agent):
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
 
-        if machine_info.is_gpu_available():
-            assert get_gpu_count() == 1, 'Only support training in single GPU,\
-                    Please set environment variable: `export CUDA_VISIBLE_DEVICES=[GPU_ID_TO_USE]` .'
-
         super(MAAgent, self).__init__(algorithm)
 
         # Attention: In the beginning, sync target model totally.
@@ -61,9 +57,10 @@ class MAAgent(parl.Agent):
     def predict(self, obs, use_target_model=False):
         """ predict action by model or target_model
         """
-        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        act = self.alg.predict(obs, use_target_model=use_target_model)
-        act_numpy = act.detach().cpu().numpy().flatten()
+        with torch.no_grad():
+            obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+            act = self.alg.predict(obs, use_target_model=use_target_model)
+            act_numpy = act.cpu().numpy().flatten()
         return act_numpy
 
     def learn(self, agents):

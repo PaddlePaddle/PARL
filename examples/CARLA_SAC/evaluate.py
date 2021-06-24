@@ -14,7 +14,7 @@
 
 import argparse
 from env_utils import LocalEnv
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 from carla_model import CarlaModel
 from carla_agent import CarlaAgent
 from parl.algorithms import SAC
@@ -68,7 +68,7 @@ def main():
     # Evaluate episode
     for episode in range(args.eval_episodes):
         episode_reward = run_episode(agent, eval_env)
-        tensorboard.add_scalar('eval/episode_reward', episode_reward, episode)
+        summary.add_scalar('eval/episode_reward', episode_reward, episode)
         logger.info('Evaluation episode reward: {}'.format(episode_reward))
 
 

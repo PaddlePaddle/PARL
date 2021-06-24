@@ -29,7 +29,7 @@ LR = 3e-4
 GAMMA = 0.99
 EPS = 1e-5  # Adam optimizer epsilon (default: 1e-5)
 GAE_LAMBDA = 0.95  # Lambda parameter for calculating N-step advantage
-ENTROPY_COEF = 0  # Entropy coefficient (ie. c_2 in the paper)
+ENTROPY_COEF = 0.  # Entropy coefficient (ie. c_2 in the paper)
 VALUE_LOSS_COEF = 0.5  # Value loss coefficient (ie. c_1 in the paper)
 MAX_GRAD_NROM = 0.5  # Max gradient norm for gradient clipping
 NUM_STEPS = 2048  # data collecting time steps (ie. T in the paper)
@@ -100,9 +100,9 @@ def main():
                 episode_rewards.append(info['episode']['r'])
 
             # If done then clean the history of observations.
-            masks = torch.FloatTensor([0.0] if done else [1.0])
-            bad_masks = torch.FloatTensor(
-                [0.0] if 'bad_transition' in info.keys() else [1.0])
+            masks = torch.FloatTensor([[0.0]] if done else [[1.0]])
+            bad_masks = torch.FloatTensor([[0.0]] if 'bad_transition' in info.
+                                          keys() else [[1.0]])
             rollouts.append(obs, action, action_log_prob, value, reward, masks,
                             bad_masks)
 

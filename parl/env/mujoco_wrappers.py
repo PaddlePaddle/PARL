@@ -119,7 +119,10 @@ class VecNormalize(gym.Wrapper):
     def step(self, action):
         ob, rew, new, info = self.env.step(action)
         self.ret = self.ret * self.gamma + rew
-        # normalize observation
+        # normalize observation, expand batch dim if observation does not have batch dimension
+        if ob.ndim == 1:
+            ob = np.expand_dims(ob, 0)
+
         ob = self._obfilt(ob)
         # normalize reward
         if self.ret_rms:

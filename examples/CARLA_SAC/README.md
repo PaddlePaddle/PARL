@@ -14,7 +14,7 @@ Please view [Carla simulator](https://github.com/carla-simulator/carla/releases/
 ## How to use
 + System: Ubuntu 16.04
 ### Dependencies:
-+ [parl>=1.4.3](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + [CARLA_0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
   ```CARLA

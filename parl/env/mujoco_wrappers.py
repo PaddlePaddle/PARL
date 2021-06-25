@@ -164,16 +164,17 @@ class VecNormalizeEnv(gym.Wrapper):
         self.training = False
 
 
-def get_wrapper_by_cls(venv):
-    """ Fetch VecNormalizeEnv class
+def get_wrapper_by_cls(venv, cls):
+    """ Fetch env wrapper class cls from current venv
 
     Args:
         venv (gym.Wrapper): current env
+        cls (gym.Wrapper): target env wrapper class
     """
-    if isinstance(venv, VecNormalizeEnv):
+    if isinstance(venv, cls):
         return venv
-    elif hasattr(venv, 'venv'):
-        return get_wrapper_by_cls(venv.venv)
+    elif hasattr(venv, 'env'):
+        return get_wrapper_by_cls(venv.env, cls)
 
     return None
 
@@ -209,7 +210,7 @@ def get_ob_rms(env):
     Args:
         env (gym.Wrapper): current env
     """
-    vec_norm_env = get_wrapper_by_cls(env)
+    vec_norm_env = get_wrapper_by_cls(env, VecNormalizeEnv)
     ob_rms = None
     if vec_norm_env:
         ob_rms = vec_norm_env.get_ob_rms()
@@ -222,7 +223,7 @@ def wrap_rms(env, gamma, test=False, ob_rms=None):
     rewards information are stored in info['episode']. This is the wrapper for single agent.
 
     Args:
-        env (str): Mujoco env name
+        env (gym.Wrapper): Mujoco env
         gamma (float or None): discounting factor, if test then gamma = None
         test (bool): True if test else False
         ob_rms (None or np.array): ob_rms from training environment, not None only when test is True

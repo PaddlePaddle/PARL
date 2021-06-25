@@ -23,8 +23,6 @@ __all__ = ['MADDPG']
 from parl.core.torch.policy_distribution import SoftCategoricalDistribution
 from parl.core.torch.policy_distribution import SoftMultiCategoricalDistribution
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 def SoftPDistribution(logits, act_space):
     """Args:
@@ -80,6 +78,8 @@ class MADDPG(parl.Algorithm):
         self.tau = tau
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.model = model.to(device)
         self.target_model = deepcopy(model)

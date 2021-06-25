@@ -25,6 +25,7 @@ class MockingEnv(unittest.TestCase):
     """ The class is the base class for tests under the remote module. It can provide different mocked environemtns for tests, and each test should inherit this class. Note that users **SHOULD NOT** override the setUp function, and they should implement _setUp for initialization instead.
     Usage: please refer to par/remote/tests/mocking_env_test.py.
     """
+
     def patch(self, target, **kwargs):
         p = mock.patch(target, **kwargs)
         p.start()

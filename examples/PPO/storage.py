@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-
-from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
+from paddle.io import BatchSampler, RandomSampler
 
 
 class RolloutStorage(object):
@@ -37,15 +36,6 @@ class RolloutStorage(object):
 
     def append(self, obs, actions, action_log_probs, value_preds, rewards,
                masks, bad_masks):
-        """
-        print("obs")
-        print(obs)
-        print("masks")
-        print(masks)
-        print("rewards")
-        print(rewards)
-        exit()
-        """
         self.obs[self.step + 1] = obs
         self.actions[self.step] = actions
         self.rewards[self.step] = rewards
@@ -71,9 +61,10 @@ class RolloutStorage(object):
         # generate sample batch
         mini_batch_size = self.num_steps // num_mini_batch
         sampler = BatchSampler(
-            SubsetRandomSampler(range(self.num_steps)),
-            mini_batch_size,
+            sampler=RandomSampler(range(self.num_steps)),
+            batch_size=mini_batch_size,
             drop_last=True)
+
         for indices in sampler:
             obs_batch = self.obs[:-1][indices]
             actions_batch = self.actions[indices]

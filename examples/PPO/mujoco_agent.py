@@ -32,11 +32,10 @@ class MujocoAgent(parl.Agent):
         Args:
             obs (np.array): observation
         """
-        with paddle.no_grad():
-            obs = paddle.to_tensor(obs, dtype='float32')
-            action = self.alg.predict(obs)
+        obs = paddle.to_tensor(obs, dtype='float32')
+        action = self.alg.predict(obs)
 
-        return action.numpy()
+        return action.detach().numpy()
 
     def sample(self, obs):
         """ Sample action from current policy given observation
@@ -44,12 +43,11 @@ class MujocoAgent(parl.Agent):
         Args:
             obs (np.array): observation
         """
-        with paddle.no_grad():
-            obs = paddle.to_tensor(obs)
-            value, action, action_log_probs = self.alg.sample(obs)
+        obs = paddle.to_tensor(obs)
+        value, action, action_log_probs = self.alg.sample(obs)
 
-        return value.numpy(), action.numpy(), \
-            action_log_probs.numpy()
+        return value.detach().numpy(), action.detach().numpy(), \
+            action_log_probs.detach().numpy()
 
     def learn(self, next_value, gamma, gae_lambda, ppo_epoch, num_mini_batch,
               rollouts):
@@ -106,8 +104,7 @@ class MujocoAgent(parl.Agent):
         Args:
             obs (np.array): observation
         """
-        with paddle.no_grad():
-            obs = paddle.to_tensor(obs)
-            val = self.alg.value(obs).numpy()
+        obs = paddle.to_tensor(obs)
+        val = self.alg.value(obs)
 
-        return val
+        return val.detach().numpy()

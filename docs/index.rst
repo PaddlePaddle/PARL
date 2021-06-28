@@ -42,7 +42,17 @@ PARL
    :maxdepth: 2
    :caption: High-quality Implementations
 
-   implementations/implementations.rst
+   implementations/pg.rst
+   implementations/dqn.rst
+   implementations/ddpg.rst
+   implementations/ddqn.rst
+   implementations/oac.rst
+   implementations/a2c.rst
+   implementations/td3.rst
+   implementations/qmix.rst
+   implementations/sac.rst
+   implementations/ppo.rst
+   implementations/maddpg.rst
 
 .. toctree::
     :maxdepth: 2

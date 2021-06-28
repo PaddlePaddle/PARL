@@ -57,10 +57,9 @@ class MAAgent(parl.Agent):
     def predict(self, obs, use_target_model=False):
         """ predict action by model or target_model
         """
-        with torch.no_grad():
-            obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-            act = self.alg.predict(obs, use_target_model=use_target_model)
-            act_numpy = act.cpu().numpy().flatten()
+        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        act = self.alg.predict(obs, use_target_model=use_target_model)
+        act_numpy = act.detach().cpu().numpy().flatten()
         return act_numpy
 
     def learn(self, agents):

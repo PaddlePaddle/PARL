@@ -15,19 +15,19 @@ import unittest
 from parameterized import parameterized, parameterized_class
 from unittest import mock
 
-# How to add new configuration: provide turples with two arguements, where the first one represents the function be be mocked, and the second one is the mocked return.
+# How to add new configuration: provide tuples with two arguments, where the first one represents the function to be mocked, and the second one is the mocked return.
 env_config_for_test = parameterized_class(('to_mock_function', 'return_value'), \
         [('parl.utils.machine_info.is_gpu_available', False),
          ('parl.utils.machine_info.is_gpu_available', True)])
 
 
 class MockingEnv(unittest.TestCase):
-    """ The class is the base class for tests under the remote module. It can provide different mocked environemtns for tests, and each test should inherit this class.
+    """ The class is the base class for tests under the remote module. It can provide different mocked environments for tests, and each test should inherit this class.
         Note that users **SHOULD NOT** override the setUp function, and they should implement _setUp for initialization instead.
 
-    Usage: Users should inherit this class to implement the unit tests for remote module. The class must be decorated with the env_config declared above. (e.g., @env_config_for_test at line 19)
+    Usage: Users should inherit this class to implement the unit tests for remote modules. The class must be decorated with the env_config declared above. (e.g., @env_config_for_test at line 19)
 
-    Example: please refer to parl/remote/tests/mocking_env_test.py.
+    Example: Please refer to parl/remote/tests/mocking_env_test.py.
     """
 
     def patch(self, target, **kwargs):

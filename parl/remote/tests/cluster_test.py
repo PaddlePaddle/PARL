@@ -55,6 +55,7 @@ class Actor(object):
     def will_raise_exception_func(self):
         x = 1 / 0
 
+
 @env_config
 class TestCluster(MockingEnv):
     def tearDown(self):

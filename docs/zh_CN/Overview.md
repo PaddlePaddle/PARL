@@ -64,6 +64,7 @@
           <li><b>并行算法</b></li>
             <ul>
               <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C">A2C</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/ES">ES</a></li>
             </ul>
         </ul>
       </td>

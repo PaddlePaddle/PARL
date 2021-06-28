@@ -23,3 +23,4 @@ from parl.algorithms.torch.qmix import *
 from parl.algorithms.torch.ddpg import *
 from parl.algorithms.torch.sac import *
 from parl.algorithms.torch.oac import *
+from parl.algorithms.torch.maddpg import *

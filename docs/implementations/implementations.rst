@@ -14,3 +14,5 @@ Implemented Algorithms
    td3.rst
    qmix.rst
    sac.rst
+   ppo.rst
+   maddpg.rst

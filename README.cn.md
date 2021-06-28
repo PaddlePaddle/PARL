@@ -95,6 +95,7 @@ pip install parl
 # 算法示例
 - [QuickStart](examples/QuickStart/)
 - [DQN](examples/DQN/)
+- [ES](examples/ES/)
 - [DDPG](examples/DDPG/)
 - [A2C](examples/A2C/)
 - [TD3](examples/TD3/)

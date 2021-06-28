@@ -14,14 +14,10 @@
 
 import torch
 from torch.distributions import Categorical
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.optim import lr_scheduler
-from random import random, randint
-
+import numpy as np
 import parl
-from parl.utils.scheduler import PiecewiseScheduler, LinearDecayScheduler
 
 __all__ = ['A2C']
 
@@ -35,31 +31,25 @@ class A2C(parl.Algorithm):
             self.model.parameters(), lr=config['learning_rate'])
         self.config = config
 
-        self.lr_scheduler = LinearDecayScheduler(config['start_lr'],
-                                                 config['max_sample_steps'])
-
-        self.entropy_coeff_scheduler = PiecewiseScheduler(
-            config['entropy_coeff_scheduler'])
-
-    def learn(self, obs, actions, advantages, target_values):
-        prob = self.model.policy(obs, softmax_dim=1)
-        policy_distri = Categorical(prob)
-        actions_log_probs = policy_distri.log_prob(actions)
-
+    def learn(self, obs, actions, advantages, target_values, lr,
+              entropy_coeff):
+        logits = self.model.policy(obs)
+        act_dim = logits.shape[-1]
+        actions_onehot = F.one_hot(actions, act_dim)
+        actions_log_probs = torch.sum(
+            F.log_softmax(logits, dim=1) * actions_onehot, dim=-1)
         # The policy gradient loss
-        pi_loss = -((actions_log_probs * advantages).sum())
+        pi_loss = -1.0 * torch.sum(actions_log_probs * advantages)
 
         # The value function loss
-        values = self.model.value(obs).reshape(-1)
+        values = self.model.value(obs)
         delta = values - target_values
-        vf_loss = 0.5 * torch.mul(delta, delta).sum()
+        vf_loss = 0.5 * torch.sum(torch.square(delta))
 
+        policy_distri = Categorical(logits=logits)
         # The entropy loss (We want to maximize entropy, so entropy_ceoff < 0)
         policy_entropy = policy_distri.entropy()
-        entropy = policy_entropy.sum()
-
-        lr = self.lr_scheduler.step(step_num=obs.shape[0])
-        entropy_coeff = self.entropy_coeff_scheduler.step()
+        entropy = torch.sum(policy_entropy)
 
         total_loss = pi_loss + vf_loss * self.vf_loss_coeff + entropy * entropy_coeff
 
@@ -67,21 +57,26 @@ class A2C(parl.Algorithm):
             param_group['lr'] = lr
 
         total_loss.backward()
+        # clip the grad
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=40.0)
         self.optimizer.step()
         self.optimizer.zero_grad()
 
-        return total_loss, pi_loss, vf_loss, entropy, lr, entropy_coeff
+        return total_loss, pi_loss, vf_loss, entropy
 
     def sample(self, obs):
-        prob, values = self.model.policy_and_value(obs)
-        sample_actions = Categorical(prob).sample()
-
+        logits, values = self.model.policy_and_value(obs)
+        sample_actions = Categorical(logits=logits).sample().long()
         return sample_actions, values
+
+    def prob_and_value(self, obs):
+        logits, values = self.model.policy_and_value(obs)
+        probs = F.softmax(logits, dim=1)
+        return probs, values
 
     def predict(self, obs):
         prob = self.model.policy(obs)
         _, predict_actions = prob.max(-1)
-
         return predict_actions
 
     def value(self, obs):

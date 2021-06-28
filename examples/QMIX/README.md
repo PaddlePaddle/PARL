@@ -15,8 +15,8 @@ Github Repositories: [smac](https://github.com/oxwhirl/smac)
 
 ## How to Use
 ### Dependencies
-- python
-- [parl](https://github.com/PaddlePaddle/PARL)
+- python3.6+
++ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 - [smac](https://github.com/oxwhirl/smac)
 - [PaddlePaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 

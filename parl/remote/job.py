@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+# set the environment variables before importing any DL framework.
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['XPARL'] = 'True'
+
 # Fix cloudpickle compatible problem we known.
 import compatible_trick
 
-import os
-os.environ['XPARL'] = 'True'
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import argparse
 import cloudpickle
 import pickle

@@ -13,7 +13,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ## How to use
 ### Dependencies:
 + python3.5+
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + gym==0.9.1
 + mujoco-py==0.5.7

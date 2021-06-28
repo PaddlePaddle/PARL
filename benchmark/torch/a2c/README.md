@@ -1,28 +1,31 @@
 ## Reproduce A2C with PARL
 Based on PARL, the A2C algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper in Atari benchmarks.
 
-### Atari games introduction
+### Atari game introduction
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
-Mean episode reward in training process after 10 million sample steps.
+Mean episode reward of A2C on some atari games in training process after 10 million sample steps.
 
 <p align="center">
-<img src="Breakout_result.png" alt="result" width="300"/>
+<img src=".result/result_a2c_torch0.png" alt="result"/>
+</p>
+<p align="center">
+<img src=".result/result_a2c_torch1.png" alt="result"/>
 </p>
 
 
 ## How to use
 ### Dependencies
-+ [parl>=1.4](https://github.com/PaddlePaddle/PARL)
-+ gym==0.12.1
-+ atari-py==0.1.7
++ [parl>=1.4.3](https://github.com/PaddlePaddle/PARL)
++ gym==0.18.0
++ atari-py==0.2.6
 + torch==1.7.1
 
 
 ### Distributed Training
 
-At first, We can start a local cluster with 5 CPUs:
+At first, we can start a local cluster with 5 CPUs:
 
 ```bash
 xparl start --port 8010 --cpu_num 5

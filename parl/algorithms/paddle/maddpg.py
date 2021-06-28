@@ -25,12 +25,14 @@ from parl.core.paddle.policy_distribution import SoftMultiCategoricalDistributio
 
 
 def SoftPDistribution(logits, act_space):
-    """Args:
-            logits: the output of policy model
-            act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
+    """ Select SoftCategoricalDistribution or SoftMultiCategoricalDistribution according to act_space.
 
-        Return:
-            instance of SoftCategoricalDistribution or SoftMultiCategoricalDistribution
+    Args:
+        logits (paddle tensor): the output of policy model
+        act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
+
+    Returns:
+        instance of SoftCategoricalDistribution or SoftMultiCategoricalDistribution
     """
     # is instance of gym.spaces.Discrete
     if (hasattr(act_space, 'n')):
@@ -58,8 +60,8 @@ class MADDPG(parl.Algorithm):
         Args:
             model (parl.Model): forward network of actor and critic.
                                 The function get_actor_params() of model should be implemented.
-            agent_index: index of agent, in multiagent env
-            act_space: action_space, gym space
+            agent_index (int): index of agent, in multiagent env
+            act_space (list): action_space, gym space
             gamma (float): discounted factor for reward computation.
             tau (float): decay coefficient when updating the weights of self.target_model with self.model
             critic_lr (float): learning rate of the critic model
@@ -93,10 +95,13 @@ class MADDPG(parl.Algorithm):
             grad_clip=nn.ClipGradByNorm(clip_norm=0.5))
 
     def predict(self, obs, use_target_model=False):
-        """ input:  
-                obs: observation, shape([B] + shape of obs_n[agent_index])
-            output: 
-                act: action, shape([B] + shape of act_n[agent_index])
+        """ use the policy model to predict actions
+        Args:
+            obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
+            use_target_model (bool): use target_model or not
+    
+        Returns:
+            act (paddle tensor): action, shape([B] + shape of act_n[agent_index])
         """
         if use_target_model:
             policy = self.target_model.policy(obs)
@@ -108,11 +113,14 @@ class MADDPG(parl.Algorithm):
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
-        """ input:  
-                obs_n: all agents' observation, shape([B] + shape of obs_n)
-                act_n: all agents' action, shape([B] + shape of act_n)
-            output: 
-                Q: Q value of this agent, shape([B])
+        """ use the value model to predict Q values
+        Args: 
+            obs_n (list of paddle tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
+            act_n (list of paddle tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)
+            use_target_model (bool): use target_model or not
+
+        Returns:
+            Q (paddle tensor): Q value of this agent, shape([B])
         """
         if use_target_model:
             return self.target_model.value(obs_n, act_n)

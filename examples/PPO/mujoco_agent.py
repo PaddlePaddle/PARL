@@ -13,31 +13,54 @@
 # limitations under the License.
 
 import parl
-import torch
+import paddle
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, device):
+    """ Agent of Mujoco env
+
+    Args:
+        algorithm (`parl.Algorithm`): algorithm to be used in this agent.
+    """
+
+    def __init__(self, algorithm):
         super(MujocoAgent, self).__init__(algorithm)
-        self.device = device
 
     def predict(self, obs):
-        with torch.no_grad():
-            obs = torch.from_numpy(obs).float().to(self.device)
-            action = self.alg.predict(obs)
+        """ Predict action from current policy given observation
 
-        return action.cpu().numpy()
+        Args:
+            obs (np.array): observation
+        """
+        obs = paddle.to_tensor(obs, dtype='float32')
+        action = self.alg.predict(obs)
+
+        return action.detach().numpy()
 
     def sample(self, obs):
-        with torch.no_grad():
-            obs = torch.from_numpy(obs).to(self.device)
-            value, action, action_log_probs = self.alg.sample(obs)
+        """ Sample action from current policy given observation
 
-        return value.cpu().numpy(), action.cpu().numpy(), \
-            action_log_probs.cpu().numpy()
+        Args:
+            obs (np.array): observation
+        """
+        obs = paddle.to_tensor(obs)
+        value, action, action_log_probs = self.alg.sample(obs)
+
+        return value.detach().numpy(), action.detach().numpy(), \
+            action_log_probs.detach().numpy()
 
     def learn(self, next_value, gamma, gae_lambda, ppo_epoch, num_mini_batch,
               rollouts):
+        """ Learn current batch of rollout for ppo_epoch epochs.
+
+        Args:
+            next_value (np.array): next predicted value for calculating advantage
+            gamma (float): the discounting factor
+            gae_lambda (float): lambda for calculating n step return
+            ppo_epoch (int): number of epochs K
+            num_mini_batch (int): number of mini-batches
+            rollouts (RolloutStorage): the rollout storage that contains the current rollout
+        """
         value_loss_epoch = 0
         action_loss_epoch = 0
         dist_entropy_epoch = 0
@@ -51,15 +74,13 @@ class MujocoAgent(parl.Agent):
                     value_preds_batch, return_batch, old_action_log_probs_batch, \
                             adv_targ = sample
 
-                obs_batch = torch.from_numpy(obs_batch).to('cuda')
-                actions_batch = torch.from_numpy(actions_batch).to('cuda').to(
-                    'cuda')
-                value_preds_batch = torch.from_numpy(value_preds_batch).to(
-                    'cuda')
-                return_batch = torch.from_numpy(return_batch).to('cuda')
-                old_action_log_probs_batch = torch.from_numpy(
-                    old_action_log_probs_batch).to('cuda')
-                adv_targ = torch.from_numpy(adv_targ).to('cuda')
+                obs_batch = paddle.to_tensor(obs_batch)
+                actions_batch = paddle.to_tensor(actions_batch)
+                value_preds_batch = paddle.to_tensor(value_preds_batch)
+                return_batch = paddle.to_tensor(return_batch)
+                old_action_log_probs_batch = paddle.to_tensor(
+                    old_action_log_probs_batch)
+                adv_targ = paddle.to_tensor(adv_targ)
 
                 value_loss, action_loss, dist_entropy = self.alg.learn(
                     obs_batch, actions_batch, value_preds_batch, return_batch,
@@ -78,8 +99,12 @@ class MujocoAgent(parl.Agent):
         return value_loss_epoch, action_loss_epoch, dist_entropy_epoch
 
     def value(self, obs):
-        with torch.no_grad():
-            obs = torch.from_numpy(obs).to(self.device)
-            val = self.alg.value(obs).cpu().numpy()
+        """ Predict value from current value function given observation
 
-        return val
+        Args:
+            obs (np.array): observation
+        """
+        obs = paddle.to_tensor(obs)
+        val = self.alg.value(obs)
+
+        return val.detach().numpy()

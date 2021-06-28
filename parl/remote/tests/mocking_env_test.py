@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,15 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from parl.remote.test_utils import MockingEnv
+from parl.remote.test_utils import env_config_for_test
+import unittest
+import parl
 
-from parl.algorithms.paddle.policy_gradient import *
-from parl.algorithms.paddle.td3 import *
-from parl.algorithms.paddle.sac import *
-from parl.algorithms.paddle.dqn import *
-from parl.algorithms.paddle.ddpg import *
-from parl.algorithms.paddle.oac import *
-from parl.algorithms.paddle.qmix import *
-from parl.algorithms.paddle.a2c import *
-from parl.algorithms.paddle.ddqn import *
-from parl.algorithms.paddle.maddpg import *
-from parl.algorithms.paddle.ppo import *
+
+@env_config_for_test
+class TestMockingEnv(MockingEnv):
+    def test_gpu_env(self):
+        ret = parl.utils.machine_info.is_gpu_available()
+        assert ret == self.return_value
+
+
+if __name__ == '__main__':
+    unittest.main()

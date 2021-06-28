@@ -16,7 +16,7 @@
 
 from collections import deque
 import numpy as np
-import torch
+import paddle
 import gym
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
@@ -66,24 +66,18 @@ def evaluate(agent, ob_rms):
 
 
 def main():
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-
-    torch.set_num_threads(1)
-    device = torch.device("cuda:0" if args.cuda else "cpu")
-
+    paddle.seed(args.seed)
     env = gym.make(args.env)
     env.seed(args.seed)
     env = wrap_rms(env, GAMMA)
 
     model = MujocoModel(env.observation_space.shape[0],
                         env.action_space.shape[0])
-    model.to(device)
 
     algorithm = PPO(model, CLIP_PARAM, VALUE_LOSS_COEF, ENTROPY_COEF, LR, EPS,
                     MAX_GRAD_NROM)
 
-    agent = MujocoAgent(algorithm, device)
+    agent = MujocoAgent(algorithm)
 
     rollouts = RolloutStorage(NUM_STEPS, env.observation_space.shape[0],
                               env.action_space.shape[0])
@@ -106,9 +100,11 @@ def main():
                 episode_rewards.append(info['episode']['r'])
 
             # If done then clean the history of observations.
-            masks = torch.FloatTensor([[0.0]] if done else [[1.0]])
-            bad_masks = torch.FloatTensor([[0.0]] if 'bad_transition' in info.
-                                          keys() else [[1.0]])
+            masks = paddle.to_tensor(
+                [[0.0]] if done else [[1.0]], dtype='float32')
+            bad_masks = paddle.to_tensor(
+                [[0.0]] if 'bad_transition' in info.keys() else [[1.0]],
+                dtype='float32')
             rollouts.append(obs, action, action_log_prob, value, reward, masks,
                             bad_masks)
 
@@ -130,7 +126,6 @@ def main():
 
         if (args.test_every_steps is not None and len(episode_rewards) > 1
                 and j % args.test_every_steps == 0):
-            # get current ob_rms from training env and use it for evaluation
             ob_rms = get_ob_rms(env)
             eval_mean_reward = evaluate(agent, ob_rms)
 
@@ -157,6 +152,5 @@ if __name__ == "__main__":
         default='Hopper-v1',
         help='environment to train on (default: Hopper-v1)')
     args = parser.parse_args()
-    args.cuda = torch.cuda.is_available()
 
     main()

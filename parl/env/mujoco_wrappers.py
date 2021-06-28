@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Simplified version of https://github.com/ShangtongZhang/DeepRL/blob/master/deep_rl/component/envs.py
+# Mujoco wrapper for single agent
 
 import numpy as np
 import gym
@@ -20,7 +21,10 @@ from gym.core import Wrapper
 import time
 
 
-class TimeLimitMask(gym.Wrapper):
+class TimeLimitMaskEnv(gym.Wrapper):
+    """ Env wrapper that marks bad_transition
+    """
+
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
         if done and self.env._max_episode_steps == self.env._elapsed_steps:
@@ -32,6 +36,9 @@ class TimeLimitMask(gym.Wrapper):
 
 
 class MonitorEnv(gym.Wrapper):
+    """ Env wrapper that keeps tracks of total raw episode rewards, length of raw episode rewards for evaluation.
+    """
+
     def __init__(self, env):
         Wrapper.__init__(self, env=env)
         self.tstart = time.time()
@@ -40,7 +47,7 @@ class MonitorEnv(gym.Wrapper):
     def step(self, action):
         ob, rew, done, info = self.env.step(action)
         self.update(ob, rew, done, info)
-        return (ob, rew, done, info)
+        return ob, rew, done, info
 
     def update(self, ob, rew, done, info):
         self.rewards.append(rew)
@@ -61,21 +68,12 @@ class MonitorEnv(gym.Wrapper):
         return self.env.reset(**kwargs)
 
 
-class VectorEnv(gym.Wrapper):
-    def step(self, action):
-        ob, rew, done, info = self.env.step(action)
-        ob = np.array(ob)
-        ob = ob[np.newaxis, :]
-        rew = np.array([rew])
-
-        done = np.array([done])
-
-        info = [info]
-        return (ob, rew, done, info)
-
-
 class RunningMeanStd(object):
-    # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    """ Calculating running mean and variance
+    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+
+    """
+
     def __init__(self, epsilon=1e-4, shape=()):
         self.mean = np.zeros(shape, 'float64')
         self.var = np.ones(shape, 'float64')
@@ -93,22 +91,10 @@ class RunningMeanStd(object):
             batch_count)
 
 
-def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
-                                       batch_count):
-    delta = batch_mean - mean
-    tot_count = count + batch_count
+class VecNormalizeEnv(gym.Wrapper):
+    """ Env wrapper that normalize reward, observation based on running mean return and running mean variance.
+    """
 
-    new_mean = mean + delta * batch_count / tot_count
-    m_a = var * count
-    m_b = batch_var * batch_count
-    M2 = m_a + m_b + np.square(delta) * count * batch_count / tot_count
-    new_var = M2 / tot_count
-    new_count = tot_count
-
-    return new_mean, new_var, new_count
-
-
-class VecNormalize(gym.Wrapper):
     def __init__(self,
                  env,
                  ob=True,
@@ -133,14 +119,20 @@ class VecNormalize(gym.Wrapper):
     def step(self, action):
         ob, rew, new, info = self.env.step(action)
         self.ret = self.ret * self.gamma + rew
-        # normalize observation
+        # normalize observation, expand batch dim if observation does not have batch dimension
+        if ob.ndim == 1:
+            ob = np.expand_dims(ob, 0)
+
         ob = self._obfilt(ob)
         # normalize reward
         if self.ret_rms:
             self.ret_rms.update(self.ret)
             rew = np.clip(rew / np.sqrt(self.ret_rms.var + self.epsilon),
                           -self.cliprew, self.cliprew)
-        self.ret[new] = 0.
+
+        if new:
+            self.ret = np.zeros(1)
+
         return ob, rew, new, info
 
     def reset(self):
@@ -159,22 +151,90 @@ class VecNormalize(gym.Wrapper):
         else:
             return ob
 
+    def get_ob_rms(self):
+        return self.ob_rms
+
+    def set_ob_rms(self, ob_rms):
+        self.ob_rms = ob_rms
+
     def train(self):
         self.training = True
 
     def eval(self):
-        self.trainint = False
+        self.training = False
 
 
-def make_env(env_name, seed, gamma):
-    env = gym.make(env_name)
-    env.seed(seed)
-    env = TimeLimitMask(env)
+def get_wrapper_by_cls(venv, cls):
+    """ Fetch env wrapper class cls from current venv
+
+    Args:
+        venv (gym.Wrapper): current env
+        cls (gym.Wrapper): target env wrapper class
+    """
+    if isinstance(venv, cls):
+        return venv
+    elif hasattr(venv, 'env'):
+        return get_wrapper_by_cls(venv.env, cls)
+
+    return None
+
+
+def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
+                                       batch_count):
+    """ helper function that updates batch mean, variance, count
+
+    Args:
+        mean (np.array): current mean
+        var (np.array): current variance
+        count (float): current count
+        batch_mean (np.array): batch mean
+        batch_var (np.array): batch variance
+        batch_count (int): batch size
+    """
+    delta = batch_mean - mean
+    tot_count = count + batch_count
+
+    new_mean = mean + delta * batch_count / tot_count
+    m_a = var * count
+    m_b = batch_var * batch_count
+    M2 = m_a + m_b + np.square(delta) * count * batch_count / tot_count
+    new_var = M2 / tot_count
+    new_count = tot_count
+
+    return new_mean, new_var, new_count
+
+
+def get_ob_rms(env):
+    """ get ob_rms value from current env, if current env does not wrap VecNormalizeEnv, None will be returned
+
+    Args:
+        env (gym.Wrapper): current env
+    """
+    vec_norm_env = get_wrapper_by_cls(env, VecNormalizeEnv)
+    ob_rms = None
+    if vec_norm_env:
+        ob_rms = vec_norm_env.get_ob_rms()
+
+    return ob_rms
+
+
+def wrap_rms(env, gamma, test=False, ob_rms=None):
+    """ Wrap original Mujoco environment with wrapper envs to provide normalization using rms and extra functionality,
+    rewards information are stored in info['episode']. This is the wrapper for single agent.
+
+    Args:
+        env (gym.Wrapper): Mujoco env
+        gamma (float or None): discounting factor, if test then gamma = None
+        test (bool): True if test else False
+        ob_rms (None or np.array): ob_rms from training environment, not None only when test is True
+    """
+    env = TimeLimitMaskEnv(env)
     env = MonitorEnv(env)
-    env = VectorEnv(env)
-    if gamma is None:
-        env = VecNormalize(env, ret=False)
+    if test:
+        env = VecNormalizeEnv(env, ret=False)
+        env.eval()
+        env.set_ob_rms(ob_rms)
     else:
-        env = VecNormalize(env, gamma=gamma)
+        env = VecNormalizeEnv(env, gamma=gamma)
 
     return env

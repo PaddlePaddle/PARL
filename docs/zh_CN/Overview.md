@@ -60,6 +60,7 @@
               <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/QuickStart">PolicyGradient</a></li>
               <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DQN">DQN</a></li>
             <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/DDPG">DDPG</a></li>
+            <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/PPO">PPO</a></li>
             </ul>
           <li><b>并行算法</b></li>
             <ul>

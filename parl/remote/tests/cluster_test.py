@@ -60,7 +60,6 @@ class Actor(object):
 class TestCluster(MockingEnv):
     def tearDown(self):
         disconnect()
-        time.sleep(60)  # wait for test case finishing
 
     def test_actor_exception(self):
         port = get_free_tcp_port()
@@ -93,6 +92,7 @@ class TestCluster(MockingEnv):
 
         master.exit()
         worker1.exit()
+        th.join()
 
     def test_actor_exception_2(self):
         port = get_free_tcp_port()
@@ -118,6 +118,7 @@ class TestCluster(MockingEnv):
         del actor2
         worker1.exit()
         master.exit()
+        th.join()
 
 
 if __name__ == '__main__':

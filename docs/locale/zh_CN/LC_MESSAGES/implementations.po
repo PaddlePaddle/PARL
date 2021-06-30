@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PARL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-20 13:27+0800\n"
+"POT-Creation-Date: 2021-06-28 19:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,10 +22,11 @@ msgid "A2C"
 msgstr ""
 
 #: of parl.algorithms.paddle.a2c.A2C:1 parl.algorithms.paddle.ddpg.DDPG:1
-#: parl.algorithms.paddle.dqn.DQN:1 parl.algorithms.paddle.oac.OAC:1
+#: parl.algorithms.paddle.ddqn.DDQN:1 parl.algorithms.paddle.dqn.DQN:1
+#: parl.algorithms.paddle.oac.OAC:1
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient:1
-#: parl.algorithms.paddle.qmix.QMIX:1 parl.algorithms.paddle.sac.SAC:1
-#: parl.algorithms.paddle.td3.TD3:1
+#: parl.algorithms.paddle.ppo.PPO:1 parl.algorithms.paddle.qmix.QMIX:1
+#: parl.algorithms.paddle.sac.SAC:1 parl.algorithms.paddle.td3.TD3:1
 msgid "Bases: :class:`parl.core.paddle.algorithm.Algorithm`"
 msgstr ""
 
@@ -37,16 +38,22 @@ msgstr ""
 #: parl.algorithms.fluid.impala.impala.IMPALA.learn
 #: parl.algorithms.fluid.impala.impala.IMPALA.predict
 #: parl.algorithms.fluid.impala.impala.IMPALA.sample
-#: parl.algorithms.fluid.ppo.PPO.__init__
-#: parl.algorithms.fluid.ppo.PPO.policy_learn
 #: parl.algorithms.paddle.a2c.A2C.__init__ parl.algorithms.paddle.a2c.A2C.learn
 #: parl.algorithms.paddle.a2c.A2C.predict
 #: parl.algorithms.paddle.a2c.A2C.prob_and_value
-#: parl.algorithms.paddle.a2c.A2C.value parl.algorithms.paddle.dqn.DQN.__init__
+#: parl.algorithms.paddle.a2c.A2C.value
+#: parl.algorithms.paddle.ddpg.DDPG.__init__
+#: parl.algorithms.paddle.ddqn.DDQN.__init__
+#: parl.algorithms.paddle.dqn.DQN.__init__
+#: parl.algorithms.paddle.oac.OAC.__init__
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.ppo.PPO.__init__
+#: parl.algorithms.paddle.qmix.QMIX.__init__
 #: parl.algorithms.paddle.qmix.QMIX.learn
+#: parl.algorithms.paddle.sac.SAC.__init__
+#: parl.algorithms.paddle.td3.TD3.__init__
 msgid "Parameters"
 msgstr ""
 
@@ -101,13 +108,44 @@ msgid "DDPG"
 msgstr ""
 
 #: of parl.algorithms.paddle.ddpg.DDPG.__init__:1
+msgid "DDPG algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:3
+#: parl.algorithms.paddle.oac.OAC.__init__:3
+#: parl.algorithms.paddle.sac.SAC.__init__:3
+#: parl.algorithms.paddle.td3.TD3.__init__:3
+msgid "forward network of actor and critic."
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:5
+#: parl.algorithms.paddle.oac.OAC.__init__:5
+#: parl.algorithms.paddle.sac.SAC.__init__:5
+#: parl.algorithms.paddle.td3.TD3.__init__:5
+msgid "discounted factor for reward computation"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:7
+#: parl.algorithms.paddle.oac.OAC.__init__:7
+#: parl.algorithms.paddle.sac.SAC.__init__:7
+#: parl.algorithms.paddle.td3.TD3.__init__:7
 msgid ""
-"DDPG algorithm :param model: forward network of actor and critic. :type "
-"model: parl.Model :param gamma: discounted factor for reward computation "
-":type gamma: float :param tau: decay coefficient when updating the "
-"weights of self.target_model with self.model :type tau: float :param "
-"actor_lr: learning rate of the actor model :type actor_lr: float :param "
-"critic_lr: learning rate of the critic model :type critic_lr: float"
+"decay coefficient when updating the weights of self.target_model with "
+"self.model"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:9
+#: parl.algorithms.paddle.oac.OAC.__init__:15
+#: parl.algorithms.paddle.sac.SAC.__init__:11
+#: parl.algorithms.paddle.td3.TD3.__init__:9
+msgid "learning rate of the actor model"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.__init__:11
+#: parl.algorithms.paddle.oac.OAC.__init__:17
+#: parl.algorithms.paddle.sac.SAC.__init__:13
+#: parl.algorithms.paddle.td3.TD3.__init__:11
+msgid "learning rate of the critic model"
 msgstr ""
 
 #: of parl.algorithms.paddle.ddpg.DDPG.learn:1
@@ -130,6 +168,36 @@ msgstr ""
 msgid "DDQN"
 msgstr ""
 
+#: of parl.algorithms.paddle.ddqn.DDQN.__init__:1
+msgid "DDQN algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddqn.DDQN.__init__:3
+#: parl.algorithms.paddle.dqn.DQN.__init__:3
+msgid "forward neural network representing the Q function."
+msgstr ""
+
+#: of parl.algorithms.paddle.ddqn.DDQN.__init__:5
+#: parl.algorithms.paddle.dqn.DQN.__init__:5
+msgid "discounted factor for `accumulative` reward computation"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddqn.DDQN.__init__:7
+#: parl.algorithms.paddle.dqn.DQN.__init__:7
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__:5
+#: parl.algorithms.paddle.qmix.QMIX.__init__:11
+msgid "learning rate."
+msgstr ""
+
+#: of parl.algorithms.paddle.ddqn.DDQN.learn:1
+msgid "update the Q function (self.model) with DDQN algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddqn.DDQN.predict:1
+#: parl.algorithms.paddle.dqn.DQN.predict:1
+msgid "use self.model (Q function) to predict the action values"
+msgstr ""
+
 #: ../../implementations/dqn.rst:2
 msgid "DQN"
 msgstr ""
@@ -138,25 +206,8 @@ msgstr ""
 msgid "DQN algorithm"
 msgstr ""
 
-#: of parl.algorithms.paddle.dqn.DQN.__init__:3
-msgid "forward neural network representing the Q function."
-msgstr ""
-
-#: of parl.algorithms.paddle.dqn.DQN.__init__:5
-msgid "discounted factor for `accumulative` reward computation"
-msgstr ""
-
-#: of parl.algorithms.paddle.dqn.DQN.__init__:7
-#: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__:5
-msgid "learning rate."
-msgstr ""
-
 #: of parl.algorithms.paddle.dqn.DQN.learn:1
 msgid "update the Q function (self.model) with DQN algorithm"
-msgstr ""
-
-#: of parl.algorithms.paddle.dqn.DQN.predict:1
-msgid "use self.model (Q function) to predict the action values"
 msgstr ""
 
 #: ../../implementations/impala.rst:2
@@ -164,7 +215,6 @@ msgid "IMPALA"
 msgstr ""
 
 #: of parl.algorithms.fluid.impala.impala.IMPALA:1
-#: parl.algorithms.fluid.ppo.PPO:1
 msgid "Bases: :class:`parl.core.fluid.algorithm.Algorithm`"
 msgstr ""
 
@@ -177,6 +227,7 @@ msgid "steps of each environment sampling."
 msgstr ""
 
 #: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:7
+#: parl.algorithms.paddle.qmix.QMIX.__init__:9
 msgid "discounted factor for reward computation."
 msgstr ""
 
@@ -202,13 +253,9 @@ msgstr ""
 msgid "float scalar of learning rate."
 msgstr ""
 
-#: ../../implementations/implementations.rst:4
-msgid "APIs"
+#: ../../implementations/maddpg.rst:2
+msgid "MADDPG"
 msgstr ""
-
-#: ../../implementations/implementations.rst:2
-msgid "Implemented Algorithms"
-msgstr "已复现算法"
 
 #: ../../implementations/new_alg.rst:2
 msgid "Create Customized Algorithms"
@@ -338,18 +385,21 @@ msgid "OAC"
 msgstr ""
 
 #: of parl.algorithms.paddle.oac.OAC.__init__:1
+msgid "OAC algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.oac.OAC.__init__:9
 msgid ""
-"OAC algorithm :param model: forward network of actor and critic. :type "
-"model: parl.Model :param gamma: discounted factor for reward computation "
-":type gamma: float :param tau: decay coefficient when updating the "
-"weights of self.target_model with self.model :type tau: float :param "
-"alpha: Temperature parameter determines the relative importance of the "
-"entropy against the reward :type alpha: float :param beta: determines the"
-" relative importance of sigma_Q :type beta: float :param delta: "
-"determines the relative changes of exploration`s mean :type delta: float "
-":param actor_lr: learning rate of the actor model :type actor_lr: float "
-":param critic_lr: learning rate of the critic model :type critic_lr: "
-"float"
+"Temperature parameter determines the relative importance of the entropy "
+"against the reward"
+msgstr ""
+
+#: of parl.algorithms.paddle.oac.OAC.__init__:11
+msgid "determines the relative importance of sigma_Q"
+msgstr ""
+
+#: of parl.algorithms.paddle.oac.OAC.__init__:13
+msgid "determines the relative changes of exploration`s mean"
 msgstr ""
 
 #: of parl.algorithms.paddle.oac.OAC.sample:1
@@ -416,80 +466,58 @@ msgstr ""
 msgid "PPO"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:1
+#: of parl.algorithms.paddle.ppo.PPO.__init__:1
 msgid "PPO algorithm"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:3
-msgid "model defining forward network of policy and value."
+#: of parl.algorithms.paddle.ppo.PPO.__init__:3
+msgid "model that contains both value network and policy network"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:5
-msgid "dimension of the action space."
+#: of parl.algorithms.paddle.ppo.PPO.__init__:5
+msgid "the clipping strength for value loss clipping"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:7
-msgid "learning rate of the policy model."
+#: of parl.algorithms.paddle.ppo.PPO.__init__:7
+msgid "the coefficient for value loss (c_1)"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:9
-msgid "learning rate of the value model."
+#: of parl.algorithms.paddle.ppo.PPO.__init__:9
+msgid "the coefficient for entropy (c_2)"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.__init__:11
-msgid "epsilon used in the CLIP loss (default 0.2)."
+#: of parl.algorithms.paddle.ppo.PPO.__init__:11
+msgid "initial learning rate."
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:4
-msgid "Learn policy model with:"
+#: of parl.algorithms.paddle.ppo.PPO.__init__:13
+msgid "epsilon for Adam optimizer"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:2
-msgid "CLIP loss: Clipped Surrogate Objective"
+#: of parl.algorithms.paddle.ppo.PPO.__init__:15
+msgid "threshold for grad norm clipping"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:3
-msgid "KLPEN loss: Adaptive KL Penalty Objective"
+#: of parl.algorithms.paddle.ppo.PPO.__init__:17
+msgid "whether use value loss clipping"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:4
-msgid "See: https://arxiv.org/pdf/1707.02286.pdf"
+#: of parl.algorithms.paddle.ppo.PPO.learn:1
+msgid "update the value network and policy network parameters."
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:6
-msgid "Tensor, (batch_size, obs_dim)"
+#: of parl.algorithms.paddle.ppo.PPO.predict:1
+msgid ""
+"Predict action from parameterized policy, action with maximum probability"
+" is selected as greedy action"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:7
-msgid "Tensor, (batch_size, act_dim)"
+#: of parl.algorithms.paddle.ppo.PPO.sample:1
+msgid "Sample action from parameterized policy"
 msgstr ""
 
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:8
-msgid "Tensor (batch_size, )"
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.policy_learn:9
-msgid "Tensor (1) or None if None, use CLIP Loss; else, use KLPEN loss."
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.predict:1
-msgid "Use the policy model of self.model to predict means and logvars of actions"
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.sample:1
-msgid "Use the policy model of self.model to sample actions"
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.sync_old_policy:1
-msgid "Synchronize weights of self.model.policy_model to self.old_policy_model"
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.value_learn:1
-msgid "Learn the value model with square error cost"
-msgstr ""
-
-#: of parl.algorithms.fluid.ppo.PPO.value_predict:1
-msgid "Use value model of self.model to predict value of obs"
+#: of parl.algorithms.paddle.ppo.PPO.value:1
+msgid "Predict value from parameterized value function"
 msgstr ""
 
 #: ../../implementations/qmix.rst:2
@@ -497,18 +525,25 @@ msgid "QMIX"
 msgstr ""
 
 #: of parl.algorithms.paddle.qmix.QMIX.__init__:1
-msgid ""
-"QMIX algorithm :param agent_model: agents' local q network for decision "
-"making. :type agent_model: parl.Model :param qmixer_model: A mixing "
-"network which takes local q values as input"
+msgid "QMIX algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.__init__:3
+msgid "agents' local q network for decision making."
 msgstr ""
 
 #: of parl.algorithms.paddle.qmix.QMIX.__init__:5
 msgid ""
-"to construct a global Q network double_q (bool): Double-DQN gamma "
-"(float): discounted factor for reward computation. lr (float): learning "
-"rate. clip_grad_norm (None, or float): clipped value of gradients' global"
-" norm."
+"A mixing network which takes local q values as input to construct a "
+"global Q network."
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.__init__:7
+msgid "Double-DQN."
+msgstr ""
+
+#: of parl.algorithms.paddle.qmix.QMIX.__init__:13
+msgid "clipped value of gradients' global norm."
 msgstr ""
 
 #: of parl.algorithms.paddle.qmix.QMIX.learn:1
@@ -542,15 +577,13 @@ msgid "SAC"
 msgstr ""
 
 #: of parl.algorithms.paddle.sac.SAC.__init__:1
+msgid "SAC algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.sac.SAC.__init__:9
 msgid ""
-"SAC algorithm :param model: forward network of actor and critic. :type "
-"model: parl.Model :param gamma: discounted factor for reward computation "
-":type gamma: float :param tau: decay coefficient when updating the "
-"weights of self.target_model with self.model :type tau: float :param "
-"alpha: temperature parameter determines the relative importance of the "
-"entropy against the reward :type alpha: float :param actor_lr: learning "
-"rate of the actor model :type actor_lr: float :param critic_lr: learning "
-"rate of the critic model :type critic_lr: float"
+"temperature parameter determines the relative importance of the entropy "
+"against the reward"
 msgstr ""
 
 #: ../../implementations/td3.rst:2
@@ -558,16 +591,175 @@ msgid "TD3"
 msgstr ""
 
 #: of parl.algorithms.paddle.td3.TD3.__init__:1
-msgid ""
-"SAC algorithm :param model: forward network of actor and critic. :type "
-"model: parl.Model :param gamma: discounted factor for reward computation "
-":type gamma: float :param tau: decay coefficient when updating the "
-"weights of self.target_model with self.model :type tau: float :param "
-"actor_lr: learning rate of the actor model :type actor_lr: float :param "
-"critic_lr: learning rate of the critic model :type critic_lr: float "
-":param policy_noise: noise added to target policy during critic update "
-":type policy_noise: float :param noise_clip: range to clip target policy "
-"noise :type noise_clip: float :param policy_freq: frequency of delayed "
-"policy updates :type policy_freq: int"
+#, fuzzy
+msgid "TD3 algorithm"
+msgstr "已复现算法"
+
+#: of parl.algorithms.paddle.td3.TD3.__init__:13
+msgid "noise added to target policy during critic update"
 msgstr ""
+
+#: of parl.algorithms.paddle.td3.TD3.__init__:15
+msgid "range to clip target policy noise"
+msgstr ""
+
+#: of parl.algorithms.paddle.td3.TD3.__init__:17
+msgid "frequency of delayed policy updates"
+msgstr ""
+
+#~ msgid ""
+#~ "DDPG algorithm :param model: forward "
+#~ "network of actor and critic. :type "
+#~ "model: parl.Model :param gamma: discounted "
+#~ "factor for reward computation :type "
+#~ "gamma: float :param tau: decay "
+#~ "coefficient when updating the weights of"
+#~ " self.target_model with self.model :type "
+#~ "tau: float :param actor_lr: learning "
+#~ "rate of the actor model :type "
+#~ "actor_lr: float :param critic_lr: learning "
+#~ "rate of the critic model :type "
+#~ "critic_lr: float"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "OAC algorithm :param model: forward "
+#~ "network of actor and critic. :type "
+#~ "model: parl.Model :param gamma: discounted "
+#~ "factor for reward computation :type "
+#~ "gamma: float :param tau: decay "
+#~ "coefficient when updating the weights of"
+#~ " self.target_model with self.model :type "
+#~ "tau: float :param alpha: Temperature "
+#~ "parameter determines the relative importance"
+#~ " of the entropy against the reward"
+#~ " :type alpha: float :param beta: "
+#~ "determines the relative importance of "
+#~ "sigma_Q :type beta: float :param delta:"
+#~ " determines the relative changes of "
+#~ "exploration`s mean :type delta: float "
+#~ ":param actor_lr: learning rate of the"
+#~ " actor model :type actor_lr: float "
+#~ ":param critic_lr: learning rate of the"
+#~ " critic model :type critic_lr: float"
+#~ msgstr ""
+
+#~ msgid "model defining forward network of policy and value."
+#~ msgstr ""
+
+#~ msgid "dimension of the action space."
+#~ msgstr ""
+
+#~ msgid "learning rate of the policy model."
+#~ msgstr ""
+
+#~ msgid "learning rate of the value model."
+#~ msgstr ""
+
+#~ msgid "epsilon used in the CLIP loss (default 0.2)."
+#~ msgstr ""
+
+#~ msgid "Learn policy model with:"
+#~ msgstr ""
+
+#~ msgid "CLIP loss: Clipped Surrogate Objective"
+#~ msgstr ""
+
+#~ msgid "KLPEN loss: Adaptive KL Penalty Objective"
+#~ msgstr ""
+
+#~ msgid "See: https://arxiv.org/pdf/1707.02286.pdf"
+#~ msgstr ""
+
+#~ msgid "Tensor, (batch_size, obs_dim)"
+#~ msgstr ""
+
+#~ msgid "Tensor, (batch_size, act_dim)"
+#~ msgstr ""
+
+#~ msgid "Tensor (batch_size, )"
+#~ msgstr ""
+
+#~ msgid "Tensor (1) or None if None, use CLIP Loss; else, use KLPEN loss."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Use the policy model of self.model "
+#~ "to predict means and logvars of "
+#~ "actions"
+#~ msgstr ""
+
+#~ msgid "Use the policy model of self.model to sample actions"
+#~ msgstr ""
+
+#~ msgid "Synchronize weights of self.model.policy_model to self.old_policy_model"
+#~ msgstr ""
+
+#~ msgid "Learn the value model with square error cost"
+#~ msgstr ""
+
+#~ msgid "Use value model of self.model to predict value of obs"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "QMIX algorithm :param agent_model: agents' "
+#~ "local q network for decision making. "
+#~ ":type agent_model: parl.Model :param "
+#~ "qmixer_model: A mixing network which "
+#~ "takes local q values as input"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "to construct a global Q network "
+#~ "double_q (bool): Double-DQN gamma "
+#~ "(float): discounted factor for reward "
+#~ "computation. lr (float): learning rate. "
+#~ "clip_grad_norm (None, or float): clipped "
+#~ "value of gradients' global norm."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SAC algorithm :param model: forward "
+#~ "network of actor and critic. :type "
+#~ "model: parl.Model :param gamma: discounted "
+#~ "factor for reward computation :type "
+#~ "gamma: float :param tau: decay "
+#~ "coefficient when updating the weights of"
+#~ " self.target_model with self.model :type "
+#~ "tau: float :param alpha: temperature "
+#~ "parameter determines the relative importance"
+#~ " of the entropy against the reward"
+#~ " :type alpha: float :param actor_lr: "
+#~ "learning rate of the actor model "
+#~ ":type actor_lr: float :param critic_lr: "
+#~ "learning rate of the critic model "
+#~ ":type critic_lr: float"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "SAC algorithm :param model: forward "
+#~ "network of actor and critic. :type "
+#~ "model: parl.Model :param gamma: discounted "
+#~ "factor for reward computation :type "
+#~ "gamma: float :param tau: decay "
+#~ "coefficient when updating the weights of"
+#~ " self.target_model with self.model :type "
+#~ "tau: float :param actor_lr: learning "
+#~ "rate of the actor model :type "
+#~ "actor_lr: float :param critic_lr: learning "
+#~ "rate of the critic model :type "
+#~ "critic_lr: float :param policy_noise: noise"
+#~ " added to target policy during critic"
+#~ " update :type policy_noise: float :param"
+#~ " noise_clip: range to clip target "
+#~ "policy noise :type noise_clip: float "
+#~ ":param policy_freq: frequency of delayed "
+#~ "policy updates :type policy_freq: int"
+#~ msgstr ""
+
+#~ msgid "APIs"
+#~ msgstr ""
+
+#~ msgid "Implemented Algorithms"
+#~ msgstr "已复现算法"
 

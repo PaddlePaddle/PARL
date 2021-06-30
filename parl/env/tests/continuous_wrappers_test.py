@@ -60,7 +60,7 @@ class TestActionMappingWrapper(unittest.TestCase):
         env = MockEnv([0.0, -2.0, -5.0], [1.0, 2.0, 10.0])
         wrapper_env = ActionMappingWrapper(env)
         wrapper_env.step(origin_act)
-        self.assertListEqual(list(env.action), [0.5, 0.0, 7.5])
+        self.assertListEqual(list(env.action), [0.5, 0.0, 2.5])
 
 
 if __name__ == '__main__':

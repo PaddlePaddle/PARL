@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import parl
-import torch
+import paddle
 import numpy as np
 from parl.utils import ReplayMemory
 from parl.utils import machine_info, get_gpu_count
@@ -46,8 +46,6 @@ class MAAgent(parl.Agent):
             obs_dim=self.obs_dim_n[agent_index],
             act_dim=self.act_dim_n[agent_index])
         self.global_train_step = 0
-        self.device = torch.device("cuda" if torch.cuda.
-                                   is_available() else "cpu")
 
         super(MAAgent, self).__init__(algorithm)
 
@@ -57,7 +55,7 @@ class MAAgent(parl.Agent):
     def predict(self, obs, use_target_model=False):
         """ predict action by model or target_model
         """
-        obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
         act = self.alg.predict(obs, use_target_model=use_target_model)
         act_numpy = act.detach().cpu().numpy().flatten()
         return act_numpy
@@ -89,18 +87,18 @@ class MAAgent(parl.Agent):
         _, _, batch_rew, _, batch_isOver = self.rpm.sample_batch_by_index(
             rpm_sample_index)
         batch_obs_n = [
-            torch.FloatTensor(obs).to(self.device) for obs in batch_obs_n
+            paddle.to_tensor(obs, dtype='float32') for obs in batch_obs_n
         ]
         batch_act_n = [
-            torch.FloatTensor(act).to(self.device) for act in batch_act_n
+            paddle.to_tensor(act, dtype='float32') for act in batch_act_n
         ]
-        batch_rew = torch.FloatTensor(batch_rew).to(self.device)
-        batch_isOver = torch.FloatTensor(batch_isOver).to(self.device)
+        batch_rew = paddle.to_tensor(batch_rew, dtype='float32')
+        batch_isOver = paddle.to_tensor(batch_isOver, dtype='float32')
 
         # compute target q
         target_act_next_n = []
         batch_obs_next_n = [
-            torch.FloatTensor(obs).to(self.device) for obs in batch_obs_next_n
+            paddle.to_tensor(obs, dtype='float32') for obs in batch_obs_next_n
         ]
         for i in range(self.n):
             target_act_next = agents[i].alg.predict(
@@ -114,7 +112,7 @@ class MAAgent(parl.Agent):
 
         # learn
         critic_cost = self.alg.learn(batch_obs_n, batch_act_n, target_q)
-        critic_cost = critic_cost.cpu().detach().numpy()
+        critic_cost = critic_cost.cpu().detach().numpy()[0]
 
         return critic_cost
 

@@ -101,6 +101,7 @@ pip install parl
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
 - [QMIX](examples/QMIX/)
+- [MADDPG](examples/MADDPG/)
 - [PPO](examples/PPO/)
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [冠军解决方案：NIPS2019强化学习仿生人控制赛事](examples/NeurIPS2019-Learn-to-Move-Challenge/)

@@ -54,6 +54,7 @@
             <ul>
               <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/SAC">SAC</a></li>
               <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/TD3">TD3</a></li>
+              <li><a href="https://github.com/PaddlePaddle/PARL/tree/develop/examples/MADDPG">MADDPG</a></li>
             </ul>
           <li><b>经典算法</b></li>
             <ul>

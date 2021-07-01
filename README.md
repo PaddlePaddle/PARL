@@ -102,6 +102,7 @@ For absolute beginners, we also provide an introductory course on reinforcement 
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
 - [QMIX](examples/QMIX/)
+- [MADDPG](examples/MADDPG/)
 - [PPO](examples/PPO/)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)

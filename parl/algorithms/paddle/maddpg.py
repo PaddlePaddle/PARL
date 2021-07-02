@@ -96,6 +96,7 @@ class MADDPG(parl.Algorithm):
 
     def predict(self, obs, use_target_model=False):
         """ use the policy model to predict actions
+        
         Args:
             obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
             use_target_model (bool): use target_model or not
@@ -114,6 +115,7 @@ class MADDPG(parl.Algorithm):
 
     def Q(self, obs_n, act_n, use_target_model=False):
         """ use the value model to predict Q values
+        
         Args: 
             obs_n (list of paddle tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
             act_n (list of paddle tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)

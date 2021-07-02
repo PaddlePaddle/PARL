@@ -50,7 +50,7 @@ class DDQN(parl.Algorithm):
         """ update the Q function (self.model) with DDQN algorithm
         """
         # Q
-        pred_values = self.model.value(obs)
+        pred_values = self.model(obs)
         action_dim = pred_values.shape[-1]
         action = paddle.squeeze(action, axis=-1)
         action_onehot = paddle.nn.functional.one_hot(
@@ -62,12 +62,12 @@ class DDQN(parl.Algorithm):
         with paddle.no_grad():
 
             # select greedy action base on Q: a` = argmax_a Q(x`, a)
-            greedy_actions = self.model.value(next_obs).argmax(1)
+            greedy_actions = self.model(next_obs).argmax(1)
 
             # get booststrapped next state value: Q_{target}(x`, a`)
             g_action_oh = paddle.nn.functional.one_hot(
                 greedy_actions, num_classes=action_dim)
-            max_v = self.target_model.value(next_obs).multiply(g_action_oh)
+            max_v = self.target_model(next_obs).multiply(g_action_oh)
             max_v = max_v.sum(axis=1, keepdim=True)
 
             # get target value: y_i = r_i + gamma * Q_{target}(x`, a`)

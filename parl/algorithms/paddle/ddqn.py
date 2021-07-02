@@ -44,7 +44,7 @@ class DDQN(parl.Algorithm):
     def predict(self, obs):
         """ use self.model (Q function) to predict the action values
         """
-        return self.model.value(obs)
+        return self.model(obs)
 
     def learn(self, obs, action, reward, next_obs, terminal):
         """ update the Q function (self.model) with DDQN algorithm

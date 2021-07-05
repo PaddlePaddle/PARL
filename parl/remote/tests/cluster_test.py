@@ -60,6 +60,7 @@ class Actor(object):
 class TestCluster(MockingEnv):
     def tearDown(self):
         disconnect()
+        time.sleep(60)
 
     def test_actor_exception(self):
         port = get_free_tcp_port()

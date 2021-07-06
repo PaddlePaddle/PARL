@@ -4,7 +4,7 @@
 
 English | [简体中文](./README.cn.md)
 
-[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.1-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.2-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
 
 > PARL is a flexible and high-efficient reinforcement learning framework.
 

@@ -12,10 +12,6 @@ class CartPoleEnv(object):
         class ActionSpace(object):
             def __init__(self):
                 self.n = 2
-
-            def sample(self):
-                return self.action_space.sample()
-
         class ObservationSpace(object):
             def __init__(self):
                 self.shape = (4,)

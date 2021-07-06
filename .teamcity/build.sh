@@ -147,7 +147,7 @@ function run_test_with_fluid() {
 function run_cartpole_test {
     for exp in QuickStart DQN
     do
-        cp .teamcity/gym.py examples/${exp}/
+        cp parl/tests/gym.py examples/${exp}/
         python examples/${exp}/train.py
     done
 }

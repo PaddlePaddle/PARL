@@ -67,6 +67,8 @@ def calc_reward_to_go(reward_list, gamma=1.0):
 
 def main():
     env = gym.make('CartPole-v0')
+    print('something goes wrong.')
+    asfa
     # env = env.unwrapped # Cancel the minimum score limit
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.n

@@ -176,7 +176,7 @@ def check_model_method(model, method, algo):
         ).forward.__func__, "{}'s model needs to implement forward method. \n".format(
             algo)
     else:
-        # check if value function is implemented
+        # check if the specified method is implemented
         assert hasattr(model, method) and callable(
             getattr(
                 model, method,

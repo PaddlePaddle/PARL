@@ -20,6 +20,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import parl
+from parl.utils.utils import check_model_method
 import numpy as np
 
 __all__ = ['DQN']
@@ -34,14 +35,17 @@ class DQN(parl.Algorithm):
             gamma (float): discounted factor for reward computation.
             lr (float): learning rate.
         """
+        # checks
+        check_model_method(model, 'forward', self.__class__.__name__)
+        assert isinstance(gamma, float)
+        assert isinstance(lr, float)
+
         self.model = model
         self.target_model = copy.deepcopy(model)
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
         self.target_model.to(device)
 
-        assert isinstance(gamma, float)
-        assert isinstance(lr, float)
         self.gamma = gamma
         self.lr = lr
 

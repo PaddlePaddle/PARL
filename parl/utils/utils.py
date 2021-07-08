@@ -22,7 +22,7 @@ __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
     'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
-    'check_version_for_fluid'
+    'check_version_for_fluid', 'check_model_method'
 ]
 
 
@@ -153,3 +153,24 @@ def check_version_for_fluid():
 
     paddle_version = get_fluid_version()
     assert paddle_version >= 185 and paddle_version < 200, err
+
+
+def check_model_method(model, method, algo):
+    """ check method existence for input model to algo
+    """
+    if method == 'forward':
+        # check if forward is overriden by the subclass
+        assert callable(
+            getattr(model, 'forward',
+                    None)), "forward should be a function in model class"
+        assert model.forward.__func__ is not super(
+            model.__class__, model
+        ).forward.__func__, "{}'s model needs to implement forward method. \n".format(
+            algo)
+    else:
+        # check if value function is implemented
+        assert hasattr(model, method) and callable(
+            getattr(
+                model, method,
+                None)), "{}'s model needs to implement {} method. \n".format(
+                    algo, method)

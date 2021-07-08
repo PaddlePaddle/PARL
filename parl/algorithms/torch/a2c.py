@@ -18,13 +18,20 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 import parl
+from parl.utils.utils import check_model_method
 
 __all__ = ['A2C']
 
 
 class A2C(parl.Algorithm):
     def __init__(self, model, config):
+        # checks
+
         assert isinstance(config['vf_loss_coeff'], (int, float))
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'policy_and_value', self.__class__.__name__)
+
         self.model = model
         self.vf_loss_coeff = config['vf_loss_coeff']
         self.optimizer = optim.Adam(

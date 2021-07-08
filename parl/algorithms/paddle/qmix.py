@@ -17,6 +17,7 @@ import paddle.nn as nn
 import parl
 from copy import deepcopy
 import paddle.nn.functional as F
+from parl.utils.utils import check_model_method
 
 __all__ = ['QMIX']
 
@@ -39,14 +40,22 @@ class QMIX(parl.Algorithm):
             lr (float): learning rate.
             clip_grad_norm (None, or float): clipped value of gradients' global norm.
         """
+        # checks
+        check_model_method(agent_model, 'init_hidden', self.__class__.__name__)
+        check_model_method(agent_model, 'forward', self.__class__.__name__)
+        check_model_method(qmixer_model, 'forward', self.__class__.__name__)
+        assert hasattr(qmixer_model, 'n_agents') and not callable(
+            getattr(qmixer_model, 'n_agents',
+                    None)), 'qmixer_model needs to have attribute n_agents'
+        assert isinstance(gamma, float)
+        assert isinstance(lr, float)
+
         self.agent_model = agent_model
         self.qmixer_model = qmixer_model
         self.target_agent_model = deepcopy(self.agent_model)
         self.target_qmixer_model = deepcopy(self.qmixer_model)
 
         self.n_agents = self.qmixer_model.n_agents
-        assert isinstance(gamma, float)
-        assert isinstance(lr, float)
         self.double_q = double_q
         self.gamma = gamma
         self.lr = lr

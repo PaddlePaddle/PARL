@@ -16,6 +16,7 @@ import torch
 import torch.nn.functional as F
 from copy import deepcopy
 import parl
+from parl.utils.utils import check_model_method
 
 __all__ = ['DDPG']
 
@@ -27,10 +28,16 @@ class DDPG(parl.Algorithm):
                  tau=None,
                  actor_lr=None,
                  critic_lr=None):
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
+
         self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr

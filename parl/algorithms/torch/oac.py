@@ -17,6 +17,7 @@ import torch
 import math
 from torch.distributions import Normal
 import torch.nn.functional as F
+from parl.utils.utils import check_model_method
 from copy import deepcopy
 
 __all__ = ['OAC']
@@ -43,6 +44,14 @@ class OAC(parl.Algorithm):
                         actor_lr (float): learning rate of the actor model
                         critic_lr (float): learning rate of the critic model
         """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
+        assert hasattr(model, 'critic_model') and callable(
+            getattr(model, 'critic_model',
+                    None)), 'OAC model needs to have callable critic_model'
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)

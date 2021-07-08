@@ -157,9 +157,17 @@ def check_version_for_fluid():
 
 def check_model_method(model, method, algo):
     """ check method existence for input model to algo
+
+    Args:
+        model(parl.Model): model for checking
+        method(str): method name
+        algo(str): algorithm name
+
+    Raises:
+        AssertionError: if method is not implemented in model
     """
     if method == 'forward':
-        # check if forward is overriden by the subclass
+        # check if forward is overridden by the subclass
         assert callable(
             getattr(model, 'forward',
                     None)), "forward should be a function in model class"

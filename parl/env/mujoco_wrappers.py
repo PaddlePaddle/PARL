@@ -17,7 +17,6 @@
 
 import numpy as np
 import gym
-from gym.core import Wrapper
 import time
 
 
@@ -40,7 +39,7 @@ class MonitorEnv(gym.Wrapper):
     """
 
     def __init__(self, env):
-        Wrapper.__init__(self, env=env)
+        super().__init__(env)
         self.tstart = time.time()
         self.rewards = None
 
@@ -103,7 +102,7 @@ class VecNormalizeEnv(gym.Wrapper):
                  cliprew=10.,
                  gamma=0.99,
                  epsilon=1e-8):
-        Wrapper.__init__(self, env=env)
+        super().__init__(env)
         observation_space = env.observation_space.shape[0]
 
         self.ob_rms = RunningMeanStd(shape=observation_space) if ob else None

@@ -96,7 +96,6 @@ class TestCluster(unittest.TestCase):
 
             master.exit()
             worker1.exit()
-            th.join()
 
     def test_actor_exception_2(self):
         return_true = mock.Mock(return_value=True)
@@ -129,8 +128,6 @@ class TestCluster(unittest.TestCase):
             del actor2
             worker1.exit()
             master.exit()
-            th.join()
-
 
 if __name__ == '__main__':
     unittest.main()

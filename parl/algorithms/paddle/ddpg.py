@@ -16,6 +16,7 @@ import parl
 import paddle
 import paddle.nn.functional as F
 from copy import deepcopy
+from parl.utils.utils import check_model_method
 
 __all__ = ['DDPG']
 
@@ -36,10 +37,16 @@ class DDPG(parl.Algorithm):
             actor_lr (float): learning rate of the actor model
             critic_lr (float): learning rate of the critic model
         """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
+
         self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr

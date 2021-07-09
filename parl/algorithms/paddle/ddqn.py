@@ -15,6 +15,7 @@
 import copy
 import parl
 import paddle
+from parl.utils.utils import check_model_method
 
 __all__ = ['DDQN']
 
@@ -28,11 +29,13 @@ class DDQN(parl.Algorithm):
             gamma (float): discounted factor for `accumulative` reward computation
             lr (float): learning rate.
         """
-        self.model = model
-        self.target_model = copy.deepcopy(model)
-
+        # checks
+        check_model_method(model, 'forward', self.__class__.__name__)
         assert isinstance(gamma, float)
         assert isinstance(lr, float)
+
+        self.model = model
+        self.target_model = copy.deepcopy(model)
 
         self.gamma = gamma
         self.lr = lr

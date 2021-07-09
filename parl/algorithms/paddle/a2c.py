@@ -16,6 +16,7 @@ import parl
 import paddle
 import paddle.nn.functional as F
 from paddle.distribution import Categorical
+from parl.utils.utils import check_model_method
 import numpy as np
 
 __all__ = ['A2C']
@@ -29,9 +30,13 @@ class A2C(parl.Algorithm):
             model (parl.Model): forward network of policy and value
             vf_loss_coeff (float): coefficient of the value function loss
         """
+        # check model and vf_loss_coeff input
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'policy_and_value', self.__class__.__name__)
+        assert isinstance(vf_loss_coeff, (int, float))
 
         self.model = model
-        assert isinstance(vf_loss_coeff, (int, float))
         self.vf_loss_coeff = vf_loss_coeff
         clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=40.0)
         self.optimizer = paddle.optimizer.Adam(

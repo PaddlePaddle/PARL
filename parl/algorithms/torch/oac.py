@@ -17,6 +17,7 @@ import torch
 import math
 from torch.distributions import Normal
 import torch.nn.functional as F
+from parl.utils.utils import check_model_method
 from copy import deepcopy
 
 __all__ = ['OAC']
@@ -43,6 +44,12 @@ class OAC(parl.Algorithm):
                         actor_lr (float): learning rate of the actor model
                         critic_lr (float): learning rate of the critic model
         """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
+
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(alpha, float)
@@ -95,7 +102,7 @@ class OAC(parl.Algorithm):
         tanh_mu_T = torch.tanh(pre_tanh_mu_T)
 
         # Get the upper bound of the Q estimate
-        Q1, Q2 = self.model.critic_model(obs, tanh_mu_T)
+        Q1, Q2 = self.model.value(obs, tanh_mu_T)
         mu_Q = (Q1 + Q2) / 2.0
         sigma_Q = torch.abs(Q1 - Q2) / 2.0
 
@@ -143,7 +150,7 @@ class OAC(parl.Algorithm):
             q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
             target_Q = reward + self.gamma * (1. - terminal) * target_Q
-        cur_q1, cur_q2 = self.model.critic_model(obs, action)
+        cur_q1, cur_q2 = self.model.value(obs, action)
 
         critic_loss = F.mse_loss(cur_q1, target_Q) + F.mse_loss(
             cur_q2, target_Q)
@@ -155,7 +162,7 @@ class OAC(parl.Algorithm):
 
     def _actor_learn(self, obs):
         act, log_pi = self.sample(obs)
-        q1_pi, q2_pi = self.model.critic_model(obs, act)
+        q1_pi, q2_pi = self.model.value(obs, act)
         min_q_pi = torch.min(q1_pi, q2_pi)
         actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
 

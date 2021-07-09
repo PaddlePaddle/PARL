@@ -15,6 +15,7 @@
 import parl
 import paddle
 from paddle.distribution import Categorical
+from parl.utils.utils import check_model_method
 
 __all__ = ['PolicyGradient']
 
@@ -28,7 +29,10 @@ class PolicyGradient(parl.Algorithm):
             lr (float): learning rate.
 
         """
+        # checks
+        check_model_method(model, 'forward', self.__class__.__name__)
         assert isinstance(lr, float)
+
         self.model = model
         self.optimizer = paddle.optimizer.Adam(
             learning_rate=lr, parameters=self.model.parameters())

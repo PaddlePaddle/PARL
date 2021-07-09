@@ -16,6 +16,7 @@ import torch
 import os
 from copy import deepcopy
 import parl
+from parl.utils.utils import check_model_method
 import numpy as np
 
 __all__ = ['COMA']
@@ -43,6 +44,11 @@ class COMA(parl.Algorithm):
             gamma (float):  discounted factor for reward computation
             td_lambda (float): lambda of td-lambda return
         """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(n_actions, int)
         assert isinstance(n_agents, int)
         assert isinstance(grad_norm_clip, int) or isinstance(

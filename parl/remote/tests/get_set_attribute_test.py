@@ -24,7 +24,6 @@ from parl.utils import logger
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.utils import get_free_tcp_port
-from parl.remote.test_utils import MockingEnv, env_config
 
 
 @parl.remote_class
@@ -46,8 +45,7 @@ class Actor(object):
         self.new_attr_1 = 200
 
 
-@env_config
-class Test_get_and_set_attribute(MockingEnv):
+class Test_get_and_set_attribute(unittest.TestCase):
     def tearDown(self):
         disconnect()
 

@@ -23,7 +23,6 @@ from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
 from parl.utils import get_free_tcp_port
-from parl.remote.test_utils import MockingEnv, env_config
 
 
 @parl.remote_class
@@ -56,8 +55,7 @@ class Actor(object):
         x = 1 / 0
 
 
-@env_config
-class TestCluster(MockingEnv):
+class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
         time.sleep(60)

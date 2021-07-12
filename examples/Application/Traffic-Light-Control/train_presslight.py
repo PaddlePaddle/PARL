@@ -15,12 +15,11 @@
 import os
 import paddle
 import parl
-from parl.utils import logger
+from parl.utils import logger, ReplayMemory
 
 import numpy as np
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
-from replay_buffer import ReplayMemory
 from world import World
 from obs_reward.presslight_obs_reward import PressureLightGenerator
 from config import config

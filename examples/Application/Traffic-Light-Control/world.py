@@ -47,7 +47,7 @@ class Intersection(object):
 
         # define yellow phases, currently the default yellow phase is 0, so make sure the first phase of the roadnet is yellow phase
         self.yellow_phase_id = [0]
-        # the default time of the yellow time is 5 seconds, you can change it to the real case.
+        # the default time of the yellow signal time is 5 seconds, you can change it to the real case.
         self.yellow_phase_time = yellow_phase_time
 
         # parsing links and phases

@@ -23,7 +23,7 @@ Performances of presslight and FRAP on cityflow envrionments in training process
 
 Note that for the method `sotl`, different `t_min`, `min_green_vehicle` and `max_red_vehicle` configs may cause huge different results, which may not fair for sotl to compare its result with others, so we don't list the result of the `sotl` above.
 
-And results of the last two rows of the table ,`presslight*` and `FRAP*`, they are the results of the code [tlc-baselines](https://github.com/gjzheng93/tlc-baselines) provided from the paper authors' team. We run the [code](https://github.com/gjzheng93/tlc-baselines) just changing the yellow time and the action intervals to keep them same as our config as the papers without changing any other parameters. `--` in the table means the origins code doesn't perform well in the last four `anon_4X4` datas, the average travel time results of it will be more than 1000, maybe it will perform better than the `max_pressure`if you modify the other hyperparameters of the DQN agents, such as the buffer size, update_model_freq, the gamma or others.
+And results of the last two rows of the table ,`presslight*` and `FRAP*`, they are the results of the code [tlc-baselines](https://github.com/gjzheng93/tlc-baselines) provided from the paper authors' team. We run the [code](https://github.com/gjzheng93/tlc-baselines) just changing the yellow signal time and the action intervals to keep them same as our config as the papers without changing any other parameters. `--` in the table means the origins code doesn't perform well in the last four `anon_4X4` datas, the average travel time results of it will be more than 1000, maybe it will perform better than the `max_pressure`if you modify the other hyperparameters of the DQN agents, such as the buffer size, update_model_freq, the gamma or others.
 
 ## How to use
 ### Dependencies
@@ -32,7 +32,7 @@ And results of the last two rows of the table ,`presslight*` and `FRAP*`, they a
 + cityflow==0.1
 
 ### Training 
-First, download the data from [here](https://traffic-signal-control.github.io/) or [MPLight data](https://github.com/Chacha-Chen/MPLight/tree/master/data) and put them in the `data` directory. And the run the training script. The `train_presslight.py `for the presslight, each intersection has its own model as default(you can also choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
+First, download the data from [here](https://traffic-signal-control.github.io/) or [MPLight data](https://github.com/Chacha-Chen/MPLight/tree/master/data) and put them in the `data` directory. And run the training script. The `train_presslight.py `for the presslight, each intersection has its own model as default(you can also choose to train with that all the intersections share one model in the script, just as what the paper MPLight used, it is suggested when the number of the intersections is large, just setting the `--is_share_model` to `True`).
 ```bash
 python train_presslight.py --is_share_model False
 ```
@@ -67,7 +67,7 @@ python test.py
 We don't use the distributed traing or the parallel actors for collect the datas from the cityflow env, if you want to use the parallel actors with the cluster, you can refer to [here](https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C) or our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html) for details. 
 
 ### Some Suggestions and Conclusions
-+ The classic method `max_pressure`, `solt` or `greedy`(just set green lights to the roads with the most vehicles) can get the not bad baselines, when you use the RL method, you can compare to those baselines to make sure there is no mistakes in the RL code and the training process.
++ The classic method `max_pressure`, `solt` or `greedy`(just set green lights to the roads with the most vehicles) can get the not bad baselines, when you use the RL method, you can compare to those baselines to make sure there are no mistakes in the RL code and the training process.
 + As for the just one intersection roadnet data, from our experiences:
     + `presslight` can get the high baselines results, if you want to get better results, you can try `FRAP` in your own data, if the flow data and the roadnet is easy without so many vehicles, `presslight` maybe better.
 + If your roadnet contains hundreds intersections, it is unrealistic to make each model to each agent(intersection), you can choose to train with that all the intersections share one common model and one buffer. As for the complicated scene, the complicated model `FRAR`, `Colight`,`GAT` or `multi-agents` methods may be better.

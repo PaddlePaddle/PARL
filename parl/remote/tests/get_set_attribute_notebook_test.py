@@ -77,7 +77,6 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
             master.exit()
             worker1.exit()
-            th.join()
 
     def test_set_attribute(self):
         return_true = mock.Mock(return_value=True)
@@ -108,7 +107,6 @@ class Test_get_and_set_attribute(unittest.TestCase):
             self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
             master.exit()
             worker1.exit()
-            th.join()
 
 
 if __name__ == '__main__':

@@ -20,6 +20,10 @@ env_config_for_test = parameterized_class(('to_mock_function', 'return_value'), 
         [('parl.utils.machine_info.is_gpu_available', False),
          ('parl.utils.machine_info.is_gpu_available', True)])
 
+env_config = parameterized_class(('to_mock_function', 'return_value'), \
+        [('parl.remote.remote_class_serialization.is_implemented_in_notebook', False), # mock that remote class is not implemented in the notebook
+         ('parl.remote.remote_class_serialization.is_implemented_in_notebook', True)]) # mock that remote class is implemented in the notebook
+
 
 class MockingEnv(unittest.TestCase):
     """ The class is the base class for tests under the remote module. It can provide different mocked environments for tests, and each test should inherit this class.

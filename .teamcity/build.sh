@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -ex
 
 function init() {
     RED='\033[0;31m'
@@ -24,6 +25,24 @@ function init() {
     source ~/.bashrc
     export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
+}
+
+function run_example_test {
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
+    do
+        cp parl/tests/gym.py examples/${exp}/
+        if [ "${exp}" == "DQN_variant" ]; then
+          echo -e "\n Performing checks for example ${exp} with DQN ... "
+          python examples/${exp}/train.py --train_total_steps 5000
+          echo -e "\n Performing checks for example ${exp} with DDQN ... "
+          python examples/${exp}/train.py --train_total_steps 5000 --algo DDQN
+          echo -e "\n Performing checks for example ${exp} with Dueling DQN ... "
+          python examples/${exp}/train.py --train_total_steps 5000 --dueling True
+        else
+          echo -e "\n Performing checks for example ${exp} ... "
+          python examples/${exp}/train.py --train_total_steps 5000
+        fi
+    done
 }
 
 function print_usage() {
@@ -237,7 +256,7 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install /data/paddle_package/paddlepaddle_gpu-2.1.0.post101-cp38-cp38-linux_x86_64.whl
             run_test_with_gpu $env
-            run_cartpole_test $env
+            run_example_test $env
 
             run_test_with_fluid
             ############

@@ -42,7 +42,8 @@ class Wrapper(object):
 
     def __getattr__(self, name):
         if name.startswith('_'):
-            raise AttributeError("attempted to get missing private attribute '{}'".format(name))
+            raise AttributeError(
+                "attempted to get missing private attribute '{}'".format(name))
         return getattr(self.env, name)
 
 
@@ -85,6 +86,7 @@ class ObservationSpace(object):
 class Spec(object):
     def __init__(self, id='PongNoFrameskip-v4'):
         self.id = id
+
 
 # mock gym.spaces
 class spaces(object):
@@ -165,8 +167,16 @@ class PongEnv(object):
 # mock mujoco envs
 class HalfCheetahEnv(object):
     def __init__(self):
-        self.observation_space = Box(high=np.array([np.inf] * 17), low=np.array([-np.inf] * 17), shape=(17, ), dtype=None)
-        self.action_space = Box(high=np.array([1.0] * 6), low=np.array([-1.0] * 6), shape=(6, ), dtype=None)
+        self.observation_space = Box(
+            high=np.array([np.inf] * 17),
+            low=np.array([-np.inf] * 17),
+            shape=(17, ),
+            dtype=None)
+        self.action_space = Box(
+            high=np.array([1.0] * 6),
+            low=np.array([-1.0] * 6),
+            shape=(6, ),
+            dtype=None)
         self._max_episode_steps = 1000
         self._elapsed_steps = 0
 

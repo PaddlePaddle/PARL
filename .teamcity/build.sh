@@ -31,18 +31,18 @@ function run_example_test {
     for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
     do
         cp parl/tests/gym.py examples/${exp}/
-        if [ "${exp}" == "DQN_variant" ]; then
-          echo -e "\n Performing checks for example ${exp} with DQN ... "
-          python examples/${exp}/train.py --train_total_steps 5000
-          echo -e "\n Performing checks for example ${exp} with DDQN ... "
-          python examples/${exp}/train.py --train_total_steps 5000 --algo DDQN
-          echo -e "\n Performing checks for example ${exp} with Dueling DQN ... "
-          python examples/${exp}/train.py --train_total_steps 5000 --dueling True
-        else
-          echo -e "\n Performing checks for example ${exp} ... "
-          python examples/${exp}/train.py --train_total_steps 5000
-        fi
     done
+
+    python examples/QuickStart/train.py
+    python examples/DQN/train.py
+    python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
+    python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
+    python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
+    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v1
 }
 
 function print_usage() {
@@ -159,13 +159,6 @@ function run_test_with_fluid() {
         export LC_ALL=C.UTF-8
         export LANG=C.UTF-8
         xparl stop
-    done
-}
-
-function run_cartpole_test {
-    for exp in QuickStart DQN
-    do
-        python examples/${exp}/train.py
     done
 }
 

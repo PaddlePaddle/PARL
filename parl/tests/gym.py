@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,8 +22,11 @@ def make(env_name):
         return CartPoleEnv()
     elif env_name == 'PongNoFrameskip-v4':
         return PongEnv()
-    else:
+    elif env_name == 'HalfCheetah-v1':
         return HalfCheetahEnv()
+    else:
+        raise NotImplementedError(
+            'Mock env not defined, please check your env name')
 
 
 # mock Box
@@ -107,8 +110,8 @@ class CartPoleEnv(object):
     def step(self, action):
         action = int(action)
         obs = np.random.random(4) * 2 - 1
-        reward = random() * 2 - 1
-        done = True if random() < 0.05 else False
+        reward = np.random.choice([0.0, 1.0])
+        done = np.random.choice([True, False], p=[0.1, 0.9])
         info = {}
         return obs, reward, done, info
 

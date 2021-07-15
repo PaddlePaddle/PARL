@@ -318,7 +318,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--config_path_name',
-        default='./examples/config.json',
+        default='./scenarios/config_hz_1.json',
         type=str,
         help='config path')
     parser.add_argument(

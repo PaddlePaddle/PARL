@@ -1,4 +1,4 @@
-## Reproduce Some Baselines of Traffic Light Control
+## Baseline Algorithms For Traffic Light Control
 Based on PARL, we use the DDQN algorithm of deep RL to reproduce some baselines of the Traffic Light Control(TLC), reaching the same level of indicators as the papers in TLC benchmarks.
 
 ### Traffic Light Control Simulator Introduction
@@ -7,7 +7,7 @@ Please see [sumo](https://github.com/eclipse/sumo) or [cityflow](https://github.
 And we use the cityflow simuator in the experiments, as for how to install the cityflow, please refer [here](https://cityflow.readthedocs.io/en/latest/index.html) for more informations.
 
 ### Benchmark Result
-Note that we set the yellow signal time to 5 seconds to clear the intersection, and the action intervals is set to 10 seconds as the papers, you can refer the `config.py` for details, you also can change the time as what you want. The different values of the times above may cause different results of the experiments.
+Note that we set the yellow signal time to 5 seconds to clear the intersection, and the action intervals is set to 10 seconds as the papers, you can refer the `config.py` for more details.
 You can download the data from [here](https://traffic-signal-control.github.io/) and [MPLight data](https://github.com/Chacha-Chen/MPLight/tree/master/data).
 We use the average travel time of all vehicles to evaluate the performance of the signal control method in transportation.
 Performances of presslight and FRAP on cityflow envrionments in training process after 300 episodes are shown below.
@@ -21,7 +21,7 @@ Performances of presslight and FRAP on cityflow envrionments in training process
 | FRAP* | 130.53| 159.54| 750.68| 713.48|--| -- |-- | -- |
 
 
-Note that for the method `sotl`, different `t_min`, `min_green_vehicle` and `max_red_vehicle` configs may cause huge different results, which may not fair for sotl to compare its result with others, so we don't list the result of the `sotl` above.
+We also provide the implementation for that SOTL algorithm, but its performance heavily relies on the environment variables such as `t_min` and `min_green_vehicle`. We do not list its result here.
 
 And results of the last two rows of the table ,`presslight*` and `FRAP*`, they are the results of the code [tlc-baselines](https://github.com/gjzheng93/tlc-baselines) provided from the paper authors' team. We run the [code](https://github.com/gjzheng93/tlc-baselines) just changing the yellow signal time and the action intervals to keep them same as our config as the papers without changing any other parameters. `--` in the table means the origins code doesn't perform well in the last four `anon_4X4` datas, the average travel time results of it will be more than 1000, maybe it will perform better than the `max_pressure`if you modify the other hyperparameters of the DQN agents, such as the buffer size, update_model_freq, the gamma or others.
 
@@ -60,21 +60,6 @@ python test.py
     + Different algorithms have different models.
 + obs_reward
     + Different algorithms have different obs and rewards generators.
-
-
-### Something about the Distributed Training
-
-We don't use the distributed traing or the parallel actors for collect the datas from the cityflow env, if you want to use the parallel actors with the cluster, you can refer to [here](https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C) or our [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html) for details. 
-
-### Some Suggestions and Conclusions
-+ The classic method `max_pressure`, `solt` or `greedy`(just set green lights to the roads with the most vehicles) can get the not bad baselines, when you use the RL method, you can compare to those baselines to make sure there are no mistakes in the RL code and the training process.
-+ As for the just one intersection roadnet data, from our experiences:
-    + `presslight` can get the high baselines results, if you want to get better results, you can try `FRAP` in your own data, if the flow data and the roadnet is easy without so many vehicles, `presslight` maybe better.
-+ If your roadnet contains hundreds intersections, it is unrealistic to make each model to each agent(intersection), you can choose to train with that all the intersections share one common model and one buffer. As for the complicated scene, the complicated model `FRAR`, `Colight`,`GAT` or `multi-agents` methods may be better.
-+ The replay memory size and the gamma doesn't matter much from our experiences.
-+ As the reward is hard or inappropriate to design, we suggest that the `ES` maybe a better choice, and we also have tested same data with the [ES](https://github.com/PaddlePaddle/PARL/tree/develop/benchmark/torch/ES), just use the negative average travel time as the fitness(rewards), it can get the better results when we create enough actors in the [cluster](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).   
-+ The RL methods is just overfitting the env with the specific flow and roadnet data, maybe when evaluating the results we can test the model with different flow or roadnet data?
-
 
 ### Reference
 + [Parl](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)

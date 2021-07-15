@@ -26,10 +26,6 @@ class Agent(parl.Agent):
 
     def sample(self, obs):
         # The epsilon-greedy action selector.
-        def sample_random(act_dim):
-            # Random samples
-            return np.random.randint(0, act_dim)
-
         obs = paddle.to_tensor(obs, dtype='float32')
         logits = self.alg.sample(obs)
         act_dim = logits.shape[-1]
@@ -37,7 +33,7 @@ class Agent(parl.Agent):
         actions = np.argmax(act_values, axis=-1)
         for i in range(obs.shape[0]):
             if np.random.rand() <= self.epsilon:
-                actions[i] = sample_random(act_dim)
+                actions[i] = np.random.randint(0, act_dim)
         return actions
 
     def predict(self, obs):

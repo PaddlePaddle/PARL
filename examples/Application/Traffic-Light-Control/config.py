@@ -16,7 +16,7 @@ config = {
 
     #==========  env config ==========
     'config_path_name':
-    './examples/config_hz_2.json',  # note that the path of the data can be modified in the json file.
+    './scenarios/config_hz_1.json',  # note that the path of the data can be modified in the json file.
     'thread_num': 8,
     'obs_fns': ['lane_count'],
     'reward_fns': ['pressure'],

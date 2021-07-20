@@ -282,7 +282,8 @@ class TestEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         obs = self._env.reset(**kwargs)
-        if self._get_curr_episode() == self._end_episode:
+        # remove stick equality to prevent infinite loop
+        if self._get_curr_episode() >= self._end_episode:
             self._was_real_done = True
             self._eval_rewards = \
                 self._monitor.get_episode_rewards()[-self._eval_episodes:]

@@ -16,6 +16,7 @@ import parl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from parl.utils.utils import check_model_method
 from copy import deepcopy
 
 __all__ = ['MADDPG']
@@ -67,13 +68,18 @@ class MADDPG(parl.Algorithm):
             critic_lr (float): learning rate of the critic model
             actor_lr (float): learning rate of the actor model
         """
-
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(agent_index, int)
         assert isinstance(act_space, list)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
+
         self.agent_index = agent_index
         self.act_space = act_space
         self.gamma = gamma

@@ -84,6 +84,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 4)
         worker1.exit()
         master.exit()
+        th.join()
 
 
 if __name__ == '__main__':

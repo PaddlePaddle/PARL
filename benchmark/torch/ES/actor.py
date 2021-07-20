@@ -21,7 +21,6 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
-import os
 
 
 @parl.remote_class(wait=False)
@@ -51,7 +50,6 @@ class Actor(object):
                 obs = self.obs_filter(obs[None], update=False)
 
             action = self.agent.predict(obs)
-            action = action.detach().numpy()
             if add_noise:
                 action += np.random.randn(
                     *action.shape) * self.config['action_noise_std']
@@ -116,10 +114,3 @@ class Actor(object):
 
     def set_filter(self, new_filter):
         self.obs_filter.sync(new_filter)
-
-
-if __name__ == '__main__':
-
-    from es_config import config
-    actor = Actor(config)
-    actor.as_remote(config['server_ip'], config['server_port'])

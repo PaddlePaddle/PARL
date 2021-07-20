@@ -15,6 +15,7 @@
 import torch
 import torch.optim as optim
 import parl
+from parl.utils.utils import check_model_method
 from torch.distributions import Categorical
 
 __all__ = ['PolicyGradient']
@@ -29,6 +30,8 @@ class PolicyGradient(parl.Algorithm):
             lr (float): learning rate.
 
         """
+        # checks
+        check_model_method(model, 'forward', self.__class__.__name__)
         assert isinstance(lr, float)
 
         self.model = model

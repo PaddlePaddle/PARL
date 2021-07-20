@@ -38,7 +38,8 @@ from parl.remote.communication import loads_argument, loads_return,\
 from parl.remote import remote_constants
 from parl.utils.exceptions import SerializeError, DeserializeError
 from parl.remote.message import InitializedJob
-from parl.remote.utils import load_remote_class, redirect_output_to_file
+from parl.remote.utils import redirect_output_to_file
+from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread
 
@@ -293,15 +294,7 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                file_name, class_name, end_of_file, in_sys_path = cloudpickle.loads(
-                    message[1])
-
-                # append the environment paths of the client to the current environment path.
-                client_sys_path = cloudpickle.loads(message[3])
-                sys.path.extend(client_sys_path)
-
-                cls = load_remote_class(file_name, class_name, end_of_file,
-                                        in_sys_path)
+                cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
 
                 with redirect_output_to_file(self.logfile_path, os.devnull):

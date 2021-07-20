@@ -91,6 +91,7 @@ class TestCluster(unittest.TestCase):
 
         master.exit()
         worker1.exit()
+        th.join()
 
 
 if __name__ == '__main__':

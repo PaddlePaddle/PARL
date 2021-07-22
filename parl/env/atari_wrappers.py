@@ -296,7 +296,9 @@ class TestEnv(gym.Wrapper):
     def reset(self, **kwargs):
         obs = self._env.reset(**kwargs)
         # remove stick equality to prevent infinite loop
-        # this only affects the mock example tests
+        # this only affects the mock example tests because during noop reset, it is possible that more than 3 done signals are emitted by the 
+        # mock env which uses done = random.choice(True, False, p=[0.1, 0.9]). However, it is impossible for the true env to emit more than 3
+        # done signals in one noop reset
         if self._get_curr_episode() >= self._end_episode:
             self._was_real_done = True
             self._eval_rewards = \

@@ -322,7 +322,10 @@ if __name__ == '__main__':
         type=str,
         help='config path')
     parser.add_argument(
-        '--is_test_frap', default=True, type=bool, help='test algorithm')
+        '--is_test_frap',
+        default=True,
+        type=bool,
+        help='test the frap algorithm or others')
     parser.add_argument(
         '--result_name', default='4_4', type=str, help='result path')
     parser.add_argument(

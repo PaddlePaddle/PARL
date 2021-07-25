@@ -96,39 +96,6 @@ class TestCluster(unittest.TestCase):
 
             master.exit()
             worker1.exit()
-            th.join()
-
-    def test_actor_exception_2(self):
-        return_true = mock.Mock(return_value=True)
-        with mock.patch(
-                'parl.remote.remote_class_serialization.is_implemented_in_notebook',
-                return_true):
-            port = get_free_tcp_port()
-            logger.info("running: test_actor_exception_2")
-            master = Master(port=port)
-            th = threading.Thread(target=master.run)
-            th.start()
-            time.sleep(3)
-            worker1 = Worker('localhost:{}'.format(port), 1)
-            self.assertEqual(1, master.cpu_num)
-            parl.connect('localhost:{}'.format(port))
-
-            actor = Actor()
-
-            with self.assertRaises(exceptions.RemoteError):
-                actor.will_raise_exception_func()
-
-            actor2 = Actor()
-            for _ in range(5):
-                if master.cpu_num == 0:
-                    break
-                time.sleep(10)
-            self.assertEqual(actor2.add_one(1), 2)
-            self.assertEqual(0, master.cpu_num)
-            del actor
-            del actor2
-            worker1.exit()
-            master.exit()
 
 
 if __name__ == '__main__':

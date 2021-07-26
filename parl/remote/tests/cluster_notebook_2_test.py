@@ -61,41 +61,37 @@ class TestCluster(unittest.TestCase):
         disconnect()
         time.sleep(60)  # wait for test case finishing
 
-    def test_actor_exception(self):
+    def test_actor_exception_2(self):
         return_true = mock.Mock(return_value=True)
         with mock.patch(
                 'parl.remote.remote_class_serialization.is_implemented_in_notebook',
                 return_true):
             port = get_free_tcp_port()
-            logger.info("running:test_actor_exception")
+            logger.info("running: test_actor_exception_2")
             master = Master(port=port)
             th = threading.Thread(target=master.run)
             th.start()
             time.sleep(3)
             worker1 = Worker('localhost:{}'.format(port), 1)
-            for _ in range(3):
-                if master.cpu_num == 1:
-                    break
-                time.sleep(10)
             self.assertEqual(1, master.cpu_num)
-            logger.info("running:test_actor_exception: 0")
             parl.connect('localhost:{}'.format(port))
-            logger.info("running:test_actor_exception: 1")
+
+            actor = Actor()
 
             with self.assertRaises(exceptions.RemoteError):
-                actor = Actor(abcd='a bug')
-            logger.info("running:test_actor_exception: 2")
+                actor.will_raise_exception_func()
 
             actor2 = Actor()
-            for _ in range(3):
+            for _ in range(5):
                 if master.cpu_num == 0:
                     break
                 time.sleep(10)
             self.assertEqual(actor2.add_one(1), 2)
             self.assertEqual(0, master.cpu_num)
-
-            master.exit()
+            del actor
+            del actor2
             worker1.exit()
+            master.exit()
 
 
 if __name__ == '__main__':

@@ -78,7 +78,7 @@ class AtariAgent(parl.Agent):
 
         obs = torch.tensor(obs, dtype=torch.float, device=self.device)
         pred_q = self.alg.predict(
-            obs).cpu().numpy().squeeze()  # with torch.no_grad in algorithm
+            obs).cpu().detach().numpy().squeeze()
 
         best_actions = np.where(pred_q == pred_q.max())[0]
         act = np.random.choice(best_actions)

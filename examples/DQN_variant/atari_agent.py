@@ -74,9 +74,8 @@ class AtariAgent(parl.Agent):
         if obs.ndim == 3:  # if obs is 3 dimensional, we need to expand it to have batch_size = 1
             obs = np.expand_dims(obs, axis=0)
 
-        with paddle.no_grad():
-            obs = paddle.to_tensor(obs, dtype='float32')
-            pred_q = self.alg.predict(obs).numpy().squeeze()
+        obs = paddle.to_tensor(obs, dtype='float32')
+        pred_q = self.alg.predict(obs).detach().numpy().squeeze()
 
         best_actions = np.where(pred_q == pred_q.max())[0]
         act = np.random.choice(best_actions)

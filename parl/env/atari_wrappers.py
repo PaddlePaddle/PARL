@@ -1,5 +1,18 @@
-# Third party code
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Third party code
 # The following code are copied or modified from:
 # https://github.com/ray-project/ray/blob/master/python/ray/rllib/env/atari_wrappers.py
 
@@ -282,7 +295,9 @@ class TestEnv(gym.Wrapper):
 
     def reset(self, **kwargs):
         obs = self._env.reset(**kwargs)
-        if self._get_curr_episode() == self._end_episode:
+        # During the noop reset in NoopResetEnv, env may be reset multiple times(may occur in mock env,
+        # almost impossible in atari env), so the == condition may never be met. >= can avoid infinite loop.
+        if self._get_curr_episode() >= self._end_episode:
             self._was_real_done = True
             self._eval_rewards = \
                 self._monitor.get_episode_rewards()[-self._eval_episodes:]

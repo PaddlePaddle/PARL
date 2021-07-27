@@ -121,9 +121,12 @@ class JobCenter(object):
             worker_address (str): The worker which kills an old job.
         """
         self.lock.acquire()
+
         self.job_pool[new_job.job_address] = new_job
+        self.worker_vacant_jobs[worker_address] += 1
 
         if killed_job_address in self.job_pool:
+            self.worker_vacant_jobs[worker_address] -= 1
             self.job_pool.pop(killed_job_address)
 
         to_del_idx = None
@@ -132,12 +135,9 @@ class JobCenter(object):
             if job.job_address == killed_job_address:
                 to_del_idx = i
                 break
-
         del self.worker_dict[worker_address].initialized_jobs[to_del_idx]
-        self.worker_dict[worker_address].initialized_jobs.append(new_job)
 
-        if killed_job_address not in self.job_pool:
-            self.worker_vacant_jobs[worker_address] += 1
+        self.worker_dict[worker_address].initialized_jobs.append(new_job)
 
         self.lock.release()
 

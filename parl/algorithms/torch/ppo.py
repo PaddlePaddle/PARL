@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Normal
+from parl.utils.utils import check_model_method
 
 __all__ = ['PPO']
 
@@ -32,6 +33,10 @@ class PPO(parl.Algorithm):
                  eps=None,
                  max_grad_norm=None,
                  use_clipped_value_loss=True):
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+
         self.model = model
 
         self.clip_param = clip_param

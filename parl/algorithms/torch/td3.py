@@ -18,6 +18,7 @@ import torch
 import torch.nn.functional as F
 from copy import deepcopy
 import parl
+from parl.utils.utils import check_model_method
 
 __all__ = ['TD3']
 
@@ -33,6 +34,12 @@ class TD3(parl.Algorithm):
             policy_noise=0.2,  # Noise added to target policy during critic update
             noise_clip=0.5,  # Range to clip target policy noise
             policy_freq=2):  # Frequency of delayed policy updates
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'Q1', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
         assert isinstance(actor_lr, float)

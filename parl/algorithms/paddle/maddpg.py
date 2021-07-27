@@ -13,16 +13,16 @@
 # limitations under the License.
 
 import parl
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import paddle
+import paddle.nn as nn
+import paddle.nn.functional as F
 from parl.utils.utils import check_model_method
 from copy import deepcopy
 
 __all__ = ['MADDPG']
 
-from parl.core.torch.policy_distribution import SoftCategoricalDistribution
-from parl.core.torch.policy_distribution import SoftMultiCategoricalDistribution
+from parl.core.paddle.policy_distribution import SoftCategoricalDistribution
+from parl.core.paddle.policy_distribution import SoftMultiCategoricalDistribution
 
 
 def SoftPDistribution(logits, act_space):
@@ -87,19 +87,22 @@ class MADDPG(parl.Algorithm):
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        self.model = model.to(device)
+        self.model = model
         self.target_model = deepcopy(model)
         self.sync_target(0)
 
-        self.actor_optimizer = torch.optim.Adam(
-            lr=self.actor_lr, params=self.model.get_actor_params())
-        self.critic_optimizer = torch.optim.Adam(
-            lr=self.critic_lr, params=self.model.get_critic_params())
+        self.actor_optimizer = paddle.optimizer.Adam(
+            learning_rate=self.actor_lr,
+            parameters=self.model.get_actor_params(),
+            grad_clip=nn.ClipGradByNorm(clip_norm=0.5))
+        self.critic_optimizer = paddle.optimizer.Adam(
+            learning_rate=self.critic_lr,
+            parameters=self.model.get_critic_params(),
+            grad_clip=nn.ClipGradByNorm(clip_norm=0.5))
 
     def predict(self, obs, use_target_model=False):
         """ use the policy model to predict actions
+        
         Args:
             obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
             use_target_model (bool): use target_model or not
@@ -118,6 +121,7 @@ class MADDPG(parl.Algorithm):
 
     def Q(self, obs_n, act_n, use_target_model=False):
         """ use the value model to predict Q values
+        
         Args: 
             obs_n (list of paddle tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
             act_n (list of paddle tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)
@@ -151,25 +155,23 @@ class MADDPG(parl.Algorithm):
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
         eval_q = self.Q(obs_n, action_input_n)
-        act_cost = torch.mean(-1.0 * eval_q)
+        act_cost = paddle.mean(-1.0 * eval_q)
 
-        act_reg = torch.mean(torch.square(this_policy))
+        act_reg = paddle.mean(paddle.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3
 
-        self.actor_optimizer.zero_grad()
+        self.actor_optimizer.clear_grad()
         cost.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.get_actor_params(), 0.5)
         self.actor_optimizer.step()
         return cost
 
     def _critic_learn(self, obs_n, act_n, target_q):
         pred_q = self.Q(obs_n, act_n)
-        cost = F.mse_loss(pred_q, target_q)
+        cost = paddle.mean(F.square_error_cost(pred_q, target_q))
 
-        self.critic_optimizer.zero_grad()
+        self.critic_optimizer.clear_grad()
         cost.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.get_critic_params(), 0.5)
         self.critic_optimizer.step()
         return cost
 

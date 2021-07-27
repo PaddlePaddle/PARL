@@ -4,7 +4,7 @@
 
 [English](./README.md) | 简体中文
 
-[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.1-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
+[![Documentation Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](https://parl.readthedocs.io/en/latest/index.html) [![Documentation Status](https://img.shields.io/badge/中文文档-最新-brightgreen.svg)](https://parl.readthedocs.io/zh_CN/latest/) [![Documentation Status](https://img.shields.io/badge/手册-中文-brightgreen.svg)](./docs/zh_CN/Overview.md) [![Release](https://img.shields.io/badge/release-v2.0.2-blue.svg)](https://github.com/PaddlePaddle/PARL/releases)
 
 
 > PARL 是一个高性能、灵活的强化学习框架。
@@ -101,6 +101,7 @@ pip install parl
 - [TD3](examples/TD3/)
 - [SAC](examples/SAC/)
 - [QMIX](examples/QMIX/)
+- [MADDPG](examples/MADDPG/)
 - [PPO](examples/PPO/)
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [冠军解决方案：NIPS2019强化学习仿生人控制赛事](examples/NeurIPS2019-Learn-to-Move-Challenge/)

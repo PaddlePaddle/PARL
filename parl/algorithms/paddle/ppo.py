@@ -17,6 +17,7 @@ import paddle
 import paddle.optimizer as optim
 import paddle.nn as nn
 from paddle.distribution import Normal
+from parl.utils.utils import check_model_method
 
 __all__ = ['PPO']
 
@@ -43,6 +44,10 @@ class PPO(parl.Algorithm):
             max_grad_norm (float): threshold for grad norm clipping
             use_clipped_value_loss (bool): whether use value loss clipping
         """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+
         super().__init__(model)
         self.clip_param = clip_param
 

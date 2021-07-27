@@ -23,6 +23,7 @@ from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
 from parl.utils import get_free_tcp_port
+from unittest import mock
 
 
 @parl.remote_class
@@ -58,40 +59,39 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
+        time.sleep(60)  # wait for test case finishing
 
-    def test_add_worker(self):
-        port = get_free_tcp_port()
-        logger.info("running: test_add_worker")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
+    def test_actor_exception_2(self):
+        return_true = mock.Mock(return_value=True)
+        with mock.patch(
+                'parl.remote.remote_class_serialization.is_implemented_in_notebook',
+                return_true):
+            port = get_free_tcp_port()
+            logger.info("running: test_actor_exception_2")
+            master = Master(port=port)
+            th = threading.Thread(target=master.run)
+            th.start()
+            time.sleep(3)
+            worker1 = Worker('localhost:{}'.format(port), 1)
+            self.assertEqual(1, master.cpu_num)
+            parl.connect('localhost:{}'.format(port))
 
-        worker1 = Worker('localhost:{}'.format(port), 4)
-        for _ in range(3):
-            if master.cpu_num == 4:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 4)
+            actor = Actor()
 
-        worker2 = Worker('localhost:{}'.format(port), 4)
-        for _ in range(3):
-            if master.cpu_num == 8:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 8)
+            with self.assertRaises(exceptions.RemoteError):
+                actor.will_raise_exception_func()
 
-        worker2.exit()
-
-        for _ in range(10):
-            if master.cpu_num == 4:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 4)
-
-        master.exit()
-        worker1.exit()
-        th.join()
+            actor2 = Actor()
+            for _ in range(5):
+                if master.cpu_num == 0:
+                    break
+                time.sleep(10)
+            self.assertEqual(actor2.add_one(1), 2)
+            self.assertEqual(0, master.cpu_num)
+            del actor
+            del actor2
+            worker1.exit()
+            master.exit()
 
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ class MujocoAgent(parl.Agent):
         obs = np.expand_dims(obs, axis=0)
         obs = torch.from_numpy(obs).float()
         predict_actions = self.alg.predict(obs)
-        return predict_actions
+        return predict_actions.detach().cpu().numpy()
 
     def learn(self, noisy_rewards, noises):
         """ Update weights of the model in the numpy level.

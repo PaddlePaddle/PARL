@@ -55,8 +55,7 @@ class DDQN(parl.Algorithm):
     def predict(self, obs):
         """ use value model self.model to predict the action value
         """
-        with torch.no_grad():
-            pred_q = self.model(obs)
+        pred_q = self.model(obs)
         return pred_q
 
     def learn(self, obs, action, reward, next_obs, terminal):

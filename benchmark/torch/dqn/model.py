@@ -1,4 +1,4 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,38 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 import parl
 
 
 class AtariModel(parl.Model):
-    """CNN network used in TensorPack examples.
+    """ Neural Network to solve Atari problem.
 
     Args:
-        input_channel (int): Input channel of states.
         act_dim (int): Dimension of action space.
-        algo (str): which ('DQN', 'Double', 'Dueling') model to use.
+        dueling (bool): True if use dueling architecture else False
     """
 
-    def __init__(self, input_channel, act_dim, algo='DQN'):
-        super(AtariModel, self).__init__()
+    def __init__(self, act_dim, dueling=False):
+        super().__init__()
         self.conv1 = nn.Conv2d(
-            input_channel, 32, kernel_size=8, stride=4, padding=2)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+            in_channels=4, out_channels=32, kernel_size=5, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(
+            in_channels=32,
+            out_channels=32,
+            kernel_size=5,
+            stride=1,
+            padding=2)
+        self.conv3 = nn.Conv2d(
+            in_channels=32,
+            out_channels=64,
+            kernel_size=4,
+            stride=1,
+            padding=1)
+        self.conv4 = nn.Conv2d(
+            in_channels=64,
+            out_channels=64,
+            kernel_size=3,
+            stride=1,
+            padding=1)
+        self.relu = nn.ReLU()
+        self.max_pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.flatten = nn.Flatten()
 
-        self.algo = algo
-        if self.algo == 'Dueling':
-            self.fc1_adv = nn.Linear(7744, 512)
-            self.fc1_val = nn.Linear(7744, 512)
-            self.fc2_adv = nn.Linear(512, act_dim)
-            self.fc2_val = nn.Linear(512, 1)
+        self.dueling = dueling
+
+        if dueling:
+            self.linear_1_adv = nn.Linear(in_features=6400, out_features=512)
+            self.linear_2_adv = nn.Linear(
+                in_features=512, out_features=act_dim)
+            self.linear_1_val = nn.Linear(in_features=6400, out_features=512)
+            self.linear_2_val = nn.Linear(in_features=512, out_features=1)
+
         else:
-            self.fc1 = nn.Linear(7744, 512)
-            self.fc2 = nn.Linear(512, act_dim)
+            self.linear_1 = nn.Linear(in_features=6400, out_features=act_dim)
 
         self.reset_params()
 
@@ -54,16 +71,27 @@ class AtariModel(parl.Model):
                     m.weight, mode='fan_out', nonlinearity='relu')
                 nn.init.zeros_(m.bias)
 
-    def forward(self, x):
-        x = x / 255.0
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(x.size(0), -1)
-        if self.algo == 'Dueling':
-            As = self.fc2_adv(F.relu(self.fc1_adv(x)))
-            V = self.fc2_val(F.relu(self.fc1_val(x)))
+    def forward(self, obs):
+        """ Perform forward pass 
+
+        Args:
+            obs (torch.Tensor): shape of (batch_size, 3, 84, 84), mini batch of observations
+        """
+        obs = obs / 255.0
+        out = self.max_pool(self.relu(self.conv1(obs)))
+        out = self.max_pool(self.relu(self.conv2(out)))
+        out = self.max_pool(self.relu(self.conv3(out)))
+        out = self.relu(self.conv4(out))
+        out = self.flatten(out)
+
+        if self.dueling:
+            As = self.relu(self.linear_1_adv(out))
+            As = self.linear_2_adv(As)
+            V = self.relu(self.linear_1_val(out))
+            V = self.linear_2_val(V)
             Q = As + (V - As.mean(dim=1, keepdim=True))
+
         else:
-            Q = self.fc2(F.relu(self.fc1(x)))
+            Q = self.linear_1(out)
+
         return Q

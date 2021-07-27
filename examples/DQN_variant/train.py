@@ -39,6 +39,7 @@ LR_START = 0.0003  # starting learing rate
 TOTAL_STEP = 1000000
 MEMORY_WARMUP_SIZE = 50000
 UPDATE_FREQ = 4
+BATCH_SIZE = 32
 
 # eval params
 EVAL_RENDER = False
@@ -65,8 +66,8 @@ def run_train_episode(agent, env, rpm):
         if (rpm.size() > MEMORY_WARMUP_SIZE) and (step % UPDATE_FREQ == 0):
             # s,a,r,s',done
             (batch_all_obs, batch_action, batch_reward,
-             batch_done) = rpm.sample_batch(args.batch_size)
-            batch_obs = batch_all_obs[:, :4, :, :]
+             batch_done) = rpm.sample_batch(BATCH_SIZE)
+            batch_obs = batch_all_obs[:, :CONTEXT_LEN, :, :]
             batch_next_obs = batch_all_obs[:, 1:, :, :]
 
             train_loss = agent.learn(batch_obs, batch_action, batch_reward,
@@ -175,8 +176,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env', help='name of the atari env', default='PongNoFrameskip-v4')
-    parser.add_argument(
-        '--batch_size', type=int, default=32, help='batch size for training')
     parser.add_argument(
         '--algo',
         default='DQN',

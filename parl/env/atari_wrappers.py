@@ -324,7 +324,7 @@ def wrap_deepmind(env,
                   framestack=True,
                   obs_format='NHWC',
                   test=False,
-                  eval_episodes=3):
+                  test_episodes=3):
     """Configure environment for DeepMind-style Atari.
 
     Args:
@@ -332,7 +332,7 @@ def wrap_deepmind(env,
         framestack (bool): Whether to framestack observations.
         obs_format (str): observation output format
         test (bool): whether this is a test env
-        eval_episodes (int): when test, number of episodes for each evaluation
+        test_episodes (int): when test, number of episodes for each evaluation
     """
     env = MonitorEnv(env)
     env = NoopResetEnv(env, noop_max=30)
@@ -346,5 +346,5 @@ def wrap_deepmind(env,
     if framestack:
         env = FrameStack(env, 4, obs_format)
     if test:
-        env = TestEnv(env, eval_episodes)
+        env = TestEnv(env, test_episodes)
     return env

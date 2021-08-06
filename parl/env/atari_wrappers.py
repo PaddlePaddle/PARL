@@ -273,22 +273,22 @@ class FrameStack(gym.Wrapper):
 
 
 class TestEnv(gym.Wrapper):
-    def __init__(self, env, eval_episodes=3):
+    def __init__(self, env, test_episodes=3):
         """ env wrapper for test and validation in atari environment.
 
         Args:
             env (ClipRewardEnv or FrameStack): the atari env
-            eval_episodes (int): number of episodes for evaluation
+            test_episodes (int): number of episodes for test
         """
 
         gym.Wrapper.__init__(self, env)
         self._env = env
         self._monitor = get_wrapper_by_cls(env, MonitorEnv)
-        self._eval_episodes = eval_episodes
+        self._test_episodes = test_episodes
         self._was_real_done = False
         self._eval_rewards = None
         self._end_episode = len(
-            self._monitor.get_episode_rewards()) + eval_episodes
+            self._monitor.get_episode_rewards()) + test_episodes
 
     def step(self, action):
         ob, reward, done, info = self._env.step(action)
@@ -301,8 +301,8 @@ class TestEnv(gym.Wrapper):
         if self._get_curr_episode() >= self._end_episode:
             self._was_real_done = True
             self._eval_rewards = \
-                self._monitor.get_episode_rewards()[-self._eval_episodes:]
-            self._end_episode = self._end_episode + self._eval_episodes
+                self._monitor.get_episode_rewards()[-self._test_episodes:]
+            self._end_episode = self._end_episode + self._test_episodes
         else:
             self._was_real_done = False
             self._eval_rewards = None
@@ -324,7 +324,7 @@ def wrap_deepmind(env,
                   framestack=True,
                   obs_format='NHWC',
                   test=False,
-                  eval_episodes=3):
+                  test_episodes=3):
     """Configure environment for DeepMind-style Atari.
 
     Args:
@@ -332,7 +332,7 @@ def wrap_deepmind(env,
         framestack (bool): Whether to framestack observations.
         obs_format (str): observation output format
         test (bool): whether this is a test env
-        eval_episodes (int): when test, number of episodes for each evaluation
+        test_episodes (int): when test, number of episodes for each evaluation
     """
     env = MonitorEnv(env)
     env = NoopResetEnv(env, noop_max=30)
@@ -346,5 +346,5 @@ def wrap_deepmind(env,
     if framestack:
         env = FrameStack(env, 4, obs_format)
     if test:
-        env = TestEnv(env, eval_episodes)
+        env = TestEnv(env, test_episodes)
     return env

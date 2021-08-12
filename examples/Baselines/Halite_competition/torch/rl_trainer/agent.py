@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import parl
 import torch
+
 
 class Agent(parl.Agent):
     """Agent.
@@ -43,7 +43,8 @@ class Agent(parl.Agent):
         log_prob = torch.tensor(log_prob, dtype=torch.float32)
         adv = torch.tensor(adv, dtype=torch.float32)
 
-        value_loss, action_loss, entropy = self.alg.learn(obs, act, value, returns, log_prob, adv)
+        value_loss, action_loss, entropy = self.alg.learn(
+            obs, act, value, returns, log_prob, adv)
 
         return value_loss, action_loss, entropy
 
@@ -57,7 +58,7 @@ class Agent(parl.Agent):
         """
 
         state_tensor = torch.tensor(state, dtype=torch.float32)
-        
+
         with torch.no_grad():
 
             action = self.alg.predict(state_tensor).cpu().numpy()
@@ -111,7 +112,7 @@ class Agent(parl.Agent):
         model_dict["actor_optimizer"] = self.alg.actor_optimizer.state_dict()
 
         torch.save(model_dict, model_path)
-    
+
     def restore(self, model_path):
         """Restore model
         Args:
@@ -120,5 +121,6 @@ class Agent(parl.Agent):
         model_dict = torch.load(model_path)
         self.alg.critic.load_state_dict(model_dict["critic"])
         self.alg.actor.load_state_dict(model_dict["actor"])
-        self.alg.critic_optimizer.load_state_dict(model_dict["critic_optimizer"])
+        self.alg.critic_optimizer.load_state_dict(
+            model_dict["critic_optimizer"])
         self.alg.actor_optimizer.load_state_dict(model_dict["actor_optimizer"])

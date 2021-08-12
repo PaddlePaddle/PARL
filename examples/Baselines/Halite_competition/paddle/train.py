@@ -23,7 +23,6 @@ from parl.utils.window_stat import WindowStat
 from kaggle_environments import make, evaluate
 from kaggle_environments.envs.halite.helpers import *
 
-
 env_seed = config["seed"]
 paddle.seed(env_seed)
 np.random.seed(env_seed)
@@ -32,7 +31,6 @@ logx = logx.logx
 logx.initialize(logdir=config["log_path"], tensorboard=True, hparams=config)
 if not os.path.exists(config["save_path"]):
     os.makedirs(config["save_path"])
-
 '''set up agent
 In this training script, we only train the first agent
 If you want to train the agent by self-play, you can also set 
@@ -51,7 +49,8 @@ player_num = len(player_list)
 # set up agent controller
 players = [None] * player_num
 for player_ind in player_index:
-    players[player_ind] = Controller() 
+    players[player_ind] = Controller()
+
 
 # return action for each ship and shipyard
 # this function will be only used in testing
@@ -60,14 +59,19 @@ def take_action(observation, configuration):
     action = players[0].take_action(board, "predict")
     return action
 
+
 # function for testing
 def test_agent():
     players[0].prepare_test()
-    rew, _, _, errors = evaluate("halite", agents=[take_action, "random"], configuration={"randomSeed":env_seed}, debug=True)
+    rew, _, _, errors = evaluate(
+        "halite",
+        agents=[take_action, "random"],
+        configuration={"randomSeed": env_seed},
+        debug=True)
     rew1, rew2 = rew[0][0], rew[0][1]
 
     if rew1 is None or rew2 is None:
-        # Somthing wrong happends in your program(Sometimes the built-in evaluate function will raise 
+        # Somthing wrong happends in your program(Sometimes the built-in evaluate function will raise
         #                                           timeout exception if the cpu resource is limited)
         # please check the errors to see the detailed message
         print(errors[0])
@@ -75,6 +79,7 @@ def test_agent():
         pdb.set_trace()
         return None, None
     return rew1, rew2
+
 
 def main():
 
@@ -91,7 +96,12 @@ def main():
         '''another way to build an environment without a specific seed
         env = make("halite", configuration={"size": config["board_size"]})
         '''
-        env = make("halite", configuration={"size": config["board_size"], "randomSeed":env_seed})
+        env = make(
+            "halite",
+            configuration={
+                "size": config["board_size"],
+                "randomSeed": env_seed
+            })
         configuration = env.configuration
         env = env.train_selfplay(player_list)
 
@@ -108,7 +118,7 @@ def main():
 
         # record the alive status of players
         agent_done = [False] * player_num
-        
+
         # since we train the agent with a random agent, we also save the episode halite obtained by
         # the random agent and compute a winning rate
         random_agent_halite = 0
@@ -125,9 +135,9 @@ def main():
             # record the actions of agents
             actions = [None] * player_num
 
-            # sampling actions 
+            # sampling actions
             for ind, board in zip(player_index, boards):
-                
+
                 # compute the action for those alive agents
                 if not agent_done[ind]:
 
@@ -138,7 +148,9 @@ def main():
             observation_next = [infos[0] for infos in player_infos]
             rews = [infos[1] for infos in player_infos]
             dones = [infos[2] for infos in player_infos]
-            boards_next = [Board(obs_next, configuration) for obs_next in observation_next]
+            boards_next = [
+                Board(obs_next, configuration) for obs_next in observation_next
+            ]
 
             # reset the flag of done
             for ind, done in zip(player_index, dones):
@@ -151,11 +163,13 @@ def main():
                 # update the final state of ships and shipyards and save data
                 for ind, board in zip(player_index, boards):
                     players[ind].update_state(board)
-                    episode_ship_halite[ind] = sum([ship.halite for ship in board.current_player.ships])
+                    episode_ship_halite[ind] = sum(
+                        [ship.halite for ship in board.current_player.ships])
                     episode_halite[ind] = board.current_player.halite
                     episode_ship_num[ind] = len(board.current_player.ship_ids)
-                    episode_shipyard_num[ind] = len(board.current_player.shipyard_ids)
-                
+                    episode_shipyard_num[ind] = len(
+                        board.current_player.shipyard_ids)
+
                 random_agent_halite = boards[0].opponents[0].halite
                 break
 
@@ -163,14 +177,16 @@ def main():
         if len(players[0].ship_buffer):
             value_loss, action_loss, entropy = players[0].train_ship_agent()
             #logx.msg("ship loss : {0}".format(ship_loss))
-            logx.metric("train", 
-                        {   "ship_value_loss": value_loss,
-                            "ship_policy_loss": action_loss,
-                            "ship_entropy": entropy},
-                        total_step)
+            logx.metric(
+                "train", {
+                    "ship_value_loss": value_loss,
+                    "ship_policy_loss": action_loss,
+                    "ship_entropy": entropy
+                }, total_step)
 
         # print logs
-        logx.msg("episode:{0}, episode_step:{1}, total_step:{2}".format(episode, episode_step, total_step))
+        logx.msg("episode:{0}, episode_step:{1}, total_step:{2}".format(
+            episode, episode_step, total_step))
 
         # snippet of code to test the agent
         '''
@@ -195,7 +211,7 @@ def main():
             ship_len = np.array(player.ship_len)
             ship_rew = ship_rew.mean() if len(ship_rew) else None
             ship_len = ship_len.mean() if len(ship_len) else None
-            
+
             message = "player_id:{0}, ".format(ind)
             if ship_rew is not None:
                 message += "ship_rew:{0:.2f}, ".format(ship_rew)
@@ -208,26 +224,36 @@ def main():
                 logx.msg(message)
 
         #logx.msg("random player, episode_halite:{0}".format(random_agent_halite))
-        for player_ind, halite, ship_num, shipyard_num, ship_halite in zip(player_index, episode_halite, episode_ship_num, 
-                                                                            episode_shipyard_num, episode_ship_halite):
+        for player_ind, halite, ship_num, shipyard_num, ship_halite in zip(
+                player_index, episode_halite, episode_ship_num,
+                episode_shipyard_num, episode_ship_halite):
 
             win_stat.add(halite > random_agent_halite)
 
-            logx.msg("player_id:{0}, episode_halite:{1}, ship_num:{2}, shipyard_num:{3}, ship_halite:{4}".format(
-                player_ind, halite, ship_num, shipyard_num, ship_halite))
+            logx.msg(
+                "player_id:{0}, episode_halite:{1}, ship_num:{2}, shipyard_num:{3}, ship_halite:{4}"
+                .format(player_ind, halite, ship_num, shipyard_num,
+                        ship_halite))
 
-            logx.metric("train", {"player{0}_environment_rew".format(player_ind): halite,
-                                "player{0}_winning_rate".format(player_ind): win_stat.mean}, episode)
+            logx.metric(
+                "train", {
+                    "player{0}_environment_rew".format(player_ind): halite,
+                    "player{0}_winning_rate".format(player_ind): win_stat.mean
+                }, episode)
 
             # save the best model
             if win_stat.mean > best_win_rate:
                 best_win_rate = win_stat.mean
-                ship_model_path = os.path.join(config["save_path"], 'player%s_test_ship_model_ep_%s.pth' % (player_ind, episode))
+                ship_model_path = os.path.join(
+                    config["save_path"], 'player%s_test_ship_model_ep_%s.pth' %
+                    (player_ind, episode))
                 players[player_ind].save(ship_model_path)
 
         # save the latest model
-        ship_model_path = os.path.join(config["save_path"], 'latest_ship_model.pth')
+        ship_model_path = os.path.join(config["save_path"],
+                                       'latest_ship_model.pth')
         players[0].save(ship_model_path)
+
 
 if __name__ == '__main__':
     main()

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import numpy as np
 from config import config
 from kaggle_environments.envs.halite.helpers import *
@@ -30,47 +29,52 @@ halite = config["num_halite"]
 
 # convert action index to specific policy
 ship_policies = {
-                0: do_nothing_policy,
-                1: move_up_policy,
-                2: move_down_policy,
-                3: move_left_policy,
-                4: move_right_policy}
+    0: do_nothing_policy,
+    1: move_up_policy,
+    2: move_down_policy,
+    3: move_left_policy,
+    4: move_right_policy
+}
 
-shipyard_policies = {0: do_nothing_policy,
-                     1: spawn_policy}
+shipyard_policies = {0: do_nothing_policy, 1: spawn_policy}
+
 
 class Controller:
     """Controller.`
     Keep Track of each ship and shipyard
     """
+
     def __init__(self):
         """Initialize models
         """
-        
+
         self.init = False
 
         self.train = True
 
         # set up agnet for ships
-        ship_actor = Model(obs_dim=config["ship_obs_dim"], 
-                            act_dim=config["ship_act_dim"],
-                            softmax=True)
+        ship_actor = Model(
+            obs_dim=config["ship_obs_dim"],
+            act_dim=config["ship_act_dim"],
+            softmax=True)
 
-        ship_critic = Model(obs_dim=config["ship_obs_dim"], 
-                             act_dim=1)
+        ship_critic = Model(obs_dim=config["ship_obs_dim"], act_dim=1)
 
-        ship_alg = PPO(actor=ship_actor, 
-                        critic=ship_critic,
-                        clip_param = 0.3,
-                        value_loss_coef=config["vf_loss_coef"],
-                        entropy_coef=config["ent_coef"],
-                        initial_lr=config["lr"],
-                        max_grad_norm=5)
+        ship_alg = PPO(
+            actor=ship_actor,
+            critic=ship_critic,
+            clip_param=0.3,
+            value_loss_coef=config["vf_loss_coef"],
+            entropy_coef=config["ent_coef"],
+            initial_lr=config["lr"],
+            max_grad_norm=5)
 
         self.ship_agent = Agent(ship_alg)
 
-        self.ship_buffer = ReplayMemory(config["ship_max_step"], config["ship_obs_dim"] + config["world_dim"])
-    
+        self.ship_buffer = ReplayMemory(
+            config["ship_max_step"],
+            config["ship_obs_dim"] + config["world_dim"])
+
     def prepare_test(self):
         """Reset parameters for testing agents
         """
@@ -90,7 +94,7 @@ class Controller:
             del self.board
         if hasattr(self, "ship_states"):
             del self.ship_states
-        
+
     def reset(self, board):
         """Reset parameters
         Args:
@@ -108,16 +112,18 @@ class Controller:
             # rule indicates whether this ship is controlled by defined rules
             # full_episode indicates the experience collected by this ship is compelete or not
             # halite saves the number of cargo this ship collects
-            self.ship_states[ship_id] = {"obs": [],
-                                        "act": [],
-                                        "rew": [],
-                                        "terminal": [],
-                                        "value": [],
-                                        "log_prob": [],
-                                        "rule": False,
-                                        "full_episode": False,
-                                        "halite":[]}
-        
+            self.ship_states[ship_id] = {
+                "obs": [],
+                "act": [],
+                "rew": [],
+                "terminal": [],
+                "value": [],
+                "log_prob": [],
+                "rule": False,
+                "full_episode": False,
+                "halite": []
+            }
+
         self.ship_rew = []
         self.ship_len = []
 
@@ -146,7 +152,7 @@ class Controller:
 
         if not hasattr(self, "board"):
             self.reset(board)
-        
+
         # take action for ships
         self.take_ship_action(board, method)
 
@@ -179,20 +185,21 @@ class Controller:
 
                 # if there is an opponent shipo nearby, the shipyard can spawn a ship to protect itself
                 if check_nearby_ship(board, shipyard, enemy=True):
-                    
+
                     shipyard_policies[1](board, shipyard)
 
                 else:
-                    
+
                     # if the player has extra halite, the shipyard can spawn more ships
-                    if  tmp_halite > 50 and shipyard.cell.ship_id is None and not check_nearby_ship(board, shipyard, enemy=False):
-                        
+                    if tmp_halite > 50 and shipyard.cell.ship_id is None and not check_nearby_ship(
+                            board, shipyard, enemy=False):
+
                         shipyard_policies[1](board, shipyard)
 
                         tmp -= 1
 
                         tmp_halite -= 50
-                
+
                 if tmp == 0:
 
                     break
@@ -212,11 +219,11 @@ class Controller:
 
         # determine a ship and turn it into a base if we do not have a shipyard
         if len(me.shipyards) == 0:
-            
+
             convert = False
 
             for ship in me.ships:
-                
+
                 if ship.halite >= 70:
 
                     self.ship_states[ship.id]["rule"] = True
@@ -226,7 +233,7 @@ class Controller:
                     convert = True
 
                     break
-            
+
             # if there is no ships we can turn into shipyard
             # then we utilize the defined rules to mine the halite
             if not convert:
@@ -237,7 +244,7 @@ class Controller:
 
                 self.ship_states[ship.id]["act"] = "mine"
 
-        # set rule agent  
+        # set rule agent
         for ship in me.ships:
 
             #current time step
@@ -249,9 +256,9 @@ class Controller:
 
                 if board.cells[shipyard_pos].shipyard_id:
 
-                    dis = step + mahattan_distance(shipyard_pos, ship.position) 
+                    dis = step + mahattan_distance(shipyard_pos, ship.position)
 
-                    # already obtained K halite or this episode almostly ends, 
+                    # already obtained K halite or this episode almostly ends,
                     # we force these ships to return to the base
                     if (dis <= 299 and dis >= 294) or ship.halite >= halite:
 
@@ -262,62 +269,65 @@ class Controller:
                         return_to_base_policy(board, ship)
 
             else:
-                
+
                 # take action for these rule ships
                 if self.ship_states[ship.id]["act"] == "convert":
 
                     convert_policy(board, ship)
-                
+
                 if self.ship_states[ship.id]["act"] == "mine":
 
                     mine_policy(board, ship)
-                
+
                 if self.ship_states[ship.id]["act"] == "return_to_base":
 
                     return_to_base_policy(board, ship)
 
         # take actions for those non-rule agent by ppo model
         ready_ship_id = self.get_ship_id()
-        
+
         # obtain the states of these non-rule agent
-        state = np.zeros((len(ready_ship_id), config["ship_obs_dim"] + config["world_dim"]))
+        state = np.zeros((len(ready_ship_id),
+                          config["ship_obs_dim"] + config["world_dim"]))
 
         if len(ready_ship_id):
 
             for ind, ship_id in enumerate(ready_ship_id):
 
                 ship_index = me.ship_ids.index(ship_id)
-                
+
                 ship = me.ships[ship_index]
 
-                self.ship_states[ship_id]["obs"].append(get_ship_feature(board, ship))
+                self.ship_states[ship_id]["obs"].append(
+                    get_ship_feature(board, ship))
 
                 state[ind] = self.ship_states[ship_id]["obs"][-1]
 
             # take action
             if method == 'sample':
-                values, actions, action_log_probs = self.ship_agent.sample(state)
+                values, actions, action_log_probs = self.ship_agent.sample(
+                    state)
             else:
                 actions = self.ship_agent.predict(state)
-        
+
         # action for those ships whoe are ready
         for ind, ship_id in enumerate(ready_ship_id):
-            
+
             ship_index = me.ship_ids.index(ship_id)
 
             ship = me.ships[ship_index]
 
             ship_policies[actions[ind]](board, ship)
-            
 
             # set act
             self.ship_states[ship_id]["act"].append(actions[ind])
 
             if method == "sample":
-                
+
                 self.ship_states[ship.id]["value"].append(values[ind])
 
-                self.ship_states[ship.id]["log_prob"].append(action_log_probs[ind])
+                self.ship_states[ship.id]["log_prob"].append(
+                    action_log_probs[ind])
 
         return me.next_actions
 
@@ -333,12 +343,15 @@ class Controller:
         alive = [is_alive(board.step, me)]
 
         # the status of opponents
-        terminals = [is_alive(board.step, opponent) for opponent in board.opponents]
+        terminals = [
+            is_alive(board.step, opponent) for opponent in board.opponents
+        ]
 
         alive.extend(terminals)
 
         # whether the status of the environment is over
-        env_done = True if not all(alive) or sum(alive) == len(alive) - 1 else False
+        env_done = True if not all(alive) or sum(
+            alive) == len(alive) - 1 else False
 
         self.update_ship_state(board, alive[0], env_done)
 
@@ -361,13 +374,13 @@ class Controller:
 
             # ship loss
             if ship_id not in new_me.ship_ids:
-                
+
                 # simply set this flag to a negative number
                 self.ship_states[ship_id]["halite"].append(-1)
 
                 # whether it's rule policy
                 if ship_state["rule"]:
-                    
+
                     act = ship_state["act"]
 
                     # set the terminal to be 1 and this means the agent finishes its episode
@@ -378,7 +391,7 @@ class Controller:
                     continue
 
                 # Attacked by the opponents or ships in current teams
-                if ship_state["act"][-1] in [0,1,2,3,4]:
+                if ship_state["act"][-1] in [0, 1, 2, 3, 4]:
 
                     # rew for every time step
                     rew = -1
@@ -407,16 +420,16 @@ class Controller:
                 if ship_state["rule"]:
 
                     if ship_state["act"] == "mine":
-                        
+
                         # The agent will only stop mining until the number of halite is more than 70
                         # when it's asked to mine and build a shipyard
                         if new_ship.halite > 70:
 
                             ship_state["terminal"].append(1)
-                    
+
                     if ship_state["act"] == "return_to_base":
 
-                        # To determine whether the ship is at the shipyard or not    
+                        # To determine whether the ship is at the shipyard or not
                         new_cell = board.cells[new_ship.position]
 
                         if new_cell.shipyard_id and new_cell.shipyard.player_id == new_ship.player_id:
@@ -425,16 +438,15 @@ class Controller:
 
                     continue
 
-
                 # To determine whether the ship should return to base or not
                 return_to_base = False
                 shipyard_pos = nearest_shipyard_position(board, new_ship)
                 if board.cells[shipyard_pos].shipyard_id:
-                    dis = board.step + mahattan_distance(shipyard_pos, new_ship.position)
+                    dis = board.step + mahattan_distance(
+                        shipyard_pos, new_ship.position)
                     return_to_base = (dis <= 299 and dis >= 294)
 
-
-                if ship_state["act"][-1] in [0,1,2,3,4]:
+                if ship_state["act"][-1] in [0, 1, 2, 3, 4]:
 
                     # reward for every time step
                     rew = -1
@@ -443,13 +455,14 @@ class Controller:
                     if ship_state["act"][-1] == 0:
                         old_cell = old_board.cells[old_ship.position]
                         new_cell = board.cells[new_ship.position]
-                        delta_cell_halite = old_cell.halite - new_cell.halite   
+                        delta_cell_halite = old_cell.halite - new_cell.halite
                     else:
                         delta_cell_halite = 0
 
                     # rew for destroying other ships
                     if new_ship.halite != old_ship.halite + delta_cell_halite:
-                        destroyed_ship_halite = new_ship.halite - (old_ship.halite + delta_cell_halite)
+                        destroyed_ship_halite = new_ship.halite - (
+                            old_ship.halite + delta_cell_halite)
                         rew += (destroyed_ship_halite / 2)
 
                     # this ships controlled by model collect the halite we need
@@ -460,13 +473,14 @@ class Controller:
                         ship_state["full_episode"] = True
 
                     else:
-                        
+
                         # the environment ends(the enemy dies)
                         if env_done or return_to_base:
                             rew += (ship_state["halite"][-1] - halite)
                             ship_state["rew"].append(rew)
                             next_obs = get_ship_feature(board, new_ship)
-                            ship_state["value"].append(self.ship_agent.value(next_obs)[0])
+                            ship_state["value"].append(
+                                self.ship_agent.value(next_obs)[0])
                             ship_state["full_episode"] = True
                             ship_state["terminal"].append(0)
                         else:
@@ -479,35 +493,41 @@ class Controller:
         for ship_id, ship_state in self.ship_states.items():
 
             if ship_state["rule"]:
-                
+
                 # if the rule agent finish its goal, then we should not keep track of this agent.
                 if len(ship_state["terminal"]) and ship_state["terminal"][-1]:
 
                     eliminated_ship_ids.append(ship_id)
-                
+
                 continue
-            
+
             if ship_state["full_episode"]:
-                    
+
                 # prepare data for training
                 if self.train:
 
                     obs_batch = np.concatenate(ship_state["obs"])
                     action_batch = np.array(ship_state["act"])
                     reward_batch = np.array(ship_state["rew"])
-                    terminal_batch = 1 - np.array(ship_state["terminal"])                    
+                    terminal_batch = 1 - np.array(ship_state["terminal"])
                     log_prob_batch = np.array(ship_state["log_prob"])
                     value_batch = np.array(ship_state["value"])
 
-                    return_batch = self.compute_returns(reward_batch, terminal_batch, value_batch[-1] ,config["gamma"])
+                    return_batch = self.compute_returns(
+                        reward_batch, terminal_batch, value_batch[-1],
+                        config["gamma"])
                     value_batch = value_batch[:-1]
 
                     advantages = return_batch - terminal_batch * value_batch
-                    return_batch = (return_batch - return_batch.mean()) / (return_batch.std() + 1e-5)
-                    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
+                    return_batch = (return_batch - return_batch.mean()) / (
+                        return_batch.std() + 1e-5)
+                    advantages = (advantages - advantages.mean()) / (
+                        advantages.std() + 1e-5)
 
                     # add data into buffer
-                    self.ship_buffer.append(obs_batch, action_batch, value_batch ,return_batch, log_prob_batch, advantages)
+                    self.ship_buffer.append(obs_batch, action_batch,
+                                            value_batch, return_batch,
+                                            log_prob_batch, advantages)
 
                     # save statistic data
                     self.ship_rew.append(sum(reward_batch))
@@ -530,15 +550,17 @@ class Controller:
 
             if ship_id not in self.ship_states.keys():
 
-                self.ship_states[ship_id] = {"obs": [],
-                                        "act": [],
-                                        "rew": [],
-                                        "terminal": [],
-                                        "value": [],
-                                        "log_prob": [],
-                                        "rule": False,
-                                        "full_episode": False,
-                                        "halite":[]}
+                self.ship_states[ship_id] = {
+                    "obs": [],
+                    "act": [],
+                    "rew": [],
+                    "terminal": [],
+                    "value": [],
+                    "log_prob": [],
+                    "rule": False,
+                    "full_episode": False,
+                    "halite": []
+                }
 
     def train_ship_agent(self):
         """Train ship agent
@@ -554,15 +576,17 @@ class Controller:
 
         for _ in range(max(1, int(buf_len * train_times / batch_size))):
 
-            obs, action, value, returns, log_prob, adv =  self.ship_buffer.sample_batch(batch_size)
-            value_loss, action_loss, entropy = self.ship_agent.learn(obs, action, value, returns, log_prob, adv)
+            obs, action, value, returns, log_prob, adv = self.ship_buffer.sample_batch(
+                batch_size)
+            value_loss, action_loss, entropy = self.ship_agent.learn(
+                obs, action, value, returns, log_prob, adv)
             v_loss.append(value_loss)
             a_loss.append(action_loss)
             ent.append(entropy)
-        
+
         # reset the buffer to store new data
         self.ship_buffer.reset()
-        
+
         return np.mean(v_loss), np.mean(a_loss), np.mean(ent)
 
     def save(self, ship_model_path):
@@ -571,7 +595,7 @@ class Controller:
             ship_model_path (str): the path to save the ship model
         """
         self.ship_agent.save(ship_model_path)
-    
+
     def restore(self, ship_model_path):
         """Restore model
         Args:
@@ -579,7 +603,7 @@ class Controller:
         """
         self.ship_agent.restore(ship_model_path)
 
-    def compute_returns(self, reward, terminal, next_value ,gamma):
+    def compute_returns(self, reward, terminal, next_value, gamma):
         """Compute returns for training value and policy network
         Args:
             reward (np.array) : reward
@@ -591,7 +615,7 @@ class Controller:
         """
         returns = np.ones(reward.shape)
         pre_r_sum = next_value
-        for step in range(len(reward)-1, -1, -1):
+        for step in range(len(reward) - 1, -1, -1):
             returns[step] = reward[step] + gamma * pre_r_sum * terminal[step]
             pre_r_sum = returns[step]
 

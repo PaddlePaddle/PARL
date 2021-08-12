@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from kaggle_environments.envs.halite.helpers import *
 from collections import deque
 from config import config
@@ -20,6 +19,7 @@ import numpy as np
 import random
 
 size = config["board_size"]
+
 
 # obtain a new position when given an action and a position
 def get_new_position(pos, action):
@@ -33,13 +33,15 @@ def get_new_position(pos, action):
         tmp[1] = (pos[1] - 1 + size) % size
     elif action == ShipAction.RIGHT:
         tmp[1] = (pos[1] + 1 + size) % size
-    
+
     return tmp
+
 
 # transform the position in a widly applied setting like the index used in np.array
 def transform_position(pos):
 
-    return (size - pos[1] - 1 , pos[0])
+    return (size - pos[1] - 1, pos[0])
+
 
 # obtain the mahattan distance of two positions
 def mahattan_distance(pos1, pos2):
@@ -49,11 +51,12 @@ def mahattan_distance(pos1, pos2):
 
     return min(offset_x, size - offset_x) + min(offset_y, size - offset_y)
 
+
 # heading to a specific location
 def head_to(board, start_pos, des_pos, ignore_teammates):
 
     ori_pos = start_pos
-    
+
     act = nearby_enemy(board, board.cells[start_pos].ship, ignore_teammates)
     if act is not None:
         return act
@@ -65,8 +68,8 @@ def head_to(board, start_pos, des_pos, ignore_teammates):
     offset_x = des_pos[0] - central
     offset_y = des_pos[1] - central
 
-    new_pos = ((start_pos[0] - offset_x + size) % size, 
-                (start_pos[1] - offset_y + size) % size)
+    new_pos = ((start_pos[0] - offset_x + size) % size,
+               (start_pos[1] - offset_y + size) % size)
 
     if new_pos[1] < central and check_pos(board, ori_pos, "right"):
         return ShipAction.RIGHT
@@ -76,8 +79,9 @@ def head_to(board, start_pos, des_pos, ignore_teammates):
         return ShipAction.DOWN
     if new_pos[0] > central and check_pos(board, ori_pos, "up"):
         return ShipAction.UP
-        
+
     return None
+
 
 # check the status of the specific position
 # whether there is a ship or shipyard
@@ -86,14 +90,14 @@ def check_pos(board, pos, act):
     player_id = board.cells[pos].ship.player_id
 
     if act == "right":
-        new_pos = ((pos[0]+1) % size, pos[1])
+        new_pos = ((pos[0] + 1) % size, pos[1])
     if act == "left":
-        new_pos = ((pos[0]-1) % size, pos[1])
+        new_pos = ((pos[0] - 1) % size, pos[1])
     if act == "up":
-        new_pos = (pos[0], (pos[1]+1)%size)
+        new_pos = (pos[0], (pos[1] + 1) % size)
     if act == "down":
-        new_pos = (pos[0], (pos[1]-1)%size)
-    
+        new_pos = (pos[0], (pos[1] - 1) % size)
+
     cell = board.cells[new_pos]
     if (cell.ship) \
          or (cell.shipyard and cell.shipyard.player_id != player_id):
@@ -101,35 +105,53 @@ def check_pos(board, pos, act):
 
     return True
 
+
 # chech the existence of enemies
 def nearby_enemy(board, ship, ignore_teammates=False):
 
     ship_position = transform_position(ship.position)
 
     if ignore_teammates:
-        enemy_positions = [transform_position(enemy_ship.position) for enemy_ship in board.ships.values() 
-                    if enemy_ship.id != ship.id and enemy_ship.player.id != ship.player.id]
+        enemy_positions = [
+            transform_position(enemy_ship.position)
+            for enemy_ship in board.ships.values() if enemy_ship.id != ship.id
+            and enemy_ship.player.id != ship.player.id
+        ]
     else:
-        enemy_positions = [transform_position(enemy_ship.position) for enemy_ship in board.ships.values() 
-                            if enemy_ship.id != ship.id]
+        enemy_positions = [
+            transform_position(enemy_ship.position)
+            for enemy_ship in board.ships.values() if enemy_ship.id != ship.id
+        ]
 
-    enemy_positions.extend([transform_position(enemy_shipyard.position) for enemy_shipyard in board.shipyards.values() 
-                        if enemy_shipyard.player.id != ship.player.id])
-    
+    enemy_positions.extend([
+        transform_position(enemy_shipyard.position)
+        for enemy_shipyard in board.shipyards.values()
+        if enemy_shipyard.player.id != ship.player.id
+    ])
+
     if len(enemy_positions):
-        original_distance = min([mahattan_distance(ship_position, enemy_position) for enemy_position in enemy_positions])
-        
+        original_distance = min([
+            mahattan_distance(ship_position, enemy_position)
+            for enemy_position in enemy_positions
+        ])
+
         if original_distance < 3:
-            
-            actions = [ShipAction.UP, ShipAction.DOWN, ShipAction.LEFT, ShipAction.RIGHT]
+
+            actions = [
+                ShipAction.UP, ShipAction.DOWN, ShipAction.LEFT,
+                ShipAction.RIGHT
+            ]
 
             tmp = []
 
             for action in actions:
                 new_position = get_new_position(ship_position, action)
-                new_distance = min([mahattan_distance(new_position, enemy_position) for enemy_position in enemy_positions])
+                new_distance = min([
+                    mahattan_distance(new_position, enemy_position)
+                    for enemy_position in enemy_positions
+                ])
                 tmp.append(new_distance - original_distance)
-            
+
             max_dis = max(tmp)
             index = []
             for direct, value in enumerate(tmp):
@@ -139,8 +161,9 @@ def nearby_enemy(board, ship, ignore_teammates=False):
             #index = tmp.index(max(tmp))
 
             return actions[index]
-    
+
     return None
+
 
 # find the nearest shipyard
 def nearest_shipyard_position(board, ship):
@@ -148,22 +171,28 @@ def nearest_shipyard_position(board, ship):
     me = board.current_player
 
     if len(me.shipyards):
-        
-        shipyard_positions = [transform_position(shipyard.position) for shipyard in me.shipyards]
+
+        shipyard_positions = [
+            transform_position(shipyard.position) for shipyard in me.shipyards
+        ]
 
         ship_position = transform_position(ship.position)
 
-        distance = [mahattan_distance(shipyard_position, ship_position) for shipyard_position in shipyard_positions]
+        distance = [
+            mahattan_distance(shipyard_position, ship_position)
+            for shipyard_position in shipyard_positions
+        ]
 
         index = distance.index(min(distance))
 
         return me.shipyards[index].position
-        
+
     else:
-        
+
         return ship.position
 
-# use bfs to find the nearest halite  
+
+# use bfs to find the nearest halite
 def nearest_halite(board, ship):
 
     halite_map = np.array(board.observation['halite']).reshape((size, size))
@@ -183,8 +212,9 @@ def nearest_halite(board, ship):
             if not cell.ship_id and not cell.shipyard_id:
                 return (pos[1], size - pos[0] - 1)
         else:
-            for offset in [[1,0], [-1,0], [0,1], [0,-1]]:
-                tmp = ((pos[0]+offset[0])%size, (pos[1]+offset[1])%size)
+            for offset in [[1, 0], [-1, 0], [0, 1], [0, -1]]:
+                tmp = ((pos[0] + offset[0]) % size,
+                       (pos[1] + offset[1]) % size)
 
                 if halite_map[tmp[0], tmp[1]] > 10:
                     cell = board.cells[(tmp[1], size - tmp[0] - 1)]
@@ -199,6 +229,7 @@ def nearest_halite(board, ship):
                     check[tmp[0], tmp[1]] = 1
 
     return (pos[1], size - pos[0] - 1)
+
 
 # determine the alive status of a single player
 def is_alive(step, player):
@@ -215,6 +246,7 @@ def is_alive(step, player):
 
     return alive
 
+
 # check the ships nearby for a specific shipyard
 def check_nearby_ship(board, shipyard, enemy):
 
@@ -222,9 +254,9 @@ def check_nearby_ship(board, shipyard, enemy):
     shipyard_pos = shipyard.position
     player_id = shipyard.player_id
 
-    for offset in [[0,1],[0,-1],[1,0],[-1,0]]:
+    for offset in [[0, 1], [0, -1], [1, 0], [-1, 0]]:
         new_pos = ((shipyard_pos[0] + offset[0]) % size,
-                    (shipyard_pos[1] + offset[1]) % size)
+                   (shipyard_pos[1] + offset[1]) % size)
         new_cell = board.cells[new_pos]
         if enemy and new_cell.ship_id and new_cell.ship.player_id != player_id:
             return True

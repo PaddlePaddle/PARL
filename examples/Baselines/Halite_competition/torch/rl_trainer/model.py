@@ -17,6 +17,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Model(parl.Model):
     """ Neural Network to approximate v value.
     Args:
@@ -25,7 +26,7 @@ class Model(parl.Model):
         softmax (book): Whether to use softmax activation at the end of last layer
     """
 
-    def __init__(self, obs_dim ,act_dim, softmax=False):
+    def __init__(self, obs_dim, act_dim, softmax=False):
         super().__init__()
 
         self.obs_dim = obs_dim
@@ -39,18 +40,10 @@ class Model(parl.Model):
 
         self.network = nn.Sequential(
             nn.Conv2d(
-                in_channels=5,
-                out_channels=16,
-                kernel_size=(3, 3),
-                stride=2
-            ),
+                in_channels=5, out_channels=16, kernel_size=(3, 3), stride=2),
             nn.ReLU(),
             nn.Conv2d(
-                in_channels=16,
-                out_channels=16,
-                kernel_size=(3, 3),
-                stride=2
-            ),
+                in_channels=16, out_channels=16, kernel_size=(3, 3), stride=2),
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=16,
@@ -71,7 +64,7 @@ class Model(parl.Model):
 
         x = F.relu(self.l1(ship_feature))
         y = F.relu(self.l2(world_vector))
-        z = F.relu(self.l3(torch.cat((x,y), 1)))
+        z = F.relu(self.l3(torch.cat((x, y), 1)))
         out = self.l4(z)
 
         if self.softmax:

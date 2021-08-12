@@ -16,7 +16,6 @@ from rl_trainer.controller import Controller
 from kaggle_environments import evaluate
 from kaggle_environments.envs.halite.helpers import *
 
-
 if __name__ == '__main__':
 
     player = Controller()
@@ -31,8 +30,12 @@ if __name__ == '__main__':
     # function for testing
     def test_agent():
         player.prepare_test()
-        rew, _, _, _ = evaluate("halite", agents=[take_action, "random"], configuration={"randomSeed":123456}, debug=True)
+        rew, _, _, _ = evaluate(
+            "halite",
+            agents=[take_action, "random"],
+            configuration={"randomSeed": 123456},
+            debug=True)
         return rew[0][0], rew[0][1]
 
-    r1,r2 = test_agent()
+    r1, r2 = test_agent()
     print("agent : {0}, random : {1}".format(r1, r2))

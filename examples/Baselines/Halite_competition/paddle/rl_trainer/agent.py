@@ -15,6 +15,7 @@
 import parl
 import paddle
 
+
 class Agent(parl.Agent):
     """Agent.
     Args:
@@ -43,7 +44,8 @@ class Agent(parl.Agent):
         log_prob = paddle.to_tensor(log_prob, dtype=paddle.float32)
         adv = paddle.to_tensor(adv, dtype=paddle.float32)
 
-        value_loss, action_loss, entropy = self.alg.learn(obs, act, value, returns, log_prob, adv)
+        value_loss, action_loss, entropy = self.alg.learn(
+            obs, act, value, returns, log_prob, adv)
 
         return value_loss, action_loss, entropy
 
@@ -57,7 +59,7 @@ class Agent(parl.Agent):
         """
 
         state_tensor = paddle.to_tensor(state, dtype=paddle.float32)
-        
+
         with paddle.no_grad():
 
             action = self.alg.predict(state_tensor).cpu().numpy()
@@ -110,7 +112,7 @@ class Agent(parl.Agent):
         model_dict["actor"] = self.alg.actor.state_dict()
         model_dict["optim"] = self.alg.optim.state_dict()
         paddle.save(model_dict, model_path)
-    
+
     def restore(self, model_path):
         """Restore model
         Args:

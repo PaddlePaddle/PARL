@@ -14,6 +14,7 @@
 
 import numpy as np
 
+
 class ReplayMemory(object):
     """ Replay Memory for saving data.
     Args:
@@ -22,9 +23,9 @@ class ReplayMemory(object):
     """
 
     def __init__(self, max_size, obs_dim):
-        
+
         self.max_size = int(max_size)
-        
+
         self.obs_dim = obs_dim
 
         self.reset()
@@ -38,7 +39,7 @@ class ReplayMemory(object):
         obs = self.obs[batch_idx]
         action = self.action[batch_idx]
         value = self.value[batch_idx]
-        returns = self.returns[batch_idx].reshape((-1,1))
+        returns = self.returns[batch_idx].reshape((-1, 1))
         log_prob = self.log_prob[batch_idx]
         adv = self.adv[batch_idx]
 
@@ -65,7 +66,7 @@ class ReplayMemory(object):
         self._curr_size = min(self._curr_size + size, self.max_size)
 
         if self._curr_pos + size >= self.max_size:
-            
+
             delta_size = -(size + self._curr_pos - self.max_size)
 
             self.obs = np.roll(self.obs, delta_size, 0)
@@ -77,12 +78,12 @@ class ReplayMemory(object):
 
             self._curr_pos += delta_size
 
-        self.obs[self._curr_pos: self._curr_pos + size] = obs
-        self.action[self._curr_pos: self._curr_pos + size] = act
-        self.value[self._curr_pos: self._curr_pos + size] = value
-        self.returns[self._curr_pos: self._curr_pos + size] = returns
-        self.log_prob[self._curr_pos: self._curr_pos + size] = log_prob
-        self.adv[self._curr_pos: self._curr_pos + size] = adv
+        self.obs[self._curr_pos:self._curr_pos + size] = obs
+        self.action[self._curr_pos:self._curr_pos + size] = act
+        self.value[self._curr_pos:self._curr_pos + size] = value
+        self.returns[self._curr_pos:self._curr_pos + size] = returns
+        self.log_prob[self._curr_pos:self._curr_pos + size] = log_prob
+        self.adv[self._curr_pos:self._curr_pos + size] = adv
 
         self._curr_pos = (self._curr_pos + size) % self.max_size
 

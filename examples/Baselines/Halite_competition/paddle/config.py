@@ -34,7 +34,7 @@ config = {
     "ship_obs_dim": 6,
     "ship_act_dim": 5,
     "ship_max_step": 10000,
-    
+
     # the number of halite we want the ships to obtain
     "num_halite": 100,
 
@@ -47,5 +47,4 @@ config = {
     # configuration for logging
     "log_path": './train_log/',
     "save_path": './save_model/',
-
 }

@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import paddle
 import paddle.nn as nn
 import paddle.optimizer as optim
 from paddle.distribution import Categorical
 
-class PPO:
 
+class PPO:
     def __init__(self,
                  actor,
                  critic,
@@ -49,9 +48,11 @@ class PPO:
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
 
-        self.optim = optim.Adam(parameters=list(self.actor.parameters()) + list(self.critic.parameters()), 
-                                learning_rate=initial_lr,
-                                grad_clip=nn.ClipGradByNorm(max_grad_norm))
+        self.optim = optim.Adam(
+            parameters=list(self.actor.parameters()) + list(
+                self.critic.parameters()),
+            learning_rate=initial_lr,
+            grad_clip=nn.ClipGradByNorm(max_grad_norm))
 
     def learn(self, obs_batch, actions_batch, value_preds_batch, return_batch,
               old_action_log_probs_batch, adv_targ):
@@ -67,11 +68,11 @@ class PPO:
 
         values = self.critic(obs_batch)
         probs = self.actor(obs_batch)
-    
+
         dist = Categorical(probs)
         action_log_probs = dist.log_prob(actions_batch)
         dist_entropy = dist.entropy().mean()
-        
+
         ratio = paddle.exp(action_log_probs - old_action_log_probs_batch)
         surr1 = ratio * adv_targ
         surr2 = paddle.clip(ratio, 1.0 - self.clip_param,
@@ -84,12 +85,13 @@ class PPO:
             value_losses = (values - return_batch).pow(2)
             value_losses_clipped = (value_pred_clipped - return_batch).pow(2)
             value_loss = 0.5 * paddle.maximum(value_losses,
-                                         value_losses_clipped).mean()
+                                              value_losses_clipped).mean()
         else:
             value_loss = 0.5 * (return_batch - values).pow(2).mean()
 
         self.optim.clear_grad()
-        (value_loss + action_loss - dist_entropy * self.entropy_coef).backward()
+        (value_loss + action_loss -
+         dist_entropy * self.entropy_coef).backward()
         self.optim.step()
 
         return value_loss.item(), action_loss.item(), dist_entropy.item()
@@ -111,7 +113,7 @@ class PPO:
             dist = Categorical(action_probs)
             action = dist.sample([1]).reshape((batch_size, 1))
             action_log_probs = dist.log_prob(action)
-        
+
         action = action.squeeze(1)
         action_log_probs = action_log_probs.squeeze(1)
 
@@ -139,4 +141,3 @@ class PPO:
             value = self.critic(obs)
         value = value.squeeze(1)
         return value
-

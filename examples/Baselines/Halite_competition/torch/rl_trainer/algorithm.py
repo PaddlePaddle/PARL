@@ -19,8 +19,8 @@ import torch.optim as optim
 import parl
 from torch.distributions import Categorical
 
-class PPO(parl.Algorithm):
 
+class PPO(parl.Algorithm):
     def __init__(self,
                  actor,
                  critic,
@@ -50,8 +50,10 @@ class PPO(parl.Algorithm):
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
 
-        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=initial_lr)
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=initial_lr)
+        self.critic_optimizer = optim.Adam(
+            self.critic.parameters(), lr=initial_lr)
+        self.actor_optimizer = optim.Adam(
+            self.actor.parameters(), lr=initial_lr)
 
     def learn(self, obs_batch, actions_batch, value_preds_batch, return_batch,
               old_action_log_probs_batch, adv_targ):
@@ -136,4 +138,3 @@ class PPO(parl.Algorithm):
         with torch.no_grad():
             value = self.critic(obs)
         return value
-

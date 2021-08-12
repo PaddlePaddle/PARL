@@ -19,17 +19,19 @@ import random
 from config import config
 from .utils import *
 
+
 # convert the ship to shipyard
 def convert_policy(board, ship):
 
     ship.next_action = ShipAction.CONVERT
+
 
 # deposit the halite to the nearest shipyard
 # this policy would avoid ships in its teams
 def deposit_policy(board, ship):
 
     shipyard_position = nearest_shipyard_position(board, ship)
-    
+
     ship.next_action = head_to(board, ship.position, shipyard_position)
 
 
@@ -38,14 +40,18 @@ def mine_policy(board, ship):
 
     nearest_halite_pos = nearest_halite(board, ship)
 
-    ship.next_action = head_to(board, ship.position, nearest_halite_pos, ignore_teammates=False)
+    ship.next_action = head_to(
+        board, ship.position, nearest_halite_pos, ignore_teammates=False)
+
 
 # return to the shipyard
 def return_to_base_policy(board, ship):
 
     shipyard_position = nearest_shipyard_position(board, ship)
-    
-    ship.next_action = head_to(board, ship.position, shipyard_position, ignore_teammates=True)
+
+    ship.next_action = head_to(
+        board, ship.position, shipyard_position, ignore_teammates=True)
+
 
 # move upwards
 def move_up_policy(board, ship):
@@ -56,6 +62,7 @@ def move_up_policy(board, ship):
     else:
         ship.next_action = ShipAction.UP
 
+
 # move downwards
 def move_down_policy(board, ship):
 
@@ -64,6 +71,7 @@ def move_down_policy(board, ship):
         ship.next_action = act
     else:
         ship.next_action = ShipAction.DOWN
+
 
 # move left
 def move_left_policy(board, ship):
@@ -74,6 +82,7 @@ def move_left_policy(board, ship):
     else:
         ship.next_action = ShipAction.LEFT
 
+
 # move right
 def move_right_policy(board, ship):
 
@@ -83,10 +92,12 @@ def move_right_policy(board, ship):
     else:
         ship.next_action = ShipAction.RIGHT
 
+
 # spawn a ship
 def spawn_policy(board, shipyard):
 
     shipyard.next_action = ShipyardAction.SPAWN
+
 
 # do nothing
 def do_nothing_policy(board, base):

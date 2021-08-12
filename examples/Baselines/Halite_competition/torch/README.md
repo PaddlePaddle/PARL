@@ -60,4 +60,4 @@ The original environments provides a way to visualize the results. If you want t
 
 Only one file can be uploaded to the competition platform. Please pack all functions you need in a single file. To load a trained model, you need to encode the model into bytes and put it in the file. After that, you can decode and load the model. We provide a sample(e.g. **submission.py**) to show you how to do this. Besides, you can check encode_model.py to see how to encode the trained model.
 
-Another thing you need to pay attention to is that the scoring system will only use the function at the end of the uploaded file. That‘s to say you need to design a function which takes observation and configuration as input and return the action, and put it at the end of the file. Please check **submission.py** to see how to do this.
+Another thing you need to pay attention to is that the scoring system will only use the function at the end of the uploaded file. That‘s to say you need to design a function which takes observation and configuration as input and return the action, and put it at the end of the file. Please check **submission.py** to see how to do this.、

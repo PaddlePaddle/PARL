@@ -27,3 +27,4 @@ if __name__ == '__main__':
     model_byte = base64.b64encode(pickle.dumps(actor))
     with open('./model/actor.txt', "wb") as f:
         f.write(model_byte)
+

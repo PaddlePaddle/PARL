@@ -28,6 +28,7 @@
 + [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
 + gym
 
+*其中`homework/lesson5/ddpg_quadrotor`的代码已经用`ActionMappingWrapper`(parl>=1.4可用)替换了`action_mapping`(parl<=1.3.3可用)*
 
 ### 运行示例
 

@@ -524,7 +524,7 @@ class Actor(parl.Model):
     def predict(self, state):
         """Predict action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         """
 
         state_tensor = paddle.to_tensor(state, dtype=paddle.float32)
@@ -535,7 +535,7 @@ class Actor(parl.Model):
     def sample(self, state):
         """Sampling action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         """
 
         batch_size = state.shape[0]

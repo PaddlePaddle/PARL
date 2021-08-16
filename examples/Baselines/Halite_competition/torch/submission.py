@@ -25,6 +25,10 @@ from kaggle_environments.envs.halite.helpers import *
 from kaggle_environments import make, evaluate
 from collections import deque
 
+import os
+os.environ['PARL_BACKEND'] = 'torch'
+
+
 config = {
 
     # configuration for env
@@ -523,7 +527,7 @@ class Actor(nn.Module):
     def predict(self, state):
         """Predict action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         """
 
         state_tensor = torch.tensor(state, dtype=torch.float32)
@@ -534,7 +538,7 @@ class Actor(nn.Module):
     def sample(self, state):
         """Sampling action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         """
 
         state_tensor = torch.tensor(state, dtype=torch.float32)

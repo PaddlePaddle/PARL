@@ -28,12 +28,12 @@ class Agent(parl.Agent):
     def learn(self, obs, act, value, returns, log_prob, adv):
         """Updating network
         Args:
-            obs (numpy.array): representation of current observation
-            act (numpy.array): current action
-            value (numpy.array): state value
-            returns (numpy.array): discounted return
-            log_prob (numpy.array): the log probabilities of action
-            adv (numpy.array): advantage value
+            obs (np.array): representation of current observation
+            act (np.array): current action
+            value (np.array): state value
+            returns (np.array): discounted return
+            log_prob (np.array): the log probabilities of action
+            adv (np.array): advantage value
         """
 
         obs = torch.tensor(obs, dtype=torch.float32)
@@ -51,7 +51,7 @@ class Agent(parl.Agent):
     def predict(self, state):
         """Predict action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
 
         Return:
             action (np.array): action to be executed
@@ -68,7 +68,7 @@ class Agent(parl.Agent):
     def sample(self, state):
         """Sampling action
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         Return:
             action (np.array): action to be executed
         """
@@ -87,7 +87,7 @@ class Agent(parl.Agent):
     def value(self, state):
         """Predict the critic value
         Args:
-            state (tensor): representation of current state 
+            state (np.array): representation of current state 
         Return:
             value (np.array): state value
         """

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+os.environ['PARL_BACKEND'] = 'torch'
+
 from rl_trainer.controller import Controller
 from kaggle_environments import evaluate
 from kaggle_environments.envs.halite.helpers import *

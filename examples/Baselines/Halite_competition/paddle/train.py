@@ -27,16 +27,18 @@ env_seed = config["seed"]
 paddle.seed(env_seed)
 np.random.seed(env_seed)
 random.seed(env_seed)
+
 logx = logx.logx
 logx.initialize(logdir=config["log_path"], tensorboard=True, hparams=config)
 if not os.path.exists(config["save_path"]):
     os.makedirs(config["save_path"])
+
 '''set up agent
 In this training script, we only train the first agent
 If you want to train the agent by self-play, you can also set 
         player_list = [None, None]
 Then, the environment will return the observation of these two agents
-Right now, we onlu use
+Right now, we only use
         player_list = [None, "random"]
 Then, the environment will only return the observation of the first agent
 '''
@@ -59,7 +61,6 @@ def take_action(observation, configuration):
     action = players[0].take_action(board, "predict")
     return action
 
-
 # function for testing
 def test_agent():
     players[0].prepare_test()
@@ -75,8 +76,6 @@ def test_agent():
         #                                           timeout exception if the cpu resource is limited)
         # please check the errors to see the detailed message
         print(errors[0])
-        import pdb
-        pdb.set_trace()
         return None, None
     return rew1, rew2
 
@@ -176,17 +175,12 @@ def main():
         # train agents
         if len(players[0].ship_buffer):
             value_loss, action_loss, entropy = players[0].train_ship_agent()
-            #logx.msg("ship loss : {0}".format(ship_loss))
             logx.metric(
                 "train", {
                     "ship_value_loss": value_loss,
                     "ship_policy_loss": action_loss,
                     "ship_entropy": entropy
                 }, total_step)
-
-        # print logs
-        logx.msg("episode:{0}, episode_step:{1}, total_step:{2}".format(
-            episode, episode_step, total_step))
 
         # snippet of code to test the agent
         '''
@@ -223,7 +217,6 @@ def main():
             if ship_rew is not None or ship_len is not None:
                 logx.msg(message)
 
-        #logx.msg("random player, episode_halite:{0}".format(random_agent_halite))
         for player_ind, halite, ship_num, shipyard_num, ship_halite in zip(
                 player_index, episode_halite, episode_ship_num,
                 episode_shipyard_num, episode_ship_halite):

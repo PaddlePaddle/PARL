@@ -28,7 +28,6 @@ from collections import deque
 import os
 os.environ['PARL_BACKEND'] = 'torch'
 
-
 config = {
 
     # configuration for env

@@ -17,12 +17,13 @@ from config import config
 from kaggle_environments.envs.halite.helpers import *
 
 from .agent import Agent
-from .policy import *
-from .obs_parser import *
 from .model import Model
-from .replay_memory import *
-from .algorithm import *
-from .utils import is_alive
+from .algorithm import PPO
+from .obs_parser import get_ship_feature
+from .replay_memory import ReplayMemory
+from .utils import is_alive, check_nearby_ship, nearest_shipyard_position, mahattan_distance
+from .policy import do_nothing_policy, move_up_policy, move_down_policy, move_left_policy, move_right_policy,\
+                    spawn_policy, return_to_base_policy, mine_policy, convert_policy
 
 # the halite we want the agent to mine
 halite = config["num_halite"]

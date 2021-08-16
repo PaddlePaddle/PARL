@@ -35,14 +35,14 @@ config = {
     "ship_act_dim": 5,
     "ship_max_step": 10000,
 
-    # seed for training
-    "seed": 123456,
-
-    # the number of halite we want the ships to obtain
+    # the number of halite we want the ships to obtain (e.g K)
     "num_halite": 100,
 
-    # the maximum number of ships
+    # the maximum number of ships (e.g M)
     "num_ships": 10,
+
+    # seed for training
+    "seed": 123456,
 
     # configuration for logging
     "log_path": './train_log/',

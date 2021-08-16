@@ -32,7 +32,6 @@ logx = logx.logx
 logx.initialize(logdir=config["log_path"], tensorboard=True, hparams=config)
 if not os.path.exists(config["save_path"]):
     os.makedirs(config["save_path"])
-
 '''set up agent
 In this training script, we only train the first agent
 If you want to train the agent by self-play, you can also set 
@@ -60,6 +59,7 @@ def take_action(observation, configuration):
     board = Board(observation, configuration)
     action = players[0].take_action(board, "predict")
     return action
+
 
 # function for testing
 def test_agent():

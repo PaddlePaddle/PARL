@@ -20,8 +20,8 @@ import runx.logx as logx
 from config import config
 from rl_trainer.controller import Controller
 from parl.utils.window_stat import WindowStat
-from kaggle_environments import make, evaluate
-from kaggle_environments.envs.halite.helpers import *
+from zerosum_env import make, evaluate
+from zerosum_env.envs.halite.helpers import *
 
 env_seed = config["seed"]
 paddle.seed(env_seed)

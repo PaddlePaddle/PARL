@@ -14,7 +14,7 @@
 
 import numpy as np
 from config import config
-from kaggle_environments.envs.halite.helpers import *
+from zerosum_env.envs.halite.helpers import *
 
 from .agent import Agent
 from .model import Model

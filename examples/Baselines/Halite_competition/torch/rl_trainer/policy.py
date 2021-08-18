@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kaggle_environments import make, evaluate
-from kaggle_environments.envs.halite.helpers import *
+from zerosum_env import make, evaluate
+from zerosum_env.envs.halite.helpers import *
 
 import random
 from config import config

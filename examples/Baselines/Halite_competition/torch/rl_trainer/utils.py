@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from kaggle_environments.envs.halite.helpers import *
+from zerosum_env.envs.halite.helpers import *
 from collections import deque
 from config import config
 import numpy as np

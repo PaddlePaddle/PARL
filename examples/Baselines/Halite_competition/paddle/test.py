@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from rl_trainer.controller import Controller
-from kaggle_environments import evaluate
-from kaggle_environments.envs.halite.helpers import *
+from zerosum_env import evaluate
+from zerosum_env.envs.halite.helpers import *
 
 if __name__ == '__main__':
 

@@ -21,8 +21,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
-from kaggle_environments.envs.halite.helpers import *
-from kaggle_environments import make, evaluate
+from zerosum_env.envs.halite.helpers import *
+from zerosum_env import make, evaluate
 from collections import deque
 
 import os

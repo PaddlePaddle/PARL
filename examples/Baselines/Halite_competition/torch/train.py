@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+os.environ['PARL_BACKEND'] = 'torch'
+
 import torch
 import random
 import numpy as np
@@ -20,10 +22,8 @@ import runx.logx as logx
 from config import config
 from rl_trainer.controller import Controller
 from parl.utils.window_stat import WindowStat
-from kaggle_environments import make, evaluate
-from kaggle_environments.envs.halite.helpers import *
-
-os.environ['PARL_BACKEND'] = 'torch'
+from zerosum_env import make, evaluate
+from zerosum_env.envs.halite.helpers import *
 
 env_seed = config["seed"]
 torch.manual_seed(env_seed)

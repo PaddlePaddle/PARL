@@ -669,7 +669,7 @@ class Controller:
 
             for shipyard in me.shipyards:
 
-                # if there is an opponent shipo nearby, the shipyard can spawn a ship to protect itself
+                # if there is an opponent ship nearby, the shipyard can spawn a ship to protect itself
                 if check_nearby_ship(board, shipyard, enemy=True):
 
                     shipyard_policies[1](board, shipyard)
@@ -793,7 +793,7 @@ class Controller:
             else:
                 actions = self.ship_actor.predict(state)
 
-        # action for those ships whoe are ready
+        # action for those ships who are ready
         for ind, ship_id in enumerate(ready_ship_id):
 
             ship_index = me.ship_ids.index(ship_id)

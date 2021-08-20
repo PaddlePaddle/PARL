@@ -13,6 +13,7 @@ In this example, we provide a distributed SAC baseline based on PARL and paddlep
 ### Training
 
 1. Download the pretrained model (trained with fixed first 288 timesteps data) in the current directory. (filename: `paddle_pretrain_model`)
+
 [Baidu Pan](https://pan.baidu.com/s/1R-4EWIgNr2YogbJnMXk4Cg) (password: hwkb)
 
 2. Copy all files of `gridsim` (the competition package) to the current directory.
@@ -36,7 +37,7 @@ export PARL_BACKEND=paddle
 4. Start xparl cluster
 
 ```bash
-# You can change following `cpu_num` and `args.actor_nums` in the train.py 
+# You can change following `cpu_num` and `args.actor_num` in the train.py 
 # based on the CPU number of your machine.
 
 xparl start --port 8010 --cpu_num 6

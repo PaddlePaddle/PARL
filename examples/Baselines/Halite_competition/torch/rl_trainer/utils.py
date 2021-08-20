@@ -37,7 +37,7 @@ def get_new_position(pos, action):
     return tmp
 
 
-# transform the position in a widly applied setting like the index used in np.array
+# transform the position in a widely applied setting like the index used in np.array
 def transform_position(pos):
 
     return (size - pos[1] - 1, pos[0])
@@ -106,7 +106,7 @@ def check_pos(board, pos, act):
     return True
 
 
-# chech the existence of enemies
+# check the existence of enemies
 def nearby_enemy(board, ship, ignore_teammates=False):
 
     ship_position = transform_position(ship.position)

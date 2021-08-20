@@ -50,11 +50,11 @@ python test.py
 
 ## 结果
 以下图片展示了PPO算法的学习效果。目前，我们只在某个固定种子下训练模型，并且选取了一个随机智能体作为对手。为了在赛事中得到较好的名次，选手应该训练出一个更为鲁棒的模型(如应对不同砂金分布的环境和 1vs1, 1vs3场景)。
-![learning curve](./assets/learning_curve.jpg)
+![learning curve](https://github.com/benchmarking-rl/PARL-experiments/blob/master/Baselines/Halite_Competition/torch/learning_curve.jpg?raw=true)
 
 ## 可视化
 如果你想查看经渲染后的对战效果，首先需要激活Jupyter Notebook环境并打开test.ipynb，随后运行其中代码即可看到动画效果。
-![learning curve](./assets/animation.gif)
+![animation](https://github.com/benchmarking-rl/PARL-experiments/blob/master/Baselines/Halite_Competition/torch/animation.gif?raw=true)
 
 ## 提交
 目前选手们只能提交一个文件到平台上，因此选手需要将需要用到的函数和模型都放置到同一个文件中。为了在文件中加载模型，选手需要先将模型编码成字节串然后放到文件中，在需要加载模型的地方将字节串解码。选手可以参考 encode_model.py 查看如何编码模型，参考 submission.py 文件查看提交范例和加载模型。

@@ -14,7 +14,7 @@ In this example, we provide a distributed SAC baseline based on PARL and torch t
 
 1. Download the pretrained model (trained with fixed first 288 timesteps data) in the current directory. (filename: `torch_pretrain_model`)
 
-[Baidu Pan](https://pan.baidu.com/s/1IW-_re83QGTGFEALC0vS5g) (password: e3b6)
+[Baidu Pan](https://pan.baidu.com/s/1Pqv9i9byOzqStcHdttOlRA) (password: n9qc)
 
 2. Copy all files of `gridsim` (the competition package) to the current directory.
 ```bash

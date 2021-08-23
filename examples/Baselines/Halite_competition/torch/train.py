@@ -18,9 +18,9 @@ os.environ['PARL_BACKEND'] = 'torch'
 import torch
 import random
 import numpy as np
-import runx.logx as logx
 from config import config
 from rl_trainer.controller import Controller
+from parl.utils import logger, tensorboard
 from parl.utils.window_stat import WindowStat
 from zerosum_env import make, evaluate
 from zerosum_env.envs.halite.helpers import *
@@ -31,11 +31,6 @@ torch.cuda.manual_seed(env_seed)
 torch.cuda.manual_seed_all(env_seed)
 np.random.seed(env_seed)
 random.seed(env_seed)
-
-logx = logx.logx
-logx.initialize(logdir=config["log_path"], tensorboard=True, hparams=config)
-if not os.path.exists(config["save_path"]):
-    os.makedirs(config["save_path"])
 '''set up agent
 In this training script, we only train the first agent
 If you want to train the agent by self-play, you can also set 
@@ -179,12 +174,11 @@ def main():
         # train agents
         if len(players[0].ship_buffer):
             value_loss, action_loss, entropy = players[0].train_ship_agent()
-            logx.metric(
-                "train", {
-                    "ship_value_loss": value_loss,
-                    "ship_policy_loss": action_loss,
-                    "ship_entropy": entropy
-                }, total_step)
+            tensorboard.add_scalar("train/ship_value_loss", value_loss,
+                                   total_step)
+            tensorboard.add_scalar("train/ship_policy_loss", action_loss,
+                                   total_step)
+            tensorboard.add_scalar("train/ship_entropy", entropy, total_step)
 
         # snippet of code to test the agent
         '''
@@ -192,10 +186,8 @@ def main():
         if (episode) % config["test_every_episode"] == 0:
             rew1, rew2 = test_agent()
             if rew1 is not None and rew2 is not None:
-                logx.metric("test", {
-                                    "player_rew":rew1,
-                                    "random_rew":rew2},
-                            episode)
+                tensorboard.add_scalar("test/player_rew", rew1, episode)
+                tensorboard.add_scalar("test/random_rew", rew2, episode)
                 # saving model
                 if rew1 > best_test_rew:
                     best_test_rew = rew1
@@ -213,13 +205,13 @@ def main():
             message = "player_id:{0}, ".format(ind)
             if ship_rew is not None:
                 message += "ship_rew:{0:.2f}, ".format(ship_rew)
-                logx.metric("train", {"ship_rew": ship_rew}, total_step)
+                tensorboard.add_scalar("train/ship_rew", ship_rew, total_step)
             if ship_len is not None:
                 message += "ship_len:{0:.2f}, ".format(ship_len)
-                logx.metric("train", {"ship_len": ship_len}, total_step)
+                tensorboard.add_scalar("train/ship_len", ship_len, total_step)
 
             if ship_rew is not None or ship_len is not None:
-                logx.msg(message)
+                logger.info(message)
 
         for player_ind, halite, ship_num, shipyard_num, ship_halite in zip(
                 player_index, episode_halite, episode_ship_num,
@@ -227,22 +219,23 @@ def main():
 
             win_stat.add(halite > random_agent_halite)
 
-            logx.msg(
+            logger.info(
                 "player_id:{0}, episode_halite:{1}, ship_num:{2}, shipyard_num:{3}, ship_halite:{4}"
                 .format(player_ind, halite, ship_num, shipyard_num,
                         ship_halite))
 
-            logx.metric(
-                "train", {
-                    "player{0}_environment_rew".format(player_ind): halite,
-                    "player{0}_winning_rate".format(player_ind): win_stat.mean
-                }, episode)
+            tensorboard.add_scalar(
+                "train/player{0}_environment_rew".format(player_ind), halite,
+                episode)
+            tensorboard.add_scalar(
+                "train/player{0}_winning_rate".format(player_ind),
+                win_stat.mean, episode)
 
             # save the best model
             if win_stat.mean > best_win_rate:
                 best_win_rate = win_stat.mean
                 ship_model_path = os.path.join(
-                    config["save_path"], 'player%s_test_ship_model_ep_%s.pth' %
+                    config["save_path"], 'player%s_best_ship_model_ep_%s.pth' %
                     (player_ind, episode))
                 players[player_ind].save(ship_model_path)
 

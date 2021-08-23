@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import parl
 import paddle
 
@@ -107,6 +108,10 @@ class Agent(parl.Agent):
         Args:
             model_path (str): the path to save model
         """
+        sep = os.sep
+        dirname = sep.join(model_path.split(sep)[:-1])
+        if dirname != '' and not os.path.exists(dirname):
+            os.makedirs(dirname)
         model_dict = {}
         model_dict["critic"] = self.alg.critic.state_dict()
         model_dict["actor"] = self.alg.actor.state_dict()

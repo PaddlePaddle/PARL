@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import gym
 import numpy as np
 from parl.utils import logger
@@ -22,6 +21,7 @@ from utilize.form_action import *
 
 MAX_TIMESTEP = 288
 GAMMA = 0.99
+
 
 class MaxTimestepWrapper(gym.Wrapper):
     def __init__(self, env):
@@ -52,7 +52,7 @@ class ObsTransformerWrapper(gym.Wrapper):
     def __init__(self, env):
         logger.info("[env type]:{}".format(type(env)))
         gym.Wrapper.__init__(self, env)
-    
+
     def _get_obs(self, obs):
         # loads
         loads = []
@@ -78,9 +78,11 @@ class ObsTransformerWrapper(gym.Wrapper):
         action_space_high = obs.action_space['adjust_gen_p'].high.tolist()
         action_space_low[settings.balanced_id] = 0.0
         action_space_high[settings.balanced_id] = 0.0
-        
-        features = np.concatenate([loads, prods, rho.tolist(), next_load, action_space_low,
-            action_space_high])
+
+        features = np.concatenate([
+            loads, prods,
+            rho.tolist(), next_load, action_space_low, action_space_high
+        ])
 
         return features
 
@@ -88,7 +90,7 @@ class ObsTransformerWrapper(gym.Wrapper):
         self.raw_obs, reward, done, info = self.env.step(action, **kwargs)
         obs = self._get_obs(self.raw_obs)
         return obs, reward, done, info
-        
+
     def reset(self, **kwargs):
         self.raw_obs = self.env.reset(**kwargs)
         obs = self._get_obs(self.raw_obs)
@@ -102,13 +104,13 @@ class RewardShapingWrapper(gym.Wrapper):
 
     def step(self, action, **kwargs):
         obs, reward, done, info = self.env.step(action, **kwargs)
-        
+
         shaping_reward = 1.0
 
         info["origin_reward"] = reward
 
         return obs, shaping_reward, done, info
-        
+
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
 
@@ -132,10 +134,10 @@ class ActionWrapper(gym.Wrapper):
             (high_bound - low_bound) / 2.0)
         mapped_action[self.raw_env.settings.balanced_id] = 0.0
         mapped_action = np.clip(mapped_action, low_bound, high_bound)
-        
-        ret_action = form_action(mapped_action, self.v_action) 
+
+        ret_action = form_action(mapped_action, self.v_action)
         return self.env.step(ret_action, **kwargs)
-        
+
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
 
@@ -155,6 +157,6 @@ def get_env():
 
 if __name__ == '__main__':
     env = get_env()
-    
+
     obs = env.reset()
     print(obs.shape)

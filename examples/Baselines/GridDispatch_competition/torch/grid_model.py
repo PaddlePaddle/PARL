@@ -50,7 +50,6 @@ class Actor(parl.Model):
         self.mean_linear = nn.Linear(256, action_dim)
         self.std_linear = nn.Linear(256, action_dim)
 
-
     def forward(self, obs):
         x = F.relu(self.l1(obs))
         x = F.relu(self.l2(x))

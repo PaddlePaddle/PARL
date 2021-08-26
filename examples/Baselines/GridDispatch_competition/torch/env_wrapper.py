@@ -19,13 +19,11 @@ from Environment.base_env import Environment
 from utilize.settings import settings
 from utilize.form_action import *
 
-MAX_TIMESTEP = 288
-GAMMA = 0.99
-
 
 class MaxTimestepWrapper(gym.Wrapper):
-    def __init__(self, env):
+    def __init__(self, env, max_timestep=288):
         logger.info("[env type]:{}".format(type(env)))
+        self.max_timestep = max_timestep
         env.observation_space = None
         env.reward_range = None
         env.metadata = None
@@ -36,7 +34,7 @@ class MaxTimestepWrapper(gym.Wrapper):
     def step(self, action, **kwargs):
         self.timestep += 1
         obs, reward, done, info = self.env.step(action, **kwargs)
-        if self.timestep >= MAX_TIMESTEP:
+        if self.timestep >= self.max_timestep:
             done = True
             info["timeout"] = True
         else:
@@ -153,10 +151,3 @@ def get_env():
     env = ActionWrapper(env, raw_env)
 
     return env
-
-
-if __name__ == '__main__':
-    env = get_env()
-
-    obs = env.reset()
-    print(obs.shape)

@@ -29,9 +29,10 @@ python yml_creator.py --dataset_path $PWD/data
 ```
 
 
-3. Set the environment variable of PARL
+3. Set the environment variable of PARL and gridsim.
 ```bash
 export PARL_BACKEND=paddle
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib64
 ```
 
 4. Start xparl cluster

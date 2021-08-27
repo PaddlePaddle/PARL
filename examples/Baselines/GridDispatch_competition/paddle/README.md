@@ -1,9 +1,10 @@
 ## SAC baseline for grid dispatching competition
 
-In this example, we provide a distributed SAC baseline based on PARL and paddlepaddle to solve the [grid dispatching competition](https://aistudio.baidu.com/aistudio/competition/detail/111) task.
+In this example, we provide a distributed SAC baseline based on PARL and paddlepaddle for the [grid dispatching competition](https://aistudio.baidu.com/aistudio/competition/detail/111) task.
 
 ### Dependencies
-* python3
+* Linux
+* python3.6+
 * paddlepaddle >= 2.1.0
 * parl >= 2.0.0
 
@@ -38,19 +39,19 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib64
 4. Start xparl cluster
 
 ```bash
-# You can change following `cpu_num` and `args.actor_num` in the train.py 
-# based on the CPU number of your machine.
+# You can change following `cpu_num` and `args.actor_num` in the train.py based on the CPU number of your machine.
+# Note that you only need to start the cluster once.
 
 xparl start --port 8010 --cpu_num 6
 ```
 
-5. Run training script
+5. start training. 
 
 ```bash
 python train.py --actor_num 6
 ```
 
-6. Visualize
+6. Visualize the training curve and other information.
 ```
 tensorboard --logdir .
 ```

@@ -28,7 +28,7 @@
 + [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
 + gym
 
-*其中`homework/lesson5/ddpg_quadrotor`的代码已经用`ActionMappingWrapper`(parl>=1.4可用)替换了`action_mapping`(parl<=1.3.3可用)*
+**【注意】** Windows系统如果无法安装`parl==1.3.1`，则推荐使用`parl==1.4`，注意运行代码时删除`train.py`第`21`行对`parl`版本的限制
 
 ### 运行示例
 

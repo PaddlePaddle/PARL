@@ -24,11 +24,10 @@
 
 ### 安装依赖（注意：请务必安装对应的版本）
 
-+ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
++ [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
 + gym
 
-**【注意】** Windows系统如果无法安装`parl==1.3.1`，则推荐使用`parl==1.4`，注意运行代码时删除`train.py`第`21`行对`parl`版本的限制
 
 ### 运行示例
 

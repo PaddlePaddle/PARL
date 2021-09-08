@@ -18,7 +18,7 @@
 import parl
 import paddle
 assert paddle.__version__ == "1.6.3", "[Version WARNING] please try `pip install paddlepaddle==1.6.3`"
-assert parl.__version__ == "1.3.1", "[Version WARNING] please try `pip install parl==1.3.1`"
+assert parl.__version__ == "1.3.1" or parl.__version__ == "1.4", "[Version WARNING] please try `pip install parl==1.3.1` or `pip install parl==1.4` "
 
 import os
 import numpy as np

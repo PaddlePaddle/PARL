@@ -24,11 +24,10 @@
 
 ### 安装依赖（注意：请务必安装对应的版本）
 
-+ [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)
-+ [parl==1.3.1](https://github.com/PaddlePaddle/PARL)
++ [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
++ [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
 + gym
 
-*其中`homework/lesson5/ddpg_quadrotor`的代码已经用`ActionMappingWrapper`(parl>=1.4可用)替换了`action_mapping`(parl<=1.3.3可用)*
 
 ### 运行示例
 

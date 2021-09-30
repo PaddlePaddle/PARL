@@ -107,6 +107,7 @@ def main():
             BATCH_SIZE)
         agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                     batch_terminal)
+        total_steps += 1
 
         # Evaluate episode
         if (total_steps + 1) // args.test_every_steps >= test_flag:

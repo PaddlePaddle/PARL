@@ -42,7 +42,6 @@ class Agent(AgentBase):
 
     Attributes:
         alg (parl.algorithm): algorithm of this agent.
-        place: can automatically specify device when creating a tensor.
 
     Public Functions:
         - ``sample``: return a noisy action to perform exploration according to the policy.

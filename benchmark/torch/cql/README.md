@@ -4,13 +4,12 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 > Paper: CQL in [Conservative Q-Learning for Offline Reinforcement Learning](https://arxiv.org/abs/2006.04779)
 
 ### Environment and dataset introduction
-Mujoco games: Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
++ Mujoco games: Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
++ D4RL datasets: Please see [here](https://sites.google.com/view/d4rl/home) to know more about D4RL datasets.
 
-D4RL datasets: Please see [here](https://sites.google.com/view/d4rl/home) to know more about D4RL datasets.
+### Benchmark result
 
-### Benchmark result (TODO)
-
-<!-- <img src=".benchmark/CQL_results.png" width = "800" height ="400" alt="CQL_results"/> -->
+![learning curve](https://github.com/benchmarking-rl/PARL-experiments/blob/master/CQL/torch/result.png)
 
 + Each experiment was run three times with different seeds
 

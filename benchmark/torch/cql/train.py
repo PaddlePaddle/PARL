@@ -110,8 +110,8 @@ def main():
         total_steps += 1
 
         # Evaluate episode
-        if (total_steps + 1) // args.test_every_steps >= test_flag:
-            while (total_steps + 1) // args.test_every_steps >= test_flag:
+        if total_steps // args.test_every_steps >= test_flag:
+            while total_steps // args.test_every_steps >= test_flag:
                 test_flag += 1
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,

@@ -185,6 +185,3 @@ class MADDPG(parl.Algorithm):
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(self.target_model, decay=decay)
-        if decay is None:
-            decay = 1.0 - self.tau
-        self.model.sync_weights_to(self.target_model, decay=decay)

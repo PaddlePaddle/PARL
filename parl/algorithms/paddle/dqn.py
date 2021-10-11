@@ -74,4 +74,6 @@ class DQN(parl.Algorithm):
         return loss
 
     def sync_target(self):
+        """ assign the parameters of the training network to the target network
+        """
         self.model.sync_weights_to(self.target_model)

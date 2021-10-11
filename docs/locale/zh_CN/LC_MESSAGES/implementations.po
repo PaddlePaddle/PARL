@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PARL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-28 19:31+0800\n"
+"POT-Creation-Date: 2021-10-11 20:14+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,7 @@ msgstr ""
 
 #: of parl.algorithms.paddle.a2c.A2C:1 parl.algorithms.paddle.ddpg.DDPG:1
 #: parl.algorithms.paddle.ddqn.DDQN:1 parl.algorithms.paddle.dqn.DQN:1
-#: parl.algorithms.paddle.oac.OAC:1
+#: parl.algorithms.paddle.maddpg.MADDPG:1 parl.algorithms.paddle.oac.OAC:1
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient:1
 #: parl.algorithms.paddle.ppo.PPO:1 parl.algorithms.paddle.qmix.QMIX:1
 #: parl.algorithms.paddle.sac.SAC:1 parl.algorithms.paddle.td3.TD3:1
@@ -43,8 +43,13 @@ msgstr ""
 #: parl.algorithms.paddle.a2c.A2C.prob_and_value
 #: parl.algorithms.paddle.a2c.A2C.value
 #: parl.algorithms.paddle.ddpg.DDPG.__init__
+#: parl.algorithms.paddle.ddpg.DDPG.sync_target
 #: parl.algorithms.paddle.ddqn.DDQN.__init__
 #: parl.algorithms.paddle.dqn.DQN.__init__
+#: parl.algorithms.paddle.maddpg.MADDPG.Q
+#: parl.algorithms.paddle.maddpg.MADDPG.__init__
+#: parl.algorithms.paddle.maddpg.MADDPG.predict
+#: parl.algorithms.paddle.maddpg.MADDPG.sync_target
 #: parl.algorithms.paddle.oac.OAC.__init__
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient.__init__
 #: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
@@ -126,6 +131,7 @@ msgid "discounted factor for reward computation"
 msgstr ""
 
 #: of parl.algorithms.paddle.ddpg.DDPG.__init__:7
+#: parl.algorithms.paddle.maddpg.MADDPG.__init__:12
 #: parl.algorithms.paddle.oac.OAC.__init__:7
 #: parl.algorithms.paddle.sac.SAC.__init__:7
 #: parl.algorithms.paddle.td3.TD3.__init__:7
@@ -135,6 +141,7 @@ msgid ""
 msgstr ""
 
 #: of parl.algorithms.paddle.ddpg.DDPG.__init__:9
+#: parl.algorithms.paddle.maddpg.MADDPG.__init__:16
 #: parl.algorithms.paddle.oac.OAC.__init__:15
 #: parl.algorithms.paddle.sac.SAC.__init__:11
 #: parl.algorithms.paddle.td3.TD3.__init__:9
@@ -142,6 +149,7 @@ msgid "learning rate of the actor model"
 msgstr ""
 
 #: of parl.algorithms.paddle.ddpg.DDPG.__init__:11
+#: parl.algorithms.paddle.maddpg.MADDPG.__init__:14
 #: parl.algorithms.paddle.oac.OAC.__init__:17
 #: parl.algorithms.paddle.sac.SAC.__init__:13
 #: parl.algorithms.paddle.td3.TD3.__init__:11
@@ -162,6 +170,18 @@ msgstr ""
 msgid ""
 "Refine the predicting process, e.g,. use the policy model to predict "
 "actions."
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.sync_target:1
+#: parl.algorithms.paddle.maddpg.MADDPG.sync_target:1
+msgid "update the target network with the training network"
+msgstr ""
+
+#: of parl.algorithms.paddle.ddpg.DDPG.sync_target:3
+#: parl.algorithms.paddle.maddpg.MADDPG.sync_target:3
+msgid ""
+"the decaying factor while updating the target network with the training "
+"network. 0 represents the **assignment**."
 msgstr ""
 
 #: ../../implementations/ddqn.rst:2
@@ -210,6 +230,10 @@ msgstr ""
 msgid "update the Q function (self.model) with DQN algorithm"
 msgstr ""
 
+#: of parl.algorithms.paddle.dqn.DQN.sync_target:1
+msgid "assign the parameters of the training network to the target network"
+msgstr ""
+
 #: ../../implementations/impala.rst:2
 msgid "IMPALA"
 msgstr ""
@@ -227,6 +251,7 @@ msgid "steps of each environment sampling."
 msgstr ""
 
 #: of parl.algorithms.fluid.impala.impala.IMPALA.__init__:7
+#: parl.algorithms.paddle.maddpg.MADDPG.__init__:10
 #: parl.algorithms.paddle.qmix.QMIX.__init__:9
 msgid "discounted factor for reward computation."
 msgstr ""
@@ -255,6 +280,78 @@ msgstr ""
 
 #: ../../implementations/maddpg.rst:2
 msgid "MADDPG"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q:1
+msgid "use the value model to predict Q values"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q:3
+msgid "all agents' observation, len(agent's num) + shape([B] + shape of obs_n)"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q:5
+msgid "all agents' action, len(agent's num) + shape([B] + shape of act_n)"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q:7
+#: parl.algorithms.paddle.maddpg.MADDPG.predict:5
+msgid "use target_model or not"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q
+#: parl.algorithms.paddle.maddpg.MADDPG.predict
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.qmix.QMIX.learn
+msgid "Returns"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q:10
+msgid "Q value of this agent, shape([B])"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.Q
+#: parl.algorithms.paddle.maddpg.MADDPG.predict
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
+#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
+#: parl.algorithms.paddle.qmix.QMIX.learn
+msgid "Return type"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.__init__:1
+#, fuzzy
+msgid "MADDPG algorithm"
+msgstr "已复现算法"
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.__init__:3
+msgid ""
+"forward network of actor and critic. The function get_actor_params() of "
+"model should be implemented."
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.__init__:6
+msgid "index of agent, in multiagent env"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.__init__:8
+msgid "action_space, gym space"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.learn:1
+msgid "update actor and critic model with MADDPG algorithm"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.predict:1
+msgid "use the policy model to predict actions"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.predict:3
+msgid "observation, shape([B] + shape of obs_n[agent_index])"
+msgstr ""
+
+#: of parl.algorithms.paddle.maddpg.MADDPG.predict:8
+msgid "action, shape([B] + shape of act_n[agent_index])"
 msgstr ""
 
 #: ../../implementations/new_alg.rst:2
@@ -434,20 +531,8 @@ msgstr ""
 msgid "shape of (batch_size, 1)"
 msgstr ""
 
-#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
-#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
-#: parl.algorithms.paddle.qmix.QMIX.learn
-msgid "Returns"
-msgstr ""
-
 #: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn:10
 msgid "shape of (1)"
-msgstr ""
-
-#: of parl.algorithms.paddle.policy_gradient.PolicyGradient.learn
-#: parl.algorithms.paddle.policy_gradient.PolicyGradient.predict
-#: parl.algorithms.paddle.qmix.QMIX.learn
-msgid "Return type"
 msgstr ""
 
 #: of parl.algorithms.paddle.policy_gradient.PolicyGradient.predict:1
@@ -762,4 +847,7 @@ msgstr ""
 
 #~ msgid "Implemented Algorithms"
 #~ msgstr "已复现算法"
+
+#~ msgid "update the target network with the training network."
+#~ msgstr ""
 

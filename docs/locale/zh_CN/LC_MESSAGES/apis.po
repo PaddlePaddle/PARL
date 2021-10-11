@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PARL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-18 14:23+0800\n"
+"POT-Creation-Date: 2021-10-11 20:11+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -52,43 +52,39 @@ msgstr ""
 msgid "algorithm of this agent."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:21
-msgid "can automatically specify device when creating a tensor."
-msgstr ""
-
-#: of parl.core.paddle.agent.Agent:29 parl.core.paddle.model.Model:47
+#: of parl.core.paddle.agent.Agent:28 parl.core.paddle.model.Model:47
 msgid "Public Functions:"
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:25
+#: of parl.core.paddle.agent.Agent:24
 msgid ""
 "``sample``: return a noisy action to perform exploration according to the"
 " policy."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:26
+#: of parl.core.paddle.agent.Agent:25
 msgid "``predict``: return an action given current observation."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:27
+#: of parl.core.paddle.agent.Agent:26
 msgid ""
 "``learn``: update the parameters of self.alg using the `learn_program` "
 "defined in `build_program()`."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:28
+#: of parl.core.paddle.agent.Agent:27
 msgid "``save``: save parameters of the ``agent`` to a given path."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:29
+#: of parl.core.paddle.agent.Agent:28
 msgid "``restore``: restore previous saved parameters from a given path."
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:31
+#: of parl.core.paddle.agent.Agent:30
 msgid "Todo"
 msgstr ""
 
-#: of parl.core.paddle.agent.Agent:31
+#: of parl.core.paddle.agent.Agent:30
 msgid ""
 "allow users to get parameters of a specified model by specifying the "
 "model's name in ``get_weights()``."
@@ -363,4 +359,7 @@ msgid ""
 "Before calling ``sync_weights_to``, parameters of the model must have "
 "been initialized."
 msgstr ""
+
+#~ msgid "can automatically specify device when creating a tensor."
+#~ msgstr ""
 

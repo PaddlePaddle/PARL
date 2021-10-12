@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PARL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-11 20:14+0800\n"
+"POT-Creation-Date: 2021-10-12 11:18+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -181,7 +181,8 @@ msgstr ""
 #: parl.algorithms.paddle.maddpg.MADDPG.sync_target:3
 msgid ""
 "the decaying factor while updating the target network with the training "
-"network. 0 represents the **assignment**."
+"network. 0 represents the **assignment**. None represents updating the "
+"target network slowly that depends on the hyperparameter `tau`."
 msgstr ""
 
 #: ../../implementations/ddqn.rst:2
@@ -849,5 +850,11 @@ msgstr ""
 #~ msgstr "已复现算法"
 
 #~ msgid "update the target network with the training network."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "the decaying factor while updating the"
+#~ " target network with the training "
+#~ "network. 0 represents the **assignment**."
 #~ msgstr ""
 

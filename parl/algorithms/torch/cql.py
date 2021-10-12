@@ -28,29 +28,29 @@ class CQL(parl.Algorithm):
                  model,
                  gamma=None,
                  tau=None,
-                 alpha=None,
                  actor_lr=None,
                  critic_lr=None,
-                 policy_eval_start=0,
-                 with_automatic_entropy_tuning=False,
+                 policy_eval_start=40000,
+                 with_automatic_entropy_tuning=True,
                  with_lagrange=False,
-                 lagrange_thresh=-1.0,
-                 min_q_version=-1,
-                 min_q_weight=1.0):
+                 lagrange_thresh=10.0,
+                 min_q_version=3,
+                 min_q_weight=5.0,
+                 alpha=1.0):
         """ CQL algorithm
             Args:
                 model(parl.Model): forward network of actor and critic.
                 gamma(float): discounted factor for reward computation
                 tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                alpha (float): temperature parameter determines the relative importance of the entropy against the reward
                 actor_lr (float): learning rate of the actor model
                 critic_lr (float): learning rate of the critic model
-                policy_eval_start (int): try doing behaivoral cloning before 
+                policy_eval_start (int): try doing behaivoral cloning at the beginning, 40000 or 10000 work similarly
                 with_automatic_entropy_tuning (bool): train with automatic entropy tuning in Actor.
                 with_lagrange (bool): train with lagrange
-                lagrange_thresh (float): the value of tau, corresponds to the CQL(lagrange) version
+                lagrange_thresh (float): the value of tau, corresponds to the CQL(lagrange) version, suggest 10.0 in mujoco and 5.0 in Franka kitchen or Adroit domains
                 min_q_version (int): min_q_version = 3 (CQL(H)), = 2 (CQL(rho)), will be set to <0 in cql if not using lagrange
                 min_q_weight (float): the value of alpha in Critic loss, suggest 5.0 or 10.0 if not using lagrange
+                alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
         """
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
@@ -59,15 +59,17 @@ class CQL(parl.Algorithm):
         check_model_method(model, 'get_critic_params', self.__class__.__name__)
         assert isinstance(gamma, float)
         assert isinstance(tau, float)
-        assert isinstance(alpha, float)
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
         assert isinstance(with_automatic_entropy_tuning, bool)
         assert isinstance(with_lagrange, bool)
+        assert isinstance(lagrange_thresh, float)
+        assert isinstance(min_q_version, int)
+        assert isinstance(min_q_weight, float)
+        assert isinstance(alpha, float)
 
         self.gamma = gamma
         self.tau = tau
-        self.alpha = alpha
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
 
@@ -78,6 +80,7 @@ class CQL(parl.Algorithm):
         self.lagrange_thresh = lagrange_thresh
         self.min_q_version = -1 if self.with_lagrange else min_q_version
         self.min_q_weight = min_q_weight
+        self.alpha = alpha
         self.temp = 1.0
         self.num_random = 10
         self._current_steps = 0
@@ -106,11 +109,15 @@ class CQL(parl.Algorithm):
                 [self.log_alpha_prime], lr=critic_lr)
 
     def predict(self, obs):
+        """ Define the predicting process, e.g,. use the policy model to predict actions.
+        """
         act_mean, _ = self.model.policy(obs)
         action = torch.tanh(act_mean)
         return action
 
     def sample(self, obs):
+        """ Define the sampling process. This function returns an action with noise to perform exploration.
+        """
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std * N(0, 1))
@@ -123,21 +130,9 @@ class CQL(parl.Algorithm):
         log_prob = log_prob.sum(1, keepdims=True)
         return action, log_prob
 
-    def sample_log_prob(self, obs, action):
-        def atanh(x):
-            one_plus_x = (1 + x).clamp(min=1e-6)
-            one_minus_x = (1 - x).clamp(min=1e-6)
-            return 0.5 * torch.log(one_plus_x / one_minus_x)
-
-        raw_action = atanh(action)
-        act_mean, act_log_std = self.model.policy(obs)
-
-        normal = Normal(act_mean, act_log_std.exp())
-        log_prob = normal.log_prob(raw_action)
-        log_prob -= torch.log(1 - action.pow(2) + 1e-6)
-        return log_prob.sum(-1)
-
     def learn(self, obs, action, reward, next_obs, terminal):
+        """ Define the loss function and create an optimizer to minize the loss.
+        """
         self._current_steps += 1
         critic_loss = self._critic_learn(obs, action, reward, next_obs,
                                          terminal)
@@ -256,13 +251,27 @@ class CQL(parl.Algorithm):
             conventionally, there's not much difference in performance with having 20k 
             gradient steps here, or not having it
             """
-            policy_log_prob = self.sample_log_prob(obs, action)
+            policy_log_prob = self._sample_log_prob(obs, action)
             actor_loss = (self.alpha * log_pi - policy_log_prob).mean()
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor_optimizer.step()
         return actor_loss
+
+    def _sample_log_prob(self, obs, action):
+        def atanh(x):
+            one_plus_x = (1 + x).clamp(min=1e-6)
+            one_minus_x = (1 - x).clamp(min=1e-6)
+            return 0.5 * torch.log(one_plus_x / one_minus_x)
+
+        raw_action = atanh(action)
+        act_mean, act_log_std = self.model.policy(obs)
+
+        normal = Normal(act_mean, act_log_std.exp())
+        log_prob = normal.log_prob(raw_action)
+        log_prob -= torch.log(1 - action.pow(2) + 1e-6)
+        return log_prob.sum(-1)
 
     def _get_policy_actions(self, obs):
         obs_temp = obs.unsqueeze(1).repeat(1, self.num_random, 1).view(
@@ -283,6 +292,12 @@ class CQL(parl.Algorithm):
         return q1, q2
 
     def sync_target(self, decay=None):
+        """ update the target network with the training network
+        Args:
+            decay(float): the decaying factor while updating the target network with the training network.
+                        0 represents the **assignment**.
+                        0 represents the **assignment**. None represents updating the target network slowly that depends on the hyperparameter `tau`.
+        """
         if decay is None:
             decay = 1.0 - self.tau
         for param, target_param in zip(self.model.parameters(),

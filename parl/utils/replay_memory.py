@@ -99,3 +99,16 @@ class ReplayMemory(object):
         self.terminal[:self._curr_size] = data['terminal'][:self._curr_size]
         self.next_obs[:self._curr_size] = data['next_obs'][:self._curr_size]
         logger.info("[load rpm]memory loade from {}".format(pathname))
+
+    def load_from_d4rl(self, dataset):
+        logger.info("Dataset Info: ")
+        for key in dataset:
+            logger.info('key: {},\tshape: {},\tdtype: {}'.format(
+                key, dataset[key].shape, dataset[key].dtype))
+        self.obs = dataset['observations']
+        self.next_obs = dataset['next_observations']
+        self.action = dataset['actions']
+        self.reward = dataset['rewards']
+        self.terminal = dataset['terminals']
+        self._curr_size = dataset['terminals'].shape[0]
+        logger.info('Number of terminals on: {}'.format(self.terminal.sum()))

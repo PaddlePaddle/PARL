@@ -21,11 +21,6 @@ from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import CQL
 
-POLICY_EVAL_START = 40000  # Defaulted to 20000 (40000 or 10000 work similarly)
-LAGRANGE_THRESH = 10  # but paper: 10.0 in mujoco,  5.0 in Franka kitchen and Adroit domains
-MIN_Q_VERSION = 3  # min_q_version = 3 (CQL(H)), = 2 (CQL(rho)), will be set to <0 in cql if not using lagrange
-MIN_Q_WEIGHT = 5.0  # the value of alpha in critic loss, suggest 5.0 or 10.0 if not using lagrange
-ALPHA = 1.0  # the value of alpha(temperature parameter) in actor loss, determines the relative importance of entropy term against the reward
 EVAL_EPISODES = 5
 MEMORY_SIZE = int(2e6)
 BATCH_SIZE = 256
@@ -50,21 +45,6 @@ def run_evaluate_episodes(agent, env, eval_episodes):
     return avg_reward
 
 
-def load_hdf5(dataset, rpm):
-    rpm.obs = dataset['observations']
-    rpm.next_obs = dataset['next_observations']
-    rpm.action = dataset['actions']
-    rpm.reward = dataset['rewards']
-    rpm.terminal = dataset['terminals']
-    rpm._curr_size = dataset['terminals'].shape[0]
-
-    logger.info("Dataset Info: ")
-    for key in dataset:
-        logger.info('key: {},\tshape: {},\tdtype: {}'.format(
-            key, dataset[key].shape, dataset[key].dtype))
-    logger.info('Number of terminals on: {}'.format(rpm.terminal.sum()))
-
-
 def main():
     logger.info("------------------- CQL ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
@@ -83,21 +63,16 @@ def main():
         model,
         gamma=GAMMA,
         tau=TAU,
-        alpha=ALPHA,
         actor_lr=ACTOR_LR,
         critic_lr=CRITIC_LR,
-        policy_eval_start=POLICY_EVAL_START,
         with_automatic_entropy_tuning=args.with_automatic_entropy_tuning,
-        with_lagrange=args.with_lagrange,
-        lagrange_thresh=LAGRANGE_THRESH,
-        min_q_version=MIN_Q_VERSION,
-        min_q_weight=MIN_Q_WEIGHT)
+        with_lagrange=args.with_lagrange)
     agent = MujocoAgent(algorithm)
 
     # Initialize offline data
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
-    load_hdf5(d4rl.qlearning_dataset(env), rpm)
+    rpm.load_from_d4rl(d4rl.qlearning_dataset(env))
 
     total_steps = 0
     test_flag = 0

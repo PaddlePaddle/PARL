@@ -38,19 +38,20 @@ class CQL(parl.Algorithm):
                  min_q_weight=5.0,
                  alpha=1.0):
         """ CQL algorithm
-            Args:
-                model(parl.Model): forward network of actor and critic.
-                gamma(float): discounted factor for reward computation
-                tau (float): decay coefficient when updating the weights of self.target_model with self.model
-                actor_lr (float): learning rate of the actor model
-                critic_lr (float): learning rate of the critic model
-                policy_eval_start (int): try doing behaivoral cloning at the beginning, 40000 or 10000 work similarly
-                with_automatic_entropy_tuning (bool): train with automatic entropy tuning in Actor.
-                with_lagrange (bool): train with lagrange
-                lagrange_thresh (float): the value of tau, corresponds to the CQL(lagrange) version, suggest 10.0 in mujoco and 5.0 in Franka kitchen or Adroit domains
-                min_q_version (int): min_q_version = 3 (CQL(H)), = 2 (CQL(rho)), will be set to <0 in cql if not using lagrange
-                min_q_weight (float): the value of alpha in Critic loss, suggest 5.0 or 10.0 if not using lagrange
-                alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
+
+        Args:
+            model (parl.Model): forward network of actor and critic.
+            gamma (float): discounted factor for reward computation
+            tau (float): decay coefficient when updating the weights of self.target_model with self.model
+            actor_lr (float): learning rate of the actor model
+            critic_lr (float): learning rate of the critic model
+            policy_eval_start (int): try doing behaivoral cloning at the beginning, 40000 or 10000 work similarly
+            with_automatic_entropy_tuning (bool): train with automatic entropy tuning in Actor.
+            with_lagrange (bool): train with lagrange
+            lagrange_thresh (float): the value of tau, corresponds to the CQL(lagrange) version, suggest 10.0 in mujoco and 5.0 in Franka kitchen or Adroit domains
+            min_q_version (int): min_q_version = 3 (CQL(H)), = 2 (CQL(rho)), will be set to <0 in cql if not using lagrange
+            min_q_weight (float): the value of alpha in Critic loss, suggest 5.0 or 10.0 if not using lagrange
+            alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
         """
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
@@ -293,9 +294,9 @@ class CQL(parl.Algorithm):
 
     def sync_target(self, decay=None):
         """ update the target network with the training network
+
         Args:
             decay(float): the decaying factor while updating the target network with the training network.
-                        0 represents the **assignment**.
                         0 represents the **assignment**. None represents updating the target network slowly that depends on the hyperparameter `tau`.
         """
         if decay is None:

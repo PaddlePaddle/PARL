@@ -16,7 +16,6 @@ import argparse
 import gym
 import d4rl
 from parl.utils import logger, tensorboard, ReplayMemory
-from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import CQL
@@ -52,7 +51,6 @@ def main():
 
     env = gym.make(args.env)
     env.seed(args.seed)
-    env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]

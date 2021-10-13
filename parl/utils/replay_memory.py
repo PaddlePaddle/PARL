@@ -156,6 +156,26 @@ class ReplayMemory(object):
                             actions (np.float32): shape of (batch_size, act_dim), 
                             rewards (np.float32): shape of (batch_size), 
                             terminals (bool): shape of (batch_size)
+        
+        Examples:
+            ```python
+            import gym
+            import d4rl
+
+            env = gym.make("hopper-medium-v0")
+            rpm = ReplayMemory(max_size=int(2e6), obs_dim=11, act_dim=3)
+            rpm.load_from_d4rl(d4rl.qlearning_dataset(env))
+            ```
+
+            Output
+
+            Dataset Info: 
+            key: observations,	shape: (999981, 11),	dtype: float32
+            key: actions,	shape: (999981, 3),	dtype: float32
+            key: next_observations,	shape: (999981, 11),	dtype: float32
+            key: rewards,	shape: (999981,),	dtype: float32
+            key: terminals,	shape: (999981,),	dtype: bool
+            Number of terminals on: 3045
         """
         logger.info("Dataset Info: ")
         for key in dataset:

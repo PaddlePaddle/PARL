@@ -110,4 +110,4 @@ For absolute beginners, we also provide an introductory course on reinforcement 
 
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "280" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "280" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "195" height ="200" alt="Breakout"/>
 <br>
-<img src=".github/Aircraft.gif"  width = "793" height ="300"  alt="NeurlIPS2018"/>
+<img src=".github/Aircraft.gif"  width = "762" height ="300"  alt="NeurlIPS2018"/>

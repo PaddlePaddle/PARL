@@ -3,7 +3,7 @@ Implementation of [MAML](https://arxiv.org/abs/1703.03400) and [MAML++](https://
 
 ## Benchmark result
 
-We follow the regression task setting from [Meta-SGD](https://arxiv.org/pdf/1707.09835.pdf), where the model is going to learn different sine waves.
+We follow the regression task setting from [Meta-SGD](https://arxiv.org/pdf/1707.09835.pdf), where the model is going to learn different sine waves. The figure below shows the test losses of MAML and MAML++ on 10000 randomly generated sine waves.
 
 <p align="center">
 <img src=".benchmark/loss.png" alt="result"/>

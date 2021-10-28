@@ -20,8 +20,10 @@ from maml_algorithm import MAML
 from data import MetaLearningDataLoader
 from config import Config
 
+
 class MAMLAgent(parl.Agent):
-    def __init__(self, algorithm: MAML, data: MetaLearningDataLoader, config: Config):
+    def __init__(self, algorithm: MAML, data: MetaLearningDataLoader,
+                 config: Config):
         super().__init__(algorithm)
 
         self.algorithm = algorithm
@@ -34,7 +36,8 @@ class MAMLAgent(parl.Agent):
         with tqdm.tqdm(total=self.config.total_iter_per_epoch) as bar:
             while num_iters < self.config.total_iter_per_epoch:
                 for data_batch in self.data.get_train_batches():
-                    loss = self.algorithm.train_one_iter(data_batch, current_epoch)
+                    loss = self.algorithm.train_one_iter(
+                        data_batch, current_epoch)
                     num_iters += 1
                     bar.update(1)
                     bar.set_description(f'training loss: {loss:.3f}')
@@ -55,14 +58,11 @@ class MAMLAgent(parl.Agent):
         return self._confidence_interval(total_loss)
 
     @staticmethod
-    def _confidence_interval(data: List[float], confidence: float = 0.95) -> Tuple[float, float]: 
+    def _confidence_interval(data: List[float],
+                             confidence: float = 0.95) -> Tuple[float, float]:
         '''caaulate confidence interval of losses'''
 
         dist = NormalDist.from_samples(data)
         z = NormalDist().inv_cdf((1 + confidence) / 2.)
-        h = dist.stdev * z / ((len(data) - 1) ** .5)
+        h = dist.stdev * z / ((len(data) - 1)**.5)
         return dist.mean, h
-
-
-
-    

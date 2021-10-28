@@ -41,11 +41,12 @@ class MAMLModel(parl.Model):
         self.params = list()
 
         for i in range(len(self.network_dims) - 1):
-            weight = nn.Parameter(torch.zeros((self.network_dims[i+1], self.network_dims[i])))
+            weight = nn.Parameter(
+                torch.zeros((self.network_dims[i + 1], self.network_dims[i])))
             torch.nn.init.kaiming_normal_(weight)
             self.params.append(weight)
-            self.params.append(nn.Parameter(torch.zeros((self.network_dims[i+1]))))
-
+            self.params.append(
+                nn.Parameter(torch.zeros((self.network_dims[i + 1]))))
 
     def forward(self, x: torch.Tensor, params: List = None) -> torch.Tensor:
         """
@@ -64,10 +65,10 @@ class MAMLModel(parl.Model):
         assert len(params) // 2 == self.num_layers
 
         for i in range(self.num_layers):
-            x = F.linear(x, params[i*2], params[i*2+1])
+            x = F.linear(x, params[i * 2], params[i * 2 + 1])
             if i != len(self.network_dims) - 2:
                 x = F.relu(x)
-            
+
         return x
 
     def zero_grad(self, params=None):
@@ -91,4 +92,3 @@ class MAMLModel(parl.Model):
 
         for weight in new_weights:
             self.params.append(weight.detach().clone())
-

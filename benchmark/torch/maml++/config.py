@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class Config:
     seed = 0
@@ -23,11 +24,11 @@ class Config:
 
     total_epochs = 80
     total_iter_per_epoch = 500
-    
+
     second_order = True
-    
-    first_order_to_second_order_epoch = total_epochs //2
-    
+
+    first_order_to_second_order_epoch = total_epochs // 2
+
     min_learning_rate = 0.00001
     meta_learning_rate = 0.001
     task_learning_rate = 0.001
@@ -44,9 +45,8 @@ class Config:
     training_batch_size = 16
     num_training_support = 5
     num_training_query = 10
-    
+
     num_test_sample = 10000
     test_batch_size = num_test_sample // 100
     num_test_support = 5
     num_test_query = 100
-

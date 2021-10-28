@@ -28,8 +28,8 @@ def main():
     Runs a full training experiment with evaluations of the model on the val set at every epoch. Furthermore,
     will return the test set evaluation results on the best performing validation model.
     """
-    
     config = Config()
+
     torch.manual_seed(config.seed)
     random.seed(config.seed)
     np.random.seed(config.seed)
@@ -38,18 +38,18 @@ def main():
 
     # load data
     data = MetaLearningDataLoader(config)
-    
+
     model = MAMLModel(config, device)
     algo = MAML(model, config, device)
     agent = MAMLAgent(algo, data, config)
 
     for i in range(config.total_epochs):
         logger.info(f'start epoch {i+1}')
-
         agent.train_one_epoch(i)
         loss, h = agent.evaluate()
         tensorboard.add_scalar('test/loss', loss, i)
         logger.info(f'epoch {i+1}: test loss: {loss:.3f} +- {h:.3f}')
-        
+
+
 if __name__ == '__main__':
     main()

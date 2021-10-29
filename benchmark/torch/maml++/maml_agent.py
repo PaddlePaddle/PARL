@@ -12,24 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from statistics import NormalDist
+import numpy as np
+import scipy
 import parl
 import tqdm
 
 
 class MAMLAgent(parl.Agent):
-    def __init__(self, algorithm, data, config):
+    def __init__(self, algorithm, data, total_iter_per_epoch):
         super().__init__(algorithm)
 
         self.algorithm = algorithm
         self.data = data
-        self.config = config
+        self.total_iter_per_epoch = total_iter_per_epoch
 
     def train_one_epoch(self, current_epoch):
 
         num_iters = 0
-        with tqdm.tqdm(total=self.config.total_iter_per_epoch) as bar:
-            while num_iters < self.config.total_iter_per_epoch:
+        with tqdm.tqdm(total=self.total_iter_per_epoch) as bar:
+            while num_iters < self.total_iter_per_epoch:
                 for data_batch in self.data.get_train_batches():
                     loss = self.algorithm.train_one_iter(
                         data_batch, current_epoch)
@@ -37,7 +38,7 @@ class MAMLAgent(parl.Agent):
                     bar.update(1)
                     bar.set_description(f'training loss: {loss:.3f}')
 
-                    if num_iters >= self.config.total_iter_per_epoch: break
+                    if num_iters >= self.total_iter_per_epoch: break
 
     def evaluate(self):
         '''Evaluate current model on test set
@@ -65,7 +66,9 @@ class MAMLAgent(parl.Agent):
             Mean and margin of error.
         '''
 
-        dist = NormalDist.from_samples(data)
-        z = NormalDist().inv_cdf((1 + confidence) / 2.)
-        h = dist.stdev * z / ((len(data) - 1)**.5)
-        return dist.mean, h
+        a = 1.0 * np.array(data)
+        n = len(a)
+        m, se = np.mean(a), scipy.stats.sem(a)
+        h = se * scipy.stats.t.ppf((1 + confidence) / 2., n - 1)
+
+        return m, h

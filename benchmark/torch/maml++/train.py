@@ -37,18 +37,28 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # load data
-    data = MetaLearningDataLoader(config)
+    data = MetaLearningDataLoader(
+        config.num_training_tasks, config.training_batch_size,
+        config.num_training_support, config.num_training_query,
+        config.num_test_tasks, config.test_batch_size, config.num_test_support,
+        config.num_test_query, config.amplitude, config.frequency,
+        config.phase, config.x_range)
 
-    model = MAMLModel(config, device)
-    algo = MAML(model, config, device)
-    agent = MAMLAgent(algo, data, config)
+    model = MAMLModel(config.network_dims, device)
+    algo = MAML(model, device, config.num_updates_per_iter, config.num_layers,
+                config.task_learning_rate, config.learnable_learning_rates,
+                config.meta_learning_rate, config.total_epochs,
+                config.min_learning_rate, config.learning_rate_scheduler,
+                config.second_order, config.use_multi_step_loss_optimization,
+                config.multi_step_loss_num_epochs)
+    agent = MAMLAgent(algo, data, config.total_iter_per_epoch)
 
     for i in range(config.total_epochs):
         logger.info(f'start epoch {i+1}')
         agent.train_one_epoch(i)
         loss, h = agent.evaluate()
         tensorboard.add_scalar('test/loss', loss, i)
-        logger.info(f'epoch {i+1}: test loss: {loss:.3f} +- {h:.3f}')
+        logger.info(f'epoch {i+1}: test loss: {loss:.3f}+-{h:.3f}')
 
 
 if __name__ == '__main__':

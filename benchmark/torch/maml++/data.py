@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 import torch
-import math
 import random
 import numpy as np
-from config import Config
 
 
 class MetaLearningDataSet(Dataset):
@@ -36,20 +33,12 @@ class MetaLearningDataSet(Dataset):
         noise: if add noise to sine curves.
     """
 
-    def __init__(self,
-                 num_classes: int,
-                 support: int,
-                 query: int,
-                 amplitude: Tuple[float] = (0.1, 5.0),
-                 frequency: Tuple[float] = (0.8, 1.2),
-                 phase: Tuple[float] = (0, math.pi),
-                 x_range: Tuple[float] = (-5, 5),
-                 noise: bool = False):
+    def __init__(self, num_classes, support, query, amplitude, frequency,
+                 phase, x_range):
 
         self.num_classes = num_classes
         self.support = support
         self.query = query
-        self.noise = noise
 
         self.x = []
         self.y = []
@@ -67,25 +56,24 @@ class MetaLearningDataSet(Dataset):
             self.x.append(task_x)
             self.y.append(task_y)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx):
+
+        # randomly split support and query
         idxes = np.arange(self.support + self.query)
         np.random.shuffle(idxes)
 
-        if self.noise:
-            noisy_y = self.y[idx] + np.random.normal(
-                0, 0.1, self.support + self.query).astype(np.float32)
-        else:
-            noisy_y = self.y[idx]
+        return torch.from_numpy(self.x[idx][idxes[:self.support]]).unsqueeze(1), torch.from_numpy(self.y[idx][idxes[:self.support]]).unsqueeze(1), \
+            torch.from_numpy(self.x[idx][idxes[self.support:]]).unsqueeze(1), torch.from_numpy(self.y[idx][idxes[self.support:]]).unsqueeze(1)
 
-        return torch.from_numpy(self.x[idx][idxes[:self.support]]).unsqueeze(1), torch.from_numpy(noisy_y[idxes[:self.support]]).unsqueeze(1), \
-            torch.from_numpy(self.x[idx][idxes[self.support:]]).unsqueeze(1), torch.from_numpy(noisy_y[idxes[self.support:]]).unsqueeze(1)
-
-    def __len__(self) -> int:
+    def __len__(self):
         return self.num_classes
 
 
 class MetaLearningDataLoader:
-    def __init__(self, config: Config):
+    def __init__(self, num_training_tasks, training_batch_size,
+                 num_training_support, num_training_query, num_test_tasks,
+                 test_batch_size, num_test_support, num_test_query, amplitude,
+                 frequency, phase, x_range):
         """
         Initializes a meta learning system dataloader. The data loader uses the Pytorch DataLoader class to parallelize
         batch sampling and preprocessing.
@@ -95,19 +83,20 @@ class MetaLearningDataLoader:
 
         """
         self.training_dataset = MetaLearningDataSet(
-            config.num_training_sample, config.num_training_support,
-            config.num_training_query)
-        self.test_dataset = MetaLearningDataSet(config.num_test_sample,
-                                                config.num_test_support,
-                                                config.num_test_query)
-        self.config = config
+            num_training_tasks, num_training_support, num_training_query,
+            amplitude, frequency, phase, x_range)
+        self.test_dataset = MetaLearningDataSet(
+            num_test_tasks, num_test_support, num_test_query, amplitude,
+            frequency, phase, x_range)
+        self.training_batch_size = training_batch_size
+        self.test_batch_size = test_batch_size
 
     def get_train_batches(self):
         """Returns a training batches data_loader"""
 
         data_loader = DataLoader(
             self.training_dataset,
-            batch_size=self.config.training_batch_size,
+            batch_size=self.training_batch_size,
             shuffle=True,
             drop_last=True)
         for sample_batched in data_loader:
@@ -118,7 +107,7 @@ class MetaLearningDataLoader:
 
         data_loader = DataLoader(
             self.test_dataset,
-            batch_size=self.config.test_batch_size,
+            batch_size=self.test_batch_size,
             shuffle=True,
             drop_last=True)
         for sample_batched in data_loader:

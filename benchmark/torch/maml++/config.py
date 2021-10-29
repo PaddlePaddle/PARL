@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+import math
 
 
 @dataclass
@@ -41,12 +42,17 @@ class Config:
     use_multi_step_loss_optimization = True
     multi_step_loss_num_epochs = 10
 
-    num_training_sample = 1600
+    num_training_tasks = 1600
     training_batch_size = 16
     num_training_support = 5
     num_training_query = 10
 
-    num_test_sample = 10000
-    test_batch_size = num_test_sample // 100
+    num_test_tasks = 10000
+    test_batch_size = num_test_tasks // 100
     num_test_support = 5
     num_test_query = 100
+
+    amplitude = (0.1, 5.0)
+    frequency = (0.8, 1.2)
+    phase = (0, math.pi)
+    x_range = (-5, 5)

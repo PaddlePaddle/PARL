@@ -19,22 +19,19 @@ import parl
 
 
 class MAMLModel(parl.Model):
-    def __init__(self, config, device):
+    def __init__(self, network_dims, device):
         """
         Builds a multi-layer perceptron. It also provides functionality for passing external parameters to be
-        used at inference time. Enables inner loop optimization readily.
-        :param input_dim: Input shape.
-        :param hidden_dim: Hidden dimension of each hidden layer. 
-        :param output_dim: Output shape.
-        :param device: The device to run this on.
-        :param meta_classifier: A flag indicating whether the system's meta-learning (inner-loop) functionalities should
-        be enabled.
+        used at inference time.
+        
+        Args:
+            network_dims: List, define the dimension of each linear layer.
+            device: Cpu or cuda.
         """
         super().__init__()
-        self.device = device
 
-        self.network_dims = config.network_dims
-        self.num_layers = config.num_layers
+        self.network_dims = network_dims
+        self.num_layers = len(network_dims) - 1
 
         self.params = list()
 
@@ -76,14 +73,12 @@ class MAMLModel(parl.Model):
     def zero_grad(self, params=None):
         if params is None:
             for param in self.params:
-                if param.requires_grad:
-                    if param.grad is not None:
-                        param.grad.zero_()
+                if param.requires_grad and param.grad is not None:
+                    param.grad.zero_()
         else:
             for param in params:
-                if param.requires_grad:
-                    if param.grad is not None:
-                        param.grad.zero_()
+                if param.requires_grad and param.grad is not None:
+                    param.grad.zero_()
 
     def get_weights(self):
 

@@ -21,23 +21,33 @@ import parl
 
 
 class MAML(parl.Algorithm):
-    def __init__(self, model, config, device):
+    def __init__(self, model, device, num_updates_per_iter, num_layers,
+                 task_learning_rate, learnable_learning_rates,
+                 meta_learning_rate, total_epochs, min_learning_rate,
+                 learning_rate_scheduler, second_order,
+                 use_multi_step_loss_optimization, multi_step_loss_num_epochs):
 
         self.model = model
+        self.num_updates_per_iter = num_updates_per_iter
         self.learning_rates = nn.Parameter(
-            data=torch.ones((config.num_updates_per_iter, config.num_layers),
-                            device=device) * config.task_learning_rate,
-            requires_grad=config.learnable_learning_rates)
+            data=torch.ones((num_updates_per_iter, num_layers), device=device)
+            * task_learning_rate,
+            requires_grad=learnable_learning_rates)
 
         self.optimizer = optim.Adam(
             self.model.get_weights() + [self.learning_rates],
-            lr=config.meta_learning_rate,
+            lr=meta_learning_rate,
             amsgrad=False)
+
+        self.learning_rate_scheduler = learning_rate_scheduler
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer=self.optimizer,
-            T_max=config.total_epochs,
-            eta_min=config.min_learning_rate)
-        self.config = config
+            T_max=total_epochs,
+            eta_min=min_learning_rate)
+
+        self.second_order = second_order
+        self.use_multi_step_loss_optimization = use_multi_step_loss_optimization
+        self.multi_step_loss_num_epochs = multi_step_loss_num_epochs
         self.device = device
 
     def train_one_iter(self, data_batch, current_epoch):
@@ -58,7 +68,7 @@ class MAML(parl.Algorithm):
         y_query_set = y_query_set.to(self.device)
 
         self.model.zero_grad()
-        if self.config.learning_rate_scheduler:
+        if self.learning_rate_scheduler:
             self.scheduler.step(current_epoch)
         batch_losses = []
         for x_support, y_support, x_query, y_query in zip(
@@ -68,7 +78,7 @@ class MAML(parl.Algorithm):
                 current_epoch)
             model_weights = self.model.get_weights()
 
-            for num_step in range(self.config.num_updates_per_iter):
+            for num_step in range(self.num_updates_per_iter):
 
                 support_loss = self._caculate_loss(x_support, y_support,
                                                    model_weights)
@@ -76,16 +86,16 @@ class MAML(parl.Algorithm):
                 model_weights = self._inner_loop_update(
                     loss=support_loss,
                     weights=model_weights,
-                    use_second_order=self.config.second_order,
+                    use_second_order=self.second_order,
                     current_update_step=num_step)
 
-                if self.config.use_multi_step_loss_optimization and current_epoch < self.config.multi_step_loss_num_epochs:
+                if self.use_multi_step_loss_optimization and current_epoch < self.multi_step_loss_num_epochs:
                     query_loss = self._caculate_loss(
                         x=x_query, y=y_query, weights=model_weights)
                     task_loss = task_loss + per_step_loss_importance_vectors[
                         num_step] * query_loss
 
-                elif num_step == (self.config.num_updates_per_iter - 1):
+                elif num_step == (self.num_updates_per_iter - 1):
                     query_loss = self._caculate_loss(
                         x=x_query, y=y_query, weights=model_weights)
                     task_loss = query_loss
@@ -123,7 +133,7 @@ class MAML(parl.Algorithm):
 
             model_weights = self.model.get_weights()
 
-            for num_step in range(self.config.num_updates_per_iter):
+            for num_step in range(self.num_updates_per_iter):
 
                 support_loss = self._caculate_loss(x_support, y_support,
                                                    model_weights)
@@ -131,7 +141,7 @@ class MAML(parl.Algorithm):
                 model_weights = self._inner_loop_update(
                     loss=support_loss,
                     weights=model_weights,
-                    use_second_order=self.config.second_order,
+                    use_second_order=self.second_order,
                     current_update_step=num_step)
 
             with torch.no_grad():
@@ -190,10 +200,10 @@ class MAML(parl.Algorithm):
             the MSL (Multi Step Loss) mechanism.
         """
         loss_weights = np.ones(
-            self.config.num_updates_per_iter,
-            dtype=np.float32) / self.config.num_updates_per_iter
-        decay_rate = 1.0 / self.config.num_updates_per_iter / self.config.multi_step_loss_num_epochs
-        min_value_for_non_final_losses = 0.03 / self.config.num_updates_per_iter
+            self.num_updates_per_iter,
+            dtype=np.float32) / self.num_updates_per_iter
+        decay_rate = 1.0 / self.num_updates_per_iter / self.multi_step_loss_num_epochs
+        min_value_for_non_final_losses = 0.03 / self.num_updates_per_iter
 
         for i in range(len(loss_weights) - 1):
             curr_value = np.maximum(loss_weights[i] - (epoch * decay_rate),
@@ -206,7 +216,7 @@ class MAML(parl.Algorithm):
         return loss_weights
 
     def _caculate_loss(self, x, y, weights):
-        pred_y = self.model.forward(x, weights)
+        pred_y = self.model(x, weights)
 
         loss = F.mse_loss(pred_y, y)
 

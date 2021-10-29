@@ -54,11 +54,12 @@ def main():
     agent = MAMLAgent(algo, data, config.total_iter_per_epoch)
 
     for i in range(config.total_epochs):
-        logger.info(f'start epoch {i+1}')
+        logger.info('start epoch {}'.format(i + 1))
         agent.train_one_epoch(i)
         loss, h = agent.evaluate()
         tensorboard.add_scalar('test/loss', loss, i)
-        logger.info(f'epoch {i+1}: test loss: {loss:.3f}+-{h:.3f}')
+        logger.info('epoch {}: test loss: {:.3f}+-{:.3f}'.format(
+            i + 1, loss, h))
 
 
 if __name__ == '__main__':

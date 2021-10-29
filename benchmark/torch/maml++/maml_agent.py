@@ -36,7 +36,6 @@ class MAMLAgent(parl.Agent):
                         data_batch, current_epoch)
                     num_iters += 1
                     bar.update(1)
-                    bar.set_description(f'training loss: {loss:.3f}')
 
                     if num_iters >= self.total_iter_per_epoch: 
                         break

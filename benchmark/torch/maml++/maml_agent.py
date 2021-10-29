@@ -38,7 +38,8 @@ class MAMLAgent(parl.Agent):
                     bar.update(1)
                     bar.set_description(f'training loss: {loss:.3f}')
 
-                    if num_iters >= self.total_iter_per_epoch: break
+                    if num_iters >= self.total_iter_per_epoch: 
+                        break
 
     def evaluate(self):
         '''Evaluate current model on test set

@@ -11,7 +11,7 @@ We follow the regression task setting from [Meta-SGD](https://arxiv.org/pdf/1707
 
 | MAML(from Meta-SGD) | Mate-SGD(from Meta-SGD) | MAML (ours) | MAML++ (ours)|
 | --- | --- | --- | --- |
-| 1.13&plusmn;0.18 |0.90&plusmn;0.16|  0.90&plusmn;0.06 | 0.34&plusmn;0.04 |
+| 1.13&plusmn;0.18 |0.90&plusmn;0.16|  0.93&plusmn;0.02 | 0.33&plusmn;0.01 |
 
 ## How to use
 

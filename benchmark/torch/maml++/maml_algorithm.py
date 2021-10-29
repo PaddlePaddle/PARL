@@ -189,8 +189,9 @@ class MAML(parl.Algorithm):
             A tensor to be used to compute the weighted average of the loss, useful for
             the MSL (Multi Step Loss) mechanism.
         """
-        loss_weights = np.ones(self.config.num_updates_per_iter
-                               ) / self.config.num_updates_per_iter
+        loss_weights = np.ones(
+            self.config.num_updates_per_iter,
+            dtype=np.float32) / self.config.num_updates_per_iter
         decay_rate = 1.0 / self.config.num_updates_per_iter / self.config.multi_step_loss_num_epochs
         min_value_for_non_final_losses = 0.03 / self.config.num_updates_per_iter
 
@@ -201,7 +202,7 @@ class MAML(parl.Algorithm):
 
         loss_weights[-1] = 1 - np.sum(loss_weights[:-1])
 
-        loss_weights = torch.Tensor(loss_weights, device=self.device)
+        loss_weights = torch.from_numpy(loss_weights).to(self.device)
         return loss_weights
 
     def _caculate_loss(self, x, y, weights):

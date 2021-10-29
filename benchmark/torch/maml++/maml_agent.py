@@ -37,7 +37,7 @@ class MAMLAgent(parl.Agent):
                     num_iters += 1
                     bar.update(1)
 
-                    if num_iters >= self.total_iter_per_epoch: 
+                    if num_iters >= self.total_iter_per_epoch:
                         break
 
     def evaluate(self):

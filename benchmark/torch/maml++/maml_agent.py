@@ -13,24 +13,19 @@
 # limitations under the License.
 
 from statistics import NormalDist
-from typing import List, Tuple
 import parl
 import tqdm
-from maml_algorithm import MAML
-from data import MetaLearningDataLoader
-from config import Config
 
 
 class MAMLAgent(parl.Agent):
-    def __init__(self, algorithm: MAML, data: MetaLearningDataLoader,
-                 config: Config):
+    def __init__(self, algorithm, data, config):
         super().__init__(algorithm)
 
         self.algorithm = algorithm
         self.data = data
         self.config = config
 
-    def train_one_epoch(self, current_epoch: int):
+    def train_one_epoch(self, current_epoch):
 
         num_iters = 0
         with tqdm.tqdm(total=self.config.total_iter_per_epoch) as bar:
@@ -44,23 +39,31 @@ class MAMLAgent(parl.Agent):
 
                     if num_iters >= self.config.total_iter_per_epoch: break
 
-    def evaluate(self) -> Tuple[float, float]:
+    def evaluate(self):
         '''Evaluate current model on test set
         
         Returns:
-            Confidence interval of test losses
+            Confidence interval of test losses.
         '''
         total_loss = []
-        for data_batch in self.data.get_train_batches():
+        for data_batch in self.data.get_test_batches():
             loss = self.algorithm.evaluate_one_iter(data_batch)
             total_loss.append(loss)
 
         return self._confidence_interval(total_loss)
 
     @staticmethod
-    def _confidence_interval(data: List[float],
-                             confidence: float = 0.95) -> Tuple[float, float]:
-        '''caaulate confidence interval of losses'''
+    def _confidence_interval(data, confidence=0.95):
+        '''
+        Caculate confidence interval of losses.
+
+        Args:
+            data: A list of losses.
+            confidence: Confidence level.
+
+        Returns:
+            Mean and margin of error.
+        '''
 
         dist = NormalDist.from_samples(data)
         z = NormalDist().inv_cdf((1 + confidence) / 2.)

@@ -6,5 +6,16 @@ The **PARL** team gets the first place for all tracks (both Robustness Track and
 <img src="../../../examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/images/l2rpn.jpeg" alt="PARL" height="300" />
 </p>
 
-## Note
-We release the code with trained policy for our top submission at the moment. Regarding the training the code, we are still working on a technical report and will release it as soon as possible.
+## Paper Citation
+
+If you use our code for your experiments or found it helpful, consider citing the following paper:
+
+<pre>
+@inproceedings{Zhou2021ActionSB,
+  title={Action Set Based Policy Optimization for Safe Power Grid Management},
+  author={Bo Zhou and Hongsheng Zeng and Yuecheng Liu and Kejiao Li and Fan Wang and Hao Tian},
+  journal={ECML PKDD2021},
+  year={2021}
+}
+</pre>
+

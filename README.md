@@ -108,6 +108,6 @@ For absolute beginners, we also provide an introductory course on reinforcement 
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 - [Winning Solution for NIPS2020: Learning to Run a Power Network Challenge](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)
 
-<img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "295" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "295" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "195" height ="200" alt="Breakout"/>
+<img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "280" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "280" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "195" height ="200" alt="Breakout"/>
 <br>
-<img src=".github/Aircraft.gif"  width = "793" height ="300"  alt="NeurlIPS2018"/>
+<img src=".github/Aircraft.gif"  width = "762" height ="300"  alt="NeurlIPS2018"/>

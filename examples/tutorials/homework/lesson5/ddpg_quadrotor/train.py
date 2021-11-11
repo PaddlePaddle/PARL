@@ -14,6 +14,12 @@
 
 # -*- coding: utf-8 -*-
 
+# 检查paddle和parl的版本
+import parl
+import paddle
+assert paddle.__version__ == "1.6.3", "[Version WARNING] please try `pip install paddlepaddle==1.6.3`"
+assert parl.__version__ == "1.3.1" or parl.__version__ == "1.4", "[Version WARNING] please try `pip install parl==1.3.1` or `pip install parl==1.4` "
+
 import os
 import numpy as np
 
@@ -22,7 +28,6 @@ from parl import layers
 from paddle import fluid
 from parl.utils import logger
 from parl.utils import ReplayMemory  # 经验回放
-from parl.env.continuous_wrappers import ActionMappingWrapper  # 将神经网络输出映射到对应的实际动作取值范围内
 
 from rlschool import make_env  # 使用 RLSchool 创建飞行器环境
 from quadrotor_model import QuadrotorModel
@@ -41,6 +46,24 @@ TRAIN_TOTAL_STEPS = 1e6  # 总训练步数
 TEST_EVERY_STEPS = 1e4  # 每个N步评估一下算法效果，每次评估5个episode求平均reward
 
 
+def action_mapping(model_output_act, low_bound, high_bound):
+    """ 将模型输出的动作从范围 [-1,1] 映射到 [low_bound, high_bound].
+    参数:
+        model_output_act: np.array, 值的范围为[-1, 1]
+        low_bound: float, 环境动作空间的下界
+        high_bound: float, 环境动作空间的上界
+    返回:
+        action: np.array, 值的范围为 [low_bound, high_bound]
+    """
+    assert np.all(((model_output_act<=1.0), (model_output_act>=-1.0))), \
+        'the action should be in range [-1.0, 1.0]'
+    assert high_bound > low_bound
+    action = low_bound + (model_output_act - (-1.0)) * (
+        (high_bound - low_bound) / 2.0)
+    action = np.clip(action, low_bound, high_bound)
+    return action
+
+
 def run_episode(env, agent, rpm):
     obs = env.reset()
     total_reward, steps = 0, 0
@@ -53,7 +76,9 @@ def run_episode(env, agent, rpm):
         # Add exploration noise, and clip to [-1.0, 1.0]
         action = np.clip(np.random.normal(action, 1.0), -1.0, 1.0)
 
-        next_obs, reward, done, info = env.step(action)
+        real_action = action_mapping(action, env.action_space.low[0],
+                                     env.action_space.high[0])
+        next_obs, reward, done, info = env.step(real_action)
         rpm.append(obs, action, REWARD_SCALE * reward, next_obs, done)
 
         if rpm.size() > MEMORY_WARMUP_SIZE:
@@ -82,7 +107,9 @@ def evaluate(env, agent, render=False):
             action = np.squeeze(action)
             action = np.clip(action, -1.0, 1.0)  ## special
 
-            next_obs, reward, done, info = env.step(action)
+            real_action = action_mapping(action, env.action_space.low[0],
+                                         env.action_space.high[0])
+            next_obs, reward, done, info = env.step(real_action)
 
             obs = next_obs
             total_reward += reward
@@ -100,7 +127,6 @@ def evaluate(env, agent, render=False):
 # 创建飞行器环境
 env = make_env("Quadrotor", task="hovering_control")
 # 将神经网络输出（取值范围为[-1, 1]）映射到对应的实际动作取值范围内
-env = ActionMappingWrapper(env)
 
 env.reset()
 obs_dim = env.observation_space.shape[0]

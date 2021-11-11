@@ -16,7 +16,6 @@ import os
 import paddle
 from parl.core.agent_base import AgentBase
 from parl.core.paddle.algorithm import Algorithm
-from parl.utils import machine_info, get_gpu_count
 
 __all__ = ['Agent']
 
@@ -43,7 +42,6 @@ class Agent(AgentBase):
 
     Attributes:
         alg (parl.algorithm): algorithm of this agent.
-        place: can automatically specify device when creating a tensor.
 
     Public Functions:
         - ``sample``: return a noisy action to perform exploration according to the policy.
@@ -66,12 +64,6 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
-
-        gpu_count = get_gpu_count()
-        if gpu_count > 0:
-            self.place = paddle.CUDAPlace(0)
-        else:
-            self.place = paddle.CPUPlace()
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.

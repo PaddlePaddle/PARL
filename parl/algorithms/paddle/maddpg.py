@@ -176,6 +176,12 @@ class MADDPG(parl.Algorithm):
         return cost
 
     def sync_target(self, decay=None):
+        """ update the target network with the training network
+
+        Args:
+            decay(float): the decaying factor while updating the target network with the training network. 
+                        0 represents the **assignment**. None represents updating the target network slowly that depends on the hyperparameter `tau`.
+        """
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(self.target_model, decay=decay)

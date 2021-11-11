@@ -90,9 +90,6 @@ class Agent(AgentBase):
             save_path(str): where to save the parameters.
             model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
 
-        Raises:
-            ValueError: if program is None and self.learn_program does not exist.
-
         Example:
 
         .. code-block:: python
@@ -104,6 +101,29 @@ class Agent(AgentBase):
         if model is None:
             model = self.alg.model
         paddle.save(model.state_dict(), save_path)
+
+    def save_inference_model(self, save_path, input_spec, model=None):
+        """
+        Saves input Layer or function as ``paddle.jit.TranslatedLayer`` format model, which can be used for inference.
+
+        Args:
+            save_path(str): where to save the parameters.
+            model(parl.Model): model that describes the policy network structure. If None, will use self.alg.model.
+            input_spec(InputSpec|Tensor|Python built-in variable): Describes the input of the saved model's forward
+            method, which can be described by InputSpec or example Tensor.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save_inference_model('./model_dir', [InputSpec(shape=[None, 128], dtype='float32')])
+
+        """
+        if model is None:
+            model = self.alg.model
+        assert hasattr(model, 'forward'), "model must have forward method"
+        paddle.jit.save(model, save_path, [input_spec])
 
     def restore(self, save_path, model=None):
         """Restore previously saved parameters.

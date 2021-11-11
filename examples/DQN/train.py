@@ -17,7 +17,8 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger, ReplayMemory
-
+import paddle
+from paddle.static import InputSpec
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
@@ -74,6 +75,27 @@ def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
     return np.mean(eval_reward)
 
 
+# infer 5 episodes
+def run_inference_episodes(path, env, inference_episodes=5, render=False):
+    inference_model = paddle.jit.load(path)
+    inference_reward = []
+    for i in range(inference_episodes):
+        obs = env.reset()
+        episode_reward = 0
+        while True:
+            obs = paddle.to_tensor(obs, dtype='float32')
+            pred_q = inference_model(obs)
+            action = pred_q.argmax().numpy()[0]
+            obs, reward, done, _ = env.step(action)
+            episode_reward += reward
+            if render:
+                env.render()
+            if done:
+                break
+        inference_reward.append(episode_reward)
+    return np.mean(inference_reward)
+
+
 def main():
     env = gym.make('CartPole-v0')
     obs_dim = env.observation_space.shape[0]
@@ -93,7 +115,7 @@ def main():
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
-    max_episode = 800
+    max_episode = 80
 
     # start training
     episode = 0
@@ -111,6 +133,13 @@ def main():
     # save the parameters to ./model.ckpt
     save_path = './model.ckpt'
     agent.save(save_path)
+
+    # save the model and parameters of policy network for inference
+    save_inference_path = './inference_model'
+    input_spec = InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')
+    agent.save_inference_model(save_inference_path, input_spec, model)
+    inference_reward = run_inference_episodes(save_inference_path, env, render=False)
+    logger.info('Inference reward:{}'.format(inference_reward))
 
 
 if __name__ == '__main__':

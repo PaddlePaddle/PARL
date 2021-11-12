@@ -30,6 +30,16 @@ BATCH_SIZE = 64
 LEARNING_RATE = 0.0005
 GAMMA = 0.99
 
+class InferenceAgent(object):
+    def __init__(self, path):
+        self.agent = paddle.jit.load(path)
+
+    def predict(self, obs):
+        obs = paddle.to_tensor(obs, dtype='float32')
+        pred_q = self.agent(obs)
+        action = pred_q.argmax().numpy()[0]
+        return action
+
 
 # train an episode
 def run_train_episode(agent, env, rpm):
@@ -75,27 +85,6 @@ def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
     return np.mean(eval_reward)
 
 
-# infer 5 episodes
-def run_inference_episodes(path, env, inference_episodes=5, render=False):
-    inference_model = paddle.jit.load(path)
-    inference_reward = []
-    for i in range(inference_episodes):
-        obs = env.reset()
-        episode_reward = 0
-        while True:
-            obs = paddle.to_tensor(obs, dtype='float32')
-            pred_q = inference_model(obs)
-            action = pred_q.argmax().numpy()[0]
-            obs, reward, done, _ = env.step(action)
-            episode_reward += reward
-            if render:
-                env.render()
-            if done:
-                break
-        inference_reward.append(episode_reward)
-    return np.mean(inference_reward)
-
-
 def main():
     env = gym.make('CartPole-v0')
     obs_dim = env.observation_space.shape[0]
@@ -138,7 +127,10 @@ def main():
     save_inference_path = './inference_model'
     input_spec = InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')
     agent.save_inference_model(save_inference_path, input_spec, model)
-    inference_reward = run_inference_episodes(save_inference_path, env, render=False)
+
+    # inference part
+    inference_agent = InferenceAgent(save_inference_path)
+    inference_reward = run_evaluate_episodes(inference_agent, env)
     logger.info('Inference reward:{}'.format(inference_reward))
 
 

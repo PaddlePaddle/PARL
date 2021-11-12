@@ -33,6 +33,12 @@ class TestModel(parl.Model):
         out = self.fc3(out)
         return out
 
+    def forward(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        out = self.fc3(out)
+        return out
+
 
 class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
@@ -94,6 +100,16 @@ class AgentBaseTest(unittest.TestCase):
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
         self.assertTrue(os.path.exists(save_path2))
+
+    def test_inference_model(self):
+        agent = TestAgent(self.alg)
+        save_path1 = 'my_model'
+        save_path2 = os.path.join('my_model', 'model-2')
+        input_spec = paddle.static.InputSpec(shape=[None, 4], dtype='float32')
+        agent.save_inference_model(save_path1, input_spec, self.model)
+        agent.save_inference_model(save_path2, input_spec, self.model)
+        self.assertTrue(os.path.exists(save_path1+'.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2+'.pdmodel'))
 
     def test_save_with_model(self):
         agent = TestAgent(self.alg)

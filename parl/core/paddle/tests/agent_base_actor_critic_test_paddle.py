@@ -119,6 +119,16 @@ class ACAgentBaseTest(unittest.TestCase):
         self.assertTrue(os.path.exists(save_path1))
         self.assertTrue(os.path.exists(save_path2))
 
+    def test_inference_model(self):
+        agent = TestAgent(self.alg)
+        save_path1 = 'my_acmodel'
+        save_path2 = os.path.join('my_ac_model', 'model-2')
+        input_spec = paddle.static.InputSpec(shape=[None, 4], dtype='float32')
+        agent.save_inference_model(save_path1, input_spec, self.model.actor)
+        agent.save_inference_model(save_path2, input_spec, self.model.actor)
+        self.assertTrue(os.path.exists(save_path1+'.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2+'.pdmodel'))
+
     def test_save_with_model(self):
         agent = TestAgent(self.alg)
         save_path1 = 'my_acmodel.ckpt'

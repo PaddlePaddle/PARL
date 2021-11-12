@@ -16,7 +16,6 @@ import gym
 import argparse
 import numpy as np
 import paddle
-from paddle.static import InputSpec
 from parl.utils import logger, summary, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel

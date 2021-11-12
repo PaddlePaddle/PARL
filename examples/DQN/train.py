@@ -104,7 +104,7 @@ def main():
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
-    max_episode = 80
+    max_episode = 800
 
     # start training
     episode = 0

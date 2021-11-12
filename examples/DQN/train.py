@@ -104,7 +104,7 @@ def main():
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
-    max_episode = 80
+    max_episode = 800
 
     # start training
     episode = 0
@@ -125,7 +125,7 @@ def main():
 
     # save the model and parameters of policy network for inference
     save_inference_path = './inference_model'
-    input_spec = InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')
+    input_spec = [InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')]
     agent.save_inference_model(save_inference_path, input_spec, model)
 
     # inference part

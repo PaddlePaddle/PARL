@@ -137,29 +137,29 @@ def main():
 
     # save the model and parameters of policy network for inference
     save_inference_path = './inference_model'
-    input_spec = InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')
-    agent.save_inference_model(save_inference_path, input_spec, model.critic_model)
+    input_spec = [InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')]
+    agent.save_inference_model(save_inference_path, input_spec, model.actor_model)
 
     # Infer episode
-    # inference_agent = InferenceAgent(save_inference_path)
-    # inference_reward = run_evaluate_episodes(inference_agent, env, 5)
-    # logger.info('Inference reward:{}'.format(inference_reward))
+    inference_agent = InferenceAgent(save_inference_path)
+    inference_reward = run_evaluate_episodes(inference_agent, env, 5)
+    logger.info('Inference reward:{}'.format(inference_reward))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v2", help='OpenAI gym environment name')
+        "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
     parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
-        default=2e3,
+        default=5e6,
         type=int,
         help='Max time steps to run environment')
     parser.add_argument(
         '--test_every_steps',
         type=int,
-        default=int(1e3),
+        default=int(5e3),
         help='The step interval between two consecutive evaluations')
     args = parser.parse_args()
 

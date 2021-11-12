@@ -123,7 +123,7 @@ class Agent(AgentBase):
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
-        paddle.jit.save(model, save_path, [input_spec])
+        paddle.jit.save(model, save_path, input_spec)
 
     def restore(self, save_path, model=None):
         """Restore previously saved parameters.

@@ -40,6 +40,20 @@ class TestModel(parl.Model):
         return out
 
 
+class DoubleInputTestModel(parl.Model):
+    def __init__(self):
+        super(DoubleInputTestModel, self).__init__()
+        self.fc1 = nn.Linear(4, 256)
+        self.fc2 = nn.Linear(256 + 4, 128)
+        self.fc3 = nn.Linear(128, 1)
+
+    def forward(self, obs_1, obs_2):
+        out = self.fc1(obs_1)
+        out = self.fc2(paddle.concat([out, obs_2], 1))
+        out = self.fc3(out)
+        return out
+
+
 class TestAlgorithm(parl.Algorithm):
     def __init__(self, model):
         self.model = model
@@ -79,6 +93,8 @@ class AgentBaseTest(unittest.TestCase):
         self.alg = TestAlgorithm(self.model)
         self.target_model = TestModel()
         self.target_alg = TestAlgorithm(self.target_model)
+        self.double_model = DoubleInputTestModel()
+        self.double_alg = TestAlgorithm(self.double_model)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
@@ -105,11 +121,21 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.alg)
         save_path1 = 'my_model'
         save_path2 = os.path.join('my_model', 'model-2')
-        input_spec = paddle.static.InputSpec(shape=[None, 4], dtype='float32')
+        input_spec = [paddle.static.InputSpec(shape=[None, 4], dtype='float32')]
         agent.save_inference_model(save_path1, input_spec, self.model)
         agent.save_inference_model(save_path2, input_spec, self.model)
         self.assertTrue(os.path.exists(save_path1+'.pdmodel'))
         self.assertTrue(os.path.exists(save_path2+'.pdmodel'))
+
+    def test_double_inference_model(self):
+        agent = TestAgent(self.double_alg)
+        save_path1 = 'my_double_model'
+        save_path2 = os.path.join('my_double_model', 'model-2')
+        input_spec = [paddle.static.InputSpec(shape=[None, 4], dtype='float32'), paddle.static.InputSpec(shape=[None, 4], dtype='float32')]
+        agent.save_inference_model(save_path1, input_spec, self.double_model)
+        agent.save_inference_model(save_path2, input_spec, self.double_model)
+        self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
 
     def test_save_with_model(self):
         agent = TestAgent(self.alg)

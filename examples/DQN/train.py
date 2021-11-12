@@ -16,9 +16,8 @@ import os
 import gym
 import numpy as np
 import parl
-from parl.utils import logger, ReplayMemory
+from parl.utils import logger, ReplayMemory, inference
 import paddle
-from paddle.static import InputSpec
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
@@ -30,9 +29,10 @@ BATCH_SIZE = 64
 LEARNING_RATE = 0.0005
 GAMMA = 0.99
 
+
 class InferenceAgent(object):
     def __init__(self, path):
-        self.agent = paddle.jit.load(path)
+        self.agent = CartpoleAgent.load_inference(path)
 
     def predict(self, obs):
         obs = paddle.to_tensor(obs, dtype='float32')
@@ -104,7 +104,7 @@ def main():
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
-    max_episode = 800
+    max_episode = 80
 
     # start training
     episode = 0
@@ -125,8 +125,10 @@ def main():
 
     # save the model and parameters of policy network for inference
     save_inference_path = './inference_model'
-    input_spec = [InputSpec(shape=[None, env.observation_space.shape[0]], dtype='float32')]
-    agent.save_inference_model(save_inference_path, input_spec, model)
+    input_shape = [[None, env.observation_space.shape[0]]]
+    input_type = ['float32']
+    agent.save_inference_model(save_inference_path, input_shape, input_type,
+                               model)
 
     # inference part
     inference_agent = InferenceAgent(save_inference_path)

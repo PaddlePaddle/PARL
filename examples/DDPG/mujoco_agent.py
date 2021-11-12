@@ -51,3 +51,7 @@ class MujocoAgent(parl.Agent):
         critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
                                                  terminal)
         return critic_loss, actor_loss
+
+    @staticmethod
+    def load_inference(path):
+        return paddle.jit.load(path)

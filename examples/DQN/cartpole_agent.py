@@ -99,3 +99,7 @@ class CartpoleAgent(parl.Agent):
         terminal = paddle.to_tensor(terminal, dtype='float32')
         loss = self.alg.learn(obs, act, reward, next_obs, terminal)
         return loss.numpy()[0]
+
+    @staticmethod
+    def load_inference(path):
+        return paddle.jit.load(path)

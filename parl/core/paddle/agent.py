@@ -14,6 +14,7 @@
 
 import os
 import paddle
+from paddle.static import InputSpec
 from parl.core.agent_base import AgentBase
 from parl.core.paddle.algorithm import Algorithm
 
@@ -102,27 +103,34 @@ class Agent(AgentBase):
             model = self.alg.model
         paddle.save(model.state_dict(), save_path)
 
-    def save_inference_model(self, save_path, input_spec, model=None):
+    def save_inference_model(self,
+                             save_path,
+                             input_shape_list,
+                             input_type_list,
+                             model=None):
         """
         Saves input Layer or function as ``paddle.jit.TranslatedLayer`` format model, which can be used for inference.
 
         Args:
             save_path(str): where to save the parameters.
             model(parl.Model): model that describes the policy network structure. If None, will use self.alg.model.
-            input_spec(InputSpec|Tensor|Python built-in variable): Describes the input of the saved model's forward
-            method, which can be described by InputSpec or example Tensor.
+            input_shape_list(list): shape of all inputs of the saved model's forward method.
+            input_shape_type(list): dtype of all inputs of the saved model's forward method.
 
         Example:
 
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [InputSpec(shape=[None, 128], dtype='float32')])
+            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'])
 
         """
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
+        input_spec = []
+        for input_shape, input_type in zip(input_shape_list, input_type_list):
+            input_spec.append(InputSpec(shape=input_shape, dtype=input_type))
         paddle.jit.save(model, save_path, input_spec)
 
     def restore(self, save_path, model=None):

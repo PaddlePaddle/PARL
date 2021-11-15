@@ -122,12 +122,23 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'])
+            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], model)
+
+
+        Example with actor-critic:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], model.actor_model)
 
         """
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
+        assert isinstance(input_shape_list, list),  "input_shape must be list"
+        assert isinstance(input_type_list, list), "input_type must be list"
+        assert len(input_shape_list) == len(input_type_list)
         input_spec = []
         for input_shape, input_type in zip(input_shape_list, input_type_list):
             input_spec.append(InputSpec(shape=input_shape, dtype=input_type))

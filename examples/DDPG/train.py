@@ -15,7 +15,6 @@
 import gym
 import argparse
 import numpy as np
-import paddle
 from parl.utils import logger, summary, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel
@@ -31,17 +30,6 @@ TAU = 0.005
 ACTOR_LR = 1e-3
 CRITIC_LR = 1e-3
 EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
-
-
-class InferenceAgent(object):
-    def __init__(self, path):
-        self.agent = MujocoAgent.load_inference(path)
-
-    def predict(self, obs):
-        obs = paddle.to_tensor(obs, dtype='float32')
-        act = self.agent(obs)
-        action_numpy = act.cpu().numpy()[0]
-        return action_numpy
 
 
 # Run episode for training
@@ -140,11 +128,6 @@ def main():
     input_type = ['float32']
     agent.save_inference_model(save_inference_path, input_shape, input_type,
                                model.actor_model)
-
-    # Infer episode
-    inference_agent = InferenceAgent(save_inference_path)
-    inference_reward = run_evaluate_episodes(inference_agent, env, 5)
-    logger.info('Inference reward:{}'.format(inference_reward))
 
 
 if __name__ == "__main__":

@@ -16,8 +16,7 @@ import os
 import gym
 import numpy as np
 import parl
-from parl.utils import logger, ReplayMemory, inference
-import paddle
+from parl.utils import logger, ReplayMemory
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
@@ -28,17 +27,6 @@ MEMORY_WARMUP_SIZE = 200
 BATCH_SIZE = 64
 LEARNING_RATE = 0.0005
 GAMMA = 0.99
-
-
-class InferenceAgent(object):
-    def __init__(self, path):
-        self.agent = CartpoleAgent.load_inference(path)
-
-    def predict(self, obs):
-        obs = paddle.to_tensor(obs, dtype='float32')
-        pred_q = self.agent(obs)
-        action = pred_q.argmax().numpy()[0]
-        return action
 
 
 # train an episode
@@ -129,11 +117,6 @@ def main():
     input_type = ['float32']
     agent.save_inference_model(save_inference_path, input_shape, input_type,
                                model)
-
-    # inference part
-    inference_agent = InferenceAgent(save_inference_path)
-    inference_reward = run_evaluate_episodes(inference_agent, env)
-    logger.info('Inference reward:{}'.format(inference_reward))
 
 
 if __name__ == '__main__':

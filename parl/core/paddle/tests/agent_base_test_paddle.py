@@ -117,28 +117,28 @@ class AgentBaseTest(unittest.TestCase):
         self.assertTrue(os.path.exists(save_path1))
         self.assertTrue(os.path.exists(save_path2))
 
-    def test_inference_model(self):
+    def test_save_inference_model(self):
         agent = TestAgent(self.alg)
-        save_path1 = 'my_model'
-        save_path2 = os.path.join('my_model', 'model-2')
-        input_shape = [[None, 4]]
-        input_type = ['float32']
-        agent.save_inference_model(save_path1, input_shape, input_type,
+        save_path1 = 'my_inference_model'
+        save_path2 = os.path.join('my_infer_model', 'model-2')
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes,
                                    self.model)
-        agent.save_inference_model(save_path2, input_shape, input_type,
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes,
                                    self.model)
         self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
         self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
 
-    def test_double_inference_model(self):
+    def test_save_inference_model_with_multi_inputs(self):
         agent = TestAgent(self.double_alg)
-        save_path1 = 'my_double_model'
-        save_path2 = os.path.join('my_double_model', 'model-2')
-        input_shape = [[None, 4], [None, 4]]
-        input_type = ['float32', 'float32']
-        agent.save_inference_model(save_path1, input_shape, input_type,
+        save_path1 = 'my_inference_model_with_multi_inputs'
+        save_path2 = os.path.join('my_infer_model_with_multi_inputs', 'model-2')
+        input_shapes = [[None, 4], [None, 4]]
+        input_dtypes = ['float32', 'float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes,
                                    self.double_model)
-        agent.save_inference_model(save_path2, input_shape, input_type,
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes,
                                    self.double_model)
         self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
         self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
@@ -252,6 +252,24 @@ class AgentBaseTest(unittest.TestCase):
         new_params = agent.get_weights()
         for i, j in zip(params.values(), new_params.values()):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
+
+    def test_save_inference_model_with_wrong_input(self):
+        agent = TestAgent(self.alg)
+        save_path = 'my_inference_model_with_wrong_input'
+        input_shapes = [None, 4]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path, input_shapes, input_dtypes,
+                                       self.model)
+
+    def test_save_multi_inputs_inference_model_with_wrong_inputs(self):
+        agent = TestAgent(self.double_alg)
+        save_path = 'my_inference_model_with_multi_inputs'
+        input_shapes = [None, 4]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path, input_shapes, input_dtypes,
+                                       self.model)
 
 
 if __name__ == '__main__':

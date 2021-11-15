@@ -106,23 +106,23 @@ class Agent(AgentBase):
     def save_inference_model(self,
                              save_path,
                              input_shape_list,
-                             input_type_list,
+                             input_dtype_list,
                              model=None):
         """
         Saves input Layer or function as ``paddle.jit.TranslatedLayer`` format model, which can be used for inference.
 
         Args:
-            save_path(str): where to save the parameters.
+            save_path(str): where to save the inference_model.
             model(parl.Model): model that describes the policy network structure. If None, will use self.alg.model.
             input_shape_list(list): shape of all inputs of the saved model's forward method.
-            input_shape_type(list): dtype of all inputs of the saved model's forward method.
+            input_dtype_list(list): dtype of all inputs of the saved model's forward method.
 
         Example:
 
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], model)
+            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'])
 
 
         Example with actor-critic:
@@ -130,17 +130,17 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], model.actor_model)
+            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
 
         """
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
-        assert isinstance(input_shape_list, list), "input_shape must be list"
-        assert isinstance(input_type_list, list), "input_type must be list"
-        assert len(input_shape_list) == len(input_type_list)
+        assert isinstance(input_shape_list, list), 'Type of input_shape_list in save_inference_model() should be list, but received {}'.format(type(input_shape_list))
+        assert isinstance(input_dtype_list, list), 'Type of input_dtype_list in save_inference_model() should be list, but received {}'.format(type(input_dtype_list))
+        assert len(input_shape_list) == len(input_dtype_list)
         input_spec = []
-        for input_shape, input_type in zip(input_shape_list, input_type_list):
+        for input_shape, input_type in zip(input_shape_list, input_dtype_list):
             input_spec.append(InputSpec(shape=input_shape, dtype=input_type))
         paddle.jit.save(model, save_path, input_spec)
 

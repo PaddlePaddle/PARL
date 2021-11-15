@@ -136,7 +136,7 @@ class Agent(AgentBase):
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
-        assert isinstance(input_shape_list, list),  "input_shape must be list"
+        assert isinstance(input_shape_list, list), "input_shape must be list"
         assert isinstance(input_type_list, list), "input_type must be list"
         assert len(input_shape_list) == len(input_type_list)
         input_spec = []

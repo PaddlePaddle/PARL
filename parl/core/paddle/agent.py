@@ -135,7 +135,12 @@ class Agent(AgentBase):
         """
         if model is None:
             model = self.alg.model
-        assert hasattr(model, 'forward'), "model must have forward method"
+        assert callable(
+            getattr(model, 'forward',
+                    None)), "forward should be a function in model class."
+        assert model.forward.__func__ is not super(
+            model.__class__,
+            model).forward.__func__, "model needs to implement forward method."
         assert isinstance(
             input_shape_list, list
         ), 'Type of input_shape_list in save_inference_model() should be list, but received {}'.format(

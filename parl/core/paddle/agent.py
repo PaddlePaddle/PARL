@@ -136,8 +136,14 @@ class Agent(AgentBase):
         if model is None:
             model = self.alg.model
         assert hasattr(model, 'forward'), "model must have forward method"
-        assert isinstance(input_shape_list, list), 'Type of input_shape_list in save_inference_model() should be list, but received {}'.format(type(input_shape_list))
-        assert isinstance(input_dtype_list, list), 'Type of input_dtype_list in save_inference_model() should be list, but received {}'.format(type(input_dtype_list))
+        assert isinstance(
+            input_shape_list, list
+        ), 'Type of input_shape_list in save_inference_model() should be list, but received {}'.format(
+            type(input_shape_list))
+        assert isinstance(
+            input_dtype_list, list
+        ), 'Type of input_dtype_list in save_inference_model() should be list, but received {}'.format(
+            type(input_dtype_list))
         assert len(input_shape_list) == len(input_dtype_list)
         input_spec = []
         for input_shape, input_type in zip(input_shape_list, input_dtype_list):

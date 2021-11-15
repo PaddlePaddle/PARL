@@ -133,7 +133,8 @@ class AgentBaseTest(unittest.TestCase):
     def test_save_inference_model_with_multi_inputs(self):
         agent = TestAgent(self.double_alg)
         save_path1 = 'my_inference_model_with_multi_inputs'
-        save_path2 = os.path.join('my_infer_model_with_multi_inputs', 'model-2')
+        save_path2 = os.path.join('my_infer_model_with_multi_inputs',
+                                  'model-2')
         input_shapes = [[None, 4], [None, 4]]
         input_dtypes = ['float32', 'float32']
         agent.save_inference_model(save_path1, input_shapes, input_dtypes,

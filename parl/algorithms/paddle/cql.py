@@ -73,8 +73,6 @@ class CQL(parl.Algorithm):
         self.temp = 1.0
         self.num_random = 10
         self._current_steps = 0
-
-        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.target_model = deepcopy(self.model)
         self.actor_optimizer = paddle.optimizer.Adam(
@@ -109,9 +107,7 @@ class CQL(parl.Algorithm):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std * N(0, 1))
-        x_t = normal.sample(
-            [1]
-        )  #act_mean + self.sample_normal.sample(act_log_std.shape) * act_log_std.exp()
+        x_t = normal.sample([1])
         x_t = x_t.squeeze()
         action = paddle.tanh(x_t)
         log_prob = normal.log_prob(x_t)
@@ -144,10 +140,6 @@ class CQL(parl.Algorithm):
         ## add CQL
         random_actions_tensor = paddle.uniform(
             shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
-        # torch.FloatTensor(
-        # cur_q2.shape[0] * self.num_random, action.shape[-1]).uniform_(
-        #     -1, 1)
-
         curr_actions_tensor, curr_log_pis = self._get_policy_actions(obs)
         new_curr_actions_tensor, new_log_pis = self._get_policy_actions(obs)
 

@@ -14,6 +14,7 @@
 
 import os
 import paddle
+from paddle.static import InputSpec
 from parl.core.agent_base import AgentBase
 from parl.core.paddle.algorithm import Algorithm
 
@@ -90,9 +91,6 @@ class Agent(AgentBase):
             save_path(str): where to save the parameters.
             model(parl.Model): model that describes the neural network structure. If None, will use self.alg.model.
 
-        Raises:
-            ValueError: if program is None and self.learn_program does not exist.
-
         Example:
 
         .. code-block:: python
@@ -104,6 +102,58 @@ class Agent(AgentBase):
         if model is None:
             model = self.alg.model
         paddle.save(model.state_dict(), save_path)
+
+    def save_inference_model(self,
+                             save_path,
+                             input_shape_list,
+                             input_dtype_list,
+                             model=None):
+        """
+        Saves input Layer or function as ``paddle.jit.TranslatedLayer`` format model, which can be used for inference.
+
+        Args:
+            save_path(str): where to save the inference_model.
+            model(parl.Model): model that describes the policy network structure. If None, will use self.alg.model.
+            input_shape_list(list): shape of all inputs of the saved model's forward method.
+            input_dtype_list(list): dtype of all inputs of the saved model's forward method.
+
+        Example:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save_inference_model('./inference_model_dir', [[None, 128]], ['float32'])
+
+
+        Example with actor-critic:
+
+        .. code-block:: python
+
+            agent = AtariAgent()
+            agent.save_inference_model('./inference_ac_model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
+
+        """
+        if model is None:
+            model = self.alg.model
+        assert callable(
+            getattr(model, 'forward',
+                    None)), "forward should be a function in model class."
+        assert model.forward.__func__ is not super(
+            model.__class__,
+            model).forward.__func__, "model needs to implement forward method."
+        assert isinstance(
+            input_shape_list, list
+        ), 'Type of input_shape_list in save_inference_model() should be list, but received {}'.format(
+            type(input_shape_list))
+        assert isinstance(
+            input_dtype_list, list
+        ), 'Type of input_dtype_list in save_inference_model() should be list, but received {}'.format(
+            type(input_dtype_list))
+        assert len(input_shape_list) == len(input_dtype_list)
+        input_spec = []
+        for input_shape, input_type in zip(input_shape_list, input_dtype_list):
+            input_spec.append(InputSpec(shape=input_shape, dtype=input_type))
+        paddle.jit.save(model, save_path, input_spec)
 
     def restore(self, save_path, model=None):
         """Restore previously saved parameters.

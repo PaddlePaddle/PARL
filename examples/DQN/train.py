@@ -17,7 +17,6 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger, ReplayMemory
-
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
@@ -111,6 +110,12 @@ def main():
     # save the parameters to ./model.ckpt
     save_path = './model.ckpt'
     agent.save(save_path)
+
+    # save the model and parameters of policy network for inference
+    save_inference_path = './inference_model'
+    input_shapes = [[None, env.observation_space.shape[0]]]
+    input_dtypes = ['float32']
+    agent.save_inference_model(save_inference_path, input_shapes, input_dtypes)
 
 
 if __name__ == '__main__':

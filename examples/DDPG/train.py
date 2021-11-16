@@ -122,6 +122,13 @@ def main():
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
                 EVAL_EPISODES, avg_reward))
 
+    # save the model and parameters of policy network for inference
+    save_inference_path = './inference_model'
+    input_shapes = [[None, env.observation_space.shape[0]]]
+    input_dtypes = ['float32']
+    agent.save_inference_model(save_inference_path, input_shapes, input_dtypes,
+                               model.actor_model)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

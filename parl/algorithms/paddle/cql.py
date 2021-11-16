@@ -57,17 +57,6 @@ class CQL(parl.Algorithm):
         check_model_method(model, 'policy', self.__class__.__name__)
         check_model_method(model, 'get_actor_params', self.__class__.__name__)
         check_model_method(model, 'get_critic_params', self.__class__.__name__)
-        assert isinstance(gamma, float)
-        assert isinstance(tau, float)
-        assert isinstance(actor_lr, float)
-        assert isinstance(critic_lr, float)
-        assert isinstance(with_automatic_entropy_tuning, bool)
-        assert isinstance(with_lagrange, bool)
-        assert isinstance(lagrange_thresh, float)
-        assert isinstance(min_q_version, int)
-        assert isinstance(min_q_weight, float)
-        assert isinstance(alpha, float)
-
         self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr

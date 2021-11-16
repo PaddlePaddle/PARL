@@ -18,3 +18,20 @@ weights = agent.get_weights()
 #--------------Remote Actor--------------
 actor.set_weights(weights)
 ```
+
+场景3: 在训练完成后，需要把训练好的模型结构和参数保存到本地，用于后续的推理部署。
+
+直接通过agent的相关接口来完成网络结构和参数的存储。
+
+```python
+# 保存网络结构和参数到./inference_model_dir
+agent.save_inference_model('./inference_model_dir', [[None, 128]], ['float32'])
+```
+
+对于Actor-Critic类算法，只需要保存其中的Actor网络。
+
+```python
+# 保存Actor-Critic算法的策略网络结构和参数到./inference_ac_model_dir
+agent.save_inference_model('./inference_ac_model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
+```
+

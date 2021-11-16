@@ -122,7 +122,7 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'])
+            agent.save_inference_model('./inference_model_dir', [[None, 128]], ['float32'])
 
 
         Example with actor-critic:
@@ -130,7 +130,7 @@ class Agent(AgentBase):
         .. code-block:: python
 
             agent = AtariAgent()
-            agent.save_inference_model('./model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
+            agent.save_inference_model('./inference_ac_model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
 
         """
         if model is None:

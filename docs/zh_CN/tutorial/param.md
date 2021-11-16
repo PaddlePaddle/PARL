@@ -34,4 +34,3 @@ agent.save_inference_model('./inference_model_dir', [[None, 128]], ['float32'])
 # 保存Actor-Critic算法的策略网络结构和参数到./inference_ac_model_dir
 agent.save_inference_model('./inference_ac_model_dir', [[None, 128]], ['float32'], agent.alg.model.actor_model)
 ```
-

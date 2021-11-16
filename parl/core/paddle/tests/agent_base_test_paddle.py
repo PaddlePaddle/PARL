@@ -40,6 +40,7 @@ class TestModelWithoutForward(parl.Model):
         self.fc1 = nn.Linear(4, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, 1)
+        self.forward = None
 
     def predict(self, obs):
         out = self.fc1(obs)

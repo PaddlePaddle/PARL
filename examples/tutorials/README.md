@@ -27,7 +27,7 @@
 + Python 3.6/3.7 
 + [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
 + [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
-+ gym
++ gym==0.18.0
 
 
 ### 运行示例

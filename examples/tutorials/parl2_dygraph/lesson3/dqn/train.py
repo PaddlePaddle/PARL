@@ -122,8 +122,8 @@ def main():
             total_reward = run_train_episode(agent, env, rpm)
             episode += 1
 
-        # test part
-        eval_reward = run_evaluate_episodes(agent, env, render=False)  # render=True 查看显示效果
+        # test part       render=True 查看显示效果
+        eval_reward = run_evaluate_episodes(agent, env, render=False)
         logger.info('episode:{}    e_greed:{}   Test reward:{}'.format(
             episode, agent.e_greed, eval_reward))
 

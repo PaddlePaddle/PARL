@@ -108,8 +108,8 @@ def main():
 
         agent.learn(batch_obs, batch_action, batch_reward)
         if (i + 1) % 100 == 0:
-            total_reward = evaluate(
-                env, agent, render=False)  # render=True 查看显示效果
+            # render=True 查看显示效果
+            total_reward = run_evaluate_episodes(agent, env, render=False)
             logger.info('Test reward: {}'.format(total_reward))
 
     # save the parameters to ./model.ckpt

@@ -131,10 +131,10 @@ def main():
     action_dim = env.action_space.shape[0]
 
     # Initialize model, algorithm, agent, replay_memory
-    model = MujocoModel(obs_dim, action_dim)
+    model = QuadrotorModel(obs_dim, action_dim)
     algorithm = DDPG(
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, action_dim, expl_noise=EXPL_NOISE)
+    agent = QuadrotorAgent(algorithm, action_dim, expl_noise=EXPL_NOISE)
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 

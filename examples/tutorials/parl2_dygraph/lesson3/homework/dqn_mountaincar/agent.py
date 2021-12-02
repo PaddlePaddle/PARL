@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ class Agent(parl.Agent):
         self.global_step = 0
         self.update_target_steps = 200  # 每隔200个training steps再把model的参数复制到target_model中
 
-
         self.e_greed = e_greed  # 有一定概率随机选取动作，探索
         self.e_greed_decrement = e_greed_decrement  # 随着训练逐步收敛，探索的程度慢慢降低
 
@@ -40,7 +39,8 @@ class Agent(parl.Agent):
             act = np.random.randint(self.act_dim)  # 探索：每个动作都有概率被选择
         else:
             act = self.predict(obs)  # 选择最优动作
-        self.e_greed = max(0.01, self.e_greed - self.e_greed_decrement)  # 随着训练逐步收敛，探索的程度慢慢降低
+        self.e_greed = max(
+            0.01, self.e_greed - self.e_greed_decrement)  # 随着训练逐步收敛，探索的程度慢慢降低
         return act
 
     def predict(self, obs):

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import parl
 import paddle
 from paddle.distribution import Categorical
 import paddle.nn.functional as F
+
 
 class PolicyGradient(parl.Algorithm):
     def __init__(self, model, lr):
@@ -45,7 +46,8 @@ class PolicyGradient(parl.Algorithm):
         prob = self.model(obs)  # 获取输出动作概率
         # log_prob = Categorical(prob).log_prob(action) # 交叉熵
         # loss = paddle.mean(-1 * log_prob * reward)
-        action_onehot = paddle.squeeze(F.one_hot(action, num_classes=prob.shape[1]), axis=1)
+        action_onehot = paddle.squeeze(
+            F.one_hot(action, num_classes=prob.shape[1]), axis=1)
         log_prob = paddle.sum(paddle.log(prob) * action_onehot, axis=-1)
         reward = paddle.squeeze(reward, axis=1)
         loss = paddle.mean(-1 * log_prob * reward)

@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@
 # 检查paddle和parl的版本
 import parl
 import paddle
-assert float(paddle.__version__[:3]) >= 2.0, "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
-assert float(parl.__version__[:3]) >= 2.0, "[Version WARNING] please try `pip install parl==2.0.1`"
+assert float(
+    paddle.__version__[:3]
+) >= 2.0, "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert float(parl.__version__[:3]
+             ) >= 2.0, "[Version WARNING] please try `pip install parl==2.0.1`"
 
 #import gym
 import argparse
@@ -66,6 +69,7 @@ REWARD_SCALE = 0.01
 BATCH_SIZE = 256
 EVAL_EPISODES = 5
 EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
+
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):

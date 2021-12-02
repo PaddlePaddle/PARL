@@ -49,7 +49,7 @@ class CQL(parl.Algorithm):
             with_automatic_entropy_tuning (bool): train with automatic entropy tuning in Actor.
             with_lagrange (bool): train with lagrange
             lagrange_thresh (float): the value of tau, corresponds to the CQL(lagrange) version, suggest 10.0 in mujoco and 5.0 in Franka kitchen or Adroit domains
-            min_q_version (int): min_q_version = 3 (CQL(H)), = 2 (CQL(rho)), will be set to <0 in cql if not using lagrange
+            min_q_version (int): min_q_version = 3 (CQL(H)), = 2 (CQL(rho))
             min_q_weight (float): the value of alpha in Critic loss, suggest 5.0 or 10.0 if not using lagrange
             alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
         """
@@ -79,7 +79,7 @@ class CQL(parl.Algorithm):
         self.with_automatic_entropy_tuning = with_automatic_entropy_tuning
         self.with_lagrange = with_lagrange
         self.lagrange_thresh = lagrange_thresh
-        self.min_q_version = -1 if self.with_lagrange else min_q_version
+        self.min_q_version = min_q_version
         self.min_q_weight = min_q_weight
         self.alpha = alpha
         self.temp = 1.0

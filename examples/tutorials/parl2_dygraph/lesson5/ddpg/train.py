@@ -14,11 +14,13 @@
 
 #-*- coding: utf-8 -*-
 
-# 检查paddle和parl的版本
+# 检查版本
+import gym
 import parl
 import paddle
 assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
 assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
+assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
 
 import gym
 import numpy as np

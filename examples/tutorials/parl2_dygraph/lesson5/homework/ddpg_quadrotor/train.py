@@ -17,11 +17,8 @@
 # 检查paddle和parl的版本
 import parl
 import paddle
-assert float(
-    paddle.__version__[:3]
-) >= 2.0, "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
-assert float(parl.__version__[:3]
-             ) >= 2.0, "[Version WARNING] please try `pip install parl==2.0.1`"
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
 
 #import gym
 import argparse

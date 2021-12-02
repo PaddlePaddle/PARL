@@ -17,11 +17,8 @@
 # 检查paddle和parl的版本
 import parl
 import paddle
-assert float(
-    paddle.__version__[:3]
-) >= 2.0, "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
-assert float(parl.__version__[:3]
-             ) >= 2.0, "[Version WARNING] please try `pip install parl==2.0.1`"
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
 
 import os
 import gym
@@ -44,7 +41,7 @@ GAMMA = 0.99  # reward 的衰减因子，一般取 0.9 到 0.999 不等
 
 
 # 训练一个episode
-def run_episode(env, agent, rpm):
+def run_train_episode(agent, env, rpm):
     total_reward = 0
     obs = env.reset()
     step = 0
@@ -70,7 +67,7 @@ def run_episode(env, agent, rpm):
 
 
 # 评估 agent, 跑 5 个episode，总reward求平均
-def evaluate(env, agent, render=False):
+def run_evaluate_episodes(agent, env, render=False):
     eval_reward = []
     for i in range(5):
         obs = env.reset()
@@ -111,7 +108,7 @@ def main():
 
     # 先往经验池里存一些数据，避免最开始训练的时候样本丰富度不够
     while len(rpm) < MEMORY_WARMUP_SIZE:
-        run_episode(env, agent, rpm)
+        run_train_episode(agent, env, rpm)
 
     max_episode = 2000
 
@@ -120,11 +117,11 @@ def main():
     while episode < max_episode:  # 训练max_episode个回合，test部分不计算入episode数量
         # train part
         for i in range(50):
-            total_reward = run_episode(env, agent, rpm)
+            total_reward = run_train_episode(agent, env, rpm)
             episode += 1
 
         # test part
-        eval_reward = evaluate(env, agent, render=False)  # render=True 查看显示效果
+        eval_reward = run_evaluate_episodes(agent, env, render=False)  # render=True 查看显示效果
         logger.info('episode:{}    e_greed:{}   Test reward:{}'.format(
             episode, agent.e_greed, eval_reward))
 

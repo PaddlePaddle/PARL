@@ -17,11 +17,8 @@
 # 检查paddle和parl的版本
 import parl
 import paddle
-assert float(
-    paddle.__version__[:3]
-) >= 2.0, "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
-assert float(parl.__version__[:3]
-             ) >= 2.0, "[Version WARNING] please try `pip install parl==2.0.1`"
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
 
 import os
 import gym
@@ -38,7 +35,7 @@ LEARNING_RATE = 1e-3
 
 
 # 训练一个episode
-def run_episode(env, agent):
+def run_train_episode(agent, env):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
     while True:
@@ -55,7 +52,7 @@ def run_episode(env, agent):
 
 
 # 评估 agent, 跑 5 个episode，总reward求平均
-def evaluate(env, agent, render=False):
+def run_evaluate_episodes(agent, env, render=False):
     eval_reward = []
     for i in range(5):
         obs = env.reset()
@@ -94,11 +91,11 @@ def main():
     # 加载模型并评估
     # if os.path.exists('./model.ckpt'):
     #     agent.restore('./model.ckpt')
-    #     evaluate(env, agent, render=True)
+    #     run_evaluate_episodes(agent, env, render=True)
     #     exit()
 
     for i in range(1000):
-        obs_list, action_list, reward_list = run_episode(env, agent)
+        obs_list, action_list, reward_list = run_train_episode(agent, env)
         if i % 10 == 0:
             logger.info("Episode {}, Reward Sum {}.".format(
                 i, sum(reward_list)))

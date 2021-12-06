@@ -59,7 +59,7 @@ class DQN(parl.Algorithm):
             action, num_classes=action_dim)
         # 下面一行是逐元素相乘，拿到action对应的 Q(s,a)
         # 比如：pred_value = [[2.3, 5.7, 1.2, 3.9, 1.4]], action_onehot = [[0,0,0,1,0]]
-        pred_value = paddle.multiply(pred_values, action_onehot)
+        pred_value = pred_values * action_onehot
         #  ==> pred_value = [[3.9]]
         pred_value = paddle.sum(pred_value, axis=1, keepdim=True)
 

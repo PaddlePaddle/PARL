@@ -3,7 +3,7 @@
 针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例（注意：本课程示例均基于**静态图框架**编写）。
 
 ## News: 
-+ 应广大学员的要求，我们在2021年12月6日提供了课程配套代码的（lesson3-lesson5）的**动态图框架**版本，见 [链接](parl2_dygraph/)。
++ [2021年12月6日] 应广大学员的要求，我们提供了课程配套代码的（lesson3-lesson5）的**动态图框架**版本，见 [链接](parl2_dygraph/)。
 + lesson1-lesson2不涉及神经网络，可沿用本目录下的代码。
 
 ## 课程大纲

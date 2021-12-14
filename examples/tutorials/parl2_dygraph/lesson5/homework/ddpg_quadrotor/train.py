@@ -55,6 +55,9 @@ class ActionMappingWrapper:
         mapped_action = np.clip(mapped_action, self.low_bound, self.high_bound)
         return self.env.step(mapped_action)
 
+    def render(self):
+        self.env.render()
+
 
 ACTOR_LR = 0.0002
 CRITIC_LR = 0.001
@@ -106,7 +109,7 @@ def run_train_episode(agent, env, rpm):
 
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def run_evaluate_episodes(agent, env, eval_episodes):
+def run_evaluate_episodes(agent, env, eval_episodes, render=False):
     avg_reward = 0.
     for _ in range(eval_episodes):
         obs = env.reset()
@@ -115,6 +118,8 @@ def run_evaluate_episodes(agent, env, eval_episodes):
             action = agent.predict(obs)
             obs, reward, done, _ = env.step(action)
             avg_reward += reward
+            if render:
+                env.render()
     avg_reward /= eval_episodes
     return avg_reward
 
@@ -154,7 +159,8 @@ def main():
         if (total_steps + 1) // args.test_every_steps >= test_flag:
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
-            avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
+            avg_reward = run_evaluate_episodes(
+                agent, env, EVAL_EPISODES, render=False)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(

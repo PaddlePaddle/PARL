@@ -15,6 +15,7 @@
 import os
 import gym
 import numpy as np
+import paddle
 import parl
 from parl.utils import logger, ReplayMemory
 
@@ -114,4 +115,11 @@ def main():
 
 
 if __name__ == '__main__':
+    if paddle.is_compiled_with_cuda():
+        paddle.set_device('gpu')
+    elif paddle.is_compiled_with_npu():
+        paddle.set_device('npu')
+    else:
+        paddle.set_device('cpu')
+    
     main()

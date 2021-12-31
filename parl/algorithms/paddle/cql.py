@@ -131,34 +131,32 @@ class CQL(parl.Algorithm):
             next_action, next_log_pro = self.sample(next_obs)
             q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = paddle.minimum(q1_next,
-                                      q2_next)  # a little different from SAC
+                                 q2_next)  # a little different from SAC
             target_Q = reward + self.gamma * (1. - terminal) * target_Q
         cur_q1, cur_q2 = self.model.value(obs, action)
         qf1_loss = F.mse_loss(cur_q1, target_Q)
         qf2_loss = F.mse_loss(cur_q2, target_Q)
-
         ## add CQL
-        random_actions_tensor = paddle.uniform(
-            shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
+        random_actions_tensor = paddle.uniform(shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
         curr_actions_tensor, curr_log_pis = self._get_policy_actions(obs)
-        new_curr_actions_tensor, new_log_pis = self._get_policy_actions(obs)
-
+        new_curr_actions_tensor, new_log_pis = self._get_policy_actions(
+            next_obs)
         q1_rand, q2_rand = self._get_tensor_values(obs, random_actions_tensor)
         q1_curr_actions, q2_curr_actions = self._get_tensor_values(
             obs, curr_actions_tensor)
         q1_next_actions, q2_next_actions = self._get_tensor_values(
-            obs, new_curr_actions_tensor)
-
+           obs, new_curr_actions_tensor)
         cat_q1 = paddle.concat(
-            [q1_rand, cur_q1.unsqueeze(1), q1_curr_actions], 1)
+            [q1_rand,
+             cur_q1.unsqueeze(1),  q1_curr_actions], 1)
         cat_q2 = paddle.concat(
-            [q2_rand, cur_q2.unsqueeze(1), q2_curr_actions], 1)
-
+            [q2_rand,
+             cur_q2.unsqueeze(1),  q2_curr_actions], 1)
         if self.min_q_version == 3:
             # importance sampled version
             random_density = np.log(0.5**curr_actions_tensor.shape[-1])
             cat_q1 = paddle.concat([
-                q1_rand - random_density,
+                  q1_rand - random_density,
                 q1_next_actions - new_log_pis.detach(),
                 q1_curr_actions - curr_log_pis.detach()
             ], 1)
@@ -167,7 +165,6 @@ class CQL(parl.Algorithm):
                 q2_next_actions - new_log_pis.detach(),
                 q2_curr_actions - curr_log_pis.detach()
             ], 1)
-
         min_qf1_loss = paddle.logsumexp(
             cat_q1 / self.temp,
             axis=1,

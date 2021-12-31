@@ -46,16 +46,16 @@ class Critic(parl.Model):
         super(Critic, self).__init__()
 
         # Q1 network
-        self.l1 = nn.Linear(obs_dim + action_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, 256)
-        self.last_fc1 = nn.Linear(256, 1)
+        self.l1 = nn.Linear(obs_dim + action_dim, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l2 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l3 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.last_fc1 = nn.Linear(256, 1, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
 
         # Q2 network
-        self.l4 = nn.Linear(obs_dim + action_dim, 256)
-        self.l5 = nn.Linear(256, 256)
-        self.l6 = nn.Linear(256, 256)
-        self.last_fc2 = nn.Linear(256, 1)
+        self.l4 = nn.Linear(obs_dim + action_dim, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l5 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l6 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.last_fc2 = nn.Linear(256, 1, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
 
     def forward(self, obs, action):
         x = paddle.concat([obs, action], 1)
@@ -78,11 +78,11 @@ class Actor(parl.Model):
     def __init__(self, obs_dim, action_dim):
         super(Actor, self).__init__()
 
-        self.l1 = nn.Linear(obs_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, 256)
-        self.mean_linear = nn.Linear(256, action_dim)
-        self.std_linear = nn.Linear(256, action_dim)
+        self.l1 = nn.Linear(obs_dim, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l2 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.l3 = nn.Linear(256, 256, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.mean_linear = nn.Linear(256, action_dim, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
+        self.std_linear = nn.Linear(256, action_dim, weight_attr=nn.initializer.KaimingUniform(), bias_attr=nn.initializer.KaimingUniform())
 
     def forward(self, obs):
         x = F.relu(self.l1(obs))

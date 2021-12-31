@@ -15,10 +15,12 @@
 # -*- coding: utf-8 -*-
 
 # 检查paddle和parl的版本
+import gym
 import parl
 import paddle
 assert paddle.__version__ == "1.6.3", "[Version WARNING] please try `pip install paddlepaddle==1.6.3`"
 assert parl.__version__ == "1.3.1" or parl.__version__ == "1.4", "[Version WARNING] please try `pip install parl==1.3.1` or `pip install parl==1.4` "
+assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
 
 import os
 import numpy as np

@@ -33,6 +33,19 @@ class ACModel(parl.Model):
         return self.critic(obs)
 
 
+class DoubleInputACModel(parl.Model):
+    def __init__(self):
+        super(DoubleInputACModel, self).__init__()
+        self.actor = DoubleInputActor()
+        self.critic = Critic()
+
+    def predict(self, obs):
+        return self.actor(obs)
+
+    def Q(self, obs):
+        return self.critic(obs)
+
+
 class Actor(parl.Model):
     def __init__(self):
         super(Actor, self).__init__()
@@ -54,6 +67,20 @@ class Critic(parl.Model):
     def forward(self, x):
         out = self.fc1(x)
         out = self.fc2(out)
+        return out
+
+
+class DoubleInputActor(parl.Model):
+    def __init__(self):
+        super(DoubleInputActor, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.fc2 = nn.Linear(300 + 4, 300)
+        self.fc3 = nn.Linear(300, 1)
+
+    def forward(self, x1, x2):
+        out = self.fc1(x1)
+        out = self.fc2(paddle.concat([out, x2], 1))
+        out = self.fc3(out)
         return out
 
 
@@ -96,6 +123,8 @@ class ACAgentBaseTest(unittest.TestCase):
         self.alg = TestAlgorithm(self.model)
         self.target_model = ACModel()
         self.target_alg = TestAlgorithm(self.target_model)
+        self.double_model = DoubleInputACModel()
+        self.double_alg = TestAlgorithm(self.double_model)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
@@ -118,6 +147,69 @@ class ACAgentBaseTest(unittest.TestCase):
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
         self.assertTrue(os.path.exists(save_path2))
+
+    def test_save_inference_model(self):
+        agent = TestAgent(self.alg)
+        save_path1 = 'my_inference_acmodel'
+        save_path2 = os.path.join('my_infer_acmodel', 'model-2')
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                   self.model.actor)
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes,
+                                   self.model.actor)
+        self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.model)
+        input_shapes = (None, 4)
+        input_dtypes = ['float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.model.actor)
+        input_shapes = [[None, 4]]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.model.actor)
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.model.actor)
+
+    def test_save_inference_model_with_multi_inputs(self):
+        agent = TestAgent(self.double_alg)
+        save_path1 = 'my_inference_acmodel_with_multi_inputs'
+        save_path2 = os.path.join('my_infer_acmodel_with_multi_inputs',
+                                  'model-2')
+        input_shapes = [[None, 4], [None, 4]]
+        input_dtypes = ['float32', 'float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                   self.double_model.actor)
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes,
+                                   self.double_model.actor)
+        self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.double_model)
+        input_shapes = (None, 4)
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.double_model.actor)
+        input_shapes = [[None, 4]]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.double_model.actor)
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes,
+                                       self.double_model.actor)
 
     def test_save_with_model(self):
         agent = TestAgent(self.alg)

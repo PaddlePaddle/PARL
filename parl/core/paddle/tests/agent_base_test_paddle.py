@@ -27,9 +27,38 @@ class TestModel(parl.Model):
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, 1)
 
+    def forward(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        out = self.fc3(out)
+        return out
+
+
+class TestModelWithoutForward(parl.Model):
+    def __init__(self):
+        super(TestModelWithoutForward, self).__init__()
+        self.fc1 = nn.Linear(4, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 1)
+        self.forward = None
+
     def predict(self, obs):
         out = self.fc1(obs)
         out = self.fc2(out)
+        out = self.fc3(out)
+        return out
+
+
+class DoubleInputTestModel(parl.Model):
+    def __init__(self):
+        super(DoubleInputTestModel, self).__init__()
+        self.fc1 = nn.Linear(4, 256)
+        self.fc2 = nn.Linear(256 + 4, 128)
+        self.fc3 = nn.Linear(128, 1)
+
+    def forward(self, obs_1, obs_2):
+        out = self.fc1(obs_1)
+        out = self.fc2(paddle.concat([out, obs_2], 1))
         out = self.fc3(out)
         return out
 
@@ -39,7 +68,7 @@ class TestAlgorithm(parl.Algorithm):
         self.model = model
 
     def predict(self, obs):
-        return self.model.predict(obs)
+        return self.model(obs)
 
     def learn(self, obs, label):
         pred_output = self.model.policy(obs)
@@ -73,6 +102,11 @@ class AgentBaseTest(unittest.TestCase):
         self.alg = TestAlgorithm(self.model)
         self.target_model = TestModel()
         self.target_alg = TestAlgorithm(self.target_model)
+        self.target_model_without_forward = TestModelWithoutForward()
+        self.target_alg_without_forward = TestAlgorithm(
+            self.target_model_without_forward)
+        self.double_model = DoubleInputTestModel()
+        self.double_alg = TestAlgorithm(self.double_model)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
@@ -94,6 +128,59 @@ class AgentBaseTest(unittest.TestCase):
         agent.save(save_path2)
         self.assertTrue(os.path.exists(save_path1))
         self.assertTrue(os.path.exists(save_path2))
+
+    def test_save_inference_model(self):
+        agent = TestAgent(self.alg)
+        save_path1 = 'my_inference_model'
+        save_path2 = os.path.join('my_infer_model', 'model-2')
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes)
+        self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
+        agent_without_forward = TestAgent(self.target_alg_without_forward)
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32']
+        with self.assertRaises(AssertionError):
+            agent_without_forward.save_inference_model(
+                save_path1, input_shapes, input_dtypes)
+        input_shapes = (None, 4)
+        input_dtypes = ['float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        input_shapes = [[None, 4]]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+
+    def test_save_inference_model_with_multi_inputs(self):
+        agent = TestAgent(self.double_alg)
+        save_path1 = 'my_inference_model_with_multi_inputs'
+        save_path2 = os.path.join('my_infer_model_with_multi_inputs',
+                                  'model-2')
+        input_shapes = [[None, 4], [None, 4]]
+        input_dtypes = ['float32', 'float32']
+        agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        agent.save_inference_model(save_path2, input_shapes, input_dtypes)
+        self.assertTrue(os.path.exists(save_path1 + '.pdmodel'))
+        self.assertTrue(os.path.exists(save_path2 + '.pdmodel'))
+        input_shapes = (None, 4)
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        input_shapes = [[None, 4]]
+        input_dtypes = 'float32'
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
+        input_shapes = [[None, 4]]
+        input_dtypes = ['float32', 'float32']
+        with self.assertRaises(AssertionError):
+            agent.save_inference_model(save_path1, input_shapes, input_dtypes)
 
     def test_save_with_model(self):
         agent = TestAgent(self.alg)

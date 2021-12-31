@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 
 #-*- coding: utf-8 -*-
 
-# 检查paddle和parl的版本
+# 检查版本
 import gym
 import parl
 import paddle
-assert paddle.__version__ == "1.6.3", "[Version WARNING] please try `pip install paddlepaddle==1.6.3`"
-assert parl.__version__ == "1.3.1" or parl.__version__ == "1.4", "[Version WARNING] please try `pip install parl==1.3.1` or `pip install parl==1.4` "
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
 assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
 
 import gym
@@ -41,22 +41,20 @@ MEMORY_SIZE = int(1e6)  # 经验池大小
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20  # 预存一部分经验之后再开始训练
 BATCH_SIZE = 128
 REWARD_SCALE = 0.1  # reward 缩放系数
-NOISE = 0.05  # 动作噪声方差
-TRAIN_EPISODE = 6e3  # 训练的总episode数
+NOISE = 0.1  # 动作噪声方差
+TRAIN_EPISODE = int(6e3)  # 训练的总episode数
 
 
 # 训练一个episode
-def run_episode(agent, env, rpm):
+def run_train_episode(agent, env, rpm):
     obs = env.reset()
     total_reward = 0
     steps = 0
     while True:
         steps += 1
         batch_obs = np.expand_dims(obs, axis=0)
-        action = agent.predict(batch_obs.astype('float32'))
-
-        # 增加探索扰动, 输出限制在 [-1.0, 1.0] 范围内
-        action = np.clip(np.random.normal(action, NOISE), -1.0, 1.0)
+        action = agent.sample(batch_obs.astype('float32'))
+        action = action[0]  # ContinuousCartPoleE输入的action为一个实数
 
         next_obs, reward, done, info = env.step(action)
 
@@ -78,7 +76,7 @@ def run_episode(agent, env, rpm):
 
 
 # 评估 agent, 跑 5 个episode，总reward求平均
-def evaluate(env, agent, render=False):
+def run_evaluate_episodes(agent, env, render=False):
     eval_reward = []
     for i in range(5):
         obs = env.reset()
@@ -87,7 +85,7 @@ def evaluate(env, agent, render=False):
         while True:
             batch_obs = np.expand_dims(obs, axis=0)
             action = agent.predict(batch_obs.astype('float32'))
-            action = np.clip(action, -1.0, 1.0)
+            action = action[0]  # ContinuousCartPoleE输入的action为一个实数
 
             steps += 1
             next_obs, reward, done, info = env.step(action)
@@ -110,24 +108,24 @@ def main():
     act_dim = env.action_space.shape[0]
 
     # 使用PARL框架创建agent
-    model = Model(act_dim)
+    model = Model(act_dim=act_dim, obs_dim=obs_dim)
     algorithm = DDPG(
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
-    agent = Agent(algorithm, obs_dim, act_dim)
+    agent = Agent(algorithm, act_dim, expl_noise=NOISE)
 
     # 创建经验池
     rpm = ReplayMemory(MEMORY_SIZE)
     # 往经验池中预存数据
     while len(rpm) < MEMORY_WARMUP_SIZE:
-        run_episode(agent, env, rpm)
+        run_train_episode(agent, env, rpm)
 
     episode = 0
     while episode < TRAIN_EPISODE:
-        for i in range(50):
-            total_reward = run_episode(agent, env, rpm)
+        for i in range(100):
+            total_reward = run_train_episode(agent, env, rpm)
             episode += 1
 
-        eval_reward = evaluate(env, agent, render=False)
+        eval_reward = run_evaluate_episodes(agent, env, render=False)
         logger.info('episode:{}    Test reward:{}'.format(
             episode, eval_reward))
 

@@ -12,23 +12,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#-*- coding: utf-8 -*-
+
+# 检查版本
 import gym
+import parl
+import paddle
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
+assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
+
+#import gym
 import argparse
 import numpy as np
-from parl.utils import logger, summary, ReplayMemory
-from parl.env.continuous_wrappers import ActionMappingWrapper
-from mujoco_model import MujocoModel
-from mujoco_agent import MujocoAgent
+from parl.utils import logger, tensorboard, ReplayMemory
+#from parl.env.continuous_wrappers import ActionMappingWrapper
+from quadrotor_model import QuadrotorModel
+from quadrotor_agent import QuadrotorAgent
 from parl.algorithms import DDPG
+from rlschool import make_env
+import paddle
 
-WARMUP_STEPS = 1e4
-EVAL_EPISODES = 5
-MEMORY_SIZE = int(1e6)
-BATCH_SIZE = 100
+
+class ActionMappingWrapper:
+    def __init__(self, env):
+        self.env = env
+        self.action_space = self.env.action_space
+        self.observation_space = self.env.observation_space
+        self.low_bound = self.env.action_space.low[0]
+        self.high_bound = self.env.action_space.high[0]
+        assert self.high_bound > self.low_bound
+
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
+
+    def step(self, model_output_act):
+        assert np.all(((model_output_act<=1.0 + 1e-3), (model_output_act>=-1.0 - 1e-3))), \
+            'the action should be in range [-1, 1] !'
+        assert self.high_bound > self.low_bound
+        mapped_action = self.low_bound + (model_output_act - (-1.0)) * (
+            (self.high_bound - self.low_bound) / 2.0)
+        mapped_action = np.clip(mapped_action, self.low_bound, self.high_bound)
+        return self.env.step(mapped_action)
+
+    def render(self):
+        self.env.render()
+
+
+ACTOR_LR = 0.0002
+CRITIC_LR = 0.001
+
 GAMMA = 0.99
 TAU = 0.005
-ACTOR_LR = 1e-3
-CRITIC_LR = 1e-3
+MEMORY_SIZE = int(1e6)
+WARMUP_STEPS = 1e4
+REWARD_SCALE = 0.01
+
+BATCH_SIZE = 256
+EVAL_EPISODES = 5
 EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 
 
@@ -49,10 +90,10 @@ def run_train_episode(agent, env, rpm):
 
         # Perform action
         next_obs, reward, done, _ = env.step(action)
-        terminal = float(done) if episode_steps < env._max_episode_steps else 0
+        terminal = done
 
         # Store data in replay memory
-        rpm.append(obs, action, reward, next_obs, terminal)
+        rpm.append(obs, action, REWARD_SCALE * reward, next_obs, terminal)
         obs = next_obs
         episode_reward += reward
 
@@ -68,7 +109,7 @@ def run_train_episode(agent, env, rpm):
 
 # Runs policy for 5 episodes by default and returns average reward
 # A fixed seed is used for the eval environment
-def run_evaluate_episodes(agent, env, eval_episodes):
+def run_evaluate_episodes(agent, env, eval_episodes, render=False):
     avg_reward = 0.
     for _ in range(eval_episodes):
         obs = env.reset()
@@ -77,28 +118,28 @@ def run_evaluate_episodes(agent, env, eval_episodes):
             action = agent.predict(obs)
             obs, reward, done, _ = env.step(action)
             avg_reward += reward
+            if render:
+                env.render()
     avg_reward /= eval_episodes
     return avg_reward
 
 
 def main():
-    logger.info("------------------ DDPG ---------------------")
-    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
-    logger.info("---------------------------------------------")
-    logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
-    env = gym.make(args.env)
-    env.seed(args.seed)
+    env = make_env('Quadrotor', task='hovering_control')
     env = ActionMappingWrapper(env)
+    env.reset()
+    obs_dim = env.observation_space.shape[0]
+    act_dim = env.action_space.shape[0]
 
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
     # Initialize model, algorithm, agent, replay_memory
-    model = MujocoModel(obs_dim, action_dim)
+    model = QuadrotorModel(obs_dim, action_dim)
     algorithm = DDPG(
         model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
-    agent = MujocoAgent(algorithm, action_dim, expl_noise=EXPL_NOISE)
+    agent = QuadrotorAgent(algorithm, action_dim, expl_noise=EXPL_NOISE)
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
 
@@ -109,7 +150,8 @@ def main():
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
         total_steps += episode_steps
 
-        summary.add_scalar('train/episode_reward', episode_reward, total_steps)
+        tensorboard.add_scalar('train/episode_reward', episode_reward,
+                               total_steps)
         logger.info('Total Steps: {} Reward: {}'.format(
             total_steps, episode_reward))
 
@@ -117,24 +159,16 @@ def main():
         if (total_steps + 1) // args.test_every_steps >= test_flag:
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
-            avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
-            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
+            avg_reward = run_evaluate_episodes(
+                agent, env, EVAL_EPISODES, render=False)
+            tensorboard.add_scalar('eval/episode_reward', avg_reward,
+                                   total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
                 EVAL_EPISODES, avg_reward))
-
-    # save the model and parameters of policy network for inference
-    save_inference_path = './inference_model'
-    input_shapes = [[None, env.observation_space.shape[0]]]
-    input_dtypes = ['float32']
-    agent.save_inference_model(save_inference_path, input_shapes, input_dtypes,
-                               model.actor_model)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
-    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
         default=5e6,
@@ -143,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--test_every_steps',
         type=int,
-        default=int(5e3),
+        default=int(1e4),
         help='The step interval between two consecutive evaluations')
     args = parser.parse_args()
 

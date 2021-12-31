@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 
 #-*- coding: utf-8 -*-
 
-# 检查paddle和parl的版本
+# 检查版本
 import gym
 import parl
 import paddle
-assert paddle.__version__ == "1.6.3", "[Version WARNING] please try `pip install paddlepaddle==1.6.3`"
-assert parl.__version__ == "1.3.1" or parl.__version__ == "1.4", "[Version WARNING] please try `pip install parl==1.3.1` or `pip install parl==1.4` "
+assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install paddlepaddle==2.2.0`"
+assert parl.__version__ == "2.0.1", "[Version WARNING] please try `pip install parl==2.0.1`"
 assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
 
 import os
@@ -33,10 +33,11 @@ from parl.algorithms import PolicyGradient
 
 from parl.utils import logger
 
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 5e-4
 
 
-def run_episode(env, agent):
+# 训练一个episode
+def run_train_episode(agent, env):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
     while True:
@@ -54,7 +55,7 @@ def run_episode(env, agent):
 
 
 # 评估 agent, 跑 5 个episode，总reward求平均
-def evaluate(env, agent, render=False):
+def run_evaluate_episodes(agent, env, render=False):
     eval_reward = []
     for i in range(5):
         obs = env.reset()
@@ -101,18 +102,20 @@ def main():
     logger.info('obs_dim {}, act_dim {}'.format(obs_dim, act_dim))
 
     # 根据parl框架构建agent
-    model = Model(act_dim=act_dim)
+    model = Model(obs_dim=obs_dim, act_dim=act_dim)
     alg = PolicyGradient(model, lr=LEARNING_RATE)
-    agent = Agent(alg, obs_dim=obs_dim, act_dim=act_dim)
+    agent = Agent(alg)
 
-    # 加载模型
+    # 加载模型并评估
     # if os.path.exists('./model.ckpt'):
     #     agent.restore('./model.ckpt')
+    #     run_evaluate_episodes(agent, env, render=True)
+    #     exit()
 
-    for i in range(1000):
-        obs_list, action_list, reward_list = run_episode(env, agent)
+    for i in range(3000):
+        obs_list, action_list, reward_list = run_train_episode(agent, env)
         if i % 10 == 0:
-            logger.info("Train Episode {}, Reward Sum {}.".format(
+            logger.info("Episode {}, Reward Sum {}.".format(
                 i, sum(reward_list)))
 
         batch_obs = np.array(obs_list)
@@ -121,9 +124,9 @@ def main():
 
         agent.learn(batch_obs, batch_action, batch_reward)
         if (i + 1) % 100 == 0:
-            total_reward = evaluate(env, agent, render=False)
-            logger.info('Episode {}, Test reward: {}'.format(
-                i + 1, total_reward))
+            # render=True 查看显示效果
+            total_reward = run_evaluate_episodes(agent, env, render=False)
+            logger.info('Test reward: {}'.format(total_reward))
 
     # save the parameters to ./model.ckpt
     agent.save('./model.ckpt')

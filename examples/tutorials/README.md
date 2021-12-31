@@ -1,6 +1,9 @@
 ## 《PARL强化学习入门实践》课程示例
 
-针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例（注意：本课程示例均基于静态图框架编写）。
+针对强化学习初学者，PARL提供了[入门课程](https://aistudio.baidu.com/aistudio/course/introduce/1335)，展示最基础的5个强化学习算法代码示例（注意：本课程示例均基于**静态图框架**编写）。
+
+## News: 
++ [2021.12.06] 应广大学员的要求，我们提供了课程配套代码的（lesson3-lesson5）的**动态图框架**版本，见 [链接](parl2_dygraph/)。lesson1-lesson2不涉及神经网络，可沿用本目录下的代码。
 
 ## 课程大纲
 + 一、强化学习(RL)初印象
@@ -27,7 +30,7 @@
 + Python 3.6/3.7 
 + [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
 + [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
-+ gym
++ gym==0.18.0
 
 
 ### 运行示例

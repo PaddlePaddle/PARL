@@ -30,7 +30,7 @@ def create_file_after_first_call(func_name):
             if logdir is None:
                 logdir = logger.auto_set_dir(action='d')
                 logger.warning(
-                    "[VisualDL] logdir is None, will save VisualDL files to {}\nView the data using: visualdl --logdir=./{} --host={}"
+                    "[VisualDL] logdir is None, will save VisualDL files to {}\nView the data using: visualdl --logdir={} --host={}"
                     .format(logdir, logdir, get_ip_address()))
             _writer = LogWriter(logdir=logger.get_dir())
         func = getattr(_writer, func_name)

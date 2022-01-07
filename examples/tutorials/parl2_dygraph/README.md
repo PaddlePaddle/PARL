@@ -19,7 +19,7 @@
 
 + Python 3.6/3.7/3.8
 + [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==2.2.0
-+ [parl](https://github.com/PaddlePaddle/PARL)==2.0.1
++ [parl](https://github.com/PaddlePaddle/PARL)==2.0.3
 + gym==0.18.0
 + rlschool==0.3.1（仅 lesson5 的 homework 需要安装）
 

@@ -43,6 +43,6 @@ class MujocoAgent(parl.Agent):
         reward = paddle.to_tensor(reward, dtype='float32')
         next_obs = paddle.to_tensor(next_obs, dtype='float32')
         terminal = paddle.to_tensor(terminal, dtype='float32')
-        critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
-                                                 terminal)
-        return critic_loss, actor_loss
+        critic_loss, mse, actor_loss, min_q = self.alg.learn(
+            obs, action, reward, next_obs, terminal)
+        return critic_loss, mse, actor_loss, min_q

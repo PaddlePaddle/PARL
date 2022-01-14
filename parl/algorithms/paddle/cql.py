@@ -53,10 +53,21 @@ class CQL(parl.Algorithm):
             alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
         """
         # checks
-        check_model_method(model, 'value', self.__class__.__name__)
-        check_model_method(model, 'policy', self.__class__.__name__)
-        check_model_method(model, 'get_actor_params', self.__class__.__name__)
-        check_model_method(model, 'get_critic_params', self.__class__.__name__)
+        # check_model_method(model, 'value', self.__class__.__name__)
+        # check_model_method(model, 'policy', self.__class__.__name__)
+        # check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        # check_model_method(model, 'get_critic_params', self.__class__.__name__)
+        assert isinstance(gamma, float)
+        assert isinstance(tau, float)
+        assert isinstance(actor_lr, float)
+        assert isinstance(critic_lr, float)
+        assert isinstance(with_automatic_entropy_tuning, bool)
+        assert isinstance(with_lagrange, bool)
+        assert isinstance(lagrange_thresh, float)
+        assert isinstance(min_q_version, int)
+        assert isinstance(min_q_weight, float)
+        assert isinstance(alpha, float)
+
         self.gamma = gamma
         self.tau = tau
         self.actor_lr = actor_lr
@@ -78,19 +89,18 @@ class CQL(parl.Algorithm):
         self.actor_optimizer = paddle.optimizer.Adam(
             learning_rate=actor_lr, parameters=self.model.get_actor_params())
         self.critic_optimizer = paddle.optimizer.Adam(
-            learning_rate=critic_lr,
-            parameters=self.model.get_critic_params(),
-        )
+            learning_rate=critic_lr, parameters=self.model.get_critic_params())
 
         if self.with_automatic_entropy_tuning:
             self.target_entropy = None
             self.log_alpha = paddle.zeros([1])
+            self.log_alpha.stop_gradient = False
             self.alpha_optimizer = paddle.optimizer.Adam(
                 learning_rate=actor_lr, parameters=[self.log_alpha])
-
         if self.with_lagrange:
             self.target_action_gap = self.lagrange_thresh
             self.log_alpha_prime = paddle.zeros([1])
+            self.log_alpha_prime.stop_gradient = False
             self.alpha_prime_optimizer = paddle.optimizer.Adam(
                 learning_rate=critic_lr, parameters=[self.log_alpha_prime])
 
@@ -107,9 +117,10 @@ class CQL(parl.Algorithm):
         act_mean, act_log_std = self.model.policy(obs)
         normal = Normal(act_mean, act_log_std.exp())
         # for reparameterization trick  (mean + std * N(0, 1))
-        x_t = normal.sample([1])
-        x_t = x_t.squeeze()
+        x_t = act_mean + self.sample_normal.sample(
+            act_log_std.shape) * act_log_std.exp()
         action = paddle.tanh(x_t)
+
         log_prob = normal.log_prob(x_t)
         # Enforcing Action Bound
         log_prob -= paddle.log((1 - action.pow(2)) + 1e-6)
@@ -120,43 +131,47 @@ class CQL(parl.Algorithm):
         """ Define the loss function and create an optimizer to minize the loss.
         """
         self._current_steps += 1
-        critic_loss = self._critic_learn(obs, action, reward, next_obs,
-                                         terminal)
-        actor_loss = self._actor_learn(obs, action)
+        critic_loss, mse = self._critic_learn(obs, action, reward, next_obs,
+                                              terminal)
+        actor_loss, min_q = self._actor_learn(obs, action)
         self.sync_target()
-        return critic_loss, actor_loss
+        return critic_loss, mse, actor_loss, min_q
 
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with paddle.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
             q1_next, q2_next = self.target_model.value(next_obs, next_action)
             target_Q = paddle.minimum(q1_next,
-                                 q2_next)  # a little different from SAC
+                                      q2_next)  # a little different from SAC
             target_Q = reward + self.gamma * (1. - terminal) * target_Q
         cur_q1, cur_q2 = self.model.value(obs, action)
+
         qf1_loss = F.mse_loss(cur_q1, target_Q)
         qf2_loss = F.mse_loss(cur_q2, target_Q)
+        mse = qf2_loss + qf1_loss
         ## add CQL
-        random_actions_tensor = paddle.uniform(shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
+        random_actions_tensor = paddle.uniform(
+            shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
         curr_actions_tensor, curr_log_pis = self._get_policy_actions(obs)
         new_curr_actions_tensor, new_log_pis = self._get_policy_actions(
             next_obs)
+
         q1_rand, q2_rand = self._get_tensor_values(obs, random_actions_tensor)
         q1_curr_actions, q2_curr_actions = self._get_tensor_values(
             obs, curr_actions_tensor)
         q1_next_actions, q2_next_actions = self._get_tensor_values(
-           obs, new_curr_actions_tensor)
+            obs, new_curr_actions_tensor)
+
         cat_q1 = paddle.concat(
-            [q1_rand,
-             cur_q1.unsqueeze(1),  q1_curr_actions], 1)
+            [q1_rand, cur_q1.unsqueeze(1), q1_curr_actions], 1)
         cat_q2 = paddle.concat(
-            [q2_rand,
-             cur_q2.unsqueeze(1),  q2_curr_actions], 1)
+            [q2_rand, cur_q2.unsqueeze(1), q2_curr_actions], 1)
+
         if self.min_q_version == 3:
             # importance sampled version
             random_density = np.log(0.5**curr_actions_tensor.shape[-1])
             cat_q1 = paddle.concat([
-                  q1_rand - random_density,
+                q1_rand - random_density,
                 q1_next_actions - new_log_pis.detach(),
                 q1_curr_actions - curr_log_pis.detach()
             ], 1)
@@ -165,6 +180,7 @@ class CQL(parl.Algorithm):
                 q2_next_actions - new_log_pis.detach(),
                 q2_curr_actions - curr_log_pis.detach()
             ], 1)
+
         min_qf1_loss = paddle.logsumexp(
             cat_q1 / self.temp,
             axis=1,
@@ -199,7 +215,7 @@ class CQL(parl.Algorithm):
         self.critic_optimizer.clear_grad()
         critic_loss.backward(retain_graph=True)
         self.critic_optimizer.step()
-        return critic_loss
+        return critic_loss, mse
 
     def _actor_learn(self, obs, action):
         act, log_pi = self.sample(obs)
@@ -232,7 +248,7 @@ class CQL(parl.Algorithm):
         self.actor_optimizer.clear_grad()
         actor_loss.backward(retain_graph=True)
         self.actor_optimizer.step()
-        return actor_loss
+        return actor_loss, min_q_pi.mean()
 
     def _sample_log_prob(self, obs, action):
         def atanh(x):

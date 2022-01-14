@@ -11,7 +11,7 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 + Mujoco simulator: Please see [here](http://mujoco.org/) to know more about Mujoco simulator and obtain a license.
 
 ### Benchmark result
-![avatar](./benchmark.png)
+![avatar](./result.png)
 
 
 

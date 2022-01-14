@@ -80,13 +80,18 @@ def main():
         # Train steps
         batch_obs, batch_action, batch_reward, batch_next_obs, batch_terminal = rpm.sample_batch(
             BATCH_SIZE)
-        critic_loss, actor_loss = agent.learn(batch_obs, batch_action,
-                                              batch_reward, batch_next_obs,
-                                              batch_terminal)
-        tensorboard.add_scalar('train/critic_loss',
-                               critic_loss.cpu().numpy(), total_steps)
-        tensorboard.add_scalar('train/actor_loss',
-                               actor_loss.cpu().numpy(), total_steps)
+        critic_loss, mse_loss, actor_loss, min_q = agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,\
+            batch_terminal)
+        tensorboard.add_scalar('train/critic_loss', critic_loss.cpu().numpy(),
+                            total_steps)
+
+        tensorboard.add_scalar('train/mse_loss', mse_loss.cpu().numpy(),
+                            total_steps)
+        tensorboard.add_scalar('train/actor_loss', actor_loss.cpu().numpy(),
+                            total_steps)
+        tensorboard.add_scalar('train/min_qi', min_q.cpu().numpy(), total_steps)
+    
+
 
         # Evaluate episode
         if total_steps // args.test_every_steps >= test_flag:

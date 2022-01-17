@@ -16,6 +16,7 @@ import parl
 import paddle
 from paddle.distribution import Normal
 import paddle.nn.functional as F
+from parl.utils.utils import check_model_method
 from copy import deepcopy
 import numpy as np
 

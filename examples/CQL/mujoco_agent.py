@@ -37,7 +37,6 @@ class MujocoAgent(parl.Agent):
     def learn(self, obs, action, reward, next_obs, terminal):
         terminal = np.expand_dims(terminal, -1)
         reward = np.expand_dims(reward, -1)
-
         obs = paddle.to_tensor(obs, dtype='float32')
         action = paddle.to_tensor(action, dtype='float32')
         reward = paddle.to_tensor(reward, dtype='float32')

@@ -31,5 +31,5 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 # To train for halfcheetah-medium-expert-v0(default), or [halfcheetah/hopper/walker/ant]-[random/medium/expert/medium-expert/medium-replay]-[v0/v2]
 python train.py --env [ENV_NAME]
 
-# To reproduce the performance of halfcheetah-medium-expert-v0
-python train.py --env halfcheetah-medium-expert-v0 --with_automatic_entropy_tuning
+# To reproduce the performance
+python train.py --env [ENV_NAME] --with_automatic_entropy_tuning

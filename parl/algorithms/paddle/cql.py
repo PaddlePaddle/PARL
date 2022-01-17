@@ -16,6 +16,7 @@ import parl
 import paddle
 from paddle.distribution import Normal
 import paddle.nn.functional as F
+from parl.utils.utils import check_model_method
 from copy import deepcopy
 import numpy as np
 
@@ -149,10 +150,6 @@ class CQL(parl.Algorithm):
         ## add CQL
         random_actions_tensor = paddle.uniform(
             shape=[cur_q2.shape[0] * self.num_random, action.shape[-1]])
-        # torch.FloatTensor(
-        # cur_q2.shape[0] * self.num_random, action.shape[-1]).uniform_(
-        #     -1, 1)
-
         curr_actions_tensor, curr_log_pis = self._get_policy_actions(obs)
         new_curr_actions_tensor, new_log_pis = self._get_policy_actions(
             next_obs)

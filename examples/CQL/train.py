@@ -72,7 +72,6 @@ def main():
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
     rpm.load_from_d4rl(d4rl.qlearning_dataset(env))
-
     total_steps = 0
     test_flag = 0
     for total_steps in trange(int(args.train_total_steps)):
@@ -116,7 +115,7 @@ if __name__ == "__main__":
         help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
         "--train_total_steps",
-        default=3e6,
+        default=1e6,
         type=int,
         help='Max time steps to run environment')
     parser.add_argument(

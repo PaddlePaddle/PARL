@@ -44,7 +44,6 @@ class MujocoModel(parl.Model):
 class Critic(parl.Model):
     def __init__(self, obs_dim, action_dim):
         super(Critic, self).__init__()
-
         # Q1 network
         self.l1 = nn.Linear(obs_dim + action_dim, 256)
         self.l2 = nn.Linear(256, 256)
@@ -77,7 +76,6 @@ class Critic(parl.Model):
 class Actor(parl.Model):
     def __init__(self, obs_dim, action_dim):
         super(Actor, self).__init__()
-
         self.l1 = nn.Linear(obs_dim, 256)
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, 256)

@@ -43,8 +43,7 @@ class MAPPOgent(parl.Agent):
         self.alg.model.actor.train()
         self.alg.model.critic.train()
         if self._use_popart:
-            advantages = buffer.returns[:
-                                        -1] - self.value_normalizer.denormalize(
+            advantages = buffer.returns[:-1] - self.value_normalizer.denormalize( \
                                             buffer.value_preds[:-1])
         else:
             advantages = buffer.returns[:-1] - buffer.value_preds[:-1]

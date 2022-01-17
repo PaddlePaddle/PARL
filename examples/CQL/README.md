@@ -1,7 +1,5 @@
 ## Reproduce CQL with PARL
 
-Different from Online RL which gather new data directly from the environment, Offline RL algorithms learn a policy or Q-function from static dataset, without additional interaction with the environment.
-
 Based on PARL, the CQL algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper on continuous control datasets from the D4RL benchmark.
 
 > Paper: CQL in [Conservative Q-Learning for Offline Reinforcement Learning](https://arxiv.org/abs/2006.04779)
@@ -11,16 +9,14 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 + Mujoco simulator: Please see [here](http://mujoco.org/) to know more about Mujoco simulator and obtain a license.
 
 ### Benchmark result
-![avatar](./benchmark.png)
-
-
+![learning curve](https://github.com/benchmarking-rl/PARL-experiments/blob/master/CQL/paddle/result.png)
 
 
 ## How to use
 ### Dependencies:
 + python3.5+
 + [parl>2.0.2](https://github.com/PaddlePaddle/PARL)
-+ [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
++ [paddlepaddle>=2.0.4](https://github.com/PaddlePaddle/Paddle)
 + gym==0.20.0
 + mujoco-py==2.0.2.13
 + [d4rl](https://github.com/rail-berkeley/d4rl) (install from source)

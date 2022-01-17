@@ -5,7 +5,7 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 > Paper: CQL in [Conservative Q-Learning for Offline Reinforcement Learning](https://arxiv.org/abs/2006.04779)
 
 ### Env and dataset introduction
-+ D4RL datasets: Please see [here](https://sites.google.com/view/d4rl/home) to know more about D4RL datasets. D4RL require Mujoco as a dependency. For more D4RL usage methods, please refer to its [guide](https://github.com/rail-berkeley/d4rl#using-d4rl).
++ D4RL datasets: This algorithm is tested in the D4RL dataset, one of the most commonly used dataset for offline RL. For more details about D4RL, please see [here](https://sites.google.com/view/d4rl/home). D4RL require Mujoco as a dependency. For more D4RL usage methods, please refer to its [guide](https://github.com/rail-berkeley/d4rl#using-d4rl).
 + Mujoco simulator: Please see [here](http://mujoco.org/) to know more about Mujoco simulator and obtain a license.
 
 ### Benchmark result

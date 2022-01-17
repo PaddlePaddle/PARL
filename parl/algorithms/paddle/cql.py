@@ -52,7 +52,7 @@ class CQL(parl.Algorithm):
             min_q_weight (float): the value of alpha in Critic loss, suggest 5.0 or 10.0 if not using lagrange
             alpha (float): the value of alpha(temperature parameter) in Actor loss, determines the relative importance of entropy term against the reward
         """
-        # checks
+        # check model method
         check_model_method(model, 'value', self.__class__.__name__)
         check_model_method(model, 'policy', self.__class__.__name__)
         check_model_method(model, 'get_actor_params', self.__class__.__name__)

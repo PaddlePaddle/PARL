@@ -49,6 +49,7 @@ class IQL(parl.Algorithm):
             self.model.get_critic_params(), lr=self.lr)
         self.policy_optimizer = torch.optim.Adam(
             self.model.get_actor_params(), lr=self.lr)
+        
         self.tau = tau
         self.beta = beta
         self.discount = discount

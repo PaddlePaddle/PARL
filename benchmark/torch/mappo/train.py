@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import numpy as np
 import torch
 import argparse
 from itertools import chain
-from mpe.env_wrappers import ParallelEnv
-from mappo_model import MAPPOModel
+from env_wrappers import ParallelEnv
+from simple_model import SimpleModel
 from parl.algorithms import MAPPO
-from mappo_agent import MAPPOgent
+from simple_agent import SimpleAgent
 from mappo_buffer import SeparatedReplayBuffer
 from parl.utils import logger, summary
 
@@ -37,6 +37,14 @@ EPISODE_LENGTH = 25  # Max length for any episode
 GAMMA = 0.99  # discount factor for rewards (default: 0.99)
 GAE_LAMBDA = 0.95  # gae lambda parameter (default: 0.95)
 LOG_INTERVAL_EPISODES = 5  # time duration between contiunous twice log printing
+
+
+def get_act_dim_from_act_space(action_space):
+    if action_space.__class__.__name__ == "Discrete":
+        act_dim = action_space.n
+    else:
+        act_dim = action_space.high - action_space.low + 1
+    return act_dim
 
 
 def main():
@@ -54,14 +62,15 @@ def main():
     agents = []
     buffers = []
     for agent_id in range(agent_num):
+
         share_observation_space = envs.share_observation_space[agent_id] if args.use_centralized_V else \
             envs.observation_space[agent_id]
 
-        model = MAPPOModel(
-            envs.observation_space[agent_id],
-            share_observation_space,
-            envs.action_space[agent_id],
-            device=device)
+        obs_dim = envs.observation_space[agent_id].shape[0]
+        cent_obs_dim = share_observation_space.shape[0]
+        act_dim = get_act_dim_from_act_space(envs.action_space[agent_id])
+
+        model = SimpleModel(obs_dim, cent_obs_dim, act_dim)
         algorithm = MAPPO(
             model,
             args.clip_param,
@@ -74,12 +83,11 @@ def main():
             args.use_popart,
             args.use_value_active_masks,
             device=device)
-        agent = MAPPOgent(args.ppo_epoch, args.num_mini_batch, env_num,
-                          algorithm, args.use_popart)
+        agent = SimpleAgent(algorithm, args.ppo_epoch, args.num_mini_batch,
+                            env_num, args.use_popart, device)
         # buffer
         bu = SeparatedReplayBuffer(
-            EPISODE_LENGTH, env_num, GAMMA, GAE_LAMBDA,
-            envs.observation_space[agent_id], share_observation_space,
+            EPISODE_LENGTH, env_num, GAMMA, GAE_LAMBDA, obs_dim, cent_obs_dim,
             envs.action_space[agent_id], args.use_popart)
         agents.append(agent)
         buffers.append(bu)
@@ -204,15 +212,17 @@ if __name__ == '__main__':
     parser.add_argument(
         '--scenario_name',
         type=str,
-        default='simple_speaker_listener',
-        choices=['simple_spread', 'simple_reference'],
+        default='simple_reference',
+        choices=[
+            'simple_speaker_listener', 'simple_spread', 'simple_reference'
+        ],
         help='scenario of MultiAgentEnv')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument(
         '--env_num',
         type=int,
-        default=128,
-        help='Number of parallel envs on each python process')
+        default=5,
+        help='Number of parallel envs to train')
     parser.add_argument(
         '--num_env_steps',
         type=int,

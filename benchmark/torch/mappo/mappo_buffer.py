@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,48 +18,33 @@ import torch
 import numpy as np
 
 
-def get_shape_from_obs_space(obs_space):
-    if obs_space.__class__.__name__ == 'Box':
-        obs_shape = obs_space.shape
-    elif obs_space.__class__.__name__ == 'list':
-        obs_shape = obs_space
-    else:
-        raise NotImplementedError
-    return obs_shape
-
-
-def get_shape_from_act_space(act_space):
-    if act_space.__class__.__name__ == 'Discrete':
-        act_shape = 1
-    else:  # agar
-        act_shape = act_space.shape
-    return act_shape
-
-
 class SeparatedReplayBuffer(object):
-    def __init__(self, episode_length, env_num, gamma, gae_lambda, obs_space,
-                 share_obs_space, act_space, use_popart):
+    def __init__(self, episode_length, env_num, gamma, gae_lambda, obs_shape,
+                 share_obs_shape, act_space, use_popart):
+        """  ReplayBuffer for each agent
+
+        Args:
+            model (parl.Model): model that contains both value network and policy network
+            episode_length (int): max length for any episode
+            env_num (int): Number of parallel envs to train
+            gamma (float): discount factor for rewards
+            gae_lambda (float): gae lambda parameter
+            obs_shape (int): obs dim for single agent
+            share_obs_shape (int): concatenated obs dim for all agents
+            act_space (MultiDiscrete/Discrete): action space for single agent
+            use_popart (bool): whether to use PopArt to normalize rewards
+        """
         self.episode_length = episode_length
         self.env_num = env_num
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self._use_popart = use_popart
 
-        obs_shape = get_shape_from_obs_space(obs_space)
-        share_obs_shape = get_shape_from_obs_space(share_obs_space)
-
-        if type(obs_shape[-1]) == list:
-            obs_shape = obs_shape[:1]
-
-        if type(share_obs_shape[-1]) == list:
-            share_obs_shape = share_obs_shape[:1]
-
         self.share_obs = np.zeros(
-            (self.episode_length + 1, self.env_num, *share_obs_shape),
+            (self.episode_length + 1, self.env_num, share_obs_shape),
             dtype=np.float32)
-        self.obs = np.zeros(
-            (self.episode_length + 1, self.env_num, *obs_shape),
-            dtype=np.float32)
+        self.obs = np.zeros((self.episode_length + 1, self.env_num, obs_shape),
+                            dtype=np.float32)
 
         self.value_preds = np.zeros((self.episode_length + 1, self.env_num, 1),
                                     dtype=np.float32)
@@ -70,10 +55,10 @@ class SeparatedReplayBuffer(object):
             self.available_actions = np.ones(
                 (self.episode_length + 1, self.env_num, act_space.n),
                 dtype=np.float32)
+            act_shape = 1
         else:
             self.available_actions = None
-
-        act_shape = get_shape_from_act_space(act_space)
+            act_shape = act_space.shape
 
         self.actions = np.zeros((self.episode_length, self.env_num, act_shape),
                                 dtype=np.float32)
@@ -100,6 +85,8 @@ class SeparatedReplayBuffer(object):
                bad_masks=None,
                active_masks=None,
                available_actions=None):
+        """ insert sample data into buffer
+        """
         self.share_obs[self.step + 1] = share_obs.copy()
         self.obs[self.step + 1] = obs.copy()
         self.actions[self.step] = actions.copy()
@@ -117,6 +104,8 @@ class SeparatedReplayBuffer(object):
         self.step = (self.step + 1) % self.episode_length
 
     def after_update(self):
+        """ update buffer after learn
+        """
         self.share_obs[0] = self.share_obs[-1].copy()
         self.obs[0] = self.obs[-1].copy()
         self.masks[0] = self.masks[-1].copy()
@@ -126,6 +115,8 @@ class SeparatedReplayBuffer(object):
             self.available_actions[0] = self.available_actions[-1].copy()
 
     def compute_returns(self, next_value, value_normalizer=None):
+        """ compute return for each step
+        """
         self.value_preds[-1] = next_value
         gae = 0
         for step in reversed(range(self.rewards.shape[0])):
@@ -149,6 +140,8 @@ class SeparatedReplayBuffer(object):
                                advantages,
                                num_mini_batch=None,
                                mini_batch_size=None):
+        """sample data from replay memory for training
+        """
         episode_length, env_num = self.rewards.shape[0:2]
         batch_size = env_num * episode_length
 

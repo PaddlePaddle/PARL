@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ import torch.nn as nn
 from torch.distributions import Categorical
 import numpy as np
 import parl
-import math
 
-__all__ = ['MAPPO']
+__all__ = ['MAPPO', 'PopArt']
 
 
 class MAPPO(parl.Algorithm):
@@ -37,8 +36,24 @@ class MAPPO(parl.Algorithm):
                  use_popart=True,
                  use_value_active_masks=True,
                  device=torch.device("cpu")):
+        """  MAPPO algorithm
+
+        Args:
+            model (parl.Model): model that contains both value network and policy network
+            clip_param (float): the clipping strength for value loss clipping
+            value_loss_coef (float): the coefficient for value loss
+            entropy_coef (float): the coefficient for entropy (c_2)
+            initial_lr (float): initial learning rate.
+            huber_delta (float): coefficience of huber loss
+            eps (None or float): epsilon for Adam optimizer
+            max_grad_norm (float): threshold for grad norm clipping
+            use_popart (bool): whether to use PopArt to normalize rewards
+            use_value_active_masks (bool): whether to mask useless data in value loss
+            device (torch.device): the device to run on (cpu/gpu)
+        """
         self.model = model
-        self.act_space = self.model.act_space
+        self.model.to(device)
+        self.multi_discrete = self.model.actor.multi_discrete
         self.device = device
         self.tpdv = dict(dtype=torch.float32, device=device)
 
@@ -70,9 +85,14 @@ class MAPPO(parl.Algorithm):
                obs,
                available_actions=None,
                deterministic=False):
+        """ Sample action from parameterized policy
+        """
+        if available_actions is not None:
+            available_actions = torch.from_numpy(available_actions).to(
+                self.device)
         policy = self.model.policy(obs, available_actions, deterministic)
 
-        if self.act_space.__class__.__name__ == "Discrete":
+        if not self.multi_discrete:
             action_dis = Categorical(logits=policy)
             if deterministic:
                 actions = action_dis.probs.argmax(dim=-1, keepdim=True)
@@ -83,7 +103,7 @@ class MAPPO(parl.Algorithm):
         else:
             actions = []
             action_log_probs = []
-            for i in range(self.act_space.shape):
+            for i in range(len(self.model.act_dim)):
                 action_dis = Categorical(logits=policy[i])
                 if deterministic:
                     action = action_dis.probs.argmax(dim=-1, keepdim=True)
@@ -99,22 +119,15 @@ class MAPPO(parl.Algorithm):
         values = self.model.value(cent_obs)
         return values, actions, action_log_probs
 
-    def learn(self, sample):
-        share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch, masks_batch, \
-        active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch = sample
-
-        old_action_log_probs_batch = check(old_action_log_probs_batch).to(
-            **self.tpdv)
-        adv_targ = check(adv_targ).to(**self.tpdv)
-        value_preds_batch = check(value_preds_batch).to(**self.tpdv)
-        return_batch = check(return_batch).to(**self.tpdv)
-        active_masks_batch = check(active_masks_batch).to(**self.tpdv)
-
+    def learn(self, share_obs_batch, obs_batch, actions_batch,
+              value_preds_batch, return_batch, active_masks_batch,
+              old_action_log_probs_batch, adv_targ, available_actions_batch):
+        """ update the value network and policy network parameters.
+        """
         policy = self.model.policy(
             obs_batch, available_actions_batch, deterministic=True)
-        if self.act_space.__class__.__name__ == "Discrete":
+        if not self.multi_discrete:
             action_dis = Categorical(logits=policy)
-            actions_batch = check(actions_batch).to(**self.tpdv)
             action_log_probs = action_dis.log_prob(
                 actions_batch.squeeze(-1)).view(actions_batch.size(0),
                                                 -1).sum(-1).unsqueeze(-1)
@@ -124,11 +137,11 @@ class MAPPO(parl.Algorithm):
             else:
                 dist_entropy = action_dis.entropy().mean()
         else:
-            actions_batch = check(actions_batch).to(**self.tpdv)
             actions_batch = torch.transpose(actions_batch, 0, 1)
             action_log_probs = []
             dist_entropy = []
-            for i in range(self.act_space.shape):
+
+            for i in range(len(self.model.act_dim)):
                 action_dis = Categorical(logits=policy[i])
                 action_log_probs.append(
                     action_dis.log_prob(actions_batch[i].squeeze(-1)).view(
@@ -174,6 +187,8 @@ class MAPPO(parl.Algorithm):
 
     def cal_value_loss(self, values, value_preds_batch, return_batch,
                        active_masks_batch):
+        """ Calculate value function loss.
+        """
         value_pred_clipped = value_preds_batch + (
             values - value_preds_batch).clamp(-self.clip_param,
                                               self.clip_param)
@@ -202,6 +217,8 @@ class MAPPO(parl.Algorithm):
         return value_loss
 
     def value(self, cent_obs):
+        """ Predict value from parameterized value function
+        """
         values = self.model.value(cent_obs)
         return values
 
@@ -214,9 +231,17 @@ class PopArt(torch.nn.Module):
                  beta=0.99999,
                  epsilon=1e-5,
                  device=torch.device("cpu")):
+        """  PopArt layer use running mean and std to normalize rewards
 
+        Args:
+            weight (Parameter): output layer weight of critic net
+            bias (Parameter): output layer bias of critic net
+            norm_axes (float): the number of groups to separate the channels into
+            beta (float): the fixed decay rate determining the horizon used to compute the statistics
+            epsilon (float): the epsilon value to use to avoid division by zero
+            device (torch.device): the device to run on (cpu/gpu)
+        """
         super(PopArt, self).__init__()
-
         self.beta = beta
         self.epsilon = epsilon
         self.norm_axes = norm_axes
@@ -238,6 +263,7 @@ class PopArt(torch.nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
+
         self.mean.zero_()
         self.mean_sq.zero_()
         self.debiasing_term.zero_()
@@ -297,12 +323,9 @@ class PopArt(torch.nn.Module):
         return out
 
 
-def check(input):
-    output = torch.from_numpy(input) if type(input) == np.ndarray else input
-    return output
-
-
 def huber_loss(e, d):
+    """ Huber loss function
+    """
     a = (abs(e) <= d).float()
     b = (e > d).float()
     return a * e**2 / 2 + b * d * (abs(e) - d / 2)

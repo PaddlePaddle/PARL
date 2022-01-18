@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,31 +19,28 @@ import numpy as np
 import parl
 
 
-class MAPPOgent(parl.Agent):
-    def __init__(self, ppo_epoch, num_mini_batch, env_num, algorithm,
-                 use_popart):
+class SimpleAgent(parl.Agent):
+    def __init__(self, algorithm, ppo_epoch, num_mini_batch, env_num,
+                 use_popart, device):
         self.ppo_epoch = ppo_epoch
         self.num_mini_batch = num_mini_batch
         self._use_popart = use_popart
         self.env_num = env_num
         self.value_normalizer = algorithm.value_normalizer
-        self.device = torch.device("cuda" if torch.cuda.
-                                   is_available() else "cpu")
-        super(MAPPOgent, self).__init__(algorithm)
+        self.device = device
+        super(SimpleAgent, self).__init__(algorithm)
 
-    @torch.no_grad()
     def sample(self, share_obs, obs):
-        self.alg.model.actor.eval()
-        self.alg.model.critic.eval()
+        obs = torch.from_numpy(obs).to(self.device)
+        share_obs = torch.from_numpy(share_obs).to(self.device)
         value, action, action_log_prob = self.alg.sample(share_obs, obs)
         return value.detach().cpu().numpy(), action.detach().cpu().numpy(
         ), action_log_prob.detach().cpu().numpy()
 
     def learn(self, buffer):
-        self.alg.model.actor.train()
-        self.alg.model.critic.train()
         if self._use_popart:
-            advantages = buffer.returns[:-1] - self.value_normalizer.denormalize( \
+            advantages = buffer.returns[:
+                                        -1] - self.value_normalizer.denormalize(
                                             buffer.value_preds[:-1])
         else:
             advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
@@ -63,7 +60,30 @@ class MAPPOgent(parl.Agent):
             data_generator = buffer.feed_forward_generator(
                 advantages, self.num_mini_batch)
             for sample in data_generator:
-                value_loss, policy_loss, dist_entropy = self.alg.learn(sample)
+                share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch, masks_batch, \
+                active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch = sample
+
+                share_obs_batch = torch.from_numpy(share_obs_batch).to(
+                    self.device)
+                obs_batch = torch.from_numpy(obs_batch).to(self.device)
+                actions_batch = torch.from_numpy(actions_batch).to(self.device)
+                value_preds_batch = torch.from_numpy(value_preds_batch).to(
+                    self.device)
+                return_batch = torch.from_numpy(return_batch).to(self.device)
+                active_masks_batch = torch.from_numpy(active_masks_batch).to(
+                    self.device)
+                old_action_log_probs_batch = torch.from_numpy(
+                    old_action_log_probs_batch).to(self.device)
+                adv_targ = torch.from_numpy(adv_targ).to(self.device)
+                if available_actions_batch is not None:
+                    available_actions_batch = torch.from_numpy(
+                        available_actions_batch).to(self.device)
+
+                value_loss, policy_loss, dist_entropy = self.alg.learn(
+                    share_obs_batch, obs_batch, actions_batch,
+                    value_preds_batch, return_batch, active_masks_batch,
+                    old_action_log_probs_batch, adv_targ,
+                    available_actions_batch)
 
                 train_info['value_loss'] += value_loss.item()
                 train_info['policy_loss'] += policy_loss.item()
@@ -75,8 +95,7 @@ class MAPPOgent(parl.Agent):
         return train_info
 
     def value(self, share_obs):
-        self.alg.model.actor.eval()
-        self.alg.model.critic.eval()
+        share_obs = torch.from_numpy(share_obs).to(self.device)
         next_values = self.alg.value(share_obs).detach().cpu().numpy()
         next_values = np.array(np.split(next_values, self.env_num))
         return next_values

@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,32 +15,17 @@
 # modified from https://github.com/marlbenchmark/on-policy
 
 import parl
-import torch
 import torch.nn as nn
-import numpy as np
 import torch.nn.functional as F
-from mappo_buffer import get_shape_from_obs_space
 
 
-def check(input):
-    output = torch.from_numpy(input) if type(input) == np.ndarray else input
-    return output
+class SimpleModel(parl.Model):
+    def __init__(self, obs_dim, cent_obs_dim, act_dim):
+        super(SimpleModel, self).__init__()
+        self.act_dim = act_dim
 
-
-class MAPPOModel(parl.Model):
-    def __init__(self,
-                 obs_space,
-                 cent_obs_space,
-                 act_space,
-                 device=torch.device("cpu")):
-        super(MAPPOModel, self).__init__()
-        self.device = device
-        self.obs_space = obs_space
-        self.share_obs_space = cent_obs_space
-        self.act_space = act_space
-
-        self.actor = Actor(self.obs_space, self.act_space, self.device)
-        self.critic = Critic(self.share_obs_space, self.device)
+        self.actor = Actor(obs_dim, self.act_dim)
+        self.critic = Critic(cent_obs_dim)
 
     def policy(self, obs, available_actions=None, deterministic=False):
         actions = self.actor(obs, available_actions, deterministic)
@@ -52,31 +37,25 @@ class MAPPOModel(parl.Model):
 
 
 class Actor(parl.Model):
-    def __init__(self, obs_space, action_space, device=torch.device("cpu")):
+    def __init__(self, obs_dim, act_dim):
         super(Actor, self).__init__()
-        self.tpdv = dict(dtype=torch.float32, device=device)
         self.multi_discrete = False
-        obs_shape = get_shape_from_obs_space(obs_space)
-        self.ln1 = nn.LayerNorm(obs_shape[0])
+        self.ln1 = nn.LayerNorm(obs_dim)
         self.ln2 = nn.LayerNorm(64)
         self.ln3 = nn.LayerNorm(64)
-        self.fc1 = nn.Linear(obs_shape[0], 64)
+        self.fc1 = nn.Linear(obs_dim, 64)
         self.fc2 = nn.Linear(64, 64)
-        if action_space.__class__.__name__ == "Discrete":
-            self.fc3 = nn.Linear(64, action_space.n)
+
+        if isinstance(act_dim, int):
+            self.fc3 = nn.Linear(64, act_dim)
         else:
             self.multi_discrete = True
-            action_dims = action_space.high - action_space.low + 1
             self.action_outs = []
-            for action_dim in action_dims:
+            for action_dim in act_dim:
                 self.action_outs.append(nn.Linear(64, action_dim))
             self.action_outs = nn.ModuleList(self.action_outs)
-        self.to(device)
 
     def forward(self, obs, available_actions=None, deterministic=False):
-        obs = check(obs).to(**self.tpdv)
-        if available_actions is not None:
-            available_actions = check(available_actions).to(**self.tpdv)
         x = self.ln1(obs)
         x = F.tanh(self.fc1(x))
         x = self.ln2(x)
@@ -96,20 +75,16 @@ class Actor(parl.Model):
 
 
 class Critic(parl.Model):
-    def __init__(self, cent_obs_space, device=torch.device("cpu")):
+    def __init__(self, cent_obs_dim):
         super(Critic, self).__init__()
-        self.tpdv = dict(dtype=torch.float32, device=device)
-        cent_obs_shape = get_shape_from_obs_space(cent_obs_space)
-        self.ln1 = nn.LayerNorm(cent_obs_shape[0])
+        self.ln1 = nn.LayerNorm(cent_obs_dim)
         self.ln2 = nn.LayerNorm(64)
         self.ln3 = nn.LayerNorm(64)
-        self.fc1 = nn.Linear(cent_obs_shape[0], 64)
+        self.fc1 = nn.Linear(cent_obs_dim, 64)
         self.fc2 = nn.Linear(64, 64)
         self.v_out = nn.Linear(64, 1)
-        self.to(device)
 
     def forward(self, cent_obs):
-        cent_obs = check(cent_obs).to(**self.tpdv)
         x = self.ln1(cent_obs)
         x = F.tanh(self.fc1(x))
         x = self.ln2(x)

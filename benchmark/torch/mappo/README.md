@@ -6,13 +6,13 @@ Based on PARL, the MAPPO algorithm of deep reinforcement learning has been repro
 
 ### Multi-agent particle environment introduction
 
-A simple multi-agent particle world based on gym. Please see [here](https://github.com/caoxixiya/mappo_mpe) to install the environment, which is a light [MPE](https://github.com/openai/multiagent-particle-envs) env modified from [MAPPO](https://github.com/marlbenchmark/on-policy/tree/main/onpolicy/envs) official code.
+A simple multi-agent particle world based on gym. Please see [here](https://github.com/caoxixiya/mappo_mpe) to install the environment, which is a modified [MPE](https://github.com/openai/multiagent-particle-envs) env extracted from [MAPPO](https://github.com/marlbenchmark/on-policy/tree/main/onpolicy/envs) official code.
 
 ## How to use
 
 ### Dependencies:
 
-+ python>=3.8
++ python>=3.6
 + [parl>=2.0.4](https://github.com/PaddlePaddle/PARL)
 + [mappo-mpe](https://github.com/caoxixiya/mappo_mpe)
 + numpy==1.18.5
@@ -21,10 +21,11 @@ A simple multi-agent particle world based on gym. Please see [here](https://gith
 
 ### Start Training:
 
-```python
+```commandline
 # To train an agent for simple_speaker_listener scenario
 python train.py
 
 # To train for other scenario
 python train.py --scenario_name [ENV_NAME]
 ```
+

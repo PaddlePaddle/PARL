@@ -1,99 +1,159 @@
-"""
-Modified from OpenAI Baselines code to work with multi-agent envs
-"""
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# modified from https://github.com/marlbenchmark/on-policy
+
 import numpy as np
-from mpe.environment import MultiAgentEnv
-from mpe.scenarios import load
+from multiagent.environment import MultiAgentEnv
+from multiagent.scenarios import load
 
 
-def MPEEnv(scenario_name, rank, seed):
-    # load scenario from script
-    scenario = load(scenario_name + ".py").Scenario()
-    # create world
-    world = scenario.make_world()
-    # create multiagent environment
-    env = MultiAgentEnv(world, scenario.reset_world, scenario.reward,
-                        scenario.observation, scenario.info)
-    env.seed(seed + rank * 1000)
-    return env
+class MPEEnv(object):
+    def __init__(self, scenario_name, seed):
+        """
+        multiagent env wrapper
+
+        Args:
+            scenario_name (str): scenario of MultiAgentEnv
+            seed (int): random seed
+        """
+        scenario = load(scenario_name + ".py").Scenario()
+        world = scenario.make_world()
+        self.env = MultiAgentEnv(world, scenario.reset_world, scenario.reward,
+                                 scenario.observation, scenario.info)
+        self.env.seed(seed)
+
+        self.share_observation_space = self.env.share_observation_space
+        self.observation_space = self.env.observation_space
+        self.action_space = self.env.action_space
+
+    def reset(self):
+        """
+        Returns:
+            obs of single env
+        """
+        return self.env.reset()
+
+    def step(self, actions):
+        """
+        Args:
+            actions: array of action
+
+        Returns:
+            obs: array of next obs of env
+            reward: array of return reward of env
+            done: array of done of env
+            info: array of info of env
+        """
+        agents_actions_list = []
+        for agent_id in range(len(self.observation_space)):
+            if self.action_space[agent_id].__class__.__name__ == 'MultiDiscrete':
+                for action_id in range(self.action_space[agent_id].shape):
+                    action_label = actions[agent_id][action_id]
+                    action_one_hot = np.squeeze(
+                        np.eye(self.action_space[agent_id].high[action_id] + 1)[action_label])
+                    if action_id == 0:
+                        action_env = action_one_hot
+                    else:
+                        action_env = np.concatenate((action_env, action_one_hot))
+                agents_actions_list.append(action_env)
+            else:
+                action_label = actions[agent_id]
+                action_one_hot = np.squeeze(np.eye(self.action_space[agent_id].n)[action_label])
+                agents_actions_list.append(action_one_hot)
+
+        results = self.env.step(agents_actions_list)
+        obs, rews, dones, infos = map(np.array, results)
+
+        return obs, rews, dones, infos
+
+    def close(self):
+        """close env
+        """
+        self.env.close()
 
 
 class ParallelEnv(object):
-    """
-    Creates a simple vectorized wrapper for multiple environments, calling each environment in sequence on the current
-    Python process. This is useful for computationally simple environment such as ``cartpole-v1``,
-    as the overhead of multiprocess or multithread outweighs the environment computation time.
-    This can also be used for RL methods that
-    require a vectorized environment, but that you want a single environments to train with.
-    """
     closed = False
     viewer = None
 
     def __init__(self, scenario_name, env_num, seed):
-        self.envs = [
-            MPEEnv(scenario_name, rank, seed) for rank in range(env_num)
-        ]
-        self.actions = None
-        self.num_envs = env_num
-        self.observation_space = self.envs[0].observation_space
+        """
+        Creates a simple vectorized wrapper for multiple environments, calling each environment in sequence on the current
+        Python process. This is useful for computationally simple environment such as ``cartpole-v1``,
+        as the overhead of multiprocess or multithread outweighs the environment computation time.
+        This can also be used for RL methods that require a vectorized environment, but that you want a single
+        environments to train with.
+
+        Args:
+            scenario_name (str): scenario of MultiAgentEnv
+            env_num (int): number of parallel envs to train
+            seed (int): random seed
+        """
+        self.envs = [MPEEnv(scenario_name, seed + rank * 1000) for rank in range(env_num)]
         self.share_observation_space = self.envs[0].share_observation_space
+        self.observation_space = self.envs[0].observation_space
         self.action_space = self.envs[0].action_space
+        self.num_envs = env_num
 
     def reset(self):
+        """
+        Returns:
+            List of obs
+        """
         obs = [env.reset() for env in self.envs]
         return np.array(obs)
 
     def step(self, actions):
         """
-        Step the environments synchronously.
+        Args:
+            actions: array of action
 
-        This is available for backwards compatibility.
+        Returns:
+            obs_batch: array of next obs of envs
+            reward_batch: array of return reward of envs
+            done_batch: array of done of envs
+            info_batch: array of info of envs
         """
-        temp_actions_env = []
-        for agent_id in range(len(self.observation_space)):
-            action = actions[agent_id]
-            if self.action_space[
-                    agent_id].__class__.__name__ == 'MultiDiscrete':
-                for i in range(self.action_space[agent_id].shape):
-                    uc_action_env = np.eye(
-                        self.action_space[agent_id].high[i] + 1)[action[:, i]]
-                    if i == 0:
-                        action_env = uc_action_env
-                    else:
-                        action_env = np.concatenate(
-                            (action_env, uc_action_env), axis=1)
-            elif self.action_space[agent_id].__class__.__name__ == 'Discrete':
-                action_env = np.squeeze(
-                    np.eye(self.action_space[agent_id].n)[action], 1)
+        obs_batch, rews_batch, dones_batch, infos_batch = [], [], [], []
+        actions = np.array(actions).transpose(1, 0, 2)
+
+        for env_id in range(actions.shape[0]):
+            obs, rews, dones, infos = self.envs[env_id].step(actions[env_id])
+
+            if 'bool' in dones.__class__.__name__:
+                if dones:
+                    obs = self.envs[env_id].reset()
             else:
-                raise NotImplementedError
+                if np.all(dones):
+                    obs = self.envs[env_id].reset()
 
-            temp_actions_env.append(action_env)
+            obs_batch.append(obs)
+            rews_batch.append(rews)
+            dones_batch.append(dones)
+            infos_batch.append(infos)
 
-        actions_env = []
-        for i in range(self.num_envs):
-            one_hot_action_env = []
-            for temp_action_env in temp_actions_env:
-                one_hot_action_env.append(temp_action_env[i])
-            actions_env.append(one_hot_action_env)
+        obs_batch = np.array(obs_batch)
+        rews_batch = np.array(rews_batch)
+        dones_batch = np.array(dones_batch)
+        infos_batch = np.array(infos_batch)
 
-        self.actions = actions_env
-
-        results = [env.step(a) for (a, env) in zip(self.actions, self.envs)]
-        obs, rews, dones, infos = map(np.array, zip(*results))
-
-        for (i, done) in enumerate(dones):
-            if 'bool' in done.__class__.__name__:
-                if done:
-                    obs[i] = self.envs[i].reset()
-            else:
-                if np.all(done):
-                    obs[i] = self.envs[i].reset()
-        self.actions = None
-
-        return obs, rews, dones, infos
+        return obs_batch, rews_batch, dones_batch, infos_batch
 
     def close(self):
+        """close all envs
+        """
         if self.closed:
             return
         if self.viewer is not None:

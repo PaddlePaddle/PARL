@@ -62,7 +62,6 @@ def main():
     agents = []
     buffers = []
     for agent_id in range(agent_num):
-
         share_observation_space = envs.share_observation_space[agent_id] if args.use_centralized_V else \
             envs.observation_space[agent_id]
 
@@ -83,8 +82,7 @@ def main():
             args.use_popart,
             args.use_value_active_masks,
             device=device)
-        agent = SimpleAgent(algorithm, args.ppo_epoch, args.num_mini_batch,
-                            env_num, args.use_popart, device)
+        agent = SimpleAgent(algorithm, env_num, device)
         # buffer
         bu = SeparatedReplayBuffer(
             EPISODE_LENGTH, env_num, GAMMA, GAE_LAMBDA, obs_dim, cent_obs_dim,
@@ -158,7 +156,7 @@ def main():
         # learn
         train_infos = []
         for agent_id in range(agent_num):
-            train_info = agents[agent_id].learn(buffers[agent_id])
+            train_info = agents[agent_id].learn(buffers[agent_id], args.ppo_epoch, args.num_mini_batch, args.use_popart)
             train_infos.append(train_info)
             buffers[agent_id].after_update()
 
@@ -178,18 +176,18 @@ def main():
                 agent_rewards.append(individual_rewards)
                 train_infos[agent_id].update({
                     'individual_rewards':
-                    individual_rewards
+                        individual_rewards
                 })
                 train_infos[agent_id].update({
                     "average_episode_rewards":
-                    average_episode_rewards
+                        average_episode_rewards
                 })
 
             use_time = round(end - start, 3)
             logger.info(
                 'Steps: {}, Episodes: {}/{}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
-                .format(total_num_steps, episode, episodes,
-                        average_episode_rewards, agent_rewards, use_time))
+                    .format(total_num_steps, episode, episodes,
+                            average_episode_rewards, agent_rewards, use_time))
 
             for agent_id in range(agent_num):
                 for k, v in train_infos[agent_id].items():
@@ -212,7 +210,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--scenario_name',
         type=str,
-        default='simple_reference',
+        default='simple_speaker_listener',
         choices=[
             'simple_speaker_listener', 'simple_spread', 'simple_reference'
         ],
@@ -221,7 +219,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env_num',
         type=int,
-        default=5,
+        default=128,
         help='Number of parallel envs to train')
     parser.add_argument(
         '--num_env_steps',

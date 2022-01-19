@@ -27,8 +27,8 @@ class SimpleModel(parl.Model):
         self.actor = Actor(obs_dim, self.act_dim)
         self.critic = Critic(cent_obs_dim)
 
-    def policy(self, obs, available_actions=None, deterministic=False):
-        actions = self.actor(obs, available_actions, deterministic)
+    def policy(self, obs):
+        actions = self.actor(obs)
         return actions
 
     def value(self, cent_obs):
@@ -55,7 +55,7 @@ class Actor(parl.Model):
                 self.action_outs.append(nn.Linear(64, action_dim))
             self.action_outs = nn.ModuleList(self.action_outs)
 
-    def forward(self, obs, available_actions=None, deterministic=False):
+    def forward(self, obs):
         x = self.ln1(obs)
         x = F.tanh(self.fc1(x))
         x = self.ln2(x)
@@ -68,9 +68,6 @@ class Actor(parl.Model):
                 policys.append(policy)
         else:
             policys = self.fc3(x)
-            if available_actions is not None:
-                policys[available_actions == 0] = -1e10
-
         return policys
 
 

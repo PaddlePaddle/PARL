@@ -45,19 +45,14 @@ class SeparatedReplayBuffer(object):
             dtype=np.float32)
         self.obs = np.zeros((self.episode_length + 1, self.env_num, obs_shape),
                             dtype=np.float32)
-
         self.value_preds = np.zeros((self.episode_length + 1, self.env_num, 1),
                                     dtype=np.float32)
         self.returns = np.zeros((self.episode_length + 1, self.env_num, 1),
                                 dtype=np.float32)
 
         if act_space.__class__.__name__ == 'Discrete':
-            self.available_actions = np.ones(
-                (self.episode_length + 1, self.env_num, act_space.n),
-                dtype=np.float32)
             act_shape = 1
         else:
-            self.available_actions = None
             act_shape = act_space.shape
 
         self.actions = np.zeros((self.episode_length, self.env_num, act_shape),
@@ -66,10 +61,8 @@ class SeparatedReplayBuffer(object):
             (self.episode_length, self.env_num, act_shape), dtype=np.float32)
         self.rewards = np.zeros((self.episode_length, self.env_num, 1),
                                 dtype=np.float32)
-
         self.masks = np.ones((self.episode_length + 1, self.env_num, 1),
                              dtype=np.float32)
-        self.bad_masks = np.ones_like(self.masks)
         self.active_masks = np.ones_like(self.masks)
 
         self.step = 0
@@ -82,9 +75,7 @@ class SeparatedReplayBuffer(object):
                value_preds,
                rewards,
                masks,
-               bad_masks=None,
-               active_masks=None,
-               available_actions=None):
+               active_masks=None):
         """ insert sample data into buffer
         """
         self.share_obs[self.step + 1] = share_obs.copy()
@@ -94,12 +85,8 @@ class SeparatedReplayBuffer(object):
         self.value_preds[self.step] = value_preds.copy()
         self.rewards[self.step] = rewards.copy()
         self.masks[self.step + 1] = masks.copy()
-        if bad_masks is not None:
-            self.bad_masks[self.step + 1] = bad_masks.copy()
         if active_masks is not None:
             self.active_masks[self.step + 1] = active_masks.copy()
-        if available_actions is not None:
-            self.available_actions[self.step + 1] = available_actions.copy()
 
         self.step = (self.step + 1) % self.episode_length
 
@@ -109,10 +96,7 @@ class SeparatedReplayBuffer(object):
         self.share_obs[0] = self.share_obs[-1].copy()
         self.obs[0] = self.obs[-1].copy()
         self.masks[0] = self.masks[-1].copy()
-        self.bad_masks[0] = self.bad_masks[-1].copy()
         self.active_masks[0] = self.active_masks[-1].copy()
-        if self.available_actions is not None:
-            self.available_actions[0] = self.available_actions[-1].copy()
 
     def compute_returns(self, next_value, value_normalizer=None):
         """ compute return for each step
@@ -125,7 +109,6 @@ class SeparatedReplayBuffer(object):
                         self.masks[step + 1] - value_normalizer.denormalize(self.value_preds[step])
                 gae = delta + self.gamma * self.gae_lambda * self.masks[
                     step + 1] * gae
-                gae = gae * self.bad_masks[step + 1]
                 self.returns[step] = gae + value_normalizer.denormalize(
                     self.value_preds[step])
             else:
@@ -133,13 +116,12 @@ class SeparatedReplayBuffer(object):
                         self.value_preds[step]
                 gae = delta + self.gamma * self.gae_lambda * self.masks[
                     step + 1] * gae
-                gae = gae * self.bad_masks[step + 1]
                 self.returns[step] = gae + self.value_preds[step]
 
-    def feed_forward_generator(self,
-                               advantages,
-                               num_mini_batch=None,
-                               mini_batch_size=None):
+    def sample_batch(self,
+                     advantages,
+                     num_mini_batch=None,
+                     mini_batch_size=None):
         """sample data from replay memory for training
         """
         episode_length, env_num = self.rewards.shape[0:2]
@@ -162,9 +144,6 @@ class SeparatedReplayBuffer(object):
         share_obs = self.share_obs[:-1].reshape(-1, *self.share_obs.shape[2:])
         obs = self.obs[:-1].reshape(-1, *self.obs.shape[2:])
         actions = self.actions.reshape(-1, self.actions.shape[-1])
-        if self.available_actions is not None:
-            available_actions = self.available_actions[:-1].reshape(
-                -1, self.available_actions.shape[-1])
         value_preds = self.value_preds[:-1].reshape(-1, 1)
         returns = self.returns[:-1].reshape(-1, 1)
         masks = self.masks[:-1].reshape(-1, 1)
@@ -178,10 +157,6 @@ class SeparatedReplayBuffer(object):
             share_obs_batch = share_obs[indices]
             obs_batch = obs[indices]
             actions_batch = actions[indices]
-            if self.available_actions is not None:
-                available_actions_batch = available_actions[indices]
-            else:
-                available_actions_batch = None
             value_preds_batch = value_preds[indices]
             return_batch = returns[indices]
             masks_batch = masks[indices]
@@ -192,4 +167,4 @@ class SeparatedReplayBuffer(object):
             else:
                 adv_targ = advantages[indices]
 
-            yield share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch
+            yield share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ

@@ -80,10 +80,7 @@ class MAPPO(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             self.model.critic.parameters(), lr=self.lr, eps=self.eps)
 
-    def sample(self,
-               cent_obs,
-               obs,
-               deterministic=False):
+    def sample(self, cent_obs, obs, deterministic=False):
         """ Sample action from parameterized policy
         """
         policy = self.model.policy(obs)
@@ -115,8 +112,15 @@ class MAPPO(parl.Algorithm):
         values = self.model.value(cent_obs)
         return values, actions, action_log_probs
 
-    def learn(self, share_obs_batch, obs_batch, actions_batch,
-              value_preds_batch, return_batch, old_action_log_probs_batch, adv_targ, active_masks_batch=None):
+    def learn(self,
+              share_obs_batch,
+              obs_batch,
+              actions_batch,
+              value_preds_batch,
+              return_batch,
+              old_action_log_probs_batch,
+              adv_targ,
+              active_masks_batch=None):
         """ update the value network and policy network parameters.
         """
         policy = self.model.policy(obs_batch)
@@ -159,9 +163,12 @@ class MAPPO(parl.Algorithm):
                             1.0 + self.clip_param) * adv_targ
 
         if active_masks_batch is not None:
-            policy_action_loss = (-torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True) *active_masks_batch).sum() / active_masks_batch.sum()
+            policy_action_loss = (
+                -torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True) *
+                active_masks_batch).sum() / active_masks_batch.sum()
         else:
-            policy_action_loss = -torch.sum(torch.min(surr1, surr2), dim=-1, keepdim=True).mean()
+            policy_action_loss = -torch.sum(
+                torch.min(surr1, surr2), dim=-1, keepdim=True).mean()
 
         policy_loss = policy_action_loss
         self.actor_optimizer.zero_grad()
@@ -181,13 +188,16 @@ class MAPPO(parl.Algorithm):
 
         return value_loss, policy_loss, dist_entropy
 
-    def cal_value_loss(self, values, value_preds_batch, return_batch,
+    def cal_value_loss(self,
+                       values,
+                       value_preds_batch,
+                       return_batch,
                        active_masks_batch=None):
         """ Calculate value function loss.
         """
         value_pred_clipped = value_preds_batch + (
-                values - value_preds_batch).clamp(-self.clip_param,
-                                                  self.clip_param)
+            values - value_preds_batch).clamp(-self.clip_param,
+                                              self.clip_param)
 
         if self._use_popart:
             self.value_normalizer.update(return_batch)
@@ -275,26 +285,26 @@ class PopArt(torch.nn.Module):
 
         batch_mean = input_vector.mean(dim=tuple(range(self.norm_axes)))
         batch_sq_mean = (input_vector
-                         ** 2).mean(dim=tuple(range(self.norm_axes)))
+                         **2).mean(dim=tuple(range(self.norm_axes)))
 
         self.mean.mul_(self.beta).add_(batch_mean * (1.0 - self.beta))
         self.mean_sq.mul_(self.beta).add_(batch_sq_mean * (1.0 - self.beta))
         self.debiasing_term.mul_(self.beta).add_(1.0 * (1.0 - self.beta))
 
-        self.stddev = (self.mean_sq - self.mean ** 2).sqrt().clamp(min=1e-4)
+        self.stddev = (self.mean_sq - self.mean**2).sqrt().clamp(min=1e-4)
 
         new_mean, new_var = self.debiased_mean_var()
         new_stddev = torch.sqrt(new_var)
 
         self.weight.data = self.weight * old_stddev / new_stddev
         self.bias.data = (
-                                 old_stddev * self.bias + old_mean - new_mean) / new_stddev
+            old_stddev * self.bias + old_mean - new_mean) / new_stddev
 
     def debiased_mean_var(self):
         debiased_mean = self.mean / self.debiasing_term.clamp(min=self.epsilon)
         debiased_mean_sq = self.mean_sq / self.debiasing_term.clamp(
             min=self.epsilon)
-        debiased_var = (debiased_mean_sq - debiased_mean ** 2).clamp(min=1e-2)
+        debiased_var = (debiased_mean_sq - debiased_mean**2).clamp(min=1e-2)
         return debiased_mean, debiased_var
 
     def normalize(self, input_vector):
@@ -302,8 +312,8 @@ class PopArt(torch.nn.Module):
             input_vector = torch.from_numpy(input_vector)
         input_vector = input_vector.to(**self.tpdv)
         mean, var = self.debiased_mean_var()
-        out = (input_vector - mean[(None,) * self.norm_axes]
-               ) / torch.sqrt(var)[(None,) * self.norm_axes]
+        out = (input_vector - mean[(None, ) * self.norm_axes]
+               ) / torch.sqrt(var)[(None, ) * self.norm_axes]
 
         return out
 
@@ -312,8 +322,8 @@ class PopArt(torch.nn.Module):
             input_vector = torch.from_numpy(input_vector)
         input_vector = input_vector.to(**self.tpdv)
         mean, var = self.debiased_mean_var()
-        out = input_vector * torch.sqrt(var)[(None,) * self.norm_axes] + mean[
-            (None,) * self.norm_axes]
+        out = input_vector * torch.sqrt(var)[(None, ) * self.norm_axes] + mean[
+            (None, ) * self.norm_axes]
         out = out.cpu().numpy()
 
         return out
@@ -324,4 +334,4 @@ def huber_loss(e, d):
     """
     a = (abs(e) <= d).float()
     b = (e > d).float()
-    return a * e ** 2 / 2 + b * d * (abs(e) - d / 2)
+    return a * e**2 / 2 + b * d * (abs(e) - d / 2)

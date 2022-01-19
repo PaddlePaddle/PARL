@@ -156,7 +156,9 @@ def main():
         # learn
         train_infos = []
         for agent_id in range(agent_num):
-            train_info = agents[agent_id].learn(buffers[agent_id], args.ppo_epoch, args.num_mini_batch, args.use_popart)
+            train_info = agents[agent_id].learn(
+                buffers[agent_id], args.ppo_epoch, args.num_mini_batch,
+                args.use_popart)
             train_infos.append(train_info)
             buffers[agent_id].after_update()
 
@@ -176,18 +178,18 @@ def main():
                 agent_rewards.append(individual_rewards)
                 train_infos[agent_id].update({
                     'individual_rewards':
-                        individual_rewards
+                    individual_rewards
                 })
                 train_infos[agent_id].update({
                     "average_episode_rewards":
-                        average_episode_rewards
+                    average_episode_rewards
                 })
 
             use_time = round(end - start, 3)
             logger.info(
                 'Steps: {}, Episodes: {}/{}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
-                    .format(total_num_steps, episode, episodes,
-                            average_episode_rewards, agent_rewards, use_time))
+                .format(total_num_steps, episode, episodes,
+                        average_episode_rewards, agent_rewards, use_time))
 
             for agent_id in range(agent_num):
                 for k, v in train_infos[agent_id].items():

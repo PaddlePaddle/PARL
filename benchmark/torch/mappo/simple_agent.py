@@ -37,7 +37,7 @@ class SimpleAgent(parl.Agent):
         if use_popart:
             advantages = buffer.returns[:
                                         -1] - self.value_normalizer.denormalize(
-                buffer.value_preds[:-1])
+                                            buffer.value_preds[:-1])
         else:
             advantages = buffer.returns[:-1] - buffer.value_preds[:-1]
 
@@ -53,8 +53,7 @@ class SimpleAgent(parl.Agent):
         train_info['dist_entropy'] = 0
 
         for _ in range(ppo_epoch):
-            data_generator = buffer.sample_batch(
-                advantages, num_mini_batch)
+            data_generator = buffer.sample_batch(advantages, num_mini_batch)
             for sample in data_generator:
                 share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch, masks_batch, \
                 active_masks_batch, old_action_log_probs_batch, adv_targ = sample
@@ -73,7 +72,8 @@ class SimpleAgent(parl.Agent):
                 adv_targ = torch.from_numpy(adv_targ).to(self.device)
 
                 value_loss, policy_loss, dist_entropy = self.alg.learn(
-                    share_obs_batch, obs_batch, actions_batch, value_preds_batch, return_batch,
+                    share_obs_batch, obs_batch, actions_batch,
+                    value_preds_batch, return_batch,
                     old_action_log_probs_batch, adv_targ, active_masks_batch)
 
                 train_info['value_loss'] += value_loss.item()

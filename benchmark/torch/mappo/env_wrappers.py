@@ -58,19 +58,23 @@ class MPEEnv(object):
         """
         agents_actions_list = []
         for agent_id in range(len(self.observation_space)):
-            if self.action_space[agent_id].__class__.__name__ == 'MultiDiscrete':
+            if self.action_space[
+                    agent_id].__class__.__name__ == 'MultiDiscrete':
                 for action_id in range(self.action_space[agent_id].shape):
                     action_label = actions[agent_id][action_id]
                     action_one_hot = np.squeeze(
-                        np.eye(self.action_space[agent_id].high[action_id] + 1)[action_label])
+                        np.eye(self.action_space[agent_id].high[action_id] +
+                               1)[action_label])
                     if action_id == 0:
                         action_env = action_one_hot
                     else:
-                        action_env = np.concatenate((action_env, action_one_hot))
+                        action_env = np.concatenate((action_env,
+                                                     action_one_hot))
                 agents_actions_list.append(action_env)
             else:
                 action_label = actions[agent_id]
-                action_one_hot = np.squeeze(np.eye(self.action_space[agent_id].n)[action_label])
+                action_one_hot = np.squeeze(
+                    np.eye(self.action_space[agent_id].n)[action_label])
                 agents_actions_list.append(action_one_hot)
 
         results = self.env.step(agents_actions_list)
@@ -101,7 +105,10 @@ class ParallelEnv(object):
             env_num (int): number of parallel envs to train
             seed (int): random seed
         """
-        self.envs = [MPEEnv(scenario_name, seed + rank * 1000) for rank in range(env_num)]
+        self.envs = [
+            MPEEnv(scenario_name, seed + rank * 1000)
+            for rank in range(env_num)
+        ]
         self.share_observation_space = self.envs[0].share_observation_space
         self.observation_space = self.envs[0].observation_space
         self.action_space = self.envs[0].action_space

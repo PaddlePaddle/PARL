@@ -169,3 +169,8 @@ class ParallelEnv(object):
         self.closed = True
         for env in self.envs:
             env.close()
+
+    def render(self):
+        """show animation
+        """
+        self.envs[0].env.render()

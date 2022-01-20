@@ -84,7 +84,8 @@ def main():
     if args.restore:
         # restore modle
         for i in range(len(agents)):
-            model_file = args.model_dir + '/agent_' + str(i)
+            model_file = args.model_dir + '/' + args.env_name + '/agent_' + str(
+                i)
             if not os.path.exists(model_file):
                 raise Exception(
                     'model file {} does not exits'.format(model_file))
@@ -143,6 +144,11 @@ def main():
                     actions[agent_id], action_log_probs[agent_id],
                     values[agent_id], rewards[:, agent_id], masks[:, agent_id])
 
+            # show animation
+            if args.show:
+                time.sleep(0.1)
+                envs.render()
+
         # compute return and update network
         with torch.no_grad():
             for agent_id in range(agent_num):
@@ -195,7 +201,7 @@ def main():
 
             # save model
             if not args.restore:
-                model_dir = args.model_dir
+                model_dir = args.model_dir + '/' + args.env_name
                 os.makedirs(os.path.dirname(model_dir), exist_ok=True)
                 for i in range(len(agents)):
                     model_name = '/agent_' + str(i)
@@ -211,7 +217,7 @@ if __name__ == '__main__':
         type=str,
         default='simple_speaker_listener',
         help='scenario of MultiAgentEnv')
-    parser.add_argument('--seed', type=int, default=1, help='random seed')
+    parser.add_argument('--seed', type=int, default=10, help='random seed')
     parser.add_argument(
         '--env_num',
         type=int,
@@ -227,6 +233,8 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help='restore or not, must have model_dir')
+    parser.add_argument(
+        '--show', action='store_true', default=False, help='display or not')
     parser.add_argument(
         '--model_dir',
         type=str,

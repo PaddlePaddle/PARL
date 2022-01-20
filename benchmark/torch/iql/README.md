@@ -1,6 +1,6 @@
 ## Reproduce CQL with PARL
 
-Based on PARL, the IQL algorithm of deep reinforcement learning has been reproduced.
+Based on PARL, the IQL algorithm of deep reinforcement learning has been reproduced, reaching the same level of indicators as the paper on continuous control datasets from the D4RL benchmark.
 
 > Paper: IQL in [Offline Reinforcement Learning with Implicit Q-Learning](https://arxiv.org/abs/2110.06169)
 

@@ -14,9 +14,9 @@
 
 import numpy as np
 from parl.utils import logger
+import d4rl
 from tqdm import tqdm
 __all__ = ['ReplayMemory']
-
 
 def split_into_trajectories(observations, actions, rewards, masks, dones_float,
                             next_observations):
@@ -26,9 +26,7 @@ def split_into_trajectories(observations, actions, rewards, masks, dones_float,
                           dones_float[i], next_observations[i]))
         if dones_float[i] == 1.0 and i + 1 < len(observations):
             trajs.append([])
-
     return trajs
-
 
 class ReplayMemory(object):
     def __init__(self, max_size, obs_dim, act_dim):
@@ -42,16 +40,14 @@ class ReplayMemory(object):
         self.max_size = int(max_size)
         self.obs_dim = obs_dim
         self.act_dim = act_dim
-
         self.obs = np.zeros((max_size, obs_dim), dtype='float32')
         if act_dim == 0:  # Discrete control environment
-            self.action = np.zeros((max_size, ), dtype='int32')
+            self.action = np.zeros((max_size,), dtype='int32')
         else:  # Continuous control environment
             self.action = np.zeros((max_size, act_dim), dtype='float32')
-        self.reward = np.zeros((max_size, ), dtype='float32')
-        self.terminal = np.zeros((max_size, ), dtype='bool')
+        self.reward = np.zeros((max_size,), dtype='float32')
+        self.terminal = np.zeros((max_size,), dtype='bool')
         self.next_obs = np.zeros((max_size, obs_dim), dtype='float32')
-
         self._curr_size = 0
         self._curr_pos = 0
 
@@ -80,6 +76,8 @@ class ReplayMemory(object):
 
     def __len__(self):
         return self._curr_size
+
+
 
     def load_from_d4rl(self, dataset):
         """ load data from d4rl dataset(https://github.com/rail-berkeley/d4rl#using-d4rl) to replay memory.
@@ -132,27 +130,22 @@ class ReplayMemory(object):
         self.terminal = dataset['terminals']
         self._curr_size = dataset['terminals'].shape[0]
         self.dones_float = np.zeros_like(self.reward)
-        for i in range(len(self.dones_float) - 1):
-            if np.linalg.norm(self.obs[i + 1] - self.next_obs[i]
-                              ) > 1e-6 or self.terminal[i] == 1.0:
+        for i in range(len(self.dones_float)-1):
+            if np.linalg.norm(self.obs[i + 1] -
+                              self.next_obs[i]) > 1e-6 or self.terminal[i] == 1.0:
                 self.dones_float[i] = 1
             else:
                 self.dones_float[i] = 0
         self.dones_float[-1] = 1
         assert self._curr_size <= self.max_size, 'please set a proper max_size for ReplayMemory'
         logger.info('Number of terminals on: {}'.format(self.terminal.sum()))
-
-        trajs = split_into_trajectories(self.obs, self.action, self.reward,
-                                        self.terminal, self.dones_float,
-                                        self.next_obs)
-
+        #normalize reward
+        trajs = split_into_trajectories(self.obs,self.action, self.reward, self.terminal, self.dones_float, self.next_obs)
         def compute_returns(traj):
             episode_return = 0
             for _, _, rew, _, _, _ in traj:
                 episode_return += rew
-
             return episode_return
-
         trajs.sort(key=compute_returns)
         self.reward /= compute_returns(trajs[-1]) - compute_returns(trajs[0])
         self.reward *= 1000

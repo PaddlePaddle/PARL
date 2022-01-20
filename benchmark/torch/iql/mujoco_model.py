@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cmath import log
 import parl
 import torch
 import torch.nn as nn
@@ -46,7 +47,6 @@ class MujocoModel(parl.Model):
 
     def get_value_params(self):
         return self.value_model.parameters()
-
 
 class Value(parl.Model):
     def __init__(self, obs_dim):
@@ -88,7 +88,6 @@ class Critic(parl.Model):
         q2 = self.last_fc2(q2)
         return q1, q2
 
-
 class Actor(parl.Model):
     def __init__(self, obs_dim, act_dim, hidden_dim=256, n_hidden=2):
         super().__init__()
@@ -96,19 +95,18 @@ class Actor(parl.Model):
         self.l1 = nn.Linear(obs_dim, 256)
         self.l2 = nn.Linear(256, 256)
         self.mean_linear = nn.Linear(256, act_dim)
-        self.log_std = nn.Parameter(
-            torch.zeros(act_dim, dtype=torch.float32), requires_grad=True)
-
+        self.log_std = nn.Parameter(torch.zeros(act_dim, dtype=torch.float32),requires_grad=True)
     def forward(self, obs):
         x = F.relu(self.l1(obs))
         x = F.relu(self.l2(x))
         mean = F.tanh(self.mean_linear(x))
         log_std = torch.sigmoid(self.log_std)
-        log_std = LOG_SIG_MIN + log_std * (LOG_SIG_MAX - LOG_SIG_MIN)
+        log_std = LOG_SIG_MIN + log_std * (
+            LOG_SIG_MAX - LOG_SIG_MIN)
         log_std = torch.exp(log_std)
         scale_tril = torch.diag(log_std)
-        return torch.distributions.MultivariateNormal(
-            mean, scale_tril=scale_tril)
+        return torch.distributions.MultivariateNormal(mean, scale_tril=scale_tril)
+
 
     def act(self, obs, deterministic=False, enable_grad=False):
         with torch.set_grad_enabled(enable_grad):

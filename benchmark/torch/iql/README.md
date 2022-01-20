@@ -19,7 +19,6 @@ Based on PARL, the IQL algorithm of deep reinforcement learning has been reprodu
 + python3.5+
 + [parl>2.0.4](https://github.com/PaddlePaddle/PARL)
 + torch
-+ tqdm
 + gym==0.20.0
 + mujoco-py==2.0.2.13
 + [d4rl](https://github.com/rail-berkeley/d4rl) (install from source)

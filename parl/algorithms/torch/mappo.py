@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/marlbenchmark/on-policy
-
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical
@@ -34,28 +32,27 @@ class MAPPO(parl.Algorithm):
                  eps=None,
                  max_grad_norm=None,
                  use_popart=True,
-                 use_value_active_masks=True,
-                 device=torch.device("cpu")):
+                 use_value_active_masks=True):
         """  MAPPO algorithm
 
         Args:
             model (parl.Model): model that contains both value network and policy network
             clip_param (float): the clipping strength for value loss clipping
             value_loss_coef (float): the coefficient for value loss
-            entropy_coef (float): the coefficient for entropy (c_2)
+            entropy_coef (float): the coefficient for entropy
             initial_lr (float): initial learning rate.
             huber_delta (float): coefficience of huber loss
             eps (None or float): epsilon for Adam optimizer
             max_grad_norm (float): threshold for grad norm clipping
             use_popart (bool): whether to use PopArt to normalize rewards
             use_value_active_masks (bool): whether to mask useless data in value loss
-            device (torch.device): the device to run on (cpu/gpu)
         """
         self.model = model
-        self.model.to(device)
+        self.device = torch.device("cuda:0" if torch.cuda.
+                                   is_available() else "cpu")
+        self.model.to(self.device)
         self.multi_discrete = self.model.actor.multi_discrete
-        self.device = device
-        self.tpdv = dict(dtype=torch.float32, device=device)
+        self.tpdv = dict(dtype=torch.float32, device=self.device)
 
         self.clip_param = clip_param
         self.value_loss_coef = value_loss_coef
@@ -68,10 +65,8 @@ class MAPPO(parl.Algorithm):
         self._use_value_active_masks = use_value_active_masks
 
         if self._use_popart:
-            self.value_normalizer = PopArt(
-                self.model.critic.v_out.weight,
-                self.model.critic.v_out.bias,
-                device=self.device)
+            self.value_normalizer = PopArt(self.model.critic.v_out.weight,
+                                           self.model.critic.v_out.bias)
         else:
             self.value_normalizer = None
 
@@ -230,14 +225,9 @@ class MAPPO(parl.Algorithm):
 
 
 class PopArt(torch.nn.Module):
-    def __init__(self,
-                 weight,
-                 bias,
-                 norm_axes=1,
-                 beta=0.99999,
-                 epsilon=1e-5,
-                 device=torch.device("cpu")):
-        """  PopArt layer use running mean and std to normalize rewards. (https://arxiv.org/abs/1602.07714)
+    def __init__(self, weight, bias, norm_axes=1, beta=0.99999, epsilon=1e-5):
+        """  PopArt layer use running mean and std to normalize rewards.
+             The PopArt code is mainly referenced and copied from https://github.com/marlbenchmark/on-policy/blob/main/onpolicy/algorithms/utils/popart.py
 
         Args:
             weight (Parameter): output layer weight of critic net
@@ -245,13 +235,15 @@ class PopArt(torch.nn.Module):
             norm_axes (float): the number of groups to separate the channels into
             beta (float): the fixed decay rate determining the horizon used to compute the statistics
             epsilon (float): the epsilon value to use to avoid division by zero
-            device (torch.device): the device to run on (cpu/gpu)
         """
         super(PopArt, self).__init__()
         self.beta = beta
         self.epsilon = epsilon
         self.norm_axes = norm_axes
-        self.tpdv = dict(dtype=torch.float32, device=device)
+        self.tpdv = dict(
+            dtype=torch.float32,
+            device=torch.device("cuda:0" if torch.cuda.
+                                is_available() else "cpu"))
 
         self.weight = weight
         self.bias = bias
@@ -269,7 +261,6 @@ class PopArt(torch.nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-
         self.mean.zero_()
         self.mean_sq.zero_()
         self.debiasing_term.zero_()
@@ -314,7 +305,6 @@ class PopArt(torch.nn.Module):
         mean, var = self.debiased_mean_var()
         out = (input_vector - mean[(None, ) * self.norm_axes]
                ) / torch.sqrt(var)[(None, ) * self.norm_axes]
-
         return out
 
     def denormalize(self, input_vector):
@@ -325,7 +315,6 @@ class PopArt(torch.nn.Module):
         out = input_vector * torch.sqrt(var)[(None, ) * self.norm_axes] + mean[
             (None, ) * self.norm_axes]
         out = out.cpu().numpy()
-
         return out
 
 

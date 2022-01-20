@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/marlbenchmark/on-policy
-
 import os
 import time
 import numpy as np
@@ -37,6 +35,9 @@ EPISODE_LENGTH = 25  # Max length for any episode
 GAMMA = 0.99  # discount factor for rewards (default: 0.99)
 GAE_LAMBDA = 0.95  # gae lambda parameter (default: 0.95)
 LOG_INTERVAL_EPISODES = 5  # time duration between contiunous twice log printing
+CLIP_PARAM = 0.2  # ppo clip parameter, suggestion 4 in the paper (default: 0.2)
+PPO_EPOCH = 15  # number of epochs for updating using each T data, suggestion 3 in the paper (default: 15)
+NUM_MINI_BATCH = 1  # number of batches for ppo, suggestion 3 in the paper (default: 1)
 
 
 def get_act_dim_from_act_space(action_space):
@@ -52,9 +53,8 @@ def main():
     torch.cuda.manual_seed_all(args.seed)
     np.random.seed(args.seed)
     torch.set_num_threads(1)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    envs = ParallelEnv(args.scenario_name, args.env_num, args.seed)
+    envs = ParallelEnv(args.env_name, args.env_num, args.seed)
 
     agent_num = len(envs.observation_space)
     env_num = args.env_num
@@ -70,19 +70,10 @@ def main():
         act_dim = get_act_dim_from_act_space(envs.action_space[agent_id])
 
         model = SimpleModel(obs_dim, cent_obs_dim, act_dim)
-        algorithm = MAPPO(
-            model,
-            args.clip_param,
-            VALUE_LOSS_COEF,
-            ENTROPY_COEF,
-            LR,
-            HUBER_DELTA,
-            EPS,
-            MAX_GRAD_NORM,
-            args.use_popart,
-            args.use_value_active_masks,
-            device=device)
-        agent = SimpleAgent(algorithm, env_num, device)
+        algorithm = MAPPO(model, CLIP_PARAM, VALUE_LOSS_COEF, ENTROPY_COEF, LR,
+                          HUBER_DELTA, EPS, MAX_GRAD_NORM, args.use_popart,
+                          args.use_value_active_masks)
+        agent = SimpleAgent(algorithm)
         # buffer
         bu = SeparatedReplayBuffer(
             EPISODE_LENGTH, env_num, GAMMA, GAE_LAMBDA, obs_dim, cent_obs_dim,
@@ -111,7 +102,7 @@ def main():
         buffers[agent_id].share_obs[0] = share_obs.copy()
         buffers[agent_id].obs[0] = np.array(list(obs[:, agent_id])).copy()
 
-    episodes = int(args.num_env_steps) // EPISODE_LENGTH // args.env_num
+    episodes = int(args.train_total_steps) // EPISODE_LENGTH // args.env_num
     for episode in range(episodes):
         for step in range(EPISODE_LENGTH):
             # Sample actions
@@ -126,7 +117,14 @@ def main():
                 actions.append(action)
                 action_log_probs.append(action_log_prob)
 
-            obs, rewards, dones, infos = envs.step(actions)
+            actions_batch = []
+            for env_id in range(actions[0].shape[0]):
+                env_actions = []
+                for agent_id in range(len(actions)):
+                    env_actions.append(actions[agent_id][env_id])
+                actions_batch.append(env_actions)
+
+            obs, rewards, dones, infos = envs.step(actions_batch)
 
             masks = np.ones((args.env_num, agent_num, 1), dtype=np.float32)
             masks[dones == True] = np.zeros(((dones == True).sum(), 1),
@@ -149,7 +147,7 @@ def main():
         with torch.no_grad():
             for agent_id in range(agent_num):
                 next_values = agents[agent_id].value(
-                    buffers[agent_id].share_obs[-1]).squeeze(-1)
+                    buffers[agent_id].share_obs[-1])
                 buffers[agent_id].compute_returns(
                     next_values, agents[agent_id].value_normalizer)
 
@@ -157,8 +155,7 @@ def main():
         train_infos = []
         for agent_id in range(agent_num):
             train_info = agents[agent_id].learn(
-                buffers[agent_id], args.ppo_epoch, args.num_mini_batch,
-                args.use_popart)
+                buffers[agent_id], PPO_EPOCH, NUM_MINI_BATCH, args.use_popart)
             train_infos.append(train_info)
             buffers[agent_id].after_update()
 
@@ -210,12 +207,9 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--scenario_name',
+        '--env_name',
         type=str,
         default='simple_speaker_listener',
-        choices=[
-            'simple_speaker_listener', 'simple_spread', 'simple_reference'
-        ],
         help='scenario of MultiAgentEnv')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument(
@@ -224,7 +218,7 @@ if __name__ == '__main__':
         default=128,
         help='Number of parallel envs to train')
     parser.add_argument(
-        '--num_env_steps',
+        '--train_total_steps',
         type=int,
         default=2e7,
         help='Number of environment steps to train')
@@ -253,24 +247,6 @@ if __name__ == '__main__':
         'whether to use centralized V function, suggestion 2 in the paper (default: True)'
     )
     parser.add_argument(
-        "--ppo_epoch",
-        type=int,
-        default=15,
-        help=
-        'number of epochs for updating using each T data, suggestion 3 in the paper (default: 15)'
-    )
-    parser.add_argument(
-        "--num_mini_batch",
-        type=int,
-        default=1,
-        help='number of batches for ppo, suggestion 3 in the paper (default: 1)'
-    )
-    parser.add_argument(
-        "--clip_param",
-        type=float,
-        default=0.2,
-        help='ppo clip parameter, suggestion 4 in the paper (default: 0.2)')
-    parser.add_argument(
         "--use_value_active_masks",
         default=True,
         help=
@@ -278,6 +254,6 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    logger.set_dir('./train_log/' + str(args.scenario_name))
+    logger.set_dir('./train_log/' + str(args.env_name))
 
     main()

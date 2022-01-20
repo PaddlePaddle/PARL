@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/marlbenchmark/on-policy
-
 import torch
 import numpy as np
 import parl
 
 
 class SimpleAgent(parl.Agent):
-    def __init__(self, algorithm, env_num, device):
-        self.env_num = env_num
+    def __init__(self, algorithm):
         self.value_normalizer = algorithm.value_normalizer
-        self.device = device
+        self.device = torch.device("cuda:0" if torch.cuda.
+                                   is_available() else "cpu")
         super(SimpleAgent, self).__init__(algorithm)
 
     def sample(self, share_obs, obs):
@@ -88,5 +86,4 @@ class SimpleAgent(parl.Agent):
     def value(self, share_obs):
         share_obs = torch.from_numpy(share_obs).to(self.device)
         next_values = self.alg.value(share_obs).detach().cpu().numpy()
-        next_values = np.array(np.split(next_values, self.env_num))
         return next_values

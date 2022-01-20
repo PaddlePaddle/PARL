@@ -118,22 +118,12 @@ class SeparatedReplayBuffer(object):
                     step + 1] * gae
                 self.returns[step] = gae + self.value_preds[step]
 
-    def sample_batch(self,
-                     advantages,
-                     num_mini_batch=None,
-                     mini_batch_size=None):
+    def sample_batch(self, advantages, num_mini_batch=None):
         """sample data from replay memory for training
         """
         episode_length, env_num = self.rewards.shape[0:2]
         batch_size = env_num * episode_length
-
-        if mini_batch_size is None:
-            assert batch_size >= num_mini_batch, (
-                "PPO requires the number of processes ({}) "
-                "* number of steps ({}) = {} "
-                "to be greater than or equal to the number of PPO mini batches ({})."
-                "".format(env_num, episode_length, env_num, num_mini_batch))
-            mini_batch_size = batch_size // num_mini_batch
+        mini_batch_size = batch_size // num_mini_batch
 
         rand = torch.randperm(batch_size).numpy()
         sampler = [
@@ -153,7 +143,6 @@ class SeparatedReplayBuffer(object):
         advantages = advantages.reshape(-1, 1)
 
         for indices in sampler:
-            # obs size [T+1 N Dim]-->[T N Dim]-->[T*N,Dim]-->[index,Dim]
             share_obs_batch = share_obs[indices]
             obs_batch = obs[indices]
             actions_batch = actions[indices]

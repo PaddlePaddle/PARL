@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/marlbenchmark/on-policy
-
 import numpy as np
 from multiagent.environment import MultiAgentEnv
 from multiagent.scenarios import load
@@ -28,6 +26,14 @@ class MPEEnv(object):
             scenario_name (str): scenario of MultiAgentEnv
             seed (int): random seed
         """
+        env_list = [
+            'simple_attack', 'simple_adversary', 'simple_crypto',
+            'simple_push', 'simple_reference', 'simple_speaker_listener',
+            'simple_spread', 'simple_tag', 'simple_world_comm',
+            'simple_crypto_display'
+        ]
+        assert scenario_name in env_list, 'Env {} not found (valid envs include {})'.format(
+            scenario_name, env_list)
         scenario = load(scenario_name + ".py").Scenario()
         world = scenario.make_world()
         self.env = MultiAgentEnv(world, scenario.reset_world, scenario.reward,
@@ -62,9 +68,9 @@ class MPEEnv(object):
                     agent_id].__class__.__name__ == 'MultiDiscrete':
                 for action_id in range(self.action_space[agent_id].shape):
                     action_label = actions[agent_id][action_id]
+                    max_action = self.action_space[agent_id].high[action_id] + 1
                     action_one_hot = np.squeeze(
-                        np.eye(self.action_space[agent_id].high[action_id] +
-                               1)[action_label])
+                        np.eye(max_action)[action_label])
                     if action_id == 0:
                         action_env = action_one_hot
                     else:
@@ -73,8 +79,8 @@ class MPEEnv(object):
                 agents_actions_list.append(action_env)
             else:
                 action_label = actions[agent_id]
-                action_one_hot = np.squeeze(
-                    np.eye(self.action_space[agent_id].n)[action_label])
+                max_action = self.action_space[agent_id].n
+                action_one_hot = np.squeeze(np.eye(max_action)[action_label])
                 agents_actions_list.append(action_one_hot)
 
         results = self.env.step(agents_actions_list)
@@ -94,11 +100,7 @@ class ParallelEnv(object):
 
     def __init__(self, scenario_name, env_num, seed):
         """
-        Creates a simple vectorized wrapper for multiple environments, calling each environment in sequence on the current
-        Python process. This is useful for computationally simple environment such as ``cartpole-v1``,
-        as the overhead of multiprocess or multithread outweighs the environment computation time.
-        This can also be used for RL methods that require a vectorized environment, but that you want a single
-        environments to train with.
+        Creates a simple vectorized wrapper for multiple environments
 
         Args:
             scenario_name (str): scenario of MultiAgentEnv
@@ -134,9 +136,8 @@ class ParallelEnv(object):
             info_batch: array of info of envs
         """
         obs_batch, rews_batch, dones_batch, infos_batch = [], [], [], []
-        actions = np.array(actions).transpose(1, 0, 2)
 
-        for env_id in range(actions.shape[0]):
+        for env_id in range(len(actions)):
             obs, rews, dones, infos = self.envs[env_id].step(actions[env_id])
 
             if 'bool' in dones.__class__.__name__:

@@ -21,11 +21,10 @@ A simple multi-agent particle world based on gym. Please see [here](https://gith
 
 ### Start Training:
 
-```commandline
+```
 # To train an agent for simple_speaker_listener scenario
 python train.py
 
 # To train for other scenario
-python train.py --scenario_name [ENV_NAME]
+# python train.py --env_name [ENV_NAME]
 ```
-

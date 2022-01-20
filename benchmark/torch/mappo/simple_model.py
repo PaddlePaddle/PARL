@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/marlbenchmark/on-policy
-
 import parl
 import torch.nn as nn
 import torch.nn.functional as F

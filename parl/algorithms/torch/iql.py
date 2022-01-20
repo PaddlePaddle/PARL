@@ -35,23 +35,6 @@ class IQL(parl.Algorithm):
                  beta=3.,
                  discount=0.99,
                  alpha=0.005):
-
-        self.device = torch.device("cuda" if torch.cuda.
-                                   is_available() else "cpu")
-        self.model = model.to(self.device)
-        self.q_target = copy.deepcopy(self.model).to(self.device)
-        self.lr = lr
-
-        self.v_optimizer = torch.optim.Adam(
-            self.model.get_value_params(), lr=self.lr)
-        self.q_optimizer = torch.optim.Adam(
-            self.model.get_critic_params(), lr=self.lr)
-        self.policy_optimizer = torch.optim.Adam(
-            self.model.get_actor_params(), lr=self.lr)
-        self.tau = tau
-        self.beta = beta
-        self.discount = discount
-        self.alpha = alpha
         """ IQL algorithm
         Args:
             model (parl.Model): forward network of value, actor and critic.
@@ -75,6 +58,23 @@ class IQL(parl.Algorithm):
         assert isinstance(beta, float)
         assert isinstance(discount, float)
         assert isinstance(alpha, float)
+
+        self.device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
+        self.model = model.to(self.device)
+        self.q_target = copy.deepcopy(self.model).to(self.device)
+        self.lr = lr
+
+        self.v_optimizer = torch.optim.Adam(
+            self.model.get_value_params(), lr=self.lr)
+        self.q_optimizer = torch.optim.Adam(
+            self.model.get_critic_params(), lr=self.lr)
+        self.policy_optimizer = torch.optim.Adam(
+            self.model.get_actor_params(), lr=self.lr)
+        self.tau = tau
+        self.beta = beta
+        self.discount = discount
+        self.alpha = alpha
 
     def predict(self, observations):
         act = self.model.actor_model.act(observations, deterministic=True)

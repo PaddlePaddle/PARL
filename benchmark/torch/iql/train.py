@@ -89,9 +89,9 @@ def main():
             normalized_returns = d4rl.get_normalized_score(
                 args.env, eval_rewards) * 100
             normalized_mean = normalized_returns.mean()
-            tensorboard.add_scalar('eval/episode_reward' + str(i), avg_reward,
+            tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)
-            tensorboard.add_scalar('eval/episode_normalized_reward' + str(i),
+            tensorboard.add_scalar('eval/episode_normalized_reward',
                                    normalized_mean, total_steps)
             logger.info('Evaluation: total_steps {}, Reward: {}'.format(
                 total_steps, avg_reward))

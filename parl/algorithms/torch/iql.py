@@ -126,6 +126,8 @@ class IQL(parl.Algorithm):
         ).detach()
 
     def sync_target(self, alpha=0):
-        for param, target_param in zip(self.model.parameters(), self.q_target.parameters()):
-            target_param.data.copy_(alpha * param.data + (1 - alpha) * target_param.data)
+        for param, target_param in zip(self.model.parameters(),
+                                       self.q_target.parameters()):
+            target_param.data.copy_(alpha * param.data +
+                                    (1 - alpha) * target_param.data)
         return None

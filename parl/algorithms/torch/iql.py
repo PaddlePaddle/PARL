@@ -130,4 +130,3 @@ class IQL(parl.Algorithm):
                                        self.q_target.parameters()):
             target_param.data.copy_(alpha * param.data +
                                     (1 - alpha) * target_param.data)
-        return None

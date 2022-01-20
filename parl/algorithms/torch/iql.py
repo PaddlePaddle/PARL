@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 import parl
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from parl.utils.utils import check_model_method
 
 EXP_ADV_MAX = 100.
 
@@ -52,6 +52,29 @@ class IQL(parl.Algorithm):
         self.beta = beta
         self.discount = discount
         self.alpha = alpha
+        """ IQL algorithm
+        Args:
+            model (parl.Model): forward network of value, actor and critic.
+            max_stpes (int): total train steps.
+            lr (float): learning rate of the value, actor and critic model.
+            tau(float): the coefficient for asymmetric l2 loss.
+            beta(float): inverse temperature of policy extraction.
+            discount (float): discounted factor for reward computation.
+            alpha (float): decay coefficient when updating the weights of self.target_model with self.model.
+        """
+        # checks
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'qvalue', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
+        check_model_method(model, 'get_value_params', self.__class__.__name__)
+        assert isinstance(max_steps, int)
+        assert isinstance(lr, float)
+        assert isinstance(tau, float)
+        assert isinstance(beta, float)
+        assert isinstance(discount, float)
+        assert isinstance(alpha, float)
 
     def predict(self, observations):
         act = self.model.actor_model.act(observations, deterministic=True)
@@ -103,12 +126,6 @@ class IQL(parl.Algorithm):
         ).detach()
 
     def sync_target(self, alpha=0):
-        """ update the target network with the training network
-        Args:
-            decay(float): the decaying factor while updating the target network with the training network.
-                        0 represents the **assignment**. None represents updating the target network slowly that depends on the hyperparameter `tau`.
-        """
-
         for param, target_param in zip(self.model.parameters(),
                                        self.q_target.parameters()):
             target_param.data.copy_(alpha * param.data +

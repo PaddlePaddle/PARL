@@ -40,7 +40,6 @@ class MPEEnv(object):
                                  scenario.observation, scenario.info)
         self.env.seed(seed)
 
-        self.share_observation_space = self.env.share_observation_space
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
 
@@ -94,7 +93,7 @@ class MPEEnv(object):
         self.env.close()
 
 
-class ParallelEnv(object):
+class VectorEnv(object):
     closed = False
     viewer = None
 
@@ -111,9 +110,10 @@ class ParallelEnv(object):
             MPEEnv(scenario_name, seed + rank * 1000)
             for rank in range(env_num)
         ]
-        self.share_observation_space = self.envs[0].share_observation_space
-        self.observation_space = self.envs[0].observation_space
-        self.action_space = self.envs[0].action_space
+        self.raw_env = self.envs[0].env
+        self.share_observation_space = self.raw_env.share_observation_space
+        self.observation_space = self.raw_env.observation_space
+        self.action_space = self.raw_env.action_space
         self.num_envs = env_num
 
     def reset(self):
@@ -169,8 +169,3 @@ class ParallelEnv(object):
         self.closed = True
         for env in self.envs:
             env.close()
-
-    def render(self):
-        """show animation
-        """
-        self.envs[0].env.render()

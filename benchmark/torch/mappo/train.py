@@ -18,7 +18,7 @@ import numpy as np
 import torch
 import argparse
 from itertools import chain
-from env_wrappers import ParallelEnv
+from env_wrappers import VectorEnv
 from simple_model import SimpleModel
 from parl.algorithms import MAPPO
 from simple_agent import SimpleAgent
@@ -54,7 +54,7 @@ def main():
     np.random.seed(args.seed)
     torch.set_num_threads(1)
 
-    envs = ParallelEnv(args.env_name, args.env_num, args.seed)
+    envs = VectorEnv(args.env_name, args.env_num, args.seed)
 
     agent_num = len(envs.observation_space)
     env_num = args.env_num
@@ -147,7 +147,7 @@ def main():
             # show animation
             if args.show:
                 time.sleep(0.1)
-                envs.render()
+                envs.raw_env.render()
 
         # compute return and update network
         with torch.no_grad():
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         type=str,
         default='simple_speaker_listener',
         help='scenario of MultiAgentEnv')
-    parser.add_argument('--seed', type=int, default=10, help='random seed')
+    parser.add_argument('--seed', type=int, default=1, help='random seed')
     parser.add_argument(
         '--env_num',
         type=int,

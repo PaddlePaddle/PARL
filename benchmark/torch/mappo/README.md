@@ -8,6 +8,33 @@ Based on PARL, the MAPPO algorithm of deep reinforcement learning has been repro
 
 A simple multi-agent particle world based on gym. Please see [here](https://github.com/caoxixiya/mappo_mpe) to install the environment, which is a modified [MPE](https://github.com/openai/multiagent-particle-envs) env extracted from [MAPPO](https://github.com/marlbenchmark/on-policy/tree/main/onpolicy/envs) official code.
 
+### Benchmark result
+
+Mean episode reward (every 1000 episodes) in training process (totally 25000 episodes).
+
+<p align="center">
+<img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/result.png" alt="result"/>
+</p>
+
+### Experiments result
+
+<table>
+<tr>
+<td>
+simple_reference<br>
+<img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_reference.gif"                  width = "200" height = "200" alt="MAPPO_simple_reference"/>
+</td>
+<td>
+simple_speaker_listener<br>
+<img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_speaker_listener.gif"        width = "200" height = "200" alt="MAPPO_simple_speaker_listener"/>
+</td>
+<td>
+simple_spread<br>
+<img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_spread.gif"             width = "200" height = "200" alt="MAPPO_simple_spread"/>
+</td>
+</tr>
+</table>
+
 ## How to use
 
 ### Dependencies:

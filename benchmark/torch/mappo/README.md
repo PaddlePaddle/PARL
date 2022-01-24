@@ -18,7 +18,7 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 
 ### Experiments result
 
-<table>
+<table align="center">
 <tr>
 <td>
 simple_reference<br>

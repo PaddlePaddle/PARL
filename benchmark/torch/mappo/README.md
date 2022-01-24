@@ -21,15 +21,15 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <table align="center">
 <tr>
 <td>
-simple_reference<br>
+simple_reference<br align="center">
 <img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_reference.gif"                  width = "200" height = "200" alt="MAPPO_simple_reference"/>
 </td>
 <td>
-simple_speaker_listener<br>
+simple_speaker_listener<br align="center">
 <img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_speaker_listener.gif"        width = "200" height = "200" alt="MAPPO_simple_speaker_listener"/>
 </td>
 <td>
-simple_spread<br>
+simple_spread<br align="center">
 <img src="https://github.com/caoxixiya/PARL-experiments/blob/master/MAPPO/pc/simple_spread.gif"             width = "200" height = "200" alt="MAPPO_simple_spread"/>
 </td>
 </tr>

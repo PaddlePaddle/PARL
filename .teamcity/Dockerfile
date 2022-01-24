@@ -22,3 +22,5 @@ COPY ./requirements.txt /root/
 RUN apt-get install -y libgflags-dev libgoogle-glog-dev libomp-dev unzip
 RUN apt-get install -y libgtest-dev && cd /usr/src/gtest && mkdir build \
 	&& cd build && cmake .. && make  && cp libgtest*.a /usr/local/lib
+
+EXPOSE 22

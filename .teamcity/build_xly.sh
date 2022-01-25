@@ -148,6 +148,8 @@ function run_test_with_fluid() {
         echo "Running tests in $env with paddlepaddle 1.8.5 .."
         echo `which pip`
         echo "========================================"
+        pwd
+        ls
         pip install .
         pip install -r .teamcity/requirements_fluid.txt
 

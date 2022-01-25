@@ -17,7 +17,7 @@
 
 FROM parl/parl-test:2.0-cuda10.1-v1
 
-sed -i "s#.*##g" /etc/apt/sources.list
+RUN sed -i "s#.*##g" /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -o Acquire::https::mirror.ufs.ac.za::Verify-Peer=false -y libgflags-dev libgoogle-glog-dev libomp-dev unzip
 RUN apt-get update && apt-get install -o Acquire::https::mirror.ufs.ac.za::Verify-Peer=false -y libgtest-dev && cd /usr/src/gtest && mkdir build \

@@ -22,7 +22,9 @@ function init() {
     NONE='\033[0m'
 
     REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/../" && pwd )"
+    set +x
     source ~/.bashrc
+    set -x
     export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
 }
@@ -136,11 +138,7 @@ function run_single_fluid_test() {
 function run_test_with_fluid() {
     # declare -a envs=("py27" "py36" "py37")
     declare -a envs=("py37")
-    for env in "${envs[@]}";do
-        set +x
-        source ~/.bashrc
-        set -x
-        
+    for env in "${envs[@]}";do    
         export PATH="/root/miniconda3/bin:$PATH"
         source activate $env
         python -m pip install --upgrade pip
@@ -148,8 +146,6 @@ function run_test_with_fluid() {
         echo "Running tests in $env with paddlepaddle 1.8.5 .."
         echo `which pip`
         echo "========================================"
-        pwd
-        ls
         pip install .
         pip install -r .teamcity/requirements_fluid.txt
 
@@ -216,8 +212,6 @@ function main() {
             #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
             declare -a envs=("py36" "py37" "py38")
             for env in "${envs[@]}";do
-                cd /work
-                source ~/.bashrc
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
                 python -m pip install --upgrade pip

@@ -72,8 +72,7 @@ def main():
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
     rpm.load_from_d4rl(d4rl.qlearning_dataset(env))
-    total_steps = 0
-    test_flag = 0
+
     for total_steps in trange(int(args.train_total_steps)):
 
         # Train steps
@@ -92,9 +91,7 @@ def main():
                                min_q.cpu().numpy(), total_steps)
 
         # Evaluate episode
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
-                test_flag += 1
+        if total_steps % args.test_every_steps == 0:
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
                                    total_steps)

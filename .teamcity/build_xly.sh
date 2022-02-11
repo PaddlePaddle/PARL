@@ -22,9 +22,7 @@ function init() {
     NONE='\033[0m'
 
     REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/../" && pwd )"
-    set +x
-    source ~/.bashrc
-    set -x
+
     export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
 }

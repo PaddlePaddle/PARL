@@ -18,6 +18,7 @@ import unittest
 class ImportTest(unittest.TestCase):
     def test_import_parl_alone(self):
         import parl
+        import parl_wrong
 
 
 if __name__ == '__main__':

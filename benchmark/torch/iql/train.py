@@ -46,7 +46,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 
 def main():
-    logger.info("------------------- CQL ---------------------")
+    logger.info("------------------- IQL ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
 
@@ -54,21 +54,17 @@ def main():
     env.seed(args.seed)
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
+
     # Initialize model, algorithm, agent
     model = MujocoModel(obs_dim, action_dim)
     algorithm = IQL(model, max_steps=args.train_total_steps)
     agent = MujocoAgent(algorithm)
-    # Initialize offline data
 
+    # Initialize offline data
     rpm = ReplayMemory(
         max_size=MEMORY_SIZE, obs_dim=obs_dim, act_dim=action_dim)
     rpm.load_from_d4rl(d4rl.qlearning_dataset(env))
 
-    model = MujocoModel(obs_dim, action_dim)
-    algorithm = IQL(model, max_steps=args.train_total_steps)
-    agent = MujocoAgent(algorithm)
-    total_steps = 0
-    test_flag = 0
     result = []
     for total_steps in trange(args.train_total_steps):
         # Train steps
@@ -81,9 +77,7 @@ def main():
         tensorboard.add_scalar('train/value_loss', value_loss, total_steps)
         tensorboard.add_scalar('train/actor_loss', actor_loss, total_steps)
         # Evaluate episode
-        if total_steps // args.test_every_steps >= test_flag:
-            while total_steps // args.test_every_steps >= test_flag:
-                test_flag += 1
+        if total_steps % args.test_every_steps == 0:
             avg_reward, eval_rewards = run_evaluate_episodes(
                 agent, env, EVAL_EPISODES)
             normalized_returns = d4rl.get_normalized_score(

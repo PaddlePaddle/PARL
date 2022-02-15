@@ -126,6 +126,12 @@ class IQL(parl.Algorithm):
         ).detach()
 
     def sync_target(self, alpha=0):
+        """ update the target network with the training network
+
+        Args:
+            alpha(float): the decaying factor while updating the target network with the training network.
+                        1.0 represents the **assignment**.
+        """
         for param, target_param in zip(self.model.parameters(),
                                        self.q_target.parameters()):
             target_param.data.copy_(alpha * param.data +

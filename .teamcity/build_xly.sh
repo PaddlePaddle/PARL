@@ -212,11 +212,12 @@ function main() {
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
-                python -m pip install --upgrade pip
+                python -m pip install --upgrade pip 
                 echo ========================================
                 echo Running tests in $env ..
                 echo `which pip`
                 echo ========================================
+                pip config set global.index-url https://mirror.baidu.com/pypi/simple
                 pip install .
                 if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
                 then

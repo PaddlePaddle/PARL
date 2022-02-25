@@ -16,11 +16,15 @@ import os
 import time
 import argparse
 import numpy as np
+import parl
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
 from parl.env.multiagent_simple_env import MAenv
 from parl.utils import logger, summary
+from parl.utils import ReplayMemory
+
+from actor import Actor
 
 CRITIC_LR = 0.01  # learning rate for the critic model
 ACTOR_LR = 0.01  # learning rate of the actor model
@@ -31,51 +35,6 @@ MAX_EPISODES = 25000  # stop condition:number of episodes
 MAX_STEP_PER_EPISODE = 25  # maximum step per episode
 STAT_RATE = 1000  # statistical interval of save model or count reward
 
-
-def run_episode(env, agents):
-    obs_n = env.reset()
-    total_reward = 0
-    agents_reward = [0 for _ in range(env.n)]
-    steps = 0
-    while True:
-        steps += 1
-        action_n = [agent.predict(obs) for agent, obs in zip(agents, obs_n)]
-        next_obs_n, reward_n, done_n, _ = env.step(action_n)
-        done = all(done_n)
-        terminal = (steps >= MAX_STEP_PER_EPISODE)
-
-        # store experience
-        for i, agent in enumerate(agents):
-            agent.add_experience(obs_n[i], action_n[i], reward_n[i],
-                                 next_obs_n[i], done_n[i])
-
-        # compute reward of every agent
-        obs_n = next_obs_n
-        for i, reward in enumerate(reward_n):
-            total_reward += reward
-            agents_reward[i] += reward
-
-        # check the end of an episode
-        if done or terminal:
-            break
-
-        # show animation
-        if args.show:
-            time.sleep(0.1)
-            env.render()
-
-        # show model effect without training
-        if args.restore and args.show:
-            continue
-
-        # learn policy
-        for i, agent in enumerate(agents):
-            critic_loss = agent.learn(agents)
-            if critic_loss != 0.0:
-                summary.add_scalar('critic_loss_%d' % i, critic_loss,
-                                   agent.global_train_step)
-
-    return total_reward, agents_reward, steps
 
 
 def train_agent():
@@ -140,43 +99,75 @@ def train_agent():
                     'model file {} does not exits'.format(model_file))
             agents[i].restore(model_file)
 
+    rpms = []
+    memory_size = int(1e5)
+    for i in range(len(agents)):
+        rpm = ReplayMemory(
+            max_size=memory_size,
+            obs_dim=env.obs_shape_n[i],
+            act_dim=env.act_shape_n[i])
+        rpms.append(rpm)
+
+    parl.connect(args.master_address)
+    remote_actors = [Actor(args) for _ in range(args.actor_num)]
+
     t_start = time.time()
     logger.info('Starting...')
     while total_episodes <= MAX_EPISODES:
-        # run an episode
-        ep_reward, ep_agent_rewards, steps = run_episode(env, agents)
-        summary.add_scalar('train_reward/episode', ep_reward, total_episodes)
-        summary.add_scalar('train_reward/step', ep_reward, total_steps)
-        if args.show:
-            print('episode {}, reward {}, agents rewards {}, steps {}'.format(
-                total_episodes, ep_reward, ep_agent_rewards, steps))
+        latest_weights = [agent.get_weights() for agent in agents]
+        for remote_actor in remote_actors:
+            remote_actor.set_weights(latest_weights)
+        result_object_id = [remote_actor.run_episode() for remote_actor in remote_actors]
+        for future_object in result_object_id:
+            experience, ep_reward, ep_agent_rewards, steps = future_object.get()
 
-        # Record reward
-        total_steps += steps
-        total_episodes += 1
-        episode_rewards.append(ep_reward)
-        for i in range(env.n):
-            agent_rewards[i].append(ep_agent_rewards[i])
+            summary.add_scalar('train_reward/episode', ep_reward, total_episodes)
+            summary.add_scalar('train_reward/step', ep_reward, total_steps)
+            if args.show:
+                print('episode {}, reward {}, agents rewards {}, steps {}'.format(
+                    total_episodes, ep_reward, ep_agent_rewards, steps))
 
-        # Keep track of final episode reward
-        if total_episodes % STAT_RATE == 0:
-            mean_episode_reward = round(
-                np.mean(episode_rewards[-STAT_RATE:]), 3)
-            final_ep_ag_rewards = []  # agent rewards for training curve
-            for rew in agent_rewards:
-                final_ep_ag_rewards.append(round(np.mean(rew[-STAT_RATE:]), 2))
-            use_time = round(time.time() - t_start, 3)
-            logger.info(
-                'Steps: {}, Episodes: {}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
-                .format(total_steps, total_episodes, mean_episode_reward,
-                        final_ep_ag_rewards, use_time))
-            t_start = time.time()
-            summary.add_scalar('mean_episode_reward/episode',
-                               mean_episode_reward, total_episodes)
-            summary.add_scalar('mean_episode_reward/step', mean_episode_reward,
-                               total_steps)
-            summary.add_scalar('use_time/1000episode', use_time,
-                               total_episodes)
+            # add experience
+            for obs_n, action_n, reward_n, next_obs_n, done_n in experience:
+                for i, rpm in enumerate(rpms):
+                    rpm.append(obs_n[i], action_n[i], reward_n[i],
+                                 next_obs_n[i], done_n[i])
+
+            # train/sample rate 
+            for _ in range(len(experience)):
+                # learn policy
+                for i, agent in enumerate(agents):
+                    critic_loss = agent.learn(agents, rpms)
+                    if critic_loss != 0.0:
+                        summary.add_scalar('critic_loss_%d' % i, critic_loss,
+                                           agent.global_train_step)
+
+            # Record reward
+            total_steps += steps
+            total_episodes += 1
+            episode_rewards.append(ep_reward)
+            for i in range(env.n):
+                agent_rewards[i].append(ep_agent_rewards[i])
+
+            # Keep track of final episode reward
+            if total_episodes % STAT_RATE == 0:
+                mean_episode_reward = round(
+                    np.mean(episode_rewards[-STAT_RATE:]), 3)
+                final_ep_ag_rewards = []  # agent rewards for training curve
+                for rew in agent_rewards:
+                    final_ep_ag_rewards.append(round(np.mean(rew[-STAT_RATE:]), 2))
+                use_time = round(time.time() - t_start, 3)
+                logger.info(
+                    'Steps: {}, Episodes: {}, Mean episode reward: {}, mean agents rewards {}, Time: {}'
+                    .format(total_steps, total_episodes, mean_episode_reward,
+                            final_ep_ag_rewards, use_time))
+                t_start = time.time()
+                summary.add_scalar('mean_episode_reward/episode',
+                                   mean_episode_reward, total_episodes)
+                summary.add_scalar('mean_episode_reward/step', mean_episode_reward,
+                                   total_steps)
+                summary.add_scalar('use_time/1000episode', use_time,
+                                   total_episodes)
 
             # save model
             if not args.restore:
@@ -208,6 +199,14 @@ if __name__ == '__main__':
         type=str,
         default='./model',
         help='directory for saving model')
+    parser.add_argument(
+        '--master_address',
+        type=str,
+        default='localhost:8010')
+    parser.add_argument(
+        '--actor_num',
+        type=int,
+        default=1)
 
     args = parser.parse_args()
     logger.set_dir('./train_log/' + str(args.env))

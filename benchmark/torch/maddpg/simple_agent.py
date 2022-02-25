@@ -15,8 +15,6 @@
 import parl
 import torch
 import numpy as np
-from parl.utils import ReplayMemory
-from parl.utils import machine_info, get_gpu_count
 
 
 class MAAgent(parl.Agent):
@@ -39,12 +37,7 @@ class MAAgent(parl.Agent):
         self.speedup = speedup
         self.n = len(act_dim_n)
 
-        self.memory_size = int(1e5)
         self.min_memory_size = batch_size * 25  # batch_size * args.max_episode_len
-        self.rpm = ReplayMemory(
-            max_size=self.memory_size,
-            obs_dim=self.obs_dim_n[agent_index],
-            act_dim=self.act_dim_n[agent_index])
         self.global_train_step = 0
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
@@ -62,7 +55,7 @@ class MAAgent(parl.Agent):
         act_numpy = act.detach().cpu().numpy().flatten()
         return act_numpy
 
-    def learn(self, agents):
+    def learn(self, agents, rpms):
         """ sample batch, compute q_target and train
         """
         self.global_train_step += 1
@@ -70,8 +63,10 @@ class MAAgent(parl.Agent):
         # only update parameter every 100 steps
         if self.global_train_step % 100 != 0:
             return 0.0
+        
+        rpm = rpms[self.agent_index]
 
-        if self.rpm.size() <= self.min_memory_size:
+        if rpm.size() <= self.min_memory_size:
             return 0.0
 
         batch_obs_n = []
@@ -79,14 +74,14 @@ class MAAgent(parl.Agent):
         batch_obs_next_n = []
 
         # sample batch
-        rpm_sample_index = self.rpm.make_index(self.batch_size)
+        rpm_sample_index = rpm.make_index(self.batch_size)
         for i in range(self.n):
             batch_obs, batch_act, _, batch_obs_next, _ \
-                = agents[i].rpm.sample_batch_by_index(rpm_sample_index)
+                = rpms[i].sample_batch_by_index(rpm_sample_index)
             batch_obs_n.append(batch_obs)
             batch_act_n.append(batch_act)
             batch_obs_next_n.append(batch_obs_next)
-        _, _, batch_rew, _, batch_isOver = self.rpm.sample_batch_by_index(
+        _, _, batch_rew, _, batch_isOver = rpm.sample_batch_by_index(
             rpm_sample_index)
         batch_obs_n = [
             torch.FloatTensor(obs).to(self.device) for obs in batch_obs_n
@@ -117,6 +112,3 @@ class MAAgent(parl.Agent):
         critic_cost = critic_cost.cpu().detach().numpy()
 
         return critic_cost
-
-    def add_experience(self, obs, act, reward, next_obs, terminal):
-        self.rpm.append(obs, act, reward, next_obs, terminal)

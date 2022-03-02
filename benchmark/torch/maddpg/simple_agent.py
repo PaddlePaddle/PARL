@@ -16,7 +16,6 @@ import parl
 import torch
 import numpy as np
 from parl.utils import ReplayMemory
-from parl.utils import machine_info, get_gpu_count
 
 
 class MAAgent(parl.Agent):

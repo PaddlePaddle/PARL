@@ -19,8 +19,12 @@ Please view [Carla simulator](https://github.com/carla-simulator/carla/releases/
 + [CARLA_0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
   ```CARLA
   # Download CARLA_0.9.6, extract it to a folder, 
-  # and add the folder path to `PYTHONPATH` environment variable
+  cd ${YOURFLODER}
+  wget http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/CARLA_0.9.6.tar.gz
+  mkdir CARLA_0.9.6
+  tar -zxf CARLA_0.9.6.tar.gz -C CARLA_0.9.6
   
+  # and add the folder path to `PYTHONPATH` environment variable
   $ export PYTHONPATH="${YOURFLODER}/CARLA_0.9.6/PythonAPI/carla/dist/carla-0.9.6-py3.5-linux-x86_64.egg:$PYTHONPATH"
   ```
 + [gym_carla](https://github.com/ShuaibinLi/gym_carla.git)

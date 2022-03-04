@@ -62,6 +62,7 @@ function abort(){
 }
 
 function check_style() {
+    source ~/.bashrc
     trap 'abort' 0
     set -e
 

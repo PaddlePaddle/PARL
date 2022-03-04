@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ function init() {
     NONE='\033[0m'
 
     REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/../" && pwd )"
-    source ~/.bashrc
+
     export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
 }
@@ -136,9 +136,7 @@ function run_single_fluid_test() {
 function run_test_with_fluid() {
     # declare -a envs=("py27" "py36" "py37")
     declare -a envs=("py37")
-    for env in "${envs[@]}";do
-        cd /work
-        source ~/.bashrc
+    for env in "${envs[@]}";do    
         export PATH="/root/miniconda3/bin:$PATH"
         source activate $env
         python -m pip install --upgrade pip
@@ -212,15 +210,14 @@ function main() {
             #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
             declare -a envs=("py36" "py37" "py38")
             for env in "${envs[@]}";do
-                cd /work
-                source ~/.bashrc
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
-                python -m pip install --upgrade pip
+                python -m pip install --upgrade pip 
                 echo ========================================
                 echo Running tests in $env ..
                 echo `which pip`
                 echo ========================================
+                pip config set global.index-url https://mirror.baidu.com/pypi/simple
                 pip install .
                 if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
                 then

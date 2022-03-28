@@ -24,6 +24,10 @@
 + atari-py==0.2.6 (仅 lesson4 的 homework 需要安装)
 + rlschool==0.3.1 (仅 lesson5 的 homework 需要安装)
 
+可以直接安装本目录下的 `requirements.txt` 来完成以上依赖版本的适配。
+```
+pip install -r requirements.txt
+```
 
 ### 运行示例
 

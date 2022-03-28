@@ -1,0 +1,6 @@
+# requirements for tutorials (paddle dygraph version)
+paddlepaddle==2.2.0
+parl==2.0.3
+gym==0.18.0
+atari-py==0.2.6
+rlschool==0.3.1

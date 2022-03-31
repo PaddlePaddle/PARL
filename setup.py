@@ -71,7 +71,8 @@ setup(
     package_data={'': ['*.so']},
     install_requires=[
         "termcolor>=1.1.0",
-        "pyzmq==18.1.1",
+        'pyzmq==18.1.1; python_version<"3.9"',
+        'pyzmq==22.3.0; python_version>="3.9"',
         "scipy>=1.0.0",
         'cloudpickle==1.3.0; python_version<"3"',
         'cloudpickle==1.6.0; python_version>="3"',

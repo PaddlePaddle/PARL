@@ -31,7 +31,13 @@
 + [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
 + [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
 + gym==0.18.0
++ atari-py==0.2.6 (仅 lesson4 的 homework 需要安装)
++ rlschool==0.3.1 (仅 lesson5 的 homework 需要安装)
 
+可以直接安装本目录下的 `requirements.txt` 来完成以上依赖版本的适配。
+```
+pip install -r requirements.txt
+```
 
 ### 运行示例
 

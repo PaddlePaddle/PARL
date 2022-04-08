@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ class DiagGaussianDistribution(PolicyDistribution):
         (mean, logstd) = logits
         self.mean = mean
         self.logstd = logstd
-        
+
         self.std = paddle.exp(self.logstd)
 
     def sample(self):
@@ -74,7 +74,8 @@ class DiagGaussianDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
-        entropy = paddle.sum(self.logstd + 0.5 * np.log(2.0 * np.pi * np.e), axis=1)
+        entropy = paddle.sum(
+            self.logstd + 0.5 * np.log(2.0 * np.pi * np.e), axis=1)
         return entropy
 
     def logp(self, actions):
@@ -88,10 +89,12 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         assert len(actions.shape) == 2
 
-        norm_actions = paddle.sum(paddle.square((actions - self.mean) / self.std), axis=1)
+        norm_actions = paddle.sum(
+            paddle.square((actions - self.mean) / self.std), axis=1)
         actions_shape = paddle.to_tensor(self.actions.shape, dtype='float32')
         pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
-        actions_log_prob = - 0.5 * norm_actions - 0.5 * pi_item - paddle.sum(self.logstd, axis=1)
+        actions_log_prob = -0.5 * norm_actions - 0.5 * pi_item - paddle.sum(
+            self.logstd, axis=1)
 
         return actions_log_prob
 
@@ -105,7 +108,8 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         assert isinstance(other, DiagGaussianDistribution)
 
-        temp = (paddle.square(self.std) + paddle.square(self.mean - other.mean)) / (2.0 * paddle.square)
+        temp = (paddle.square(self.std) +
+                paddle.square(self.mean - other.mean)) / (2.0 * paddle.square)
         kl = paddle.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
         return kl
 

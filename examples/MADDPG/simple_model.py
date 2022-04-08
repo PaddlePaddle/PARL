@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,11 @@ import paddle.nn.functional as F
 
 
 class MAModel(parl.Model):
-    def __init__(self, obs_dim, act_dim, critic_in_dim, continuous_actions=False):
+    def __init__(self,
+                 obs_dim,
+                 act_dim,
+                 critic_in_dim,
+                 continuous_actions=False):
         super(MAModel, self).__init__()
         self.actor_model = ActorModel(obs_dim, act_dim, continuous_actions)
         self.critic_model = CriticModel(critic_in_dim)

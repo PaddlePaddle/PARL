@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,9 @@ import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
-from parl.env.multiagent_simple_env import MAenv
+from env_mpe import MAenv_v2
 from parl.utils import logger, summary
+from gym import spaces
 
 CRITIC_LR = 0.01  # learning rate for the critic model
 ACTOR_LR = 0.01  # learning rate of the actor model
@@ -79,36 +80,33 @@ def run_episode(env, agents):
 
 
 def train_agent():
-    env = MAenv(args.env)
+    env = MAenv_v2(args.env, args.continuous_actions)
+    if args.continuous_actions:
+        assert isinstance(env.action_space[0], spaces.Box)
+
+    # print env info
     logger.info('agent num: {}'.format(env.n))
-    logger.info('observation_space: {}'.format(env.observation_space))
-    logger.info('action_space: {}'.format(env.action_space))
     logger.info('obs_shape_n: {}'.format(env.obs_shape_n))
     logger.info('act_shape_n: {}'.format(env.act_shape_n))
-
+    logger.info('observation_space: {}'.format(env.observation_space))
+    logger.info('action_space: {}'.format(env.action_space))
     for i in range(env.n):
         logger.info('agent {} obs_low:{} obs_high:{}'.format(
             i, env.observation_space[i].low, env.observation_space[i].high))
         logger.info('agent {} act_n:{}'.format(i, env.act_shape_n[i]))
-        if ('low' in dir(env.action_space[i])):
+        if (isinstance(env.action_space[i], spaces.Box)):
             logger.info('agent {} act_low:{} act_high:{} act_shape:{}'.format(
                 i, env.action_space[i].low, env.action_space[i].high,
                 env.action_space[i].shape))
-            logger.info('num_discrete_space:{}'.format(
-                env.action_space[i].num_discrete_space))
-
-    from gym import spaces
-    from multiagent.multi_discrete import MultiDiscrete
-    for space in env.action_space:
-        assert (isinstance(space, spaces.Discrete)
-                or isinstance(space, MultiDiscrete))
 
     critic_in_dim = sum(env.obs_shape_n) + sum(env.act_shape_n)
     logger.info('critic_in_dim: {}'.format(critic_in_dim))
 
+    # build agents
     agents = []
     for i in range(env.n):
-        model = MAModel(env.obs_shape_n[i], env.act_shape_n[i], critic_in_dim)
+        model = MAModel(env.obs_shape_n[i], env.act_shape_n[i], critic_in_dim,
+                        args.continuous_actions)
         algorithm = MADDPG(
             model,
             agent_index=i,
@@ -208,8 +206,17 @@ if __name__ == '__main__':
         type=str,
         default='./model',
         help='directory for saving model')
+    parser.add_argument(
+        '--continuous_actions',
+        action='store_true',
+        default=False,
+        help='use continuous action mode or not')
+    parser.add_argument('--seed', type=int, default=0)
 
     args = parser.parse_args()
-    logger.set_dir('./train_log/' + str(args.env))
+    print('========== args: ', args)
+    # logger.set_dir('./train_log/' + str(args.env))
+    logger.set_dir('./train_log/' + str(args.env) + '_' + str(args.seed) +
+                   '_' + str(args.continuous_actions))
 
     train_agent()

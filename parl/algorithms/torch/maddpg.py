@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ from copy import deepcopy
 
 __all__ = ['MADDPG']
 
+from parl.core.torch.policy_distribution import DiagGaussianDistribution
 from parl.core.torch.policy_distribution import SoftCategoricalDistribution
 from parl.core.torch.policy_distribution import SoftMultiCategoricalDistribution
 
@@ -42,6 +43,10 @@ def SoftPDistribution(logits, act_space):
     elif (hasattr(act_space, 'num_discrete_space')):
         return SoftMultiCategoricalDistribution(logits, act_space.low,
                                                 act_space.high)
+    # is instance of gym.spaces.Box
+    elif (hasattr(act_space, 'high')):
+        return DiagGaussianDistribution(logits)
+
     else:
         raise AssertionError("act_space must be instance of \
             gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
@@ -80,6 +85,11 @@ class MADDPG(parl.Algorithm):
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 
+        self.continuous_actions = False
+        if not len(act_space) == 0 and hasattr(act_space[0], 'high') \
+                and not hasattr(act_space[0], 'num_discrete_space'):
+            self.continuous_actions = True
+
         self.agent_index = agent_index
         self.act_space = act_space
         self.gamma = gamma
@@ -103,7 +113,7 @@ class MADDPG(parl.Algorithm):
         Args:
             obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
             use_target_model (bool): use target_model or not
-    
+
         Returns:
             act (paddle tensor): action, shape([B] + shape of act_n[agent_index])
         """
@@ -114,11 +124,13 @@ class MADDPG(parl.Algorithm):
         action = SoftPDistribution(
             logits=policy,
             act_space=self.act_space[self.agent_index]).sample()
+        if self.continuous_actions:
+            action = torch.tanh(action)
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
         """ use the value model to predict Q values
-        Args: 
+        Args:
             obs_n (list of paddle tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
             act_n (list of paddle tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)
             use_target_model (bool): use target_model or not
@@ -146,7 +158,8 @@ class MADDPG(parl.Algorithm):
         sample_this_action = SoftPDistribution(
             logits=this_policy,
             act_space=self.act_space[self.agent_index]).sample()
-
+        if self.continuous_actions:
+            sample_this_action = torch.tanh(sample_this_action)
         # action_input_n = deepcopy(act_n)
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
@@ -177,3 +190,4 @@ class MADDPG(parl.Algorithm):
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(self.target_model, decay=decay)
+

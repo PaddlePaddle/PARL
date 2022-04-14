@@ -30,7 +30,7 @@ def SoftPDistribution(logits, act_space):
     """ Select SoftCategoricalDistribution or SoftMultiCategoricalDistribution according to act_space.
 
     Args:
-        logits (paddle tensor): the output of policy model
+        logits (torch tensor): the output of policy model
         act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
 
     Returns:
@@ -111,11 +111,11 @@ class MADDPG(parl.Algorithm):
     def predict(self, obs, use_target_model=False):
         """ use the policy model to predict actions
         Args:
-            obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
+            obs (torch tensor): observation, shape([B] + shape of obs_n[agent_index])
             use_target_model (bool): use target_model or not
 
         Returns:
-            act (paddle tensor): action, shape([B] + shape of act_n[agent_index])
+            act (torch tensor): action, shape([B] + shape of act_n[agent_index])
         """
         if use_target_model:
             policy = self.target_model.policy(obs)
@@ -131,12 +131,12 @@ class MADDPG(parl.Algorithm):
     def Q(self, obs_n, act_n, use_target_model=False):
         """ use the value model to predict Q values
         Args:
-            obs_n (list of paddle tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
-            act_n (list of paddle tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)
+            obs_n (list of torch tensor): all agents' observation, len(agent's num) + shape([B] + shape of obs_n)
+            act_n (list of torch tensor): all agents' action, len(agent's num) + shape([B] + shape of act_n)
             use_target_model (bool): use target_model or not
 
         Returns:
-            Q (paddle tensor): Q value of this agent, shape([B])
+            Q (torch tensor): Q value of this agent, shape([B])
         """
         if use_target_model:
             return self.target_model.value(obs_n, act_n)
@@ -166,7 +166,13 @@ class MADDPG(parl.Algorithm):
         eval_q = self.Q(obs_n, action_input_n)
         act_cost = torch.mean(-1.0 * eval_q)
 
-        act_reg = torch.mean(torch.square(this_policy))
+        # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
+        if self.continuous_actions:
+            act_reg = [torch.mean(torch.square(p)) for p in this_policy]
+            act_reg = torch.tensor(act_reg)
+            act_reg = torch.mean(act_reg)
+        else:
+            act_reg = torch.mean(torch.square(this_policy)) # only (mean)
 
         cost = act_cost + act_reg * 1e-3
 

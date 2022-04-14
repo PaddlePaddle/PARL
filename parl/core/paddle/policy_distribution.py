@@ -44,7 +44,7 @@ class DiagGaussianDistribution(PolicyDistribution):
     """Categorical distribution for discrete action spaces."""
 
     def __init__(self, logits):
-        """TODO
+        """
         Args:
             logits: A tuple of (mean, logstd)
                     mean: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS] of unnormalized policy logits

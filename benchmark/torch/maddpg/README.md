@@ -58,9 +58,9 @@ simple_world_comm<br>
 ### Dependencies:
 + python3.5+
 + torch
-+ [parl>=2.0.2](https://github.com/PaddlePaddle/PARL)
-+ [multiagent-particle-envs](https://github.com/openai/multiagent-particle-envs)
-+ gym==0.10.5
++ [parl>=2.0.4](https://github.com/PaddlePaddle/PARL)
++ PettingZoo==1.17.0
++ gym==0.23.1
 
 ### Start Training:
 ```

@@ -19,7 +19,7 @@ import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
-from env_mpe import MAenv_v2
+from parl.env.pettingzoo_mpe import MAenv_v2
 from parl.utils import logger, summary
 from gym import spaces
 

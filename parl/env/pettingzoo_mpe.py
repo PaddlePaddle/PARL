@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-from parl.utils import logger
 try:
     import gym
     from gym import spaces
@@ -25,10 +24,11 @@ try:
     from pettingzoo.mpe import simple_spread_v2
     from pettingzoo.mpe import simple_tag_v2
     from pettingzoo.mpe import simple_world_comm_v2
-    logger.info('MAenv_v2 is ready to use')
 except:
-    logger.warning(
-        'Can not use MAenv_v2 from env_mpe, try `pip install PettingZoo==1.17.0` and `pip install gym==0.23.1`'
+    raise ImportError(
+        'Can not use MAenv_v2 from parl.env.pettingzoo_mpe. \n \
+        try `pip install PettingZoo==1.17.0` and `pip install gym==0.23.1` \n \
+        (PettingZoo 1.17.0 requires gym>=0.21.0)'
     )
 
 

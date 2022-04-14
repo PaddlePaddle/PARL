@@ -58,7 +58,7 @@ def MAenv_v2(scenario_name, continuous_actions=False):
     elif scenario_name == 'simple_spread':
         env = simple_spread_v2.parallel_env(
             N=3,
-            local_ratio=0.5,
+            local_ratio=0,
             max_cycles=25,
             continuous_actions=continuous_actions)
     elif scenario_name == 'simple_tag':

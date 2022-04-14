@@ -170,7 +170,13 @@ class MADDPG(parl.Algorithm):
         eval_q = self.Q(obs_n, action_input_n)
         act_cost = paddle.mean(-1.0 * eval_q)
 
-        act_reg = paddle.mean(paddle.square(this_policy))
+        # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
+        if self.continuous_actions:
+            act_reg = [paddle.mean(paddle.square(p)) for p in this_policy]
+            act_reg = paddle.to_tensor(act_reg)
+            act_reg = paddle.mean(act_reg)
+        else:
+            act_reg = paddle.mean(paddle.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3
 

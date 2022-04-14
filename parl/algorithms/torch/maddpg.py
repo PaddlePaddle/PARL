@@ -168,11 +168,8 @@ class MADDPG(parl.Algorithm):
 
         # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
         if self.continuous_actions:
-            act_reg = [torch.mean(torch.square(p)) for p in this_policy]
-            act_reg = torch.tensor(act_reg)
-            act_reg = torch.mean(act_reg)
-        else:
-            act_reg = torch.mean(torch.square(this_policy)) # only (mean)
+            this_policy = torch.cat(this_policy,dim=-1)
+        act_reg = torch.mean(torch.square(this_policy)) # only (mean)
 
         cost = act_cost + act_reg * 1e-3
 

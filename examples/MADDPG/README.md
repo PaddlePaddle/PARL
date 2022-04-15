@@ -1,7 +1,7 @@
 ## Reproduce MADDPG with PARL
 Based on PARL, the MADDPG algorithm of deep reinforcement learning has been reproduced.
 
-> Paper: MADDPG in [ Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://arxiv.org/abs/1706.02275)
+> Paper: MADDPG in [ Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments](https://arxiv.org/abs/1806.02275)
 
 ### Multi-agent particle environment introduction
 A simple multi-agent particle world based on gym. Please see [here](https://github.com/openai/multiagent-particle-envs) to install and know more about the environment.
@@ -19,37 +19,37 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <tr>
 <td>
 simple<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple.gif"                  width = "180" height = "180" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_adversary.gif"        width = "180" height = "180" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_push.gif"             width = "180" height = "180" alt="MADDPG_simple_push"/>
 </td>
 <td>
-simple_reference<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
+simple_crypto<br>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_crypto.gif"        width = "180" height = "180" alt="MADDPG_simple_crypto"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_speaker_listener.gif" width = "180" height = "180" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_spread.gif"           width = "180" height = "180" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_tag.gif"              width = "180" height = "180" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_world_comm.gif"       width = "180" height = "180" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>

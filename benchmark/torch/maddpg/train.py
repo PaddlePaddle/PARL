@@ -212,11 +212,6 @@ if __name__ == '__main__':
         default=False,
         help='use continuous action mode or not')
     parser.add_argument(
-        '--log_dir',
-        type=str,
-        default='./train_log/',
-        help='the path for saving training log')
-    parser.add_argument(
         '--max_episodes',
         type=int,
         default=25000,

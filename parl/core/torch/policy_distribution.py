@@ -146,7 +146,7 @@ class DiagGaussianDistribution(PolicyDistribution):
             sample_action: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
                            with noise to keep the target close to the original action.
         """
-        return torch.normal(self.mean,self.std)
+        return torch.normal(self.mean,torch.abs(self.std))
 
     def entropy(self):
         """

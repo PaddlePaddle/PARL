@@ -226,7 +226,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print('========== args: ', args)
     # logger.set_dir('./train_log/' + str(args.env))
-    logger.set_dir(args.log_dir + str(args.env) + '_' + str(args.seed) +
+    logger.set_dir('./train_log/' + str(args.env) + '_' + str(args.seed) +
                    '_' + str(args.continuous_actions))
 
     train_agent()

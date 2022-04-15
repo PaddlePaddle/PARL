@@ -139,7 +139,7 @@ def train_agent():
 
     t_start = time.time()
     logger.info('Starting...')
-    while total_episodes <= MAX_EPISODES:
+    while total_episodes <= args.max_episodes:
         # run an episode
         ep_reward, ep_agent_rewards, steps = run_episode(env, agents)
         summary.add_scalar('train_reward/episode', ep_reward, total_episodes)

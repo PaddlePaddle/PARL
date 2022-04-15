@@ -21,6 +21,7 @@ try:
     class MAenv(MultiAgentEnv):
         """ multiagent environment warppers for maddpg
         """
+
         def __init__(self, scenario_name):
             env_list = [
                 'simple', 'simple_adversary', 'simple_crypto', 'simple_push',
@@ -35,9 +36,10 @@ try:
             world = scenario.make_world()
             # initial multiagent environment
             super().__init__(world, scenario.reset_world, scenario.reward,
-                            scenario.observation)
+                             scenario.observation)
             self.obs_shape_n = [
-                self.get_shape(self.observation_space[i]) for i in range(self.n)
+                self.get_shape(self.observation_space[i])
+                for i in range(self.n)
             ]
             self.act_shape_n = [
                 self.get_shape(self.action_space[i]) for i in range(self.n)
@@ -61,10 +63,12 @@ try:
             elif (isinstance(input_space, MultiDiscrete)):
                 return sum(input_space.high - input_space.low + 1)
             else:
-                print('[Error] shape is {}, not Box or Discrete or MultiDiscrete'.
-                    format(input_space.shape))
+                print(
+                    '[Error] shape is {}, not Box or Discrete or MultiDiscrete'
+                    .format(input_space.shape))
                 raise NotImplementedError
 except:
-    raise ImportError('Can not use MAenv from parl.env.multiagent_simple_env, \n \
+    raise ImportError(
+        'Can not use MAenv from parl.env.multiagent_simple_env, \n \
         please pip install multiagent according to https://github.com/openai/multiagent-particle-envs \
         as well as `pip install gym==0.10.5`')

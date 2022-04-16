@@ -121,11 +121,13 @@ class MADDPG(parl.Algorithm):
             policy = self.target_model.policy(obs)
         else:
             policy = self.model.policy(obs)
+
         action = SoftPDistribution(
             logits=policy,
             act_space=self.act_space[self.agent_index]).sample()
         if self.continuous_actions:
             action = torch.tanh(action)
+
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
@@ -160,6 +162,7 @@ class MADDPG(parl.Algorithm):
             act_space=self.act_space[self.agent_index]).sample()
         if self.continuous_actions:
             sample_this_action = torch.tanh(sample_this_action)
+
         # action_input_n = deepcopy(act_n)
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
@@ -175,7 +178,7 @@ class MADDPG(parl.Algorithm):
 
         self.actor_optimizer.zero_grad()
         cost.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.get_actor_params(), 0.5)
+        # torch.nn.utils.clip_grad_norm_(self.model.get_actor_params(), 0.5)
         self.actor_optimizer.step()
         return cost
 
@@ -185,7 +188,7 @@ class MADDPG(parl.Algorithm):
 
         self.critic_optimizer.zero_grad()
         cost.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.get_critic_params(), 0.5)
+        # torch.nn.utils.clip_grad_norm_(self.model.get_critic_params(), 0.5)
         self.critic_optimizer.step()
         return cost
 

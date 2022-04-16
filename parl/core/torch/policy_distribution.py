@@ -146,7 +146,8 @@ class DiagGaussianDistribution(PolicyDistribution):
             sample_action: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
                            with noise to keep the target close to the original action.
         """
-        return torch.normal(self.mean,torch.abs(self.std))
+        random_normal = torch.randn(size=self.mean.shape)
+        return self.mean + self.std * random_normal
 
     def entropy(self):
         """
@@ -186,7 +187,7 @@ class DiagGaussianDistribution(PolicyDistribution):
         assert isinstance(other, DiagGaussianDistribution)
 
         temp = (torch.square(self.std) +
-                torch.square(self.mean - other.mean)) / (2.0 * torch.square)
+                torch.square(self.mean - other.mean)) / (2.0 * paddle.square(other.std))
         kl = torch.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
         return kl
 

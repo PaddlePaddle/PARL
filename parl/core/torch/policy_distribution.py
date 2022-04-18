@@ -188,7 +188,7 @@ class DiagGaussianDistribution(PolicyDistribution):
         assert isinstance(other, DiagGaussianDistribution)
 
         temp = (torch.square(self.std) +
-                torch.square(self.mean - other.mean)) / (2.0 * paddle.square(other.std))
+                torch.square(self.mean - other.mean)) / (2.0 * torch.square(other.std))
         kl = torch.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
         return kl
 

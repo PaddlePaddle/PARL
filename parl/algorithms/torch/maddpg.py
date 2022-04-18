@@ -173,7 +173,7 @@ class MADDPG(parl.Algorithm):
 
         # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
         if self.continuous_actions:
-            this_policy = torch.cat(this_policy,dim=-1)
+            this_policy = torch.cat(this_policy, dim=-1)
         act_reg = torch.mean(torch.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3
@@ -204,4 +204,3 @@ class MADDPG(parl.Algorithm):
         if decay is None:
             decay = 1.0 - self.tau
         self.model.sync_weights_to(self.target_model, decay=decay)
-

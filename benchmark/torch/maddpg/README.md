@@ -10,7 +10,7 @@ A simple multi-agent particle world based on gym. Please see [here](https://gith
 Mean episode reward (every 1000 episodes) in training process (totally 25000 episodes).
 
 <p align="center">
-<img src=".benchmark/maddpg_torch.png" alt="result"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/torch/result.png" alt="result"/>
 </p>
 
 ### Experiments result
@@ -19,37 +19,37 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <tr>
 <td>
 simple<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
 </td>
 <td>
-simple_reference<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
+simple_crypto<br>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_crypto.gif"        width = "170" height = "170" alt="MADDPG_simple_crypto"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src="../../fluid/MADDPG/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>

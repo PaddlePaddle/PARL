@@ -174,13 +174,13 @@ class MADDPG(parl.Algorithm):
         # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
         if self.continuous_actions:
             this_policy = torch.cat(this_policy,dim=-1)
-        act_reg = torch.mean(torch.square(this_policy)) # only (mean)
+        act_reg = torch.mean(torch.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3
 
         self.actor_optimizer.zero_grad()
         cost.backward()
-        # torch.nn.utils.clip_grad_norm_(self.model.get_actor_params(), 0.5)
+        torch.nn.utils.clip_grad_norm_(self.model.get_actor_params(), 0.5)
         self.actor_optimizer.step()
         return cost
 
@@ -190,7 +190,7 @@ class MADDPG(parl.Algorithm):
 
         self.critic_optimizer.zero_grad()
         cost.backward()
-        # torch.nn.utils.clip_grad_norm_(self.model.get_critic_params(), 0.5)
+        torch.nn.utils.clip_grad_norm_(self.model.get_critic_params(), 0.5)
         self.critic_optimizer.step()
         return cost
 

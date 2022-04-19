@@ -82,7 +82,6 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         Args:
             actions: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS]
-            eps: A small float constant that avoids underflows when computing the log probability
 
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE]

@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 __all__ = [
     'PolicyDistribution', 'CategoricalDistribution',
@@ -39,9 +40,79 @@ class PolicyDistribution(object):
         raise NotImplementedError
 
 
+class DiagGaussianDistribution(PolicyDistribution):
+    """DiagGaussian distribution for continuous action spaces."""
+    def __init__(self, logits):
+        """
+        Args:
+            logits: A tuple of (mean, logstd)
+                    mean: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS] of unnormalized policy logits
+                    logstd: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS]
+        """
+        assert len(logits) == 2
+        assert len(logits[0].shape) == 2 and len(logits[1].shape) == 2
+        self.logits = logits
+        (mean, logstd) = logits
+        self.mean = mean
+        self.logstd = logstd
+
+        self.std = torch.exp(self.logstd)
+
+    def sample(self):
+        """
+        Returns:
+            sample_action: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
+                           with noise to keep the target close to the original action.
+        """
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        random_normal = torch.randn(size=self.mean.shape).to(device)
+        return self.mean + self.std * random_normal
+
+    def entropy(self):
+        """
+        Returns:
+            entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
+        """
+        entropy = torch.sum(self.logstd + 0.5 * np.log(2.0 * np.pi * np.e),
+                            axis=1)
+        return entropy
+
+    def logp(self, actions):
+        """
+        Args:
+            actions: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS]
+        Returns:
+            actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
+        """
+        assert len(actions.shape) == 2
+
+        norm_actions = torch.sum(torch.square(
+            (actions - self.mean) / self.std),
+                                 axis=1)
+        actions_shape = torch.to_tensor(actions.shape, dtype=torch.float32)
+        pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
+        actions_log_prob = -0.5 * norm_actions - pi_item - torch.sum(
+            self.logstd, axis=1)
+
+        return actions_log_prob
+
+    def kl(self, other):
+        """
+        Args:
+            other: object of DiagGaussianDistribution
+        Returns:
+            kl: A float32 tensor with shape [BATCH_SIZE]
+        """
+        assert isinstance(other, DiagGaussianDistribution)
+
+        temp = (torch.square(self.std) + torch.square(self.mean - other.mean)
+                ) / (2.0 * torch.square(other.std))
+        kl = torch.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
+        return kl
+
+
 class CategoricalDistribution(PolicyDistribution):
     """Categorical distribution for discrete action spaces."""
-
     def __init__(self, logits):
         """
         Args:
@@ -125,7 +196,6 @@ class CategoricalDistribution(PolicyDistribution):
 
 class SoftCategoricalDistribution(CategoricalDistribution):
     """Categorical distribution with noise for discrete action spaces"""
-
     def __init__(self, logits):
         """
         Args:
@@ -148,7 +218,6 @@ class SoftCategoricalDistribution(CategoricalDistribution):
 
 class SoftMultiCategoricalDistribution(PolicyDistribution):
     """Categorical distribution with noise for MultiDiscrete action spaces."""
-
     def __init__(self, logits, low, high):
         """
         Args:
@@ -162,10 +231,9 @@ class SoftMultiCategoricalDistribution(PolicyDistribution):
         self.categoricals = list(
             map(
                 SoftCategoricalDistribution,
-                torch.split(
-                    logits,
-                    split_size_or_sections=list(high - low + 1),
-                    dim=len(logits.shape) - 1)))
+                torch.split(logits,
+                            split_size_or_sections=list(high - low + 1),
+                            dim=len(logits.shape) - 1)))
 
     def sample(self):
         """

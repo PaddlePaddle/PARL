@@ -28,7 +28,6 @@ ACTOR_LR = 0.01  # learning rate of the actor model
 GAMMA = 0.95  # reward discount factor
 TAU = 0.01  # soft update
 BATCH_SIZE = 1024
-MAX_EPISODES = 25000  # stop condition:number of episodes
 MAX_STEP_PER_EPISODE = 25  # maximum step per episode
 STAT_RATE = 1000  # statistical interval of save model or count reward
 
@@ -140,7 +139,7 @@ def train_agent():
 
     t_start = time.time()
     logger.info('Starting...')
-    while total_episodes <= MAX_EPISODES:
+    while total_episodes <= args.max_episodes:
         # run an episode
         ep_reward, ep_agent_rewards, steps = run_episode(env, agents)
         summary.add_scalar('train_reward/episode', ep_reward, total_episodes)
@@ -211,7 +210,11 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help='use continuous action mode or not')
-    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument(
+        '--max_episodes',
+        type=int,
+        default=25000,
+        help='stop condition: number of episodes')
 
     args = parser.parse_args()
     print('========== args: ', args)

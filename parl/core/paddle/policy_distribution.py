@@ -41,7 +41,7 @@ class PolicyDistribution(object):
 
 
 class DiagGaussianDistribution(PolicyDistribution):
-    """Categorical distribution for discrete action spaces."""
+    """DiagGaussian distribution for continuous action spaces."""
 
     def __init__(self, logits):
         """
@@ -82,7 +82,6 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         Args:
             actions: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS]
-            eps: A small float constant that avoids underflows when computing the log probability
 
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
@@ -91,8 +90,7 @@ class DiagGaussianDistribution(PolicyDistribution):
 
         norm_actions = paddle.sum(
             paddle.square((actions - self.mean) / self.std), axis=1)
-        actions_shape = paddle.to_tensor(self.actions.shape, dtype='float32')
-        pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
+        pi_item = 0.5 * np.log(2.0 * np.pi) * actions.shape[1]
         actions_log_prob = -0.5 * norm_actions - 0.5 * pi_item - paddle.sum(
             self.logstd, axis=1)
 
@@ -108,8 +106,8 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         assert isinstance(other, DiagGaussianDistribution)
 
-        temp = (paddle.square(self.std) +
-                paddle.square(self.mean - other.mean)) / (2.0 * paddle.square)
+        temp = (paddle.square(self.std) + paddle.square(self.mean - other.mean)
+                ) / (2.0 * paddle.square(other.std))
         kl = paddle.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
         return kl
 

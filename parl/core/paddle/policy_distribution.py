@@ -41,7 +41,7 @@ class PolicyDistribution(object):
 
 
 class DiagGaussianDistribution(PolicyDistribution):
-    """Categorical distribution for discrete action spaces."""
+    """DiagGaussian distribution for continuous action spaces."""
 
     def __init__(self, logits):
         """

@@ -68,7 +68,11 @@ simple_world_comm<br>
 python train.py
 
 # To train for other scenario, model is automatically saved every 1000 episodes
-# python train.py --env [ENV_NAME]
+python train.py --env [ENV_NAME]
 
 # To show animation effects after training
-# python train.py --env [ENV_NAME] --show --restore
+python train.py --env [ENV_NAME] --show --restore
+
+# To train and evaluate scenarios with continuous action spaces
+python train.py --env [ENV_NAME] --continuous_actions
+python train.py --env [ENV_NAME] --continuous_actions --show --restore

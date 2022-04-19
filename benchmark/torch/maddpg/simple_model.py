@@ -59,9 +59,7 @@ class ActorModel(parl.Model):
         self.fc3 = nn.Linear(hid2_size, act_dim)
         if self.continuous_actions:
             std_hid_size = 64
-            self.std_fc = nn.Linear(
-                std_hid_size,
-                act_dim)
+            self.std_fc = nn.Linear(std_hid_size, act_dim)
         self.apply(weights_init_)
 
     def forward(self, obs):

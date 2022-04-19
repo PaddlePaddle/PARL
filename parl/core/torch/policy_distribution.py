@@ -42,6 +42,7 @@ class PolicyDistribution(object):
 
 class DiagGaussianDistribution(PolicyDistribution):
     """DiagGaussian distribution for continuous action spaces."""
+
     def __init__(self, logits):
         """
         Args:
@@ -73,8 +74,8 @@ class DiagGaussianDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
-        entropy = torch.sum(self.logstd + 0.5 * np.log(2.0 * np.pi * np.e),
-                            axis=1)
+        entropy = torch.sum(
+            self.logstd + 0.5 * np.log(2.0 * np.pi * np.e), axis=1)
         return entropy
 
     def logp(self, actions):
@@ -86,9 +87,8 @@ class DiagGaussianDistribution(PolicyDistribution):
         """
         assert len(actions.shape) == 2
 
-        norm_actions = torch.sum(torch.square(
-            (actions - self.mean) / self.std),
-                                 axis=1)
+        norm_actions = torch.sum(
+            torch.square((actions - self.mean) / self.std), axis=1)
         actions_shape = torch.to_tensor(actions.shape, dtype=torch.float32)
         pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
         actions_log_prob = -0.5 * norm_actions - pi_item - torch.sum(
@@ -113,6 +113,7 @@ class DiagGaussianDistribution(PolicyDistribution):
 
 class CategoricalDistribution(PolicyDistribution):
     """Categorical distribution for discrete action spaces."""
+
     def __init__(self, logits):
         """
         Args:
@@ -196,6 +197,7 @@ class CategoricalDistribution(PolicyDistribution):
 
 class SoftCategoricalDistribution(CategoricalDistribution):
     """Categorical distribution with noise for discrete action spaces"""
+
     def __init__(self, logits):
         """
         Args:
@@ -218,6 +220,7 @@ class SoftCategoricalDistribution(CategoricalDistribution):
 
 class SoftMultiCategoricalDistribution(PolicyDistribution):
     """Categorical distribution with noise for MultiDiscrete action spaces."""
+
     def __init__(self, logits, low, high):
         """
         Args:
@@ -231,9 +234,10 @@ class SoftMultiCategoricalDistribution(PolicyDistribution):
         self.categoricals = list(
             map(
                 SoftCategoricalDistribution,
-                torch.split(logits,
-                            split_size_or_sections=list(high - low + 1),
-                            dim=len(logits.shape) - 1)))
+                torch.split(
+                    logits,
+                    split_size_or_sections=list(high - low + 1),
+                    dim=len(logits.shape) - 1)))
 
     def sample(self):
         """

@@ -107,21 +107,19 @@ def train_agent():
     for i in range(env.n):
         model = MAModel(env.obs_shape_n[i], env.act_shape_n[i], critic_in_dim,
                         args.continuous_actions)
-        algorithm = MADDPG(
-            model,
-            agent_index=i,
-            act_space=env.action_space,
-            gamma=GAMMA,
-            tau=TAU,
-            critic_lr=CRITIC_LR,
-            actor_lr=ACTOR_LR)
-        agent = MAAgent(
-            algorithm,
-            agent_index=i,
-            obs_dim_n=env.obs_shape_n,
-            act_dim_n=env.act_shape_n,
-            batch_size=BATCH_SIZE,
-            speedup=(not args.restore))
+        algorithm = MADDPG(model,
+                           agent_index=i,
+                           act_space=env.action_space,
+                           gamma=GAMMA,
+                           tau=TAU,
+                           critic_lr=CRITIC_LR,
+                           actor_lr=ACTOR_LR)
+        agent = MAAgent(algorithm,
+                        agent_index=i,
+                        obs_dim_n=env.obs_shape_n,
+                        act_dim_n=env.act_shape_n,
+                        batch_size=BATCH_SIZE,
+                        speedup=(not args.restore))
         agents.append(agent)
     total_steps = 0
     total_episodes = 0
@@ -158,8 +156,8 @@ def train_agent():
 
         # Keep track of final episode reward
         if total_episodes % STAT_RATE == 0:
-            mean_episode_reward = round(
-                np.mean(episode_rewards[-STAT_RATE:]), 3)
+            mean_episode_reward = round(np.mean(episode_rewards[-STAT_RATE:]),
+                                        3)
             final_ep_ag_rewards = []  # agent rewards for training curve
             for rew in agent_rewards:
                 final_ep_ag_rewards.append(round(np.mean(rew[-STAT_RATE:]), 2))
@@ -188,34 +186,31 @@ def train_agent():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Environment
-    parser.add_argument(
-        '--env',
-        type=str,
-        default='simple_speaker_listener',
-        help='scenario of MultiAgentEnv')
+    parser.add_argument('--env',
+                        type=str,
+                        default='simple_speaker_listener',
+                        help='scenario of MultiAgentEnv')
     # auto save model, optional restore model
-    parser.add_argument(
-        '--show', action='store_true', default=False, help='display or not')
-    parser.add_argument(
-        '--restore',
-        action='store_true',
-        default=False,
-        help='restore or not, must have model_dir')
-    parser.add_argument(
-        '--model_dir',
-        type=str,
-        default='./model',
-        help='directory for saving model')
-    parser.add_argument(
-        '--continuous_actions',
-        action='store_true',
-        default=False,
-        help='use continuous action mode or not')
-    parser.add_argument(
-        '--max_episodes',
-        type=int,
-        default=25000,
-        help='the maximum number of episodes')
+    parser.add_argument('--show',
+                        action='store_true',
+                        default=False,
+                        help='display or not')
+    parser.add_argument('--restore',
+                        action='store_true',
+                        default=False,
+                        help='restore or not, must have model_dir')
+    parser.add_argument('--model_dir',
+                        type=str,
+                        default='./model',
+                        help='directory for saving model')
+    parser.add_argument('--continuous_actions',
+                        action='store_true',
+                        default=False,
+                        help='use continuous action mode or not')
+    parser.add_argument('--max_episodes',
+                        type=int,
+                        default=25000,
+                        help='the maximum number of episodes')
     parser.add_argument('--seed', type=int, default=0)
 
     args = parser.parse_args()

@@ -43,7 +43,7 @@ class PolicyDistribution(object):
 class DiagGaussianDistribution(PolicyDistribution):
     """Categorical distribution for discrete action spaces."""
     def __init__(self, logits):
-        """TODO
+        """
         Args:
             logits: A tuple of (mean, logstd)
                     mean: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS] of unnormalized policy logits
@@ -90,7 +90,7 @@ class DiagGaussianDistribution(PolicyDistribution):
         norm_actions = torch.sum(torch.square(
             (actions - self.mean) / self.std),
                                  axis=1)
-        actions_shape = torch.to_tensor(self.actions.shape,
+        actions_shape = torch.to_tensor(actions.shape,
                                         dtype=torch.float32)
         pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
         actions_log_prob = -0.5 * norm_actions - pi_item - torch.sum(

@@ -17,6 +17,7 @@ try:
     from multiagent.multi_discrete import MultiDiscrete
     from multiagent.environment import MultiAgentEnv
     import multiagent.scenarios as scenarios
+    from parl.utils import logger
 
     class MAenv(MultiAgentEnv):
         """ multiagent environment warppers for maddpg
@@ -67,6 +68,11 @@ try:
                     '[Error] shape is {}, not Box or Discrete or MultiDiscrete'
                     .format(input_space.shape))
                 raise NotImplementedError
+
+    logger.warning(
+        'the `MAenv` from `parl.env.multiagent_simple_env` is deprecated since parl 2.0.3 and will be removed in parl 3.0. \n \
+        We recomend you to use `from parl.env.multiagent_env import MAenv` instead, which provides arguments for continuous_actions.'
+    )
 except:
     raise ImportError(
         'Can not use MAenv from parl.env.multiagent_simple_env, \n \

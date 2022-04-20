@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import paddle
 import paddle.nn.functional as F
+import numpy as np
 
 __all__ = [
     'PolicyDistribution', 'CategoricalDistribution',
@@ -37,6 +38,78 @@ class PolicyDistribution(object):
     def logp(self, actions):
         """The log-probabilities of the actions in this policy distribution."""
         raise NotImplementedError
+
+
+class DiagGaussianDistribution(PolicyDistribution):
+    """DiagGaussian distribution for continuous action spaces."""
+
+    def __init__(self, logits):
+        """
+        Args:
+            logits: A tuple of (mean, logstd)
+                    mean: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS] of unnormalized policy logits
+                    logstd: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS]
+        """
+        assert len(logits) == 2
+        assert len(logits[0].shape) == 2 and len(logits[1].shape) == 2
+        self.logits = logits
+        (mean, logstd) = logits
+        self.mean = mean
+        self.logstd = logstd
+
+        self.std = paddle.exp(self.logstd)
+
+    def sample(self):
+        """
+        Returns:
+            sample_action: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS] of sample action,
+                           with noise to keep the target close to the original action.
+        """
+        mean_shape = paddle.to_tensor(self.mean.shape, dtype='int64')
+        random_normal = paddle.normal(shape=mean_shape)
+        return self.mean + self.std * random_normal
+
+    def entropy(self):
+        """
+        Returns:
+            entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
+        """
+        entropy = paddle.sum(
+            self.logstd + 0.5 * np.log(2.0 * np.pi * np.e), axis=1)
+        return entropy
+
+    def logp(self, actions):
+        """
+        Args:
+            actions: An float32 tensor with shape [BATCH_SIZE, NUM_ACTIOINS]
+
+        Returns:
+            actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
+        """
+        assert len(actions.shape) == 2
+
+        norm_actions = paddle.sum(
+            paddle.square((actions - self.mean) / self.std), axis=1)
+        pi_item = 0.5 * np.log(2.0 * np.pi) * actions.shape[1]
+        actions_log_prob = -0.5 * norm_actions - 0.5 * pi_item - paddle.sum(
+            self.logstd, axis=1)
+
+        return actions_log_prob
+
+    def kl(self, other):
+        """
+        Args:
+            other: object of DiagGaussianDistribution
+
+        Returns:
+            kl: A float32 tensor with shape [BATCH_SIZE]
+        """
+        assert isinstance(other, DiagGaussianDistribution)
+
+        temp = (paddle.square(self.std) + paddle.square(self.mean - other.mean)
+                ) / (2.0 * paddle.square(other.std))
+        kl = paddle.sum(other.logstd - self.logstd + temp - 0.5, axis=1)
+        return kl
 
 
 class CategoricalDistribution(PolicyDistribution):

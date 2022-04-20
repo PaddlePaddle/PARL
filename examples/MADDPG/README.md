@@ -10,7 +10,7 @@ A simple multi-agent particle world based on gym. Please see [here](https://gith
 Mean episode reward (every 1000 episodes) in training process (totally 25000 episodes).
 
 <p align="center">
-<img src=".benchmark/maddpg_paddle.png" alt="result"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/result.png" alt="result"/>
 </p>
 
 ### Experiments result
@@ -19,37 +19,37 @@ Mean episode reward (every 1000 episodes) in training process (totally 25000 epi
 <tr>
 <td>
 simple<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple.gif"                  width = "170" height = "170" alt="MADDPG_simple"/>
 </td>
 <td>
 simple_adversary<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_adversary.gif"        width = "170" height = "170" alt="MADDPG_simple_adversary"/>
 </td>
 <td>
 simple_push<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_push.gif"             width = "170" height = "170" alt="MADDPG_simple_push"/>
 </td>
 <td>
-simple_reference<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_reference.gif"        width = "170" height = "170" alt="MADDPG_simple_reference"/>
+simple_crypto<br>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_crypto.gif"        width = "170" height = "170" alt="MADDPG_simple_crypto"/>
 </td>
 </tr>
 <tr>
 <td>
 simple_speaker_listener<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_speaker_listener.gif" width = "170" height = "170" alt="MADDPG_simple_speaker_listener"/>
 </td>
 <td>
 simple_spread<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_spread.gif"           width = "170" height = "170" alt="MADDPG_simple_spread"/>
 </td>
 <td>
 simple_tag<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_tag.gif"              width = "170" height = "170" alt="MADDPG_simple_tag"/>
 </td>
 <td>
 simple_world_comm<br>
-<img src="../../benchmark/fluid/MADDPG/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/.benchmark/MADDPG_simple_world_comm.gif"       width = "170" height = "170" alt="MADDPG_simple_world_comm"/>
 </td>
 </tr>
 </table>
@@ -58,9 +58,10 @@ simple_world_comm<br>
 ### Dependencies:
 + python3.5+
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.2](https://github.com/PaddlePaddle/PARL)
-+ [multiagent-particle-envs](https://github.com/openai/multiagent-particle-envs)
-+ gym==0.10.5
++ [parl>=2.0.4](https://github.com/PaddlePaddle/PARL)
++ PettingZoo==1.17.0
++ gym==0.23.1
+
 
 ### Start Training:
 ```
@@ -68,7 +69,12 @@ simple_world_comm<br>
 python train.py
 
 # To train for other scenario, model is automatically saved every 1000 episodes
-# python train.py --env [ENV_NAME]
+python train.py --env [ENV_NAME]
 
 # To show animation effects after training
-# python train.py --env [ENV_NAME] --show --restore
+python train.py --env [ENV_NAME] --show --restore
+
+# To train and evaluate scenarios with continuous action spaces
+python train.py --env [ENV_NAME] --continuous_actions
+python train.py --env [ENV_NAME] --continuous_actions --show --restore
+```

@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ from copy import deepcopy
 
 __all__ = ['MADDPG']
 
+from parl.core.paddle.policy_distribution import DiagGaussianDistribution
 from parl.core.paddle.policy_distribution import SoftCategoricalDistribution
 from parl.core.paddle.policy_distribution import SoftMultiCategoricalDistribution
 
@@ -42,6 +43,9 @@ def SoftPDistribution(logits, act_space):
     elif (hasattr(act_space, 'num_discrete_space')):
         return SoftMultiCategoricalDistribution(logits, act_space.low,
                                                 act_space.high)
+    # is instance of gym.spaces.Box
+    elif (hasattr(act_space, 'high')):
+        return DiagGaussianDistribution(logits)
     else:
         raise AssertionError("act_space must be instance of \
             gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
@@ -80,6 +84,11 @@ class MADDPG(parl.Algorithm):
         assert isinstance(actor_lr, float)
         assert isinstance(critic_lr, float)
 
+        self.continuous_actions = False
+        if not len(act_space) == 0 and hasattr(act_space[0], 'high') \
+            and not hasattr(act_space[0], 'num_discrete_space'):
+            self.continuous_actions = True
+
         self.agent_index = agent_index
         self.act_space = act_space
         self.gamma = gamma
@@ -117,6 +126,8 @@ class MADDPG(parl.Algorithm):
         action = SoftPDistribution(
             logits=policy,
             act_space=self.act_space[self.agent_index]).sample()
+        if self.continuous_actions:
+            action = paddle.tanh(action)
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
@@ -150,6 +161,8 @@ class MADDPG(parl.Algorithm):
         sample_this_action = SoftPDistribution(
             logits=this_policy,
             act_space=self.act_space[self.agent_index]).sample()
+        if self.continuous_actions:
+            sample_this_action = paddle.tanh(sample_this_action)
 
         # action_input_n = deepcopy(act_n)
         action_input_n = act_n + []
@@ -157,6 +170,9 @@ class MADDPG(parl.Algorithm):
         eval_q = self.Q(obs_n, action_input_n)
         act_cost = paddle.mean(-1.0 * eval_q)
 
+        # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
+        if self.continuous_actions:
+            this_policy = paddle.concat(this_policy, axis=-1)
         act_reg = paddle.mean(paddle.square(this_policy))
 
         cost = act_cost + act_reg * 1e-3

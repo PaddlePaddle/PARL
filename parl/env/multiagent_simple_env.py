@@ -71,7 +71,7 @@ try:
 
     logger.warning(
         'the `MAenv` from `parl.env.multiagent_simple_env` is deprecated since parl 2.0.4 and will be removed in parl 3.0. \n \
-        We recomend you to use `from parl.env.multiagent_env import MAenv` instead, which provides arguments for continuous_actions.'
+        We recomend you to use `from parl.env.multiagent_env import MAenv` instead, which supports continuous control.'
     )
 except:
     raise ImportError(

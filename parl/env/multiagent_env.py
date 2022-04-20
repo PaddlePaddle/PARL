@@ -25,12 +25,12 @@ try:
     from pettingzoo.mpe import simple_tag_v2
     from pettingzoo.mpe import simple_world_comm_v2
 except:
-    raise ImportError('Can not use MAenv_v2 from parl.env.pettingzoo_mpe. \n \
+    raise ImportError('Can not use MAenv from parl.env.multiagent_env. \n \
         try `pip install PettingZoo==1.17.0` and `pip install gym==0.23.1` \n \
         (PettingZoo 1.17.0 requires gym>=0.21.0)')
 
 
-def MAenv_v2(scenario_name, continuous_actions=False):
+def MAenv(scenario_name, continuous_actions=False):
     env_list = [
         'simple', 'simple_adversary', 'simple_crypto', 'simple_push',
         'simple_speaker_listener', 'simple_spread', 'simple_tag',

@@ -19,7 +19,7 @@ import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
-from parl.env.pettingzoo_mpe import MAenv_v2
+from parl.env.multiagent_env import MAenv
 from parl.utils import logger, summary
 from gym import spaces
 
@@ -79,7 +79,7 @@ def run_episode(env, agents):
 
 
 def train_agent():
-    env = MAenv_v2(args.env, args.continuous_actions)
+    env = MAenv(args.env, args.continuous_actions)
     if args.continuous_actions:
         assert isinstance(env.action_space[0], spaces.Box)
 

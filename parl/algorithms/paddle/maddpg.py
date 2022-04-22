@@ -117,7 +117,8 @@ class MADDPG(parl.Algorithm):
             use_target_model (bool): use target_model or not
     
         Returns:
-            act (paddle tensor): action, shape([B] + shape of act_n[agent_index]) - noted that in the discrete case we take the argmax along the last axis as action
+            act (paddle tensor): action, shape([B] + shape of act_n[agent_index])
+                                noted that in the discrete case we take the argmax along the last axis as action
         """
         if use_target_model:
             policy = self.target_model.policy(obs)

@@ -128,7 +128,11 @@ class CategoricalDistribution(PolicyDistribution):
             sample_action: An int64 tensor with shape [BATCH_SIZE] of multinomial sampling ids.
                            Each value in sample_action is in [0, NUM_ACTIOINS - 1]
         """
-        raise NotImplementedError
+        probs = F.softmax(self.logits)
+        batch_size = probs.shape[0]
+        sample_actions = torch.multinomial(
+            input=probs, num_samples=1).squeeze(1)
+        return sample_actions
 
     def entropy(self):
         """

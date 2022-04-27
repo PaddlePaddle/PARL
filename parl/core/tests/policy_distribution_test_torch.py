@@ -84,8 +84,14 @@ class CategoricalDistributionTest(unittest.TestCase):
         return dist
 
     def test_sample(self):
-        with self.assertRaises(NotImplementedError):
-            self.dist.sample()
+        # check shape
+        sample_action = self.dist.sample()
+        self.assertEqual(list(sample_action.shape), [
+            self.batch_size,
+        ])
+        # range check
+        self.assertGreaterEqual(torch.max(sample_action), 0)
+        self.assertLess(torch.min(sample_action), self.num_actions)
 
     def test_entropy(self):
         # check shape is [BATCHSIZE, ]

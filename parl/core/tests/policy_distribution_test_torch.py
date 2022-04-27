@@ -107,8 +107,6 @@ class CategoricalDistributionTest(unittest.TestCase):
         logp = self.dist.logp(sample_action)
         # check shape is [BATCHSIZE, ]
         self.assertEqual(logp.shape, (self.batch_size, self.num_actions))
-        # range check of logp, the maximum log of probability should be smaller than zero
-        # self.assertLessEqual(torch.max(logp), 0)
 
     def test_kl(self):
         # check shape is [BATCHSIZE, ]

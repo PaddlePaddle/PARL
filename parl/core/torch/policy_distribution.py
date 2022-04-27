@@ -89,7 +89,7 @@ class DiagGaussianDistribution(PolicyDistribution):
 
         norm_actions = torch.sum(
             torch.square((actions - self.mean) / self.std), axis=1)
-        actions_shape = torch.to_tensor(actions.shape, dtype=torch.float32)
+        actions_shape = torch.tensor(actions.shape, dtype=torch.float32)
         pi_item = 0.5 * np.log(2.0 * np.pi) * actions_shape[1]
         actions_log_prob = -0.5 * norm_actions - pi_item - torch.sum(
             self.logstd, axis=1)
@@ -135,7 +135,7 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
-        logits = self.logits - torch.max(self.logits, dim=1)
+        logits = self.logits - torch.max(self.logits, dim=1)[0]
         e_logits = torch.exp(logits)
         z = torch.sum(e_logits, dim=1)
         prob = e_logits / z
@@ -150,18 +150,18 @@ class CategoricalDistribution(PolicyDistribution):
             eps: A small float constant that avoids underflows when computing the log probability
 
         Returns:
-            actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
+            actions_log_prob: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS]
         """
         assert len(actions.shape) == 1
 
-        logits = self.logits - torch.max(self.logits, dim=1)
+        logits = self.logits - torch.max(self.logits, dim=1)[0]
         e_logits = torch.exp(logits)
         z = torch.sum(e_logits, dim=1)
         prob = e_logits / z
 
         actions = torch.unsqueeze(actions, dim=1)
         actions_onehot = F.one_hot(actions, prob.shape[1])
-        actions_onehot = torch.cast(actions_onehot, dtype='float32')
+        actions_onehot = actions_onehot.float()
         actions_prob = torch.sum(prob * actions_onehot, dim=1)
 
         actions_prob = actions_prob + eps
@@ -179,8 +179,8 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert isinstance(other, CategoricalDistribution)
 
-        logits = self.logits - torch.max(self.logits, dim=1)
-        other_logits = other.logits - torch.max(other.logits, dim=1)
+        logits = self.logits - torch.max(self.logits, dim=1)[0]
+        other_logits = other.logits - torch.max(other.logits, dim=1)[0]
 
         e_logits = torch.exp(logits)
         other_e_logits = torch.exp(other_logits)

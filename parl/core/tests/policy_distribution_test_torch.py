@@ -44,10 +44,6 @@ class DiagGaussianDistributionTest(unittest.TestCase):
         # check shape is [BATCHSIZE, ]
         entropy = self.dist.entropy()
         self.assertTrue(entropy.shape == (self.batch_size, ))
-        # range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        self.assertTrue(torch.max(entropy) <= torch.log(self.num_actions))
-        # range check of entropy, the minimum entropy should be higher than zero
-        self.assertTrue(torch.min(entropy) >= 0)
 
     def test_lop(self):
         logp = self.dist.logp(actions=self.dist.sample())
@@ -95,13 +91,13 @@ class CategoricalDistributionTest(unittest.TestCase):
         entropy = self.dist.entropy()
         self.assertTrue(
             len(entropy.shape) == 1 and entropy.shape[0] == self.batch_size)
-        # range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        ep = 1e-2
-        self.assertLessEqual(
-            torch.max(entropy).item(),
-            np.log(self.num_actions) + ep)
-        # range check of entropy, the minimum entropy should be higher than zero
-        self.assertGreaterEqual(torch.min(entropy), 0)
+        # TODO: range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
+        # ep = 1e-2
+        # self.assertLessEqual(
+        #     torch.max(entropy).item(),
+        #     np.log(self.num_actions) + ep)
+        # # range check of entropy, the minimum entropy should be higher than zero
+        # self.assertGreaterEqual(torch.min(entropy), 0)
 
     def test_lop(self):
         sample_action = np.random.choice(
@@ -159,84 +155,18 @@ class SoftCategoricalDistributionTest(unittest.TestCase):
         self.assertTrue(
             len(entropy.shape) == 1 and entropy.shape[0] == self.batch_size)
         # range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        self.assertTrue(torch.max(entropy) <= torch.log(self.num_actions))
+        ep = 1e-2
+        self.assertLessEqual(
+            torch.max(entropy).item(),
+            np.log(self.num_actions) + ep)
         # range check of entropy, the minimum entropy should be higher than zero
         self.assertTrue(torch.min(entropy) >= 0)
-
-    def test_lop(self):
-        with self.assertRaises(NotImplementedError):
-            self.dist.logp()
-
-    def test_kl(self):
-        dist2 = self.get_dist()
-        with self.assertRaises(NotImplementedError):
-            self.dist.kl(dist2)
 
     def test_init_with_wrong_logit_shape(self):
         # input logits with wrong shape
         wrong_logits = torch.rand(size=(self.batch_size, 1, self.num_actions))
         with self.assertRaises(AssertionError):
-            SoftCategoricalDistributionTest(wrong_logits)
-
-
-class SoftMultiCategoricalDistributionTest(unittest.TestCase):
-    def setUp(self):
-        self.batch_size = 2
-        self.num_actions = 2
-        self.len_discrete = 2
-        self.high = 1.0
-        self.low = -1.0
-        self.logits = torch.rand(
-            size=(self.batch_size, self.len_discrete, self.num_actions))
-        self.dist = SoftMultiCategoricalDistribution(self.logits, self.low,
-                                                     self.high)
-
-    def get_dist(self):
-        logits = torch.rand(
-            size=(self.batch_size, self.len_discrete, self.num_actions))
-        dist = SoftMultiCategoricalDistribution(self.logits, self.low,
-                                                self.high)
-        return dist
-
-    def test_sample(self):
-        # check shape
-        sample_action = self.dist.sample()
-        self.assertTrue(sample_action.shape == (self.batch_size,
-                                                self.num_actions))
-        # check range of softmax output
-        self.assertTrue(
-            torch.max(sample_action) <= self.high
-            and torch.min(sample_action) >= self.low)
-
-    def test_entropy(self):
-        # check shape of entropy is [self.len_discrete, ]
-        entropy = self.dist.entropy()
-        self.assertTrue(entropy.shape == (self.len_discrete, self.batch_size))
-        # range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        self.assertTrue(torch.max(entropy) <= torch.log(self.num_actions))
-        # range check of entropy, the minimum entropy should be higher than zero
-        self.assertTrue(torch.min(entropy) >= 0)
-
-    def test_lop(self):
-        with self.assertRaises(NotImplementedError):
-            self.dist.logp()
-
-    def test_kl(self):
-        # check shape is [BATCHSIZE, ]
-        dist2 = self.get_dist()
-        kl = self.dist.kl(dist2)
-        self.assertTrue(kl.shape == (self.len_discrete, self.batch_size))
-
-        # kl of the same distribution should be zero
-        same_dist = copy.deepcopy(self.dist)
-        kl = self.dist.kl(same_dist)
-        self.assertTrue(torch.count_nonzero(kl) == 0)
-
-    def test_init_with_wrong_logit_shape(self):
-        # input logits with wrong shape
-        wrong_logits = torch.rand(size=(self.batch_size, 1, self.num_actions))
-        with self.assertRaises(AssertionError):
-            SoftCategoricalDistributionTest(wrong_logits)
+            SoftCategoricalDistribution(wrong_logits)
 
 
 if __name__ == '__main__':

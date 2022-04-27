@@ -102,13 +102,6 @@ class CategoricalDistributionTest(unittest.TestCase):
         entropy = self.dist.entropy()
         self.assertTrue(
             len(entropy.shape) == 1 and entropy.shape[0] == self.batch_size)
-        # TODO: range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        # ep = 1e-2
-        # self.assertLessEqual(
-        #     paddle.max(entropy).item(),
-        #     np.log(self.num_actions) + ep)
-        # # range check of entropy, the minimum entropy should be higher than zero
-        # self.assertGreaterEqual(paddle.min(entropy), 0)
 
     def test_lop(self):
         sample_action = np.random.choice(
@@ -164,13 +157,6 @@ class SoftCategoricalDistributionTest(unittest.TestCase):
         entropy = self.dist.entropy()
         self.assertTrue(
             len(entropy.shape) == 1 and entropy.shape[0] == self.batch_size)
-        # TODO: range check of entropy, the maximum entropy should be lower than ln(self.num_actions)
-        # ep = 1e-2
-        # self.assertLessEqual(
-        #     paddle.max(entropy).item(),
-        #     np.log(self.num_actions) + ep)
-        # # range check of entropy, the minimum entropy should be higher than zero
-        # self.assertTrue(paddle.min(entropy) >= 0)
 
     def test_init_with_wrong_logit_shape(self):
         # input logits with wrong shape

@@ -142,7 +142,7 @@ class DiagGaussianDistributionTest(unittest.TestCase):
 class CategoricalDistributionTest(unittest.TestCase):
     def setUp(self):
         self.batch_size = 2
-        self.num_actions = 2
+        self.num_actions = 3
         self.logits = torch.rand(size=(self.batch_size, self.num_actions))
         self.dist = CategoricalDistribution(self.logits)
 
@@ -193,14 +193,12 @@ class CategoricalDistributionTest(unittest.TestCase):
         # check shape is [BATCHSIZE, ]
         self.assertEqual(logp.shape, (self.batch_size, self.num_actions))
 
-        # TODO: the logp output of the uniform distribution should be num_actions*log(1/num_actions)
+        # TODO: the logp output of the uniform distribution should be log(1/num_actions)
         # uniform_logits = torch.ones(size=(self.batch_size, self.num_actions))
         # dist = self.get_dist(uniform_logits)
         # act_smp = dist.sample()
-        # print(act_smp,dist.logp(act_smp))
         # logp_out = dist.logp(act_smp)[torch.arange(self.batch_size),act_smp]
-        # exp_out = self.num_actions * np.log(1/self.num_actions )+ 1e-6
-        # print(logp_out,exp_out)
+        # exp_out =  np.log(1/self.num_actions )+ 1e-6
         # self.assertTrue(self.torch_check_eq(logp_out, exp_out))
 
     def test_kl(self):

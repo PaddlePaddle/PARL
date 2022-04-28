@@ -128,9 +128,12 @@ class CategoricalDistribution(PolicyDistribution):
             sample_action: An int64 tensor with shape [BATCH_SIZE] of multinomial sampling ids.
                            Each value in sample_action is in [0, NUM_ACTIOINS - 1]
         """
-        probs = F.softmax(self.logits)
+        logits = self.logits - torch.max(self.logits, dim=1)[0]
+        e_logits = torch.exp(logits)
+        z = torch.sum(e_logits, dim=1)
+        prob = e_logits / z
         sample_actions = torch.multinomial(
-            input=probs, num_samples=1).squeeze(1)
+            input=prob, num_samples=1).squeeze(1)
         return sample_actions
 
     def entropy(self):
@@ -138,6 +141,8 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
+        print(self.logits.shape)
+        print(self.logits.shape)
         logits = self.logits - torch.max(self.logits, dim=1)[0]
         e_logits = torch.exp(logits)
         z = torch.sum(e_logits, dim=1)
@@ -155,22 +160,23 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             actions_log_prob: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS]
         """
-        assert len(actions.shape) == 1
-
-        logits = self.logits - torch.max(self.logits, dim=1)[0]
-        e_logits = torch.exp(logits)
-        z = torch.sum(e_logits, dim=1)
-        prob = e_logits / z
-
-        actions = torch.unsqueeze(actions, dim=1)
-        actions_onehot = F.one_hot(actions, prob.shape[1])
-        actions_onehot = actions_onehot.float()
-        actions_prob = torch.sum(prob * actions_onehot, dim=1)
-
-        actions_prob = actions_prob + eps
-        actions_log_prob = torch.log(actions_prob)
-
-        return actions_log_prob
+        # assert len(actions.shape) == 1
+        #
+        # logits = self.logits - torch.max(self.logits, dim=1)[0]
+        # e_logits = torch.exp(logits)
+        # z = torch.sum(e_logits, dim=1)
+        # prob = e_logits / z
+        #
+        # actions = torch.unsqueeze(actions, dim=1)
+        # actions_onehot = F.one_hot(actions, prob.shape[1])
+        # actions_onehot = actions_onehot.float()
+        # actions_prob = torch.sum(prob * actions_onehot,dim=1)
+        #
+        # actions_prob = actions_prob + eps
+        # actions_log_prob = torch.log(actions_prob)
+        #
+        # return actions_log_prob
+        return NotImplementedError
 
     def kl(self, other):
         """

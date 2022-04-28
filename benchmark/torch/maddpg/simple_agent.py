@@ -24,18 +24,15 @@ class MAAgent(parl.Agent):
                  agent_index=None,
                  obs_dim_n=None,
                  act_dim_n=None,
-                 batch_size=None,
-                 speedup=False):
+                 batch_size=None):
         assert isinstance(agent_index, int)
         assert isinstance(obs_dim_n, list)
         assert isinstance(act_dim_n, list)
         assert isinstance(batch_size, int)
-        assert isinstance(speedup, bool)
         self.agent_index = agent_index
         self.obs_dim_n = obs_dim_n
         self.act_dim_n = act_dim_n
         self.batch_size = batch_size
-        self.speedup = speedup
         self.n = len(act_dim_n)
 
         self.memory_size = int(1e5)

@@ -191,15 +191,15 @@ class CategoricalDistributionTest(unittest.TestCase):
         sample_action = torch.tensor(sample_action)
         logp = self.dist.logp(sample_action)
         # check shape is [BATCHSIZE, ]
-        self.assertEqual(logp.shape, (self.batch_size, self.num_actions))
+        self.assertEqual(logp.shape, (self.batch_size, ))
 
         # TODO: the logp output of the uniform distribution should be log(1/num_actions)
-        # uniform_logits = torch.ones(size=(self.batch_size, self.num_actions))
-        # dist = self.get_dist(uniform_logits)
-        # act_smp = dist.sample()
-        # logp_out = dist.logp(act_smp)[torch.arange(self.batch_size),act_smp]
-        # exp_out =  np.log(1/self.num_actions )+ 1e-6
-        # self.assertTrue(self.torch_check_eq(logp_out, exp_out))
+        uniform_logits = torch.ones(size=(self.batch_size, self.num_actions))
+        dist = self.get_dist(uniform_logits)
+        act_smp = dist.sample()
+        logp_out = dist.logp(act_smp)
+        exp_out = np.log(1 / self.num_actions) + 1e-6
+        self.assertTrue(self.torch_check_eq(logp_out, exp_out))
 
     def test_kl(self):
         # check shape is [BATCHSIZE, ]
@@ -223,7 +223,7 @@ class CategoricalDistributionTest(unittest.TestCase):
 class SoftCategoricalDistributionTest(unittest.TestCase):
     def setUp(self):
         self.batch_size = 2
-        self.num_actions = 2
+        self.num_actions = 3
         self.logits = torch.rand(size=(self.batch_size, self.num_actions))
         self.dist = SoftCategoricalDistribution(self.logits)
 

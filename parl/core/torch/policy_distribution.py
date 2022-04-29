@@ -128,9 +128,9 @@ class CategoricalDistribution(PolicyDistribution):
             sample_action: An int64 tensor with shape [BATCH_SIZE] of multinomial sampling ids.
                            Each value in sample_action is in [0, NUM_ACTIOINS - 1]
         """
-        logits = self.logits - torch.max(self.logits, dim=1)[0]
+        logits = self.logits - torch.max(self.logits, dim=1, keepdim=True)[0]
         e_logits = torch.exp(logits)
-        z = torch.sum(e_logits, dim=1)
+        z = torch.sum(e_logits, dim=1, keepdim=True)
         prob = e_logits / z
         sample_actions = torch.multinomial(
             input=prob, num_samples=1).squeeze(1)
@@ -143,9 +143,9 @@ class CategoricalDistribution(PolicyDistribution):
         """
         print(self.logits.shape)
         print(self.logits.shape)
-        logits = self.logits - torch.max(self.logits, dim=1)[0]
+        logits = self.logits - torch.max(self.logits, dim=1, keepdim=True)[0]
         e_logits = torch.exp(logits)
-        z = torch.sum(e_logits, dim=1)
+        z = torch.sum(e_logits, dim=1, keepdim=True)
         prob = e_logits / z
         entropy = -1.0 * torch.sum(prob * (logits - torch.log(z)), dim=1)
 
@@ -158,25 +158,24 @@ class CategoricalDistribution(PolicyDistribution):
             eps: A small float constant that avoids underflows when computing the log probability
 
         Returns:
-            actions_log_prob: A float32 tensor with shape [BATCH_SIZE, NUM_ACTIONS]
+            actions_log_prob: A float32 tensor with shape [BATCH_SIZE]
         """
-        # assert len(actions.shape) == 1
-        #
-        # logits = self.logits - torch.max(self.logits, dim=1)[0]
-        # e_logits = torch.exp(logits)
-        # z = torch.sum(e_logits, dim=1)
-        # prob = e_logits / z
-        #
-        # actions = torch.unsqueeze(actions, dim=1)
-        # actions_onehot = F.one_hot(actions, prob.shape[1])
-        # actions_onehot = actions_onehot.float()
-        # actions_prob = torch.sum(prob * actions_onehot,dim=1)
-        #
-        # actions_prob = actions_prob + eps
-        # actions_log_prob = torch.log(actions_prob)
-        #
-        # return actions_log_prob
-        return NotImplementedError
+        assert len(actions.shape) == 1
+
+        logits = self.logits - torch.max(self.logits, dim=1, keepdim=True)[0]
+        e_logits = torch.exp(logits)
+        z = torch.sum(e_logits, dim=1, keepdim=True)
+        prob = e_logits / z
+
+        actions_onehot = F.one_hot(actions, prob.shape[1])
+        actions_onehot = actions_onehot.float()
+        actions_prob = prob * actions_onehot
+        actions_prob = torch.max(actions_prob, dim=1)[0]
+
+        actions_prob = actions_prob + eps
+        actions_log_prob = torch.log(actions_prob)
+
+        return actions_log_prob
 
     def kl(self, other):
         """
@@ -188,14 +187,15 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert isinstance(other, CategoricalDistribution)
 
-        logits = self.logits - torch.max(self.logits, dim=1)[0]
-        other_logits = other.logits - torch.max(other.logits, dim=1)[0]
+        logits = self.logits - torch.max(self.logits, dim=1, keepdim=True)[0]
+        other_logits = other.logits - torch.max(
+            other.logits, dim=1, keepdim=True)[0]
 
         e_logits = torch.exp(logits)
         other_e_logits = torch.exp(other_logits)
 
-        z = torch.sum(e_logits, dim=1)
-        other_z = torch.sum(other_e_logits, dim=1)
+        z = torch.sum(e_logits, dim=1, keepdim=True)
+        other_z = torch.sum(other_e_logits, dim=1, keepdim=True)
 
         prob = e_logits / z
         kl = torch.sum(

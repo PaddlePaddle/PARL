@@ -91,7 +91,7 @@ class DiagGaussianDistribution(PolicyDistribution):
         norm_actions = paddle.sum(
             paddle.square((actions - self.mean) / self.std), axis=1)
         pi_item = 0.5 * np.log(2.0 * np.pi) * actions.shape[1]
-        actions_log_prob = -0.5 * norm_actions - 0.5 * pi_item - paddle.sum(
+        actions_log_prob = -0.5 * norm_actions - pi_item - paddle.sum(
             self.logstd, axis=1)
 
         return actions_log_prob
@@ -138,9 +138,9 @@ class CategoricalDistribution(PolicyDistribution):
         Returns:
             entropy: A float32 tensor with shape [BATCH_SIZE] of entropy of self policy distribution.
         """
-        logits = self.logits - paddle.max(self.logits, axis=1)
+        logits = self.logits - paddle.max(self.logits, axis=1, keepdim=True)
         e_logits = paddle.exp(logits)
-        z = paddle.sum(e_logits, axis=1)
+        z = paddle.sum(e_logits, axis=1, keepdim=True)
         prob = e_logits / z
         entropy = -1.0 * paddle.sum(prob * (logits - paddle.log(z)), axis=1)
 
@@ -157,15 +157,15 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert len(actions.shape) == 1
 
-        logits = self.logits - paddle.max(self.logits, axis=1)
+        logits = self.logits - paddle.max(self.logits, axis=1, keepdim=True)
         e_logits = paddle.exp(logits)
-        z = paddle.sum(e_logits, axis=1)
+        z = paddle.sum(e_logits, axis=1, keepdim=True)
         prob = e_logits / z
 
-        actions = paddle.unsqueeze(actions, axis=1)
         actions_onehot = F.one_hot(actions, prob.shape[1])
         actions_onehot = paddle.cast(actions_onehot, dtype='float32')
-        actions_prob = paddle.sum(prob * actions_onehot, axis=1)
+        actions_prob = prob * actions_onehot
+        actions_prob = paddle.max(actions_prob, axis=1)
 
         actions_prob = actions_prob + eps
         actions_log_prob = paddle.log(actions_prob)
@@ -182,14 +182,15 @@ class CategoricalDistribution(PolicyDistribution):
         """
         assert isinstance(other, CategoricalDistribution)
 
-        logits = self.logits - paddle.max(self.logits, axis=1)
-        other_logits = other.logits - paddle.max(other.logits, axis=1)
+        logits = self.logits - paddle.max(self.logits, axis=1, keepdim=True)
+        other_logits = other.logits - paddle.max(
+            other.logits, axis=1, keepdim=True)
 
         e_logits = paddle.exp(logits)
         other_e_logits = paddle.exp(other_logits)
 
-        z = paddle.sum(e_logits, axis=1)
-        other_z = paddle.sum(other_e_logits, axis=1)
+        z = paddle.sum(e_logits, axis=1, keepdim=True)
+        other_z = paddle.sum(other_e_logits, axis=1, keepdim=True)
 
         prob = e_logits / z
         kl = paddle.sum(

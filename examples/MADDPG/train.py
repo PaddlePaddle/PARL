@@ -119,8 +119,7 @@ def train_agent():
             agent_index=i,
             obs_dim_n=env.obs_shape_n,
             act_dim_n=env.act_shape_n,
-            batch_size=BATCH_SIZE,
-            speedup=(not args.restore))
+            batch_size=BATCH_SIZE)
         agents.append(agent)
     total_steps = 0
     total_episodes = 0

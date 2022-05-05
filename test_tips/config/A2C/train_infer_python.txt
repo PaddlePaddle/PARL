@@ -1,9 +1,9 @@
 ===========================train_params===========================
-model_name:DQN
+model_name:A2C
 python:python3.8
 gpu_list:0
 null:null
---max_episode:lite_train_lite_infer=3|whole_train_whole_infer=800
+--max_sample_steps:lite_train_lite_infer=10|whole_train_whole_infer=10000000
 null:null
 null:null
 null:null
@@ -11,7 +11,7 @@ train_model_name:null
 null:null
 ##
 trainer:norm_train
-norm_train:train.py
+norm_train:examples/A2C/train.py
 ##
 ===========================eval_params===========================
 eval:null

@@ -1,9 +1,9 @@
 ===========================train_params===========================
-model_name:DQN
+model_name:MADDPG
 python:python3.8
 gpu_list:0
 null:null
---max_episode:lite_train_lite_infer=3|whole_train_whole_infer=800
+--max_episode:lite_train_lite_infer=3|whole_train_whole_infer=25000
 null:null
 null:null
 null:null
@@ -11,7 +11,7 @@ train_model_name:null
 null:null
 ##
 trainer:norm_train
-norm_train:train.py
+norm_train:examples/MADDPG/train.py
 ##
 ===========================eval_params===========================
 eval:null

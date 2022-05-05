@@ -185,6 +185,16 @@ if __name__ == '__main__':
     learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0
 
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--max_sample_steps',
+        type=int,
+        default=1e7,
+        help='stop condition: number of sample step')
+    args = parser.parse_args()
+    config['max_sample_steps'] = args.max_sample_steps
+
     while not learner.should_stop():
         start = time.time()
         while time.time() - start < config['log_metrics_interval_s']:

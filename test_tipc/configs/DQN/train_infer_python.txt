@@ -1,7 +1,7 @@
 ===========================train_params===========================
 model_name:DQN
 python:python3.7
-gpu_list:0
+gpu_list:-1
 null:null
 --max_episode:lite_train_lite_infer=3|whole_train_whole_infer=800
 null:null

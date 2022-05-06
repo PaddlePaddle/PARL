@@ -45,7 +45,7 @@ fi
 
 if [[ $mojuco_envs =~ $model_name ]]; then
   # Get the prereqs
-  if [ ! -d "~/.mujoco/" ]; then
+  if [ ! -d ~/.mujoco/ ]; then
     apt-get -qq update
     apt-get -qq install -y libosmesa6-dev libgl1-mesa-glx libglfw3 libgl1-mesa-dev libglew-dev patchelf
     # Get Mujoco
@@ -56,14 +56,5 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     wget https://roboti.us/file/mjkey.txt
     cp mjkey.txt ~/.mujoco
     cp mjkey.txt ~/.mujoco/mjpro131/bin
-  #  echo 'export LD_LIBRARY_PATH=~/.mujoco/mjpro131/bin${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}' >> ~/.bashrc
-  #  echo 'export MUJOCO_KEY_PATH=~/.mujoco${MUJOCO_KEY_PATH}' >> ~/.bashrc
-  #  echo 'export LD_PRELOAD=$LD_PRELOAD:/usr/lib/x86_64-linux-gnu/libGLEW.so' >> ~/.bashrc
-  #  echo "/root/.mujoco/mjpro131/bin" > /etc/ld.so.conf.d/mujoco_ld_lib_path.conf
-  #  ldconfig
-#    ${python_name} -m pip install 'mujoco-py==0.5.7'
-  #  os.environ['LD_LIBRARY_PATH']=os.environ[''] + ':/root/.mujoco/mjpro131/bin'
-  #  os.environ['LD_PRELOAD']=os.environ['LD_PRELOAD'] + ':/usr/lib/x86_64-linux-gnu/libGLEW.so'
-  #  os.environ['LD_LIBRARY_PATH']=os.environ['LD_LIBRARY_PATH']+':/usr/lib/nvidia'
   fi
 fi

@@ -276,6 +276,7 @@ else
             IFS="|"
             env=" "
         fi
+        echo  ${autocast_list[*]}
         for autocast in ${autocast_list[*]}; do 
             if [ ${autocast} = "amp" ]; then
                 set_amp_config="Global.use_amp=True Global.scale_loss=1024.0 Global.use_dynamic_loss_scaling=True"

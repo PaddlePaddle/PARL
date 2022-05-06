@@ -29,7 +29,9 @@ python_name=${array[0]}
 echo $model_name
 
 #${python_name} -m pip install parl
+sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
 ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
+sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
 
 if [[ ${model_name} == "A2C" ]];then
 #  ${python_name} -m pip install paddlepaddle>=2.0.0

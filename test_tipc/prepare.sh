@@ -58,7 +58,7 @@ if [[ $mojuco_envs =~ $model_name ]]; then
   #  echo 'export LD_PRELOAD=$LD_PRELOAD:/usr/lib/x86_64-linux-gnu/libGLEW.so' >> ~/.bashrc
   #  echo "/root/.mujoco/mjpro131/bin" > /etc/ld.so.conf.d/mujoco_ld_lib_path.conf
   #  ldconfig
-    ${python_name} -m pip install 'mujoco-py==0.5.7'
+#    ${python_name} -m pip install 'mujoco-py==0.5.7'
   #  os.environ['LD_LIBRARY_PATH']=os.environ[''] + ':/root/.mujoco/mjpro131/bin'
   #  os.environ['LD_PRELOAD']=os.environ['LD_PRELOAD'] + ':/usr/lib/x86_64-linux-gnu/libGLEW.so'
   #  os.environ['LD_LIBRARY_PATH']=os.environ['LD_LIBRARY_PATH']+':/usr/lib/nvidia'

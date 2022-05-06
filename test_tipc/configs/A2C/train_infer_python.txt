@@ -1,7 +1,7 @@
 ===========================train_params===========================
 model_name:A2C
-python:python3.8
-null:null
+python:python3.7
+gpu_list:0
 null:null
 --max_sample_steps:lite_train_lite_infer=10|whole_train_whole_infer=10000000
 null:null

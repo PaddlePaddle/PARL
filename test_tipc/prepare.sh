@@ -45,16 +45,33 @@ fi
 
 if [[ $mojuco_envs =~ $model_name ]]; then
   # Get the prereqs
-  if [ ! -d ~/.mujoco/ ]; then
+  if [ ! -d ~/.mujoco/mjpro131/ ]; then
     apt-get -qq update
     apt-get -qq install -y libosmesa6-dev libgl1-mesa-glx libglfw3 libgl1-mesa-dev libglew-dev patchelf
     # Get Mujoco
+    if [ ! -d ~/.mujoco/ ];then
     mkdir ~/.mujoco
+    fi
     wget -q https://roboti.us/download/mjpro131_linux.zip -O mjpro131_linux.zip
     unzip mjpro131_linux.zip -d "$HOME/.mujoco"
     rm mjpro131_linux.zip
     wget https://roboti.us/file/mjkey.txt
     cp mjkey.txt ~/.mujoco
     cp mjkey.txt ~/.mujoco/mjpro131/bin
+  fi
+
+  if [ ! -d ~/.mujoco/mujoco210/ ]; then
+    apt-get -qq update
+    apt-get -qq install -y libosmesa6-dev libgl1-mesa-glx libglfw3 libgl1-mesa-dev libglew-dev patchelf
+    # Get Mujoco
+    if [ ! -d ~/.mujoco/ ];then
+    mkdir ~/.mujoco
+    fi
+    wget -q https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz -O ~/.mujoco/mujoco.tar.gz
+    tar -zxf ~/.mujoco/mujoco.tar.gz -d "$HOME/.mujoco"
+    rm ~/.mujoco/mujoco.tar.gz
+    wget https://roboti.us/file/mjkey.txt
+    cp mjkey.txt ~/.mujoco
+    cp mjkey.txt ~/.mujoco/mujoco210/bin
   fi
 fi

@@ -26,6 +26,8 @@ python_name_list=$(func_parser_value "${lines[2]}")
 array=(${python_name_list})
 python_name=${array[0]}
 
+echo $model_name
+
 pip3 install -r ./examples/${model_name}requirements.txt
 
 if [[ ${model_name} == "A2C" ]];then

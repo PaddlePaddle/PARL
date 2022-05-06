@@ -254,6 +254,7 @@ else
     USE_GPU_KEY=(${train_use_gpu_value})
     echo ${gpu_list[*]}
     for gpu in ${gpu_list[*]}; do
+        echo ${gpu}
         train_use_gpu=${USE_GPU_KEY[Count]}
         Count=$(($Count + 1))
         ips=""

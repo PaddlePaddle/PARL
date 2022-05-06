@@ -54,7 +54,7 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     mkdir ~/.mujoco
     fi
     wget -q https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz -O ~/.mujoco/mujoco.tar.gz
-    tar -zxvf ~/.mujoco/mujoco.tar.gz -d "$HOME/.mujoco"
+    tar -vxzf ~/.mujoco/mujoco.tar.gz -d "$HOME/.mujoco"
     rm ~/.mujoco/mujoco.tar.gz
     wget https://roboti.us/file/mjkey.txt
     cp mjkey.txt ~/.mujoco

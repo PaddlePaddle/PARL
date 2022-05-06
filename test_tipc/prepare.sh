@@ -28,7 +28,7 @@ python_name=${array[0]}
 
 echo $model_name
 
-${python_name} -m pip install parl
+#${python_name} -m pip install parl
 ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
 
 if [[ ${model_name} == "A2C" ]];then
@@ -36,6 +36,7 @@ if [[ ${model_name} == "A2C" ]];then
 #  ${python_name} -m pip install atari-py==0.1.7
 #  ${python_name} -m pip install parl>=1.4.3
 #  ${python_name} -m pip gym==0.12.1
+  xparl stop
   xparl start --port 8010 --cpu_num 2
 #elif [ ${model_name} = "DQN" ];then
 #  ${python_name} -m pip install paddlepaddle>=2.0.0

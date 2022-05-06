@@ -2,4 +2,4 @@ paddlepaddle>=2.0.0
 gym==0.9.1
 parl>=2.0.0
 mujoco-py==0.5.7
-git+https://hub.fastgit.xyz/rail-berkeley/d4rl@master#egg=d4rl
+git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl

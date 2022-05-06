@@ -66,6 +66,23 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     fi
     cp mjkey.txt ~/.mujoco/mujoco210/bin
   fi
+
+  if [ ! -d ~/.mujoco/mujoco200/ ]; then
+    apt-get -qq update
+    apt-get -qq install -y libosmesa6-dev libgl1-mesa-glx libglfw3 libgl1-mesa-dev libglew-dev patchelf
+    # Get Mujoco
+    if [ ! -d ~/.mujoco/ ];then
+      mkdir ~/.mujoco
+    fi
+    cd ~/.mujoco/
+    wget -q https://roboti.us/download/mujoco200_linux.zip
+    unzip mujoco200_linux.zip
+    rm mujoco200_linux.zip
+    if [ ! -f "mjkey.txt" ];then
+      wget https://roboti.us/file/mjkey.txt
+    fi
+    cp mjkey.txt ~/.mujoco/mujoco200/bin
+  fi
 fi
 
 

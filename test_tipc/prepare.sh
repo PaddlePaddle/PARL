@@ -95,6 +95,9 @@ if [[ ${model_name} == "CQL" ]];then
   ${python_name} -m pip install --upgrade pip
   ${python_name} -m pip install gym==0.20.0
   ${python_name} -m pip install mujoco-py==2.0.2.13
+  apt-get install gnutls-bin
+  git config --global http.sslVerify false
+  git config --global http.postBuffer 1048576000
   ${python_name} -m pip install git+https://gitee.com/top1014/dm_control#egg=dm_control
   ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps
   ${python_name} -m pip install git+https://gitee.com/louis-yx/mjrl@master#egg=mjrl

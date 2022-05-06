@@ -282,7 +282,8 @@ else
                 set_amp_config="Global.use_amp=True Global.scale_loss=1024.0 Global.use_dynamic_loss_scaling=True"
             else
                 set_amp_config=" "
-            fi          
+            fi
+            echo ${trainer_list[*]}
             for trainer in ${trainer_list[*]}; do 
                 flag_quant=False
                 if [ ${trainer} = ${pact_key} ]; then

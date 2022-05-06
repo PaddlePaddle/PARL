@@ -1,3 +1,4 @@
 gym==0.12.1
 atari-py==0.1.7
 opencv-python
+parl

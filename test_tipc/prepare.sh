@@ -69,14 +69,24 @@ if [[ $mojuco_envs =~ $model_name ]]; then
 fi
 
 
-#${python_name} -m pip install parl
-${python_name} -m pip install --upgrade pip
-sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
-sed -i '/parl/d' ./examples/${model_name}/requirements.txt
-${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
-sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
-sed '$ a parl' ./examples/${model_name}/requirements.txt
-${python_name} -m pip install -e .
+# python package
+if [[ ${model_name} == "CQL" ]];then
+  ${python_name} -m pip install --upgrade pip
+  ${python_name} -m pip install gym==0.20.0
+  ${python_name} -m pip install mujoco-py==2.0.2.13
+  ${python_name} -m pip install git+https://gitee.com/top1014/dm_control#egg=dm_control
+  ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps dm_control
+  ${python_name} -m pip install -e .
+else
+  ${python_name} -m pip install --upgrade pip
+  sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
+  sed -i '/parl/d' ./examples/${model_name}/requirements.txt
+  ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
+  sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
+  sed '$ a parl' ./examples/${model_name}/requirements.txt
+  ${python_name} -m pip install -e .
+fi
+
 
 if [[ ${model_name} == "A2C" ]];then
   xparl stop

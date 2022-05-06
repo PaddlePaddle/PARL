@@ -182,9 +182,6 @@ class Learner(object):
 if __name__ == '__main__':
     from a2c_config import config
 
-    learner = Learner(config)
-    assert config['log_metrics_interval_s'] > 0
-
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -194,6 +191,9 @@ if __name__ == '__main__':
         help='stop condition: number of sample step')
     args = parser.parse_args()
     config['max_sample_steps'] = args.max_sample_steps
+
+    learner = Learner(config)
+    assert config['log_metrics_interval_s'] > 0
 
     while not learner.should_stop():
         start = time.time()

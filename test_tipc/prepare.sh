@@ -45,7 +45,7 @@ fi
 
 if [[ $mojuco_envs =~ $model_name ]]; then
   # Get the prereqs
-  if [ ! -d "~/.mujoco" ]; then
+  if [ ! -d "~/.mujoco/" ]; then
     apt-get -qq update
     apt-get -qq install -y libosmesa6-dev libgl1-mesa-glx libglfw3 libgl1-mesa-dev libglew-dev patchelf
     # Get Mujoco

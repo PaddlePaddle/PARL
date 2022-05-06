@@ -65,6 +65,13 @@ LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_python.log"
 
+# mujoco env var
+mojuco_envs="DDPG TD3 SAC PPO CQL"
+if [[ $mojuco_envs =~ $model_name ]]; then
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+fi
 
 function func_inference(){
     IFS='|'

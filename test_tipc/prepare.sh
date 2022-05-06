@@ -46,7 +46,6 @@ if [[ $mojuco_envs =~ $model_name ]]; then
       wget https://roboti.us/file/mjkey.txt
     fi
     cp mjkey.txt ~/.mujoco/mjpro131/bin
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
   fi
 
   if [ ! -d ~/.mujoco/mujoco210/ ]; then
@@ -62,7 +61,6 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     cd ~/.mujoco/
     tar zxvf ~/.mujoco/mujoco.tar.gz
     rm ~/.mujoco/mujoco.tar.gz
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
     if [ ! -f "mjkey.txt" ];then
       wget https://roboti.us/file/mjkey.txt
     fi
@@ -81,11 +79,11 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     unzip mujoco200_linux.zip
     mv mujoco200_linux mujoco200
     rm mujoco200_linux.zip
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
     if [ ! -f "mjkey.txt" ];then
       wget https://roboti.us/file/mjkey.txt
     fi
     cp mjkey.txt ~/.mujoco/mujoco200/bin
+
   fi
 fi
 

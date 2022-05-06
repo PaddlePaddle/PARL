@@ -20,7 +20,7 @@ import copy
 from parl.core.paddle.policy_distribution import DiagGaussianDistribution, CategoricalDistribution, SoftCategoricalDistribution
 
 
-def set_random_seed(seed: int, using_cuda: bool = False) -> None:
+def set_random_seed(seed: int) -> None:
     """
     Seed the different random generators.
     :param seed:
@@ -32,11 +32,6 @@ def set_random_seed(seed: int, using_cuda: bool = False) -> None:
     np.random.seed(seed)
     # seed the RNG for all devices (both CPU and CUDA)
     paddle.seed(seed)
-
-    if using_cuda:
-        # Deterministic operations for CuDNN, it may impact performances
-        paddle.backends.cudnn.deterministic = True
-        paddle.backends.cudnn.benchmark = False
 
 
 class DiagGaussianDistributionTest(unittest.TestCase):

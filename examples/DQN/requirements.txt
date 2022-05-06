@@ -1,3 +1,1 @@
-paddlepaddle>=2.0.0
 gym
-parl>=2.0.0

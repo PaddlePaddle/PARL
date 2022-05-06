@@ -26,22 +26,8 @@ python_name_list=$(func_parser_value "${lines[2]}")
 array=(${python_name_list})
 python_name=${array[0]}
 
-echo $model_name
-
-#${python_name} -m pip install parl
-${python_name} -m pip install --upgrade pip
-sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
-sed -i '/parl/d' ./examples/${model_name}/requirements.txt
-${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
-sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
-sed '$ a parl' ./examples/${model_name}/requirements.txt
-${python_name} -m pip install -e .
-
 mojuco_envs="DDPG TD3 SAC PPO CQL"
-if [[ ${model_name} == "A2C" ]];then
-  xparl stop
-  xparl start --port 8010 --cpu_num 5
-fi
+echo $model_name
 
 if [[ $mojuco_envs =~ $model_name ]]; then
   # Get the prereqs
@@ -74,4 +60,19 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     cp mjkey.txt ~/.mujoco
     cp mjkey.txt ~/.mujoco/mujoco210/bin
   fi
+fi
+
+
+#${python_name} -m pip install parl
+${python_name} -m pip install --upgrade pip
+sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
+sed -i '/parl/d' ./examples/${model_name}/requirements.txt
+${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
+sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
+sed '$ a parl' ./examples/${model_name}/requirements.txt
+${python_name} -m pip install -e .
+
+if [[ ${model_name} == "A2C" ]];then
+  xparl stop
+  xparl start --port 8010 --cpu_num 5
 fi

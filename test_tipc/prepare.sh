@@ -40,7 +40,7 @@ if [[ ${model_name} == "A2C" ]];then
 #  ${python_name} -m pip install parl>=1.4.3
 #  ${python_name} -m pip gym==0.12.1
   xparl stop
-  xparl start --port 8010 --cpu_num 2
+  xparl start --port 8010 --cpu_num 5
 #elif [ ${model_name} = "DQN" ];then
 #  ${python_name} -m pip install paddlepaddle>=2.0.0
 #  ${python_name} -m pip install gym

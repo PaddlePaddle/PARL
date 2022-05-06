@@ -77,6 +77,7 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     cd ~/.mujoco/
     wget -q https://roboti.us/download/mujoco200_linux.zip
     unzip mujoco200_linux.zip
+    mv mujoco200_linux mujoco200
     rm mujoco200_linux.zip
     if [ ! -f "mjkey.txt" ];then
       wget https://roboti.us/file/mjkey.txt

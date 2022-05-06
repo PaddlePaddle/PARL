@@ -15,6 +15,8 @@ dataline=$(cat ${FILENAME})
 IFS=$'\n'
 lines=(${dataline})
 
+
+
 # The training params
 model_name=$(func_parser_value "${lines[1]}")
 
@@ -24,9 +26,9 @@ python_name_list=$(func_parser_value "${lines[2]}")
 array=(${python_name_list})
 python_name=${array[0]}
 
-${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
+pip3 install -r ./examples/${model_name}/requirements.txt
 
-if [ ${model_name} = "A2C" ];then
+if [[ ${model_name} == "A2C" ]];then
 #  ${python_name} -m pip install paddlepaddle>=2.0.0
 #  ${python_name} -m pip install atari-py==0.1.7
 #  ${python_name} -m pip install parl>=1.4.3

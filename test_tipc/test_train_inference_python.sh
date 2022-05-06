@@ -230,3 +230,7 @@ else
         done  # done with:    for trainer in ${trainer_list[*]}; do
     done      # done with:    for gpu in ${gpu_list[*]}; do
 fi
+
+if [[ ${model_name} == "MADDPG" ]];then
+  xparl stop
+fi

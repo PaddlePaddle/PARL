@@ -31,8 +31,11 @@ echo $model_name
 #${python_name} -m pip install parl
 ${python_name} -m pip install --upgrade pip
 sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
+sed -i '/parl/d' ./examples/${model_name}/requirements.txt
 ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
 sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
+sed '$ a parl' ./examples/${model_name}/requirements.txt
+${python_name} -m pip install -e .
 
 mojuco_envs="DDPG TD3 SAC PPO CQL"
 if [[ ${model_name} == "A2C" ]];then

@@ -11,7 +11,7 @@ train_model_name:null
 null:null
 ##
 trainer:norm_train
-norm_train:examples/A2C/train.py
+norm_train:examples/DDPG/train.py
 ##
 ===========================eval_params===========================
 eval:null

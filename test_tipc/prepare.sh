@@ -28,6 +28,7 @@ python_name=${array[0]}
 
 echo $model_name
 
+${python_name} -m pip install parl
 ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
 
 if [[ ${model_name} == "A2C" ]];then

@@ -5,8 +5,6 @@ FILENAME=$1
 # MODE be one of ['lite_train_lite_infer' 'lite_train_whole_infer' 'whole_train_whole_infer', 'whole_infer', 'klquant_whole_infer']
 MODE=$2
 
-echo $FILENAME
-echo $MODE
 
 dataline=$(awk 'NR==1, NR==51{print}'  $FILENAME)
 
@@ -254,6 +252,7 @@ else
     IFS="|"
     export Count=0
     USE_GPU_KEY=(${train_use_gpu_value})
+    echo ${gpu_list[*]}
     for gpu in ${gpu_list[*]}; do
         train_use_gpu=${USE_GPU_KEY[Count]}
         Count=$(($Count + 1))

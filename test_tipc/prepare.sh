@@ -96,7 +96,9 @@ if [[ ${model_name} == "CQL" ]];then
   ${python_name} -m pip install gym==0.20.0
   ${python_name} -m pip install mujoco-py==2.0.2.13
   ${python_name} -m pip install git+https://gitee.com/top1014/dm_control#egg=dm_control
-  ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps dm_control
+  ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps
+  ${python_name} -m pip install git+git://github.com/aravindr93/mjrl@master#egg=mjrl
+  ${python_name} -m pip install pybullet
   ${python_name} -m pip install -e .
 else
   ${python_name} -m pip install --upgrade pip

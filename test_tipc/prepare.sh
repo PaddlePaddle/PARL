@@ -111,7 +111,7 @@ else
 fi
 
 # parl install
-${python_name} -m pip install -e .
+#${python_name} -m pip install -e .
 
 if [[ ${model_name} == "A2C" ]];then
   xparl stop

@@ -32,6 +32,7 @@ echo $model_name
 
 
 if [[ $mojuco_envs =~ $model_name ]]; then
+
   # Get the prereqs
   if [ ! -d ~/.mujoco/mjpro131/ ]; then
     apt-get -qq update
@@ -101,17 +102,12 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
     " >> /etc/profile
     source /etc/profile
-  f
+  fi
 #  fi
 
   fi
 
 
-
-#  fi
-
-
-fi
 
 
 # update pip

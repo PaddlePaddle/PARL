@@ -100,6 +100,7 @@ if [[ $mojuco_envs =~ $model_name ]]; then
       export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
       export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
       " >> /etc/profile
+      source /etc/profile
   fi
 
 

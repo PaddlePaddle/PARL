@@ -134,7 +134,7 @@ else
 fi
 
 # parl install
-#${python_name} -m pip install -e .
+${python_name} -m pip install -e .
 
 # prepare xparl for distributed training
 if [[ ${model_name} == "A2C" ]];then

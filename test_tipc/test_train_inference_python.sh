@@ -147,7 +147,7 @@ if [ ${MODE} = "whole_infer" ]; then
 else
     IFS="|"
     export Count=0
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+#    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
     USE_GPU_KEY=(${train_use_gpu_value})
     for gpu in ${gpu_list[*]}; do
         train_use_gpu=${USE_GPU_KEY[Count]}

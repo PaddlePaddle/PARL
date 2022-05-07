@@ -26,8 +26,10 @@ python_name_list=$(func_parser_value "${lines[2]}")
 array=(${python_name_list})
 python_name=${array[0]}
 
-mojuco_envs="DDPG TD3 SAC PPO CQL"
+mojuco_envs="DDPG TD3 SAC PPO CQL ES OAC"
 echo $model_name
+
+
 
 if [[ $mojuco_envs =~ $model_name ]]; then
   # Get the prereqs
@@ -85,6 +87,26 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     cp mjkey.txt ~/.mujoco/mujoco200/bin
 
   fi
+
+  # mujoco env var
+#  if [[ $mojuco_envs =~ $model_name ]]; then
+  #  echo "insert"
+  FIND_FILE="/etc/profile"
+  FIND_STR="LD_LIBRARY_PATH"
+  # 判断匹配函数，匹配函数不为0，则包含给定字符
+  if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
+      cat "
+      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+      " >> /etc/profile
+  fi
+
+
+
+#  fi
+
+
 fi
 
 

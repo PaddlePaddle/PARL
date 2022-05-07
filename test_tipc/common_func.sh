@@ -63,4 +63,3 @@ function status_check(){
         echo -e "\033[33m Run failed with command - ${run_command}!  \033[0m" | tee -a ${run_log}
     fi
 }
-

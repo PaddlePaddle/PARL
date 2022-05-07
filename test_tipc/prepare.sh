@@ -113,7 +113,10 @@ fi
 # parl install
 #${python_name} -m pip install -e .
 
+# prepare xparl for distributed training
 if [[ ${model_name} == "A2C" ]];then
   xparl stop
   xparl start --port 8010 --cpu_num 5
+elif [[ ${model_name} == "ES"]];then
+  xparl start --port 8037 --cpu_num 2
 fi

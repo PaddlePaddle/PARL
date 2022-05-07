@@ -1,5 +1,5 @@
 paddlepaddle>=2.0.0
 gym==0.20.0
 parl>=2.0.0
-mujoco-py
-git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl
+mujoco-py==2.1.2.14
+git+https://gitee.com/louis-yx/d4rl@master#egg=d4rl

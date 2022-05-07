@@ -65,7 +65,7 @@ LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_python.log"
 
-echo $LD_LIBRARY_PATH
+
 if [[ ${model_name} == "ES" ]];then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
 elif [[ ${model_name} == "CQL" ]];then
@@ -81,6 +81,8 @@ elif [[ ${model_name} == "OAC" ]];then
 elif [[ ${model_name} == "PPO" ]];then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 fi
+echo "add path of mujoco"
+echo $LD_LIBRARY_PATH
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 

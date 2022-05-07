@@ -89,24 +89,26 @@ if [[ $mojuco_envs =~ $model_name ]]; then
 
   fi
 
-
-if [[ ${model_name} == "ES" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-elif [[ ${model_name} == "CQL" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-elif [[ ${model_name} == "TD3" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-elif [[ ${model_name} == "DDPG" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-elif [[ ${model_name} == "SAC" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-elif [[ ${model_name} == "OAC" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-elif [[ ${model_name} == "PPO" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-fi
-echo "add path of mujoco"
-echo $LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+#if [[ ${model_name} == "ES" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+#elif [[ ${model_name} == "CQL" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+#elif [[ ${model_name} == "TD3" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+#elif [[ ${model_name} == "DDPG" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+#elif [[ ${model_name} == "SAC" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+#elif [[ ${model_name} == "OAC" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+#elif [[ ${model_name} == "PPO" ]];then
+#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+#fi
+#echo "add path of mujoco"
+#echo $LD_LIBRARY_PATH
   # mujoco env var
 
 #  FIND_FILE="/etc/profile"

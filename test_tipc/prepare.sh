@@ -117,6 +117,6 @@ fi
 if [[ ${model_name} == "A2C" ]];then
   xparl stop
   xparl start --port 8010 --cpu_num 5
-elif [[ ${model_name} == "ES"]];then
+else
   xparl start --port 8037 --cpu_num 2
 fi

@@ -241,6 +241,6 @@ fi
 
 if [[ ${model_name} == "MADDPG" ]];then
   xparl stop
-elif [[ ${model_name} == "ES" ]];then
-  xparl stop
+#elif [[ ${model_name} == "ES" ]];then
+#  xparl stop
 fi

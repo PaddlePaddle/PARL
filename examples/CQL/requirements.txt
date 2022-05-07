@@ -3,4 +3,3 @@ gym==0.20.0
 parl>=2.0.0
 mujoco-py==2.0.2.13
 git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl
-

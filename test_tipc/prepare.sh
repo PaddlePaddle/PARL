@@ -117,15 +117,16 @@ ${python_name} -m pip install --upgrade pip
 if [[ ${model_name} == "CQL" ]];then
   apt install openssl
   ${python_name} -m pip install gym==0.20.0
-  ${python_name} -m pip install mujoco-py==2.0.2.13
+  ${python_name} -m pip install mujoco-py==2.1.2.14
   apt-get install gnutls-bin
   git config --global http.sslVerify false
   git config --global http.postBuffer 1048576000
   ${python_name} -m pip install git+https://gitee.com/top1014/dm_control#egg=dm_control
-  ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps
+  ${python_name} -m pip install git+https://gitee.com/louis-yx/d4rl@master#egg=d4rl --no-deps
   ${python_name} -m pip install git+https://gitee.com/louis-yx/mjrl@master#egg=mjrl
   ${python_name} -m pip install pybullet
 else
+  ${python_name} -m pip uninstall mujoco-py -y
   sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
   sed -i '/parl/d' ./examples/${model_name}/requirements.txt
   ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt

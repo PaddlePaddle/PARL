@@ -88,9 +88,11 @@ if [[ $mojuco_envs =~ $model_name ]]; then
 fi
 
 
+# update pip
+${python_name} -m pip install --upgrade pip
+
 # python package
 if [[ ${model_name} == "CQL" ]];then
-  ${python_name} -m pip install --upgrade pip
   ${python_name} -m pip install gym==0.20.0
   ${python_name} -m pip install mujoco-py==2.0.2.13
   apt-get install gnutls-bin
@@ -100,17 +102,16 @@ if [[ ${model_name} == "CQL" ]];then
   ${python_name} -m pip install git+https://gitee.com/mirrors_rail-berkeley/d4rl@master#egg=d4rl --no-deps
   ${python_name} -m pip install git+https://gitee.com/louis-yx/mjrl@master#egg=mjrl
   ${python_name} -m pip install pybullet
-  ${python_name} -m pip install -e .
 else
-  ${python_name} -m pip install --upgrade pip
   sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
   sed -i '/parl/d' ./examples/${model_name}/requirements.txt
   ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt
   sed '$ a paddlepaddle' ./examples/${model_name}/requirements.txt
   sed '$ a parl' ./examples/${model_name}/requirements.txt
-  ${python_name} -m pip install -e .
 fi
 
+# parl install
+${python_name} -m pip install -e .
 
 if [[ ${model_name} == "A2C" ]];then
   xparl stop

@@ -69,7 +69,7 @@ status_log="${LOG_PATH}/results_python.log"
 mojuco_envs="DDPG TD3 SAC PPO CQL ES OAC"
 echo $model_name
 if [[ $mojuco_envs =~ $model_name ]]; then
-  echo "insert"
+#  echo "insert"
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin

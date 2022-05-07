@@ -83,10 +83,6 @@ fi
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 
-#source /etc/profile
-#
-#eval "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin"
-
 function func_inference(){
     IFS='|'
     _python=$1
@@ -255,6 +251,6 @@ fi
 
 if [[ ${model_name} == "MADDPG" ]];then
   xparl stop
-#elif [[ ${model_name} == "ES" ]];then
-#  xparl stop
+elif [[ ${model_name} == "ES" ]];then
+  xparl stop
 fi

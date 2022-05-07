@@ -65,6 +65,7 @@ LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_python.log"
 
+echo $LD_LIBRARY_PATH
 if [[ ${model_name} == "ES" ]];then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
 elif [[ ${model_name} == "CQL" ]];then

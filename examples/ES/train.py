@@ -190,7 +190,7 @@ if __name__ == '__main__':
         default=200,
         help='stop condition: number of train_steps')
     args = parser.parse_args()
-    config['train_steps'] = args.max_sample_steps
+    config['train_steps'] = args.train_steps
 
     learner = Learner(config)
     while learner.train_steps < config['train_steps']:

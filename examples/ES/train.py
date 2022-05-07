@@ -189,8 +189,14 @@ if __name__ == '__main__':
         type=int,
         default=200,
         help='stop condition: number of train_steps')
+    parser.add_argument(
+        '--actor_num',
+        type=int,
+        default=24,
+        help='the number of actor')
     args = parser.parse_args()
     config['train_steps'] = args.train_steps
+    config['actor_num'] = args.actor_num
 
     learner = Learner(config)
     while learner.train_steps < config['train_steps']:

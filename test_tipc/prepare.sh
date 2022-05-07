@@ -26,12 +26,12 @@ python_name_list=$(func_parser_value "${lines[2]}")
 array=(${python_name_list})
 python_name=${array[0]}
 
-mojuco_envs="DDPG TD3 SAC PPO CQL ES OAC"
+mujoco_envs="DDPG TD3 SAC PPO CQL ES OAC"
 echo $model_name
 
 
 
-if [[ $mojuco_envs =~ $model_name ]]; then
+if [[ $mujoco_envs =~ $model_name ]]; then
 
   # Get the prereqs
     if [ ! -d ~/.mujoco/mjpro131/ ]; then
@@ -98,7 +98,7 @@ ${python_name} -m pip install --upgrade pip
 if [[ ${model_name} == "CQL" ]];then
     apt install openssl
     ${python_name} -m pip install gym==0.20.0
-    ${python_name} -m pip install mujoco-py==2.1.2.14
+    ${python_name} -m pip install mujoco_py==2.0.2.8
     apt-get install gnutls-bin
     git config --global http.sslVerify false
     git config --global http.postBuffer 1048576000

@@ -146,7 +146,7 @@ if [[ ${model_name} == "CQL" ]];then
   ${python_name} -m pip install git+https://gitee.com/louis-yx/mjrl@master#egg=mjrl
   ${python_name} -m pip install pybullet
 else
-  ${python_name} -m pip uninstall mujoco-py -y
+#  ${python_name} -m pip uninstall mujoco-py -y
   sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt
   sed -i '/parl/d' ./examples/${model_name}/requirements.txt
   ${python_name} -m pip install -r ./examples/${model_name}/requirements.txt

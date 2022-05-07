@@ -88,43 +88,9 @@ if [[ $mojuco_envs =~ $model_name ]]; then
     cp mjkey.txt ~/.mujoco/mujoco200/bin
 
   fi
-
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
-#if [[ ${model_name} == "ES" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-#elif [[ ${model_name} == "CQL" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-#elif [[ ${model_name} == "TD3" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "DDPG" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "SAC" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "OAC" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "PPO" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#fi
-#echo "add path of mujoco"
-#echo $LD_LIBRARY_PATH
-  # mujoco env var
-
-#  FIND_FILE="/etc/profile"
-#  FIND_STR="LD_LIBRARY_PATH"
-#  # 判断匹配函数，匹配函数不为0，则包含给定字符
-#  if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
-#    echo "insert mujoco LD_LIBRARY_PATH"
-#    cat "
-#    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-#    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
-#    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#    " >> /etc/profile
-#    source /etc/profile
-#  fi
-#  fi
-
   fi
 
 

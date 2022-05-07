@@ -65,29 +65,9 @@ LOG_PATH="./log/${model_name}/${MODE}"
 mkdir -p ${LOG_PATH}
 status_log="${LOG_PATH}/results_python.log"
 
-#
-#if [[ ${model_name} == "ES" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-#elif [[ ${model_name} == "CQL" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-#elif [[ ${model_name} == "TD3" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "DDPG" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "SAC" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "OAC" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#elif [[ ${model_name} == "PPO" ]];then
-#  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-#fi
-#echo "add path of mujoco"
-#echo $LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 
 function func_inference(){
     IFS='|'
@@ -255,8 +235,8 @@ else
     done      # done with:    for gpu in ${gpu_list[*]}; do
 fi
 
-if [[ ${model_name} == "MADDPG" ]];then
-  xparl stop
+if [[ ${model_name} == "A2C" ]];then
+    xparl stop
 elif [[ ${model_name} == "ES" ]];then
-  xparl stop
+    xparl stop
 fi

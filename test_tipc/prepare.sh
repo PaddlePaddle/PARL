@@ -89,18 +89,20 @@ if [[ $mojuco_envs =~ $model_name ]]; then
   fi
 
   # mujoco env var
-#  if [[ $mojuco_envs =~ $model_name ]]; then
-  #  echo "insert"
+  echo "insert"
   FIND_FILE="/etc/profile"
   FIND_STR="LD_LIBRARY_PATH"
   # 判断匹配函数，匹配函数不为0，则包含给定字符
   if [ `grep -c "$FIND_STR" $FIND_FILE` == '0' ];then
-      cat "
-      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
-      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
-      export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
-      " >> /etc/profile
-      source /etc/profile
+    cat "
+    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
+    " >> /etc/profile
+    source /etc/profile
+  f
+#  fi
+
   fi
 
 

@@ -131,4 +131,3 @@ elif [[ ${model_name} == "ES" ]];then
   xparl stop
   xparl start --port 8037 --cpu_num 2
 fi
-

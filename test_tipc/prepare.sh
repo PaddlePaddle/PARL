@@ -115,6 +115,7 @@ ${python_name} -m pip install --upgrade pip
 
 # python package
 if [[ ${model_name} == "CQL" ]];then
+  apt install openssl
   ${python_name} -m pip install gym==0.20.0
   ${python_name} -m pip install mujoco-py==2.0.2.13
   apt-get install gnutls-bin

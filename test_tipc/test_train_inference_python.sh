@@ -69,7 +69,7 @@ echo $LD_LIBRARY_PATH
 if [[ ${model_name} == "ES" ]];then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
 elif [[ ${model_name} == "CQL" ]];then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco210/bin
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 elif [[ ${model_name} == "TD3" ]];then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro131/bin
 elif [[ ${model_name} == "DDPG" ]];then

@@ -3,7 +3,7 @@ model_name:MADDPG
 python:python3.7
 gpu_list:0
 null:null
---max_episode:lite_train_lite_infer=3|whole_train_whole_infer=25000
+--max_episode:lite_train_lite_infer=3
 null:null
 null:null
 null:null

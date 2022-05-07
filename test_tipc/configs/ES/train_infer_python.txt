@@ -3,7 +3,7 @@ model_name:ES
 python:python3.7
 gpu_list:-1
 null:null
---train_steps:lite_train_lite_infer=1|whole_train_whole_infer=200
+--train_steps:lite_train_lite_infer=1
 null:null
 null:null
 null:null

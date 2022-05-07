@@ -107,10 +107,10 @@ if [[ ${model_name} == "CQL" ]];then
   apt-get install gnutls-bin
   git config --global http.sslVerify false
   git config --global http.postBuffer 1048576000
-  ${python_name} -m pip install git+https://gitee.com/top1014/dm_control#egg=dm_control
-  ${python_name} -m pip install git+https://gitee.com/louis-yx/d4rl@master#egg=d4rl --no-deps
-  ${python_name} -m pip install git+https://gitee.com/louis-yx/mjrl@master#egg=mjrl
+  ${python_name} -m pip install git+http://gitlab.baidu.com/liuyixin04/dm_control@main#egg=dm_control
+  ${python_name} -m pip install git+http://gitlab.baidu.com/liuyixin04/mjrl@main#egg=mjrl
   ${python_name} -m pip install pybullet
+  ${python_name} -m pip install git+http://gitlab.baidu.com/liuyixin04/d4rl@main#egg=d4rl --no-deps
 else
 #  ${python_name} -m pip uninstall mujoco-py -y
   sed -i '/paddlepaddle/d' ./examples/${model_name}/requirements.txt

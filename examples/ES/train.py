@@ -181,6 +181,17 @@ if __name__ == '__main__':
     logger.info(
         "Before training, it takes a few mimutes to initialize a noise table for exploration"
     )
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--train_steps',
+        type=int,
+        default=200,
+        help='stop condition: number of train_steps')
+    args = parser.parse_args()
+    config['train_steps'] = args.max_sample_steps
+
     learner = Learner(config)
     while learner.train_steps < config['train_steps']:
         learner.step()

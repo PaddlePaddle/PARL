@@ -23,3 +23,4 @@ from parl.algorithms.paddle.a2c import *
 from parl.algorithms.paddle.ddqn import *
 from parl.algorithms.paddle.maddpg import *
 from parl.algorithms.paddle.ppo import *
+from parl.algorithms.paddle.cql import *

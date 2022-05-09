@@ -1,0 +1,5 @@
+paddlepaddle>=2.0.0
+gym==0.20.0
+parl>=2.0.0
+mujoco_py==2.0.2.8
+git+https://github.com/rail-berkeley/d4rl@master#egg=d4rl

@@ -1,0 +1,4 @@
+PettingZoo==1.17.0
+gym==0.23.1
+parl
+paddlepaddle

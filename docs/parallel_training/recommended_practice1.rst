@@ -1,4 +1,4 @@
-Recommended Practice
+Recommended Practice1
 ---------------------
 
 .. image:: ./poster.png
@@ -73,3 +73,5 @@ Here we reveal the performance of Python threads. At first, let's run the follow
   :align: center
 
 | Only **3.74** seconds are needed !!! As you can see from the code above, it is the ``@parl.remote_class`` that makes the change happen. By simply adding this decorator, we achieved real multi-thread computation.
+
+| In our next tutorial, we are going to show how to implement parallel computation without multithreading.

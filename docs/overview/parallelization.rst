@@ -2,7 +2,9 @@ Parallelization
 ----------------
 
 
-| PARL provides a compact API for distributed training, allowing users to transfer the code into a parallelized version by simply adding a decorator. For more information about our APIs for parallel training, please visit our :doc:`tutorial <../parallel_training/overview>`.
+| PARL provides a compact API for distributed training, allowing users to transfer the code into a parallelized version by simply adding a decorator. 
+
+| We now provides two types of API to implement parallel training. For more information about our APIs for parallel training, please visit our :doc:`tutorial <../parallel_training/overview>`.
 
 | Here is a ``Hello World`` example to demonstrate how easy it is to leverage outer computation resources:
 

@@ -60,7 +60,8 @@ PARL
 
     parallel_training/overview.rst
     parallel_training/setup.rst
-    parallel_training/recommended_practice.rst
+    parallel_training/recommended_practice1.rst
+    parallel_training/recommended_practice2.rst
     parallel_training/debug.rst
     parallel_training/file_distribution.rst
     parallel_training/serialization.rst

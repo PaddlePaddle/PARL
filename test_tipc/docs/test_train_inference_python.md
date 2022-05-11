@@ -36,15 +36,6 @@ Linux GPU/CPU 基础训练推理测试的主程序为`test_train_inference_pytho
     pip install paddlepaddle==2.2.0
     ```
 
-- 安装依赖
-    ```
-    pip3 install  -r requirements.txt
-    ```
-- 安装AutoLog（规范化日志输出工具）
-    ```
-    pip install  https://paddleocr.bj.bcebos.com/libs/auto_log-1.2.0-py3-none-any.whl
-    ```
-
 ### 2.3 功能测试
 
 

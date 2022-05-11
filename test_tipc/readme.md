@@ -31,7 +31,7 @@
 | MADDPG         | MADDPG         |  决策  |  支持  | - | - | - |
 | OAC            | OAC            |  决策  |  支持  | - | - | - |
 | PPO            | PPO            |  决策  |  支持  | - | - | - |
-| PolicyGradient | PolicyGradient |  决策  |  支持  | - | - | - |
+| PolicyGradient | QuickStart     |  决策  |  支持  | - | - | - |
 | SAC            | SAC            |  决策  |  支持  | - | - | - |
 | TD3            | TD3            |  决策  |  支持  | - | - | - |
 

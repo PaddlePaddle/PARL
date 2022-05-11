@@ -8,14 +8,18 @@ Linux GPU/CPU 基础训练推理测试的主程序为`test_train_inference_pytho
 
 | 算法名称 | 模型名称 | 单机单卡 | 单机多卡 |
 |  :----: |   :----:  |    :----:  |  :----:   |
-|  DQN  | DQN | 正常训练 | 正常训练 |
-
-
-- 推理相关：
-
-| 算法名称 | 模型名称 | device_CPU | device_GPU | batchsize |
-|  :----:   |  :----: |   :----:   |  :----:  |   :----:   |
-|  DQN   |  DQN |  支持 | 支持 | 1 |
+| A2C            | A2C            | 正常训练 | 正常训练 |
+| CQL            | CQL            | 正常训练 | 正常训练 |
+| DDPG           | DDPG           | 正常训练 | 正常训练 |
+| DQN            | DQN            | 正常训练 | 正常训练 |
+| DQN_varient    | DQN_varient    | 正常训练 | 正常训练 |
+| ES             | ES             | 正常训练 | 正常训练 |
+| MADDPG         | MADDPG         | 正常训练 | 正常训练 |
+| OAC            | OAC            | 正常训练 | 正常训练 |
+| PPO            | PPO            | 正常训练 | 正常训练 |
+| PolicyGradient | QuickStart     | 正常训练 | 正常训练 |
+| SAC            | SAC            | 正常训练 | 正常训练 |
+| TD3            | TD3            | 正常训练 | 正常训练 |
 
 
 ## 2. 测试流程

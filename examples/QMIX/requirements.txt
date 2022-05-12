@@ -1,0 +1,3 @@
+PaddlePaddle>=2.0.0
+smac
+parl>=2.0.0

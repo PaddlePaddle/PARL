@@ -16,6 +16,7 @@ import os
 import gym
 import numpy as np
 import parl
+import argparse
 from parl.utils import logger, ReplayMemory
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
@@ -92,7 +93,7 @@ def main():
     while len(rpm) < MEMORY_WARMUP_SIZE:
         run_train_episode(agent, env, rpm)
 
-    max_episode = 800
+    max_episode = args.max_episode
 
     # start training
     episode = 0
@@ -119,4 +120,13 @@ def main():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--max_episode',
+        type=int,
+        default=800,
+        help='stop condition: number of max episode')
+    args = parser.parse_args()
+
     main()

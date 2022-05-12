@@ -19,6 +19,7 @@ import parl
 from parl.utils import logger
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
+import argparse
 
 LEARNING_RATE = 1e-3
 
@@ -83,7 +84,7 @@ def main():
     #     run_evaluate_episodes(agent, env, render=True)
     #     exit()
 
-    for i in range(1000):
+    for i in range(args.max_episodes):
         obs_list, action_list, reward_list = run_train_episode(agent, env)
         if i % 10 == 0:
             logger.info("Episode {}, Reward Sum {}.".format(
@@ -103,4 +104,12 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    # Environment
+    parser.add_argument(
+        '--max_episodes',
+        type=int,
+        default=1000,
+        help='stop condition: number of episodes')
+    args = parser.parse_args()
     main()

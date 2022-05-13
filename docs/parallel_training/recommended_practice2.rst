@@ -3,7 +3,7 @@ Recommended Practice(no_wait mode)
 
 | This tutorial shows how to use ``@parl.remote_class`` to implement parallel computation **without** multithreading.
 
-| In the previous tutorial, we implemented parallel computation through decorator and multithreading. PARL actually provides a more compact parallel computation mode without manually creating threads. By passing the argument ``wait=false`` to the decoratior, we can run the task in parallel in a simpler way. The program will not be blocked while calling the functions of the decroated class. Instead, it will return a ``future_object`` immediately, and users can obtain the result in the future by calling ``future_object.get()``.
+| In the previous tutorial, we implemented parallel computation through decorator and multithreading. PARL actually provides a more compact parallel computation mode without manually creating threads. By passing the argument ``wait=false`` to the decoratior, we can run tasks in parallel in a simpler way. The program will not be blocked while calling the functions of the decroated class. Instead, it will return a ``future_object`` immediately, and users can obtain the result in the future by calling ``future_object.get()``.
 
 | Recall that in the previous tutorial, we introduced a multithreading style parallel computation which looks as below.
 

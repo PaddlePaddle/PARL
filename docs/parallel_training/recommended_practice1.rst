@@ -1,4 +1,4 @@
-Recommended Practice 1
+Recommended Practice
 ---------------------
 
 .. image:: ./poster.png

@@ -15,10 +15,10 @@ Based on PARL, the CQL algorithm of deep reinforcement learning has been reprodu
 ## How to use
 ### Dependencies:
 + python3.5+
-+ [parl>2.0.2](https://github.com/PaddlePaddle/PARL)
++ [parl>2.0.3](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.4](https://github.com/PaddlePaddle/Paddle)
 + gym==0.20.0
-+ mujoco-py==2.0.2.13
++ mujoco-py==2.0.2.8
 + [d4rl](https://github.com/rail-berkeley/d4rl) (install from source)
 
 ### Start Training:

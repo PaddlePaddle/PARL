@@ -1,8 +1,9 @@
-Recommended Practice2
+Recommended Practice(no_wait mode)
 ---------------------
 
 | This tutorial shows how to use ``@parl.remote_class`` to implement parallel computation **without** multithreading.
 
+| In the previous tutorial, we implemented parallel computation through decorator and multithreading. PARL actually provides another more concise parallel computation mode without manually creating threads. The difference from the previous tutorial is that ``wait=false`` is added to the decorater, so that when the function is executed, a future object will be obtained immediately, and the program will not be blocked, and the return result can be obtained by calling ``get`` function of the future object.
 
 | Recall that in the previous tutorial, we introduced a multithreading style parallel computation which looks as below.
 
@@ -52,7 +53,7 @@ Recommended Practice2
 
 | two things to notice: 
 
-    1. We add ``wait=False`` to enable actors execute in parallel.
+    1. We add ``wait=False`` so that the program will not be blocked.
 
     2. After actors start running, calling ``job.get()`` would block the main program until the job is finished and receive the return result.
 

@@ -55,6 +55,6 @@ Recommended Practice(no_wait mode)
 
     1. We add ``wait=False`` in the remote decorator so that the program will not be blocked.
 
-    2. After actors start running, calling ``job.get()`` would block the main program until the job is finished and receive the return result.
+    2. After actors start running, calling ``job.get()`` will block the main program until the job is finished. The return of ``jog.get()`` is the same as calling the original function.
 
 

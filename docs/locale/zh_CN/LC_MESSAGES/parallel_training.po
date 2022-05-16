@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PARL \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-25 14:16+0800\n"
+"POT-Creation-Date: 2022-05-16 17:40+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.10.1\n"
 
 #: ../../parallel_training/debug.rst:2
 msgid "How to Debug"
@@ -35,7 +35,6 @@ msgid ""
 msgstr "这种情况下，我们应该怎么debug，定位问题呢？ 这里推荐两个方案："
 
 #: ../../parallel_training/debug.rst:26
-
 msgid ""
 "**Comment out the parallel decorator**, first run the code locally, debug"
 " according to the log, then deploy your script on cluster by uncomment "
@@ -48,7 +47,6 @@ msgstr ""
 "先不在集群上跑并行，而是在本地跑起来，根据输出的日志debug，调试通过后再增加并行修饰符。但是这种方法在静态图的神经网络框架中可能会引发静态图重复定义的问题，在使用静态图版本paddle或者tensorflow的时候不建议采用这种方法。"
 
 #: ../../parallel_training/debug.rst:27
-
 msgid ""
 "**Check according to xparl's log service**. After the local script is "
 "connected to the xparl cluster, xparl will output the address of the "
@@ -75,8 +73,8 @@ msgid ""
 "meet this demand, ``parl.connect`` provides an interface where users can "
 "directly specify the files or codes that need to be distributed."
 msgstr ""
-"文件分发是分布式并行计算的重要功能。它负责把用户的代码还有配置文件分发到不同的机器上，让所有的机器都运行同样的代码进行并行计算。默认情况下，XPARL分发主文件（例如: ``main.py`` ）所在目录下"
-"所有 ``.py`` "
+"文件分发是分布式并行计算的重要功能。它负责把用户的代码还有配置文件分发到不同的机器上，让所有的机器都运行同样的代码进行并行计算。默认情况下，XPARL分发主文件（例如:"
+" ``main.py`` ）所在目录下所有 ``.py`` "
 "结尾文件。但是有时候用户需要分发一些特定的文件，比如模型文件、配置文件、子目录下的Python代码（用于import的子模块）。为了满足这个需求，``parl.connect``"
 " 提供了接口，用户可直接指定需要分发的文件或代码。"
 
@@ -182,17 +180,17 @@ msgid ""
 " them to remote machines."
 msgstr "市面上的并行框架大部分得要用户手动同步文件才可以跑起并行代码，比如配置文件得要手动或者通过命令分发到不同机器，parl可以自动分发当前目录下的代码文件，实现无缝的多机并行。"
 
-#: ../../parallel_training/recommended_practice.rst:2
+#: ../../parallel_training/recommended_practice1.rst:2
 msgid "Recommended Practice"
 msgstr "加速案例"
 
-#: ../../parallel_training/recommended_practice.rst:7
+#: ../../parallel_training/recommended_practice1.rst:7
 msgid ""
 "This tutorial shows how to use ``@parl.remote_class`` to implement "
 "parallel computation with **multi-threads**."
 msgstr "这个教程展示了如何通过并行修饰符 ``@parl.remote_class`` ，使用python的 **多线程** 也能够实现并行计算。"
 
-#: ../../parallel_training/recommended_practice.rst:9
+#: ../../parallel_training/recommended_practice1.rst:9
 msgid ""
 "Python has poor performance in multi-threading because of the `GIL "
 "<https://realpython.com/python-gil/>`_ , and we always find that multi-"
@@ -202,25 +200,25 @@ msgstr ""
 "众所周知，python 的多线程并发性能并不好，很难达到传统的编程语言比如C++或者JAVA这种加速效果，主要的原因是python "
 "有全局锁（GIL）的限制，使得其最多只能运用单核来记性运算。"
 
-#: ../../parallel_training/recommended_practice.rst:11
+#: ../../parallel_training/recommended_practice1.rst:11
 msgid ""
 "Here we reveal the performance of Python threads. At first, let's run the"
 " following code:"
 msgstr "下面我们通过一个简单的例子来看下GIL对于python的影响。首先，我们跑下这段代码："
 
-#: ../../parallel_training/recommended_practice.rst:24
+#: ../../parallel_training/recommended_practice1.rst:24
 msgid ""
 "This code takes **17.46** seconds to finish counting from 1 to 1e8 for "
 "five times."
 msgstr "这段代码需要 **17.46秒** 的时间来计算5次的从1累加到1亿。"
 
-#: ../../parallel_training/recommended_practice.rst:25
+#: ../../parallel_training/recommended_practice1.rst:25
 msgid ""
 "Now let's implement a thread-based code using the Python library, "
 "``threading``, as shown below."
 msgstr "接下来我们通过python的原生多线程库改造下上面的代码，让它可以多线程跑起来。"
 
-#: ../../parallel_training/recommended_practice.rst:45
+#: ../../parallel_training/recommended_practice1.rst:45
 msgid ""
 "It takes **41.35** seconds, much slower than previous code that finish "
 "counting serially. As the performance is limited by the GIL, there is "
@@ -230,16 +228,74 @@ msgstr ""
 "运行这段代码之后，居然需要 **41.35秒** "
 "，比刚才的串行运算速度更慢。主要的原因是GIL限制了python只能单核运算，使用了多线程运算之后，触发了多线程竞争CPU的问题，反而延长了计算时间。"
 
-#: ../../parallel_training/recommended_practice.rst:47
+#: ../../parallel_training/recommended_practice1.rst:47
 msgid "Finally, let's try to use PARL:"
 msgstr "最后，我们尝试使用PARL: "
 
-#: ../../parallel_training/recommended_practice.rst:75
+#: ../../parallel_training/recommended_practice1.rst:75
 msgid ""
 "Only **3.74** seconds are needed !!! As you can see from the code above, "
 "it is the ``@parl.remote_class`` that makes the change happen. By simply "
 "adding this decorator, we achieved real multi-thread computation."
 msgstr "这段代码只需要 **4.3秒** 就能跑完！PARL在这里做的改动只有两行代码，但是我们却看到了运算速度的极大提升，具体的效果对比可以看下图。"
+
+#: ../../parallel_training/recommended_practice1.rst:77
+#, fuzzy
+msgid ""
+"In our next tutorial, we are going to show how to implement parallel "
+"computation without multithreading."
+msgstr "在我们下一个教程中，我们将会展示如何在不使用多线程的情况下实现并行计算。"
+
+#: ../../parallel_training/recommended_practice2.rst:2
+#, fuzzy
+msgid "Recommended Practice(no_wait mode)"
+msgstr "加速案例(异步模式)"
+
+#: ../../parallel_training/recommended_practice2.rst:4
+#, fuzzy
+msgid ""
+"This tutorial shows how to use ``@parl.remote_class`` to implement "
+"parallel computation **without** multithreading."
+msgstr "这个教程展示了如何通过并行修饰符`@parl.remote_class`，在**不使用**python的多线程情况下实现并行计算。"
+
+#: ../../parallel_training/recommended_practice2.rst:6
+msgid ""
+"In the previous tutorial, we implemented parallel computation through "
+"decorator and multithreading. PARL actually provides a more compact "
+"parallel computation mode without manually creating threads. By passing "
+"the argument ``wait=false`` to the decoratior, we can run tasks in "
+"parallel in a simpler way. The program will not be blocked while calling "
+"the functions of the decroated class. Instead, it will return a "
+"``future_object`` immediately, and users can obtain the result in the "
+"future by calling ``future_object.get()``."
+msgstr "在上一个示例中，我们用PARL的修饰符和多线程实现了并行计算，但实际上PARL提供了一种更加简洁的方法来实现并行计算，无需手动创建函数。和上一个教程的区别是在修饰符中添加`wait=false`参数，这样执行函数的时候会立刻得到一个future对象，程序并不会阻塞在当前函数，后续可以通过调用future对象的`get`函数获取到执行结果。"
+
+#: ../../parallel_training/recommended_practice2.rst:8
+msgid ""
+"Recall that in the previous tutorial, we introduced a multithreading "
+"style parallel computation which looks as below."
+msgstr "在上一个示例中，我们实现的并行计算如下所示。"
+
+#: ../../parallel_training/recommended_practice2.rst:31
+msgid "Now let's look at how to implement it without ``threading``."
+msgstr "现在我们来看一下如何在**不使用**python的多线程情况下实现并行计算。"
+
+#: ../../parallel_training/recommended_practice2.rst:54
+msgid "two things to notice:"
+msgstr "这里有两点需要注意的地方："
+
+#: ../../parallel_training/recommended_practice2.rst:56
+msgid ""
+"We add ``wait=False`` in the remote decorator so that the program will "
+"not be blocked."
+msgstr "加入`wait=False`使actor的函数调用变成非阻塞版。"
+
+#: ../../parallel_training/recommended_practice2.rst:58
+msgid ""
+"After actors start running, calling ``job.get()`` will block the main "
+"program until the job is finished. The return of ``jog.get()`` is the "
+"same as calling the original function."
+msgstr "在每个actor运行起来后，调用`job.get()`会阻塞当前程序直到对应job运行结束，并得到返回的结果。"
 
 #: ../../parallel_training/serialization.rst:2
 msgid "Serialization Acceleration (Not Necessary)"

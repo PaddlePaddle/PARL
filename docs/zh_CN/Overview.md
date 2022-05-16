@@ -75,8 +75,8 @@
         <li><b>教程</b></li>
             <ul><li><a href="xparl/introduction.md">XPARL并行介绍</a></li>
             <li><a href="xparl/tutorial.md">使用教程</a></li>
-            <li><a href="xparl/example1.md">加速案例</a></li>
-            <li><a href="xparl/example2.md">加速案例（no_wait模式)</a></li>
+            <li><a href="xparl/example1.md">加速案例 (默认模式)</a></li>
+            <li><a href="xparl/example2.md">加速案例（异步模式)</a></li>
             <li><a href="xparl/debug.md">如何debug</a></li>
             <li><a href="xparl/distribute_files.md">分发本地文件</a></li>
             <li><a href="xparl/serialize.md">序列化加速（非必须）</a></li>

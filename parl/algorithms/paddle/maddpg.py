@@ -27,14 +27,14 @@ from parl.core.paddle.policy_distribution import SoftMultiCategoricalDistributio
 
 
 def SoftPDistribution(logits, act_space):
-    """ Select SoftCategoricalDistribution or SoftMultiCategoricalDistribution according to act_space.
+    """ Select Policy Distribution according to act_space.
 
     Args:
         logits (paddle tensor): the output of policy model
-        act_space: action space, must be gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
+        act_space: action space, must be gym.spaces.Box or gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
 
     Returns:
-        instance of SoftCategoricalDistribution or SoftMultiCategoricalDistribution
+        instance of DiagGaussianDistribution or SoftCategoricalDistribution or SoftMultiCategoricalDistribution
     """
     # is instance of gym.spaces.Discrete
     if (hasattr(act_space, 'n')):
@@ -47,7 +47,7 @@ def SoftPDistribution(logits, act_space):
     elif (hasattr(act_space, 'high')):
         return DiagGaussianDistribution(logits)
     else:
-        raise AssertionError("act_space must be instance of \
+        raise AssertionError("act_space must be instance of gym.spaces.Box or \
             gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
 
 

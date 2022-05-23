@@ -22,9 +22,7 @@ assert paddle.__version__ == "2.2.0", "[Version WARNING] please try `pip install
 assert parl.__version__ == "2.0.3", "[Version WARNING] please try `pip install parl==2.0.3`"
 assert gym.__version__ == "0.18.0", "[Version WARNING] please try `pip install gym==0.18.0`"
 
-import gym
 import numpy as np
-import parl
 from parl.utils import logger
 
 from agent import Agent

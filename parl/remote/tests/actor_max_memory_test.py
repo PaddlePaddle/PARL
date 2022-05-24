@@ -34,7 +34,7 @@ class Actor(object):
         self.data = []
 
     def add_50mb(self):
-        self.data.append(os.urandom(500 * 1024**2))
+        self.data.append(os.urandom(50 * 1024**2))
         self.x += 1
         return self.x
 

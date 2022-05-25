@@ -34,7 +34,7 @@ from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 from six.moves import queue
-from parl.remote.utils import get_version
+from parl.remote.utils import get_version, XPARL_PYTHON
 
 
 class Worker(object):
@@ -268,10 +268,9 @@ found in your current environment. To use "pyarrow" for serialization, please in
         """
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
-        command = [
-            sys.executable, job_file, "--worker_address",
-            self.reply_job_address, "--log_server_address",
-            self.log_server_address
+        command = XPARL_PYTHON + [
+            job_file, "--worker_address", self.reply_job_address,
+            "--log_server_address", self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -407,8 +406,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
         if port is None:
             port = "0"  # `0` means using a random port in flask
-        command = [
-            sys.executable,
+        command = XPARL_PYTHON + [
             log_server_file,
             "--port",
             str(port),

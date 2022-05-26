@@ -31,6 +31,7 @@ from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address,
                         get_port_from_range, is_port_available, kill_process,
                         to_str)
 from parl.remote.remote_constants import STATUS_TAG
+from parl.remote.utils import XPARL_PYTHON
 
 # A flag to mark if parl is started from a command line
 os.environ['XPARL'] = 'True'
@@ -152,8 +153,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     while log_server_port == monitor_port or log_server_port == port:
         log_server_port = get_port_from_range(start, end)
 
-    master_command = [
-        sys.executable,
+    master_command = XPARL_PYTHON + [
         start_file,
         "--name",
         "master",
@@ -162,14 +162,14 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         "--monitor_port",
         monitor_port,
     ]
-    worker_command = [
-        sys.executable, start_file, "--name", "worker", "--address",
-        "localhost:" + str(port), "--cpu_num",
+    worker_command = XPARL_PYTHON + [
+        start_file, "--name", "worker", "--address", "localhost:" + str(port),
+        "--cpu_num",
         str(cpu_num), '--log_server_port',
         str(log_server_port)
     ]
-    monitor_command = [
-        sys.executable, monitor_file, "--monitor_port",
+    monitor_command = XPARL_PYTHON + [
+        monitor_file, "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
 
@@ -285,9 +285,8 @@ def start_worker(address, cpu_num, log_server_port_range):
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
 
-    command = [
-        sys.executable, start_file, "--name", "worker", "--address", address,
-        "--cpu_num",
+    command = XPARL_PYTHON + [
+        start_file, "--name", "worker", "--address", address, "--cpu_num",
         str(cpu_num), "--log_server_port",
         str(log_server_port)
     ]

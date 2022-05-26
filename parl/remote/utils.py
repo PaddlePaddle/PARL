@@ -21,7 +21,8 @@ import pkg_resources
 from parl.utils import logger
 
 __all__ = [
-    'redirect_output_to_file', 'get_subfiles_recursively', 'get_version'
+    'redirect_output_to_file', 'get_subfiles_recursively', 'get_version',
+    'XPARL_PYTHON'
 ]
 
 
@@ -116,3 +117,27 @@ def get_version(module_name):
     else:
         module_version = pkg_resources.get_distribution(module_name).version
         return module_version
+
+
+def get_xparl_python():
+    """Users can specify the executable python of xparl command
+    by exporting XPARL_PYTHON environment variable
+
+    Examples:
+    ```bash
+    export XPARL_PYTHON='/opt/compiler/gcc-10/lib/ld-linux-x86-64.so.2 --library-path /opt/compiler/gcc-10/lib:~/miniconda3/envs/py36/lib: ~/miniconda3/envs/py36/bin/python'
+    xparl start --port 8010
+    ```
+
+    Returns:
+        xparl_python (list): executable python of xparl command
+    """
+    xparl_python = sys.executable
+    env_name = "XPARL_PYTHON"
+    if env_name in os.environ and os.environ[env_name]:
+        assert isinstance(os.environ[env_name], str)
+        xparl_python = os.environ[env_name]
+    return xparl_python.split()
+
+
+XPARL_PYTHON = get_xparl_python()

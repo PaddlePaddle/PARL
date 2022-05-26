@@ -27,14 +27,14 @@ from multiprocessing import Process
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(max_memory=350)
+@parl.remote_class(max_memory=35)
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
         self.data = []
 
-    def add_500mb(self):
-        self.data.append(os.urandom(500 * 1024**2))
+    def add_50mb(self):
+        self.data.append(os.urandom(50 * 1024**2))
         self.x += 1
         return self.x
 
@@ -52,7 +52,7 @@ class TestMaxMemory(unittest.TestCase):
         parl.connect(cluster_addr)
         actor1 = Actor()
         time.sleep(10)
-        actor1.add_500mb()
+        actor1.add_50mb()
 
     def test_max_memory(self):
         port = get_free_tcp_port()

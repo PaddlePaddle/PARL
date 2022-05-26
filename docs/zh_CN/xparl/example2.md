@@ -53,6 +53,6 @@ for result in returns:
 
 这里有两点需要注意的地方：
 
-1. 加入`wait=False`使actor的函数调用变成非阻塞版。
+1. 加入`wait=False`后，actor的函数调用不会阻塞主程序。
 
-2. 在每个actor运行起来后，调用`job.get()`会阻塞当前程序直到对应job运行结束，并得到返回的结果。
+2. 在每个actor运行起来后，调用`job.get()`会阻塞当前程序直到job对应函数运行结束，并得到返回的结果。

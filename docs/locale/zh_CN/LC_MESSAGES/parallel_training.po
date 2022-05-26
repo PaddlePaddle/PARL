@@ -268,7 +268,7 @@ msgid ""
 "the functions of the decroated class. Instead, it will return a "
 "``future_object`` immediately, and users can obtain the result in the "
 "future by calling ``future_object.get()``."
-msgstr "在上一个示例中，我们用PARL的修饰符和多线程实现了并行计算，但实际上PARL提供了一种更加简洁的方法来实现并行计算，无需手动创建函数。和上一个教程的区别是在修饰符中添加`wait=false`参数，这样执行函数的时候会立刻得到一个future对象，程序并不会阻塞在当前函数，后续可以通过调用future对象的`get`函数获取到执行结果。"
+msgstr "在上一个示例中，我们用PARL的修饰符和多线程实现了并行计算，但实际上PARL提供了一种更加简洁的方法来实现并行计算，无需手动创建线程。和上一个教程的区别是在修饰符中添加`wait=false`参数，这样执行函数的时候会立刻得到一个future对象，程序并不会阻塞在当前函数，后续可以通过调用future对象的`get`函数获取到执行结果。"
 
 #: ../../parallel_training/recommended_practice2.rst:8
 msgid ""

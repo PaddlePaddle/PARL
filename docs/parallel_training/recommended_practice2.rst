@@ -56,6 +56,6 @@ Recommended Practice(no_wait mode)
     1. We add ``wait=False`` in the remote decorator so that the program will not be blocked.
     2. After actors start running, calling ``job.get()`` will block the main program until the job is finished. The return of ``jog.get()`` is the same as calling the original function.
     3. If optional args ``timeout`` of ``job.get()`` is a positive number, it blocks at most timeout seconds and raises the Empty exception if no item was available within that time. If optional args ``block`` of ``job.get()`` is false, return an item if one is immediately available, else raise the Empty exception (timeout is ignored in that case).
-    4. We also provite `job.get_nowait()` function, which is equivalent to ``job.get(block=False)``.
+    4. We also provite ``job.get_nowait()`` function, which is equivalent to ``job.get(block=False)``.
 
 

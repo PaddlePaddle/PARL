@@ -84,7 +84,7 @@ setup(
         "flask_cors",
         "requests",
         "grpcio>=1.27.2",
-        "protobuf>=3.14.0",
+        "protobuf>=3.14.0, <4.0.0",
     ],
     classifiers=[
         'Intended Audience :: Developers',

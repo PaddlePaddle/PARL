@@ -1,4 +1,2 @@
 gym
 pygame
-parl
-paddlepaddle

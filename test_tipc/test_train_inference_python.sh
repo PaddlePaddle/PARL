@@ -237,11 +237,11 @@ fi
 if [[ ${model_name} == "ES" ]];then
     xparl stop
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
 fi
 if [[ ${model_name} == "OAC" ]];then
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
 fi
 if [[ ${model_name} == "DQN_variant" ]];then
     pip uninstall gym
@@ -250,13 +250,12 @@ if [[ ${model_name} == "DQN_variant" ]];then
 if
 if [[ ${model_name} == "DQN" ]];then
     pip uninstall gym
-    pip uninstall py
     pip uninstall pygame
 fi
 if [[ ${model_name} == "A2C" ]];then
     xparl stop
     pip uninstall gym
-    pip uninstall atari
+    pip uninstall atari-py
     pip uninstall opencv-python
 fi
 if [[ ${model_name} == "MADDPG" ]];then
@@ -268,18 +267,18 @@ if [[ ${model_name} == "QuickStart" ]];then
 fi
 if [[ ${model_name} == "DDPG" ]];then
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
 fi
 if [[ ${model_name} == "SAC" ]];then
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
 fi
 if [[ ${model_name} == "PPO" ]];then
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
 fi
 if [[ ${model_name} == "CQL" ]];then
     pip uninstall gym
-    pip uninstall mujoco_py
+    pip uninstall mujoco-py
     pip uninstall d4rl
 fi

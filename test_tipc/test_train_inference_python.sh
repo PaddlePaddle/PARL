@@ -234,8 +234,51 @@ else
     done      # done with:    for gpu in ${gpu_list[*]}; do
 fi
 
+if [[ ${model_name} == "ES" ]];then
+    xparl stop
+    pip uninstall gym
+    pip uninstall mujoco-py
+fi
+if [[ ${model_name} == "OAC" ]];then
+    pip uninstall gym
+    pip uninstall mujoco-py
+fi
+if [[ ${model_name} == "DQN_variant" ]];then
+    pip uninstall gym
+    pip uninstall tqdm
+    pip uninstall atari-py
+if
+if [[ ${model_name} == "DQN" ]];then
+    pip uninstall gym
+    pip uninstall pygame
+fi
 if [[ ${model_name} == "A2C" ]];then
     xparl stop
-elif [[ ${model_name} == "ES" ]];then
-    xparl stop
+    pip uninstall gym
+    pip uninstall atari-py
+    pip uninstall opencv-python
+fi
+if [[ ${model_name} == "MADDPG" ]];then
+    pip uninstall PettingZoo
+    pip uninstall gym
+fi
+if [[ ${model_name} == "QuickStart" ]];then
+    pip uninstall gym
+fi
+if [[ ${model_name} == "DDPG" ]];then
+    pip uninstall gym
+    pip uninstall mujoco-py
+fi
+if [[ ${model_name} == "SAC" ]];then
+    pip uninstall gym
+    pip uninstall mujoco-py
+fi
+if [[ ${model_name} == "PPO" ]];then
+    pip uninstall gym
+    pip uninstall mujoco-py
+fi
+if [[ ${model_name} == "CQL" ]];then
+    pip uninstall gym
+    pip uninstall mujoco-py
+    pip uninstall d4rl
 fi

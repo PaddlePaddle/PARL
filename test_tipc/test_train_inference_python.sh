@@ -255,7 +255,7 @@ if [[ ${model_name} == "DQN_variant" ]];then
     ${python_name} -m pip uninstall gym -y
     ${python_name} -m pip uninstall tqdm -y
     ${python_name} -m pip uninstall atari-py -y
-if
+fi
 if [[ ${model_name} == "DQN" ]];then
     ${python_name} -m pip uninstall gym -y
     ${python_name} -m pip uninstall pygame -y

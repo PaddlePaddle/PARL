@@ -234,8 +234,63 @@ else
     done      # done with:    for gpu in ${gpu_list[*]}; do
 fi
 
+# get python version
+array=(${python})
+python_name=${array[0]}
+
+# update pip
+${python_name} -m pip install --upgrade pip
+
+# uninstall python package
+if [[ ${model_name} == "ES" ]];then
+    xparl stop
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "OAC" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "DQN_variant" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall tqdm -y
+    ${python_name} -m pip uninstall atari-py -y
+fi
+if [[ ${model_name} == "DQN" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall pygame -y
+fi
 if [[ ${model_name} == "A2C" ]];then
     xparl stop
-elif [[ ${model_name} == "ES" ]];then
-    xparl stop
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall atari-py -y
+    ${python_name} -m pip uninstall opencv-python -y
+fi
+if [[ ${model_name} == "MADDPG" ]];then
+    ${python_name} -m pip uninstall PettingZoo -y
+    ${python_name} -m pip uninstall gym -y
+fi
+if [[ ${model_name} == "QuickStart" ]];then
+    ${python_name} -m pip uninstall gym -y
+fi
+if [[ ${model_name} == "DDPG" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "TD3" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "SAC" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "PPO" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
+if [[ ${model_name} == "CQL" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+    ${python_name} -m pip uninstall d4rl -y
 fi

@@ -277,6 +277,10 @@ if [[ ${model_name} == "DDPG" ]];then
     ${python_name} -m pip uninstall gym -y
     ${python_name} -m pip uninstall mujoco-py -y
 fi
+if [[ ${model_name} == "TD3" ]];then
+    ${python_name} -m pip uninstall gym -y
+    ${python_name} -m pip uninstall mujoco-py -y
+fi
 if [[ ${model_name} == "SAC" ]];then
     ${python_name} -m pip uninstall gym -y
     ${python_name} -m pip uninstall mujoco-py -y

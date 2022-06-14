@@ -240,19 +240,16 @@ msgid ""
 msgstr "这段代码只需要 **4.3秒** 就能跑完！PARL在这里做的改动只有两行代码，但是我们却看到了运算速度的极大提升，具体的效果对比可以看下图。"
 
 #: ../../parallel_training/recommended_practice1.rst:77
-#, fuzzy
 msgid ""
 "In our next tutorial, we are going to show how to implement parallel "
 "computation without multithreading."
 msgstr "在我们下一个教程中，我们将会展示如何在不使用多线程的情况下实现并行计算。"
 
 #: ../../parallel_training/recommended_practice2.rst:2
-#, fuzzy
 msgid "Recommended Practice(no_wait mode)"
 msgstr "加速案例(异步模式)"
 
 #: ../../parallel_training/recommended_practice2.rst:4
-#, fuzzy
 msgid ""
 "This tutorial shows how to use ``@parl.remote_class`` to implement "
 "parallel computation **without** multithreading."

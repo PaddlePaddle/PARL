@@ -72,7 +72,7 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
-        self.training = self.alg.model.training
+        self.training = True
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -151,22 +151,17 @@ class Agent(AgentBase):
         checkpoint = torch.load(save_path, map_location=map_location)
         model.load_state_dict(checkpoint)
 
-    def train(self, mode=True):
+    def train(self):
         """Sets the agent in training mode.
-        
-        Args:
-            mode (bool): whether to set training mode (``True``) or evaluation
-                         mode (``False``). Default: ``True``.
 
-        Returns: Agent: self.
+        This has any effect only on certain modules of their behaviors in training/evaluation mode, if they are affected, e.g. class:`Dropout`, class:`BatchNorm`, etc.
+
         """
-        self.alg._train(mode)
-        self.training = self.alg.model.training
+        self.alg.model.train()
+        self.training = True
 
     def eval(self):
         """Sets the agent in evaluation mode.
-        
-        Returns: Agent: self.
         """
-        self.alg._eval()
-        self.training = self.alg.model.training
+        self.alg.model.eval()
+        self.training = False

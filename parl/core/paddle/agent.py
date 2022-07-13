@@ -67,7 +67,7 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
-        self.training = self.alg.model.training
+        self.training = True
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -184,24 +184,17 @@ class Agent(AgentBase):
         param_dict = paddle.load(save_path)
         model.set_state_dict(param_dict)
 
-    def train(self, mode=True):
+    def train(self):
         """Sets the agent in training mode.
 
-        Args:
-            mode (bool): whether to set training mode (``True``) or evaluation
-                         mode (``False``). Default: ``True``.
+        This has any effect only on certain modules of their behaviors in training/evaluation mode, if they are affected, e.g. class:`Dropout`, class:`BatchNorm`, etc.
 
-        Returns: Agent: self.
         """
-        if not isinstance(mode, bool):
-            raise ValueError("training mode is expected to be boolean")
-        self.alg._train(mode)
-        self.training = self.alg.model.training
+        self.alg.model.train()
+        self.training = True
 
     def eval(self):
         """Sets the agent in evaluation mode.
-
-        Returns: Agent: self.
         """
-        self.alg._eval()
-        self.training = self.alg.model.training
+        self.alg.model.eval()
+        self.training = False

@@ -32,12 +32,6 @@ class TestModel(parl.Model):
         self.fc1 = nn.Linear(4, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, 1)
-        self.dropout = nn.Dropout(0.5)
-
-    def forward(self, obs):
-        out = self.dropout(obs)
-        out = self.fc3(out)
-        return out
 
     def predict(self, obs):
         out = self.fc1(obs)
@@ -335,17 +329,6 @@ class ModelBaseTest(unittest.TestCase):
         params['fc1.weight'] = params['fc2.bias']
         with self.assertRaises(RuntimeError):
             self.model.set_weights(params)
-
-    def test_train_and_eval_mode(self):
-        obs = torch.arange(0, 128).reshape(-1).float()
-
-        self.model._train()
-        train_mode_out = self.model(obs)
-        self.assertTrue(self.model.training)
-        self.model._eval()
-        eval_mode_out = self.model(obs)
-        self.assertFalse(self.model.training)
-        self.assertNotEqual(train_mode_out, eval_mode_out)
 
 
 if __name__ == '__main__':

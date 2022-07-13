@@ -65,6 +65,22 @@ class TestModelWithDropout(parl.Model):
         return out
 
 
+class TestModelWithBN(parl.Model):
+    def __init__(self):
+        super(TestModelWithBN, self).__init__()
+        self.fc1 = nn.Linear(4, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.bn = nn.BatchNorm1D(128)
+        self.fc3 = nn.Linear(128, 1)
+
+    def forward(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        out = self.bn(out)
+        out = self.fc3(out)
+        return out
+
+
 class DoubleInputTestModel(parl.Model):
     def __init__(self):
         super(DoubleInputTestModel, self).__init__()
@@ -309,7 +325,33 @@ class AgentBaseTest(unittest.TestCase):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
 
     def test_train_and_eval_mode(self):
+        model = TestModel()
+        alg = TestAlgorithm(model)
+        agent = TestAgent(alg)
+        obs = np.random.random([1, 4]).astype('float32')
+        agent.train()
+        self.assertTrue(agent.training)
+        train_mode_output = agent.predict(obs)
+        agent.eval()
+        self.assertFalse(agent.training)
+        eval_mode_output = agent.predict(obs)
+        self.assertEqual(train_mode_output, eval_mode_output)
+
+    def test_train_and_eval_mode_with_dropout(self):
         model = TestModelWithDropout()
+        alg = TestAlgorithm(model)
+        agent = TestAgent(alg)
+        obs = np.random.random([1, 4]).astype('float32')
+        agent.train()
+        self.assertTrue(agent.training)
+        train_mode_output = agent.predict(obs)
+        agent.eval()
+        self.assertFalse(agent.training)
+        eval_mode_output = agent.predict(obs)
+        self.assertNotEqual(train_mode_output, eval_mode_output)
+
+    def test_train_and_eval_mode_with_bn(self):
+        model = TestModelWithBN()
         alg = TestAlgorithm(model)
         agent = TestAgent(alg)
         obs = np.random.random([1, 4]).astype('float32')

@@ -46,6 +46,32 @@ class DoubleInputACModel(parl.Model):
         return self.critic(obs)
 
 
+class ACModelWithDropout(parl.Model):
+    def __init__(self):
+        super(ACModelWithDropout, self).__init__()
+        self.actor = ActorWithDropout()
+        self.critic = Critic()
+
+    def predict(self, obs):
+        return self.actor(obs)
+
+    def Q(self, obs):
+        return self.critic(obs)
+
+
+class ACModelWithBN(parl.Model):
+    def __init__(self):
+        super(ACModelWithBN, self).__init__()
+        self.actor = Actor()
+        self.critic = CriticWithBN()
+
+    def predict(self, obs):
+        return self.actor(obs)
+
+    def Q(self, obs):
+        return self.critic(obs)
+
+
 class Actor(parl.Model):
     def __init__(self):
         super(Actor, self).__init__()
@@ -58,6 +84,20 @@ class Actor(parl.Model):
         return out
 
 
+class ActorWithDropout(parl.Model):
+    def __init__(self):
+        super(ActorWithDropout, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.dropout = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(300, 2)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.dropout(out)
+        out = self.fc2(out)
+        return out
+
+
 class Critic(parl.Model):
     def __init__(self):
         super(Critic, self).__init__()
@@ -66,6 +106,20 @@ class Critic(parl.Model):
 
     def forward(self, x):
         out = self.fc1(x)
+        out = self.fc2(out)
+        return out
+
+
+class CriticWithBN(parl.Model):
+    def __init__(self):
+        super(CriticWithBN, self).__init__()
+        self.fc1 = nn.Linear(4, 300)
+        self.bn = nn.BatchNorm1D(300)
+        self.fc2 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.bn(out)
         out = self.fc2(out)
         return out
 
@@ -125,6 +179,10 @@ class ACAgentBaseTest(unittest.TestCase):
         self.target_alg = TestAlgorithm(self.target_model)
         self.double_model = DoubleInputACModel()
         self.double_alg = TestAlgorithm(self.double_model)
+        self.dropout_model = ACModelWithDropout()
+        self.dropout_alg = TestAlgorithm(self.dropout_model)
+        self.bn_model = ACModelWithBN()
+        self.bn_alg = TestAlgorithm(self.bn_model)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
@@ -354,6 +412,48 @@ class ACAgentBaseTest(unittest.TestCase):
         new_params = agent.get_weights()
         for i, j in zip(params.values(), new_params.values()):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
+
+    def test_train_and_eval_mode(self):
+        agent = TestAgent(self.alg)
+        obs = np.random.random([10, 4]).astype('float32')
+        agent.train()
+        self.assertTrue(agent.training)
+        act_train = agent.predict(obs)
+        q_train = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        agent.eval()
+        self.assertFalse(agent.training)
+        act_eval = agent.predict(obs)
+        q_eval = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        self.assertTrue((act_train == act_eval).all())
+        self.assertTrue((q_train == q_eval).all())
+
+    def test_train_and_eval_mode_with_dropout(self):
+        agent = TestAgent(self.dropout_alg)
+        obs = np.random.random([10, 4]).astype('float32')
+        agent.train()
+        self.assertTrue(agent.training)
+        act_train = agent.predict(obs)
+        q_train = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        agent.eval()
+        self.assertFalse(agent.training)
+        act_eval = agent.predict(obs)
+        q_eval = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        self.assertFalse((act_train == act_eval).all())
+        self.assertTrue((q_train == q_eval).all())
+
+    def test_train_and_eval_mode_with_bn(self):
+        agent = TestAgent(self.bn_alg)
+        obs = np.random.random([10, 4]).astype('float32')
+        agent.train()
+        self.assertTrue(agent.training)
+        act_train = agent.predict(obs)
+        q_train = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        agent.eval()
+        self.assertFalse(agent.training)
+        act_eval = agent.predict(obs)
+        q_eval = agent.alg.model.Q(paddle.to_tensor(obs)).numpy()
+        self.assertTrue((act_train == act_eval).all())
+        self.assertFalse((q_train == q_eval).all())
 
 
 if __name__ == '__main__':

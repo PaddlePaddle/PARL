@@ -32,7 +32,6 @@ class MockModel(ModelBase):
 
 class TestAlgorithm(AlgorithmBase):
     def __init__(self):
-        self.model = MockModel(1)
         self.model1 = MockModel(1)
         self.model2 = MockModel(2)
 

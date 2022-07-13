@@ -132,29 +132,3 @@ class Model(nn.Module, ModelBase):
         for key in weights.keys():
             new_weights[key] = torch.from_numpy(weights[key])
         self.load_state_dict(new_weights)
-
-    def _train(self, mode=True):
-        """Sets the model in training mode.
-        
-        This has any effect only on certain modules of their behaviors in
-        training/evaluation mode, if they are affected, e.g. class:`Dropout`,
-        class:`BatchNorm`, etc.
-        
-        Args:
-            mode (bool): whether to set training mode (``True``) or evaluation
-                         mode (``False``). Default: ``True``.
-
-        Returns:
-            Module: self
-        """
-        return self.train(mode)
-
-    def _eval(self):
-        """Sets the model in evaluation mode.
-        
-        This is equivalent with `self._train(False)`.
-
-        Returns:
-            Module: self
-        """
-        return self.eval()

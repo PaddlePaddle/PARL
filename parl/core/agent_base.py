@@ -78,17 +78,12 @@ class AgentBase(object):
         """
         raise NotImplementedError
 
-    def train(self, mode=True, *args, **kwargs):
+    def train(self, *args, **kwargs):
         """Set the model in training mode.
-
-        Args:
-            mode (bool): value of mode
         """
-        if not isinstance(mode, bool):
-            raise ValueError("training mode is expected to be boolean")
-        self.alg._train(mode)
+        raise NotImplementedError
 
     def eval(self, *args, **kwargs):
         """Set the model in evaluation mode.
         """
-        self.alg._eval()
+        raise NotImplementedError

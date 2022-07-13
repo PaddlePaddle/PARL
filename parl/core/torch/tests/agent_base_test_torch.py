@@ -27,12 +27,38 @@ class TestModel(parl.Model):
     def __init__(self):
         super(TestModel, self).__init__()
         self.fc1 = nn.Linear(10, 256)
+        self.fc2 = nn.Linear(256, 1)
+
+    def forward(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
+        return out
+
+
+class TestModelWithDropout(parl.Model):
+    def __init__(self):
+        super(TestModelWithDropout, self).__init__()
+        self.fc1 = nn.Linear(10, 256)
         self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(256, 1)
 
     def forward(self, obs):
         out = self.fc1(obs)
         out = self.dropout(out)
+        out = self.fc2(out)
+        return out
+
+
+class TestModelWithBN(parl.Model):
+    def __init__(self):
+        super(TestModelWithBN, self).__init__()
+        self.fc1 = nn.Linear(10, 256)
+        self.bn = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 1)
+
+    def forward(self, obs):
+        out = self.fc1(obs)
+        out = self.bn(out)
         out = self.fc2(out)
         return out
 
@@ -68,7 +94,11 @@ class TestAgent(parl.Agent):
 class AgentBaseTest(unittest.TestCase):
     def setUp(self):
         self.model = TestModel()
+        self.model1 = TestModelWithDropout()
+        self.model2 = TestModelWithBN()
         self.alg = TestAlgorithm(self.model)
+        self.alg1 = TestAlgorithm(self.model1)
+        self.alg2 = TestAlgorithm(self.model2)
 
     def test_agent(self):
         agent = TestAgent(self.alg)
@@ -104,6 +134,28 @@ class AgentBaseTest(unittest.TestCase):
 
     def test_train_and_eval_mode(self):
         agent = TestAgent(self.alg)
+        obs = torch.randn(3, 10)
+        agent.train()
+        self.assertTrue(agent.training)
+        train_mode_output = agent.predict(obs).detach().numpy()
+        agent.eval()
+        self.assertFalse(agent.training)
+        eval_mode_output = agent.predict(obs).detach().numpy()
+        self.assertTrue((train_mode_output == eval_mode_output).all())
+
+    def test_train_and_eval_mode_with_dropout(self):
+        agent = TestAgent(self.alg1)
+        obs = torch.randn(3, 10)
+        agent.train()
+        self.assertTrue(agent.training)
+        train_mode_output = agent.predict(obs)
+        agent.eval()
+        self.assertFalse(agent.training)
+        eval_mode_output = agent.predict(obs)
+        self.assertNotEqual(train_mode_output, eval_mode_output)
+
+    def test_train_and_eval_mode_with_bn(self):
+        agent = TestAgent(self.alg2)
         obs = torch.randn(3, 10)
         agent.train()
         self.assertTrue(agent.training)

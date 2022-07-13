@@ -109,13 +109,3 @@ class AlgorithmBase(object):
         """ define sampling process, such as using policy model to sample actions when given observations.
         """
         raise NotImplementedError
-
-    def _train(self, mode):
-        """set the model in training mode.
-        """
-        raise NotImplementedError
-
-    def _eval(self):
-        """set the model in evaluation mode.
-        """
-        raise NotImplementedError

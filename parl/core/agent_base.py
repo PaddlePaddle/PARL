@@ -26,6 +26,7 @@ class AgentBase(object):
             algorithm (`AlgorithmBase`): an instance of `AlgorithmBase`
         """
         self.alg = algorithm
+        self.training = self.alg.model.training
 
     def get_weights(self, *args, **kwargs):
         """Get weights of the agent.
@@ -77,3 +78,20 @@ class AgentBase(object):
            4. Add sampling operation in numpy level. (unnecessary if sampling operation have done in `Algorithm`).
         """
         raise NotImplementedError
+
+    def train(self, mode=True, *args, **kwargs):
+        """Set the model in training mode.
+
+        Args:
+            mode (bool): value of mode
+        """
+        if not isinstance(mode, bool):
+            raise ValueError("training mode is expected to be boolean")
+        self.alg._train(mode)
+        self.training = self.alg.model.training
+
+    def eval(self, *args, **kwargs):
+        """Set the model in evaluation mode.
+        """
+        self.alg._eval()
+        self.training = self.alg.model.training

@@ -93,3 +93,21 @@ class Algorithm(AlgorithmBase):
             weights (dict): a Python dict containing the parameters of self.model.
         """
         self.model.set_weights(params)
+
+    def _train(self, mode=True):
+        """Sets the model in training mode.
+
+        Args:
+            mode (bool): whether to set training mode (``True``) or evaluation
+                         mode (``False``). Default: ``True``.
+
+        Returns: Model: self.
+        """
+        return self.model._train(mode)
+
+    def _eval(self):
+        """Sets the model in evaluation mode.
+
+        Returns: Model: self.
+        """
+        return self.model._eval()

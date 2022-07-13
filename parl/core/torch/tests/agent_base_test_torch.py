@@ -27,10 +27,12 @@ class TestModel(parl.Model):
     def __init__(self):
         super(TestModel, self).__init__()
         self.fc1 = nn.Linear(10, 256)
+        self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(256, 1)
 
     def forward(self, obs):
         out = self.fc1(obs)
+        out = self.dropout(out)
         out = self.fc2(out)
         return out
 
@@ -99,6 +101,17 @@ class AgentBaseTest(unittest.TestCase):
         agent = TestAgent(self.alg)
         weight = agent.get_weights()
         agent.set_weights(weight)
+
+    def test_train_and_eval_mode(self):
+        agent = TestAgent(self.alg)
+        obs = torch.randn(3, 10)
+        agent.train()
+        self.assertTrue(agent.training)
+        train_mode_output = agent.predict(obs)
+        agent.eval()
+        self.assertFalse(agent.training)
+        eval_mode_output = agent.predict(obs)
+        self.assertNotEqual(train_mode_output, eval_mode_output)
 
 
 if __name__ == '__main__':

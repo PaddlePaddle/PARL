@@ -49,6 +49,16 @@ class ModelBase(object):
         """
         raise NotImplementedError
 
+    def _train(self, mode, *args, **kwargs):
+        """Set the model in training mode.
+        """
+        raise NotImplementedError
+
+    def _eval(self, *args, **kwargs):
+        """Set the model in evaluation mode.
+        """
+        raise NotImplementedError
+
     def __call__(self, *args, **kwargs):
         """Call forward function.
         """

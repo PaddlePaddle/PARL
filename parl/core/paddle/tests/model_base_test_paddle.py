@@ -26,11 +26,13 @@ class TestModel(Model):
         super(TestModel, self).__init__()
         self.fc1 = nn.Linear(4, 256)
         self.fc2 = nn.Linear(256, 128)
+        self.dropout = nn.Dropout(0.5)
         self.fc3 = nn.Linear(128, 1)
 
     def predict(self, obs):
         out = self.fc1(obs)
         out = self.fc2(out)
+        out = self.dropout(out)
         out = self.fc3(out)
         return out
 
@@ -214,6 +216,16 @@ class ModelBaseTest(unittest.TestCase):
         new_params = self.model.get_weights()
         for i, j in zip(params.values(), new_params.values()):
             self.assertLessEqual(abs(i.sum() - j.sum()), 1e-3)
+
+    def test_train_and_eval_mode(self):
+        obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32))
+        self.model.train()
+        train_model_output = self.model.predict(obs)
+        self.assertTrue(self.model.training)
+        self.model.eval()
+        eval_model_output = self.target_model.predict(obs)
+        self.assertFalse(self.model.training)
+        self.assertNotEqual(train_model_output, eval_model_output)
 
 
 if __name__ == '__main__':

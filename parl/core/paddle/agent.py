@@ -50,6 +50,8 @@ class Agent(AgentBase):
         - ``learn``: update the parameters of self.alg using the `learn_program` defined in `build_program()`.
         - ``save``: save parameters of the ``agent`` to a given path.
         - ``restore``: restore previous saved parameters from a given path.
+        - ``train``: set the agent in training mode.
+        - ``eval``: set the agent in evaluation mode.
 
     Todo:
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
@@ -65,6 +67,7 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
+        self.training = self.alg.model.training
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -180,3 +183,25 @@ class Agent(AgentBase):
             model = self.alg.model
         param_dict = paddle.load(save_path)
         model.set_state_dict(param_dict)
+
+    def train(self, mode=True):
+        """Sets the agent in training mode.
+
+        Args:
+            mode (bool): whether to set training mode (``True``) or evaluation
+                         mode (``False``). Default: ``True``.
+
+        Returns: Agent: self.
+        """
+        if not isinstance(mode, bool):
+            raise ValueError("training mode is expected to be boolean")
+        self.alg._train(mode)
+        self.training = self.alg.model.training
+
+    def eval(self):
+        """Sets the agent in evaluation mode.
+
+        Returns: Agent: self.
+        """
+        self.alg._eval()
+        self.training = self.alg.model.training

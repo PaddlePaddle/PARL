@@ -29,10 +29,16 @@ class TestModel(Model):
         self.dropout = nn.Dropout(0.5)
         self.fc3 = nn.Linear(128, 1)
 
-    def predict(self, obs):
+    def forward(self, obs):
         out = self.fc1(obs)
         out = self.fc2(out)
         out = self.dropout(out)
+        out = self.fc3(out)
+        return out
+
+    def predict(self, obs):
+        out = self.fc1(obs)
+        out = self.fc2(out)
         out = self.fc3(out)
         return out
 
@@ -220,10 +226,10 @@ class ModelBaseTest(unittest.TestCase):
     def test_train_and_eval_mode(self):
         obs = paddle.to_tensor(np.random.rand(1, 4).astype(np.float32))
         self.model.train()
-        train_model_output = self.model.predict(obs)
+        train_model_output = self.model(obs)
         self.assertTrue(self.model.training)
         self.model.eval()
-        eval_model_output = self.target_model.predict(obs)
+        eval_model_output = self.model(obs)
         self.assertFalse(self.model.training)
         self.assertNotEqual(train_model_output, eval_model_output)
 

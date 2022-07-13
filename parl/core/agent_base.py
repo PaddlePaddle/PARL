@@ -26,7 +26,6 @@ class AgentBase(object):
             algorithm (`AlgorithmBase`): an instance of `AlgorithmBase`
         """
         self.alg = algorithm
-        self.training = self.alg.model.training
 
     def get_weights(self, *args, **kwargs):
         """Get weights of the agent.
@@ -88,10 +87,8 @@ class AgentBase(object):
         if not isinstance(mode, bool):
             raise ValueError("training mode is expected to be boolean")
         self.alg._train(mode)
-        self.training = self.alg.model.training
 
     def eval(self, *args, **kwargs):
         """Set the model in evaluation mode.
         """
         self.alg._eval()
-        self.training = self.alg.model.training

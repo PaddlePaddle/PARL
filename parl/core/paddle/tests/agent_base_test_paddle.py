@@ -312,7 +312,7 @@ class AgentBaseTest(unittest.TestCase):
         model = TestModelWithDropout()
         alg = TestAlgorithm(model)
         agent = TestAgent(alg)
-        obs = np.random.random([10, 4]).astype('float32')
+        obs = np.random.random([1, 4]).astype('float32')
         agent.train()
         self.assertTrue(agent.training)
         train_mode_output = agent.predict(obs)

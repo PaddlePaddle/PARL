@@ -151,7 +151,8 @@ class ModelBaseTest(unittest.TestCase):
                 out_np = np.dot(target_model_fc3_w, out_np) + np.expand_dims(
                     target_model_fc3_b, -1)
 
-                self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+                self.assertLess(
+                    float(np.abs(real_target_outputs - out_np)), 1e-5)
 
     def test_sync_weights_with_different_target_model(self):
         decay = 0.9

@@ -72,6 +72,7 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
+        # agent mode (bool): True is in training mode, False is in evaluation mode.
         self.training = True
 
     def learn(self, *args, **kwargs):
@@ -152,9 +153,18 @@ class Agent(AgentBase):
         model.load_state_dict(checkpoint)
 
     def train(self):
-        """Sets the agent in training mode.
+        """Sets the agent in training mode, which is the default setting.
+        This has any effect only on certain modules of their behaviors in training/evaluation mode,
+        if they are affected, e.g. Dropout, BatchNorm, etc.
 
-        This has any effect only on certain modules of their behaviors in training/evaluation mode, if they are affected, e.g. class:`Dropout`, class:`BatchNorm`, etc.
+        Example:
+
+        .. code-block:: python
+
+            agent.train()   # default setting
+            assert (agent.training is True)
+            agent.eval()
+            assert (agent.training is False)
 
         """
         self.alg.model.train()

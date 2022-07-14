@@ -187,8 +187,7 @@ class Agent(AgentBase):
 
     def train(self):
         """Sets the agent in training mode, which is the default setting.
-        This has any effect only on certain modules of their behaviors in training/evaluation mode,
-        if they are affected, e.g. Dropout, BatchNorm, etc.
+        Model of agent will be affected if it has some modules (e.g. Dropout, BatchNorm) that behave differently in train/evaluation mode.
 
         Example:
 

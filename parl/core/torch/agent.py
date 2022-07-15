@@ -55,6 +55,8 @@ class Agent(AgentBase):
         - ``learn``: update the parameters of self.alg.
         - ``save``: save parameters of the ``agent`` to a given path.
         - ``restore``: restore previous saved parameters from a given path.
+        - ``train``: set the agent in training mode.
+        - ``eval``: set the agent in evaluation mode.
 
     Todo:
         - allow users to get parameters of a specified model by specifying the model's name in ``get_weights()``.
@@ -70,6 +72,8 @@ class Agent(AgentBase):
 
         assert isinstance(algorithm, Algorithm)
         super(Agent, self).__init__(algorithm)
+        # agent mode (bool): True is in training mode, False is in evaluation mode.
+        self.training = True
 
     def learn(self, *args, **kwargs):
         """The training interface for ``Agent``.
@@ -147,3 +151,26 @@ class Agent(AgentBase):
             model = self.alg.model
         checkpoint = torch.load(save_path, map_location=map_location)
         model.load_state_dict(checkpoint)
+
+    def train(self):
+        """Sets the agent in training mode, which is the default setting.
+        Model of agent will be affected if it has some modules (e.g. Dropout, BatchNorm) that behave differently in train/evaluation mode.
+
+        Example:
+
+        .. code-block:: python
+
+            agent.train()   # default setting
+            assert (agent.training is True)
+            agent.eval()
+            assert (agent.training is False)
+
+        """
+        self.alg.model.train()
+        self.training = True
+
+    def eval(self):
+        """Sets the agent in evaluation mode.
+        """
+        self.alg.model.eval()
+        self.training = False

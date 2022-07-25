@@ -77,3 +77,13 @@ class AgentBase(object):
            4. Add sampling operation in numpy level. (unnecessary if sampling operation have done in `Algorithm`).
         """
         raise NotImplementedError
+
+    def train(self, *args, **kwargs):
+        """Set the model in training mode.
+        """
+        raise NotImplementedError
+
+    def eval(self, *args, **kwargs):
+        """Set the model in evaluation mode.
+        """
+        raise NotImplementedError

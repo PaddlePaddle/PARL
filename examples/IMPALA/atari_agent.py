@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,7 @@ import paddle
 
 
 class AtariAgent(parl.Agent):
-    def __init__(self, algorithm, obs_shape, act_dim):
-        assert isinstance(obs_shape, (list, tuple))
-        assert isinstance(act_dim, int)
-        self.obs_shape = obs_shape
-        self.act_dim = act_dim
+    def __init__(self, algorithm):
         super(AtariAgent, self).__init__(algorithm)
 
     def sample(self, obs_np):

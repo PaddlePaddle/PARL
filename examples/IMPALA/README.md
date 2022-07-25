@@ -7,11 +7,11 @@ Based on PARL, the IMPALA algorithm of deep reinforcement learning is reproduced
 Please see [here](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
-Result with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
+Learning curve with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 + PongNoFrameskip-v4: mean_episode_rewards can reach 18-19 score in about 10 minutes.
 <img src="https://github.com/benchmarking-rl/PARL-experiments/raw/master/IMPALA/Pong.png" width = "400" height ="300" alt="IMPALA_Pong" />
 
-+ Results(mean_episode_rewards) of other games in an hour.
++ Learning curves (mean_episode_rewards) of other games in an hour.
 
 <img src="https://github.com/benchmarking-rl/PARL-experiments/raw/master/IMPALA/FourEnvs.png" width = "800" height ="600" alt="IMPALA_others" /> 
 
@@ -30,8 +30,8 @@ At first, We can start a local cluster with 32 CPUs:
 xparl start --port 8010 --cpu_num 32
 ```
 
-Note that if you have started a master before, you don't have to run the above
-command. For more information about the cluster, please refer to our
+Note that it is not necessary to run the command each time before training. 
+We can reuse the xparl cluster for distributed training if we have started it before.
 [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
 
 Then we can start the distributed training by running:

@@ -28,7 +28,7 @@
 ### 安装依赖（注意：请务必安装对应的版本）
 
 + Python 3.6/3.7 
-+ [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.6.3
++ [paddlepaddle](https://github.com/PaddlePaddle/Paddle)==1.8.5
 + [parl](https://github.com/PaddlePaddle/PARL)==1.3.1 或者 parl==1.4
 + gym==0.18.0
 + atari-py==0.2.6 (仅 lesson4 的 homework 需要安装)

@@ -247,7 +247,7 @@ msgstr "在我们下一个教程中，我们将会展示如何在不使用多线
 
 #: ../../parallel_training/recommended_practice2.rst:2
 msgid "Recommended Practice(no_wait mode)"
-msgstr "加速案例(异步模式)"
+msgstr "加速案例(后台模式)"
 
 #: ../../parallel_training/recommended_practice2.rst:4
 msgid ""

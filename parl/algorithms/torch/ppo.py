@@ -50,9 +50,11 @@ class PPO(parl.Algorithm):
         self.clip_vloss = self.config['clip_vloss']
 
         self.continuous_action = self.model.continuous_action
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.start_lr, eps=self.eps)
+        self.optimizer = optim.Adam(
+            self.model.parameters(), lr=self.start_lr, eps=self.eps)
 
-    def learn(self, batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value, lr):
+    def learn(self, batch_obs, batch_action, batch_logprob, batch_adv,
+              batch_return, batch_value, lr):
         newvalue = self.model.value(batch_obs)
         if self.continuous_action:
             action_mean, action_std = self.model.policy(batch_obs)
@@ -70,34 +72,36 @@ class PPO(parl.Algorithm):
 
         mb_advantages = batch_adv
         if self.norm_adv:
-            mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+            mb_advantages = (mb_advantages - mb_advantages.mean()) / (
+                mb_advantages.std() + 1e-8)
 
         # Policy loss
         pg_loss1 = -mb_advantages * ratio
-        pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - self.clip_coef, 1 + self.clip_coef)
+        pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - self.clip_coef,
+                                                1 + self.clip_coef)
         pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
         # Value loss
         newvalue = newvalue.view(-1)
         if self.clip_vloss:
-            v_loss_unclipped = (newvalue - batch_return) ** 2
+            v_loss_unclipped = (newvalue - batch_return)**2
             v_clipped = batch_value + torch.clamp(
                 newvalue - batch_value,
                 -self.clip_coef,
                 self.clip_coef,
             )
-            v_loss_clipped = (v_clipped - batch_return) ** 2
+            v_loss_clipped = (v_clipped - batch_return)**2
             v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
             v_loss = 0.5 * v_loss_max.mean()
         else:
-            v_loss = 0.5 * ((newvalue - batch_return) ** 2).mean()
+            v_loss = 0.5 * ((newvalue - batch_return)**2).mean()
 
         entropy_loss = entropy.mean()
         loss = pg_loss - self.ent_coef * entropy_loss + v_loss * self.vf_coef
 
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr
-        
+
         self.optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)

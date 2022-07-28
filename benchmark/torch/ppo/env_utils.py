@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import parl
 import gym
 import numpy as np
 from parl.utils import logger
 from parl.env.atari_wrappers import wrap_deepmind
 
-
 # wrapper parameters for atari env
 ENV_DIM = 84
-OBS_FORMAT ='NCHW'
+OBS_FORMAT = 'NCHW'
 # wrapper parameters for mujoco env
 GAMMA = 0.99
 CLIP_BOUND = 10
@@ -42,7 +40,9 @@ class ParallelEnv(object):
             base_env = LocalEnv
 
         if env_seed:
-            self.env_list = [base_env(env_name, env_seed + i) for i in range(self.env_num)]
+            self.env_list = [
+                base_env(env_name, env_seed + i) for i in range(self.env_num)
+            ]
         else:
             self.env_list = [base_env(env_name) for _ in range(self.env_num)]
 
@@ -67,7 +67,10 @@ class ParallelEnv(object):
         done_list = []
         info_list = []
         if self.use_xparl:
-            return_list = [self.env_list[i].step(action_list[i]) for i in range(self.env_num)]
+            return_list = [
+                self.env_list[i].step(action_list[i])
+                for i in range(self.env_num)
+            ]
             return_list = [return_.get() for return_ in return_list]
             return_list = np.array(return_list, dtype=object)
 
@@ -85,8 +88,9 @@ class ParallelEnv(object):
                 done = done_[i]
                 info = info_[i]
             else:
-                next_obs, reward, done, info = self.env_list[i].step(action_list[i])
-            
+                next_obs, reward, done, info = self.env_list[i].step(
+                    action_list[i])
+
             self.episode_steps_list[i] += 1
             self.episode_reward_list[i] += reward
 
@@ -102,7 +106,8 @@ class ParallelEnv(object):
             reward_list.append(reward)
             done_list.append(done)
             info_list.append(info)
-        return np.array(next_obs_list), np.array(reward_list), np.array(done_list), np.array(info_list)
+        return np.array(next_obs_list), np.array(reward_list), np.array(
+            done_list), np.array(info_list)
 
 
 class LocalEnv(object):
@@ -114,15 +119,19 @@ class LocalEnv(object):
         if hasattr(env.action_space, 'high'):
             env = gym.wrappers.ClipAction(env)
             env = gym.wrappers.NormalizeObservation(env)
-            env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -CLIP_BOUND, CLIP_BOUND))
+            env = gym.wrappers.TransformObservation(
+                env, lambda obs: np.clip(obs, -CLIP_BOUND, CLIP_BOUND))
             env = gym.wrappers.NormalizeReward(env, gamma=GAMMA)
-            env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -CLIP_BOUND, CLIP_BOUND))
+            env = gym.wrappers.TransformReward(
+                env, lambda reward: np.clip(reward, -CLIP_BOUND, CLIP_BOUND))
             self.env = env
         elif hasattr(env.action_space, 'n'):
             self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
-            raise AssertionError("act_space must be instance of gym.spaces.Box or gym.spaces.Discrete")
-        
+            raise AssertionError(
+                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
+            )
+
         self.obs_space = self.env.observation_space
         self.act_space = self.env.action_space
 
@@ -149,15 +158,19 @@ class RemoteEnv(object):
         if hasattr(env.action_space, 'high'):
             env = gym.wrappers.ClipAction(env)
             env = gym.wrappers.NormalizeObservation(env)
-            env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10))
+            env = gym.wrappers.TransformObservation(
+                env, lambda obs: np.clip(obs, -10, 10))
             env = gym.wrappers.NormalizeReward(env, gamma=0.99)
-            env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
+            env = gym.wrappers.TransformReward(
+                env, lambda reward: np.clip(reward, -10, 10))
             self.env = env
         elif hasattr(env.action_space, 'n'):
             self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
-            raise AssertionError("act_space must be instance of gym.spaces.Box or gym.spaces.Discrete")
-        
+            raise AssertionError(
+                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
+            )
+
         self.obs_space = self.env.observation_space
         self.act_space = self.env.action_space
         if env_seed:

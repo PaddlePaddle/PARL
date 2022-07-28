@@ -43,7 +43,8 @@ def run_evaluate_episodes(agent, eval_env_seed=120):
 
 def main():
     logger.info("------------------- PPO ---------------------")
-    logger.info('Env: {}, env_num: {}, seed: {}'.format(args.env, args.env_num, args.seed))
+    logger.info('Env: {}, env_num: {}, seed: {}'.format(
+        args.env, args.env_num, args.seed))
     logger.info("---------------------------------------------")
 
     logger.set_dir(f'./train_logs/{args.env}_{args.seed}')
@@ -51,7 +52,8 @@ def main():
     config = Config['mujoco'] if args.continuous_action else Config['atari']
     config['train_total_steps'] = args.train_total_steps
 
-    envs = ParallelEnv(args.env, args.seed, config=config, xparl_addr=args.xparl_addr)
+    envs = ParallelEnv(
+        args.env, args.seed, config=config, xparl_addr=args.xparl_addr)
     obs_space = envs.obs_space
     act_space = envs.act_space
 
@@ -59,7 +61,8 @@ def main():
     ppo = PPO(model, config)
     agent = PPOAgent(ppo)
 
-    rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space, act_space)
+    rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space,
+                             act_space)
 
     obs = envs.reset()
     done = np.zeros(config['env_num'], dtype='float32')
@@ -78,14 +81,18 @@ def main():
 
             for item in info:
                 if "episode" in item.keys():
-                    logger.info(f"Training: total steps={total_steps}, episodic_return={item['episode']['r']}")
-                    tensorboard.add_scalar("train/episode_reward", item["episode"]["r"], total_steps)
+                    logger.info(
+                        f"Training: total steps={total_steps}, episodic_return={item['episode']['r']}"
+                    )
+                    tensorboard.add_scalar("train/episode_reward",
+                                           item["episode"]["r"], total_steps)
                     break
 
         # Bootstrap value if not done
         value = agent.value(obs)
-        rollout.compute_returns(value, done, config['gamma'], config['gae_lambda'])
-    
+        rollout.compute_returns(value, done, config['gamma'],
+                                config['gae_lambda'])
+
         # Optimizing the policy and value network
         v_loss, pg_loss, entropy_loss, lr = agent.learn(rollout)
 
@@ -93,21 +100,36 @@ def main():
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
                 avg_reward = run_evaluate_episodes(agent)
-                tensorboard.add_scalar('eval/episode_reward', avg_reward,total_steps)
-                logger.info('Evaluation over: {} episodes, Reward: {}'.format(3, avg_reward))
+                tensorboard.add_scalar('eval/episode_reward', avg_reward,
+                                       total_steps)
+                logger.info('Evaluation over: {} episodes, Reward: {}'.format(
+                    3, avg_reward))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", type=str, default="HalfCheetah-v2",
+    parser.add_argument(
+        "--env",
+        type=str,
+        default="HalfCheetah-v2",
         help="the id of the environment")
-    parser.add_argument("--seed", type=int, default=110,
-        help="seed of the experiment")
-    parser.add_argument("--env_num", type=int, default=1,
-        help="number of the environment. Note: if greater than 1, xparl is needed")
-    parser.add_argument("--continuous_action", type=bool, default=True,
+    parser.add_argument(
+        "--seed", type=int, default=110, help="seed of the experiment")
+    parser.add_argument(
+        "--env_num",
+        type=int,
+        default=1,
+        help=
+        "number of the environment. Note: if greater than 1, xparl is needed")
+    parser.add_argument(
+        "--continuous_action",
+        type=bool,
+        default=True,
         help="the type of the environment")
-    parser.add_argument("--xparl_addr", type=str, default=None,
+    parser.add_argument(
+        "--xparl_addr",
+        type=str,
+        default=None,
         help="the id of the environment")
     parser.add_argument(
         "--train_total_steps",
@@ -119,7 +141,6 @@ if __name__ == "__main__":
         type=int,
         default=int(5e3),
         help='The step interval between two consecutive evaluations')
-    
+
     args = parser.parse_args()
     main()
-    

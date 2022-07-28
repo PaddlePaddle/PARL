@@ -23,8 +23,10 @@ class PPOAgent(parl.Agent):
         super(PPOAgent, self).__init__(algorithm)
 
         self.config = self.alg.config
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.lr_scheduler = LinearDecayScheduler(self.config['start_lr'], self.config['train_total_steps'])
+        self.device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
+        self.lr_scheduler = LinearDecayScheduler(
+            self.config['start_lr'], self.config['train_total_steps'])
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
@@ -36,30 +38,35 @@ class PPOAgent(parl.Agent):
         obs = torch.FloatTensor(obs).to(self.device)
         value, action, action_log_probs, action_entropy = self.alg.sample(obs)
 
-        return value.cpu().detach().numpy(), action.cpu().detach().numpy(), action_log_probs.cpu().detach().numpy(), action_entropy.cpu().detach().numpy()
+        return value.cpu().detach().numpy(), action.cpu().detach(
+        ).numpy(), action_log_probs.cpu().detach().numpy(), action_entropy.cpu(
+        ).detach().numpy()
 
     def value(self, obs):
         obs = torch.FloatTensor(obs).to(self.device)
         value = self.alg.value(obs)
         value = value.cpu().detach().numpy()
         return value
-        
+
     def learn(self, rollout):
         v_loss_epoch = 0
         pg_loss_epoch = 0
         entropy_loss_epoch = 0
 
-        num_updates = self.config['update_epochs'] * self.config['minibatch_size']
+        num_updates = self.config['update_epochs'] * self.config[
+            'minibatch_size']
         lr = self.lr_scheduler.step(step_num=num_updates)
 
         indexes = np.arange(self.config['batch_size'])
         for epoch in range(self.config['update_epochs']):
             np.random.shuffle(indexes)
-            for start in range(0, self.config['batch_size'], self.config['minibatch_size']):
+            for start in range(0, self.config['batch_size'],
+                               self.config['minibatch_size']):
                 end = start + self.config['minibatch_size']
                 sample_idx = indexes[start:end]
 
-                batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value = rollout.sample_batch(sample_idx)
+                batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value = rollout.sample_batch(
+                    sample_idx)
 
                 batch_obs = torch.from_numpy(batch_obs).to(self.device)
                 batch_action = torch.from_numpy(batch_action).to(self.device)
@@ -68,7 +75,9 @@ class PPOAgent(parl.Agent):
                 batch_return = torch.from_numpy(batch_return).to(self.device)
                 batch_value = torch.from_numpy(batch_value).to(self.device)
 
-                v_loss, pg_loss, entropy_loss = self.alg.learn(batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value, lr)
+                v_loss, pg_loss, entropy_loss = self.alg.learn(
+                    batch_obs, batch_action, batch_logprob, batch_adv,
+                    batch_return, batch_value, lr)
 
                 v_loss_epoch += v_loss
                 pg_loss_epoch += pg_loss

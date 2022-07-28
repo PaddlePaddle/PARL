@@ -29,11 +29,13 @@ class PPOModel(parl.Model):
             self.continuous_action = False
             self.actor_critic = AtariModel(obs_space, act_space)
         else:
-            raise AssertionError("act_space must be instance of gym.spaces.Box or gym.spaces.Discrete")
-    
+            raise AssertionError(
+                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
+            )
+
     def value(self, obs):
         return self.actor_critic.value(obs)
-    
+
     def policy(self, obs):
         if self.continuous_action:
             action_mean, action_std = self.actor_critic.policy(obs)
@@ -52,7 +54,7 @@ def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
 class AtariModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(AtariModel, self).__init__()
-        
+
         self.conv1 = _init_layer(nn.Conv2d(4, 32, 8, stride=4))
         self.conv2 = _init_layer(nn.Conv2d(32, 64, 4, stride=2))
         self.conv3 = _init_layer(nn.Conv2d(64, 64, 3, stride=1))
@@ -73,7 +75,7 @@ class AtariModel(parl.Model):
         out = self.fc(self.flatten(out))
         value = self.fc_v(out)
         return value
-    
+
     def policy(self, obs):
         obs = obs / 255.0
         out = self.relu(self.conv1(obs))
@@ -95,7 +97,8 @@ class MujocoModel(parl.Model):
 
         self.fc_pi1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
         self.fc_pi2 = _init_layer(nn.Linear(64, 64))
-        self.fc_pi3 = _init_layer(nn.Linear(64, np.prod(act_space.shape)), std=0.01)
+        self.fc_pi3 = _init_layer(
+            nn.Linear(64, np.prod(act_space.shape)), std=0.01)
 
         self.tanh = nn.Tanh()
         self.fc_pi_std = nn.Parameter(torch.zeros(1, act_space.shape[0]))
@@ -105,7 +108,7 @@ class MujocoModel(parl.Model):
         out = self.tanh(self.fc_v2(out))
         value = self.fc_v3(out)
         return value
-    
+
     def policy(self, obs):
         out = self.tanh(self.fc_pi1(obs))
         out = self.tanh(self.fc_pi2(out))

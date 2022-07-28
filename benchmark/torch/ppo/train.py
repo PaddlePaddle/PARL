@@ -47,7 +47,7 @@ def main():
         args.env, args.env_num, args.seed))
     logger.info("---------------------------------------------")
 
-    logger.set_dir(f'./train_logs/{args.env}_{args.seed}')
+    logger.set_dir('./train_logs/{}_{}'.format(args.env, args.seed))
 
     config = Config['mujoco'] if args.continuous_action else Config['atari']
     config['train_total_steps'] = args.train_total_steps

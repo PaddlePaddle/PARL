@@ -95,7 +95,7 @@ class ParallelEnv(object):
             self.episode_reward_list[i] += reward
 
             if done or self.episode_steps_list[i] >= self._max_episode_steps:
-                # logger.info(f"Training env {i} done, episode reward: {self.episode_reward_list[i]}")
+                # logger.info("Training env {} done, episode reward: {}".format(i, self.episode_reward_list[i]))
                 self.episode_steps_list[i] = 0
                 self.episode_reward_list[i] = 0
 

@@ -17,6 +17,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from parl.utils.utils import check_model_method
 from torch.distributions import Normal, Categorical
 
 __all__ = ['PPO']

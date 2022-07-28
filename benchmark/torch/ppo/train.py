@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,151 +12,114 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# modified from https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail
-
-from collections import deque
-import numpy as np
-import torch
-import gym
-from mujoco_model import MujocoModel
-from mujoco_agent import MujocoAgent
-from storage import RolloutStorage
-from parl.algorithms import PPO
-from parl.env.mujoco_wrappers import wrap_rms, get_ob_rms
-from parl.utils import summary
 import argparse
+import numpy as np
+from parl.utils import logger, tensorboard
 
-LR = 3e-4
-GAMMA = 0.99
-EPS = 1e-5  # Adam optimizer epsilon (default: 1e-5)
-GAE_LAMBDA = 0.95  # Lambda parameter for calculating N-step advantage
-ENTROPY_COEF = 0.  # Entropy coefficient (ie. c_2 in the paper)
-VALUE_LOSS_COEF = 0.5  # Value loss coefficient (ie. c_1 in the paper)
-MAX_GRAD_NROM = 0.5  # Max gradient norm for gradient clipping
-NUM_STEPS = 2048  # data collecting time steps (ie. T in the paper)
-PPO_EPOCH = 10  # number of epochs for updating using each T data (ie K in the paper)
-CLIP_PARAM = 0.2  # epsilon in clipping loss (ie. clip(r_t, 1 - epsilon, 1 + epsilon))
-BATCH_SIZE = 32
-
-# Logging Params
-LOG_INTERVAL = 1
+from configs import Config
+from env_utils import ParallelEnv, LocalEnv
+from storage import RolloutStorage
+from model import PPOModel
+from parl.algorithms import PPO
+from agent import PPOAgent
 
 
-def evaluate(agent, ob_rms):
-    eval_env = gym.make(args.env)
-    eval_env.seed(args.seed + 1)
-    eval_env = wrap_rms(eval_env, GAMMA, test=True, ob_rms=ob_rms)
-    eval_episode_rewards = []
-    obs = eval_env.reset()
-
-    while len(eval_episode_rewards) < 10:
-        action = agent.predict(obs)
-
-        # Observe reward and next obs
-        obs, _, done, info = eval_env.step(action)
-        # get validation rewards from info['episode']['r']
-        if done:
-            eval_episode_rewards.append(info['episode']['r'])
-
-    eval_env.close()
-
-    print(" Evaluation using {} episodes: mean reward {:.5f}\n".format(
-        len(eval_episode_rewards), np.mean(eval_episode_rewards)))
-    return np.mean(eval_episode_rewards)
+# Runs policy until 'real done' and returns episode reward
+# A fixed seed is used for the eval environment
+def run_evaluate_episodes(agent, eval_env_seed=120):
+    env = LocalEnv(args.env, env_seed=eval_env_seed)
+    eval_reward = 0.
+    while True:
+        obs = env.reset()
+        done = False
+        while not done:
+            action = agent.predict(obs)
+            obs, reward, done, info = env.step(action)
+        if "episode" in info.keys():
+            eval_reward = info["episode"]["r"]
+            break
+    return eval_reward
 
 
 def main():
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
+    logger.info("------------------- PPO ---------------------")
+    logger.info('Env: {}, env_num: {}, seed: {}'.format(args.env, args.env_num, args.seed))
+    logger.info("---------------------------------------------")
 
-    torch.set_num_threads(1)
-    device = torch.device("cuda:0" if args.cuda else "cpu")
+    logger.set_dir(f'./train_logs/{args.env}_{args.seed}')
 
-    env = gym.make(args.env)
-    env.seed(args.seed)
-    env = wrap_rms(env, GAMMA)
+    config = Config['mujoco'] if args.continuous_action else Config['atari']
+    config['train_total_steps'] = args.train_total_steps
 
-    model = MujocoModel(env.observation_space.shape[0],
-                        env.action_space.shape[0])
-    model.to(device)
+    envs = ParallelEnv(args.env, args.seed, config=config, xparl_addr=args.xparl_addr)
+    obs_space = envs.obs_space
+    act_space = envs.act_space
 
-    algorithm = PPO(model, CLIP_PARAM, VALUE_LOSS_COEF, ENTROPY_COEF, LR, EPS,
-                    MAX_GRAD_NROM)
+    model = PPOModel(obs_space, act_space)
+    ppo = PPO(model, config)
+    agent = PPOAgent(ppo)
 
-    agent = MujocoAgent(algorithm, device)
+    rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space, act_space)
 
-    rollouts = RolloutStorage(NUM_STEPS, env.observation_space.shape[0],
-                              env.action_space.shape[0])
+    obs = envs.reset()
+    done = np.zeros(config['env_num'], dtype='float32')
 
-    obs = env.reset()
-    rollouts.obs[0] = np.copy(obs)
+    total_steps = 0
+    test_flag = 0
+    num_updates = int(config['train_total_steps'] // config['batch_size'])
+    for update in range(1, num_updates + 1):
+        for step in range(0, config['step_nums']):
+            total_steps += 1 * config['env_num']
 
-    episode_rewards = deque(maxlen=10)
+            value, action, logprob, _ = agent.sample(obs)
+            next_obs, reward, next_done, info = envs.step(action)
+            rollout.append(obs, action, logprob, reward, done, value.flatten())
+            obs, done = next_obs, next_done
 
-    num_updates = int(args.train_total_steps) // NUM_STEPS
-    for j in range(num_updates):
-        for step in range(NUM_STEPS):
-            # Sample actions
-            value, action, action_log_prob = agent.sample(rollouts.obs[step])
+            for item in info:
+                if "episode" in item.keys():
+                    logger.info(f"Training: total steps={total_steps}, episodic_return={item['episode']['r']}")
+                    tensorboard.add_scalar("train/episode_reward", item["episode"]["r"], total_steps)
+                    break
 
-            # Obser reward and next obs
-            obs, reward, done, info = env.step(action)
-            # get training rewards from info['episode']['r']
-            if done:
-                episode_rewards.append(info['episode']['r'])
+        # Bootstrap value if not done
+        value = agent.value(obs)
+        rollout.compute_returns(value, done, config['gamma'], config['gae_lambda'])
+    
+        # Optimizing the policy and value network
+        v_loss, pg_loss, entropy_loss, lr = agent.learn(rollout)
 
-            # If done then clean the history of observations.
-            masks = torch.FloatTensor([[0.0]] if done else [[1.0]])
-            bad_masks = torch.FloatTensor([[0.0]] if 'bad_transition' in info.
-                                          keys() else [[1.0]])
-            rollouts.append(obs, action, action_log_prob, value, reward, masks,
-                            bad_masks)
-
-        next_value = agent.value(rollouts.obs[-1])
-
-        value_loss, action_loss, dist_entropy = agent.learn(
-            next_value, GAMMA, GAE_LAMBDA, PPO_EPOCH, BATCH_SIZE, rollouts)
-
-        rollouts.after_update()
-
-        if j % LOG_INTERVAL == 0 and len(episode_rewards) > 1:
-            total_num_steps = (j + 1) * NUM_STEPS
-            print(
-                "Updates {}, num timesteps {},\n Last {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}\n"
-                .format(j, total_num_steps, len(episode_rewards),
-                        np.mean(episode_rewards), np.median(episode_rewards),
-                        np.min(episode_rewards), np.max(episode_rewards),
-                        dist_entropy, value_loss, action_loss))
-
-        if (args.test_every_steps is not None and len(episode_rewards) > 1
-                and j % args.test_every_steps == 0):
-            # get current ob_rms from training env and use it for evaluation
-            ob_rms = get_ob_rms(env)
-            eval_mean_reward = evaluate(agent, ob_rms)
-
-            summary.add_scalar('ppo/mean_validation_rewards', eval_mean_reward,
-                               (j + 1) * NUM_STEPS)
+        if (total_steps + 1) // args.test_every_steps >= test_flag:
+            while (total_steps + 1) // args.test_every_steps >= test_flag:
+                test_flag += 1
+                avg_reward = run_evaluate_episodes(agent)
+                tensorboard.add_scalar('eval/episode_reward', avg_reward,total_steps)
+                logger.info('Evaluation over: {} episodes, Reward: {}'.format(3, avg_reward))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='RL')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env", type=str, default="HalfCheetah-v2",
+        help="the id of the environment")
+    parser.add_argument("--seed", type=int, default=110,
+        help="seed of the experiment")
+    parser.add_argument("--env_num", type=int, default=1,
+        help="number of the environment. Note: if greater than 1, xparl is needed")
+    parser.add_argument("--continuous_action", type=bool, default=True,
+        help="the type of the environment")
+    parser.add_argument("--xparl_addr", type=str, default=None,
+        help="the id of the environment")
     parser.add_argument(
-        '--seed', type=int, default=616, help='random seed (default: 616)')
+        "--train_total_steps",
+        default=1e6,
+        type=int,
+        help='Max time steps to run environment')
     parser.add_argument(
         '--test_every_steps',
         type=int,
-        default=10,
-        help='eval interval (default: 10)')
-    parser.add_argument(
-        '--train_total_steps',
-        type=int,
-        default=10e5,
-        help='number of total time steps to train (default: 10e5)')
-    parser.add_argument(
-        '--env',
-        default='Hopper-v1',
-        help='environment to train on (default: Hopper-v1)')
+        default=int(5e3),
+        help='The step interval between two consecutive evaluations')
+    
     args = parser.parse_args()
-    args.cuda = torch.cuda.is_available()
-
     main()
+    

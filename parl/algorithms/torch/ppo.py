@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,83 +17,122 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.distributions import Normal
-from parl.utils.utils import check_model_method
+from torch.distributions import Normal, Categorical
 
 __all__ = ['PPO']
 
 
 class PPO(parl.Algorithm):
-    def __init__(self,
-                 model,
-                 clip_param,
-                 value_loss_coef,
-                 entropy_coef,
-                 initial_lr,
-                 eps=None,
-                 max_grad_norm=None,
-                 use_clipped_value_loss=True):
+    def __init__(self, model, config):
+        """ PPO algorithm
+            Args:
+                model(parl.Model): forward network of actor and critic.
+                config: configs setting for ppo according to `action type`
+        """
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
         check_model_method(model, 'policy', self.__class__.__name__)
+        check_model_method(model, 'get_actor_params', self.__class__.__name__)
+        check_model_method(model, 'get_critic_params', self.__class__.__name__)
 
-        self.model = model
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = model.to(device)
+        self.config = config
 
-        self.clip_param = clip_param
+        self.start_lr = self.config['start_lr']
+        self.eps = self.config['eps']
+        self.clip_coef = self.config['clip_coef']
+        self.ent_coef = self.config['ent_coef']
+        self.vf_coef = self.config['vf_coef']
 
-        self.value_loss_coef = value_loss_coef
-        self.entropy_coef = entropy_coef
+        self.max_grad_norm = self.config['max_grad_norm']
+        self.norm_adv = self.config['norm_adv']
+        self.clip_vloss = self.config['clip_vloss']
 
-        self.max_grad_norm = max_grad_norm
-        self.use_clipped_value_loss = use_clipped_value_loss
+        self.continuous_action = self.model.continuous_action
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.start_lr, eps=self.eps)
 
-        self.optimizer = optim.Adam(model.parameters(), lr=initial_lr, eps=eps)
-
-    def learn(self, obs_batch, actions_batch, value_preds_batch, return_batch,
-              old_action_log_probs_batch, adv_targ):
-        values = self.model.value(obs_batch)
-        mean, log_std = self.model.policy(obs_batch)
-        dist = Normal(mean, log_std.exp())
-
-        action_log_probs = dist.log_prob(actions_batch).sum(-1, keepdim=True)
-        dist_entropy = dist.entropy().sum(-1).mean()
-
-        ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
-        surr1 = ratio * adv_targ
-        surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
-                            1.0 + self.clip_param) * adv_targ
-        action_loss = -torch.min(surr1, surr2).mean()
-
-        if self.use_clipped_value_loss:
-            value_pred_clipped = value_preds_batch + \
-                (values - value_preds_batch).clamp(-self.clip_param, self.clip_param)
-            value_losses = (values - return_batch).pow(2)
-            value_losses_clipped = (value_pred_clipped - return_batch).pow(2)
-            value_loss = 0.5 * torch.max(value_losses,
-                                         value_losses_clipped).mean()
+    def learn(self, batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value, lr):
+        newvalue = self.model.value(batch_obs)
+        if self.continuous_action:
+            action_mean, action_std = self.model.policy(batch_obs)
+            dist = Normal(action_mean, action_std)
+            newlogprob = dist.log_prob(batch_action).sum(1)
+            entropy = dist.entropy().sum(1)
         else:
-            value_loss = 0.5 * (return_batch - values).pow(2).mean()
+            logits = self.model.policy(batch_obs)
+            dist = Categorical(logits=logits)
+            newlogprob = dist.log_prob(batch_action)
+            entropy = dist.entropy()
 
+        logratio = newlogprob - batch_logprob
+        ratio = logratio.exp()
+
+        mb_advantages = batch_adv
+        if self.norm_adv:
+            mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+
+        # Policy loss
+        pg_loss1 = -mb_advantages * ratio
+        pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - self.clip_coef, 1 + self.clip_coef)
+        pg_loss = torch.max(pg_loss1, pg_loss2).mean()
+
+        # Value loss
+        newvalue = newvalue.view(-1)
+        if self.clip_vloss:
+            v_loss_unclipped = (newvalue - batch_return) ** 2
+            v_clipped = batch_value + torch.clamp(
+                newvalue - batch_value,
+                -self.clip_coef,
+                self.clip_coef,
+            )
+            v_loss_clipped = (v_clipped - batch_return) ** 2
+            v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
+            v_loss = 0.5 * v_loss_max.mean()
+        else:
+            v_loss = 0.5 * ((newvalue - batch_return) ** 2).mean()
+
+        entropy_loss = entropy.mean()
+        loss = pg_loss - self.ent_coef * entropy_loss + v_loss * self.vf_coef
+
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = lr
+        
         self.optimizer.zero_grad()
-        (value_loss * self.value_loss_coef + action_loss -
-         dist_entropy * self.entropy_coef).backward()
+        loss.backward()
         nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
         self.optimizer.step()
 
-        return value_loss.item(), action_loss.item(), dist_entropy.item()
+        return v_loss.item(), pg_loss.item(), entropy_loss.item()
 
     def sample(self, obs):
         value = self.model.value(obs)
-        mean, log_std = self.model.policy(obs)
-        dist = Normal(mean, log_std.exp())
-        action = dist.sample()
-        action_log_probs = dist.log_prob(action).sum(-1, keepdim=True)
 
-        return value, action, action_log_probs
+        if self.continuous_action:
+            action_mean, action_std = self.model.policy(obs)
+            dist = Normal(action_mean, action_std)
+            action = dist.sample()
+
+            action_log_probs = dist.log_prob(action).sum(1)
+            action_entropy = dist.entropy().sum(1)
+        else:
+            logits = self.model.policy(obs)
+            dist = Categorical(logits=logits)
+            action = dist.sample()
+
+            action_log_probs = dist.log_prob(action)
+            action_entropy = dist.entropy()
+
+        return value, action, action_log_probs, action_entropy
 
     def predict(self, obs):
-        mean, _ = self.model.policy(obs)
-        return mean
+        if self.continuous_action:
+            action, _ = self.model.policy(obs)
+        else:
+            logits = self.model.policy(obs)
+            dist = Categorical(logits=logits)
+            action = dist.probs.argmax(dim=-1, keepdim=True)
+        return action
 
     def value(self, obs):
         return self.model.value(obs)

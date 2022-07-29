@@ -33,8 +33,6 @@ class PPO(parl.Algorithm):
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
         check_model_method(model, 'policy', self.__class__.__name__)
-        check_model_method(model, 'get_actor_params', self.__class__.__name__)
-        check_model_method(model, 'get_critic_params', self.__class__.__name__)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)

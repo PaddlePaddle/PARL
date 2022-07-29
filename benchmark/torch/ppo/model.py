@@ -72,7 +72,8 @@ class AtariModel(parl.Model):
         out = self.relu(self.conv2(out))
         out = self.relu(self.conv3(out))
 
-        out = self.fc(self.flatten(out))
+        out = self.flatten(out)
+        out = self.relu(self.fc(out))
         value = self.fc_v(out)
         return value
 
@@ -82,7 +83,8 @@ class AtariModel(parl.Model):
         out = self.relu(self.conv2(out))
         out = self.relu(self.conv3(out))
 
-        out = self.fc(self.flatten(out))
+        out = self.flatten(out)
+        out = self.relu(self.fc(out))
         logits = self.fc_pi(out)
         return logits
 

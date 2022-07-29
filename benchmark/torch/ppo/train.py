@@ -80,11 +80,12 @@ def main():
 
             for item in info:
                 if "episode" in item.keys():
+                    rewards = item['episode']['r']
                     logger.info(
-                        "Training: total steps={}, episodic_return={}"
-                        .format(total_steps, item['episode']['r']))
-                    tensorboard.add_scalar("train/episode_reward",
-                                           item["episode"]["r"], total_steps)
+                        "Training: total steps={}, episode reward={}".format(
+                            total_steps, rewards))
+                    tensorboard.add_scalar("train/episode_reward", rewards,
+                                           total_steps)
                     break
 
         # Bootstrap value if not done

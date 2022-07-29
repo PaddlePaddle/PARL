@@ -30,7 +30,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 python train.py
 
 # To train an agent for discrete action game (Atari)
-python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False --train_total_steps 10000000
+python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False
 
 # For more customized arguments
 # python train.py --help
@@ -46,10 +46,10 @@ xparl start --port 8010 --cpu_num 5
 
 Note that if you have started a master before, you don't have to run the above
 command. For more information about the cluster, please refer to our
-[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html)
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
 Then we can start the distributed training by running:
 
 ```
-python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False --train_total_steps 10000000 --xparl_addr 'localhost:8010'
+python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False --xparl_addr 'localhost:8010'
 ```

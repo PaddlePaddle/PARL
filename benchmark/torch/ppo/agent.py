@@ -25,8 +25,8 @@ class PPOAgent(parl.Agent):
         self.config = self.alg.config
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
-        self.lr_scheduler = LinearDecayScheduler(
-            self.config['start_lr'], self.config['train_total_steps'])
+        self.lr_scheduler = LinearDecayScheduler(self.config['start_lr'],
+                                                 self.config['num_updates'])
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
@@ -53,9 +53,7 @@ class PPOAgent(parl.Agent):
         pg_loss_epoch = 0
         entropy_loss_epoch = 0
 
-        num_updates = self.config['update_epochs'] * self.config[
-            'minibatch_size']
-        lr = self.lr_scheduler.step(step_num=num_updates)
+        lr = self.lr_scheduler.step(step_num=1)
 
         indexes = np.arange(self.config['batch_size'])
         for epoch in range(self.config['update_epochs']):
@@ -83,8 +81,8 @@ class PPOAgent(parl.Agent):
                 pg_loss_epoch += pg_loss
                 entropy_loss_epoch += entropy_loss
 
-        v_loss_epoch /= num_updates
-        pg_loss_epoch /= num_updates
-        entropy_loss_epoch /= num_updates
+        v_loss_epoch /= self.config['num_updates']
+        pg_loss_epoch /= self.config['num_updates']
+        entropy_loss_epoch /= self.config['num_updates']
 
         return v_loss_epoch, pg_loss_epoch, entropy_loss_epoch, lr

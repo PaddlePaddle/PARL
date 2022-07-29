@@ -50,7 +50,6 @@ def main():
     logger.set_dir('./train_logs/{}_{}'.format(args.env, args.seed))
 
     config = Config['mujoco'] if args.continuous_action else Config['atari']
-    config['train_total_steps'] = args.train_total_steps
 
     envs = ParallelEnv(
         args.env, args.seed, config=config, xparl_addr=args.xparl_addr)
@@ -131,11 +130,6 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="the id of the environment")
-    parser.add_argument(
-        "--train_total_steps",
-        default=1e6,
-        type=int,
-        help='Max time steps to run environment')
     parser.add_argument(
         '--test_every_steps',
         type=int,

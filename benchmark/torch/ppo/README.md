@@ -37,11 +37,11 @@ python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action F
 ```
 
 ### Distributed Training
-Accelerate training process when `env_num > 1`.
-To At first, we can start a local cluster with 5 CPUs:
+Accelerate training process when `env_num > 1`.     
+At first, we can start a local cluster with 5 CPUs:
 
 ```
-xparl start --port 8010 --cpu_num 5
+xparl start --port 8010 --cpu_num 8
 ```
 
 Note that if you have started a master before, you don't have to run the above

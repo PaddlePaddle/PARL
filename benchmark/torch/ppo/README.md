@@ -26,19 +26,16 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 ### Local Training:
 
 ```
-# To train an agent for continuous action game (Mujoco: HalfCheetah-v2 by default)
+# To train an agent for discrete action game (Atari: PongNoFrameskip-v4 by default)
 python train.py
 
-# To train an agent for discrete action game (Atari)
-python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False
-
-# For more customized arguments
-# python train.py --help
+# To train an agent for continuous action game (Mujoco)
+python train.py --env 'HalfCheetah-v2' --continuous_action
 ```
 
 ### Distributed Training
 Accelerate training process when `env_num > 1`.     
-At first, we can start a local cluster with 5 CPUs:
+At first, we can start a local cluster with 8 CPUs:
 
 ```
 xparl start --port 8010 --cpu_num 8
@@ -51,5 +48,11 @@ command. For more information about the cluster, please refer to our
 Then we can start the distributed training by running:
 
 ```
-python train.py --env 'BreakoutNoFrameskip-v4' --env_num 8 --continuous_action False --xparl_addr 'localhost:8010'
+python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
 ```
+#### Training time Comparison
+
+|  Environment         | env_num  | Time/h (local, distributed) |
+|----|----|----|
+|  PongNoFrameskip-v4  | 8  | 37.28, 13.36 |
+| BreakoutNoFrameskip-v4  | 8 | - |

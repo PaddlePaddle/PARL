@@ -25,10 +25,7 @@ atari_config = {
     'num_minibatches': 4,
     'update_epochs':
     4,  # number of epochs for updating using each T data (ie K in the paper)
-    'batch_size': int(8 * 128),  # env_num * step_nums
-    'minibatch_size': int(8 * 128 // 4),  # batch_size // num_minibatches
-    'num_updates': int(
-        int(1e7) // int(8 * 128)),  # train_total_steps // batch_size
+    'eval_episode': 3,
 
     #========== coefficient of ppo ==========
     'gamma': 0.99,
@@ -57,12 +54,9 @@ mujoco_config = {
     'step_nums': 2048,
     'num_minibatches': 32,
     'update_epochs': 10,
-    'batch_size': int(1 * 2048),
-    'minibatch_size': int(1 * 2048 // 32),
-    'num_updates': int(int(1e6) // int(1 * 2048)),
     'start_lr': 3e-4,
     'eps': 1e-5,
-
+    'eval_episode': 3,
     #========== coefficient of ppo ==========
     'gamma': 0.99,
     'gae': True,

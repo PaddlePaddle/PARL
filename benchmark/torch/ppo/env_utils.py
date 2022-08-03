@@ -17,13 +17,14 @@ import gym
 import numpy as np
 from parl.utils import logger
 from parl.env.atari_wrappers import wrap_deepmind
+from parl.env.mujoco_wrappers import wrap_rms
 
+TEST_EPISODE = 3
 # wrapper parameters for atari env
 ENV_DIM = 84
 OBS_FORMAT = 'NCHW'
 # wrapper parameters for mujoco env
 GAMMA = 0.99
-CLIP_BOUND = 10
 
 
 class ParallelEnv(object):
@@ -46,13 +47,13 @@ class ParallelEnv(object):
         else:
             self.env_list = [base_env(env_name) for _ in range(self.env_num)]
 
-        self.obs_space = self.env_list[0].obs_space
-        self.act_space = self.env_list[0].act_space
         self._max_episode_steps = self.env_list[0]._max_episode_steps
 
-        self.episode_reward_list = [0] * self.env_num
-        self.episode_steps_list = [0] * self.env_num
         self.total_steps = 0
+        self.episode_steps_list = [0] * self.env_num
+        self.episode_reward_list = [0] * self.env_num
+        # used for env initialization for evaluating mujoco environment
+        self.eval_ob_rms = None
 
     def reset(self):
         obs_list = [env.reset() for env in self.env_list]
@@ -62,10 +63,7 @@ class ParallelEnv(object):
         return self.obs_list
 
     def step(self, action_list):
-        next_obs_list = []
-        reward_list = []
-        done_list = []
-        info_list = []
+        next_obs_list, reward_list, done_list, info_list = [], [], [], []
         if self.use_xparl:
             return_list = [
                 self.env_list[i].step(action_list[i])
@@ -96,12 +94,16 @@ class ParallelEnv(object):
 
             if done or self.episode_steps_list[i] >= self._max_episode_steps:
                 # logger.info("Training env {} done, episode reward: {}".format(i, self.episode_reward_list[i]))
+                if self.use_xparl:
+                    obs = self.env_list[i].reset()
+                    next_obs = obs.get()
+                    next_obs = np.array(next_obs)
+                else:
+                    next_obs = self.env_list[i].reset()
                 self.episode_steps_list[i] = 0
                 self.episode_reward_list[i] = 0
+                self.global_ob_rms = self.env_list[i].get_ob_rms()
 
-                next_obs = self.env_list[i].reset()
-                if self.use_xparl:
-                    pass
             next_obs_list.append(next_obs)
             reward_list.append(reward)
             done_list.append(done)
@@ -111,21 +113,19 @@ class ParallelEnv(object):
 
 
 class LocalEnv(object):
-    def __init__(self, env_name, env_seed=None):
+    def __init__(self, env_name, env_seed=None, test=False, ob_rms=None):
         env = gym.make(env_name)
         self._max_episode_steps = env._max_episode_steps
-        env = gym.wrappers.RecordEpisodeStatistics(env)
 
         if hasattr(env.action_space, 'high'):
-            env = gym.wrappers.ClipAction(env)
-            env = gym.wrappers.NormalizeObservation(env)
-            env = gym.wrappers.TransformObservation(
-                env, lambda obs: np.clip(obs, -CLIP_BOUND, CLIP_BOUND))
-            env = gym.wrappers.NormalizeReward(env, gamma=GAMMA)
-            env = gym.wrappers.TransformReward(
-                env, lambda reward: np.clip(reward, -CLIP_BOUND, CLIP_BOUND))
-            self.env = env
+            self.continuous_action = True
+            if test:
+                self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)
+            else:
+                self.env = wrap_rms(env, gamma=GAMMA)
         elif hasattr(env.action_space, 'n'):
+            self.continuous_action = False
+            env = gym.wrappers.RecordEpisodeStatistics(env)
             self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
@@ -142,37 +142,49 @@ class LocalEnv(object):
 
     def reset(self):
         obs = self.env.reset()
+        if obs.shape[0] == 1:
+            obs = np.squeeze(obs, axis=0)
         return obs
 
     def step(self, action):
-        return self.env.step(action)
+        next_obs, reward, done, info = self.env.step(action)
+        if next_obs.shape[0] == 1:
+            next_obs = np.squeeze(next_obs, axis=0)
+        return next_obs, reward, done, info
+
+    def get_ob_rms(self):
+        if self.continuous_action:
+            return self.env.get_ob_rms()
+        else:
+            return None
+
+    def set_ob_rms(self, ob_rms):
+        if self.continuous_action:
+            return self.env.set_ob_rms(ob_rms)
+        else:
+            return None
 
 
 @parl.remote_class(wait=False)
 class RemoteEnv(object):
-    def __init__(self, env_name, env_seed=None):
+    def __init__(self, env_name, env_seed=None, test=False, ob_rms=None):
         env = gym.make(env_name)
         self._max_episode_steps = env._max_episode_steps
-        env = gym.wrappers.RecordEpisodeStatistics(env)
 
         if hasattr(env.action_space, 'high'):
-            env = gym.wrappers.ClipAction(env)
-            env = gym.wrappers.NormalizeObservation(env)
-            env = gym.wrappers.TransformObservation(
-                env, lambda obs: np.clip(obs, -10, 10))
-            env = gym.wrappers.NormalizeReward(env, gamma=0.99)
-            env = gym.wrappers.TransformReward(
-                env, lambda reward: np.clip(reward, -10, 10))
-            self.env = env
+            self.continuous_action = True
+            if test:
+                self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)
+            else:
+                self.env = wrap_rms(env, gamma=GAMMA)
         elif hasattr(env.action_space, 'n'):
+            self.continuous_action = False
+            env = gym.wrappers.RecordEpisodeStatistics(env)
             self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
                 "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
             )
-
-        self.obs_space = self.env.observation_space
-        self.act_space = self.env.action_space
         if env_seed:
             self.env.seed(env_seed)
             self.env.action_space.seed(env_seed)
@@ -184,3 +196,20 @@ class RemoteEnv(object):
 
     def step(self, action):
         return self.env.step(action)
+
+    def get_ob_rms(self):
+        if self.continuous_action:
+            return self.env.get_ob_rms()
+        else:
+            return None
+
+    def set_ob_rms(self, ob_rms):
+        if self.continuous_action:
+            return self.env.set_ob_rms(ob_rms)
+        else:
+            return None
+
+    def render(self):
+        return logger.warning(
+            'Can not render in remote environment, render() have been skipped.'
+        )

@@ -18,33 +18,6 @@ import torch.nn as nn
 import numpy as np
 
 
-class PPOModel(parl.Model):
-    def __init__(self, obs_space, act_space):
-        super().__init__()
-
-        self.continuous_action = True
-        if hasattr(act_space, 'high'):
-            self.actor_critic = MujocoModel(obs_space, act_space)
-        elif hasattr(act_space, 'n'):
-            self.continuous_action = False
-            self.actor_critic = AtariModel(obs_space, act_space)
-        else:
-            raise AssertionError(
-                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
-            )
-
-    def value(self, obs):
-        return self.actor_critic.value(obs)
-
-    def policy(self, obs):
-        if self.continuous_action:
-            action_mean, action_std = self.actor_critic.policy(obs)
-            return action_mean, action_std
-        else:
-            logits = self.actor_critic.policy(obs)
-            return logits
-
-
 def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
     torch.nn.init.orthogonal_(layer.weight, std)
     torch.nn.init.constant_(layer.bias, bias_const)
@@ -54,6 +27,7 @@ def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
 class AtariModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(AtariModel, self).__init__()
+        self.continuous_action = False
 
         self.conv1 = _init_layer(nn.Conv2d(4, 32, 8, stride=4))
         self.conv2 = _init_layer(nn.Conv2d(32, 64, 4, stride=2))
@@ -87,35 +61,3 @@ class AtariModel(parl.Model):
         out = self.relu(self.fc(out))
         logits = self.fc_pi(out)
         return logits
-
-
-class MujocoModel(parl.Model):
-    def __init__(self, obs_space, act_space):
-        super(MujocoModel, self).__init__()
-
-        self.fc_v1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
-        self.fc_v2 = _init_layer(nn.Linear(64, 64))
-        self.fc_v3 = _init_layer(nn.Linear(64, 1), std=1.0)
-
-        self.fc_pi1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
-        self.fc_pi2 = _init_layer(nn.Linear(64, 64))
-        self.fc_pi3 = _init_layer(
-            nn.Linear(64, np.prod(act_space.shape)), std=0.01)
-
-        self.tanh = nn.Tanh()
-        self.fc_pi_std = nn.Parameter(torch.zeros(1, act_space.shape[0]))
-
-    def value(self, obs):
-        out = self.tanh(self.fc_v1(obs))
-        out = self.tanh(self.fc_v2(out))
-        value = self.fc_v3(out)
-        return value
-
-    def policy(self, obs):
-        out = self.tanh(self.fc_pi1(obs))
-        out = self.tanh(self.fc_pi2(out))
-        action_mean = self.fc_pi3(out)
-
-        action_logstd = self.fc_pi_std.expand_as(action_mean)
-        action_std = torch.exp(action_logstd)
-        return action_mean, action_std

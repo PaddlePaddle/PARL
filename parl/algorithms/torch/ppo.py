@@ -24,36 +24,52 @@ __all__ = ['PPO']
 
 
 class PPO(parl.Algorithm):
-    def __init__(self, model, config):
+    def __init__(self,
+                 model,
+                 clip_coef=None,
+                 vf_coef=None,
+                 ent_coef=None,
+                 start_lr=None,
+                 eps=None,
+                 max_grad_norm=None,
+                 clip_vloss=True,
+                 norm_adv=True):
         """ PPO algorithm
             Args:
                 model(parl.Model): forward network of actor and critic.
-                config: configs setting for ppo according to `action type`
         """
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
         check_model_method(model, 'policy', self.__class__.__name__)
 
+        assert isinstance(clip_coef, float)
+        assert isinstance(vf_coef, float)
+        assert isinstance(ent_coef, float)
+        assert isinstance(start_lr, float)
+        self.start_lr = start_lr
+        self.eps = eps
+        self.clip_coef = clip_coef
+        self.ent_coef = ent_coef
+        self.vf_coef = vf_coef
+        self.max_grad_norm = max_grad_norm
+        self.clip_vloss = clip_vloss
+
+        self.norm_adv = norm_adv
+
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
-        self.config = config
-
-        self.start_lr = self.config['start_lr']
-        self.eps = self.config['eps']
-        self.clip_coef = self.config['clip_coef']
-        self.ent_coef = self.config['ent_coef']
-        self.vf_coef = self.config['vf_coef']
-
-        self.max_grad_norm = self.config['max_grad_norm']
-        self.norm_adv = self.config['norm_adv']
-        self.clip_vloss = self.config['clip_vloss']
-
         self.continuous_action = self.model.continuous_action
         self.optimizer = optim.Adam(
             self.model.parameters(), lr=self.start_lr, eps=self.eps)
 
-    def learn(self, batch_obs, batch_action, batch_logprob, batch_adv,
-              batch_return, batch_value, lr):
+    def learn(self,
+              batch_obs,
+              batch_action,
+              batch_value,
+              batch_return,
+              batch_logprob,
+              batch_adv,
+              lr=None):
         newvalue = self.model.value(batch_obs)
         if self.continuous_action:
             action_mean, action_std = self.model.policy(batch_obs)
@@ -98,8 +114,9 @@ class PPO(parl.Algorithm):
         entropy_loss = entropy.mean()
         loss = pg_loss - self.ent_coef * entropy_loss + v_loss * self.vf_coef
 
-        for param_group in self.optimizer.param_groups:
-            param_group['lr'] = lr
+        if lr:
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = lr
 
         self.optimizer.zero_grad()
         loss.backward()

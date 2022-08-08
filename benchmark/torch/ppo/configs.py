@@ -16,7 +16,6 @@ atari_config = {
     #==========  env config ==========
     'env_name': 'PongNoFrameskip-v4',
     'continuous_action': False,
-    'env_dim': 84,
     'env_num': 8,
 
     #==========  training config ==========
@@ -32,6 +31,7 @@ atari_config = {
     'gae': True,  # whether or not to use GAE
     'gae_lambda': 0.95,  # Lambda parameter for calculating N-step advantage
     'start_lr': 2.5e-4,  # start learning rate
+    'lr_decay': True,  # whether or not to use linear decay rl
     'eps': 1e-5,  # Adam optimizer epsilon (default: 1e-5)
     'clip_coef':
     0.1,  # epsilon in clipping loss (ie. clip(r_t, 1 - epsilon, 1 + epsilon))
@@ -55,6 +55,7 @@ mujoco_config = {
     'num_minibatches': 32,
     'update_epochs': 10,
     'start_lr': 3e-4,
+    'lr_decay': True,
     'eps': 1e-5,
     'eval_episode': 3,
     #========== coefficient of ppo ==========

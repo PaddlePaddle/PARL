@@ -8,10 +8,10 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 
 ### Benchmark result
 #### 1. Mujoco games results
-<img src=".benchmark/ppo-mujoco.png" width = "800" height ="400" alt="ppo-mujoco_results"/>
+<img src=".benchmark/ppo-mujoco.png" alt="ppo-mujoco_results"/>
 
 #### 2. Atari games results
-<img src=".benchmark/ppo-atari.png" width = "800" height ="400" alt="ppo-atari_results"/>
+<img src=".benchmark/ppo-atari.png" alt="ppo-atari_results"/>
 
 + Each experiment was run three times with different seeds
 
@@ -52,7 +52,8 @@ python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8
 ```
 #### Training time Comparison
 
+Training time comparison for 10M steps in Atari games.
 |  Environment         | env_num  | Time/h (local, distributed) |
 |----|----|----|
-|  PongNoFrameskip-v4  | 8  | 37.28, 13.36 |
-| BreakoutNoFrameskip-v4  | 8 | - |
+|  PongNoFrameskip-v4  | 8  | 61.67, 29.05 |
+

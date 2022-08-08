@@ -19,14 +19,15 @@ from parl.utils.scheduler import LinearDecayScheduler
 
 
 class PPOAgent(parl.Agent):
-    def __init__(self, algorithm):
+    def __init__(self, algorithm, config):
         super(PPOAgent, self).__init__(algorithm)
 
-        self.config = self.alg.config
+        self.config = config
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
-        self.lr_scheduler = LinearDecayScheduler(self.config['start_lr'],
-                                                 self.config['num_updates'])
+        if self.config['lr_decay']:
+            self.lr_scheduler = LinearDecayScheduler(
+                self.config['start_lr'], self.config['num_updates'])
 
     def predict(self, obs):
         obs = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
@@ -52,15 +53,19 @@ class PPOAgent(parl.Agent):
         v_loss_epoch = 0
         pg_loss_epoch = 0
         entropy_loss_epoch = 0
+        if self.config['lr_decay']:
+            lr = self.lr_scheduler.step(step_num=1)
+        else:
+            lr = None
 
-        lr = self.lr_scheduler.step(step_num=1)
+        minibatch_size = int(
+            self.config['batch_size'] // self.config['num_minibatches'])
 
         indexes = np.arange(self.config['batch_size'])
         for epoch in range(self.config['update_epochs']):
             np.random.shuffle(indexes)
-            for start in range(0, self.config['batch_size'],
-                               self.config['minibatch_size']):
-                end = start + self.config['minibatch_size']
+            for start in range(0, self.config['batch_size'], minibatch_size):
+                end = start + minibatch_size
                 sample_idx = indexes[start:end]
 
                 batch_obs, batch_action, batch_logprob, batch_adv, batch_return, batch_value = rollout.sample_batch(
@@ -74,15 +79,16 @@ class PPOAgent(parl.Agent):
                 batch_value = torch.from_numpy(batch_value).to(self.device)
 
                 v_loss, pg_loss, entropy_loss = self.alg.learn(
-                    batch_obs, batch_action, batch_logprob, batch_adv,
-                    batch_return, batch_value, lr)
+                    batch_obs, batch_action, batch_value, batch_return,
+                    batch_logprob, batch_adv, lr)
 
                 v_loss_epoch += v_loss
                 pg_loss_epoch += pg_loss
                 entropy_loss_epoch += entropy_loss
 
-        v_loss_epoch /= self.config['num_updates']
-        pg_loss_epoch /= self.config['num_updates']
-        entropy_loss_epoch /= self.config['num_updates']
+        update_steps = self.config['update_epochs'] * self.config['batch_size']
+        v_loss_epoch /= update_steps
+        pg_loss_epoch /= update_steps
+        entropy_loss_epoch /= update_steps
 
         return v_loss_epoch, pg_loss_epoch, entropy_loss_epoch, lr

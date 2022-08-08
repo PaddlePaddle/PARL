@@ -19,7 +19,8 @@ from parl.utils import logger, tensorboard
 from configs import Config
 from env_utils import ParallelEnv, LocalEnv
 from storage import RolloutStorage
-from model import PPOModel
+from atari_model import AtariModel
+from mujoco_model import MujocoModel
 from parl.algorithms import PPO
 from agent import PPOAgent
 
@@ -50,8 +51,6 @@ def main():
     if args.env_num:
         config['env_num'] = args.env_num
     config['batch_size'] = int(config['env_num'] * config['step_nums'])
-    config['minibatch_size'] = int(
-        config['batch_size'] // config['num_minibatches'])
     config['num_updates'] = int(
         config['train_total_steps'] // config['batch_size'])
 
@@ -65,9 +64,15 @@ def main():
     obs_space = eval_env.obs_space
     act_space = eval_env.act_space
 
-    model = PPOModel(obs_space, act_space)
-    ppo = PPO(model, config)
-    agent = PPOAgent(ppo)
+    if args.continuous_action:
+        model = MujocoModel(obs_space, act_space)
+    else:
+        model = AtariModel(obs_space, act_space)
+
+    ppo = PPO(model, config['clip_coef'], config['vf_coef'],
+              config['ent_coef'], config['start_lr'], config['eps'],
+              config['max_grad_norm'])
+    agent = PPOAgent(ppo, config)
 
     rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space,
                              act_space)
@@ -77,8 +82,7 @@ def main():
 
     total_steps = 0
     test_flag = 0
-    num_updates = int(config['train_total_steps'] // config['batch_size'])
-    for update in range(1, num_updates + 1):
+    for update in range(1, config['num_updates'] + 1):
         for step in range(0, config['step_nums']):
             total_steps += 1 * config['env_num']
 
@@ -90,8 +94,8 @@ def main():
             for k in range(config['env_num']):
                 if done[k]:
                     logger.info(
-                        "Training: total steps={}, episodic_return={}".format(
-                            total_steps, info[k]['episode']['r']))
+                        "Training: total steps: {}, episode rewards: {}".
+                        format(total_steps, info[k]['episode']['r']))
                     tensorboard.add_scalar("train/episode_reward",
                                            info[k]["episode"]["r"],
                                            total_steps)
@@ -108,8 +112,8 @@ def main():
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
                 if args.continuous_action:
-                    ob_ram = envs.eval_ob_rms
-                    eval_env.set_ob_rms(ob_ram)
+                    ob_rms = envs.eval_ob_rms
+                    eval_env.set_ob_rms(ob_rms)
 
                 avg_reward = run_evaluate_episodes(agent, eval_env,
                                                    config['eval_episode'])

@@ -52,7 +52,7 @@ class ParallelEnv(object):
         self.total_steps = 0
         self.episode_steps_list = [0] * self.env_num
         self.episode_reward_list = [0] * self.env_num
-        # used for env initialization for evaluating mujoco environment
+        # used for env initialization for evaluating in mujoco environment
         self.eval_ob_rms = None
 
     def reset(self):
@@ -93,7 +93,6 @@ class ParallelEnv(object):
             self.episode_reward_list[i] += reward
 
             if done or self.episode_steps_list[i] >= self._max_episode_steps:
-                # logger.info("Training env {} done, episode reward: {}".format(i, self.episode_reward_list[i]))
                 if self.use_xparl:
                     obs = self.env_list[i].reset()
                     next_obs = obs.get()
@@ -102,7 +101,7 @@ class ParallelEnv(object):
                     next_obs = self.env_list[i].reset()
                 self.episode_steps_list[i] = 0
                 self.episode_reward_list[i] = 0
-                self.global_ob_rms = self.env_list[i].get_ob_rms()
+                self.eval_ob_rms = self.env_list[i].get_ob_rms()
 
             next_obs_list.append(next_obs)
             reward_list.append(reward)
@@ -117,16 +116,21 @@ class LocalEnv(object):
         env = gym.make(env_name)
         self._max_episode_steps = env._max_episode_steps
 
+        # is instance of gym.spaces.Box
         if hasattr(env.action_space, 'high'):
             self.continuous_action = True
             if test:
                 self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)
             else:
                 self.env = wrap_rms(env, gamma=GAMMA)
+        # is instance of gym.spaces.Discrete
         elif hasattr(env.action_space, 'n'):
             self.continuous_action = False
             env = gym.wrappers.RecordEpisodeStatistics(env)
-            self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
+            if test:
+                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT, test=True, test_episodes=1)
+            else:
+                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
                 "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
@@ -137,28 +141,22 @@ class LocalEnv(object):
 
         if env_seed:
             self.env.seed(env_seed)
-            self.env.action_space.seed(env_seed)
-            self.env.observation_space.seed(env_seed)
 
     def reset(self):
-        obs = self.env.reset()
-        if obs.shape[0] == 1:
-            obs = np.squeeze(obs, axis=0)
-        return obs
+        return self.env.reset()
 
     def step(self, action):
-        next_obs, reward, done, info = self.env.step(action)
-        if next_obs.shape[0] == 1:
-            next_obs = np.squeeze(next_obs, axis=0)
-        return next_obs, reward, done, info
+        return self.env.step(action)
 
     def get_ob_rms(self):
+        # used only for mujoco environment, get running mean and variance of obs
         if self.continuous_action:
             return self.env.get_ob_rms()
         else:
             return None
 
     def set_ob_rms(self, ob_rms):
+        # used only for mujoco environment, set running mean and variance of obs
         if self.continuous_action:
             return self.env.set_ob_rms(ob_rms)
         else:
@@ -180,19 +178,19 @@ class RemoteEnv(object):
         elif hasattr(env.action_space, 'n'):
             self.continuous_action = False
             env = gym.wrappers.RecordEpisodeStatistics(env)
-            self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
+            if test:
+                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT, test=True, test_episodes=1)
+            else:
+                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
                 "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
             )
         if env_seed:
             self.env.seed(env_seed)
-            self.env.action_space.seed(env_seed)
-            self.env.observation_space.seed(env_seed)
 
     def reset(self):
-        obs = self.env.reset()
-        return obs
+        return self.env.reset()
 
     def step(self, action):
         return self.env.step(action)

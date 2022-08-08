@@ -128,12 +128,18 @@ class LocalEnv(object):
             self.continuous_action = False
             env = gym.wrappers.RecordEpisodeStatistics(env)
             if test:
-                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT, test=True, test_episodes=1)
+                self.env = wrap_deepmind(
+                    env,
+                    dim=ENV_DIM,
+                    obs_format=OBS_FORMAT,
+                    test=True,
+                    test_episodes=1)
             else:
-                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
+                self.env = wrap_deepmind(
+                    env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
-                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
+                'act_space must be instance of gym.spaces.Box or gym.spaces.Discrete'
             )
 
         self.obs_space = self.env.observation_space
@@ -179,12 +185,18 @@ class RemoteEnv(object):
             self.continuous_action = False
             env = gym.wrappers.RecordEpisodeStatistics(env)
             if test:
-                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT, test=True, test_episodes=1)
+                self.env = wrap_deepmind(
+                    env,
+                    dim=ENV_DIM,
+                    obs_format=OBS_FORMAT,
+                    test=True,
+                    test_episodes=1)
             else:
-                self.env = wrap_deepmind(env, dim=ENV_DIM, obs_format=OBS_FORMAT)
+                self.env = wrap_deepmind(
+                    env, dim=ENV_DIM, obs_format=OBS_FORMAT)
         else:
             raise AssertionError(
-                "act_space must be instance of gym.spaces.Box or gym.spaces.Discrete"
+                'act_space must be instance of gym.spaces.Box or gym.spaces.Discrete'
             )
         if env_seed:
             self.env.seed(env_seed)

@@ -56,4 +56,4 @@ Training time comparison for 10M steps in Atari games.
 |  Environment         | env_num  | Time/h (local, distributed) |
 |----|----|----|
 |  PongNoFrameskip-v4  | 8  | 61.67, 29.05 |
-
+| BreakoutNoFrameskip-v4  | 8 | - |

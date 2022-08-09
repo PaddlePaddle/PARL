@@ -16,7 +16,8 @@ import argparse
 import numpy as np
 from parl.utils import logger, tensorboard
 
-from configs import Config
+from mujoco_config import mujoco_config
+from atari_config import atari_config
 from env_utils import ParallelEnv, LocalEnv
 from storage import RolloutStorage
 from atari_model import AtariModel
@@ -47,7 +48,7 @@ def main():
     logger.info('Env: {}, seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
 
-    config = Config['mujoco'] if args.continuous_action else Config['atari']
+    config = mujoco_config if args.continuous_action else atari_config
     if args.env_num:
         config['env_num'] = args.env_num
     config['batch_size'] = int(config['env_num'] * config['step_nums'])
@@ -92,7 +93,7 @@ def main():
             obs, done = next_obs, next_done
 
             for k in range(config['env_num']):
-                if done[k]:
+                if done[k] and "episode" in info[k].keys():
                     logger.info(
                         "Training: total steps: {}, episode rewards: {}".
                         format(total_steps, info[k]['episode']['r']))
@@ -112,8 +113,9 @@ def main():
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
                 if args.continuous_action:
+                    # set running mean and variance of obs
                     ob_rms = envs.eval_ob_rms
-                    eval_env.set_ob_rms(ob_rms)
+                    eval_env.env.set_ob_rms(ob_rms)
 
                 avg_reward = run_evaluate_episodes(agent, eval_env,
                                                    config['eval_episode'])

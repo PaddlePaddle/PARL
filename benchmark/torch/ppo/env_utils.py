@@ -101,7 +101,9 @@ class ParallelEnv(object):
                     next_obs = self.env_list[i].reset()
                 self.episode_steps_list[i] = 0
                 self.episode_reward_list[i] = 0
-                self.eval_ob_rms = self.env_list[i].get_ob_rms()
+                if self.env_list[i].continuous_action:
+                    # get running mean and variance of obs
+                    self.eval_ob_rms = self.env_list[i].env.get_ob_rms()
 
             next_obs_list.append(next_obs)
             reward_list.append(reward)
@@ -154,20 +156,6 @@ class LocalEnv(object):
     def step(self, action):
         return self.env.step(action)
 
-    def get_ob_rms(self):
-        # used only for mujoco environment, get running mean and variance of obs
-        if self.continuous_action:
-            return self.env.get_ob_rms()
-        else:
-            return None
-
-    def set_ob_rms(self, ob_rms):
-        # used only for mujoco environment, set running mean and variance of obs
-        if self.continuous_action:
-            return self.env.set_ob_rms(ob_rms)
-        else:
-            return None
-
 
 @parl.remote_class(wait=False)
 class RemoteEnv(object):
@@ -206,18 +194,6 @@ class RemoteEnv(object):
 
     def step(self, action):
         return self.env.step(action)
-
-    def get_ob_rms(self):
-        if self.continuous_action:
-            return self.env.get_ob_rms()
-        else:
-            return None
-
-    def set_ob_rms(self, ob_rms):
-        if self.continuous_action:
-            return self.env.set_ob_rms(ob_rms)
-        else:
-            return None
 
     def render(self):
         return logger.warning(

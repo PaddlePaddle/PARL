@@ -8,17 +8,20 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 
 ### Benchmark result
 #### 1. Mujoco games results
-<img src=".benchmark/ppo-mujoco.png" alt="ppo-mujoco_results"/>
+<p align="center">
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/torch/mujoco_result.png" alt="mujoco-result"/>
+</p>
 
 #### 2. Atari games results
-<img src=".benchmark/ppo-atari.png" alt="ppo-atari_results"/>
-
+<p align="center">
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/torch/atari_result.png" alt="atari-result"/>
+</p>
 + Each experiment was run three times with different seeds
 
 ## How to use
 ### Dependencies:
 + python>=3.6.2
-+ [parl](https://github.com/PaddlePaddle/PARL)
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + pytorch
 + gym==0.21.0
 + mujoco-py==2.1.2.14
@@ -48,7 +51,11 @@ command. For more information about the cluster, please refer to our
 Then we can start the distributed training by running:
 
 ```
+# To train an agent distributedly
+# for discrete action game (Atari games)
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
+# for continuous action game (Mujoco games)
+python train.py --env 'HalfCheetah-v2' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
 ```
 #### Training time Comparison
 

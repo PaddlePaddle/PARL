@@ -36,7 +36,15 @@ class PPO(parl.Algorithm):
                  norm_adv=True):
         """ PPO algorithm
             Args:
-                model(parl.Model): forward network of actor and critic.
+                model (parl.Model): forward network of actor and critic.
+                clip_coef (float): epsilon in clipping loss.
+                vf_coef (float): value function loss coefficient in the optimization objective.
+                ent_coef (float): policy entropy coefficient in the optimization objective.
+                start_lr (float): learning rate.
+                eps (float): Adam optimizer epsilon.
+                max_grad_norm (float): max gradient norm for gradient clipping.
+                clip_vloss (bool): whether or not to use a clipped loss for the value function
+                norm_adv (bool): whether or not to use advantages normalization
         """
         # checks
         check_model_method(model, 'value', self.__class__.__name__)
@@ -70,6 +78,21 @@ class PPO(parl.Algorithm):
               batch_logprob,
               batch_adv,
               lr=None):
+        """ update model with PPO algorithm
+        Args:
+            batch_obs (torch.Tensor):           (batch_size, obs_shape)
+            batch_action (torch.Tensor):        (batch_size, action_shape)
+            batch_value (torch.Tensor):         (batch_size)
+            batch_return (torch.Tensor):        (batch_size)
+            batch_logprob (torch.Tensor):       (batch_size)
+            batch_adv (torch.Tensor):           (batch_size)
+            lr (torch.Tensor):
+
+        Returns:
+            v_loss (float): value loss
+            pg_loss (float): policy loss
+            entropy_loss (float): entropy loss
+        """
         newvalue = self.model.value(batch_obs)
         if self.continuous_action:
             action_mean, action_std = self.model.policy(batch_obs)
@@ -126,6 +149,16 @@ class PPO(parl.Algorithm):
         return v_loss.item(), pg_loss.item(), entropy_loss.item()
 
     def sample(self, obs):
+        """ Define the sampling process. This function returns the action according to action distribution.
+        
+        Args:
+            obs (torch tensor): observation, shape([B] + obs_shape)
+        Returns:
+            value (torch tensor): value, shape([B, 1])
+            action (torch tensor): action, shape([B] + action_shape)
+            action_log_probs (torch tensor): action log probs, shape([B])
+            action_entropy (torch tensor): action entropy, shape([B])
+        """
         value = self.model.value(obs)
 
         if self.continuous_action:
@@ -146,6 +179,13 @@ class PPO(parl.Algorithm):
         return value, action, action_log_probs, action_entropy
 
     def predict(self, obs):
+        """ use the model to predict action
+        Args:
+            obs (torch tensor): observation, shape([B] + obs_shape)
+        Returns:
+            action (torch tensor): action, shape([B] + action_shape),
+                noted that in the discrete case we take the argmax along the last axis as action
+        """
         if self.continuous_action:
             action, _ = self.model.policy(obs)
         else:
@@ -155,4 +195,10 @@ class PPO(parl.Algorithm):
         return action
 
     def value(self, obs):
+        """ use the model to predict obs values
+        Args:
+            obs (torch tensor): observation, shape([B] + obs_shape)
+        Returns:
+            value (torch tensor): value of obs, shape([B])
+        """
         return self.model.value(obs)

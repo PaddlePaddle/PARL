@@ -27,7 +27,6 @@ def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
 class AtariModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(AtariModel, self).__init__()
-        self.continuous_action = False
 
         self.conv1 = _init_layer(nn.Conv2d(4, 32, 8, stride=4))
         self.conv2 = _init_layer(nn.Conv2d(32, 64, 4, stride=2))

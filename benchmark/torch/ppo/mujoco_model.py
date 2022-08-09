@@ -27,7 +27,6 @@ def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
 class MujocoModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(MujocoModel, self).__init__()
-        self.continuous_action = True
 
         self.fc_v1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
         self.fc_v2 = _init_layer(nn.Linear(64, 64))

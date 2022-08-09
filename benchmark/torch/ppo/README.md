@@ -16,6 +16,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 <p align="center">
 <img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/torch/atari_result.png" alt="atari-result"/>
 </p>
+
 + Each experiment was run three times with different seeds
 
 ## How to use

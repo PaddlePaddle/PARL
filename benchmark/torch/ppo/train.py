@@ -55,7 +55,7 @@ def main():
     config['num_updates'] = int(
         config['train_total_steps'] // config['batch_size'])
 
-    logger.set_dir('./train_logs_{}_envs/{}_{}'.format(config['env_num'],
+    logger.set_dir('./train_logs_{}envs/{}_{}'.format(config['env_num'],
                                                        args.env, args.seed))
 
     envs = ParallelEnv(
@@ -70,9 +70,9 @@ def main():
     else:
         model = AtariModel(obs_space, act_space)
 
-    ppo = PPO(model, config['clip_coef'], config['vf_coef'],
-              config['ent_coef'], config['start_lr'], config['eps'],
-              config['max_grad_norm'])
+    ppo = PPO(model, config['clip_param'], config['value_loss_coef'],
+              config['entropy_coef'], config['initial_lr'], config['eps'],
+              config['max_grad_norm'], continuous_action=args.continuous_action)
     agent = PPOAgent(ppo, config)
 
     rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space,

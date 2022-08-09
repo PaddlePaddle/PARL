@@ -118,7 +118,7 @@ class PPO(parl.Algorithm):
         # Policy loss
         surr1 = mb_advantages * ratio
         surr2 = mb_advantages * torch.clamp(ratio, 1 - self.clip_param,
-                                                1 + self.clip_param)
+                                            1 + self.clip_param)
         pg_loss = -torch.min(surr1, surr2).mean()
 
         # Value loss

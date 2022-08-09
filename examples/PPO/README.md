@@ -16,6 +16,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 <p align="center">
 <img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/paddle/atari_result.png" alt="atari-result"/>
 </p>
+
 + Each experiment was run three times with different seeds
 
 ## How to use
@@ -32,7 +33,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 python train.py
 
 # To train an agent for continuous action game (Mujoco)
-python train.py --env 'HalfCheetah-v2' --continuous_action
+python train.py --env 'HalfCheetah-v2' --continuous_action --train_total_steps 1000000
 ```
 
 ### Distributed Training
@@ -54,7 +55,7 @@ Then we can start the distributed training by running:
 # for discrete action game (Atari games)
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
 # for continuous action game (Mujoco games)
-python train.py --env 'HalfCheetah-v2' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
+python train.py --env 'HalfCheetah-v2' --continuous_action --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
 ```
 #### Training time Comparison
 

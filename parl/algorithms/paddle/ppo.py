@@ -26,51 +26,53 @@ __all__ = ['PPO']
 class PPO(parl.Algorithm):
     def __init__(self,
                  model,
-                 clip_coef=None,
-                 vf_coef=None,
-                 ent_coef=None,
-                 start_lr=None,
+                 clip_param=None,
+                 value_loss_coef=None,
+                 entropy_coef=None,
+                 initial_lr=None,
                  eps=None,
                  max_grad_norm=None,
+                 continuous_action=False,
                  clip_vloss=True,
                  norm_adv=True):
         """ PPO algorithm
 
         Args:
             model (parl.Model): forward network of actor and critic.
-            clip_coef (float): epsilon in clipping loss.
-            vf_coef (float): value function loss coefficient in the optimization objective.
-            ent_coef (float): policy entropy coefficient in the optimization objective.
-            start_lr (float): learning rate.
+            clip_param (float): epsilon in clipping loss.
+            value_loss_coef (float): value function loss coefficient in the optimization objective.
+            entropy_coef (float): policy entropy coefficient in the optimization objective.
+            initial_lr (float): learning rate.
             eps (float): Adam optimizer epsilon.
             max_grad_norm (float): max gradient norm for gradient clipping.
-            clip_vloss (bool): whether or not to use a clipped loss for the value function
-            norm_adv (bool): whether or not to use advantages normalization
+            continuous_action (bool): whether or not is continuous action environment.
+            clip_vloss (bool): whether or not to use a clipped loss for the value function.
+            norm_adv (bool): whether or not to use advantages normalization.
         """
         # check model methods
         check_model_method(model, 'value', self.__class__.__name__)
         check_model_method(model, 'policy', self.__class__.__name__)
 
-        assert isinstance(clip_coef, float)
-        assert isinstance(vf_coef, float)
-        assert isinstance(ent_coef, float)
-        assert isinstance(start_lr, float)
-        self.start_lr = start_lr
+        assert isinstance(clip_param, float)
+        assert isinstance(value_loss_coef, float)
+        assert isinstance(entropy_coef, float)
+        assert isinstance(initial_lr, float)
+        self.initial_lr = initial_lr
         self.eps = eps
-        self.clip_coef = clip_coef
-        self.ent_coef = ent_coef
-        self.vf_coef = vf_coef
+        self.clip_param = clip_param
+        self.entropy_coef = entropy_coef
+        self.value_loss_coef = value_loss_coef
         self.max_grad_norm = max_grad_norm
         self.clip_vloss = clip_vloss
+        self.continuous_action = continuous_action
         self.norm_adv = norm_adv
 
         self.model = model
-        self.continuous_action = self.model.continuous_action
 
         clip = nn.ClipGradByNorm(self.max_grad_norm)
         self.optimizer = optim.Adam(
             parameters=self.model.parameters(),
-            learning_rate=self.start_lr,
+            learning_rate=self.initial_lr,
             epsilon=self.eps,
             grad_clip=clip)
 
@@ -85,12 +87,12 @@ class PPO(parl.Algorithm):
         """ update model with PPO algorithm
 
         Args:
-            batch_obs (torch.Tensor):           (batch_size, obs_shape)
-            batch_action (torch.Tensor):        (batch_size, action_shape)
-            batch_value (torch.Tensor):         (batch_size)
-            batch_return (torch.Tensor):        (batch_size)
-            batch_logprob (torch.Tensor):       (batch_size)
-            batch_adv (torch.Tensor):           (batch_size)
+            batch_obs (torch.Tensor):           shape([batch_size] + obs_shape)
+            batch_action (torch.Tensor):        shape([batch_size] + action_shape)
+            batch_value (torch.Tensor):         shape([batch_size])
+            batch_return (torch.Tensor):        shape([batch_size])
+            batch_logprob (torch.Tensor):       shape([batch_size])
+            batch_adv (torch.Tensor):           shape([batch_size])
             lr (torch.Tensor):
         Returns:
             v_loss (float): value loss
@@ -124,10 +126,10 @@ class PPO(parl.Algorithm):
                 mb_advantages.std() + 1e-8)
 
         # Policy loss
-        pg_loss1 = -mb_advantages * ratio
-        pg_loss2 = -mb_advantages * paddle.clip(ratio, 1 - self.clip_coef,
-                                                1 + self.clip_coef)
-        pg_loss = paddle.maximum(pg_loss1, pg_loss2).mean()
+        pg_loss1 = mb_advantages * ratio
+        pg_loss2 = mb_advantages * paddle.clip(ratio, 1 - self.clip_param,
+                                               1 + self.clip_param)
+        pg_loss = -paddle.minimum(pg_loss1, pg_loss2).mean()
 
         # Value loss
         newvalue = newvalue.reshape([-1])
@@ -135,8 +137,8 @@ class PPO(parl.Algorithm):
             v_loss_unclipped = (newvalue - batch_return)**2
             v_clipped = batch_value + paddle.clip(
                 newvalue - batch_value,
-                -self.clip_coef,
-                self.clip_coef,
+                -self.clip_param,
+                self.clip_param,
             )
             v_loss_clipped = (v_clipped - batch_return)**2
             v_loss_max = paddle.maximum(v_loss_unclipped, v_loss_clipped)
@@ -145,7 +147,7 @@ class PPO(parl.Algorithm):
             v_loss = 0.5 * ((newvalue - batch_return)**2).mean()
 
         entropy_loss = entropy.mean()
-        loss = pg_loss - self.ent_coef * entropy_loss + v_loss * self.vf_coef
+        loss = pg_loss - self.entropy_coef * entropy_loss + v_loss * self.value_loss_coef
 
         if lr:
             self.optimizer.set_lr(lr)
@@ -160,12 +162,12 @@ class PPO(parl.Algorithm):
         """ Define the sampling process. This function returns the action according to action distribution.
         
         Args:
-            obs (torch tensor): observation, shape([B] + obs_shape)
+            obs (torch tensor): observation, shape([batch_size] + obs_shape)
         Returns:
-            value (torch tensor): value, shape([B, 1])
-            action (torch tensor): action, shape([B] + action_shape)
-            action_log_probs (torch tensor): action log probs, shape([B])
-            action_entropy (torch tensor): action entropy, shape([B])
+            value (torch tensor): value, shape([batch_size, 1])
+            action (torch tensor): action, shape([batch_size] + action_shape)
+            action_log_probs (torch tensor): action log probs, shape([batch_size])
+            action_entropy (torch tensor): action entropy, shape([batch_size])
         """
         value = self.model.value(obs)
 
@@ -193,9 +195,9 @@ class PPO(parl.Algorithm):
         """ use the model to predict action
 
         Args:
-            obs (torch tensor): observation, shape([B] + obs_shape)
+            obs (torch tensor): observation, shape([batch_size] + obs_shape)
         Returns:
-            action (torch tensor): action, shape([B] + action_shape),
+            action (torch tensor): action, shape([batch_size] + action_shape),
                 noted that in the discrete case we take the argmax along the last axis as action
         """
         if self.continuous_action:
@@ -210,8 +212,8 @@ class PPO(parl.Algorithm):
         """ use the model to predict obs values
 
         Args:
-            obs (torch tensor): observation, shape([B] + obs_shape)
+            obs (torch tensor): observation, shape([batch_size] + obs_shape)
         Returns:
-            value (torch tensor): value of obs, shape([B])
+            value (torch tensor): value of obs, shape([batch_size])
         """
         return self.model.value(obs)

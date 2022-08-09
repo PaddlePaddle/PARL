@@ -20,7 +20,6 @@ import paddle.nn.functional as F
 class AtariModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(AtariModel, self).__init__()
-        self.continuous_action = False
 
         self.conv1 = nn.Conv2D(4, 32, 8, stride=4)
         self.conv2 = nn.Conv2D(32, 64, 4, stride=2)

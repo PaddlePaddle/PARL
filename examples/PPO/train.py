@@ -51,12 +51,13 @@ def main():
     config = mujoco_config if args.continuous_action else atari_config
     if args.env_num:
         config['env_num'] = args.env_num
+    config['train_total_steps'] = args.train_total_steps
     config['batch_size'] = int(config['env_num'] * config['step_nums'])
     config['num_updates'] = int(
         config['train_total_steps'] // config['batch_size'])
 
-    logger.set_dir('./train_logs_{}_envs/{}_{}'.format(config['env_num'],
-                                                       args.env, args.seed))
+    logger.set_dir('./train_logs_{}envs/{}_{}'.format(config['env_num'],
+                                                      args.env, args.seed))
 
     envs = ParallelEnv(
         args.env, args.seed, config=config, xparl_addr=args.xparl_addr)
@@ -70,9 +71,15 @@ def main():
     else:
         model = AtariModel(obs_space, act_space)
 
-    ppo = PPO(model, config['clip_coef'], config['vf_coef'],
-              config['ent_coef'], config['start_lr'], config['eps'],
-              config['max_grad_norm'])
+    ppo = PPO(
+        model,
+        config['clip_param'],
+        config['value_loss_coef'],
+        config['entropy_coef'],
+        config['initial_lr'],
+        config['eps'],
+        config['max_grad_norm'],
+        continuous_action=args.continuous_action)
     agent = PPOAgent(ppo, config)
 
     rollout = RolloutStorage(config['step_nums'], config['env_num'], obs_space,
@@ -150,6 +157,11 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="xparl address for distributed training ")
+    parser.add_argument(
+        '--train_total_steps',
+        type=int,
+        default=10e6,
+        help='number of total time steps to train (default: 10e6)')
     parser.add_argument(
         '--test_every_steps',
         type=int,

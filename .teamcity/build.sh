@@ -38,7 +38,8 @@ function run_example_test {
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1 --continuous_action
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
     python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v1
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v1

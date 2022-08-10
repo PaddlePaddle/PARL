@@ -70,15 +70,11 @@ def main():
         model = MujocoModel(obs_space, act_space)
     else:
         model = AtariModel(obs_space, act_space)
-
     ppo = PPO(
         model,
-        config['clip_param'],
-        config['value_loss_coef'],
-        config['entropy_coef'],
-        config['initial_lr'],
-        config['eps'],
-        config['max_grad_norm'],
+        clip_param=config['clip_param'],
+        entropy_coef=config['entropy_coef'],
+        initial_lr=config['initial_lr'],
         continuous_action=args.continuous_action)
     agent = PPOAgent(ppo, config)
 
@@ -111,8 +107,7 @@ def main():
 
         # Bootstrap value if not done
         value = agent.value(obs)
-        rollout.compute_returns(value, done, config['gamma'],
-                                config['gae_lambda'])
+        rollout.compute_returns(value, done)
 
         # Optimizing the policy and value network
         v_loss, pg_loss, entropy_loss, lr = agent.learn(rollout)

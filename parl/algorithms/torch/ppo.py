@@ -27,14 +27,14 @@ class PPO(parl.Algorithm):
     def __init__(self,
                  model,
                  clip_param,
-                 value_loss_coef,
+                 value_loss_coef=0.5,
                  entropy_coef,
                  initial_lr,
-                 eps=None,
-                 max_grad_norm=None,
+                 eps=1e-5,
+                 max_grad_norm=0.5,
+                 use_clipped_value_loss=True,
                  continuous_action=False,
-                 clip_vloss=True,
-                 use_clipped_value_loss=True):
+                 clip_vloss=True):
         """ PPO algorithm
 
         Args:
@@ -45,9 +45,9 @@ class PPO(parl.Algorithm):
             initial_lr (float): learning rate.
             eps (float): Adam optimizer epsilon.
             max_grad_norm (float): max gradient norm for gradient clipping.
+            use_clipped_value_loss (bool): whether or not to use advantages normalization.
             continuous_action (bool): whether or not is continuous action environment.
             clip_vloss (bool): whether or not to use a clipped loss for the value function.
-            use_clipped_value_loss (bool): whether or not to use advantages normalization.
         """
         # check model method
         check_model_method(model, 'value', self.__class__.__name__)

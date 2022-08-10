@@ -14,6 +14,9 @@
 
 import numpy as np
 
+GAMMA = 0.99  # discounting factor
+GAE_LAMBDA = 0.95  # Lambda parameter for calculating N-step advantage
+
 
 class RolloutStorage():
     def __init__(self, step_nums, env_num, obs_space, act_space):
@@ -42,7 +45,7 @@ class RolloutStorage():
 
         self.cur_step = (self.cur_step + 1) % self.step_nums
 
-    def compute_returns(self, value, done, gamma, gae_lambda):
+    def compute_returns(self, value, done, gamma=GAMMA, gae_lambda=GAE_LAMBDA):
         advantages = np.zeros_like(self.rewards)
         lastgaelam = 0
         for t in reversed(range(self.step_nums)):

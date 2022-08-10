@@ -34,7 +34,7 @@ class PPO(parl.Algorithm):
                  max_grad_norm=0.5,
                  use_clipped_value_loss=True,
                  continuous_action=False,
-                 clip_vloss=True):
+                 norm_adv=True):
         """ PPO algorithm
 
         Args:
@@ -45,9 +45,9 @@ class PPO(parl.Algorithm):
             initial_lr (float): learning rate.
             eps (float): Adam optimizer epsilon.
             max_grad_norm (float): max gradient norm for gradient clipping.
-            use_clipped_value_loss (bool): whether or not to use advantages normalization.
+            use_clipped_value_loss (bool): whether or not to use a clipped loss for the value function.
             continuous_action (bool): whether or not is continuous action environment.
-            clip_vloss (bool): whether or not to use a clipped loss for the value function.
+            norm_adv (bool): whether or not to use advantages normalization.
         """
         # check model method
         check_model_method(model, 'value', self.__class__.__name__)
@@ -63,7 +63,7 @@ class PPO(parl.Algorithm):
         self.entropy_coef = entropy_coef
         self.value_loss_coef = value_loss_coef
         self.max_grad_norm = max_grad_norm
-        self.clip_vloss = clip_vloss
+        self.norm_adv = norm_adv
         self.continuous_action = continuous_action
         self.use_clipped_value_loss = use_clipped_value_loss
 
@@ -111,7 +111,7 @@ class PPO(parl.Algorithm):
         ratio = logratio.exp()
 
         mb_advantages = batch_adv
-        if self.use_clipped_value_loss:
+        if self.norm_adv:
             mb_advantages = (mb_advantages - mb_advantages.mean()) / (
                 mb_advantages.std() + 1e-8)
 
@@ -123,7 +123,7 @@ class PPO(parl.Algorithm):
 
         # Value loss
         newvalue = newvalue.view(-1)
-        if self.clip_vloss:
+        if self.use_clipped_value_loss:
             v_loss_unclipped = (newvalue - batch_return)**2
             v_clipped = batch_value + torch.clamp(
                 newvalue - batch_value,

@@ -26,10 +26,10 @@ __all__ = ['PPO']
 class PPO(parl.Algorithm):
     def __init__(self,
                  model,
-                 clip_param,
+                 clip_param=None,
                  value_loss_coef=0.5,
-                 entropy_coef,
-                 initial_lr,
+                 entropy_coef=None,
+                 initial_lr=None,
                  eps=1e-5,
                  max_grad_norm=0.5,
                  use_clipped_value_loss=True,

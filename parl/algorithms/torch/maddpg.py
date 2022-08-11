@@ -21,35 +21,6 @@ from copy import deepcopy
 
 __all__ = ['MADDPG']
 
-from parl.core.torch.policy_distribution import DiagGaussianDistribution
-from parl.core.torch.policy_distribution import SoftCategoricalDistribution
-from parl.core.torch.policy_distribution import SoftMultiCategoricalDistribution
-
-
-def SoftPDistribution(logits, act_space):
-    """ Select Policy Distribution according to act_space.
-
-    Args:
-        logits (torch tensor): the output of policy model
-        act_space: action space, must be gym.spaces.Box or gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
-
-    Returns:
-        instance of DiagGaussianDistribution or SoftCategoricalDistribution or SoftMultiCategoricalDistribution
-    """
-    # is instance of gym.spaces.Discrete
-    if (hasattr(act_space, 'n')):
-        return SoftCategoricalDistribution(logits)
-    # is instance of multiagent.multi_discrete.MultiDiscrete
-    elif (hasattr(act_space, 'num_discrete_space')):
-        return SoftMultiCategoricalDistribution(logits, act_space.low,
-                                                act_space.high)
-    # is instance of gym.spaces.Box
-    elif (hasattr(act_space, 'high')):
-        return DiagGaussianDistribution(logits)
-    else:
-        raise AssertionError("act_space must be instance of gym.spaces.Box or \
-            gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
-
 
 class MADDPG(parl.Algorithm):
     def __init__(self,
@@ -96,9 +67,9 @@ class MADDPG(parl.Algorithm):
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        self.model = model.to(device)
+        self.device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
+        self.model = model.to(self.device)
         self.target_model = deepcopy(model)
         self.sync_target(0)
 
@@ -107,8 +78,29 @@ class MADDPG(parl.Algorithm):
         self.critic_optimizer = torch.optim.Adam(
             lr=self.critic_lr, params=self.model.get_critic_params())
 
-    def predict(self, obs, use_target_model=False):
+    def predict(self, obs):
         """ use the policy model to predict actions
+        
+        Args:
+            obs (torch tensor): observation, shape([B] + shape of obs_n[agent_index])
+
+        Returns:
+            act (torch tensor): action, shape([B] + shape of act_n[agent_index]),
+                noted that in the discrete case we take the argmax along the last axis as action
+        """
+        policy = self.model.policy(obs)
+
+        if self.continuous_actions:
+            action = policy[0]
+        else:
+            action = F.softmax(policy, dim=-1)
+        if self.continuous_actions:
+            action = torch.tanh(action)
+
+        return action
+
+    def sample(self, obs, use_target_model=False):
+        """ use the policy model to sample actions
         
         Args:
             obs (torch tensor): observation, shape([B] + shape of obs_n[agent_index])
@@ -123,12 +115,17 @@ class MADDPG(parl.Algorithm):
         else:
             policy = self.model.policy(obs)
 
-        action = SoftPDistribution(
-            logits=policy,
-            act_space=self.act_space[self.agent_index]).sample()
+        # add noise for action exploration
+        if self.continuous_actions:
+            random_normal = torch.randn(size=policy[0].shape).to(self.device)
+            action = policy[0] + torch.exp(policy[1]) * random_normal
+        else:
+            uniform = torch.rand_like(policy)
+            soft_uniform = torch.log(-1.0 * torch.log(uniform)).to(self.device)
+            action = F.softmax(policy - soft_uniform, dim=-1)
+
         if self.continuous_actions:
             action = torch.tanh(action)
-
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
@@ -158,19 +155,13 @@ class MADDPG(parl.Algorithm):
     def _actor_learn(self, obs_n, act_n):
         i = self.agent_index
 
-        this_policy = self.model.policy(obs_n[i])
-        sample_this_action = SoftPDistribution(
-            logits=this_policy,
-            act_space=self.act_space[self.agent_index]).sample()
-        if self.continuous_actions:
-            sample_this_action = torch.tanh(sample_this_action)
-
-        # action_input_n = deepcopy(act_n)
+        sample_this_action = self.sample(obs_n[i])
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
         eval_q = self.Q(obs_n, action_input_n)
         act_cost = torch.mean(-1.0 * eval_q)
 
+        this_policy = self.model.policy(obs_n[i])
         # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
         if self.continuous_actions:
             this_policy = torch.cat(this_policy, dim=-1)

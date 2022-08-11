@@ -134,11 +134,13 @@ def main():
 
     total_steps = 0
     total_episodes = 0
-    test_flag = 0
     while total_episodes <= args.max_episodes:
         # run an episode
         ep_reward, ep_agent_rewards, steps = run_episode(env, agents)
-        summary.add_scalar('train_reward/episode', ep_reward, total_episodes)
+        summary.add_scalar('train/episode_reward_wrt_episode', ep_reward,
+                           total_episodes)
+        summary.add_scalar('train/episode_reward_wrt_step', ep_reward,
+                           total_steps)
         logger.info(
             'total_steps {}, episode {}, reward {}, agents rewards {}, episode steps {}'
             .format(total_steps, total_episodes, ep_reward, ep_agent_rewards,
@@ -148,17 +150,13 @@ def main():
         total_episodes += 1
 
         # evaluate agents
-        if (total_episodes + 1) // args.test_every_episodes >= test_flag:
-            while (total_episodes +
-                   1) // args.test_every_episodes >= test_flag:
-                test_flag += 1
-                eval_episode_rewards, eval_episode_steps = run_evaluate_episodes(
-                    env, agents, EVAL_EPISODES)
-                summary.add_scalar('eval/episode_reward',
-                                   np.mean(eval_episode_rewards),
-                                   total_episodes)
-                logger.info('Evaluation over: {} episodes, Reward: {}'.format(
-                    EVAL_EPISODES, np.mean(eval_episode_rewards)))
+        if total_episodes % args.test_every_episodes == 0:
+            eval_episode_rewards, eval_episode_steps = run_evaluate_episodes(
+                env, agents, EVAL_EPISODES)
+            summary.add_scalar('eval/episode_reward',
+                               np.mean(eval_episode_rewards), total_episodes)
+            logger.info('Evaluation over: {} episodes, Reward: {}'.format(
+                EVAL_EPISODES, np.mean(eval_episode_rewards)))
 
             # save model
             if not args.restore:

@@ -92,10 +92,9 @@ class MADDPG(parl.Algorithm):
 
         if self.continuous_actions:
             action = policy[0]
+            action = torch.tanh(action)
         else:
             action = F.softmax(policy, dim=-1)
-        if self.continuous_actions:
-            action = torch.tanh(action)
 
         return action
 
@@ -119,13 +118,12 @@ class MADDPG(parl.Algorithm):
         if self.continuous_actions:
             random_normal = torch.randn(size=policy[0].shape).to(self.device)
             action = policy[0] + torch.exp(policy[1]) * random_normal
+            action = torch.tanh(action)
         else:
             uniform = torch.rand_like(policy)
             soft_uniform = torch.log(-1.0 * torch.log(uniform)).to(self.device)
             action = F.softmax(policy - soft_uniform, dim=-1)
 
-        if self.continuous_actions:
-            action = torch.tanh(action)
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):

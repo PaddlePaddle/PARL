@@ -203,7 +203,6 @@ if __name__ == '__main__':
         type=int,
         default=int(1e3),
         help='the episode interval between two consecutive evaluations')
-    parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()
 
     main()

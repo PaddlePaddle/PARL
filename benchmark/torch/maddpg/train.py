@@ -94,7 +94,8 @@ def run_episode(env, agents):
 
 
 def main():
-    logger.set_dir('./train_log/{}_{}'.format(args.env, args.continuous_actions))
+    logger.set_dir('./train_log/{}_{}'.format(args.env,
+                                              args.continuous_actions))
 
     env = MAenv(args.env, args.continuous_actions)
     if args.continuous_actions:

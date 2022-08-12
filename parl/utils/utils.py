@@ -187,6 +187,8 @@ def check_model_method(model, method, algo):
 def str2bool(v):
     """for argparse argument using
     """
+    import argparse
+
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):

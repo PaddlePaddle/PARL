@@ -18,6 +18,7 @@ import os
 import parl
 import numpy as np
 import utils
+import paddle
 from es import ES
 from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
@@ -26,6 +27,7 @@ from noise import SharedNoiseTable
 from parl.utils import logger, summary
 
 from parl.utils.window_stat import WindowStat
+from parl.utils.utils import str2bool
 from actor import Actor
 
 
@@ -191,9 +193,14 @@ if __name__ == '__main__':
         help='stop condition: number of train_steps')
     parser.add_argument(
         '--actor_num', type=int, default=24, help='the number of actor')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
     args = parser.parse_args()
     config['train_steps'] = args.train_steps
     config['actor_num'] = args.actor_num
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     learner = Learner(config)
     while learner.train_steps < config['train_steps']:

@@ -16,11 +16,13 @@ import os
 import time
 import argparse
 import numpy as np
+import paddle
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
 from parl.env.multiagent_env import MAenv
 from parl.utils import logger, summary
+from parl.utils.utils import str2bool
 from gym import spaces
 
 CRITIC_LR = 0.01  # learning rate for the critic model
@@ -214,9 +216,14 @@ if __name__ == '__main__':
         type=int,
         default=25000,
         help='stop condition: number of episodes')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
 
     args = parser.parse_args()
     print('========== args: ', args)
     logger.set_dir('./train_log/' + str(args.env))
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     train_agent()

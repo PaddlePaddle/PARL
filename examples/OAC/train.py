@@ -15,7 +15,9 @@
 import gym
 import argparse
 import numpy as np
+import paddle
 from parl.utils import logger, summary, ReplayMemory
+from parl.utils.utils import str2bool
 from parl.env.continuous_wrappers import ActionMappingWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
@@ -162,6 +164,11 @@ if __name__ == "__main__":
         default=23.53,
         type=float,
         help='Determines the relative changes of exploration`s mean')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     main()

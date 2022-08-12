@@ -193,9 +193,9 @@ else
             if [ ${#gpu} -le 2 ];then  # train with single gpu
                 cmd="${python} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
             elif [ ${#ips} -le 15 ];then  # train with multi-gpu
-                cmd="${python} -m paddle.distributed.launch --gpus=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
+                cmd="${python} -m paddle.distributed.launch --devices=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
             else     # train with multi-machine
-                cmd="${python} -m paddle.distributed.launch --ips=${ips} --gpus=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
+                cmd="${python} -m paddle.distributed.launch --ips=${ips} --devices=${gpu} ${run_train} ${set_save_model} ${set_epoch} ${set_pretrain} ${set_batchsize}"
             fi
             # run train
             eval $cmd

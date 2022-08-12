@@ -18,12 +18,14 @@ from collections import deque
 import numpy as np
 import paddle
 import gym
+import paddle
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from storage import RolloutStorage
 from parl.algorithms import PPO
 from parl.env.mujoco_wrappers import wrap_rms, get_ob_rms
 from parl.utils import summary
+from parl.utils.utils import str2bool
 import argparse
 
 LR = 3e-4
@@ -151,6 +153,11 @@ if __name__ == "__main__":
         '--env',
         default='Hopper-v1',
         help='environment to train on (default: Hopper-v1)')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     main()

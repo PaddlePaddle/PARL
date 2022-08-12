@@ -17,6 +17,7 @@ import numpy as np
 import os
 import time
 import parl
+import paddle
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
@@ -27,6 +28,7 @@ from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
 from parl.utils import machine_info
+from parl.utils.utils import str2bool
 
 from actor import Actor
 from parl.algorithms import A2C
@@ -189,7 +191,13 @@ if __name__ == '__main__':
         type=int,
         default=1e7,
         help='stop condition: number of sample step')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
+
     config['max_sample_steps'] = args.max_sample_steps
 
     learner = Learner(config)

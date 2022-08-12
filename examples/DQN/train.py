@@ -17,7 +17,9 @@ import gym
 import numpy as np
 import parl
 import argparse
+import paddle
 from parl.utils import logger, ReplayMemory
+from parl.utils.utils import str2bool
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 from parl.algorithms import DQN
@@ -127,6 +129,11 @@ if __name__ == '__main__':
         type=int,
         default=800,
         help='stop condition: number of max episode')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     main()

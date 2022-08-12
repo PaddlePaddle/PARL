@@ -22,7 +22,7 @@ __all__ = [
     'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
     'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
-    'check_version_for_fluid', 'check_model_method'
+    'check_version_for_fluid', 'check_model_method', 'str2bool'
 ]
 
 
@@ -182,3 +182,16 @@ def check_model_method(model, method, algo):
                 model, method,
                 None)), "{}'s model needs to implement {} method. \n".format(
                     algo, method)
+
+
+def str2bool(v):
+    """for argparse argument using
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

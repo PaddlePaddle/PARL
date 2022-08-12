@@ -15,7 +15,9 @@
 import argparse
 import gym
 import d4rl
+import paddle
 from parl.utils import logger, tensorboard, ReplayMemory
+from parl.utils.utils import str2bool
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import CQL
@@ -130,8 +132,13 @@ if __name__ == "__main__":
         dest='with_lagrange',
         action='store_true',
         default=False)
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
 
     args = parser.parse_args()
     logger.info(args)
+
+    if args.use_npu:
+        paddle.set_device('npu')
 
     main()

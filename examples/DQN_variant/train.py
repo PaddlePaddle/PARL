@@ -17,7 +17,9 @@ import gym
 import numpy as np
 import paddle
 import parl
+import paddle
 from parl.utils import logger, summary
+from parl.utils.utils import str2bool
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from replay_memory import ReplayMemory, Experience
@@ -207,6 +209,12 @@ if __name__ == '__main__':
         type=int,
         default=6,
         help='set the random seed for test and eval environment')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
 
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
+
     main()

@@ -16,7 +16,9 @@ import os
 import gym
 import numpy as np
 import parl
+import paddle
 from parl.utils import logger
+from parl.utils.utils import str2bool
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 import argparse
@@ -111,5 +113,12 @@ if __name__ == '__main__':
         type=int,
         default=1000,
         help='stop condition: number of episodes')
+    parser.add_argument(
+        '--use_npu', type=str2bool, default=False, help='whether use npu')
+
     args = parser.parse_args()
+
+    if args.use_npu:
+        paddle.set_device('npu')
+
     main()

@@ -73,7 +73,8 @@ class PPO(parl.Algorithm):
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=initial_lr, eps=eps)
+        self.optimizer = optim.Adam(
+            self.model.parameters(), lr=initial_lr, eps=eps)
 
     def learn(self,
               batch_obs,
@@ -112,11 +113,13 @@ class PPO(parl.Algorithm):
         entropy_loss = dist_entropy.mean()
 
         if self.norm_adv:
-            batch_adv = (batch_adv - batch_adv.mean()) / (batch_adv.std() + 1e-8)
+            batch_adv = (batch_adv - batch_adv.mean()) / (
+                batch_adv.std() + 1e-8)
 
         ratio = torch.exp(action_log_probs - batch_logprob)
         surr1 = ratio * batch_adv
-        surr2 = torch.clamp(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param) * batch_adv
+        surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                            1.0 + self.clip_param) * batch_adv
         action_loss = -torch.min(surr1, surr2).mean()
 
         values = values.view(-1)
@@ -128,7 +131,8 @@ class PPO(parl.Algorithm):
             )
             value_losses = (values - batch_return).pow(2)
             value_losses_clipped = (value_pred_clipped - batch_return).pow(2)
-            value_loss = 0.5 * torch.max(value_losses, value_losses_clipped).mean()
+            value_loss = 0.5 * torch.max(value_losses,
+                                         value_losses_clipped).mean()
         else:
             value_loss = 0.5 * (batch_return - values).pow(2).mean()
         loss = value_loss * self.value_loss_coef + action_loss - entropy_loss * self.entropy_coef

@@ -32,8 +32,7 @@ atari_config = {
     'initial_lr': 2.5e-4,  # start learning rate
     'lr_decay': True,  # whether or not to use linear decay rl
     # 'eps': 1e-5,  # Adam optimizer epsilon (default: 1e-5)
-    'clip_param':
-    0.1,  # epsilon in clipping loss (ie. clip(r_t, 1 - epsilon, 1 + epsilon))
+    'clip_param': 0.1,  # epsilon in clipping loss
     'entropy_coef': 0.01,  # Entropy coefficient (ie. c_2 in the paper)
     # 'value_loss_coef': 0.5,  # Value loss coefficient (ie. c_1 in the paper)
     # 'max_grad_norm': 0.5,  # Max gradient norm for gradient clipping

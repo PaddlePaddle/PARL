@@ -26,10 +26,10 @@ __all__ = ['PPO']
 class PPO(parl.Algorithm):
     def __init__(self,
                  model,
-                 clip_param=None,
+                 clip_param=0.1,
                  value_loss_coef=0.5,
-                 entropy_coef=None,
-                 initial_lr=None,
+                 entropy_coef=0.01,
+                 initial_lr=2.5e-4,
                  eps=1e-5,
                  max_grad_norm=0.5,
                  use_clipped_value_loss=True,
@@ -57,6 +57,12 @@ class PPO(parl.Algorithm):
         assert isinstance(value_loss_coef, float)
         assert isinstance(entropy_coef, float)
         assert isinstance(initial_lr, float)
+        assert isinstance(eps, float)
+        assert isinstance(max_grad_norm, float)
+        assert isinstance(use_clipped_value_loss, bool)
+        assert isinstance(continuous_action, bool)
+        assert isinstance(norm_adv, bool)
+
         self.initial_lr = initial_lr
         self.eps = eps
         self.clip_param = clip_param

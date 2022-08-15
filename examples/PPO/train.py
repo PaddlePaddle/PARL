@@ -119,9 +119,9 @@ def main():
                 eval_env.env.set_ob_rms(ob_rms)
 
             avg_reward = run_evaluate_episodes(agent, eval_env,
-                                                config['eval_episode'])
+                                               config['eval_episode'])
             tensorboard.add_scalar('eval/episode_reward', avg_reward,
-                                    total_steps)
+                                   total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
                 config['eval_episode'], avg_reward))
 

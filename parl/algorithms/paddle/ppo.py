@@ -73,7 +73,11 @@ class PPO(parl.Algorithm):
 
         self.model = model
         clip = nn.ClipGradByNorm(self.max_grad_norm)
-        self.optimizer = optim.Adam(parameters=self.model.parameters(), learning_rate=initial_lr, epsilon=eps, grad_clip=clip)
+        self.optimizer = optim.Adam(
+            parameters=self.model.parameters(),
+            learning_rate=initial_lr,
+            epsilon=eps,
+            grad_clip=clip)
 
     def learn(self,
               batch_obs,
@@ -112,7 +116,8 @@ class PPO(parl.Algorithm):
             batch_action = paddle.to_tensor(batch_action, dtype='int64')
             actions_onehot = F.one_hot(batch_action, act_dim)
 
-            action_log_probs = paddle.sum(F.log_softmax(logits) * actions_onehot, axis=-1)
+            action_log_probs = paddle.sum(
+                F.log_softmax(logits) * actions_onehot, axis=-1)
             dist_entropy = dist.entropy()
         entropy_loss = dist_entropy.mean()
 
@@ -123,16 +128,19 @@ class PPO(parl.Algorithm):
 
         ratio = paddle.exp(action_log_probs - batch_logprob)
         surr1 = ratio * batch_adv
-        surr2 = paddle.clip(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param) * batch_adv
+        surr2 = paddle.clip(ratio, 1.0 - self.clip_param,
+                            1.0 + self.clip_param) * batch_adv
         action_loss = -paddle.minimum(surr1, surr2).mean()
 
         values = values.reshape([-1])
         # calculate value loss using semi gradient TD
         if self.use_clipped_value_loss:
-            value_pred_clipped = batch_value + paddle.clip(values - batch_value, -self.clip_param, self.clip_param)
+            value_pred_clipped = batch_value + paddle.clip(
+                values - batch_value, -self.clip_param, self.clip_param)
             value_losses = (values - batch_return).pow(2)
             value_losses_clipped = (value_pred_clipped - batch_return).pow(2)
-            value_loss = 0.5 * paddle.maximum(value_losses, value_losses_clipped).mean()
+            value_loss = 0.5 * paddle.maximum(value_losses,
+                                              value_losses_clipped).mean()
         else:
             value_loss = 0.5 * (values - batch_return).pow(2).mean()
 

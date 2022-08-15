@@ -82,6 +82,7 @@ def main():
     obs = envs.reset()
     done = np.zeros(config['env_num'], dtype='float32')
 
+    test_flag = 0
     total_steps = 0
     for update in range(1, config['num_updates'] + 1):
         for step in range(0, config['step_nums']):
@@ -108,7 +109,9 @@ def main():
         # Optimizing the policy and value network
         v_loss, pg_loss, entropy_loss, lr = agent.learn(rollout)
 
-        if total_steps % args.test_every_steps == 0:
+        if total_steps // args.test_every_steps >= test_flag:
+            while total_steps // args.test_every_steps >= test_flag:
+                test_flag += 1
             if args.continuous_action:
                 # set running mean and variance of obs
                 ob_rms = envs.eval_ob_rms

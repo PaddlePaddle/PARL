@@ -42,7 +42,6 @@ class Box(object):
 class Wrapper(object):
     def __init__(self, env):
         self.env = env
-        self._max_episode_steps = 1000
 
     def __getattr__(self, name):
         if name.startswith('_'):
@@ -144,6 +143,7 @@ class PongEnv(object):
 
         self.observation_space = ObservationSpace((210, 160, 3), 'unit8')
         self.action_space = ActionSpace(6)
+        self._max_episode_steps = 1000
         self.unwrapped = Ale()
         self.metadata = {'render.modes': []}
         self.reward_range = [0, 1]

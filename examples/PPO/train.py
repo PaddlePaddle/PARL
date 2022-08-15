@@ -114,6 +114,7 @@ def main():
         if (total_steps + 1) // args.test_every_steps >= test_flag:
             while (total_steps + 1) // args.test_every_steps >= test_flag:
                 test_flag += 1
+
             if args.continuous_action:
                 ob_rms = envs.eval_ob_rms
                 eval_env.env.set_ob_rms(ob_rms)

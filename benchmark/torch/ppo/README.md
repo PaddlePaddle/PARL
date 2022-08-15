@@ -53,8 +53,10 @@ Then we can start the distributed training by running:
 
 ```
 # To train an agent distributedly
+
 # for discrete action game (Atari games)
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
+
 # for continuous action game (Mujoco games)
 python train.py --env 'HalfCheetah-v2' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
 ```

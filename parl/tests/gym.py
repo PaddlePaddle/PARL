@@ -42,6 +42,7 @@ class Box(object):
 class Wrapper(object):
     def __init__(self, env):
         self.env = env
+        self._max_episode_steps = 1000
 
     def __getattr__(self, name):
         if name.startswith('_'):

@@ -112,6 +112,7 @@ def main():
         if total_steps // args.test_every_steps >= test_flag:
             while total_steps // args.test_every_steps >= test_flag:
                 test_flag += 1
+                
             if args.continuous_action:
                 # set running mean and variance of obs
                 ob_rms = envs.eval_ob_rms

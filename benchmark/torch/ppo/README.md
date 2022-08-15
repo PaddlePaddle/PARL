@@ -27,7 +27,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 + gym==0.21.0
 + mujoco-py==2.1.2.14
 
-### Local Training:
+### Training:
 
 ```
 # To train an agent for discrete action game (Atari: PongNoFrameskip-v4 by default)

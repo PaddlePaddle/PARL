@@ -33,8 +33,8 @@ class PPO(parl.Algorithm):
                  eps=1e-5,
                  max_grad_norm=0.5,
                  use_clipped_value_loss=True,
-                 continuous_action=False,
-                 norm_adv=True):
+                 norm_adv=True,
+                 continuous_action=False):
         """ PPO algorithm
 
         Args:
@@ -46,8 +46,8 @@ class PPO(parl.Algorithm):
             eps (float): Adam optimizer epsilon.
             max_grad_norm (float): max gradient norm for gradient clipping.
             use_clipped_value_loss (bool): whether or not to use a clipped loss for the value function.
-            continuous_action (bool): whether or not is continuous action environment.
             norm_adv (bool): whether or not to use advantages normalization.
+            continuous_action (bool): whether or not is continuous action environment.
         """
         # check model method
         check_model_method(model, 'value', self.__class__.__name__)
@@ -60,8 +60,8 @@ class PPO(parl.Algorithm):
         assert isinstance(eps, float)
         assert isinstance(max_grad_norm, float)
         assert isinstance(use_clipped_value_loss, bool)
-        assert isinstance(continuous_action, bool)
         assert isinstance(norm_adv, bool)
+        assert isinstance(continuous_action, bool)
 
         self.clip_param = clip_param
         self.value_loss_coef = value_loss_coef

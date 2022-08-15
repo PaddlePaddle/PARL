@@ -32,7 +32,7 @@ class PPOAgent(parl.Agent):
         self.config = config
         if self.config['lr_decay']:
             self.lr_scheduler = LinearDecayScheduler(
-                self.config['start_lr'], self.config['num_updates'])
+                self.config['initial_lr'], self.config['num_updates'])
 
     def predict(self, obs):
         """ Predict action from current policy given observation

@@ -38,7 +38,7 @@ python train.py --env 'HalfCheetah-v2' --continuous_action
 ```
 
 ### Distributed Training
-Accelerate training process when `env_num > 1`.     
+Accelerate training process by setting `env_num > 1`.     
 At first, we can start a local cluster with 8 CPUs:
 
 ```
@@ -60,10 +60,3 @@ python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8
 # for continuous action game (Mujoco games)
 python train.py --env 'HalfCheetah-v2' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
 ```
-#### Training time Comparison
-
-Training time comparison for 10M steps in Atari games.
-|  Environment         | env_num  | Time/h (local, distributed) |
-|----|----|----|
-|  PongNoFrameskip-v4  | 8  | 61.67, 29.05 |
-| BreakoutNoFrameskip-v4  | 8 | 578.05,  476.2|

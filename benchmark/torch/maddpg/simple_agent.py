@@ -50,7 +50,7 @@ class MAAgent(parl.Agent):
         # Attention: In the beginning, sync target model totally.
         self.alg.sync_target(decay=0)
 
-    def predict(self, obs, use_target_model=False):
+    def predict(self, obs):
         """ predict action by model or target_model
         """
         obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)

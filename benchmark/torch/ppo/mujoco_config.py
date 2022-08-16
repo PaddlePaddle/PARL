@@ -26,11 +26,9 @@ mujoco_config = {
     'train_total_steps': int(1e6),  # max training steps
     'step_nums': 2048,  # data collecting time steps (ie. T in the paper)
     'num_minibatches': 32,  # number of training minibatches per update.
-    'update_epochs':
-    10,  # number of epochs for updating using each T data (ie K in the paper)
+    'update_epochs': 10,  # number of epochs for updating (ie K in the paper)
     'eval_episode': 3,
-    'test_every_steps':
-    int(5e3),  # the step interval between two consecutive evaluations
+    'test_every_steps': int(5e3),  # interval between evaluations
 
     #========== coefficient of ppo ==========
     'initial_lr': 3e-4,  # start learning rate

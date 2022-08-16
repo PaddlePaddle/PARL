@@ -28,24 +28,27 @@ GAMMA = 0.99
 
 
 class ParallelEnv(object):
-    def __init__(self, env_name, env_seed=None, config=None, xparl_addr=None):
+    def __init__(self, config=None):
         self.config = config
         self.env_num = config['env_num']
 
-        if xparl_addr:
+        if config['xparl_addr']:
             self.use_xparl = True
-            parl.connect(xparl_addr)
+            parl.connect(config['xparl_addr'])
             base_env = RemoteEnv
         else:
             self.use_xparl = False
             base_env = LocalEnv
 
-        if env_seed:
+        if config['seed']:
             self.env_list = [
-                base_env(env_name, env_seed + i) for i in range(self.env_num)
+                base_env(config['env'], config['seed'] + i)
+                for i in range(self.env_num)
             ]
         else:
-            self.env_list = [base_env(env_name) for _ in range(self.env_num)]
+            self.env_list = [
+                base_env(config['env']) for _ in range(self.env_num)
+            ]
 
         self._max_episode_steps = self.env_list[0]._max_episode_steps
 

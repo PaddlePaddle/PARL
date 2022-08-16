@@ -21,35 +21,6 @@ from copy import deepcopy
 
 __all__ = ['MADDPG']
 
-from parl.core.paddle.policy_distribution import DiagGaussianDistribution
-from parl.core.paddle.policy_distribution import SoftCategoricalDistribution
-from parl.core.paddle.policy_distribution import SoftMultiCategoricalDistribution
-
-
-def SoftPDistribution(logits, act_space):
-    """ Select Policy Distribution according to act_space.
-
-    Args:
-        logits (paddle tensor): the output of policy model
-        act_space: action space, must be gym.spaces.Box or gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete
-
-    Returns:
-        instance of DiagGaussianDistribution or SoftCategoricalDistribution or SoftMultiCategoricalDistribution
-    """
-    # is instance of gym.spaces.Discrete
-    if (hasattr(act_space, 'n')):
-        return SoftCategoricalDistribution(logits)
-    # is instance of multiagent.multi_discrete.MultiDiscrete
-    elif (hasattr(act_space, 'num_discrete_space')):
-        return SoftMultiCategoricalDistribution(logits, act_space.low,
-                                                act_space.high)
-    # is instance of gym.spaces.Box
-    elif (hasattr(act_space, 'high')):
-        return DiagGaussianDistribution(logits)
-    else:
-        raise AssertionError("act_space must be instance of gym.spaces.Box or \
-            gym.spaces.Discrete or multiagent.multi_discrete.MultiDiscrete")
-
 
 class MADDPG(parl.Algorithm):
     def __init__(self,
@@ -85,8 +56,7 @@ class MADDPG(parl.Algorithm):
         assert isinstance(critic_lr, float)
 
         self.continuous_actions = False
-        if not len(act_space) == 0 and hasattr(act_space[0], 'high') \
-            and not hasattr(act_space[0], 'num_discrete_space'):
+        if not len(act_space) == 0 and hasattr(act_space[0], 'high'):
             self.continuous_actions = True
 
         self.agent_index = agent_index
@@ -109,8 +79,26 @@ class MADDPG(parl.Algorithm):
             parameters=self.model.get_critic_params(),
             grad_clip=nn.ClipGradByNorm(clip_norm=0.5))
 
-    def predict(self, obs, use_target_model=False):
+    def predict(self, obs):
         """ use the policy model to predict actions
+        
+        Args:
+            obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
+    
+        Returns:
+            act (paddle tensor): action, shape([B] + shape of act_n[agent_index]),
+                noted that in the discrete case we take the argmax along the last axis as action
+        """
+        policy = self.model.policy(obs)
+        if self.continuous_actions:
+            mean = policy[0]
+            action = paddle.tanh(mean)
+        else:
+            action = F.softmax(policy, axis=-1)
+        return action
+
+    def sample(self, obs, use_target_model=False):
+        """ use the policy model to sample actions
         
         Args:
             obs (paddle tensor): observation, shape([B] + shape of obs_n[agent_index])
@@ -124,11 +112,19 @@ class MADDPG(parl.Algorithm):
             policy = self.target_model.policy(obs)
         else:
             policy = self.model.policy(obs)
-        action = SoftPDistribution(
-            logits=policy,
-            act_space=self.act_space[self.agent_index]).sample()
+
         if self.continuous_actions:
+            mean, std = policy[0], paddle.exp(policy[1])
+            mean_shape = paddle.to_tensor(mean.shape, dtype='int64')
+            random_normal = paddle.normal(shape=mean_shape)
+            action = mean + std * random_normal
             action = paddle.tanh(action)
+        else:
+            eps = 1e-4
+            logits_shape = paddle.to_tensor(policy.shape, dtype='int64')
+            uniform = paddle.uniform(logits_shape, min=eps, max=1.0 - eps)
+            soft_uniform = paddle.log(-1.0 * paddle.log(uniform))
+            action = F.softmax(policy - soft_uniform, axis=-1)
         return action
 
     def Q(self, obs_n, act_n, use_target_model=False):
@@ -158,19 +154,14 @@ class MADDPG(parl.Algorithm):
     def _actor_learn(self, obs_n, act_n):
         i = self.agent_index
 
-        this_policy = self.model.policy(obs_n[i])
-        sample_this_action = SoftPDistribution(
-            logits=this_policy,
-            act_space=self.act_space[self.agent_index]).sample()
-        if self.continuous_actions:
-            sample_this_action = paddle.tanh(sample_this_action)
-
+        sample_this_action = self.sample(obs_n[i])
         # action_input_n = deepcopy(act_n)
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
         eval_q = self.Q(obs_n, action_input_n)
         act_cost = paddle.mean(-1.0 * eval_q)
 
+        this_policy = self.model.policy(obs_n[i])
         # when continuous, 'this_policy' will be a tuple with two element: (mean, std)
         if self.continuous_actions:
             this_policy = paddle.concat(this_policy, axis=-1)

@@ -38,7 +38,7 @@ python train.py --env 'HalfCheetah-v2' --continuous_action
 ```
 
 ### Distributed Training
-Accelerate training process by setting `env_num > 1` when environment simulation  running very slow.     
+Accelerate training process by setting `xparl_addr` and `env_num > 1` when environment simulation running very slow.        
 At first, we can start a local cluster with 8 CPUs:
 
 ```

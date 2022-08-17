@@ -113,6 +113,7 @@ class MADDPG(parl.Algorithm):
         else:
             policy = self.model.policy(obs)
 
+        # add noise for action exploration
         if self.continuous_actions:
             mean, std = policy[0], paddle.exp(policy[1])
             mean_shape = paddle.to_tensor(mean.shape, dtype='int64')
@@ -155,7 +156,6 @@ class MADDPG(parl.Algorithm):
         i = self.agent_index
 
         sample_this_action = self.sample(obs_n[i])
-        # action_input_n = deepcopy(act_n)
         action_input_n = act_n + []
         action_input_n[i] = sample_this_action
         eval_q = self.Q(obs_n, action_input_n)

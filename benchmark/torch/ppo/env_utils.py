@@ -131,7 +131,6 @@ class LocalEnv(object):
         # is instance of gym.spaces.Discrete
         elif hasattr(env.action_space, 'n'):
             self.continuous_action = False
-            env = gym.wrappers.RecordEpisodeStatistics(env)
             if test:
                 self.env = wrap_deepmind(
                     env,
@@ -174,7 +173,6 @@ class RemoteEnv(object):
                 self.env = wrap_rms(env, gamma=GAMMA)
         elif hasattr(env.action_space, 'n'):
             self.continuous_action = False
-            env = gym.wrappers.RecordEpisodeStatistics(env)
             if test:
                 self.env = wrap_deepmind(
                     env,

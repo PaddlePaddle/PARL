@@ -16,17 +16,19 @@ mujoco_config = {
     ## Commented parameters are set to default values in ppo
 
     #==========  env config ==========
-    'env_name': 'HalfCheetah-v2',
-    'continuous_action': True,
-    'env_num': 1,
+    'env_name': 'HalfCheetah-v2',  # environment name
+    'continuous_action': True,  # action type of the environment
+    'env_num': 1,  # number of the environment
+    'seed': None,  # seed of the experiment
+    'xparl_addr': None,  # xparl address for distributed training
 
     #==========  training config ==========
     'train_total_steps': int(1e6),  # max training steps
     'step_nums': 2048,  # data collecting time steps (ie. T in the paper)
     'num_minibatches': 32,  # number of training minibatches per update.
-    'update_epochs':
-    10,  # number of epochs for updating using each T data (ie K in the paper)
+    'update_epochs': 10,  # number of epochs for updating (ie K in the paper)
     'eval_episode': 3,
+    'test_every_steps': int(5e3),  # interval between evaluations
 
     #========== coefficient of ppo ==========
     'initial_lr': 3e-4,  # start learning rate

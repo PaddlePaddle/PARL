@@ -38,7 +38,7 @@ class PPOAgent(parl.Agent):
         """ Predict action from current policy given observation
 
         Args:
-            obs (np.array): observation
+            obs (np.array): observation, shape([batch_size] + obs_shape)
         """
         obs = paddle.to_tensor(obs, dtype='float32').unsqueeze(0)
         action = self.alg.predict(obs)
@@ -49,7 +49,7 @@ class PPOAgent(parl.Agent):
         """ Sample action from current policy given observation
 
         Args:
-            obs (np.array): observation
+            obs (np.array): observation, shape([batch_size] + obs_shape)
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         value, action, action_log_probs, action_entropy = self.alg.sample(obs)
@@ -58,6 +58,11 @@ class PPOAgent(parl.Agent):
         )[0], action_entropy.detach().numpy()
 
     def value(self, obs):
+        """ use the model to predict obs values
+
+        Args:
+            obs (torch tensor): observation, shape([batch_size] + obs_shape)
+        """
         obs = paddle.to_tensor(obs, dtype='float32')
         value = self.alg.value(obs)
         value = value.detach().numpy()

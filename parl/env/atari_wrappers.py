@@ -69,6 +69,13 @@ class MonitorEnv(gym.Wrapper):
         self._current_reward += rew
         self._num_steps += 1
         self._total_steps += 1
+        if done:
+            epinfo = {
+                "r": self._current_reward,
+                "l": self._num_steps
+            }
+            assert isinstance(info, dict)
+            info['episode'] = epinfo
         return (obs, rew, done, info)
 
     def get_episode_rewards(self):

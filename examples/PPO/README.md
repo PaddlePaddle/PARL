@@ -3,8 +3,8 @@ Based on PARL, the PPO algorithm of deep reinforcement learning has been reprodu
 
 > Paper: PPO in [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
-### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+### Mujoco/Atari games introduction
+Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about Mujoco games or [atari](https://gym.openai.com/envs/#atari) to know more about Atari games.
 
 ### Benchmark result
 #### 1. Mujoco games results
@@ -22,8 +22,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ## How to use
 ### Dependencies:
 + [paddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.5](https://github.com/PaddlePaddle/PARL)
-+ gym>=0.18.0
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ gym==0.21.0
 + mujoco-py==2.1.2.14
 
 ### Training:
@@ -37,7 +37,7 @@ python train.py --env 'HalfCheetah-v2' --continuous_action --train_total_steps 1
 ```
 
 ### Distributed Training
-Accelerate training process by setting `env_num > 1`.     
+Accelerate training process by setting `xparl_addr` and `env_num > 1` when environment simulation running very slow.        
 At first, we can start a local cluster with 8 CPUs:
 
 ```

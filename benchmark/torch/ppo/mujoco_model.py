@@ -28,28 +28,25 @@ class MujocoModel(parl.Model):
     def __init__(self, obs_space, act_space):
         super(MujocoModel, self).__init__()
 
-        self.fc_v1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
-        self.fc_v2 = _init_layer(nn.Linear(64, 64))
-        self.fc_v3 = _init_layer(nn.Linear(64, 1), std=1.0)
+        self.fc1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
+        self.fc2 = _init_layer(nn.Linear(64, 64))
 
-        self.fc_pi1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
-        self.fc_pi2 = _init_layer(nn.Linear(64, 64))
-        self.fc_pi3 = _init_layer(
+        self.fc_value = _init_layer(nn.Linear(64, 1), std=1.0)
+
+        self.fc_policy = _init_layer(
             nn.Linear(64, np.prod(act_space.shape)), std=0.01)
-
-        self.tanh = nn.Tanh()
         self.fc_pi_std = nn.Parameter(torch.zeros(1, act_space.shape[0]))
 
     def value(self, obs):
-        out = self.tanh(self.fc_v1(obs))
-        out = self.tanh(self.fc_v2(out))
-        value = self.fc_v3(out)
+        out = torch.tanh(self.fc1(obs))
+        out = torch.tanh(self.fc2(out))
+        value = self.fc_value(out)
         return value
 
     def policy(self, obs):
-        out = self.tanh(self.fc_pi1(obs))
-        out = self.tanh(self.fc_pi2(out))
-        action_mean = self.fc_pi3(out)
+        out = torch.tanh(self.fc1(obs))
+        out = torch.tanh(self.fc2(out))
+        action_mean = self.fc_policy(out)
 
         action_logstd = self.fc_pi_std.expand_as(action_mean)
         action_std = torch.exp(action_logstd)

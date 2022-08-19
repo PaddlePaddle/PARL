@@ -16,6 +16,7 @@
 # The following code are copied or modified from:
 # https://github.com/ray-project/ray/blob/master/python/ray/rllib/env/atari_wrappers.py
 
+import time
 import numpy as np
 from collections import deque
 import gym
@@ -47,6 +48,7 @@ class MonitorEnv(gym.Wrapper):
         self._episode_lengths = []
         self._num_episodes = 0
         self._num_returned = 0
+        self.tstart = time.time()
 
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
@@ -72,7 +74,8 @@ class MonitorEnv(gym.Wrapper):
         if done:
             epinfo = {
                 "r": self._current_reward,
-                "l": self._num_steps
+                "l": self._num_steps,
+                "t": round(time.time() - self.tstart, 6)
             }
             assert isinstance(info, dict)
             info['episode'] = epinfo

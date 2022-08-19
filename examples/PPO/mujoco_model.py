@@ -19,32 +19,44 @@ import numpy as np
 
 
 class MujocoModel(parl.Model):
+    """ The Model for Mujoco env
+    Args:
+        obs_space (Box): observation space.
+        act_space (Box): action space.
+    """
+
     def __init__(self, obs_space, act_space):
         super(MujocoModel, self).__init__()
 
-        self.fc_v1 = nn.Linear(obs_space.shape[0], 64)
-        self.fc_v2 = nn.Linear(64, 64)
-        self.fc_v3 = nn.Linear(64, 1)
+        self.fc1 = nn.Linear(obs_space.shape[0], 64)
+        self.fc2 = nn.Linear(64, 64)
 
-        self.fc_pi1 = nn.Linear(obs_space.shape[0], 64)
-        self.fc_pi2 = nn.Linear(64, 64)
-        self.fc_pi3 = nn.Linear(64, np.prod(act_space.shape))
+        self.fc_value = nn.Linear(64, 1)
 
+        self.fc_policy = nn.Linear(64, np.prod(act_space.shape))
         self.fc_pi_std = paddle.static.create_parameter(
             [1, np.prod(act_space.shape)],
             dtype='float32',
             default_initializer=nn.initializer.Constant(value=0))
 
     def value(self, obs):
-        out = paddle.tanh(self.fc_v1(obs))
-        out = paddle.tanh(self.fc_v2(out))
-        value = self.fc_v3(out)
+        """ Get value network prediction
+        Args:
+            obs (np.array): current observation
+        """
+        out = paddle.tanh(self.fc1(obs))
+        out = paddle.tanh(self.fc2(out))
+        value = self.fc_value(out)
         return value
 
     def policy(self, obs):
-        out = paddle.tanh(self.fc_pi1(obs))
-        out = paddle.tanh(self.fc_pi2(out))
-        action_mean = self.fc_pi3(out)
+        """ Get policy network prediction
+        Args:
+            obs (np.array): current observation
+        """
+        out = paddle.tanh(self.fc1(obs))
+        out = paddle.tanh(self.fc2(out))
+        action_mean = self.fc_policy(out)
 
         action_logstd = self.fc_pi_std
         action_std = paddle.exp(action_logstd)

@@ -53,9 +53,12 @@ class PPOAgent(parl.Agent):
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         value, action, action_log_probs, action_entropy = self.alg.sample(obs)
-        return value.detach(
-        ).numpy(), action.detach().numpy()[0], action_log_probs.detach().numpy(
-        )[0], action_entropy.detach().numpy()
+
+        value_numpy = value.detach().numpy()
+        action_numpy = action.detach().numpy()[0]
+        action_log_probs_numpy = action_log_probs.detach().numpy()[0]
+        action_entropy_numpy = action_entropy.detach().numpy()
+        return value_numpy, action_numpy, action_log_probs_numpy, action_entropy_numpy
 
     def value(self, obs):
         """ use the model to predict obs values
@@ -74,8 +77,8 @@ class PPOAgent(parl.Agent):
         Args:
             rollouts (RolloutStorage): the rollout storage that contains the current rollout
         """
-        v_loss_epoch = 0
-        pg_loss_epoch = 0
+        value_loss_epoch = 0
+        action_loss_epoch = 0
         entropy_loss_epoch = 0
         if self.config['lr_decay']:
             lr = self.lr_scheduler.step(step_num=1)
@@ -102,17 +105,17 @@ class PPOAgent(parl.Agent):
                 batch_return = paddle.to_tensor(batch_return)
                 batch_value = paddle.to_tensor(batch_value)
 
-                v_loss, pg_loss, entropy_loss = self.alg.learn(
+                value_loss, action_loss, entropy_loss = self.alg.learn(
                     batch_obs, batch_action, batch_value, batch_return,
                     batch_logprob, batch_adv, lr)
 
-                v_loss_epoch += v_loss
-                pg_loss_epoch += pg_loss
+                value_loss_epoch += value_loss
+                action_loss_epoch += action_loss
                 entropy_loss_epoch += entropy_loss
 
         update_steps = self.config['update_epochs'] * self.config['batch_size']
-        v_loss_epoch /= update_steps
-        pg_loss_epoch /= update_steps
+        value_loss_epoch /= update_steps
+        action_loss_epoch /= update_steps
         entropy_loss_epoch /= update_steps
 
-        return v_loss_epoch, pg_loss_epoch, entropy_loss_epoch, lr
+        return value_loss_epoch, action_loss_epoch, entropy_loss_epoch, lr

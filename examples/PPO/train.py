@@ -46,7 +46,7 @@ def main():
     config = mujoco_config if args.continuous_action else atari_config
     if args.env_num:
         config['env_num'] = args.env_num
-    config['env'] = args.env_name
+    config['env'] = args.env
     config['seed'] = args.seed
     config['xparl_addr'] = args.xparl_addr
     config['test_every_steps'] = args.test_every_steps

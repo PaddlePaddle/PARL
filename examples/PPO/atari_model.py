@@ -18,6 +18,12 @@ import paddle.nn.functional as F
 
 
 class AtariModel(parl.Model):
+    """ The Model for Mujoco env
+    Args:
+        obs_space (Box): observation space.
+        act_space (Box): action space.
+    """
+
     def __init__(self, obs_space, act_space):
         super(AtariModel, self).__init__()
 
@@ -32,6 +38,10 @@ class AtariModel(parl.Model):
         self.fc_v = nn.Linear(512, 1)
 
     def value(self, obs):
+        """ Get value network prediction
+        Args:
+            obs (np.array): current observation
+        """
         obs = obs / 255.0
         out = F.relu(self.conv1(obs))
         out = F.relu(self.conv2(out))
@@ -43,6 +53,10 @@ class AtariModel(parl.Model):
         return value
 
     def policy(self, obs):
+        """ Get policy network prediction
+        Args:
+            obs (np.array): current observation
+        """
         obs = obs / 255.0
         out = F.relu(self.conv1(obs))
         out = F.relu(self.conv2(out))

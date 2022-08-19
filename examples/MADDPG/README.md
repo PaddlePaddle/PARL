@@ -7,8 +7,7 @@ Based on PARL, the MADDPG algorithm of deep reinforcement learning has been repr
 A simple multi-agent particle world based on gym. Please see [here](https://github.com/openai/multiagent-particle-envs) to install and know more about the environment.
 
 ### Benchmark result
-Mean episode reward (every 1000 episodes) in training process (totally 25000 episodes).
-
+Mean episode reward in training process (totally 25000 episodes).
 <p align="center">
 <img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/MADDPG/paddle/result.png" alt="result"/>
 </p>
@@ -58,7 +57,7 @@ simple_world_comm<br>
 ### Dependencies:
 + python3.5+
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.4](https://github.com/PaddlePaddle/PARL)
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + PettingZoo==1.17.0
 + gym==0.23.1
 

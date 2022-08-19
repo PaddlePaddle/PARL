@@ -118,9 +118,6 @@ class VecNormalizeEnv(gym.Wrapper):
     def step(self, action):
         ob, rew, new, info = self.env.step(action)
         self.ret = self.ret * self.gamma + rew
-        # normalize observation, expand batch dim if observation does not have batch dimension
-        if ob.ndim == 1:
-            ob = np.expand_dims(ob, 0)
 
         ob = self._obfilt(ob)
         # normalize reward
@@ -141,11 +138,17 @@ class VecNormalizeEnv(gym.Wrapper):
 
     def _obfilt(self, ob, update=True):
         if self.ob_rms:
+            # normalize observation, expand batch dim if observation does not have batch dimension
+            if ob.ndim == 1:
+                ob = np.expand_dims(ob, 0)
             if self.training and update:
                 self.ob_rms.update(ob)
             ob = np.clip((ob - self.ob_rms.mean) /
                          np.sqrt(self.ob_rms.var + self.epsilon), -self.clipob,
                          self.clipob)
+            # squeeze observation shape after normalization
+            if ob.shape[0] == 1:
+                ob = np.squeeze(ob, axis=0)
             return ob
         else:
             return ob

@@ -49,8 +49,8 @@ def run_train_episode(env, agent, rpm):
             action = agent.sample(np.array(obs))
 
         next_obs, reward, done, info = env.step(action)
-        done = float(done) if steps < env._max_episode_steps else 0
-        rpm.append(obs, action, reward, next_obs, done)
+        terminal = float(done) if steps < env._max_episode_steps else 0
+        rpm.append(obs, action, reward, next_obs, terminal)
 
         obs = next_obs
         total_reward += reward

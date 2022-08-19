@@ -48,11 +48,19 @@ class MAAgent(parl.Agent):
         # Attention: In the beginning, sync target model totally.
         self.alg.sync_target(decay=0)
 
-    def predict(self, obs, use_target_model=False):
-        """ predict action by model or target_model
+    def predict(self, obs):
+        """ predict action by model
         """
         obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
-        act = self.alg.predict(obs, use_target_model=use_target_model)
+        act = self.alg.predict(obs)
+        act_numpy = act.detach().cpu().numpy().flatten()
+        return act_numpy
+
+    def sample(self, obs, use_target_model=False):
+        """ sample action by model or target_model
+        """
+        obs = paddle.to_tensor(obs.reshape(1, -1), dtype='float32')
+        act = self.alg.sample(obs, use_target_model=use_target_model)
         act_numpy = act.detach().cpu().numpy().flatten()
         return act_numpy
 
@@ -97,7 +105,7 @@ class MAAgent(parl.Agent):
             paddle.to_tensor(obs, dtype='float32') for obs in batch_obs_next_n
         ]
         for i in range(self.n):
-            target_act_next = agents[i].alg.predict(
+            target_act_next = agents[i].alg.sample(
                 batch_obs_next_n[i], use_target_model=True)
             target_act_next = target_act_next.detach()
             target_act_next_n.append(target_act_next)

@@ -104,7 +104,14 @@ class spaces(object):
 # mock CartPole-v0
 class CartPoleEnv(object):
     def __init__(self):
-        self.observation_space = ObservationSpace((4, ), dtype='int8')
+        self.observation_space = Box(
+            high=np.array(
+                [4.8000002e+00, 3.4028235e+38, 4.1887903e-01, 3.4028235e+38]),
+            low=np.array([
+                -4.8000002e+00, -3.4028235e+38, -4.1887903e-01, -3.4028235e+38
+            ]),
+            shape=(4, ),
+            dtype='int8')
         self.action_space = ActionSpace(2)
 
     def step(self, action):
@@ -141,7 +148,11 @@ class PongEnv(object):
             def get_action_meanings(self):
                 return ['NOOP'] * 6
 
-        self.observation_space = ObservationSpace((210, 160, 3), 'unit8')
+        self.observation_space = Box(
+            high=np.ones((210, 160, 3), dtype='uint8') * 255,
+            low=np.zeros((210, 160, 3), dtype='uint8'),
+            shape=(210, 160, 3),
+            dtype='unit8')
         self.action_space = ActionSpace(n=6, shape=())
         self._max_episode_steps = 1000
         self.unwrapped = Ale()

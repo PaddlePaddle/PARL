@@ -18,10 +18,10 @@ import paddle.nn.functional as F
 
 
 class AtariModel(parl.Model):
-    """ The Model for Mujoco env
+    """ The Model for Atari env
     Args:
         obs_space (Box): observation space.
-        act_space (Box): action space.
+        act_space (Discrete): action space.
     """
 
     def __init__(self, obs_space, act_space):

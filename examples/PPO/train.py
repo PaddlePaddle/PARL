@@ -110,7 +110,7 @@ def main():
         rollout.compute_returns(value, done)
 
         # Optimizing the policy and value network
-        v_loss, pg_loss, entropy_loss, lr = agent.learn(rollout)
+        value_loss, action_loss, entropy_loss, lr = agent.learn(rollout)
 
         if (total_steps + 1) // config['test_every_steps'] >= test_flag:
             while (total_steps + 1) // config['test_every_steps'] >= test_flag:

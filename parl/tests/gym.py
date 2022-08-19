@@ -142,7 +142,7 @@ class PongEnv(object):
                 return ['NOOP'] * 6
 
         self.observation_space = ObservationSpace((210, 160, 3), 'unit8')
-        self.action_space = ActionSpace(6)
+        self.action_space = ActionSpace(n=6, shape=())
         self._max_episode_steps = 1000
         self.unwrapped = Ale()
         self.metadata = {'render.modes': []}

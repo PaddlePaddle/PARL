@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,50 +15,39 @@
 import parl
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.distributions import Normal
+import numpy as np
+
+
+def _init_layer(layer, std=np.sqrt(2), bias_const=0.0):
+    torch.nn.init.orthogonal_(layer.weight, std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
 
 
 class MujocoModel(parl.Model):
-    def __init__(self, obs_dim, act_dim):
+    def __init__(self, obs_space, act_space):
         super(MujocoModel, self).__init__()
-        self.actor = Actor(obs_dim, act_dim)
-        self.critic = Critic(obs_dim)
 
-    def policy(self, obs):
-        return self.actor(obs)
+        self.fc1 = _init_layer(nn.Linear(obs_space.shape[0], 64))
+        self.fc2 = _init_layer(nn.Linear(64, 64))
+
+        self.fc_value = _init_layer(nn.Linear(64, 1), std=1.0)
+
+        self.fc_policy = _init_layer(
+            nn.Linear(64, np.prod(act_space.shape)), std=0.01)
+        self.fc_pi_std = nn.Parameter(torch.zeros(1, act_space.shape[0]))
 
     def value(self, obs):
-        return self.critic(obs)
-
-
-class Actor(parl.Model):
-    def __init__(self, obs_dim, act_dim):
-        super(Actor, self).__init__()
-        self.fc1 = nn.Linear(obs_dim, 64)
-        self.fc2 = nn.Linear(64, 64)
-
-        self.fc_mean = nn.Linear(64, act_dim)
-        self.log_std = nn.Parameter(torch.zeros(act_dim))
-
-    def forward(self, obs):
-        x = torch.tanh(self.fc1(obs))
-        x = torch.tanh(self.fc2(x))
-
-        mean = self.fc_mean(x)
-        return mean, self.log_std
-
-
-class Critic(parl.Model):
-    def __init__(self, obs_dim):
-        super(Critic, self).__init__()
-        self.fc1 = nn.Linear(obs_dim, 64)
-        self.fc2 = nn.Linear(64, 64)
-        self.fc3 = nn.Linear(64, 1)
-
-    def forward(self, obs):
-        x = torch.tanh(self.fc1(obs))
-        x = torch.tanh(self.fc2(x))
-        value = self.fc3(x)
-
+        out = torch.tanh(self.fc1(obs))
+        out = torch.tanh(self.fc2(out))
+        value = self.fc_value(out)
         return value
+
+    def policy(self, obs):
+        out = torch.tanh(self.fc1(obs))
+        out = torch.tanh(self.fc2(out))
+        action_mean = self.fc_policy(out)
+
+        action_logstd = self.fc_pi_std.expand_as(action_mean)
+        action_std = torch.exp(action_logstd)
+        return action_mean, action_std

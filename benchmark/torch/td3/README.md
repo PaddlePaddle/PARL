@@ -14,7 +14,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src="https://github.com/ljy2222/PARL-experiments/blob/master/TD3/torch/result.png" width = "1500" height ="260" alt="Performance" />
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/TD3/torch/result.png" alt="Performance" />
 
 ## How to use
 ### Dependencies:

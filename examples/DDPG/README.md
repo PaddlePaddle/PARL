@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DDPG/paddle/result.png" alt="DDPG_results"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DDPG/paddle/result.png" width="800" alt="DDPG_results"/>
 + Each experiment was run three times with different seeds
 
 ## How to use

@@ -27,5 +27,5 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 # --alpha 0.2(default)
 python train.py --env [ENV_NAME]
 
-# To reproduce the performance of Humanoid-v1
-python train.py --env Humanoid-v1 --alpha 0.05
+# To reproduce the performance of Humanoid-v2
+python train.py --env Humanoid-v2 --alpha 0.05

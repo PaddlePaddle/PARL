@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DDPG/torch/result.png" alt="DDPG_results"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DDPG/torch/result.png" width="800" alt="DDPG_results"/>
 
 ## How to use
 ### Dependencies:

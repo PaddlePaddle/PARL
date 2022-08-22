@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/OAC_results.png" width = "1000" height ="280" alt="OAC_results"/>
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/OAC/torch/result.png" width = "1000" height ="280" alt="OAC_results"/>
 
 + Each experiment was run three times with different seeds
 
@@ -16,13 +16,13 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Dependencies:
 + python3.5+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.9.1
++ gym==0.21.0
 + torch
-+ mujoco-py==0.5.7
++ mujoco-py==2.1.2.14
 
 ### Start Training:
 ```train
-# To train an agent for HalfCheetah-v1 game
+# To train an agent for HalfCheetah-v2 game
 python train.py
 
 # To train for other game & params

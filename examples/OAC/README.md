@@ -8,19 +8,19 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/OAC_results.png" width = "1000" height ="280" alt="OAC_results"/>
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/OAC/paddle/result.png" alt="OAC_results"/>
 
 ## How to use
 ### Dependencies:
 + python3.5+
 + [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ gym==0.9.1
-+ mujoco-py==0.5.7
++ gym==0.21.0
++ mujoco-py==2.1.2.14
 
 ### Start Training:
 ```
-# To train an agent for Humanoid-v1 game
+# To train an agent for Humanoid-v2 game
 python train.py
 
 # To train for other game

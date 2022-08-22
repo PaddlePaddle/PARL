@@ -14,7 +14,7 @@ Please view [here](https://github.com/openai/mujoco-py) to know more about Mujoc
 
 ### Benchmark result
 
-<img src="https://github.com/ljy2222/PARL-experiments/blob/master/TD3/paddle/result.png" alt="TD3_results"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/TD3/paddle/result.png" alt="TD3_results"/>
 + Each experiment was run three times with different seeds
 
 ## How to use

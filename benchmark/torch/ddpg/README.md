@@ -8,19 +8,19 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/DDPG_results.png" width = "800" height ="400" alt="DDPG_results"/>
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/DDPG/torch/result.png" width = "800" height ="400" alt="DDPG_results"/>
 
 ## How to use
 ### Dependencies:
 + python3.5+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.9.1
++ gym==0.21.0
 + torch
-+ mujoco-py==0.5.7
++ mujoco-py==2.1.2.14
 
 ### Start Training:
 ```
-# To train an agent for HalfCheetah-v1 game
+# To train an agent for HalfCheetah-v2 game
 python train.py
 
 # To train for other game

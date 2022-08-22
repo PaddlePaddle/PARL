@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src=".benchmark/SAC_results.png" width = "800" height ="400" alt="SAC_results"/>
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/SAC/paddle/result.png" alt="SAC_results"/>
 
 + Each experiment was run three times with different seeds
 
@@ -17,15 +17,15 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 + python3.5+
 + [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ gym==0.9.1
-+ mujoco-py==0.5.7
++ gym==0.21.0
++ mujoco-py==2.1.2.14
 
 ### Start Training:
 #### Train
 ```
-# To train for HalfCheetah-v1(default),Hopper-v1,Walker2d-v1,Ant-v1
+# To train for HalfCheetah-v2(default),Hopper-v2,Walker2d-v2,Ant-v2
 # --alpha 0.2(default)
 python train.py --env [ENV_NAME]
 
-# To reproduce the performance of Humanoid-v1
-python train.py --env Humanoid-v1 --alpha 0.05
+# To reproduce the performance of Humanoid-v2
+python train.py --env Humanoid-v2 --alpha 0.05

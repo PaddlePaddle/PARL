@@ -8,7 +8,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<img src="https://github.com/ljy2222/PARL-experiments/blob/master/SAC/torch/result.png" width = "800" height ="400" alt="SAC_results"/>
+<img src="https://github.com/ljy2222/PARL-experiments/blob/master/SAC/torch/result.png" alt="SAC_results"/>
 
 + Each experiment was run three times with different seeds
 

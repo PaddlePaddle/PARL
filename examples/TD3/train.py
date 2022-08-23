@@ -132,7 +132,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v1", help='Mujoco gym environment name')
+        "--env", default="HalfCheetah-v2", help='Mujoco gym environment name')
     parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",

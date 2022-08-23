@@ -14,7 +14,7 @@ Please view [here](https://github.com/openai/mujoco-py) to know more about Mujoc
 
 ### Benchmark result
 
-<img src=".benchmark/TD3_results.png" width = "800" height ="400" alt="TD3_results"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/TD3/paddle/result.png" alt="TD3_results"/>
 + Each experiment was run three times with different seeds
 
 ## How to use
@@ -22,12 +22,12 @@ Please view [here](https://github.com/openai/mujoco-py) to know more about Mujoc
 + python3.5+
 + [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ gym==0.9.1
-+ mujoco-py==0.5.7
++ gym==0.21.0
++ mujoco-py==2.1.2.14
 
 ### Start Training:
 ```
-# To train an agent for HalfCheetah-v1 game
+# To train an agent for HalfCheetah-v2 game
 python train.py
 
 # To train for different game

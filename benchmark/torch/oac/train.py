@@ -137,7 +137,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="Humanoid-v1", help='Mujoco gym environment name')
+        "--env", default="Humanoid-v2", help='Mujoco gym environment name')
     parser.add_argument(
         "--seed",
         default=0,

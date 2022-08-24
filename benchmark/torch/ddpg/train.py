@@ -128,7 +128,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v1", help='OpenAI gym environment name')
+        "--env", default="HalfCheetah-v2", help='OpenAI gym environment name')
     parser.add_argument(
         "--seed",
         default=0,

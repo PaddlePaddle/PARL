@@ -1,4 +1,4 @@
-gym==0.9.2
-mujoco-py==0.5.7
+gym==0.21.0
+mujoco-py==2.1.2.14
 paddlepaddle>=2.0.0
-parl>=2.0.2
+parl>2.0.5

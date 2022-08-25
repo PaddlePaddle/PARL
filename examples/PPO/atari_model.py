@@ -13,40 +13,43 @@
 # limitations under the License.
 
 import parl
-import paddle
 import paddle.nn as nn
-import numpy as np
+import paddle.nn.functional as F
 
 
-class MujocoModel(parl.Model):
-    """ The Model for Mujoco env
+class AtariModel(parl.Model):
+    """ The Model for Atari env
     Args:
         obs_space (Box): observation space.
-        act_space (Box): action space.
+        act_space (Discrete): action space.
     """
 
     def __init__(self, obs_space, act_space):
-        super(MujocoModel, self).__init__()
+        super(AtariModel, self).__init__()
 
-        self.fc1 = nn.Linear(obs_space.shape[0], 64)
-        self.fc2 = nn.Linear(64, 64)
+        self.conv1 = nn.Conv2D(4, 32, 8, stride=4)
+        self.conv2 = nn.Conv2D(32, 64, 4, stride=2)
+        self.conv3 = nn.Conv2D(64, 64, 3, stride=1)
 
-        self.fc_value = nn.Linear(64, 1)
+        self.flatten = nn.Flatten()
+        self.fc = nn.Linear(64 * 7 * 7, 512)
 
-        self.fc_policy = nn.Linear(64, np.prod(act_space.shape))
-        self.fc_pi_std = paddle.static.create_parameter(
-            [1, np.prod(act_space.shape)],
-            dtype='float32',
-            default_initializer=nn.initializer.Constant(value=0))
+        self.fc_pi = nn.Linear(512, act_space.n)
+        self.fc_v = nn.Linear(512, 1)
 
     def value(self, obs):
         """ Get value network prediction
         Args:
             obs (np.array): current observation
         """
-        out = paddle.tanh(self.fc1(obs))
-        out = paddle.tanh(self.fc2(out))
-        value = self.fc_value(out)
+        obs = obs / 255.0
+        out = F.relu(self.conv1(obs))
+        out = F.relu(self.conv2(out))
+        out = F.relu(self.conv3(out))
+
+        out = self.flatten(out)
+        out = F.relu(self.fc(out))
+        value = self.fc_v(out)
         return value
 
     def policy(self, obs):
@@ -54,10 +57,12 @@ class MujocoModel(parl.Model):
         Args:
             obs (np.array): current observation
         """
-        out = paddle.tanh(self.fc1(obs))
-        out = paddle.tanh(self.fc2(out))
-        action_mean = self.fc_policy(out)
+        obs = obs / 255.0
+        out = F.relu(self.conv1(obs))
+        out = F.relu(self.conv2(out))
+        out = F.relu(self.conv3(out))
 
-        action_logstd = self.fc_pi_std
-        action_std = paddle.exp(action_logstd)
-        return action_mean, action_std
+        out = self.flatten(out)
+        out = F.relu(self.fc(out))
+        logits = self.fc_pi(out)
+        return logits

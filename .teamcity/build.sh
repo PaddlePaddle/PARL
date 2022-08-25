@@ -38,7 +38,8 @@ function run_example_test {
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1 --continuous_action
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
     python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v1
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
@@ -224,12 +225,12 @@ function main() {
                     run_import_test # import parl test
 
                     pip install -r .teamcity/requirements.txt
-                    pip install paddlepaddle==2.1.0
+                    pip install paddlepaddle==2.3.1
                     run_test_with_cpu $env
                     # uninstall paddlepaddle when testing remote module
                     pip uninstall -y paddlepaddle
-                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                    # run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    # run_test_with_cpu $env "DIS_TESTING_REMOTE"
                 else
                     echo ========================================
                     echo "in torch environment"
@@ -244,7 +245,7 @@ function main() {
             done
 
             pip install -r .teamcity/requirements.txt
-            pip install /data/paddle_package/paddlepaddle_gpu-2.1.0.post101-cp38-cp38-linux_x86_64.whl
+            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
             pip install tqdm # for example test
             run_example_test $env

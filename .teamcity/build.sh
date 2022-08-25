@@ -245,7 +245,7 @@ function main() {
             done
 
             pip install -r .teamcity/requirements.txt
-            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1.post101-cp38-cp38-linux_x86_64.whl
+            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
             pip install tqdm # for example test
             run_example_test $env

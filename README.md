@@ -77,7 +77,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 # Install:
 ### Dependencies
 - Python 3.6+(Python 3.8+ is preferable for distributed training). 
-- [paddlepaddle>=2.0](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
+- [paddlepaddle>=2.3.1](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
 
 
 ```

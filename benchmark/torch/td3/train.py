@@ -77,7 +77,6 @@ def run_evaluate_episode(env, agent):
 
 def main():
     env = gym.make(args.env)
-    env.seed(ENV_SEED)
     env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]

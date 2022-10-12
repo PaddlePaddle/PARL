@@ -35,7 +35,7 @@ EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 # Run episode for training
 def run_train_episode(agent, env, rpm):
     action_dim = env.action_space.shape[0]
-    obs = env.reset()
+    obs, info = env.reset(seed=args.seed)
     done = False
     episode_reward, episode_steps = 0, 0
 
@@ -48,7 +48,7 @@ def run_train_episode(agent, env, rpm):
             action = agent.sample(obs)
 
         # Perform action
-        next_obs, reward, done, _ = env.step(action)
+        next_obs, reward, done, __, _ = env.step(action)
         terminal = float(done) if episode_steps < env._max_episode_steps else 0
 
         # Store data in replay memory
@@ -71,11 +71,11 @@ def run_train_episode(agent, env, rpm):
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        obs = env.reset()
+        obs,info = env.reset(seed=args.seed)
         done = False
         while not done:
             action = agent.predict(obs)
-            obs, reward, done, _ = env.step(action)
+            obs, reward, done, __, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward
@@ -87,7 +87,7 @@ def main():
     logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
-    env.seed(args.seed)
+    
     env = ActionMappingWrapper(env)
 
     obs_dim = env.observation_space.shape[0]

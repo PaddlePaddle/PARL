@@ -25,7 +25,7 @@ class TimeLimitMaskEnv(gym.Wrapper):
     """
 
     def step(self, action):
-        obs, rew, done, info = self.env.step(action)
+        obs, rew, done, _, info = self.env.step(action)
         if done and self.env._max_episode_steps == self.env._elapsed_steps:
             info['bad_transition'] = True
         return obs, rew, done, info
@@ -133,7 +133,7 @@ class VecNormalizeEnv(gym.Wrapper):
 
     def reset(self):
         self.ret = np.zeros(1)
-        ob = self.env.reset()
+        ob, info = self.env.reset()
         return self._obfilt(ob)
 
     def _obfilt(self, ob, update=True):

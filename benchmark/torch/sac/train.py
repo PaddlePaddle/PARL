@@ -46,7 +46,7 @@ def run_train_episode(agent, env, rpm):
             action = agent.sample(obs)
 
         # Perform action
-        next_obs, reward, done, _ = env.step(action)
+        next_obs, reward, done, __, _ = env.step(action)
         terminal = float(done) if episode_steps < env._max_episode_steps else 0
 
         # Store data in replay memory
@@ -74,7 +74,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
         done = False
         while not done:
             action = agent.predict(obs)
-            obs, reward, done, _ = env.step(action)
+            obs, reward, done, __, _ = env.step(action)
             avg_reward += reward
     avg_reward /= eval_episodes
     return avg_reward

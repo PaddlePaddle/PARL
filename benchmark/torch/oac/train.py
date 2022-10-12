@@ -74,7 +74,7 @@ def run_train_episode(agent, env, rpm):
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        obs, info = env.reset()
+        obs, info = env.reset(args.seed)
         done = False
         while not done:
             action = agent.predict(obs)

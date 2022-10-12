@@ -35,7 +35,7 @@ EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 
 def run_train_episode(env, agent, rpm):
     act_dim = env.action_space.shape[0]
-    obs = env.reset()
+    obs, info = env.reset(args.seed)
     done = False
     total_reward = 0
     steps = 0
@@ -48,7 +48,7 @@ def run_train_episode(env, agent, rpm):
         else:
             action = agent.sample(np.array(obs))
 
-        next_obs, reward, done, info = env.step(action)
+        next_obs, reward, done, __, info = env.step(action)
         terminal = float(done) if steps < env._max_episode_steps else 0
         rpm.append(obs, action, reward, next_obs, terminal)
 
@@ -65,12 +65,12 @@ def run_train_episode(env, agent, rpm):
 
 
 def run_evaluate_episode(env, agent):
-    obs = env.reset()
+    obs, info = env.reset(args.seed)
     done = False
     total_reward = 0
     while not done:
         action = agent.predict(np.array(obs))
-        obs, reward, done, _ = env.step(action)
+        obs, reward, done, __, _ = env.step(action)
         total_reward += reward
     return total_reward
 

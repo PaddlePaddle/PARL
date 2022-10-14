@@ -21,7 +21,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 + torch==1.8.1
 + [parl>=1.4](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
-+ mujoco-py==2.0.2.13
++ mujoco-py==2.1.2.14
 
 
 ### Distributed training

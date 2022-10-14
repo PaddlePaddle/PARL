@@ -16,7 +16,7 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Dependencies:
 + python3.5+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.21.0
++ gym==0.18.0
 + torch
 + mujoco-py==2.1.2.14
 

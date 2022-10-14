@@ -17,6 +17,7 @@ import argparse
 import numpy as np
 from parl.utils import logger, summary, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
+from parl.env.compat_wrappers import CompatWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import DDPG
@@ -88,9 +89,10 @@ def main():
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
-    env.seed(args.seed)
+    env = CompatWrapper(env)
     env = ActionMappingWrapper(env)
 
+    env.seed(args.seed)
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
@@ -133,8 +135,8 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--env", default="HalfCheetah-v2", help='OpenAI gym environment name')
-    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
+        "--env", default="HalfCheetah-v4", help='OpenAI gym environment name')
+    parser.add_argument("--seed", default=2, type=int, help='Sets Gym seed')
     parser.add_argument(
         "--train_total_steps",
         default=5e6,

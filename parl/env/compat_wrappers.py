@@ -16,8 +16,8 @@ import gym
 import numpy as np
 from parl.utils import logger
 
-# BASE_VERSION1 change env.seed() and env.reset()
-# BASE_VERSION2 change env.step()
+# BASE_VERSION1 make some changes in env.seed() and env.reset()
+# BASE_VERSION2 make some changes in change env.step()
 BASE_VERSION1 = [0, 26, 0]
 BASE_VERSION2 = [0, 25, 0]
 

@@ -87,9 +87,8 @@ def main():
     logger.info("---------------------------------------------")
 
     env = gym.make(args.env)
-
-    env = ActionMappingWrapper(env)
     env = CompatWrapper(env)
+    env = ActionMappingWrapper(env)
     env.seed(args.seed)
 
     obs_dim = env.observation_space.shape[0]

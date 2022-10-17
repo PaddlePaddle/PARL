@@ -90,8 +90,8 @@ def main():
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
-    env = ActionMappingWrapper(env)
     env = CompatWrapper(env)
+    env = ActionMappingWrapper(env)
     env.seed(args.seed)
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]

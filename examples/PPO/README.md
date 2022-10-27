@@ -22,7 +22,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 ## How to use
 ### Dependencies:
 + [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
-+ [parl==2.0.6](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.0.6](https://github.com/PaddlePaddle/PARL)
 + gym==0.21.0
 + mujoco-py==2.1.2.14
 

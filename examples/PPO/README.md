@@ -25,6 +25,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 + [parl>=2.0.6](https://github.com/PaddlePaddle/PARL)
 + gym==0.21.0
 + mujoco-py==2.1.2.14
++ atari-py==0.2.6
 
 ### Training:
 

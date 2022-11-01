@@ -21,7 +21,10 @@ import numpy as np
 from collections import deque
 import gym
 from gym import spaces
+from parl.env.compat_wrappers import *
+
 import cv2
+
 cv2.ocl.setUseOpenCL(False)
 
 
@@ -113,7 +116,11 @@ class NoopResetEnv(gym.Wrapper):
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
-            noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)
+            if compare_version(gym.__version__, BASE_VERSION3) == "High" or compare_version(gym.__version__,
+                                                                                            BASE_VERSION3) == "Equal":
+                noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)
+            elif compare_version(gym.__version__, BASE_VERSION3) == "Low":
+                noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)
         assert noops > 0
         obs = None
         for _ in range(noops):
@@ -129,6 +136,15 @@ class NoopResetEnv(gym.Wrapper):
 class ClipRewardEnv(gym.RewardWrapper):
     def __init__(self, env):
         gym.RewardWrapper.__init__(self, env)
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        return obs
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        clip_reward = self.reward(reward)
+        return obs, clip_reward, done, info
 
     def reward(self, reward):
         """Bin reward to {+1, 0, -1} by its sign."""
@@ -201,7 +217,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         gym.Wrapper.__init__(self, env)
         # most recent raw observations (for max pooling across time steps)
         self._obs_buffer = np.zeros(
-            (2, ) + env.observation_space.shape, dtype=np.uint8)
+            (2,) + env.observation_space.shape, dtype=np.uint8)
         self._skip = skip
 
     def step(self, action):
@@ -235,6 +251,14 @@ class WarpFrame(gym.ObservationWrapper):
         self.height = dim
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(self.height, self.width), dtype=np.uint8)
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        return self.observation(obs)
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        return self.observation(obs), reward, done, info
 
     def observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
@@ -344,6 +368,7 @@ def wrap_deepmind(env,
         test (bool): whether this is a test env
         test_episodes (int): when test, number of episodes for each evaluation
     """
+    env = CompatWrapper(env)
     env = MonitorEnv(env)
     env = NoopResetEnv(env, noop_max=30)
     if 'NoFrameskip' in env.spec.id:

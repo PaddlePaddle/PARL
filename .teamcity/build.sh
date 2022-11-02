@@ -30,7 +30,8 @@ function init() {
 function run_example_test {
     for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
     do
-        cp parl/tests/gym.py examples/${exp}/
+        sed -i '/paddlepaddle/d' ./examples/{exp}/requirements.txt
+        sed -i '/parl/d' ./examples/{exp}/requirements.txt
     done
 
     sed -i '/paddlepaddle/d' ./examples/QuickStart/requirements.txt

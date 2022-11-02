@@ -43,7 +43,7 @@ function run_example_test {
     python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
 
-    sed -i '/paddlepaddle/d' ./examples/DQN_variant t/requirements.txt
+    sed -i '/paddlepaddle/d' ./examples/DQN_variant/requirements.txt
     sed -i '/parl/d' ./examples/DQN_variant/requirements.txt
     python -m pip install -r ./examples/DQN_variant/requirements.txt
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4

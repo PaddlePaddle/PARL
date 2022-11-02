@@ -16,19 +16,21 @@ import gym
 import numpy as np
 from parl.utils import logger
 
-# BASE_VERSION1 make some changes in env.seed() and env.reset()
-# BASE_VERSION2 make some changes in change env.step()
-BASE_VERSION1 = [0, 26, 0]
-BASE_VERSION2 = [0, 25, 0]
+# BASE_VERSION1 change env.seed() and env.reset()
+# BASE_VERSION2 change env.step()
+BASE_VERSION1 = '0.26.0'
+BASE_VERSION2 = '0.25.0'
+BASE_VERSION3 = '0.21.0'
 
 
-def get_gym_version():
-    version = gym.__version__
-    version_num = [int(x) for x in version.split('.')]
+def get_gym_version(version_str=gym.__version__):
+    version_num = [int(x) for x in version_str.split('.')]
     return version_num
 
 
-def compare_version(current_version_num, base_version_num):
+def compare_version(current_version, base_version):
+    current_version_num = get_gym_version(current_version)
+    base_version_num = get_gym_version(base_version)
     if len(current_version_num) != len(base_version_num):
         raise ValueError('Version format must be x.x.x')
     else:
@@ -36,8 +38,8 @@ def compare_version(current_version_num, base_version_num):
             if current_version_num[i] < base_version_num[i]:
                 return "Low"
             elif current_version_num[i] > base_version_num[i]:
-                return 'HighEqual'
-    return 'HighEqual'
+                return 'High'
+    return 'Equal'
 
 
 class CompatWrapper(gym.Wrapper):
@@ -45,7 +47,7 @@ class CompatWrapper(gym.Wrapper):
         """
         Compat mujoco-v4
         """
-
+        env._max_episode_steps=40000
         super().__init__(env)
         attr_list = dir(env)
         if hasattr(env, '_max_episode_steps'):
@@ -53,10 +55,11 @@ class CompatWrapper(gym.Wrapper):
         if hasattr(env, '_elapsed_steps'):
             self._elapsed_steps = self.env._elapsed_steps
         self.count_ep_step = 0
-        self.ramdom_seed = 'without_setting'
+        self.random_seed = 'without_setting'
 
     def reset(self, **kwargs):
-        if compare_version(get_gym_version(), BASE_VERSION1) == "HighEqual":
+        if compare_version(gym.__version__, BASE_VERSION1) == "High" or compare_version(gym.__version__,
+                                                                                          BASE_VERSION1) == "Equal":
             if self.ramdom_seed != "without_setting":
                 kwargs['seed'] = self.ramdom_seed
             obs, info = self.env.reset(**kwargs)
@@ -65,22 +68,24 @@ class CompatWrapper(gym.Wrapper):
         return obs
 
     def seed(self, random_seed):
-        if compare_version(get_gym_version(), BASE_VERSION1) == "HighEqual":
+        if compare_version(gym.__version__, BASE_VERSION1) == "High" or compare_version(gym.__version__,
+                                                                                          BASE_VERSION1) == "Equal":
             self.ramdom_seed = random_seed
         else:
             self.env.seed(random_seed)
 
     def step(self, action):
         self.count_ep_step += 1
-        if compare_version(get_gym_version(), BASE_VERSION2) == "HighEqual":
+        if compare_version(gym.__version__, BASE_VERSION2) == "High" or compare_version(gym.__version__,
+                                                                                          BASE_VERSION2) == "Equal":
             obs, reward, done, _, info = self.env.step(action)
             if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps
         else:
             obs, reward, done, info = self.env.step(action)
-            if hasattr(env, '_elapsed_steps'):
+            if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps
-        if self.count_ep_step >= self._max_episode_steps:
+        if hasattr(self, '_max_episode_steps') and self.count_ep_step >= self._max_episode_steps:
             done = True
             self.count_ep_step = 0
         return obs, reward, done, info

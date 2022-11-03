@@ -23,8 +23,8 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 ### Dependencies:
 + [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
 + [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
-+ gym==0.18.0
-+ mujoco-py==2.1.2.14
++ gym>=0.26.0
++ mujoco>=2.2.2
 + atari-py==0.2.6
 
 ### Training:

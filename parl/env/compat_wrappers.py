@@ -47,7 +47,6 @@ class CompatWrapper(gym.Wrapper):
         """
         Compat mujoco-v4
         """
-        env._max_episode_steps=40000
         super().__init__(env)
         attr_list = dir(env)
         if hasattr(env, '_max_episode_steps'):
@@ -60,7 +59,7 @@ class CompatWrapper(gym.Wrapper):
     def reset(self, **kwargs):
         if compare_version(gym.__version__, BASE_VERSION1) == "High" or compare_version(gym.__version__,
                                                                                           BASE_VERSION1) == "Equal":
-            if self.ramdom_seed != "without_setting":
+            if self.random_seed != "without_setting":
                 kwargs['seed'] = self.ramdom_seed
             obs, info = self.env.reset(**kwargs)
         else:

@@ -16,8 +16,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 + python3.7+
 + [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ gym==0.26.0
-+ mujoco==2.2.2
++ gym>=0.26.0
++ mujoco>=2.2.2
 
 ### Start Training:
 ```

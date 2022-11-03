@@ -118,7 +118,8 @@ class NoopResetEnv(gym.Wrapper):
         else:
             if operator.ge(get_gym_version(), get_gym_version(BASE_VERSION3)):
                 noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)
-            elif operator.lt(get_gym_version(), get_gym_version(BASE_VERSION3)):
+            elif operator.lt(get_gym_version(),
+                             get_gym_version(BASE_VERSION3)):
                 noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)
         assert noops > 0
         obs = None
@@ -216,7 +217,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         gym.Wrapper.__init__(self, env)
         # most recent raw observations (for max pooling across time steps)
         self._obs_buffer = np.zeros(
-            (2,) + env.observation_space.shape, dtype=np.uint8)
+            (2, ) + env.observation_space.shape, dtype=np.uint8)
         self._skip = skip
 
     def step(self, action):

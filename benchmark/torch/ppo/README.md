@@ -5,6 +5,7 @@ Based on PARL, the PPO algorithm of deep reinforcement learning has been reprodu
 
 ### Mujoco/Atari games introduction
 Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about Mujoco games or [atari](https://gym.openai.com/envs/#atari) to know more about Atari games.
+The new version of PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to install Mujoco-py and license of Mujoco.
 
 ### Benchmark result
 #### 1. Mujoco games results
@@ -21,11 +22,11 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 
 ## How to use
 ### Dependencies:
-+ python>=3.6.2
++ python>=3.7
 + [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + pytorch
-+ gym==0.18.0
-+ mujoco-py==2.1.2.14
++ gym>=0.26.0
++ mujoco>=2.2.2
 + atari-py==0.2.6
 
 ### Training:

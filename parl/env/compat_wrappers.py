@@ -58,7 +58,7 @@ class CompatWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         if compare_version(gym.__version__, BASE_VERSION1) == "High" or compare_version(gym.__version__,
-                                                                                          BASE_VERSION1) == "Equal":
+                                                                                        BASE_VERSION1) == "Equal":
             if self.random_seed != "without_setting":
                 kwargs['seed'] = self.ramdom_seed
             obs, info = self.env.reset(**kwargs)
@@ -68,7 +68,7 @@ class CompatWrapper(gym.Wrapper):
 
     def seed(self, random_seed):
         if compare_version(gym.__version__, BASE_VERSION1) == "High" or compare_version(gym.__version__,
-                                                                                          BASE_VERSION1) == "Equal":
+                                                                                        BASE_VERSION1) == "Equal":
             self.ramdom_seed = random_seed
         else:
             self.env.seed(random_seed)
@@ -76,7 +76,7 @@ class CompatWrapper(gym.Wrapper):
     def step(self, action):
         self.count_ep_step += 1
         if compare_version(gym.__version__, BASE_VERSION2) == "High" or compare_version(gym.__version__,
-                                                                                          BASE_VERSION2) == "Equal":
+                                                                                        BASE_VERSION2) == "Equal":
             obs, reward, done, _, info = self.env.step(action)
             if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps

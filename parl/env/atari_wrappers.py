@@ -22,7 +22,7 @@ from collections import deque
 import gym
 from gym import spaces
 from parl.env.compat_wrappers import *
-
+import operator
 import cv2
 
 cv2.ocl.setUseOpenCL(False)
@@ -116,10 +116,9 @@ class NoopResetEnv(gym.Wrapper):
         if self.override_num_noops is not None:
             noops = self.override_num_noops
         else:
-            if compare_version(gym.__version__, BASE_VERSION3) == "High" or compare_version(gym.__version__,
-                                                                                            BASE_VERSION3) == "Equal":
+            if operator.ge(get_gym_version(), get_gym_version(BASE_VERSION3)):
                 noops = self.unwrapped.np_random.integers(1, self.noop_max + 1)
-            elif compare_version(gym.__version__, BASE_VERSION3) == "Low":
+            elif operator.lt(get_gym_version(), get_gym_version(BASE_VERSION3)):
                 noops = self.unwrapped.np_random.randint(1, self.noop_max + 1)
         assert noops > 0
         obs = None

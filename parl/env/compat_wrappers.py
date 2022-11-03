@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+\#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import operator
+
 import gym
 import numpy as np
 from parl.utils import logger
-import operator
 
 # BASE_VERSION1 change env.seed() and env.reset()
 # BASE_VERSION2 change env.step()

@@ -11,6 +11,7 @@ Include following approaches:
 
 ### Mujoco games introduction
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+The new version of PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to install Mujoco-py and license of Mujoco.
 
 ### Benchmark result
 
@@ -20,9 +21,9 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 ### Dependencies:
 + python
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.18.0
++ gym>=0.26.0
 + torch
-+ mujoco-py==2.1.2.14
++ mujoco>=2.2.2
 
 ### Start Training:
 ```

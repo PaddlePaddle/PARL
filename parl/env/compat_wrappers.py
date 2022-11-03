@@ -15,31 +15,24 @@
 import gym
 import numpy as np
 from parl.utils import logger
+import operator
 
 # BASE_VERSION1 change env.seed() and env.reset()
 # BASE_VERSION2 change env.step()
+# BASE_VERSION3 change env.np_random from .randint() to .integers()
 BASE_VERSION1 = '0.26.0'
 BASE_VERSION2 = '0.25.0'
 BASE_VERSION3 = '0.21.0'
 
 
 def get_gym_version(version_str=gym.__version__):
-    version_num = [int(x) for x in version_str.split('.')]
+    version_num = version_str.split('.')
+    for i in range(len(version_num)):
+        try:
+            version_num[i] = int(version_num[i])
+        except:
+            pass
     return version_num
-
-
-def compare_version(current_version, base_version):
-    current_version_num = get_gym_version(current_version)
-    base_version_num = get_gym_version(base_version)
-    if len(current_version_num) != len(base_version_num):
-        raise ValueError('Version format must be x.x.x')
-    else:
-        for i in range(len(current_version_num)):
-            if current_version_num[i] < base_version_num[i]:
-                return "Low"
-            elif current_version_num[i] > base_version_num[i]:
-                return 'High'
-    return 'Equal'
 
 
 class CompatWrapper(gym.Wrapper):
@@ -57,26 +50,23 @@ class CompatWrapper(gym.Wrapper):
         self.random_seed = 'without_setting'
 
     def reset(self, **kwargs):
-        version_reset = compare_version(gym.__version__, BASE_VERSION1)
-        if version_reset == "High" or version_reset == "Equal":
+        if operator.ge(get_gym_version(), get_gym_version(BASE_VERSION1)):
             if self.random_seed != "without_setting":
-                kwargs['seed'] = self.ramdom_seed
+                kwargs['seed'] = self.random_seed
             obs, info = self.env.reset(**kwargs)
         else:
             obs = self.env.reset(**kwargs)
         return obs
 
     def seed(self, random_seed):
-        version_seed = compare_version(gym.__version__, BASE_VERSION1)
-        if version_seed == "High" or version_seed == "Equal":
-            self.ramdom_seed = random_seed
+        if operator.ge(get_gym_version(), get_gym_version(BASE_VERSION1)):
+            self.random_seed = random_seed
         else:
             self.env.seed(random_seed)
 
     def step(self, action):
         self.count_ep_step += 1
-        version_step = compare_version(gym.__version__, BASE_VERSION2)
-        if version_step == "High" or version_step == "Equal":
+        if operator.ge(get_gym_version(), get_gym_version(BASE_VERSION2)):
             obs, reward, done, _, info = self.env.step(action)
             if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps
@@ -84,7 +74,8 @@ class CompatWrapper(gym.Wrapper):
             obs, reward, done, info = self.env.step(action)
             if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps
-        if hasattr(self, '_max_episode_steps') and self.count_ep_step >= self._max_episode_steps:
+        if hasattr(self, '_max_episode_steps') and \
+                self.count_ep_step >= self._max_episode_steps:
             done = True
             self.count_ep_step = 0
         return obs, reward, done, info

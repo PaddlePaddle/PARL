@@ -34,46 +34,38 @@ function run_example_test {
         sed -i '/parl/d' ./examples/{exp}/requirements.txt
     done
 
-    sed -i '/paddlepaddle/d' ./examples/QuickStart/requirements.txt
-    sed -i '/parl/d' ./examples/QuickStart/requirements.txt
+    
     python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
 
-    sed -i '/paddlepaddle/d' ./examples/DQN/requirements.txt
-    sed -i '/parl/d' ./examples/DQN/requirements.txt
+    
     python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
 
-    sed -i '/paddlepaddle/d' ./examples/DQN_variant/requirements.txt
-    sed -i '/parl/d' ./examples/DQN_variant/requirements.txt
+    
     python -m pip install -r ./examples/DQN_variant/requirements.txt
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
 
-    sed -i '/paddlepaddle/d' ./examples/PPO/requirements.txt
-    sed -i '/parl/d' ./examples/PPO/requirements.txt
+    
     python -m pip install -r ./examples/PPO/requirements.txt
     python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
     python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
 
-    sed -i '/paddlepaddle/d' ./examples/SAC/requirements.txt
-    sed -i '/parl/d' ./examples/SAC/requirements.txt
+    
     python -m pip install -r ./examples/SAC/requirements.txt
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
 
-    sed -i '/paddlepaddle/d' ./examples/TD3/requirements.txt
-    sed -i '/parl/d' ./examples/TD3/requirements.txt
+   
     python -m pip install -r ./examples/TD3/requirements.txt
     python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
 
-    sed -i '/paddlepaddle/d' ./examples/OAC/requirements.txt
-    sed -i '/parl/d' ./examples/OAC/requirements.txt
+   
     python -m pip install -r ./examples/OAC/requirements.txt
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
 
-    sed -i '/paddlepaddle/d' ./examples/DDPG/requirements.txt
-    sed -i '/parl/d' ./examples/DDPG/requirements.txt
+   
     python -m pip install -r ./examples/DDPG/requirements.txt
     python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
 }

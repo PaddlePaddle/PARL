@@ -5,6 +5,7 @@ Based on PARL, the OAC algorithm of deep reinforcement learning has been reprodu
 
 ### Mujoco games introduction
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+The new version of PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to install Mujoco-py and license of Mujoco.
 
 ### Benchmark result
 

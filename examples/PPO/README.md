@@ -22,6 +22,7 @@ The new version of PARL currently supports the open-source version of Mujoco pro
 
 ## How to use
 ### Dependencies:
++ python3.7+
 + [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
 + [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + gym>=0.26.0

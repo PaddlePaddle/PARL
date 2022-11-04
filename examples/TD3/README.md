@@ -11,7 +11,7 @@ Include following improvements:
 
 ### Mujoco games introduction
 Please view [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
-The new version of PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to install Mujoco-py and license of Mujoco.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco)
 
 ### Benchmark result
 

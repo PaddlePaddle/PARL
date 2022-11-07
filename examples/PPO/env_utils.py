@@ -49,8 +49,10 @@ class ParallelEnv(object):
             self.env_list = [
                 base_env(config['env']) for _ in range(self.env_num)
             ]
-
-        self._max_episode_steps = self.env_list[0]._max_episode_steps
+        if hasattr(self.env_list[0], '_max_episode_steps'):
+            self._max_episode_steps = self.env_list[0]._max_episode_steps
+        else:
+            self._max_episode_steps = 1e10
 
         self.total_steps = 0
         self.episode_steps_list = [0] * self.env_num
@@ -119,10 +121,11 @@ class ParallelEnv(object):
 class LocalEnv(object):
     def __init__(self, env_name, env_seed=None, test=False, ob_rms=None):
         env = gym.make(env_name)
-        self._max_episode_steps = env._max_episode_steps
+        # self._max_episode_steps = env._max_episode_steps
 
         # is instance of gym.spaces.Box
         if hasattr(env.action_space, 'high'):
+            self._max_episode_steps = env._max_episode_steps
             self.continuous_action = True
             if test:
                 self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)
@@ -163,9 +166,10 @@ class LocalEnv(object):
 class RemoteEnv(object):
     def __init__(self, env_name, env_seed=None, test=False, ob_rms=None):
         env = gym.make(env_name)
-        self._max_episode_steps = env._max_episode_steps
+        # self._max_episode_steps = env._max_episode_steps
 
         if hasattr(env.action_space, 'high'):
+            self._max_episode_steps = env._max_episode_steps
             self.continuous_action = True
             if test:
                 self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)

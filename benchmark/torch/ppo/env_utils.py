@@ -50,7 +50,10 @@ class ParallelEnv(object):
                 base_env(config['env']) for _ in range(self.env_num)
             ]
 
-        self._max_episode_steps = self.env_list[0]._max_episode_steps
+        if hasattr(self.env_list[0], '_max_episode_steps'):
+            self._max_episode_steps = self.env_list[0]._max_episode_steps
+        else:
+            self._max_episode_steps = 1e10
 
         self.total_steps = 0
         self.episode_steps_list = [0] * self.env_num
@@ -124,6 +127,7 @@ class LocalEnv(object):
         # is instance of gym.spaces.Box
         if hasattr(env.action_space, 'high'):
             self.continuous_action = True
+
             if test:
                 self.env = wrap_rms(env, GAMMA, test=True, ob_rms=ob_rms)
             else:

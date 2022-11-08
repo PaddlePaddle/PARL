@@ -4,7 +4,6 @@ Based on PARL, the DDPG algorithm of deep reinforcement learning has been reprod
 > Paper: DDPG in [Continuous control with deep reinforcement learning](https://arxiv.org/abs/1509.02971)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result

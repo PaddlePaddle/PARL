@@ -5,7 +5,7 @@ Based on PARL, the PPO algorithm of deep reinforcement learning has been reprodu
 
 ### Mujoco/Atari games introduction
 Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about Mujoco games or [atari](https://gym.openai.com/envs/#atari) to know more about Atari games.
-PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco)
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 #### 1. Mujoco games results

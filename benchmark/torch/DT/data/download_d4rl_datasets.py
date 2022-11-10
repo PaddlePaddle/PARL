@@ -32,10 +32,7 @@ for env_name in ['halfcheetah', 'hopper', 'walker2d']:
                 final_timestep = dataset['timeouts'][i]
             else:
                 final_timestep = (episode_step == 1000 - 1)
-            for k in [
-                    'observations', 'next_observations', 'actions', 'rewards',
-                    'terminals'
-            ]:
+            for k in ['observations', 'next_observations', 'actions', 'rewards', 'terminals']:
                 data_[k].append(dataset[k][i])
             if done_bool or final_timestep:
                 episode_step = 0

@@ -4,7 +4,7 @@ Based on PARL, we provide the implementation of decision transformer, with the s
 > Paper: [Decision Transformer: Reinforcement
 Learning via Sequence Modeling](https://arxiv.org/abs/2106.01345)
 
-### dataset for RL
+### Dataset for RL
 Follow the installation instruction in [D4RL](https://github.com/Farama-Foundation/D4RL) to install D4RL.
 Then run the scripts in `data` directory to download dataset for traininig.
 ```shell

@@ -1,4 +1,4 @@
-## Reproduce PPO with PARL
+## Introduction
 Based on PARL, we provide the implementation of decision transformer, with the same performance as reported in the original paper.
 
 > Paper: [Decision Transformer: Reinforcement

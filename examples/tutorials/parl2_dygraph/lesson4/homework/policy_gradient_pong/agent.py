@@ -37,7 +37,7 @@ class Agent(parl.Agent):
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         prob = self.alg.predict(obs)
-        act = prob.argmax().numpy()[0]  # 根据动作概率选择概率最高的动作
+        act = int(prob.argmax())  # 根据动作概率选择概率最高的动作
         return act
 
     def learn(self, obs, act, reward):
@@ -51,4 +51,4 @@ class Agent(parl.Agent):
         reward = paddle.to_tensor(reward, dtype='float32')
 
         loss = self.alg.learn(obs, act, reward)
-        return loss.numpy()[0]
+        return float(loss)

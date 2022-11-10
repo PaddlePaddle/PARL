@@ -48,7 +48,7 @@ class Agent(parl.Agent):
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         pred_q = self.alg.predict(obs)
-        act = pred_q.argmax().numpy()[0]  # 选择Q最大的下标，即对应的动作
+        act = int(pred_q.argmax())  # 选择Q最大的下标，即对应的动作
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):
@@ -68,4 +68,4 @@ class Agent(parl.Agent):
         next_obs = paddle.to_tensor(next_obs, dtype='float32')
         terminal = paddle.to_tensor(terminal, dtype='float32')
         loss = self.alg.learn(obs, act, reward, next_obs, terminal)  # 训练一次网络
-        return loss.numpy()[0]
+        return float(loss)

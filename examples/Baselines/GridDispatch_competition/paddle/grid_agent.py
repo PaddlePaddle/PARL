@@ -46,4 +46,4 @@ class GridAgent(parl.Agent):
         terminal = paddle.to_tensor(terminal, dtype='float32')
         critic_loss, actor_loss = self.alg.learn(obs, action, reward, next_obs,
                                                  terminal)
-        return critic_loss.cpu().numpy()[0], actor_loss.cpu().numpy()[0]
+        return float(critic_loss.cpu()), float(actor_loss.cpu())

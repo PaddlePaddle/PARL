@@ -116,7 +116,7 @@ class MAAgent(parl.Agent):
 
         # learn
         critic_cost = self.alg.learn(batch_obs_n, batch_act_n, target_q)
-        critic_cost = critic_cost.cpu().detach().numpy()[0]
+        critic_cost = float(critic_cost.cpu().detach())
 
         return critic_cost
 

@@ -56,7 +56,7 @@ class PPOAgent(parl.Agent):
 
         value_numpy = value.detach().numpy()
         action_numpy = action.detach().numpy()[0]
-        action_log_probs_numpy = action_log_probs.detach().numpy()[0]
+        action_log_probs_numpy = float(action_log_probs.detach())
         action_entropy_numpy = action_entropy.detach().numpy()
         return value_numpy, action_numpy, action_log_probs_numpy, action_entropy_numpy
 

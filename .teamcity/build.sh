@@ -51,6 +51,7 @@ function run_example_test {
     
     python -m pip install -r ./examples/PPO/requirements.txt
     python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python -m pip install -r ./examples/PPO/requirements_mujoco.txt
     python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
 
     

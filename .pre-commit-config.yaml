@@ -8,7 +8,7 @@ repos:
     sha: v0.24.0
     hooks:
     -   id: yapf
-        args: [--style "{column_limit: 120}" ]
+        args: ['--style={column_limit:120}' ]
         files: (.*\.(py|bzl)|BUILD|.*\.BUILD|WORKSPACE)$
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     sha: 5bf6c09bfa1297d3692cadd621ef95f1284e33c0

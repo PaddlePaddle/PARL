@@ -30,8 +30,8 @@ function init() {
 function run_example_test {
     for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
     do
-        sed -i '/paddlepaddle/d' ./examples/${exp}/requirements.txt
-        sed -i '/parl/d' ./examples/${exp}/requirements.txt
+        sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
+        sed -i '/parl/d' ./examples/${exp}/requirements*.txt
     done
 
     

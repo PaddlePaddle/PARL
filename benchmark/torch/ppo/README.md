@@ -22,7 +22,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 
 ## How to use
 ### Dependencies:
-+ python>=3.7
++ python>=3.7+
 + [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + pytorch
 + gym>=0.26.0

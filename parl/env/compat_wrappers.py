@@ -41,7 +41,6 @@ class CompatWrapper(gym.Wrapper):
         Compat mujoco-v4
         """
         super().__init__(env)
-        attr_list = dir(env)
         if hasattr(env, '_max_episode_steps'):
             self._max_episode_steps = int(self.env._max_episode_steps)
         if hasattr(env, '_elapsed_steps'):

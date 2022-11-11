@@ -165,7 +165,6 @@ class LocalEnv(object):
 class RemoteEnv(object):
     def __init__(self, env_name, env_seed=None, test=False, ob_rms=None):
         env = gym.make(env_name)
-        # self._max_episode_steps = env._max_episode_steps
 
         if hasattr(env.action_space, 'high'):
             self._max_episode_steps = env._max_episode_steps

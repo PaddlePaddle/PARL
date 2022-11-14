@@ -53,7 +53,7 @@ class ParallelEnv(object):
         if hasattr(self.env_list[0], '_max_episode_steps'):
             self._max_episode_steps = self.env_list[0]._max_episode_steps
         else:
-            self._max_episode_steps = 1e10
+            self._max_episode_steps = float('inf')
 
         self.total_steps = 0
         self.episode_steps_list = [0] * self.env_num

@@ -91,8 +91,7 @@ class AlphaZeroAgent(parl.Agent):
                     boards, target_pis, target_vs, optimizer)
 
                 # record loss with tqdm
-                pbar.set_postfix(
-                    Loss_pi=float(pi_loss), Loss_v=float(v_loss))
+                pbar.set_postfix(Loss_pi=float(pi_loss), Loss_v=float(v_loss))
 
     def predict(self, board):
         """
@@ -108,7 +107,7 @@ class AlphaZeroAgent(parl.Agent):
         board = paddle.reshape(board, [1, self.board_x, self.board_y])
 
         pi, v = self.alg.predict(board)
-        return float(pi), float(v)
+        return pi.numpy()[0], v.numpy()[0]
 
 
 def create_agent(game):

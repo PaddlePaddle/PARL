@@ -42,7 +42,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 python train.py
 
 # To train an agent for continuous action game (Mujoco)
-python train.py --env 'HalfCheetah-v2' --continuous_action
+python train.py --env 'HalfCheetah-v4' --continuous_action
 ```
 
 ### Distributed Training
@@ -66,5 +66,5 @@ Then we can start the distributed training by running:
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
 
 # for continuous action game (Mujoco games)
-python train.py --env 'HalfCheetah-v2' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
+python train.py --env 'HalfCheetah-v4' --continuous_action --env_num 5 --xparl_addr 'localhost:8010'
 ```

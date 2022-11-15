@@ -94,7 +94,7 @@ We need to inherit ``parl.Agent`` class to define our customized ``Agent``. We f
 
             obs = paddle.to_tensor(obs, dtype='float32')
             prob = self.alg.predict(obs)
-            act = prob.argmax().numpy()[0]
+            act = int(prob.argmax())
 
             return act
 
@@ -108,7 +108,7 @@ We need to inherit ``parl.Agent`` class to define our customized ``Agent``. We f
 
             loss = self.alg.learn(obs, act, reward)
 
-            return loss.numpy()[0]
+            return float(loss)
 
 In general, users have to implement the following functions:
 

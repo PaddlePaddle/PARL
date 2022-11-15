@@ -169,7 +169,7 @@ class QMIX(parl.Algorithm):
         self.optimizer.clear_grad()
         loss.backward()
         self.optimizer.step()
-        return loss.numpy()[0], mean_td_error.numpy()[0]
+        return float(loss), float(mean_td_error)
 
     def sync_target(self):
         self.agent_model.sync_weights_to(self.target_agent_model)

@@ -91,8 +91,7 @@ class AlphaZeroAgent(parl.Agent):
                     boards, target_pis, target_vs, optimizer)
 
                 # record loss with tqdm
-                pbar.set_postfix(
-                    Loss_pi=pi_loss.numpy()[0], Loss_v=v_loss.numpy()[0])
+                pbar.set_postfix(Loss_pi=float(pi_loss), Loss_v=float(v_loss))
 
     def predict(self, board):
         """

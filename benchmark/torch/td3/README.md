@@ -26,7 +26,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 
 ### Start Training:
 ```
-# To train an agent for HalfCheetah-v2 game
+# To train an agent for HalfCheetah-v4 game
 python train.py
 
 # To train for different game and different loss type

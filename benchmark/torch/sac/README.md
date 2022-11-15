@@ -23,9 +23,9 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 ### Start Training:
 #### Train
 ```
-# To train for HalfCheetah-v2(default),Hopper-v2,Walker2d-v2,Ant-v2
+# To train for HalfCheetah-v2(default),Hopper-v4,Walker2d-v4,Ant-v4
 # --alpha 0.2(default)
 python train.py --env [ENV_NAME]
 
-# To reproduce the performance of Humanoid-v2
-python train.py --env Humanoid-v2 --alpha 0.05
+# To reproduce the performance of Humanoid-v4
+python train.py --env Humanoid-v4 --alpha 0.05

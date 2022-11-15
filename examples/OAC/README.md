@@ -20,7 +20,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 
 ### Start Training:
 ```
-# To train an agent for Humanoid-v2 game
+# To train an agent for Humanoid-v4 game
 python train.py
 
 # To train for other game

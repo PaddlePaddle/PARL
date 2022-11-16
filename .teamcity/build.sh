@@ -28,14 +28,11 @@ function init() {
 }
 
 function run_example_test {
-    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG ES
     do
         sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
         sed -i '/parl/d' ./examples/${exp}/requirements*.txt
     done
-    
-    python -m pip install -r ./examples/MADDPG/requirements.txt
-    python examples/MADDPG/train.py --max_episodes 2001
     
     python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
@@ -67,10 +64,15 @@ function run_example_test {
    
     python -m pip install -r ./examples/OAC/requirements.txt
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
-
-   
+    
     python -m pip install -r ./examples/DDPG/requirements.txt
     python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    
+    python -m pip install -r ./examples/ES/requirements.txt
+    python train.py --max_episodes 21 --test_every_episodes 10
+    
+    python -m pip install -r ./examples/MADDPG/requirements.txt
+    python examples/MADDPG/train.py --max_episodes 2001
 }
 
 function print_usage() {

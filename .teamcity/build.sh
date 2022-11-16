@@ -28,12 +28,14 @@ function init() {
 }
 
 function run_example_test {
-    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG
     do
         sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
         sed -i '/parl/d' ./examples/${exp}/requirements*.txt
     done
-
+    
+    python -m pip install -r ./examples/MADDPG/requirements.txt
+    python examples/MADDPG/train.py --max_episodes 2001
     
     python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py

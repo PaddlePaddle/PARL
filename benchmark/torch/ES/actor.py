@@ -21,13 +21,13 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
-
+from parl.env.compat_wrappers import CompatWrapper
 
 @parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, config):
         self.config = config
-        self.env = gym.make(self.config['env_name'])
+        self.env = CompatWrapper(gym.make(self.config['env_name']))
         self.config['obs_dim'] = self.env.observation_space.shape[0]
         self.config['act_dim'] = self.env.action_space.shape[0]
 

@@ -47,9 +47,9 @@ class Actor(object):
         obs = self.env.reset()
         while True:
             if np.random.uniform() < self.config['filter_update_prob']:
-                obs = self.obs_filter(obs[None], update=True)
+                obs = self.obs_filter(obs, update=True)
             else:
-                obs = self.obs_filter(obs[None], update=False)
+                obs = self.obs_filter(obs, update=False)
 
             action = self.agent.predict(obs)
             if add_noise:

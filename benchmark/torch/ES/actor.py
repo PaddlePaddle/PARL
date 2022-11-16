@@ -23,6 +23,7 @@ from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
 from parl.env.compat_wrappers import CompatWrapper
 
+
 @parl.remote_class(wait=False)
 class Actor(object):
     def __init__(self, config):

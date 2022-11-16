@@ -68,8 +68,10 @@ function run_example_test {
     python -m pip install -r ./examples/DDPG/requirements.txt
     python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
     
+    xparl start --port 8037 --cpu_num 24
     python -m pip install -r ./examples/ES/requirements.txt
     python train.py --max_episodes 21 --test_every_episodes 10
+    xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt
     python examples/MADDPG/train.py --max_episodes 2001

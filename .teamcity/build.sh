@@ -70,11 +70,11 @@ function run_example_test {
     
     xparl start --port 8037 --cpu_num 24
     python -m pip install -r ./examples/ES/requirements.txt
-    python train.py --max_episodes 21 --test_every_episodes 10
+    python ./examples/ES/train.py --train_steps 2 --actor_num 2
     xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt
-    python examples/MADDPG/train.py --max_episodes 2001
+    python examples/MADDPG/train.py --max_episodes 21 --test_every_episodes 10
 }
 
 function print_usage() {

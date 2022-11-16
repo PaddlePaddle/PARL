@@ -26,6 +26,7 @@ from noise import SharedNoiseTable
 from parl.utils import logger, summary
 
 from parl.utils.window_stat import WindowStat
+from parl.env.compat_wrappers import CompatWrapper
 from actor import Actor
 
 
@@ -34,6 +35,7 @@ class Learner(object):
         self.config = config
 
         env = gym.make(self.config['env_name'])
+        env = CompatWrapper(env)
         self.config['obs_dim'] = env.observation_space.shape[0]
         self.config['act_dim'] = env.action_space.shape[0]
 

@@ -34,7 +34,6 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = obs.astype('float32')
-        #        obs = np.expand_dims(obs, axis=0)
         obs = paddle.to_tensor(obs, dtype='float32')
         predict_actions = self.alg.predict(obs)
         return predict_actions.detach().numpy()

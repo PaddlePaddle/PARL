@@ -56,7 +56,6 @@ class Actor(object):
             if add_noise:
                 action += np.random.randn(
                     *action.shape) * self.config['action_noise_std']
-            print(action)
             obs, reward, done, _ = self.env.step(action)
             episode_reward += reward
             episode_step += 1

@@ -1,4 +1,0 @@
-paddlepaddle>=2.0.0
-parl>=2.0.5
-gym>=0.26.0
-mujoco>=2.2.2

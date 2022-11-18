@@ -76,7 +76,7 @@ class CartpoleAgent(parl.Agent):
     def predict(self, obs):
         obs = paddle.to_tensor(obs, dtype='float32')
         prob = self.alg.predict(obs)
-        act = prob.argmax().numpy()[0]
+        act = int(prob.argmax())
         return act
 
     def learn(self, obs, act, reward):
@@ -87,7 +87,7 @@ class CartpoleAgent(parl.Agent):
         reward = paddle.to_tensor(reward, dtype='float32')
 
         loss = self.alg.learn(obs, act, reward)
-        return loss.numpy()[0]
+        return float(loss)
 ```
 一般情况下，用户必须实现以下几个函数：
 - 构造函数：

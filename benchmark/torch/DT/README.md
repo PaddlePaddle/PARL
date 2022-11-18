@@ -13,14 +13,9 @@ python download_d4rl_datasets.py
 
 
 ### Benchmark result
-#### 1. Mujoco games results
+#### 1. Mujoco results
 <p align="center">
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/torch/mujoco_result.png" alt="mujoco-result"/>
-</p>
-
-#### 2. Atari games results
-<p align="center">
-<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/torch/atari_result.png" alt="atari-result"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DT/torch/mujoco_result.png" alt="mujoco-result"/>
 </p>
 
 + Each experiment was run three times with different seeds

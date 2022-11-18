@@ -96,7 +96,7 @@ Agent
 
             obs = paddle.to_tensor(obs, dtype='float32')
             prob = self.alg.predict(obs)
-            act = prob.argmax().numpy()[0]
+            act = int(prob.argmax())
 
             return act
 
@@ -110,7 +110,7 @@ Agent
 
             loss = self.alg.learn(obs, act, reward)
 
-            return loss.numpy()[0]
+            return float(loss)
 
     if __name__ == '__main__':
         model = CartpoleModel()

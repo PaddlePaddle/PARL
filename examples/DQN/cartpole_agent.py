@@ -67,7 +67,7 @@ class CartpoleAgent(parl.Agent):
         """
         obs = paddle.to_tensor(obs, dtype='float32')
         pred_q = self.alg.predict(obs)
-        act = pred_q.argmax().numpy()[0]
+        act = int(pred_q.argmax())
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):
@@ -98,4 +98,4 @@ class CartpoleAgent(parl.Agent):
         next_obs = paddle.to_tensor(next_obs, dtype='float32')
         terminal = paddle.to_tensor(terminal, dtype='float32')
         loss = self.alg.learn(obs, act, reward, next_obs, terminal)
-        return loss.numpy()[0]
+        return float(loss)

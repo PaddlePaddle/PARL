@@ -51,8 +51,6 @@ def evaluate_episode_rtg(
             target_return.to(dtype=torch.float32),
             timesteps.to(dtype=torch.long),
         )
-        actions[-1] = action
-        action = action.detach().cpu().numpy()
 
         state, reward, done, _ = env.step(action)
 

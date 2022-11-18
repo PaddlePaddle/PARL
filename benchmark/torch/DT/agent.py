@@ -26,11 +26,14 @@ class DTAgent(parl.Agent):
 
     def predict(self, states, actions, rewards, returns_to_go, timesteps, **kwargs):
         action = self.alg.predict(states, actions, rewards, returns_to_go, timesteps)
+        actions[-1] = action
+        action = action.detach().cpu().numpy()
         return action
 
     def learn(self):
         batch_data = self.dataset.get_batch(self.config['batch_size'])
         loss = self.alg.learn(*batch_data)
+        loss = loss.detach().cpu().item()
         return loss
 
     def load_data(self, dataset_path):

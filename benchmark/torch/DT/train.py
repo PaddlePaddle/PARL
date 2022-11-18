@@ -20,7 +20,6 @@ import pickle
 import random
 import sys
 
-from evaluate_episodes import eval_episodes
 from tqdm import tqdm
 import parl
 from model import TrajectoryModel

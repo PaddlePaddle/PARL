@@ -55,4 +55,4 @@ class DecisionTransformer(parl.Algorithm):
         self.optimizer.step()
         self.scheduler.step()
 
-        return loss.detach().cpu().item()
+        return loss

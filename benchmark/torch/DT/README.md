@@ -18,7 +18,7 @@ python download_d4rl_datasets.py
 <img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/DT/torch/mujoco_result.png" alt="mujoco-result"/>
 </p>
 
-+ Each experiment was run three times with different seeds
++ Each experiment was run three times with different random seeds
 
 ## How to use
 ### Dependencies:

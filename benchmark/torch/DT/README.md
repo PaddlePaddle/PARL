@@ -39,3 +39,8 @@ python train.py --env hopper --dataset medium
 # To train an agent for `hooper` environment with `expert` dataset
 python train.py --env hopper --dataset expert
 ```
+
+
+### Reference
+
+https://github.com/kzl/decision-transformer

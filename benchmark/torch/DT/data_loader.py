@@ -10,9 +10,8 @@ from parl.utils import logger
 
 
 class DataLoader(object):
-    def __init__(self, dataset_path, mode, pct_traj, max_ep_len, scale):
+    def __init__(self, dataset_path, pct_traj, max_ep_len, scale):
         self.dataset_path = dataset_path
-        self.mode = mode
         self.pct_traj = pct_traj
         self.scale = scale
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -22,9 +21,6 @@ class DataLoader(object):
 
         states, traj_lens, returns = [], [], []
         for path in trajectories:
-            if mode == 'delayed':  # delayed: all rewards moved to end of trajectory
-                path['rewards'][-1] = path['rewards'].sum()
-                path['rewards'][:-1] = 0.
             states.append(path['observations'])
             traj_lens.append(len(path['observations']))
             returns.append(path['rewards'].sum())

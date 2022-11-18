@@ -50,9 +50,6 @@ def main(config):
     state_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
 
-    # save all path information into separate lists
-    mode = config.get('mode', 'normal')
-
     logger.info('Starting new experiment: {} {}'.format(env_name, dataset))
 
     K = config['K']
@@ -94,7 +91,7 @@ def main(config):
 
         agent.eval()
         logs = eval_episodes(env_targets, env, state_dim, act_dim, agent, config['max_ep_len'], config['rew_scale'],
-                             mode, state_mean, state_std, device)
+                             state_mean, state_std, device)
         for k, v in logs.items():
             logger.info('{}: {}'.format(k, v))
             summary.add_scalar(k, v, iter)
@@ -104,7 +101,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='hopper')
     parser.add_argument('--dataset', type=str, default='medium')  # medium, medium-replay, medium-expert, expert
-    parser.add_argument('--mode', type=str, default='normal')  # normal for standard setting, delayed for sparse
     parser.add_argument('--K', type=int, default=20)
     parser.add_argument('--pct_traj', type=float, default=1.)
     parser.add_argument('--batch_size', type=int, default=64)

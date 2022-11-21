@@ -4,7 +4,7 @@ Based on PARL, the PPO algorithm of deep reinforcement learning has been reprodu
 > Paper: PPO in [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
 ### Mujoco/Atari games introduction
-Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about Mujoco games or [atari](https://gym.openai.com/envs/#atari) to know more about Atari games.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 #### 1. Mujoco games results
@@ -20,11 +20,17 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 + Each experiment was run three times with different seeds
 
 ## How to use
-### Dependencies:
+### Mujoco-Dependencies:
++ python3.7+
++ [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ gym>=0.26.0
++ mujoco>=2.2.2
+
+### Atari-Dependencies:
 + [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
 + [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
-+ mujoco-py==2.1.2.14
 + atari-py==0.2.6
 
 ### Training:
@@ -34,7 +40,7 @@ Please see [mujoco-py](https://github.com/openai/mujoco-py) to know more about M
 python train.py
 
 # To train an agent for continuous action game (Mujoco)
-python train.py --env 'HalfCheetah-v2' --continuous_action --train_total_steps 1000000
+python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000
 ```
 
 ### Distributed Training
@@ -58,5 +64,5 @@ Then we can start the distributed training by running:
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
 
 # for continuous action game (Mujoco games)
-python train.py --env 'HalfCheetah-v2' --continuous_action --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
+python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
 ```

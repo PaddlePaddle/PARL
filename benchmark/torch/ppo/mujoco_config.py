@@ -16,7 +16,7 @@ mujoco_config = {
     ## Commented parameters are set to default values in ppo
 
     #==========  env config ==========
-    'env': 'HalfCheetah-v2',  # environment name
+    'env': 'HalfCheetah-v4',  # environment name
     'continuous_action': True,  # action type of the environment
     'env_num': 1,  # number of the environment
     'seed': None,  # seed of the experiment

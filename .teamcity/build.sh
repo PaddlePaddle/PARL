@@ -28,22 +28,53 @@ function init() {
 }
 
 function run_example_test {
-    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG ES
     do
-        cp parl/tests/gym.py examples/${exp}/
+        sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
+        sed -i '/parl/d' ./examples/${exp}/requirements*.txt
     done
-
+    
+    python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
+
+    
+    python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
+
+    
+    python -m pip install -r ./examples/DQN_variant/requirements.txt
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
+
+    
+    python -m pip install -r ./examples/PPO/requirements_atari.txt
     python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1 --continuous_action
-    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v1
+    python -m pip install -r ./examples/PPO/requirements_mujoco.txt
+    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
+
+    
+    python -m pip install -r ./examples/SAC/requirements.txt
+    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+
+   
+    python -m pip install -r ./examples/TD3/requirements.txt
+    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
+
+   
+    python -m pip install -r ./examples/OAC/requirements.txt
+    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    
+    python -m pip install -r ./examples/DDPG/requirements.txt
+    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    
+    xparl start --port 8037 --cpu_num 2
+    python -m pip install -r ./examples/ES/requirements.txt
+    python ./examples/ES/train.py --train_steps 2 --actor_num 2
+    xparl stop
+    
+    python -m pip install -r ./examples/MADDPG/requirements.txt
+    python examples/MADDPG/train.py --max_episodes 21 --test_every_episodes 10
 }
 
 function print_usage() {

@@ -4,7 +4,7 @@ Based on PARL, the SAC algorithm of deep reinforcement learning has been reprodu
 > Paper: SAC in [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 
@@ -14,18 +14,18 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ## How to use
 ### Dependencies:
-+ python3.5+
++ python3.7+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.18.0
++ gym>=0.26.0
 + torch
-+ mujoco-py==2.1.2.14
++ mujoco>=2.2.2
 
 ### Start Training:
 #### Train
 ```
-# To train for HalfCheetah-v2(default),Hopper-v2,Walker2d-v2,Ant-v2
+# To train for HalfCheetah-v2(default),Hopper-v4,Walker2d-v4,Ant-v4
 # --alpha 0.2(default)
 python train.py --env [ENV_NAME]
 
-# To reproduce the performance of Humanoid-v2
-python train.py --env Humanoid-v2 --alpha 0.05
+# To reproduce the performance of Humanoid-v4
+python train.py --env Humanoid-v4 --alpha 0.05

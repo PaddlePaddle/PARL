@@ -16,6 +16,7 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger
+from parl.env.compat_wrappers import CompatWrapper
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 
@@ -51,6 +52,7 @@ def calc_reward_to_go(reward_list):
 
 def main():
     env = gym.make('CartPole-v0')
+    env = CompatWrapper(env)
     model = CartpoleModel(obs_dim=OBS_DIM, act_dim=ACT_DIM)
     alg = parl.algorithms.PolicyGradient(model, LEARNING_RATE)
     agent = CartpoleAgent(alg)

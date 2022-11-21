@@ -21,6 +21,7 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
+from parl.env.compat_wrappers import CompatWrapper
 
 
 @parl.remote_class(wait=False)
@@ -28,7 +29,8 @@ class Actor(object):
     def __init__(self, config):
         self.config = config
 
-        self.env = gym.make(self.config['env_name'])
+        env = gym.make(self.config['env_name'])
+        self.env = CompatWrapper(env)
         self.config['obs_dim'] = self.env.observation_space.shape[0]
         self.config['act_dim'] = self.env.action_space.shape[0]
 
@@ -46,15 +48,14 @@ class Actor(object):
         obs = self.env.reset()
         while True:
             if np.random.uniform() < self.config['filter_update_prob']:
-                obs = self.obs_filter(obs[None], update=True)
+                obs = self.obs_filter(obs, update=True)
             else:
-                obs = self.obs_filter(obs[None], update=False)
+                obs = self.obs_filter(obs, update=False)
 
             action = self.agent.predict(obs)
             if add_noise:
                 action += np.random.randn(
                     *action.shape) * self.config['action_noise_std']
-
             obs, reward, done, _ = self.env.step(action)
             episode_reward += reward
             episode_step += 1

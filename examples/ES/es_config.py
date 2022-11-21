@@ -16,7 +16,7 @@ config = {
     #==========  remote config ==========
     'master_address': 'localhost:8037',
     #==========  env config ==========
-    'env_name': 'Humanoid-v2',
+    'env_name': 'HalfCheetah-v4',
     #==========  actor config ==========
     'actor_num': 24,
     'action_noise_std': 0.01,

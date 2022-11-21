@@ -4,7 +4,7 @@ Based on PARL, the OAC algorithm of deep reinforcement learning has been reprodu
 > Paper: OAC in [Better Exploration with Optimistic Actor-Critic](https://arxiv.org/abs/1910.12807)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 
@@ -12,15 +12,15 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ## How to use
 ### Dependencies:
-+ python3.5+
++ python3.7+
 + [parl>=2.0.0](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ gym==0.18.0
-+ mujoco-py==2.1.2.14
++ gym>=0.26.0
++ mujoco>=2.2.2
 
 ### Start Training:
 ```
-# To train an agent for Humanoid-v2 game
+# To train an agent for Humanoid-v4 game
 python train.py
 
 # To train for other game

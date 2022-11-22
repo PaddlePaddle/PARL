@@ -27,7 +27,7 @@ import cv2
 
 cv2.ocl.setUseOpenCL(False)
 
-__all__ = ['wrap_deepmind']
+__all__ = ['wrap_deepmind', 'MonitorEnv', 'get_wrapper_by_cls']
 
 
 def get_wrapper_by_cls(env, cls):

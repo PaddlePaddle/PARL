@@ -24,7 +24,7 @@ V_RESET_CHANGED = '0.26.0'
 V_STEP_CHANGED = '0.25.0'
 V_NPRANDOM_CHANGED = '0.21.0'
 
-__all__ = ['CompatWrapper']
+__all__ = ['CompatWrapper', 'get_gym_version']
 
 
 def get_gym_version(version_str=gym.__version__):
@@ -43,11 +43,12 @@ class CompatWrapper(gym.Wrapper):
         .. code-block:: python
         # old version of gym APIs
         observation = env.reset()
-        observation, reward, terminated, truncated, info = env.step(action)
+        observation, reward, done, info = env.step(action)
         # new version of gym APIs
         observation, info = env.reset()
-        observation, reward, done, info = env.step(action)
-
+        observation, reward, terminated, truncated, info = env.step(action)
+    
+    After being wrapped by `CompatWrapper`, the new version of the gym env can be used in the same way as the old version of gym.
     """
 
     def __init__(self, env):

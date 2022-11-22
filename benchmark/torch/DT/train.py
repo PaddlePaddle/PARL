@@ -72,7 +72,8 @@ def main(config):
     )
 
     model = model.to(device=device)
-    alg = parl.algorithms.DecisionTransformer(model, config['learning_rate'], config['warmup_steps'],
+    alg = parl.algorithms.DecisionTransformer(model, config['learning_rate'],
+                                              config['warmup_steps'],
                                               config['weight_decay'])
     agent = DTAgent(alg, config)
 
@@ -85,11 +86,13 @@ def main(config):
         for step in tqdm(range(config['num_steps_per_iter'])):
             loss = agent.learn()
             train_loss.append(loss)
-        logger.info("[training] iter:{} loss:{}".format(iter, np.mean(train_loss)))
+        logger.info("[training] iter:{} loss:{}".format(
+            iter, np.mean(train_loss)))
         summary.add_scalar('train_loss', np.mean(train_loss), iter)
 
         agent.eval()
-        logs = eval_episodes(env_targets, env, state_dim, act_dim, agent, config['max_ep_len'], config['rew_scale'],
+        logs = eval_episodes(env_targets, env, state_dim, act_dim, agent,
+                             config['max_ep_len'], config['rew_scale'],
                              state_mean, state_std, device)
         for k, v in logs.items():
             logger.info('{}: {}'.format(k, v))
@@ -99,7 +102,9 @@ def main(config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='hopper')
-    parser.add_argument('--dataset', type=str, default='medium')  # medium, medium-replay, medium-expert, expert
+    parser.add_argument(
+        '--dataset', type=str,
+        default='medium')  # medium, medium-replay, medium-expert, expert
     parser.add_argument('--K', type=int, default=20)
     parser.add_argument('--pct_traj', type=float, default=1.)
     parser.add_argument('--batch_size', type=int, default=64)
@@ -108,7 +113,9 @@ if __name__ == '__main__':
     parser.add_argument('--n_head', type=int, default=1)
     parser.add_argument('--activation_function', type=str, default='relu')
     parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--rew_scale', type=float, default=1000)  #normalization for rewards/returns
+    parser.add_argument(
+        '--rew_scale', type=float,
+        default=1000)  #normalization for rewards/returns
     parser.add_argument('--learning_rate', '-lr', type=float, default=1e-4)
     parser.add_argument('--weight_decay', '-wd', type=float, default=1e-4)
     parser.add_argument('--warmup_steps', type=int, default=10000)

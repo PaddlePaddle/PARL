@@ -27,6 +27,8 @@ import cv2
 
 cv2.ocl.setUseOpenCL(False)
 
+__all__ = ['wrap_deepmind']
+
 
 def get_wrapper_by_cls(env, cls):
     """Returns the gym env wrapper of the given class, or None."""

@@ -24,8 +24,10 @@ class DTAgent(parl.Agent):
         self.dataset = None
         self.config = config
 
-    def predict(self, states, actions, rewards, returns_to_go, timesteps, **kwargs):
-        action = self.alg.predict(states, actions, rewards, returns_to_go, timesteps)
+    def predict(self, states, actions, rewards, returns_to_go, timesteps,
+                **kwargs):
+        action = self.alg.predict(states, actions, rewards, returns_to_go,
+                                  timesteps)
         actions[-1] = action
         action = action.detach().cpu().numpy()
         return action
@@ -38,6 +40,6 @@ class DTAgent(parl.Agent):
 
     def load_data(self, dataset_path):
         config = self.config
-        self.dataset = DataLoader(dataset_path, config['pct_traj'], config['max_ep_len'],
-                                  config['rew_scale'])
+        self.dataset = DataLoader(dataset_path, config['pct_traj'],
+                                  config['max_ep_len'], config['rew_scale'])
         return self.dataset.state_mean, self.dataset.state_std

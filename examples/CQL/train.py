@@ -15,7 +15,7 @@
 import argparse
 import gym
 import d4rl
-from parl.utils import logger, tensorboard, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import CQL
@@ -80,21 +80,19 @@ def main():
             BATCH_SIZE)
         critic_loss, mse_loss, actor_loss, min_q = agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,\
             batch_terminal)
-        tensorboard.add_scalar('train/critic_loss',
-                               critic_loss.cpu().numpy(), total_steps)
+        summary.add_scalar('train/critic_loss',
+                           critic_loss.cpu().numpy(), total_steps)
 
-        tensorboard.add_scalar('train/mse_loss',
-                               mse_loss.cpu().numpy(), total_steps)
-        tensorboard.add_scalar('train/actor_loss',
-                               actor_loss.cpu().numpy(), total_steps)
-        tensorboard.add_scalar('train/min_qi',
-                               min_q.cpu().numpy(), total_steps)
+        summary.add_scalar('train/mse_loss',
+                           mse_loss.cpu().numpy(), total_steps)
+        summary.add_scalar('train/actor_loss',
+                           actor_loss.cpu().numpy(), total_steps)
+        summary.add_scalar('train/min_qi', min_q.cpu().numpy(), total_steps)
 
         # Evaluate episode
         if total_steps % args.test_every_steps == 0:
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
-            tensorboard.add_scalar('eval/episode_reward', avg_reward,
-                                   total_steps)
+            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
             logger.info('Evaluation: total_steps {}, Reward: {}'.format(
                 total_steps, avg_reward))
 

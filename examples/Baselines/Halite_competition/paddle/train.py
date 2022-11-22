@@ -18,7 +18,7 @@ import paddle
 import numpy as np
 from config import config
 from rl_trainer.controller import Controller
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 from parl.utils.window_stat import WindowStat
 from zerosum_env import make, evaluate
 from zerosum_env.envs.halite.helpers import *
@@ -170,11 +170,10 @@ def main():
         # train agents
         if len(players[0].ship_buffer):
             value_loss, action_loss, entropy = players[0].train_ship_agent()
-            tensorboard.add_scalar("train/ship_value_loss", value_loss,
-                                   total_step)
-            tensorboard.add_scalar("train/ship_policy_loss", action_loss,
-                                   total_step)
-            tensorboard.add_scalar("train/ship_entropy", entropy, total_step)
+            summary.add_scalar("train/ship_value_loss", value_loss, total_step)
+            summary.add_scalar("train/ship_policy_loss", action_loss,
+                               total_step)
+            summary.add_scalar("train/ship_entropy", entropy, total_step)
 
         # snippet of code to test the agent
         '''
@@ -182,8 +181,8 @@ def main():
         if (episode) % config["test_every_episode"] == 0:
             rew1, rew2 = test_agent()
             if rew1 is not None and rew2 is not None:
-                tensorboard.add_scalar("test/player_rew", rew1, episode)
-                tensorboard.add_scalar("test/random_rew", rew2, episode)
+                summary.add_scalar("test/player_rew", rew1, episode)
+                summary.add_scalar("test/random_rew", rew2, episode)
                 # saving model
                 if rew1 > best_test_rew:
                     best_test_rew = rew1
@@ -201,10 +200,10 @@ def main():
             message = "player_id:{0}, ".format(ind)
             if ship_rew is not None:
                 message += "ship_rew:{0:.2f}, ".format(ship_rew)
-                tensorboard.add_scalar("train/ship_rew", ship_rew, total_step)
+                summary.add_scalar("train/ship_rew", ship_rew, total_step)
             if ship_len is not None:
                 message += "ship_len:{0:.2f}, ".format(ship_len)
-                tensorboard.add_scalar("train/ship_len", ship_len, total_step)
+                summary.add_scalar("train/ship_len", ship_len, total_step)
 
             if ship_rew is not None or ship_len is not None:
                 logger.info(message)
@@ -220,10 +219,10 @@ def main():
                 .format(player_ind, halite, ship_num, shipyard_num,
                         ship_halite))
 
-            tensorboard.add_scalar(
+            summary.add_scalar(
                 "train/player{0}_environment_rew".format(player_ind), halite,
                 episode)
-            tensorboard.add_scalar(
+            summary.add_scalar(
                 "train/player{0}_winning_rate".format(player_ind),
                 win_stat.mean, episode)
 

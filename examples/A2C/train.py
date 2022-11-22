@@ -14,19 +14,16 @@
 
 import gym
 import numpy as np
-import os
 import time
 import parl
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
 
-from parl.env.atari_wrappers import wrap_deepmind
-from parl.utils import logger, get_gpu_count, summary
-from parl.utils.scheduler import PiecewiseScheduler
+from parl.env import wrap_deepmind
+from parl.utils import logger, summary
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat
-from parl.utils import machine_info
 
 from actor import Actor
 from parl.algorithms import A2C

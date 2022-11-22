@@ -24,6 +24,8 @@ V_RESET_CHANGED = '0.26.0'
 V_STEP_CHANGED = '0.25.0'
 V_NPRANDOM_CHANGED = '0.21.0'
 
+__all__ = ['CompatWrapper']
+
 
 def get_gym_version(version_str=gym.__version__):
     version_num = version_str.split('.')
@@ -36,6 +38,18 @@ def get_gym_version(version_str=gym.__version__):
 
 
 class CompatWrapper(gym.Wrapper):
+    """ Compatible for different versions of gym, especially for `step()` and `reset()` APIs.
+
+        .. code-block:: python
+        # old version of gym APIs
+        observation = env.reset()
+        observation, reward, terminated, truncated, info = env.step(action)
+        # new version of gym APIs
+        observation, info = env.reset()
+        observation, reward, done, info = env.step(action)
+
+    """
+
     def __init__(self, env):
         """
         Compat mujoco-v4

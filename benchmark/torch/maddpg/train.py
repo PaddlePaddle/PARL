@@ -19,7 +19,7 @@ import numpy as np
 from simple_model import MAModel
 from simple_agent import MAAgent
 from parl.algorithms import MADDPG
-from parl.env.multiagent_env import MAenv
+from parl.env import MAenv
 from parl.utils import logger, summary
 from gym import spaces
 

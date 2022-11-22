@@ -29,6 +29,8 @@ except:
         try `pip install PettingZoo==1.17.0` and `pip install gym==0.23.1` \n \
         (PettingZoo 1.17.0 requires gym>=0.21.0)')
 
+__all__ = ['MAenv']
+
 
 def MAenv(scenario_name, continuous_actions=False):
     env_list = [

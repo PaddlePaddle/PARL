@@ -21,7 +21,7 @@ from parl.utils import logger, summary
 from atari_model import AtariModel
 from atari_agent import AtariAgent
 from replay_memory import ReplayMemory, Experience
-from parl.env.atari_wrappers import wrap_deepmind
+from parl.env import wrap_deepmind
 from parl.algorithms import DQN, DDQN
 from tqdm import tqdm
 import argparse

@@ -14,7 +14,7 @@
 
 import argparse
 import numpy as np
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 
 from mujoco_config import mujoco_config
 from atari_config import atari_config
@@ -101,9 +101,8 @@ def main():
                     logger.info(
                         "Training: total steps: {}, episode rewards: {}".
                         format(total_steps, info[k]['episode']['r']))
-                    tensorboard.add_scalar("train/episode_reward",
-                                           info[k]["episode"]["r"],
-                                           total_steps)
+                    summary.add_scalar("train/episode_reward",
+                                       info[k]["episode"]["r"], total_steps)
 
         # Bootstrap value if not done
         value = agent.value(obs)
@@ -123,8 +122,7 @@ def main():
 
             avg_reward = run_evaluate_episodes(agent, eval_env,
                                                config['eval_episode'])
-            tensorboard.add_scalar('eval/episode_reward', avg_reward,
-                                   total_steps)
+            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
             logger.info('Evaluation over: {} episodes, Reward: {}'.format(
                 config['eval_episode'], avg_reward))
 

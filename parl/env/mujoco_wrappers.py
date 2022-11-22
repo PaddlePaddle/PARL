@@ -20,6 +20,8 @@ import gym
 import time
 from parl.env.compat_wrappers import CompatWrapper
 
+__all__ = ['wrap_rms']
+
 
 class TimeLimitMaskEnv(gym.Wrapper):
     """ Env wrapper that marks bad_transition

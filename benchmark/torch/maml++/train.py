@@ -14,7 +14,7 @@
 
 import random
 import torch
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 import numpy as np
 from data import MetaLearningDataLoader
 from maml_model import MAMLModel
@@ -57,7 +57,7 @@ def main():
         logger.info('start epoch {}'.format(i + 1))
         agent.train_one_epoch(i)
         loss, h = agent.evaluate()
-        tensorboard.add_scalar('test/loss', loss, i)
+        summary.add_scalar('test/loss', loss, i)
         logger.info('epoch {}: test loss: {:.3f}+-{:.3f}'.format(
             i + 1, loss, h))
 

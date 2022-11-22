@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pickle
+
 import argparse
 import gym
 from tqdm import trange
 import d4rl
-from parl.utils import logger, tensorboard
+from parl.utils import logger, summary
 from replay_buffer import ReplayMemory
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
@@ -73,9 +73,9 @@ def main():
         critic_loss, value_loss, actor_loss = agent.learn(
             batch_obs, batch_action, batch_reward, batch_next_obs,
             batch_terminal)
-        tensorboard.add_scalar('train/critic_loss', critic_loss, total_steps)
-        tensorboard.add_scalar('train/value_loss', value_loss, total_steps)
-        tensorboard.add_scalar('train/actor_loss', actor_loss, total_steps)
+        summary.add_scalar('train/critic_loss', critic_loss, total_steps)
+        summary.add_scalar('train/value_loss', value_loss, total_steps)
+        summary.add_scalar('train/actor_loss', actor_loss, total_steps)
         # Evaluate episode
         if total_steps % args.test_every_steps == 0:
             avg_reward, eval_rewards = run_evaluate_episodes(
@@ -83,10 +83,9 @@ def main():
             normalized_returns = d4rl.get_normalized_score(
                 args.env, eval_rewards) * 100
             normalized_mean = normalized_returns.mean()
-            tensorboard.add_scalar('eval/episode_reward', avg_reward,
-                                   total_steps)
-            tensorboard.add_scalar('eval/episode_normalized_reward',
-                                   normalized_mean, total_steps)
+            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
+            summary.add_scalar('eval/episode_normalized_reward',
+                               normalized_mean, total_steps)
             logger.info('Evaluation: total_steps {}, Reward: {}'.format(
                 total_steps, avg_reward))
 

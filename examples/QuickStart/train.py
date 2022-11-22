@@ -17,7 +17,7 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger
-from parl.env.compat_wrappers import CompatWrapper
+from parl.env import CompatWrapper
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 import argparse
@@ -69,6 +69,7 @@ def calc_reward_to_go(reward_list, gamma=1.0):
 
 def main():
     env = gym.make('CartPole-v1')
+    # Compatible for different versions of gym
     env = CompatWrapper(env)
     # env = env.unwrapped # Cancel the minimum score limit
     obs_dim = env.observation_space.shape[0]

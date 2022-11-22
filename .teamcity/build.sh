@@ -237,7 +237,7 @@ function main() {
             ;;
         test)
             # test code compability in environments with various python versions
-            declare -a envs=("py36" "py37" "py38" "py39")
+            declare -a envs=( "py39" "py36" "py37" "py38")
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
@@ -248,7 +248,7 @@ function main() {
                 echo ========================================
                 pip config set global.index-url https://mirror.baidu.com/pypi/simple
                 pip install .
-                if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" -o $env == "py39" \) ]
+                if [ \( $env == "py39" -o $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
                 then
                     run_import_test # import parl test
 
@@ -273,7 +273,7 @@ function main() {
             done
 
             pip install -r .teamcity/requirements.txt
-            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp39-cp39-manylinux1_x86_64.whl
+            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
             pip install tqdm # for example test
             run_example_test $env

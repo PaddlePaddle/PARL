@@ -17,6 +17,7 @@ import argparse
 import numpy as np
 from parl.utils import logger, summary, ReplayMemory
 from parl.env.continuous_wrappers import ActionMappingWrapper
+from parl.env.compat_wrappers import CompatWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import TD3
@@ -29,7 +30,7 @@ TAU = 0.005
 MEMORY_SIZE = int(1e6)
 WARMUP_SIZE = 1e4
 BATCH_SIZE = 256
-ENV_SEED = 1
+ENV_SEED = 3
 EXPL_NOISE = 0.1  # Std of Gaussian exploration noise
 
 
@@ -49,8 +50,8 @@ def run_train_episode(env, agent, rpm):
             action = agent.sample(np.array(obs))
 
         next_obs, reward, done, info = env.step(action)
-        done = float(done) if steps < env._max_episode_steps else 0
-        rpm.append(obs, action, reward, next_obs, done)
+        terminal = float(done) if steps < env._max_episode_steps else 0
+        rpm.append(obs, action, reward, next_obs, terminal)
 
         obs = next_obs
         total_reward += reward
@@ -77,9 +78,9 @@ def run_evaluate_episode(env, agent):
 
 def main():
     env = gym.make(args.env)
-    env.seed(ENV_SEED)
+    env = CompatWrapper(env)
     env = ActionMappingWrapper(env)
-
+    env.seed(args.seed)
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
 
@@ -111,7 +112,12 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--env', help='Mujoco environment name', default='HalfCheetah-v2')
+        '--env', help='Mujoco environment name', default='HalfCheetah-v4')
+    parser.add_argument(
+        "--seed",
+        default=ENV_SEED,
+        type=int,
+        help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument(
         '--train_total_steps',
         type=int,

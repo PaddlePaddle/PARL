@@ -3,26 +3,66 @@ Based on PARL, the PPO algorithm of deep reinforcement learning has been reprodu
 
 > Paper: PPO in [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 
-### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+### Mujoco/Atari games introduction
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
-
+#### 1. Mujoco games results
 <p align="center">
-<img src=".benchmark/ppo.png" alt="result"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/paddle/mujoco_result.png" alt="mujoco-result"/>
 </p>
 
-## How to use
-### Dependencies:
-+ [paddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.2](https://github.com/PaddlePaddle/PARL)
-+ gym==0.9.2
-+ mujoco-py==0.5.7
+#### 2. Atari games results
+<p align="center">
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/PPO/paddle/atari_result.png" alt="atari-result"/>
+</p>
 
-### Start Training:
++ Each experiment was run three times with different seeds
+
+## How to use
+### Mujoco-Dependencies:
++ python3.7+
++ [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ gym>=0.26.0
++ mujoco>=2.2.2
+
+### Atari-Dependencies:
++ [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ gym==0.18.0
++ atari-py==0.2.6
+
+### Training:
+
 ```
-# To train an agent for Hopper-v1 game
+# To train an agent for discrete action game (Atari: PongNoFrameskip-v4 by default)
 python train.py
 
-# For more customized arguments
-# python train.py --help
+# To train an agent for continuous action game (Mujoco)
+python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000
+```
+
+### Distributed Training
+Accelerate training process by setting `xparl_addr` and `env_num > 1` when environment simulation running very slow.        
+At first, we can start a local cluster with 8 CPUs:
+
+```
+xparl start --port 8010 --cpu_num 8
+```
+
+Note that if you have started a master before, you don't have to run the above
+command. For more information about the cluster, please refer to our
+[documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
+
+Then we can start the distributed training by running:
+
+```
+# To train an agent distributedly
+
+# for discrete action game (Atari games)
+python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
+
+# for continuous action game (Mujoco games)
+python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
+```

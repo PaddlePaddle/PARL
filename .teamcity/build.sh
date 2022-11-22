@@ -28,21 +28,53 @@ function init() {
 }
 
 function run_example_test {
-    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG ES
     do
-        cp parl/tests/gym.py examples/${exp}/
+        sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
+        sed -i '/parl/d' ./examples/${exp}/requirements*.txt
     done
-
+    
+    python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
+
+    
+    python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
+
+    
+    python -m pip install -r ./examples/DQN_variant/requirements.txt
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v1
-    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v1
+
+    
+    python -m pip install -r ./examples/PPO/requirements_atari.txt
+    python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python -m pip install -r ./examples/PPO/requirements_mujoco.txt
+    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
+
+    
+    python -m pip install -r ./examples/SAC/requirements.txt
+    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+
+   
+    python -m pip install -r ./examples/TD3/requirements.txt
+    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
+
+   
+    python -m pip install -r ./examples/OAC/requirements.txt
+    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    
+    python -m pip install -r ./examples/DDPG/requirements.txt
+    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    
+    xparl start --port 8037 --cpu_num 2
+    python -m pip install -r ./examples/ES/requirements.txt
+    python ./examples/ES/train.py --train_steps 2 --actor_num 2
+    xparl stop
+    
+    python -m pip install -r ./examples/MADDPG/requirements.txt
+    python examples/MADDPG/train.py --max_episodes 21 --test_every_episodes 10
 }
 
 function print_usage() {
@@ -224,12 +256,12 @@ function main() {
                     run_import_test # import parl test
 
                     pip install -r .teamcity/requirements.txt
-                    pip install paddlepaddle==2.1.0
+                    pip install paddlepaddle==2.3.1
                     run_test_with_cpu $env
                     # uninstall paddlepaddle when testing remote module
                     pip uninstall -y paddlepaddle
-                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                    # run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    # run_test_with_cpu $env "DIS_TESTING_REMOTE"
                 else
                     echo ========================================
                     echo "in torch environment"
@@ -244,7 +276,7 @@ function main() {
             done
 
             pip install -r .teamcity/requirements.txt
-            pip install /data/paddle_package/paddlepaddle_gpu-2.1.0.post101-cp38-cp38-linux_x86_64.whl
+            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
             pip install tqdm # for example test
             run_example_test $env

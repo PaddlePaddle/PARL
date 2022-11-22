@@ -4,25 +4,25 @@ Based on PARL, the OAC algorithm of deep reinforcement learning has been reprodu
 > Paper: OAC in [Better Exploration with Optimistic Actor-Critic](https://arxiv.org/abs/1910.12807)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 
-<img src=".benchmark/OAC_results.png" width = "1000" height ="280" alt="OAC_results"/>
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/OAC/torch/result.png" width="600" alt="OAC_results"/>
 
 + Each experiment was run three times with different seeds
 
 ## How to use
 ### Dependencies:
-+ python3.5+
++ python3.7+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym==0.9.1
++ gym>=0.26.0
 + torch
-+ mujoco-py==0.5.7
++ mujoco>=2.2.2
 
 ### Start Training:
 ```train
-# To train an agent for HalfCheetah-v1 game
+# To train an agent for HalfCheetah-v4 game
 python train.py
 
 # To train for other game & params

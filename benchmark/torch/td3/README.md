@@ -10,23 +10,23 @@ Include following approaches:
 [Addressing Function Approximation Error in Actor-Critic Methods](https://arxiv.org/abs/1802.09477)
 
 ### Mujoco games introduction
-Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
+PARL currently supports the open-source version of Mujoco provided by DeepMind, so users do not need to download binaries of Mujoco as well as install mujoco-py and get license. For more details, please visit [Mujoco](https://github.com/deepmind/mujoco).
 
 ### Benchmark result
 
-<img src=".benchmark/merge.png" width = "1500" height ="260" alt="Performance" />
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/TD3/torch/result.png" alt="Performance" />
 
 ## How to use
 ### Dependencies:
-+ python
++ python3.7+
 + [parl](https://github.com/PaddlePaddle/PARL)
-+ gym
++ gym>=0.26.0
 + torch
-+ mujoco-py>=1.50.1.0
++ mujoco>=2.2.2
 
 ### Start Training:
 ```
-# To train an agent for HalfCheetah-v2 game
+# To train an agent for HalfCheetah-v4 game
 python train.py
 
 # To train for different game and different loss type

@@ -114,4 +114,4 @@ class AtariAgent(parl.Agent):
 
         # learning rate decay
         self.alg.optimizer.set_lr(max(self.lr_scheduler.step(1), self.lr_end))
-        return loss.numpy()[0]
+        return float(loss)

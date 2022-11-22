@@ -18,6 +18,7 @@
 import numpy as np
 import gym
 import time
+from parl.env.compat_wrappers import CompatWrapper
 
 
 class TimeLimitMaskEnv(gym.Wrapper):
@@ -70,7 +71,6 @@ class MonitorEnv(gym.Wrapper):
 class RunningMeanStd(object):
     """ Calculating running mean and variance
     https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
-
     """
 
     def __init__(self, epsilon=1e-4, shape=()):
@@ -118,9 +118,6 @@ class VecNormalizeEnv(gym.Wrapper):
     def step(self, action):
         ob, rew, new, info = self.env.step(action)
         self.ret = self.ret * self.gamma + rew
-        # normalize observation, expand batch dim if observation does not have batch dimension
-        if ob.ndim == 1:
-            ob = np.expand_dims(ob, 0)
 
         ob = self._obfilt(ob)
         # normalize reward
@@ -141,11 +138,17 @@ class VecNormalizeEnv(gym.Wrapper):
 
     def _obfilt(self, ob, update=True):
         if self.ob_rms:
+            # normalize observation, expand batch dim if observation does not have batch dimension
+            if ob.ndim == 1:
+                ob = np.expand_dims(ob, 0)
             if self.training and update:
                 self.ob_rms.update(ob)
             ob = np.clip((ob - self.ob_rms.mean) /
                          np.sqrt(self.ob_rms.var + self.epsilon), -self.clipob,
                          self.clipob)
+            # squeeze observation shape after normalization
+            if ob.shape[0] == 1:
+                ob = np.squeeze(ob, axis=0)
             return ob
         else:
             return ob
@@ -165,7 +168,6 @@ class VecNormalizeEnv(gym.Wrapper):
 
 def get_wrapper_by_cls(venv, cls):
     """ Fetch env wrapper class cls from current venv
-
     Args:
         venv (gym.Wrapper): current env
         cls (gym.Wrapper): target env wrapper class
@@ -181,7 +183,6 @@ def get_wrapper_by_cls(venv, cls):
 def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
                                        batch_count):
     """ helper function that updates batch mean, variance, count
-
     Args:
         mean (np.array): current mean
         var (np.array): current variance
@@ -205,7 +206,6 @@ def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var,
 
 def get_ob_rms(env):
     """ get ob_rms value from current env, if current env does not wrap VecNormalizeEnv, None will be returned
-
     Args:
         env (gym.Wrapper): current env
     """
@@ -220,15 +220,16 @@ def get_ob_rms(env):
 def wrap_rms(env, gamma, test=False, ob_rms=None):
     """ Wrap original Mujoco environment with wrapper envs to provide normalization using rms and extra functionality,
     rewards information are stored in info['episode']. This is the wrapper for single agent.
-
     Args:
         env (gym.Wrapper): Mujoco env
         gamma (float or None): discounting factor, if test then gamma = None
         test (bool): True if test else False
         ob_rms (None or np.array): ob_rms from training environment, not None only when test is True
     """
+    env = CompatWrapper(env)
     env = TimeLimitMaskEnv(env)
     env = MonitorEnv(env)
+
     if test:
         env = VecNormalizeEnv(env, ret=False)
         env.eval()

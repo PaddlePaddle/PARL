@@ -1,0 +1,4 @@
+gym==0.18.0
+paddlepaddle>=2.0.0
+parl>2.0.5
+atari-py==0.2.6

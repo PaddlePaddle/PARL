@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger
+from parl.env.compat_wrappers import CompatWrapper
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 import argparse
@@ -67,7 +68,8 @@ def calc_reward_to_go(reward_list, gamma=1.0):
 
 
 def main():
-    env = gym.make('CartPole-v0')
+    env = gym.make('CartPole-v1')
+    env = CompatWrapper(env)
     # env = env.unwrapped # Cancel the minimum score limit
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.n

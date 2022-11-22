@@ -18,10 +18,11 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ## How to use
 ### Dependencies
++ python3.7+
 + torch==1.8.1
-+ [parl>=1.4](https://github.com/PaddlePaddle/PARL)
-+ gym==0.18.0
-+ mujoco-py==2.0.2.13
++ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ gym>=0.26.0
++ mujoco>=2.2.2
 
 
 ### Distributed training

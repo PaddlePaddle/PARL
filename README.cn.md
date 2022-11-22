@@ -76,7 +76,7 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 # 安装:
 ### 依赖
 - Python 3.6+. (Python 3.8+ 更适合用于并行训练)
-- [paddlepaddle>=2.0](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
+- [paddlepaddle>=2.3.1](https://github.com/PaddlePaddle/Paddle) (**非必须的**，如果你只用并行部分的接口不需要安装paddle) 
 
 
 ```

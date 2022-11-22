@@ -34,7 +34,6 @@ class MujocoAgent(parl.Agent):
 
     def predict(self, obs):
         obs = obs.astype('float32')
-        obs = np.expand_dims(obs, axis=0)
         obs = torch.from_numpy(obs).float()
         predict_actions = self.alg.predict(obs)
         return predict_actions.detach().cpu().numpy()

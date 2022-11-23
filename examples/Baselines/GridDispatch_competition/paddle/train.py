@@ -20,7 +20,7 @@ import argparse
 import threading
 import time
 import parl
-from parl.utils import logger, tensorboard, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
 from grid_model import GridModel
 from grid_agent import GridAgent
 from parl.algorithms import SAC
@@ -175,15 +175,15 @@ class Learner(object):
             with self.log_lock:
                 self.total_steps += episode_steps
                 self.total_MDP_steps += len(sample_data)
-                tensorboard.add_scalar('train/episode_reward', episode_reward,
-                                       self.total_steps)
-                tensorboard.add_scalar('train/episode_steps', episode_steps,
-                                       self.total_steps)
+                summary.add_scalar('train/episode_reward', episode_reward,
+                                   self.total_steps)
+                summary.add_scalar('train/episode_steps', episode_steps,
+                                   self.total_steps)
                 if critic_loss is not None:
-                    tensorboard.add_scalar('train/critic_loss', critic_loss,
-                                           self.total_steps)
-                    tensorboard.add_scalar('train/actor_loss', actor_loss,
-                                           self.total_steps)
+                    summary.add_scalar('train/critic_loss', critic_loss,
+                                       self.total_steps)
+                    summary.add_scalar('train/actor_loss', actor_loss,
+                                       self.total_steps)
                 logger.info('Total Steps: {} Reward: {} Steps: {}'.format(
                     self.total_steps, episode_reward, episode_steps))
 

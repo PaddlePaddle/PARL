@@ -24,7 +24,7 @@ from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
 from parl.utils import logger, summary
-from parl.env.compat_wrappers import CompatWrapper
+from parl.env import CompatWrapper
 from parl.utils.window_stat import WindowStat
 from actor import Actor
 
@@ -34,6 +34,7 @@ class Learner(object):
         self.config = config
 
         env = gym.make(self.config['env_name'])
+        # Compatible for different versions of gym
         env = CompatWrapper(env)
         self.config['obs_dim'] = env.observation_space.shape[0]
         self.config['act_dim'] = env.action_space.shape[0]

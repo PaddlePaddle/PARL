@@ -15,7 +15,7 @@
 
 # A dev image based on paddle production image
 
-FROM parl/parl-test:2.0-cuda10.1-v2.2
+FROM parl/parl-test:2.1-cuda10.1-v0.1
 
 RUN apt-get update && apt-get install -y libgflags-dev libgoogle-glog-dev libomp-dev unzip
 RUN apt-get update && apt-get install -y libgtest-dev && cd /usr/src/gtest && mkdir build \

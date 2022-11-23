@@ -18,7 +18,7 @@ import os
 from sc2_model import ComaModel
 from sc2_agent import Agents
 from parl.algorithms import COMA
-from parl.utils import tensorboard
+from parl.utils import summary
 
 
 def run_episode(env, agents, config, test=False):
@@ -140,9 +140,9 @@ def run(env, agents, config):
             # print('win_rate is ', win_rate)
             win_rates.append(win_rate)
             episode_rewards.append(ep_mean_reward)
-            tensorboard.add_scalar('win_rate', win_rates[-1], len(win_rates))
-            tensorboard.add_scalar('episode_rewards', episode_rewards[-1],
-                                   len(episode_rewards))
+            summary.add_scalar('win_rate', win_rates[-1], len(win_rates))
+            summary.add_scalar('episode_rewards', episode_rewards[-1],
+                               len(episode_rewards))
             print('win_rate', win_rates, len(win_rates))
             print('episode_rewards', episode_rewards, len(episode_rewards))
 

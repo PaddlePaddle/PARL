@@ -16,8 +16,7 @@ import parl
 import gym
 import numpy as np
 from parl.utils import logger
-from parl.env.atari_wrappers import wrap_deepmind
-from parl.env.mujoco_wrappers import wrap_rms
+from parl.env import wrap_deepmind, wrap_rms
 
 TEST_EPISODE = 3
 # wrapper parameters for atari env

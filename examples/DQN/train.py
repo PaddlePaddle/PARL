@@ -20,7 +20,7 @@ import argparse
 from parl.utils import logger, ReplayMemory
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
-from parl.env.compat_wrappers import CompatWrapper
+from parl.env import CompatWrapper
 from parl.algorithms import DQN
 
 LEARN_FREQ = 5  # training frequency
@@ -76,6 +76,7 @@ def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
 
 def main():
     env = gym.make('CartPole-v0')
+    # Compatible for different versions of gym
     env = CompatWrapper(env)
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.n

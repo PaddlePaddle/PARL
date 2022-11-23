@@ -15,7 +15,7 @@
 import argparse
 import gym
 import d4rl
-from parl.utils import logger, tensorboard, ReplayMemory
+from parl.utils import logger, summary, ReplayMemory
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import CQL
@@ -84,8 +84,7 @@ def main():
         # Evaluate episode
         if total_steps % args.test_every_steps == 0:
             avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
-            tensorboard.add_scalar('eval/episode_reward', avg_reward,
-                                   total_steps)
+            summary.add_scalar('eval/episode_reward', avg_reward, total_steps)
             logger.info('Evaluation: total_steps {}, Reward: {}'.format(
                 total_steps, avg_reward))
 

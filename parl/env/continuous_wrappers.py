@@ -14,7 +14,8 @@
 
 import gym
 import numpy as np
-from parl.utils import logger
+
+__all__ = ['ActionMappingWrapper']
 
 
 class ActionMappingWrapper(gym.Wrapper):

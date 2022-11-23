@@ -13,27 +13,21 @@
 # limitations under the License.
 
 import torch
-import os
 import gym
 import parl
 import time
 import numpy as np
 
 from collections import defaultdict
-from parl.env.atari_wrappers import wrap_deepmind
+from parl.env import wrap_deepmind
 from parl.utils.window_stat import WindowStat
 from parl.utils.time_stat import TimeStat
-from parl.utils import machine_info
-from parl.utils import logger, get_gpu_count, summary
+from parl.utils import logger, summary
 from parl.algorithms import A2C
 
 from atari_model import ActorCritic
 from atari_agent import Agent
 from actor import Actor
-
-import time
-import argparse
-import random
 
 
 class Learner(object):

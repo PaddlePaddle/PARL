@@ -19,9 +19,7 @@ from qmixer_model import QMixerModel
 from rnn_model import RNNModel
 from parl.algorithms import QMIX
 from qmix_agent import QMixAgent
-import parl
-from parl.utils import logger
-from parl.utils import summary
+from parl.utils import logger, summary
 import numpy as np
 from copy import deepcopy
 from qmix_config import QMixConfig

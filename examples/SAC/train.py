@@ -16,8 +16,7 @@ import gym
 import argparse
 import numpy as np
 from parl.utils import logger, summary, ReplayMemory
-from parl.env.continuous_wrappers import ActionMappingWrapper
-from parl.env.compat_wrappers import CompatWrapper
+from parl.env import ActionMappingWrapper, CompatWrapper
 from mujoco_model import MujocoModel
 from mujoco_agent import MujocoAgent
 from parl.algorithms import SAC
@@ -89,6 +88,7 @@ def main():
     logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
+    # Compatible for different versions of gym
     env = CompatWrapper(env)
     env = ActionMappingWrapper(env)
     env.seed(args.seed)

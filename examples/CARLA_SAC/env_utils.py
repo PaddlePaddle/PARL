@@ -17,7 +17,7 @@ import carla
 import gym
 import gym_carla
 import numpy as np
-from parl.env.continuous_wrappers import ActionMappingWrapper
+from parl.env import ActionMappingWrapper
 
 
 class ParallelEnv(object):

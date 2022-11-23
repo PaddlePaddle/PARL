@@ -28,7 +28,7 @@ function init() {
 }
 
 function run_example_test {
-    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG ES
+    for exp in QuickStart DQN DQN_variant PPO SAC TD3 OAC DDPG MADDPG ES A2C
     do
         sed -i '/paddlepaddle/d' ./examples/${exp}/requirements*.txt
         sed -i '/parl/d' ./examples/${exp}/requirements*.txt
@@ -37,31 +37,25 @@ function run_example_test {
     python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
 
-    
     python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
-
     
     python -m pip install -r ./examples/DQN_variant/requirements.txt
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
-
     
     python -m pip install -r ./examples/PPO/requirements_atari.txt
     python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
     python -m pip install -r ./examples/PPO/requirements_mujoco.txt
     python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
 
-    
     python -m pip install -r ./examples/SAC/requirements.txt
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
-
    
     python -m pip install -r ./examples/TD3/requirements.txt
     python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
 
-   
     python -m pip install -r ./examples/OAC/requirements.txt
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
     
@@ -71,6 +65,11 @@ function run_example_test {
     xparl start --port 8037 --cpu_num 2
     python -m pip install -r ./examples/ES/requirements.txt
     python ./examples/ES/train.py --train_steps 2 --actor_num 2
+    xparl stop
+
+    xparl start --port 8010 --cpu_num 5
+    python -m pip install -r ./examples/A2C/requirements.txt
+    python ./examples/A2C/train.py --max_sample_steps 5000
     xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt
@@ -166,7 +165,6 @@ function run_single_fluid_test() {
 }
 
 function run_test_with_fluid() {
-    # declare -a envs=("py27" "py36" "py37")
     declare -a envs=("py37")
     for env in "${envs[@]}";do    
         export PATH="/root/miniconda3/bin:$PATH"
@@ -239,8 +237,7 @@ function main() {
             ;;
         test)
             # test code compability in environments with various python versions
-            #declare -a envs=("py36_torch" "py37_torch" "py27" "py36" "py37")
-            declare -a envs=("py36" "py37" "py38")
+            declare -a envs=( "py39" "py36" "py37" "py38")
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
@@ -251,7 +248,7 @@ function main() {
                 echo ========================================
                 pip config set global.index-url https://mirror.baidu.com/pypi/simple
                 pip install .
-                if [ \( $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
+                if [ \( $env == "py39" -o $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
                 then
                     run_import_test # import parl test
 

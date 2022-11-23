@@ -1,4 +1,4 @@
 gym
 pygame
-parl
+parl>=2.1
 paddlepaddle>=2.0.0

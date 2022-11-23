@@ -20,7 +20,7 @@ import argparse
 from parl.utils import logger, ReplayMemory
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
-from parl.env import CompatWrapper, is_gym_version_ge, V_GYM_CHANGED
+from parl.env import CompatWrapper, is_gym_version_ge
 from parl.algorithms import DQN
 
 LEARN_FREQ = 5  # training frequency
@@ -58,7 +58,8 @@ def run_train_episode(agent, env, rpm):
 
 # evaluate 5 episodes
 def run_evaluate_episodes(agent, eval_episodes=5, render=False):
-    if is_gym_version_ge(V_GYM_CHANGED):
+    # Check whether the version of gym is greater than 0.26.0
+    if is_gym_version_ge("0.26.0") and render:
         env = gym.make('CartPole-v1', render_mode="human")
     else:
         env = gym.make('CartPole-v1')

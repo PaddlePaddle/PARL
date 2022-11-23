@@ -152,7 +152,7 @@ Then we use this agent to interact with the environment, and run around 1000 epi
     env = gym.make("CartPole-v0")
 
     for i in range(1000):
-          obs_list, action_list, reward_list = run_episode(env, agent)
+          obs_list, action_list, reward_list = run_train_episode(env, agent)
 
           if i % 10 == 0:
               logger.info("Episode {}, Reward Sum {}.".format(i, sum(reward_list)))

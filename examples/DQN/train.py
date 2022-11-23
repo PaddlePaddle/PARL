@@ -64,7 +64,7 @@ def run_evaluate_episodes(agent, eval_episodes=5, render=False):
         env = gym.make('CartPole-v1')
     # Compatible for different versions of gym
     env = CompatWrapper(env)
-    
+
     eval_reward = []
     for i in range(eval_episodes):
         obs = env.reset()

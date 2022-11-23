@@ -58,12 +58,11 @@ def run_train_episode(agent, env, rpm):
 
 # evaluate 5 episodes
 def run_evaluate_episodes(agent, eval_episodes=5, render=False):
-    # Check whether the version of gym is greater than 0.26.0
-    if is_gym_version_ge("0.26.0") and render:
+    # Compatible for different versions of gym
+    if is_gym_version_ge("0.26.0") and render:  # if gym version >= 0.26.0
         env = gym.make('CartPole-v1', render_mode="human")
     else:
         env = gym.make('CartPole-v1')
-    # Compatible for different versions of gym
     env = CompatWrapper(env)
 
     eval_reward = []

@@ -131,7 +131,7 @@ Then we use this agent to interact with the environment, and run around 1000 epi
 
 .. code-block:: python
 
-    def run_train_episode(agent, env):
+    def run_train_episode(env, agent):
 
         obs_list, action_list, reward_list = [], [], []
         obs = env.reset()

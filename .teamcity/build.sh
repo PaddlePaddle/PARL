@@ -69,7 +69,7 @@ function run_example_test {
 
     xparl start --port 8010 --cpu_num 5
     python -m pip install -r ./examples/A2C/requirements.txt
-    python ./examples/A2C/train.py --max_sample_steps 5000
+    python ./examples/A2C/train.py --max_sample_steps 50000
     xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt

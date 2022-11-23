@@ -24,7 +24,7 @@ V_RESET_CHANGED = '0.26.0'
 V_STEP_CHANGED = '0.25.0'
 V_NPRANDOM_CHANGED = '0.21.0'
 
-__all__ = ['CompatWrapper', 'get_gym_version']
+__all__ = ['CompatWrapper', 'get_gym_version', 'V_RESET_CHANGED', 'V_STEP_CHANGED', 'V_NPRANDOM_CHANGED']
 
 
 def get_gym_version(version_str=gym.__version__):

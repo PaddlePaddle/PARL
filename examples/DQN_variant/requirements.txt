@@ -2,4 +2,5 @@ paddlepaddle>=2.0.0
 parl>=2.0.2
 gym==0.18.0
 tqdm
+opencv-python
 atari-py==0.2.6

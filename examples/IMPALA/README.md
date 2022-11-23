@@ -18,7 +18,7 @@ Learning curve with one learner (in a P40 GPU) and 32 actors (in 32 CPUs).
 ## How to use
 ### Dependencies
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>2.0.5](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1.0](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7
 

@@ -1,5 +1,4 @@
 gym
 pygame
-opencv-python
 parl>=2.1
 paddlepaddle>=2.0.0

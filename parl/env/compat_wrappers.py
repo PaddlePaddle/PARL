@@ -13,41 +13,45 @@
 # limitations under the License.
 
 import gym
-import numpy as np
-from parl.utils import logger
 import operator
 
-# V_RESET_CHANGED change env.seed() and env.reset()
-# V_STEP_CHANGED change env.step()
+# V_GYM_CHANGED change env.seed(), env.reset() and env.step()
 # V_NPRANDOM_CHANGED change env.np_random from .randint() to .integers()
-V_RESET_CHANGED = '0.26.0'
-V_STEP_CHANGED = '0.25.0'
-V_NPRANDOM_CHANGED = '0.21.0'
+V_GYM_CHANGED = '0.26.0'
+V_NPRANDOM_CHANGED = '0.22.0'
 
 __all__ = [
-    'CompatWrapper', 'get_gym_version', 'V_RESET_CHANGED', 'V_STEP_CHANGED',
-    'V_NPRANDOM_CHANGED'
+    'CompatWrapper', 'is_gym_version_ge', 'V_GYM_CHANGED', 'V_NPRANDOM_CHANGED'
 ]
 
 
-def get_gym_version(version_str=gym.__version__):
-    version_num = version_str.split('.')
+def is_gym_version_ge(compare_version):
+    # Check whether the version of gym is greater than compare_version
+    # get gym version in python env
+    version_num = gym.__version__.split('.')
     for i in range(len(version_num)):
         try:
             version_num[i] = int(version_num[i])
         except:
             pass
-    return version_num
+    # deal with compare_version
+    compare_num = compare_version.split('.')
+    for i in range(len(version_num)):
+        try:
+            compare_num[i] = int(compare_num[i])
+        except:
+            pass
+    return operator.ge(version_num, compare_num)
 
 
 class CompatWrapper(gym.Wrapper):
     """ Compatible for different versions of gym, especially for `step()` and `reset()` APIs.
 
         .. code-block:: python
-        # old version of gym APIs
+        # old version (< 0.26.0) of gym APIs
         observation = env.reset()
         observation, reward, done, info = env.step(action)
-        # new version of gym APIs
+        # new version (>= 0.26.0) of gym APIs
         observation, info = env.reset()
         observation, reward, terminated, truncated, info = env.step(action)
     
@@ -55,9 +59,6 @@ class CompatWrapper(gym.Wrapper):
     """
 
     def __init__(self, env):
-        """
-        Compat mujoco-v4
-        """
         super().__init__(env)
         if hasattr(env, '_max_episode_steps'):
             self._max_episode_steps = int(self.env._max_episode_steps)
@@ -67,7 +68,7 @@ class CompatWrapper(gym.Wrapper):
         self.random_seed = 'without_setting'
 
     def reset(self, **kwargs):
-        if operator.ge(get_gym_version(), get_gym_version(V_RESET_CHANGED)):
+        if is_gym_version_ge(V_GYM_CHANGED):
             if self.random_seed != "without_setting":
                 kwargs['seed'] = self.random_seed
             obs, info = self.env.reset(**kwargs)
@@ -76,14 +77,14 @@ class CompatWrapper(gym.Wrapper):
         return obs
 
     def seed(self, random_seed):
-        if operator.ge(get_gym_version(), get_gym_version(V_RESET_CHANGED)):
+        if is_gym_version_ge(V_GYM_CHANGED):
             self.random_seed = random_seed
         else:
             self.env.seed(random_seed)
 
     def step(self, action):
         self.count_ep_step += 1
-        if operator.ge(get_gym_version(), get_gym_version(V_STEP_CHANGED)):
+        if is_gym_version_ge(V_GYM_CHANGED):
             obs, reward, done, _, info = self.env.step(action)
             if hasattr(self.env, '_elapsed_steps'):
                 self._elapsed_steps = self.env._elapsed_steps

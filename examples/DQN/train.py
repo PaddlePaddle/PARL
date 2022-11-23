@@ -20,7 +20,7 @@ import argparse
 from parl.utils import logger, ReplayMemory
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
-from parl.env import CompatWrapper
+from parl.env import CompatWrapper, is_gym_version_ge, V_GYM_CHANGED
 from parl.algorithms import DQN
 
 LEARN_FREQ = 5  # training frequency
@@ -57,7 +57,14 @@ def run_train_episode(agent, env, rpm):
 
 
 # evaluate 5 episodes
-def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
+def run_evaluate_episodes(agent, eval_episodes=5, render=False):
+    if is_gym_version_ge(V_GYM_CHANGED):
+        env = gym.make('CartPole-v1', render_mode="human")
+    else:
+        env = gym.make('CartPole-v1')
+    # Compatible for different versions of gym
+    env = CompatWrapper(env)
+    
     eval_reward = []
     for i in range(eval_episodes):
         obs = env.reset()
@@ -106,7 +113,7 @@ def main():
             episode += 1
 
         # test part
-        eval_reward = run_evaluate_episodes(agent, env, render=False)
+        eval_reward = run_evaluate_episodes(agent, render=False)
         logger.info('episode:{}    e_greed:{}   Test reward:{}'.format(
             episode, agent.e_greed, eval_reward))
 

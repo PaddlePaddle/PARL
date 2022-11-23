@@ -24,4 +24,3 @@ from parl.algorithms.paddle.ddqn import *
 from parl.algorithms.paddle.maddpg import *
 from parl.algorithms.paddle.ppo import *
 from parl.algorithms.paddle.cql import *
-from parl.algorithms.paddle.impala.impala import *

@@ -184,10 +184,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_sample_steps',
         type=int,
-        default=1e7,
+        default=None,
         help='stop condition: number of sample step')
     args = parser.parse_args()
-    config['max_sample_steps'] = args.max_sample_steps
+    if args.max_sample_steps is not None:
+        config['max_sample_steps'] = args.max_sample_steps
 
     learner = Learner(config)
     assert config['log_metrics_interval_s'] > 0

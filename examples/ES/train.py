@@ -18,6 +18,7 @@ import os
 import parl
 import numpy as np
 import utils
+import argparse
 from es import ES
 from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
@@ -184,18 +185,19 @@ if __name__ == '__main__':
         "Before training, it takes a few mimutes to initialize a noise table for exploration"
     )
 
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--train_steps',
         type=int,
-        default=200,
+        default=None,
         help='stop condition: number of train_steps')
     parser.add_argument(
-        '--actor_num', type=int, default=24, help='the number of actor')
+        '--actor_num', type=int, default=None, help='the number of actor')
     args = parser.parse_args()
-    config['train_steps'] = args.train_steps
-    config['actor_num'] = args.actor_num
+    if args.train_steps is not None:
+        config['train_steps'] = args.train_steps
+    if args.actor_num is not None:
+        config['actor_num'] = args.actor_num
 
     learner = Learner(config)
     while learner.train_steps < config['train_steps']:

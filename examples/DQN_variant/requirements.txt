@@ -1,5 +1,5 @@
 paddlepaddle>=2.0.0
-parl>=2.0.2
+parl
 gym==0.18.0
 tqdm
 opencv-python

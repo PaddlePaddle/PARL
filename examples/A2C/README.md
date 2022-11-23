@@ -18,7 +18,7 @@ Performance of A2C on some envrionments in training process after 10 million sam
 ## How to use
 ### Dependencies
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=1.4.3](https://github.com/PaddlePaddle/PARL)
++ [parl](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7
 

@@ -67,7 +67,7 @@ function run_example_test {
     python ./examples/ES/train.py --train_steps 2 --actor_num 2
     xparl stop
 
-    xparl start --port 8047 --cpu_num 5
+    xparl start --port 8010 --cpu_num 5
     python -m pip install -r ./examples/A2C/requirements.txt
     python ./examples/A2C/train.py --max_sample_steps 5000
     xparl stop

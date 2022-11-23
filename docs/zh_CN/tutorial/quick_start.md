@@ -106,7 +106,7 @@ agent = CartpoleAgent(alg)
 ```
 然后我们用这个agent和环境进行交互，训练模型，1000个episode之后，agent就可以很好地解决Cartpole问题，拿到满分（200）。
 ```python
-def run_train_episode(agent, env):
+def run_train_episode(env, agent):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
     while True:

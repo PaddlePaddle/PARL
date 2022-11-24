@@ -17,7 +17,7 @@ import gym
 import numpy as np
 import parl
 from parl.utils import logger
-from parl.env import CompatWrapper
+from parl.env import CompatWrapper, is_gym_version_ge
 from cartpole_model import CartpoleModel
 from cartpole_agent import CartpoleAgent
 import argparse
@@ -43,7 +43,14 @@ def run_train_episode(agent, env):
 
 
 # evaluate 5 episodes
-def run_evaluate_episodes(agent, env, eval_episodes=5, render=False):
+def run_evaluate_episodes(agent, eval_episodes=5, render=False):
+    # Compatible for different versions of gym
+    if is_gym_version_ge("0.26.0") and render:  # if gym version >= 0.26.0
+        env = gym.make('CartPole-v1', render_mode="human")
+    else:
+        env = gym.make('CartPole-v1')
+    env = CompatWrapper(env)
+
     eval_reward = []
     for i in range(eval_episodes):
         obs = env.reset()
@@ -99,7 +106,7 @@ def main():
 
         agent.learn(batch_obs, batch_action, batch_reward)
         if (i + 1) % 100 == 0:
-            total_reward = run_evaluate_episodes(agent, env, render=False)
+            total_reward = run_evaluate_episodes(agent, render=False)
             logger.info('Test reward: {}'.format(total_reward))
 
     # save the parameters to ./model.ckpt

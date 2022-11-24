@@ -57,7 +57,7 @@ simple_world_comm<br>
 ### Dependencies:
 + python3.5+
 + torch
-+ [parl>=2.1.0](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
 + PettingZoo==1.17.0
 + gym==0.23.1
 

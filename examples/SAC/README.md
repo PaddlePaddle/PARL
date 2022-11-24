@@ -15,7 +15,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 ## How to use
 ### Dependencies:
 + python3.7+
-+ [parl>=2.1.0](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
 + gym>=0.26.0
 + mujoco-py>=2.2.2

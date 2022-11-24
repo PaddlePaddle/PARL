@@ -41,9 +41,10 @@ Performance of **Dueling DQN** on 55 Atari environments:
 ## How to use
 ### Dependencies:
 + [paddlepaddle>=2.0.0](https://github.com/PaddlePaddle/Paddle)
-+ [parl>=2.0.2](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
 + gym==0.18.0
 + tqdm
++ opencv-python
 + atari-py==0.2.6
 
 ### Start Training:

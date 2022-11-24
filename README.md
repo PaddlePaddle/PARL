@@ -105,6 +105,7 @@ For beginners who know little about reinforcement learning, we also provide an i
 - [MADDPG](examples/MADDPG/)
 - [PPO](examples/PPO/)
 - [CQL](examples/CQL/)
+- [IMPALA](examples/IMPALA)
 - [Winning Solution for NIPS2018: AI for Prosthetics Challenge](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [Winning Solution for NIPS2019: Learn to Move Challenge](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 - [Winning Solution for NIPS2020: Learning to Run a Power Network Challenge](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)

@@ -9,11 +9,8 @@ Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco
 
 ### Benchmark result
 
-<p align="left">
-<img src=".result/result_es0.png" alt="result">
-</p>
-<p align="left">
-<img src=".result/result_es1.png" alt="result"/>
+<p align="center">
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/ES/torch/result.png" alt="result"/>
 </p>
 
 ## How to use

@@ -38,6 +38,9 @@ if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
 else:
     if _HAS_PADDLE:
         from parl.core.paddle import *
+        if _HAS_TORCH:
+            logger.info("PARL detects two backend frameworks: paddle, torch. Use paddle by default.")
+            logger.info("To use torch as backend, `export PARL_BACKEND=torch` before running the scripts.")
     elif _HAS_FLUID:
         from parl.core.fluid import *
         from parl.core.fluid.plutils.compiler import compile

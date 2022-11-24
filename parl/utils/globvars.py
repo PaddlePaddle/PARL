@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from parl.utils import logger
+import argparse
 
 __all__ = ['global_config', 'GlobalConfig']
 
@@ -36,9 +37,9 @@ class GlobalConfig(CONFIG):
             args (argparse.Namespace): arguments
         """
         assert isinstance(args, argparse.Namespace), type(args)
-        for k, v in six.iteritems(vars(args)):
+        for k in vars(args):
             if hasattr(self, k):
                 logger.warn("Attribute {} in globalns will be overwritten!")
-            setattr(self, k, v)
+            setattr(self, k, getattr(args, k))
 
 global_config = GlobalConfig()

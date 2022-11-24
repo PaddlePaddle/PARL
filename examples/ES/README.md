@@ -8,9 +8,9 @@ Based on PARL, we have implemented the Evolution Strategies (ES) algorithm and e
 Please see [here](https://github.com/openai/mujoco-py) to know more about Mujoco games.
 
 ### Benchmark result
-
-<img src=".result/result_ES_paddle0.png" alt="result">
-<img src=".result/result_ES_paddle1.png" alt="result">
+<p align="center">
+<img src="https://github.com/benchmarking-rl/PARL-experiments/blob/master/ES/paddle/result.png" alt="result"/>
+</p>
 
 ## How to use
 ### Dependencies

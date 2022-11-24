@@ -25,7 +25,7 @@ class GlobalConfig(CONFIG):
     A namespace to store global variables.
     Example:
     .. code-block:: none
-        from parl.utils.globvars import global_config as config
+        from parl.utils import global_config as config
         config.batch_size = 18
         config.learning_rate = 3e-4
         config.load_argument(parser.parse_args())

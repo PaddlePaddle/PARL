@@ -39,7 +39,7 @@ class GlobalConfig(CONFIG):
         assert isinstance(args, argparse.Namespace), type(args)
         for k in vars(args):
             if hasattr(self, k):
-                logger.warn("Attribute {} in globalns will be overwritten!")
+                logger.warn("Attribute {} in global_config will be overwritten!")
             setattr(self, k, getattr(args, k))
 
 global_config = GlobalConfig()

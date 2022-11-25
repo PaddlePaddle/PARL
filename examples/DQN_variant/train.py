@@ -36,8 +36,6 @@ UPDATE_TARGET_STEP = 2500
 MEMORY_SIZE = 1000000
 GAMMA = 0.99
 LR_START = 0.0003  # starting learing rate
-TOTAL_STEP = 1000000
-MEMORY_WARMUP_SIZE = 50000
 UPDATE_FREQ = 4
 BATCH_SIZE = 32
 
@@ -63,7 +61,7 @@ def run_train_episode(agent, env, rpm):
         rpm.append(Experience(obs, action, reward, done))
 
         # train model
-        if (rpm.size() > MEMORY_WARMUP_SIZE) and (step % UPDATE_FREQ == 0):
+        if (rpm.size() > args.warmup_size) and (step % UPDATE_FREQ == 0):
             # s,a,r,s',done
             (batch_all_obs, batch_action, batch_reward,
              batch_done) = rpm.sample_batch(BATCH_SIZE)
@@ -119,20 +117,18 @@ def main():
         alg = DDQN(model, gamma=GAMMA, lr=LR_START)
 
     # build Agent using model and algorithm
-    agent = AtariAgent(alg, act_dim, LR_START, TOTAL_STEP, UPDATE_TARGET_STEP)
+    agent = AtariAgent(alg, act_dim, LR_START, args.train_total_steps // 10, UPDATE_TARGET_STEP)
 
     # start training, memory warm up
-    with tqdm(
-            total=MEMORY_WARMUP_SIZE, desc='[Replay Memory Warm Up]') as pbar:
-        while rpm.size() < MEMORY_WARMUP_SIZE:
+    with tqdm(total=args.warmup_size, desc='[Replay Memory Warm Up]') as pbar:
+        while rpm.size() < args.warmup_size:
             total_reward, steps, _ = run_train_episode(agent, env, rpm)
             pbar.update(steps)
 
     test_flag = 0
-    train_total_steps = args.train_total_steps
-    pbar = tqdm(total=train_total_steps)
+    pbar = tqdm(total=args.train_total_steps)
     cum_steps = 0  # this is the current timestep
-    while cum_steps < train_total_steps:
+    while cum_steps < args.train_total_steps:
         # start epoch
         total_reward, steps, loss = run_train_episode(agent, env, rpm)
         cum_steps += steps
@@ -192,6 +188,11 @@ if __name__ == '__main__':
         type=int,
         default=int(1e7),
         help='maximum environmental steps of games')
+    parser.add_argument(
+        '--warmup_size',
+        type=int,
+        default=50000,
+        help='warmup size for agent to learn')
     parser.add_argument(
         '--test_every_steps',
         type=int,

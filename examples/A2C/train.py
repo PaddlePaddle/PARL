@@ -20,7 +20,7 @@ from atari_model import AtariModel
 from atari_agent import AtariAgent
 from collections import defaultdict
 
-from parl.env import wrap_deepmind
+from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, summary
 from parl.utils.time_stat import TimeStat
 from parl.utils.window_stat import WindowStat

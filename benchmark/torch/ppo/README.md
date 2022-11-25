@@ -23,17 +23,18 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 ## How to use
 ### Mujoco-Dependencies:
 + python>=3.7+
-+ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1.1](https://github.com/PaddlePaddle/PARL)
 + pytorch
 + gym>=0.26.0
 + mujoco>=2.2.2
 
 ### Atari-Dependencies:
 + python>=3.7+
-+ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1.1](https://github.com/PaddlePaddle/PARL)
 + pytorch
 + gym==0.18.0
 + atari-py==0.2.6
++ opencv-python
 
 ### Training:
 

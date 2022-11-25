@@ -21,6 +21,7 @@ Performance of A2C on some envrionments in training process after 10 million sam
 + [parl>=1.4.3](https://github.com/PaddlePaddle/PARL)
 + gym==0.12.1
 + atari-py==0.1.7
++ opencv-python
 
 
 ### Distributed Training

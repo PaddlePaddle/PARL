@@ -16,7 +16,6 @@ import parl
 import gym
 import numpy as np
 from parl.utils import logger
-from parl.env import wrap_deepmind, wrap_rms
 
 TEST_EPISODE = 3
 # wrapper parameters for atari env
@@ -123,6 +122,7 @@ class LocalEnv(object):
 
         # is instance of gym.spaces.Box
         if hasattr(env.action_space, 'high'):
+            from parl.env.mujoco_wrappers import wrap_rms
             self._max_episode_steps = env._max_episode_steps
             self.continuous_action = True
             if test:
@@ -131,6 +131,7 @@ class LocalEnv(object):
                 self.env = wrap_rms(env, gamma=GAMMA)
         # is instance of gym.spaces.Discrete
         elif hasattr(env.action_space, 'n'):
+            from parl.env.atari_wrappers import wrap_deepmind
             self.continuous_action = False
             if test:
                 self.env = wrap_deepmind(
@@ -166,6 +167,7 @@ class RemoteEnv(object):
         env = gym.make(env_name)
 
         if hasattr(env.action_space, 'high'):
+            from parl.env.mujoco_wrappers import wrap_rms
             self._max_episode_steps = env._max_episode_steps
             self.continuous_action = True
             if test:
@@ -173,6 +175,7 @@ class RemoteEnv(object):
             else:
                 self.env = wrap_rms(env, gamma=GAMMA)
         elif hasattr(env.action_space, 'n'):
+            from parl.env.atari_wrappers import wrap_deepmind
             self.continuous_action = False
             if test:
                 self.env = wrap_deepmind(

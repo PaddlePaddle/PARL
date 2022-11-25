@@ -1,4 +1,4 @@
 gym>=0.26.0
 mujoco==2.2.2
 paddlepaddle>=2.0.0
-parl>=2.1
+parl>=2.1.1

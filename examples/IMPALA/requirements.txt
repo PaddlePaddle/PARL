@@ -1,4 +1,5 @@
 paddlepaddle>=2.0.0
-parl>=2.1
+parl>=2.1.1
 gym==0.12.1
 atari-py==0.1.7
+opencv-python

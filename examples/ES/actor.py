@@ -21,7 +21,7 @@ from obs_filter import MeanStdFilter
 from mujoco_agent import MujocoAgent
 from mujoco_model import MujocoModel
 from noise import SharedNoiseTable
-from parl.env.compat_wrappers import CompatWrapper
+from parl.env import CompatWrapper
 
 
 @parl.remote_class(wait=False)

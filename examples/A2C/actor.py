@@ -18,7 +18,8 @@ import parl
 from atari_model import AtariModel
 from collections import defaultdict
 from atari_agent import AtariAgent
-from parl.env import wrap_deepmind, MonitorEnv, get_wrapper_by_cls, VectorEnv
+from parl.env import VectorEnv
+from parl.env.atari_wrappers import wrap_deepmind, MonitorEnv, get_wrapper_by_cls
 from parl.utils.rl_utils import calc_gae
 from parl.algorithms import A2C
 

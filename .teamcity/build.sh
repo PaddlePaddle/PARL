@@ -36,44 +36,57 @@ function run_example_test {
     
     python -m pip install -r ./examples/QuickStart/requirements.txt
     python examples/QuickStart/train.py
+    python -m pip uninstall -r ./examples/QuickStart/requirements.txt -y
 
     python -m pip install -r ./examples/DQN/requirements.txt
     python examples/DQN/train.py
+    python -m pip uninstall -r ./examples/DQN/requirements.txt -y
     
     python -m pip install -r ./examples/DQN_variant/requirements.txt
-    python examples/DQN_variant/train.py --train_total_steps 5000 --algo DQN --env PongNoFrameskip-v4
-    python examples/DQN_variant/train.py --train_total_steps 5000 --algo DDQN --env PongNoFrameskip-v4
-    python examples/DQN_variant/train.py --train_total_steps 5000 --dueling True --env PongNoFrameskip-v4
+    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DQN --env PongNoFrameskip-v4
+    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DDQN --env PongNoFrameskip-v4
+    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --dueling True --env PongNoFrameskip-v4
+    python -m pip uninstall -r ./examples/DQN_variant/requirements.txt -y
     
     python -m pip install -r ./examples/PPO/requirements_atari.txt
     python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python -m pip uninstall -r ./examples/PPO/requirements_atari.txt -y
+
     python -m pip install -r ./examples/PPO/requirements_mujoco.txt
     python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
+    python -m pip uninstall -r ./examples/PPO/requirements_mujoco.txt -y
 
     python -m pip install -r ./examples/SAC/requirements.txt
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    python -m pip uninstall -r ./examples/SAC/requirements.txt -y
    
     python -m pip install -r ./examples/TD3/requirements.txt
     python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    python -m pip uninstall -r ./examples/TD3/requirements.txt -y
 
     python -m pip install -r ./examples/OAC/requirements.txt
     python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    python -m pip uninstall -r ./examples/OAC/requirements.txt -y
     
     python -m pip install -r ./examples/DDPG/requirements.txt
     python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    python -m pip uninstall -r ./examples/DDPG/requirements.txt -y
     
-    xparl start --port 8037 --cpu_num 2
+    xparl start --port 8037 --cpu_num 24
     python -m pip install -r ./examples/ES/requirements.txt
-    python ./examples/ES/train.py --train_steps 2 --actor_num 2
+    python ./examples/ES/train.py --train_steps 2 --actor_num 24
+    python -m pip uninstall -r ./examples/ES/requirements.txt -y
     xparl stop
 
     xparl start --port 8010 --cpu_num 5
     python -m pip install -r ./examples/A2C/requirements.txt
     python ./examples/A2C/train.py --max_sample_steps 50000
+    python -m pip uninstall -r ./examples/A2C/requirements.txt -y
     xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt
     python examples/MADDPG/train.py --max_episodes 21 --test_every_episodes 10
+    python -m pip uninstall -r ./examples/MADDPG/requirements.txt -y
 }
 
 function print_usage() {
@@ -275,12 +288,16 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
-            pip install tqdm # for example test
-            run_example_test $env
-
             run_test_with_fluid
             ############
             # run_docs_test
+
+            # run example test in env test_example(python 3.8)
+            declare -a test_example_env='test_example'
+            source activate $test_example_env
+            pip install .
+            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
+            run_example_test
 
             ;;
         *)

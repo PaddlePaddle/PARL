@@ -23,7 +23,7 @@ python download_d4rl_datasets.py
 ## How to use
 ### Dependencies:
 + [D4RL](//github.com/Farama-Foundation/D4RL)
-+ [parl>=2.1](https://github.com/PaddlePaddle/PARL)
++ [parl>=2.1.1](https://github.com/PaddlePaddle/PARL)
 + pytorch
 + gym==0.18.3
 + mujoco-py==2.0.2.13

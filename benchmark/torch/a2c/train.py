@@ -19,7 +19,7 @@ import time
 import numpy as np
 
 from collections import defaultdict
-from parl.env import wrap_deepmind
+from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils.window_stat import WindowStat
 from parl.utils.time_stat import TimeStat
 from parl.utils import logger, summary

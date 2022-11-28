@@ -22,7 +22,7 @@ import numpy as np
 from tqdm import tqdm
 from parl.utils import summary, logger
 from parl.algorithms import DQN, DDQN
-from parl.env import wrap_deepmind
+from parl.env.atari_wrappers import wrap_deepmind
 from agent import AtariAgent
 from model import AtariModel
 from replay_memory import ReplayMemory, Experience

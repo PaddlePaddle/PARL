@@ -22,7 +22,7 @@ import parl
 import paddle
 from atari_model import AtariModel
 from atari_agent import AtariAgent
-from parl.env import wrap_deepmind
+from parl.env.atari_wrappers import wrap_deepmind
 from parl.utils import logger, summary
 from parl.utils.scheduler import PiecewiseScheduler
 from parl.utils.time_stat import TimeStat

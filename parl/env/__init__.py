@@ -13,7 +13,5 @@
 # limitations under the License.
 
 from parl.env.vector_env import *
-from parl.env.atari_wrappers import *
 from parl.env.continuous_wrappers import *
-from parl.env.mujoco_wrappers import *
 from parl.env.compat_wrappers import *

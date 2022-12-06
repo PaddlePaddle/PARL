@@ -55,7 +55,7 @@ simple_world_comm<br>
 
 ## How to use
 ### Dependencies:
-+ python3.5+
++ python3.7+
 + torch
 + [parl>=2.1.1](https://github.com/PaddlePaddle/PARL)
 + PettingZoo==1.17.0

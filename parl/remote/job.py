@@ -27,6 +27,7 @@ import psutil
 import re
 import sys
 import tempfile
+import shutil
 import threading
 import time
 import traceback
@@ -365,6 +366,7 @@ class Job(object):
                 .format(e))
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))
+        shutil.rmtree(envdir)
 
     def single_task(self, obj, reply_socket, job_address):
         """An infinite loop waiting for commands from the remote object.

@@ -33,8 +33,8 @@ class TestUtils(unittest.TestCase):
         if not hasattr(summary, 'add_histogram'):
             return
         for i in range(10):
-            x = np.random.random(1000) * 1.0
-            summary.add_histogram('distribution_centers', x + i, i)
+            x = np.random.random(1000)
+            summary.add_histogram('distribution_centers', x+i, i)
 
 
 if __name__ == '__main__':

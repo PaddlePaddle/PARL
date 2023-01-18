@@ -65,7 +65,7 @@ def unflatten(flat_array, array_shapes):
     i = 0
     arrays = []
     for shape in array_shapes:
-        size = np.prod(shape, dtype=np.int)
+        size = np.prod(shape, dtype=np.int32)
         array = flat_array[i:(i + size)].reshape(shape)
         arrays.append(array)
         i += size

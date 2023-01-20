@@ -22,7 +22,7 @@ import compatible_trick
 
 import argparse
 import cloudpickle
-import pickle
+import pickle5
 import psutil
 import re
 import sys
@@ -240,7 +240,7 @@ class Job(object):
         message = reply_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.SEND_FILE_TAG:
-            pyfiles = pickle.loads(message[1])
+            pyfiles = pickle5.loads(message[1])
             envdir = tempfile.mkdtemp()
 
             for empty_subfolder in pyfiles['empty_subfolders']:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import argparse
-import pickle
+import pickle5
 import random
 import time
 import zmq
@@ -57,7 +57,7 @@ class ClusterMonitor(object):
                 self.socket.send_multipart([b'[MONITOR]'])
                 msg = self.socket.recv_multipart()
 
-                status = pickle.loads(msg[1])
+                status = pickle5.loads(msg[1])
                 data = {'workers': [], 'clients': []}
                 total_vacant_cpus = 0
                 total_used_cpus = 0

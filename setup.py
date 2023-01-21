@@ -80,6 +80,7 @@ setup(
         "tensorboard",
         "flask>=1.0.4",
         "click",
+        "pickle5",
         "psutil>=5.6.2",
         "flask_cors",
         "requests",

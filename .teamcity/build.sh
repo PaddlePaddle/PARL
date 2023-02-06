@@ -270,8 +270,8 @@ function main() {
                     run_test_with_cpu $env
                     # uninstall paddlepaddle when testing remote module
                     pip uninstall -y paddlepaddle
-                    # run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                    # run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
                 else
                     echo ========================================
                     echo "in torch environment"

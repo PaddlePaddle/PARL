@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 set -ex
+echo "WWWWWWWWWWWWWWWWWWWWWWW start"
 
 function init() {
     RED='\033[0;31m'

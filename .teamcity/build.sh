@@ -252,3 +252,5 @@ function main() {
     esac
     echo "finished: ${CMD}"
 }
+
+main $@

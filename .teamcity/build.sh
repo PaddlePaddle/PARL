@@ -196,7 +196,7 @@ function main() {
             ;;
         test)
             # test code compability in environments with various python versions
-            declare -a envs=("py36" "py37" "py38" "py39")
+            declare -a envs=("py39" "py36" "py37" "py38")
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env

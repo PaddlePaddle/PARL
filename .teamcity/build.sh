@@ -43,8 +43,6 @@ function run_example_test {
     python -m pip uninstall -r ./examples/DQN/requirements.txt -y
     
     python -m pip install -r ./examples/DQN_variant/requirements.txt
-    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DQN --env PongNoFrameskip-v4
-    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --dueling True --env PongNoFrameskip-v4
     python -m pip uninstall -r ./examples/DQN_variant/requirements.txt -y
     

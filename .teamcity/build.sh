@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 set -ex
-echo "WWWWWWWWWWWWWWWWWWWWWWW start"
 
 function init() {
     RED='\033[0;31m'
@@ -293,13 +292,14 @@ function main() {
             ############
             # run_docs_test
 
+            ;;
+        example)
             # run example test in env test_example(python 3.8)
             declare -a test_example_env='test_example'
             source activate $test_example_env
             pip install .
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_example_test
-
             ;;
         *)
             print_usage

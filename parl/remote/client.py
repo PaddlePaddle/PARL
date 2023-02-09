@@ -252,7 +252,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 'file_path': self.executable_path,
                 'actor_num': self.actor_num,
                 'time': str(elapsed_time),
-                'log_monitor_url': self.log_monitor_url,
+                'log_monitor_url': self.log_monitor_url
             }
 
             self.lock.acquire()
@@ -340,7 +340,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
             time.sleep(5)
 
-    def submit_job(self, max_memory, proxy_wrapper_nowait_object):
+    def submit_job(self, max_memory, n_gpus, proxy_wrapper_nowait_object):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
@@ -351,48 +351,91 @@ found in your current environment. To use "pyarrow" for serialization, please in
             max_memory (float): Maximum memory (MB) can be used by each remote
                                 instance, the unit is in MB and default value is
                                 none(unlimited).
+            n_gpus (int): Number of GPUs can be used by each remote instance.
             proxy_wrapper_nowait_object (object): instance of actor class which is decorated by @remote_class(wait=False),
                                 use the reference count of the object to detect whether 
                                 the object has been deleted or out of scope.
 
         Returns:
-            job_address(str): IP address of the job. None if there is no available CPU in the cluster.
+            An ``InitializedJob`` that has information about available job address.
         """
         if self.master_is_alive:
 
             while True:
-                # A lock to prevent multiple actors from submitting job at the same time.
-                self.lock.acquire()
-                self.submit_job_socket.send_multipart([
-                    remote_constants.CLIENT_SUBMIT_TAG,
-                    to_byte(self.reply_master_heartbeat_address),
-                    to_byte(self.client_id),
-                ])
-                message = self.submit_job_socket.recv_multipart()
-                self.lock.release()
+                if not max_memory and n_gpus > 0:
+                    self.lock.acquire()
+                    self.submit_job_socket.send_multipart([
+                        remote_constants.CLIENT_SUBMIT_TAG,
+                        remote_constants.GPU_JOB,
+                        to_byte(self.reply_master_heartbeat_address),
+                        to_byte(self.client_id),
+                        to_byte(str(n_gpus))
+                    ])
+                    message = self.submit_job_socket.recv_multipart()
+                    self.lock.release()
 
-                tag = message[0]
+                    tag = message[0]
+                    if tag == remote_constants.NORMAL_TAG:
+                        job = cloudpickle.loads(message[1])
+                        job_heartbeat_address = job.client_heartbeat_address
+                        job_ping_address = job.ping_heartbeat_address
 
-                if tag == remote_constants.NORMAL_TAG:
-                    job_address = to_str(message[1])
-                    job_heartbeat_address = to_str(message[2])
-                    job_ping_address = to_str(message[3])
+                        check_result = self._check_and_monitor_job(
+                            job_heartbeat_address, job_ping_address, max_memory,
+                            proxy_wrapper_nowait_object)
+                        if check_result:
+                            self.lock.acquire()
+                            self.actor_num += 1
+                            self.lock.release()
+                            return job
+                    # no vacant GPU resources, cannot submit a new job
+                    elif tag == remote_constants.GPU_TAG:
+                        # wait 5 second to avoid requesting in a high frequency.
+                        time.sleep(5)
+                        return None
+                    elif tag == remote_constants.REJECT_TAG:
+                        logger.error("[Client] connects to a CPUs Master.")
+                        raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+                elif n_gpus == 0:
+                    # A lock to prevent multiple actors from submitting job at the same time.
+                    self.lock.acquire()
+                    self.submit_job_socket.send_multipart([
+                        remote_constants.CLIENT_SUBMIT_TAG,
+                        remote_constants.CPU_JOB,
+                        to_byte(self.reply_master_heartbeat_address),
+                        to_byte(self.client_id),
+                    ])
+                    message = self.submit_job_socket.recv_multipart()
+                    self.lock.release()
 
-                    check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, job_ping_address, max_memory,
-                        proxy_wrapper_nowait_object)
-                    if check_result:
-                        self.lock.acquire()
-                        self.actor_num += 1
-                        self.lock.release()
-                        return job_address
+                    tag = message[0]
 
-                # no vacant CPU resources, cannot submit a new job
-                elif tag == remote_constants.CPU_TAG:
-                    job_address = None
-                    # wait 1 second to avoid requesting in a high frequency.
-                    time.sleep(1)
-                    return job_address
+                    if tag == remote_constants.NORMAL_TAG:
+                        job = cloudpickle.loads(message[1])
+                        job_heartbeat_address = job.client_heartbeat_address
+                        job_ping_address = job.ping_heartbeat_address
+
+                        check_result = self._check_and_monitor_job(
+                            job_heartbeat_address, job_ping_address, max_memory,
+                            proxy_wrapper_nowait_object)
+                        if check_result:
+                            self.lock.acquire()
+                            self.actor_num += 1
+                            self.lock.release()
+                            return job
+
+                    # no vacant CPU resources, cannot submit a new job
+                    elif tag == remote_constants.CPU_TAG:
+                        # wait 1 second to avoid requesting in a high frequency.
+                        time.sleep(1)
+                        return None
+                    elif tag == remote_constants.REJECT_TAG:
+                        logger.error("[Client] connects to a GPUs Master.")
+                        raise NotImplementedError
+                    else:
+                        raise NotImplementedError
                 else:
                     raise NotImplementedError
         else:

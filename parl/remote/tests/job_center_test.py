@@ -24,6 +24,7 @@ class InitializedWorker(object):
                  master_heartbeat_address='localhost:8010',
                  initialized_jobs=[],
                  cpu_num=4,
+                 gpu_num=0,
                  hostname=None):
         self.worker_address = worker_address
         self.master_heartbeat_address = master_heartbeat_address

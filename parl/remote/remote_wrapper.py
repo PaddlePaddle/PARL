@@ -64,18 +64,24 @@ class RemoteWrapper(object):
 
         # max_memory argument in @remote_class decorator
         max_memory = kwargs.get('_xparl_remote_class_max_memory')
+        n_gpus = kwargs.get('_xparl_remote_class_n_gpus', 0)
 
         if self.GLOBAL_CLIENT.master_is_alive:
-            job_address = self.request_cpu_resource(
-                self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
+            if n_gpus > 0:
+                job = self.request_gpu_resource(
+                    self.GLOBAL_CLIENT, n_gpus, actor_ref_monitor)
+            else:
+                job = self.request_cpu_resource(
+                    self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
         else:
             raise Exception("Can not submit job to the master. "
                             "Please check if master is still alive.")
 
-        if job_address is None:
+        if job is None:
             raise ResourceError("Cannot submit the job to the master. "
                                 "Please add more CPU resources to the "
                                 "master or try again later.")
+        job_address = job.job_address
 
         self.internal_lock = threading.Lock()
 
@@ -87,15 +93,20 @@ class RemoteWrapper(object):
         self.job_shutdown = False
 
         self.send_file(self.job_socket)
-
+        
+        xparl_reserved_kwargs = {}
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
-                del kwargs[key]
+                xparl_reserved_kwargs[key] = kwargs.pop(key)
+        if job.gpus:
+            xparl_reserved_kwargs[
+                    XPARL_RESERVED_PREFIX + "_" + 'CUDA_VISIBLE_DEVICES'] = ','.join(job.gpus)
 
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
             dump_remote_class(cls),
             cloudpickle.dumps([args, kwargs]),
+            cloudpickle.dumps(xparl_reserved_kwargs),
         ])
         message = self.job_socket.recv_multipart()
         tag = message[0]
@@ -145,12 +156,27 @@ class RemoteWrapper(object):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job_address = global_client.submit_job(max_memory,
+            job = global_client.submit_job(max_memory, 0,
                                                    actor_ref_monitor)
-            if job_address is not None:
-                return job_address
+            if job is not None:
+                return job
             if cnt % 30 == 0:
                 logger.warning("No vacant cpu resources at the moment, "
+                               "will try {} times later.".format(cnt))
+            cnt -= 1
+        return None
+
+    def request_gpu_resource(self, global_client, n_gpus,
+                             actor_ref_monitor):
+        """Try to request gpu resource for 5 second/time for 60 times."""
+        cnt = 60
+        while cnt > 0:
+            job = global_client.submit_job(None, n_gpus,
+                                                   actor_ref_monitor)
+            if job is not None:
+                return job
+            if cnt % 5 == 0:
+                logger.warning("No vacant gpu resources at the moment, "
                                "will try {} times later.".format(cnt))
             cnt -= 1
         return None

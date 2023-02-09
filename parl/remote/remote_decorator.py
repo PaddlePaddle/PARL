@@ -79,6 +79,7 @@ def remote_class(*args, **kwargs):
 
         RemoteWrapper._original = cls
         RemoteWrapper._max_memory = max_memory
+        RemoteWrapper._n_gpus = n_gpus
 
         if wait:
             proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
@@ -89,13 +90,14 @@ def remote_class(*args, **kwargs):
         proxy_wrapper._original = cls
         return proxy_wrapper
 
-    args_names = ['max_memory', 'wait']
+    args_names = ['max_memory', 'wait', 'n_gpus']
     for key in kwargs:
         assert key in args_names, "Argument `{}` is not supported in the `@parl.remote_class`, supported arguments: {}".format(
             key, args_names)
 
     max_memory = kwargs.get('max_memory')
     wait = kwargs.get('wait', True)
+    n_gpus = kwargs.get('n_gpus', 0)
     """
         Users may pass some arguments to the decorator (e.g., parl.remote_class(10)).
         The following code tries to handle this issue.

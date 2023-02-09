@@ -27,6 +27,8 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/workers')
 def worker():
+    if CLUSTER_MONITOR.xpu == 'gpu':
+        return render_template('gpu-workers.html')
     return render_template('workers.html')
 
 
@@ -34,17 +36,17 @@ def worker():
 def clients():
     return render_template('clients.html')
 
-
 class ClusterMonitor(object):
     """A monitor which requests the cluster status every 10 seconds.
     """
 
-    def __init__(self, master_address):
+    def __init__(self, master_address, xpu):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
         self.socket.setsockopt(zmq.RCVTIMEO, 30000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
+        self.xpu = xpu
 
         thread = threading.Thread(target=self.run)
         thread.setDaemon(True)
@@ -61,6 +63,8 @@ class ClusterMonitor(object):
                 data = {'workers': [], 'clients': []}
                 total_vacant_cpus = 0
                 total_used_cpus = 0
+                total_vacant_gpus = 0
+                total_used_gpus = 0
 
                 master_idx = None
                 for idx, worker in enumerate(status['workers'].values()):
@@ -69,17 +73,27 @@ class ClusterMonitor(object):
                     if worker['hostname'] == 'Master':
                         master_idx = idx
                     data['workers'].append(worker)
-                    total_used_cpus += worker[
-                        'used_cpus'] if 'used_cpus' in worker else 0
-                    total_vacant_cpus += worker[
-                        'vacant_cpus'] if 'vacant_cpus' in worker else 0
+                    if self.xpu == 'cpu':
+                        total_used_cpus += worker[
+                            'used_cpus'] if 'used_cpus' in worker else 0
+                        total_vacant_cpus += worker[
+                            'vacant_cpus'] if 'vacant_cpus' in worker else 0
+                    elif self.xpu == 'gpu':
+                        total_used_gpus += worker[
+                            'used_gpus'] if 'used_gpus' in worker else 0
+                        total_vacant_gpus += worker[
+                            'vacant_gpus'] if 'vacant_gpus' in worker else 0
 
                 if master_idx != 0 and master_idx is not None:
                     master_worker = data['workers'].pop(master_idx)
                     data['workers'] = [master_worker] + data['workers']
 
-                data['total_vacant_cpus'] = total_vacant_cpus
-                data['total_cpus'] = total_used_cpus + total_vacant_cpus
+                if self.xpu == 'cpu':
+                    data['total_vacant_cpus'] = total_vacant_cpus
+                    data['total_cpus'] = total_used_cpus + total_vacant_cpus
+                elif self.xpu == 'gpu':
+                    data['total_vacant_gpus'] = total_vacant_gpus
+                    data['total_gpus'] = total_used_gpus + total_vacant_gpus
                 data['clients'] = list(status['clients'].values())
                 data['client_jobs'] = status['client_jobs']
                 self.data = data
@@ -139,9 +153,10 @@ if __name__ == "__main__":
     log.disabled = True
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--xpu', default='cpu', type=str)
     parser.add_argument('--monitor_port', default=1234, type=int)
     parser.add_argument('--address', default='localhost:8010', type=str)
     args = parser.parse_args()
 
-    CLUSTER_MONITOR = ClusterMonitor(args.address)
+    CLUSTER_MONITOR = ClusterMonitor(args.address, args.xpu)
     app.run(host="0.0.0.0", port=args.monitor_port)

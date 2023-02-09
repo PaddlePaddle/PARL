@@ -65,7 +65,7 @@ class ClusterMonitor(object):
         self.lock.release()
 
     def update_worker_status(self, update_status, worker_address, vacant_cpus,
-                             total_cpus):
+                             total_cpus, vacant_gpus, total_gpus):
         """Update a worker status.
 
         Args:
@@ -74,16 +74,23 @@ class ClusterMonitor(object):
             worker_address (str): worker ip address.
             vacant_cpus (int): vacant cpu number.
             total_cpus (int): total cpu number.
+            vacant_gpus (int): vacant gpu number.
+            total_gpus (int): total gpu number.
         """
         self.lock.acquire()
         worker_status = self.status['workers'][worker_address]
         worker_status['vacant_memory'] = update_status['vacant_memory']
         worker_status['used_memory'] = update_status['used_memory']
+        worker_status['vacant_gpu_memory'] = update_status['vacant_gpu_memory']
+        worker_status['used_gpu_memory'] = update_status['used_gpu_memory']
         worker_status['load_time'].append(update_status['load_time'])
         worker_status['load_value'].append(update_status['load_value'])
 
         worker_status['vacant_cpus'] = vacant_cpus
         worker_status['used_cpus'] = total_cpus - vacant_cpus
+
+        worker_status['vacant_gpus'] = vacant_gpus
+        worker_status['used_gpus'] = total_gpus - vacant_gpus
         self.lock.release()
 
     def drop_worker_status(self, worker_address):
@@ -114,12 +121,20 @@ class ClusterMonitor(object):
         clients_num = len(self.status['clients'])
         used_cpus = 0
         vacant_cpus = 0
+        used_gpus = 0
+        vacant_gpus = 0
         for worker in self.status['workers'].values():
-            used_cpus += worker['used_cpus']
-            vacant_cpus += worker['vacant_cpus']
+            used_cpus += worker.get('used_cpus', 0)
+            vacant_cpus += worker.get('vacant_cpus', 0)
+            used_gpus += worker.get('used_gpus', 0)
+            vacant_gpus += worker.get('vacant_gpus', 0)
         self.lock.release()
-        status_info = "has {} used cpus, {} vacant cpus.".format(
-            used_cpus, vacant_cpus)
+        if used_cpus + vacant_cpus != 0:
+            status_info = "has {} used cpus, {} vacant cpus.".format(
+                used_cpus, vacant_cpus, used_gpus, vacant_gpus)
+        elif used_gpus + vacant_gpus != 0:
+            status_info = "has {} used_gpus, {} vacant_gpus.".format(
+                used_cpus, vacant_cpus, used_gpus, vacant_gpus)
         return status_info
 
     def get_status(self):

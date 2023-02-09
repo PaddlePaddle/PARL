@@ -24,21 +24,33 @@ class JobCenter(object):
         worker_hostname (dict): A dict to record worker hostname.
         worker_vacant_jobs (dict): Record how many vacant jobs does each
                                    worker has.
+        worker_vacant_gpus (dict): Record how many vacant gpus does each
+                                   worker has.
         master_ip (str): IP address of the master node.
     """
 
-    def __init__(self, master_ip):
+    def __init__(self, master_ip, xpu='cpu'):
         self.job_pool = dict()
         self.worker_dict = {}
         self.worker_hostname = defaultdict(int)
         self.worker_vacant_jobs = {}
+        self.worker_used_gpus = {}
+        self.worker_vacant_gpus = {}
         self.lock = threading.Lock()
         self.master_ip = master_ip
+        self.xpu = xpu
 
     @property
     def cpu_num(self):
         """"Return vacant cpu number."""
+        if self.xpu == 'gpu':
+            return 0
         return len(self.job_pool)
+
+    @property
+    def gpu_num(self):
+        """"Return vacant gpu number."""
+        return sum([len(gpus) for gpus in self.worker_vacant_gpus.values()])
 
     @property
     def worker_num(self):
@@ -58,6 +70,8 @@ class JobCenter(object):
 
         self.worker_vacant_jobs[worker.worker_address] = len(
             worker.initialized_jobs)
+
+        self.worker_vacant_gpus[worker.worker_address] = [str(i) for i in range(worker.gpu_num)]
 
         if self.master_ip and worker.worker_address.split(
                 ':')[0] == self.master_ip:
@@ -83,12 +97,17 @@ class JobCenter(object):
                 self.job_pool.pop(job.job_address)
         self.worker_dict.pop(worker_address)
         self.worker_vacant_jobs.pop(worker_address)
+        self.worker_vacant_gpus.pop(worker_address)
+        self.worker_used_gpus.pop(worker_address, None)
         self.lock.release()
 
-    def request_job(self):
+    def request_job(self, n_gpus=0):
         """Return a job_address when the client submits a job.
 
-        If there is no vacant CPU in the cluster, this will return None.
+        If there is no vacant CPU and GPU in the cluster, this will return None.
+
+        Args:
+            n_gpus (int): request a Job with n_gpus GPUs
 
         Return:
             An ``InitializedJob`` that has information about available job address.
@@ -96,9 +115,26 @@ class JobCenter(object):
         self.lock.acquire()
         job = None
         if len(self.job_pool):
-            job_address, job = self.job_pool.popitem()
-            self.worker_vacant_jobs[job.worker_address] -= 1
-            assert self.worker_vacant_jobs[job.worker_address] >= 0
+            if n_gpus > 0:
+                for worker_address, vacant_gpus in self.worker_vacant_gpus.items():
+                    if len(vacant_gpus) < n_gpus:
+                        continue
+                    for job_address in self.job_pool.keys():
+                        if self.job_pool[job_address].worker_address == worker_address:
+                            job = self.job_pool.pop(job_address)
+                            self.worker_vacant_jobs[job.worker_address] -= 1
+                            assert self.worker_vacant_jobs[job.worker_address] >= 0
+                            break
+                    if job:
+                        job.gpus = vacant_gpus[0:n_gpus]
+                        self.worker_used_gpus.setdefault(worker_address, [])
+                        self.worker_used_gpus[worker_address].extend(vacant_gpus[0:n_gpus])
+                        self.worker_vacant_gpus[worker_address] = vacant_gpus[n_gpus:]
+                        break
+            else:
+                job_address, job = self.job_pool.popitem()
+                self.worker_vacant_jobs[job.worker_address] -= 1
+                assert self.worker_vacant_jobs[job.worker_address] >= 0
         self.lock.release()
         return job
 
@@ -135,19 +171,37 @@ class JobCenter(object):
             if job.job_address == killed_job_address:
                 to_del_idx = i
                 break
-        del self.worker_dict[worker_address].initialized_jobs[to_del_idx]
-
+        killed_job = self.worker_dict[worker_address].initialized_jobs.pop(to_del_idx)
+        if killed_job.gpus:
+            while killed_job.gpus:
+                gpu_idx = killed_job.gpus.pop()
+                self.worker_used_gpus[worker_address].remove(gpu_idx)
+                self.worker_vacant_gpus[worker_address].append(gpu_idx)
         self.worker_dict[worker_address].initialized_jobs.append(new_job)
 
         self.lock.release()
 
     def get_vacant_cpu(self, worker_address):
         """Return vacant cpu number of a worker."""
+        if self.xpu == 'gpu':
+            return 0
         return self.worker_vacant_jobs[worker_address]
+
+    def get_vacant_gpu(self, worker_address):
+        """Return vacant gpu number of a worker."""
+        return len(self.worker_vacant_gpus.get(worker_address, []))
 
     def get_total_cpu(self, worker_address):
         """Return total cpu number of a worker."""
+        if self.xpu == 'gpu':
+            return 0
         return len(self.worker_dict[worker_address].initialized_jobs)
+
+    def get_total_gpu(self, worker_address):
+        """Return total gpu number of a worker."""
+        total_gpu = len(self.worker_vacant_gpus.get(worker_address, []))
+        total_gpu += len(self.worker_used_gpus.get(worker_address, []))
+        return total_gpu
 
     def get_hostname(self, worker_address):
         """Return the hostname of a worker."""

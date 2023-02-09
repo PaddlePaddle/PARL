@@ -26,6 +26,7 @@ import threading
 import warnings
 import zmq
 from datetime import datetime
+import pynvml
 import parl
 from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
 from parl.remote import remote_constants
@@ -67,9 +68,10 @@ class Worker(object):
     Args:
         master_address (str): IP address of the master node.
         cpu_num (int): Number of cpu to be used on the worker.
+        gpu_num (int): Number of gpu to be used on the worker.
     """
 
-    def __init__(self, master_address, cpu_num=None, log_server_port=None):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu_num=0):
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -77,7 +79,9 @@ class Worker(object):
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
         self._set_cpu_num(cpu_num)
-        self.job_buffer = queue.Queue(maxsize=self.cpu_num)
+        self._set_gpu_num(gpu_num)
+        self.xpu_num = max(self.cpu_num, self.gpu_num)
+        self.job_buffer = queue.Queue(maxsize=self.xpu_num)
         self._create_sockets()
         self.check_env_consistency()
         # create log server
@@ -110,6 +114,18 @@ class Worker(object):
             self.cpu_num = cpu_num
         else:
             self.cpu_num = multiprocessing.cpu_count()
+
+    def _set_gpu_num(self, gpu_num=None):
+        """set useable gpu number for worker"""
+        if gpu_num is not None:
+            assert isinstance(
+                gpu_num, int
+            ), "gpu_num should be INT type, please check the input type."
+            self.gpu_num = gpu_num
+        else:
+            pynvml.nvmlInit()
+            self.gpu_num = pynvml.nvmlDeviceGetCount()
+            pynvml.nvmlShutdown()
 
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
@@ -203,7 +219,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             self.master_is_alive = False
             return
 
-        initialized_jobs = self._init_jobs(job_num=self.cpu_num)
+        initialized_jobs = self._init_jobs(job_num=self.xpu_num)
         self.request_master_socket.setsockopt(
             zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
@@ -228,14 +244,18 @@ found in your current environment. To use "pyarrow" for serialization, please in
         logger.set_dir(
             os.path.expanduser('~/.parl_data/worker/{}'.format(
                 self.master_heartbeat_address.replace(':', '_'))))
-        logger.info("[Worker] Connect to the master node successfully. "
-                    "({} CPUs)".format(self.cpu_num))
+        if self.cpu_num:
+            logger.info("[Worker] Connect to the master node successfully. "
+                        "({} CPUs)".format(self.cpu_num))
+        elif self.gpu_num:
+            logger.info("[Worker] Connect to the master node successfully. "
+                        "({} GPUs)".format(self.gpu_num))
 
         for job in initialized_jobs:
             job.worker_address = self.master_heartbeat_address
 
         initialized_worker = InitializedWorker(self.master_heartbeat_address,
-                                               initialized_jobs, self.cpu_num,
+                                               initialized_jobs, self.cpu_num, self.gpu_num,
                                                socket.gethostname())
         self.request_master_socket.send_multipart([
             remote_constants.WORKER_INITIALIZED_TAG,
@@ -244,14 +264,14 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
         _ = self.request_master_socket.recv_multipart()
         self.worker_status = WorkerStatus(self.master_heartbeat_address,
-                                          initialized_jobs, self.cpu_num)
+                                          initialized_jobs, self.cpu_num, self.gpu_num)
 
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""
         initialized_jobs = []
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
-                job_num = self.cpu_num - self.job_buffer.qsize()
+                job_num = self.xpu_num - self.job_buffer.qsize()
                 if job_num > 0:
                     initialized_jobs = self._init_jobs(job_num=job_num)
                     for job in initialized_jobs:
@@ -368,6 +388,15 @@ found in your current environment. To use "pyarrow" for serialization, please in
         total_memory = round(virtual_memory[0] / (1024**3), 2)
         used_memory = round(virtual_memory[3] / (1024**3), 2)
         vacant_memory = round(total_memory - used_memory, 2)
+        pynvml.nvmlInit()
+        used_gpu_memory = 0
+        vacant_gpu_memory = 0
+        for i in range(self.gpu_num):
+            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+            memery_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            used_gpu_memory += int(memery_info.used / (1024 * 1024))
+            vacant_gpu_memory += int(memery_info.free / (1024 * 1024))
+        pynvml.nvmlShutdown()
         if _IS_WINDOWS:
             load_average = round(psutil.getloadavg()[0], 2)
         else:
@@ -376,6 +405,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
         update_status = {
             "vacant_memory": vacant_memory,
             "used_memory": used_memory,
+            "vacant_gpu_memory": vacant_gpu_memory,
+            "used_gpu_memory": used_gpu_memory,
             "load_time": now,
             "load_value": load_average
         }

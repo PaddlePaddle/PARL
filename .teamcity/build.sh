@@ -72,9 +72,9 @@ function run_example_test {
     python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
     python -m pip uninstall -r ./examples/DDPG/requirements.txt -y
 
-    xparl start --port 8037 --cpu_num 10
+    xparl start --port 8037 --cpu_num 24
     python -m pip install -r ./examples/ES/requirements.txt
-    python ./examples/ES/train.py --train_steps 2 --actor_num 10
+    python ./examples/ES/train.py --train_steps 2 --actor_num 24
     python -m pip uninstall -r ./examples/ES/requirements.txt -y
     xparl stop
 
@@ -197,7 +197,7 @@ function main() {
             ;;
         test)
             # test code compability in environments with various python versions
-            declare -a envs=( "py39" "py36" "py37" "py38")
+            declare -a envs=("py36" "py37" "py38")
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env

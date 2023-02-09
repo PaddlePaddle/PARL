@@ -15,6 +15,7 @@
 import argparse
 import os
 import threading
+import pynvml
 from parl.remote import Master, Worker
 
 
@@ -29,14 +30,23 @@ def main(args):
     if args.name == 'master':
         port = args.port
         monitor_port = args.monitor_port
-        master = Master(port, monitor_port)
+        master = Master(port, monitor_port, args.xpu)
         master.run()
 
     elif args.name == 'worker':
         address = args.address
         log_server_port = args.log_server_port
         cpu_num = int(args.cpu_num) if args.cpu_num else None
-        worker = Worker(address, cpu_num, log_server_port)
+        gpu_num = int(args.gpu_num) if args.gpu_num else 0
+        if args.xpu == 'gpu':
+            if gpu_num == 0:
+                pynvml.nvmlInit()
+                gpu_num = pynvml.nvmlDeviceGetCount()
+                pynvml.nvmlShutdown()
+            if gpu_num > 0:
+                cpu_num = 0
+        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port,
+                gpu_num=gpu_num)
         worker.run()
 
     else:
@@ -47,9 +57,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--name', default='master', type=str, help='master/worker')
+    parser.add_argument('--xpu', default='cpu', type=str, help='cpu/gpu')
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)
+    parser.add_argument('--gpu_num', default='', type=str)
     parser.add_argument('--monitor_port', default='', type=str)
     parser.add_argument('--log_server_port', default='', type=str)
     args = parser.parse_args()

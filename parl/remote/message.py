@@ -43,19 +43,22 @@ class InitializedJob(object):
         self.is_alive = True
         self.job_id = job_id
         self.log_server_address = log_server_address
+        self.gpus = [] # Record which gpus does job has, should be set in JobCenter
 
 
 class InitializedWorker(object):
     def __init__(self, master_heartbeat_address, initialized_jobs, cpu_num,
-                 hostname):
+                gpu_num, hostname):
         """
     Args:
       worker_address(str): Worker server address that receives commands from the master.
       master_heartbeat_address(str): Address to which the worker send heartbeat signals to.
       initialized_jobs(list): A list of ``InitializedJob`` containing the information for initialized jobs.
       cpu_num(int): The number of CPUs used in this worker.
+      gpu_num(int): The number of GPUs used in this worker.
     """
         self.worker_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
+        self.gpu_num = gpu_num
         self.hostname = hostname

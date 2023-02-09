@@ -297,7 +297,10 @@ class Job(object):
             try:
                 cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
-
+                xparl_reserved_kwargs = cloudpickle.loads(message[3])
+                for key, value in xparl_reserved_kwargs.items():
+                    if key.endswith('CUDA_VISIBLE_DEVICES'):
+                        os.environ['CUDA_VISIBLE_DEVICES'] = value
                 with redirect_output_to_file(self.logfile_path, os.devnull):
                     obj = cls(*args, **kwargs)
             except Exception as e:

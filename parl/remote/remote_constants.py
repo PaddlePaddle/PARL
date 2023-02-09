@@ -13,6 +13,7 @@
 # limitations under the License.
 
 CPU_TAG = b'[CPU]'
+GPU_TAG = b'[GPU]'
 CONNECT_TAG = b'[CONNECT]'
 HEARTBEAT_TAG = b'[HEARTBEAT]'
 KILLJOB_TAG = b'[KILLJOB]'
@@ -41,6 +42,10 @@ SERIALIZE_EXCEPTION_TAG = b'[SERIALIZE_EXCEPTION]'
 DESERIALIZE_EXCEPTION_TAG = b'[DESERIALIZE_EXCEPTION]'
 
 NORMAL_TAG = b'[NORMAL]'
+REJECT_TAG = b'[REJECT]'
+
+CPU_JOB = b'[CPU_JOB]'
+GPU_JOB = b'[GPU_JOB]'
 
 # interval of heartbeat mechanism in the unit of second
 HEARTBEAT_INTERVAL_S = 10

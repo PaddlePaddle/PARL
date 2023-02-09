@@ -240,6 +240,7 @@ function main() {
             ;;
         example)
             # run example test in env test_example(python 3.8)
+            pip config set global.index-url https://mirror.baidu.com/pypi/simple
             declare -a test_example_env='test_example'
             source activate $test_example_env
             pip install .

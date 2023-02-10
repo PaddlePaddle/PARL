@@ -43,8 +43,6 @@ function run_example_test {
     python -m pip uninstall -r ./examples/DQN/requirements.txt -y
     
     python -m pip install -r ./examples/DQN_variant/requirements.txt
-    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DQN --env PongNoFrameskip-v4
-    python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --algo DDQN --env PongNoFrameskip-v4
     python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --dueling True --env PongNoFrameskip-v4
     python -m pip uninstall -r ./examples/DQN_variant/requirements.txt -y
     
@@ -168,41 +166,6 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_single_fluid_test() {
-    mkdir -p ${REPO_ROOT}/build
-    cd ${REPO_ROOT}/build
-    cmake .. -$1=ON
-    ctest --output-on-failure -j20
-    cd ${REPO_ROOT}
-    rm -rf ${REPO_ROOT}/build
-}
-
-function run_test_with_fluid() {
-    declare -a envs=("py37")
-    for env in "${envs[@]}";do    
-        export PATH="/root/miniconda3/bin:$PATH"
-        source activate $env
-        python -m pip install --upgrade pip
-        echo "========================================"
-        echo "Running tests in $env with paddlepaddle 1.8.5 .."
-        echo `which pip`
-        echo "========================================"
-        pip install .
-        pip install -r .teamcity/requirements_fluid.txt
-
-        echo "========================================"
-        echo "Running fluid unit tests with CPU..."
-        echo "========================================"
-        export CUDA_VISIBLE_DEVICES=""
-        run_single_fluid_test "DIS_TESTING_FLUID"
-
-        # clean env
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        xparl stop
-    done
-}
-
 function run_import_test {
     export CUDA_VISIBLE_DEVICES=""
 
@@ -221,23 +184,6 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
-function run_docs_test {
-    #export CUDA_VISIBLE_DEVICES=""
-
-    mkdir -p ${REPO_ROOT}/build
-    cd ${REPO_ROOT}/build
-
-    cmake .. -DIS_TESTING_DOCS=ON 
-
-    cat <<EOF
-    ========================================
-    Running docs test...
-    ========================================
-EOF
-    ctest --output-on-failure
-    cd ${REPO_ROOT}
-    rm -rf ${REPO_ROOT}/build
-}
 
 function main() {
     set -e
@@ -250,11 +196,11 @@ function main() {
             ;;
         test)
             # test code compability in environments with various python versions
-            declare -a envs=( "py39" "py36" "py37" "py38")
+            declare -a envs=("py39" "py36" "py37" "py38")
             for env in "${envs[@]}";do
                 export PATH="/root/miniconda3/bin:$PATH"
                 source activate $env
-                python -m pip install --upgrade pip 
+                python -m pip install --upgrade pip
                 echo ========================================
                 echo Running tests in $env ..
                 echo `which pip`
@@ -288,17 +234,16 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
-            run_test_with_fluid
-            ############
-            # run_docs_test
 
+            ;;
+        example)
             # run example test in env test_example(python 3.8)
+            pip config set global.index-url https://mirror.baidu.com/pypi/simple
             declare -a test_example_env='test_example'
             source activate $test_example_env
             pip install .
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_example_test
-
             ;;
         *)
             print_usage

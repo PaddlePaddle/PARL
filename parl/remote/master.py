@@ -126,7 +126,8 @@ class Master(object):
             worker_address = initialized_worker.worker_address
             self.job_center.add_worker(initialized_worker)
             hostname = self.job_center.get_hostname(worker_address)
-            self.cluster_monitor.add_worker_status(worker_address, hostname)
+            total_cpus = self.job_center.get_total_cpu(worker_address)
+            self.cluster_monitor.add_worker_status(worker_address, hostname, total_cpus)
             logger.info("A new worker {} is added, ".format(worker_address) +
                         "the cluster has {} CPUs.\n".format(self.cpu_num))
 

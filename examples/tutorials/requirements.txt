@@ -1,5 +1,5 @@
 # requirements for tutorials (paddle fluid version)
-paddlepaddle==1.8.5
+paddlepaddle==2.4.0
 parl==1.4
 gym==0.18.0
 atari-py==0.2.6

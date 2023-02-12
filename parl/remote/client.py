@@ -22,11 +22,12 @@ import zmq
 import parl
 import time
 import glob
+import multiprocessing as mp
 
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
-from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
+from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientProcess
 from parl.remote.utils import get_version
 
 
@@ -68,7 +69,7 @@ class Client(object):
         self.executable_path = self.get_executable_path()
         self.all_job_heartbeat_threads = []
 
-        self.actor_num = 0
+        self.actor_num = mp.Value('i', 0)
 
         self._create_sockets(master_address)
         self.check_env_consistency()
@@ -250,7 +251,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 seconds=int(time.time() - self.start_time))
             client_status = {
                 'file_path': self.executable_path,
-                'actor_num': self.actor_num,
+                'actor_num': self.actor_num.value,
                 'time': str(elapsed_time),
                 'log_monitor_url': self.log_monitor_url,
             }
@@ -294,19 +295,19 @@ found in your current environment. To use "pyarrow" for serialization, please in
         job_ping_socket.close(0)
 
         def heartbeat_exit_callback_func():
-            self.lock.acquire()
-            self.actor_num -= 1
+            with self.actor_num.get_lock():
+                self.actor_num.value -= 1
             logger.error(
                 '[xparl] lost connection with a job, current actor num: {}'.
-                format(self.actor_num))
-            self.lock.release()
+                format(self.actor_num.value))
 
         # a thread for sending heartbeat signals to job
-        job_heartbeat_thread = HeartbeatClientThread(
+        job_heartbeat_thread = HeartbeatClientProcess(
             job_heartbeat_address,
-            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+            heartbeat_exit_callback_func=heartbeat_exit_callback_func,
+            actor_num=self.actor_num)
         self.all_job_heartbeat_threads.append(job_heartbeat_thread)
-        job_heartbeat_thread.setDaemon(True)
+        job_heartbeat_thread.daemon = True
         job_heartbeat_thread.start()
 
         if actor_ref_monitor is not None:
@@ -382,9 +383,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
                         job_heartbeat_address, job_ping_address, max_memory,
                         proxy_wrapper_nowait_object)
                     if check_result:
-                        self.lock.acquire()
-                        self.actor_num += 1
-                        self.lock.release()
+                        with self.actor_num.get_lock():
+                            self.actor_num.value += 1
                         return job_address
 
                 # no vacant CPU resources, cannot submit a new job

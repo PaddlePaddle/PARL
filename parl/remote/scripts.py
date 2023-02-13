@@ -27,9 +27,8 @@ import tempfile
 import warnings
 import zmq
 from multiprocessing import Process
-from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address,
-                        get_port_from_range, is_port_available, kill_process,
-                        to_str)
+from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address, get_port_from_range, is_port_available,
+                        kill_process, to_str)
 from parl.remote.remote_constants import STATUS_TAG
 from parl.remote.utils import XPARL_PYTHON
 
@@ -70,12 +69,10 @@ def parse_port_range(log_server_port_range):
     try:
         re.match(r'\d*[-]\d*', log_server_port_range).span()
     except:
-        raise Exception(
-            "The input log_server_port_range should be `start-end` format.")
+        raise Exception("The input log_server_port_range should be `start-end` format.")
     start, end = map(int, log_server_port_range.split('-'))
     if start > end:
-        raise Exception(
-            "Start port number must be smaller than the end port number.")
+        raise Exception("Start port number must be smaller than the end port number.")
 
     return start, end
 
@@ -106,17 +103,11 @@ def cli():
 
 @click.command("start", short_help="Start a master node.")
 @click.option("--port", help="The port to bind to.", type=str, required=True)
+@click.option("--debug", help="Start parl in the debugging mode to print all running log.", is_flag=True)
 @click.option(
-    "--debug",
-    help="Start parl in the debugging mode to print all running log.",
-    is_flag=True)
-@click.option(
-    "--cpu_num",
-    type=int,
-    help="Set number of cpu manually. If not set, it will use all "
+    "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
-@click.option(
-    "--monitor_port", help="The port to start a cluster monitor.", type=str)
+@click.option("--monitor_port", help="The port to start a cluster monitor.", type=str)
 @click.option(
     "--log_server_port_range",
     help='''
@@ -132,22 +123,22 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         os.environ['DEBUG'] = 'True'
 
     if not is_port_available(port):
-        raise Exception(
-            "The master address localhost:{} is already in use.".format(port))
+        raise Exception("The master address localhost:{} is already in use.".format(port))
 
     if monitor_port and not is_port_available(monitor_port):
-        raise Exception(
-            "The input monitor port localhost:{} is already in use.".format(
-                monitor_port))
+        raise Exception("The input monitor port localhost:{} is already in use.".format(monitor_port))
 
-    cpu_num = int(
-        cpu_num) if cpu_num is not None else multiprocessing.cpu_count()
+    cpu_num = int(cpu_num) if cpu_num is not None else multiprocessing.cpu_count()
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
     monitor_file = __file__.replace('scripts.pyc', 'monitor.py')
     monitor_file = monitor_file.replace('scripts.py', 'monitor.py')
 
-    monitor_port = monitor_port if monitor_port else get_free_tcp_port()
+    if monitor_port is None:
+        monitor_port = str(int(port) + 100)
+        if not is_port_available(monitor_port):
+            monitor_port = get_free_tcp_port()
+
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
     while log_server_port == monitor_port or log_server_port == port:
@@ -163,8 +154,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         monitor_port,
     ]
     worker_command = XPARL_PYTHON + [
-        start_file, "--name", "worker", "--address", "localhost:" + str(port),
-        "--cpu_num",
+        start_file, "--name", "worker", "--address", "localhost:" + str(port), "--cpu_num",
         str(cpu_num), '--log_server_port',
         str(log_server_port)
     ]
@@ -255,12 +245,9 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
 
 
 @click.command("connect", short_help="Start a worker node.")
+@click.option("--address", help="IP address of the master node.", required=True)
 @click.option(
-    "--address", help="IP address of the master node.", required=True)
-@click.option(
-    "--cpu_num",
-    type=int,
-    help="Set number of cpu manually. If not set, it will use all "
+    "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
     "--log_server_port_range",
@@ -279,8 +266,7 @@ def start_worker(address, cpu_num, log_server_port_range):
 
     if not is_master_started(address):
         raise Exception("Worker can not connect to the master node, " +
-                        "please check if the input address {} ".format(
-                            address) + "is correct.")
+                        "please check if the input address {} ".format(address) + "is correct.")
     cpu_num = str(cpu_num) if cpu_num else ''
     start_file = __file__.replace('scripts.pyc', 'start.py')
     start_file = start_file.replace('scripts.py', 'start.py')
@@ -332,8 +318,7 @@ def status():
 
             if len(monitors):
                 monitor_port, _, master_address = monitors[0].split(' ')
-                monitor_address = "{}:{}".format(get_ip_address(),
-                                                 monitor_port)
+                monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
                 socket = ctx.socket(zmq.REQ)
                 socket.setsockopt(zmq.RCVTIMEO, 10000)
                 socket.connect('tcp://{}'.format(master_address))
@@ -341,9 +326,7 @@ def status():
                     socket.send_multipart([STATUS_TAG])
                     monitor_info = to_str(socket.recv_multipart()[1])
                 except zmq.error.Again as e:
-                    click.echo(
-                        'Can not connect to cluster {}, please try later.'.
-                        format(master_address))
+                    click.echo('Can not connect to cluster {}, please try later.'.format(master_address))
                     socket.close(0)
                     continue
                 msg = """

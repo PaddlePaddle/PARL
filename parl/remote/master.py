@@ -86,7 +86,7 @@ class Master(object):
     def _print_workers(self):
         """Display `worker_pool` infomation."""
         logger.info(
-            "Master connects to {} workers and have {} vacant CPUs.\n".format(
+            "Master connects to {} workers and has {} vacant CPUs.\n".format(
                 self.worker_num, self.cpu_num))
 
     @property

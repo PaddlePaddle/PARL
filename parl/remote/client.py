@@ -253,7 +253,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
     def _update_client_status_to_master(self):
         while self.master_is_alive:
-            print("AAAAAAAAA actor_num:{}".format(self.actor_num.value))
             elapsed_time = datetime.timedelta(
                 seconds=int(time.time() - self.start_time))
             client_status = {

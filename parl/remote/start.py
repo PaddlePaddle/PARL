@@ -45,8 +45,7 @@ def main(args):
                 pynvml.nvmlShutdown()
             if gpu_num > 0:
                 cpu_num = 0
-        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port,
-                gpu_num=gpu_num)
+        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port, gpu_num=gpu_num)
         worker.run()
 
     else:
@@ -55,8 +54,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--name', default='master', type=str, help='master/worker')
+    parser.add_argument('--name', default='master', type=str, help='master/worker')
     parser.add_argument('--xpu', default='cpu', type=str, help='cpu/gpu')
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)

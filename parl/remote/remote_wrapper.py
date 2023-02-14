@@ -68,14 +68,11 @@ class RemoteWrapper(object):
 
         if self.GLOBAL_CLIENT.master_is_alive:
             if n_gpus > 0:
-                job = self.request_gpu_resource(
-                    self.GLOBAL_CLIENT, n_gpus, actor_ref_monitor)
+                job = self.request_gpu_resource(self.GLOBAL_CLIENT, n_gpus, actor_ref_monitor)
             else:
-                job = self.request_cpu_resource(
-                    self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
+                job = self.request_cpu_resource(self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
         else:
-            raise Exception("Can not submit job to the master. "
-                            "Please check if master is still alive.")
+            raise Exception("Can not submit job to the master. " "Please check if master is still alive.")
 
         if job is None:
             raise ResourceError("Cannot submit the job to the master. "
@@ -93,14 +90,13 @@ class RemoteWrapper(object):
         self.job_shutdown = False
 
         self.send_file(self.job_socket)
-        
+
         xparl_reserved_kwargs = {}
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
                 xparl_reserved_kwargs[key] = kwargs.pop(key)
         if job.gpus:
-            xparl_reserved_kwargs[
-                    XPARL_RESERVED_PREFIX + "_" + 'CUDA_VISIBLE_DEVICES'] = ','.join(job.gpus)
+            xparl_reserved_kwargs[XPARL_RESERVED_PREFIX + "_" + 'CUDA_VISIBLE_DEVICES'] = ','.join(job.gpus)
 
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
@@ -145,49 +141,38 @@ class RemoteWrapper(object):
 
     def send_file(self, socket):
         try:
-            socket.send_multipart(
-                [remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles])
+            socket.send_multipart([remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles])
             _ = socket.recv_multipart()
         except zmq.error.Again as e:
             logger.error("Send python files failed.")
 
-    def request_cpu_resource(self, global_client, max_memory,
-                             actor_ref_monitor):
+    def request_cpu_resource(self, global_client, max_memory, actor_ref_monitor):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job = global_client.submit_job(max_memory, 0,
-                                                   actor_ref_monitor)
+            job = global_client.submit_job(max_memory, 0, actor_ref_monitor)
             if job is not None:
                 return job
             if cnt % 30 == 0:
-                logger.warning("No vacant cpu resources at the moment, "
-                               "will try {} times later.".format(cnt))
+                logger.warning("No vacant cpu resources at the moment, " "will try {} times later.".format(cnt))
             cnt -= 1
         return None
 
-    def request_gpu_resource(self, global_client, n_gpus,
-                             actor_ref_monitor):
+    def request_gpu_resource(self, global_client, n_gpus, actor_ref_monitor):
         """Try to request gpu resource for 5 second/time for 60 times."""
         cnt = 60
         while cnt > 0:
-            job = global_client.submit_job(None, n_gpus,
-                                                   actor_ref_monitor)
+            job = global_client.submit_job(None, n_gpus, actor_ref_monitor)
             if job is not None:
                 return job
             if cnt % 5 == 0:
-                logger.warning("No vacant gpu resources at the moment, "
-                               "will try {} times later.".format(cnt))
+                logger.warning("No vacant gpu resources at the moment, " "will try {} times later.".format(cnt))
             cnt -= 1
         return None
 
     def set_remote_attr(self, attr, value):
         self.internal_lock.acquire()
-        self.job_socket.send_multipart([
-            remote_constants.SET_ATTRIBUTE_TAG,
-            to_byte(attr),
-            dumps_return(value)
-        ])
+        self.job_socket.send_multipart([remote_constants.SET_ATTRIBUTE_TAG, to_byte(attr), dumps_return(value)])
         message = self.job_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
@@ -205,18 +190,13 @@ class RemoteWrapper(object):
 
         def wrapper(*args, **kwargs):
             if self.job_shutdown:
-                raise RemoteError(attr,
-                                  "This actor losts connection with the job.")
+                raise RemoteError(attr, "This actor losts connection with the job.")
             self.internal_lock.acquire()
             if is_attribute:
-                self.job_socket.send_multipart(
-                    [remote_constants.GET_ATTRIBUTE_TAG,
-                     to_byte(attr)])
+                self.job_socket.send_multipart([remote_constants.GET_ATTRIBUTE_TAG, to_byte(attr)])
             else:
                 data = dumps_argument(*args, **kwargs)
-                self.job_socket.send_multipart(
-                    [remote_constants.CALL_TAG,
-                     to_byte(attr), data])
+                self.job_socket.send_multipart([remote_constants.CALL_TAG, to_byte(attr), data])
 
             message = self.job_socket.recv_multipart()
             tag = message[0]

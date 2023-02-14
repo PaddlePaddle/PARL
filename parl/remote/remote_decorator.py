@@ -68,13 +68,11 @@ def remote_class(*args, **kwargs):
     """
 
     def decorator(cls):
-        assert inspect.isclass(
-            cls), "Only class can be decorated by `parl.remote_class`."
+        assert inspect.isclass(cls), "Only class can be decorated by `parl.remote_class`."
 
         # we are not going to create a remote actor in job.py
         if 'XPARL' in os.environ and os.environ['XPARL'] == 'True':
-            logger.warning(
-                "Note: this object will be runnning as a local object")
+            logger.warning("Note: this object will be runnning as a local object")
             return cls
 
         RemoteWrapper._original = cls

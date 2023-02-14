@@ -300,34 +300,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 .format(job_ping_address))
             return False
         job_ping_socket.close(0)
-
-        if actor_ref_monitor is not None:
-            # If `wait` argument is False in `@parl.remote_class` (future mode),
-            # the `actor_ref_monitor` is not None. And we need start a thread to
-            # detect whether the actor has been deleted according to the reference
-            # count of the actor.
-            thread = threading.Thread(
-                target=self._check_actor_is_alive,
-                args=(actor_ref_monitor, job_heartbeat_thread))
-            thread.setDaemon(True)
-            thread.start()
-
         return True
-
-    def _check_actor_is_alive(self, actor_ref_monitor, job_heartbeat_thread):
-        """A loop to check whether the actor has been deleted.
-
-        Args:
-            actor_ref_monitor (ActorRefMonitor): used for detecting whether the actor 
-                                                 has been deleted or out of scope;
-        """
-        while self.client_is_alive:
-            if actor_ref_monitor.is_deleted():
-                # terminate the heartbeat of the job and release the cpu resource.
-                job_heartbeat_thread.exit()
-                break
-
-            time.sleep(5)
 
     def submit_job(self, max_memory, proxy_wrapper_nowait_object):
         """Send a job to the Master node.

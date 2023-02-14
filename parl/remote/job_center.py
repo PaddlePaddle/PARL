@@ -13,6 +13,7 @@
 # limitations under the License.
 import threading
 from collections import defaultdict
+from parl.remote import remote_constants
 
 
 class JobCenter(object):
@@ -29,7 +30,7 @@ class JobCenter(object):
         master_ip (str): IP address of the master node.
     """
 
-    def __init__(self, master_ip, xpu='cpu'):
+    def __init__(self, master_ip, xpu=remote_constants.CPU):
         self.job_pool = dict()
         self.worker_dict = {}
         self.worker_hostname = defaultdict(int)
@@ -43,7 +44,7 @@ class JobCenter(object):
     @property
     def cpu_num(self):
         """"Return vacant cpu number."""
-        if self.xpu == 'gpu':
+        if self.xpu == remote_constants.GPU:
             return 0
         return len(self.job_pool)
 
@@ -62,26 +63,30 @@ class JobCenter(object):
 
         Args:
             worker (InitializedWorker): New worker with initialized jobs.
+        Return: True if succeeds.
         """
+        if self.xpu == remote_constants.CPU and worker.gpu_num and worker.gpu_num > 0:
+            return False
+        elif self.xpu == remote_constants.GPU and worker.cpu_num is not None and worker.cpu_num > 0:
+            return False
         self.lock.acquire()
         self.worker_dict[worker.worker_address] = worker
         for job in worker.initialized_jobs:
             self.job_pool[job.job_address] = job
 
-        self.worker_vacant_jobs[worker.worker_address] = len(
-            worker.initialized_jobs)
+        self.worker_vacant_jobs[worker.worker_address] = len(worker.initialized_jobs)
 
         self.worker_vacant_gpus[worker.worker_address] = [str(i) for i in range(worker.gpu_num)]
 
-        if self.master_ip and worker.worker_address.split(
-                ':')[0] == self.master_ip:
+        if self.master_ip and worker.worker_address.split(':')[0] == self.master_ip:
             self.worker_hostname[worker.worker_address] = "Master"
             self.master_ip = None
         else:
             self.worker_hostname[worker.hostname] += 1
-            self.worker_hostname[worker.worker_address] = "{}:{}".format(
-                worker.hostname, self.worker_hostname[worker.hostname])
+            self.worker_hostname[worker.worker_address] = "{}:{}".format(worker.hostname,
+                                                                         self.worker_hostname[worker.hostname])
         self.lock.release()
+        return True
 
     def drop_worker(self, worker_address):
         """Remove jobs from job_pool when a worker dies.
@@ -115,7 +120,9 @@ class JobCenter(object):
         self.lock.acquire()
         job = None
         if len(self.job_pool):
-            if n_gpus > 0:
+            if n_gpus > remote_constants.MAX_N_GPUS:
+                job = None
+            elif n_gpus > 0:
                 for worker_address, vacant_gpus in self.worker_vacant_gpus.items():
                     if len(vacant_gpus) < n_gpus:
                         continue
@@ -166,8 +173,7 @@ class JobCenter(object):
             self.job_pool.pop(killed_job_address)
 
         to_del_idx = None
-        for i, job in enumerate(
-                self.worker_dict[worker_address].initialized_jobs):
+        for i, job in enumerate(self.worker_dict[worker_address].initialized_jobs):
             if job.job_address == killed_job_address:
                 to_del_idx = i
                 break
@@ -178,12 +184,11 @@ class JobCenter(object):
                 self.worker_used_gpus[worker_address].remove(gpu_idx)
                 self.worker_vacant_gpus[worker_address].append(gpu_idx)
         self.worker_dict[worker_address].initialized_jobs.append(new_job)
-
         self.lock.release()
 
     def get_vacant_cpu(self, worker_address):
         """Return vacant cpu number of a worker."""
-        if self.xpu == 'gpu':
+        if self.xpu == remote_constants.GPU:
             return 0
         return self.worker_vacant_jobs[worker_address]
 
@@ -193,7 +198,7 @@ class JobCenter(object):
 
     def get_total_cpu(self, worker_address):
         """Return total cpu number of a worker."""
-        if self.xpu == 'gpu':
+        if self.xpu == remote_constants.GPU:
             return 0
         return len(self.worker_dict[worker_address].initialized_jobs)
 

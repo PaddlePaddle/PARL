@@ -61,15 +61,13 @@ class Master(object):
         port: The ip port that the master node binds to.
     """
 
-    def __init__(self, port, monitor_port=None, xpu='cpu'):
+    def __init__(self, port, monitor_port=None, xpu=remote_constants.CPU):
         self.ctx = zmq.Context()
         self.master_ip = get_ip_address()
         self.all_client_heartbeat_threads = []
         self.all_worker_heartbeat_threads = []
         self.monitor_url = "http://{}:{}".format(self.master_ip, monitor_port)
-        logger.set_dir(
-            os.path.expanduser('~/.parl_data/master/{}_{}'.format(
-                self.master_ip, port)))
+        logger.set_dir(os.path.expanduser('~/.parl_data/master/{}_{}'.format(self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
         self.client_socket.bind("tcp://*:{}".format(port))
         self.client_socket.linger = 0
@@ -86,14 +84,12 @@ class Master(object):
 
     def _print_workers(self):
         """Display `worker_pool` infomation."""
-        if self.xpu == 'cpu':
-            logger.info(
-                "Master connects to {} workers and have {} vacant CPUs.\n".format(
-                    self.worker_num, self.cpu_num))
+        if self.xpu == remote_constants.CPU:
+            logger.info("Master connects to {} workers and have {} vacant CPUs.\n".format(
+                self.worker_num, self.cpu_num))
         else:
-            logger.info(
-                "Master connects to {} workers and have {} vacant GPUs.\n".format(
-                    self.worker_num, self.gpu_num))
+            logger.info("Master connects to {} workers and have {} vacant GPUs.\n".format(
+                self.worker_num, self.gpu_num))
 
     @property
     def cpu_num(self):
@@ -121,48 +117,50 @@ class Master(object):
 
         elif tag == remote_constants.MONITOR_TAG:
             status = self._get_status()
-            self.client_socket.send_multipart(
-                [remote_constants.NORMAL_TAG, status])
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG, status])
 
         # `xparl status` command line API
         elif tag == remote_constants.STATUS_TAG:
             status_info = self.cluster_monitor.get_status_info()
-            self.client_socket.send_multipart(
-                [remote_constants.NORMAL_TAG,
-                 to_byte(status_info)])
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(status_info)])
 
         elif tag == remote_constants.WORKER_INITIALIZED_TAG:
             initialized_worker = cloudpickle.loads(message[1])
             worker_address = initialized_worker.worker_address
-            self.job_center.add_worker(initialized_worker)
-            hostname = self.job_center.get_hostname(worker_address)
-            self.cluster_monitor.add_worker_status(worker_address, hostname)
-            if self.xpu == 'cpu':
-                logger.info("A new worker {} is added, ".format(worker_address) +
-                            "the cluster has {} CPUs.\n".format(self.cpu_num))
+            success = self.job_center.add_worker(initialized_worker)
+            if not success:
+                if self.xpu == remote_constants.GPU:
+                    self.client_socket.send_multipart([remote_constants.REJECT_CPU_WORKER_TAG])
+                else:
+                    self.client_socket.send_multipart([remote_constants.REJECT_GPU_WORKER_TAG])
             else:
-                logger.info("A new worker {} is added, ".format(worker_address) +
-                            "the cluster has {} GPUs.\n".format(self.gpu_num))
+                hostname = self.job_center.get_hostname(worker_address)
+                self.cluster_monitor.add_worker_status(worker_address, hostname)
+                if self.xpu == remote_constants.CPU:
+                    logger.info("A new worker {} is added, ".format(worker_address) +
+                                "the cluster has {} CPUs.\n".format(self.cpu_num))
+                else:
+                    logger.info("A new worker {} is added, ".format(worker_address) +
+                                "the cluster has {} GPUs.\n".format(self.gpu_num))
 
-            def heartbeat_exit_callback_func(worker_address):
-                self.job_center.drop_worker(worker_address)
-                self.cluster_monitor.drop_worker_status(worker_address)
-                logger.warning("\n[Master] Cannot connect to the worker " +
-                               "{}. ".format(worker_address) +
-                               "Worker_pool will drop this worker.")
-                self._print_workers()
-                logger.warning("Exit worker monitor from master.")
+                def heartbeat_exit_callback_func(worker_address):
+                    self.job_center.drop_worker(worker_address)
+                    self.cluster_monitor.drop_worker_status(worker_address)
+                    logger.warning("\n[Master] Cannot connect to the worker " + "{}. ".format(worker_address) +
+                                   "Worker_pool will drop this worker.")
+                    self._print_workers()
+                    logger.warning("Exit worker monitor from master.")
 
-            # a thread for sending heartbeat signals to the client
-            thread = HeartbeatClientThread(
-                worker_address,
-                heartbeat_exit_callback_func=heartbeat_exit_callback_func,
-                exit_func_args=(worker_address, ))
-            self.all_worker_heartbeat_threads.append(thread)
-            thread.setDaemon(True)
-            thread.start()
+                # a thread for sending heartbeat signals to the client
+                thread = HeartbeatClientThread(
+                    worker_address,
+                    heartbeat_exit_callback_func=heartbeat_exit_callback_func,
+                    exit_func_args=(worker_address, ))
+                self.all_worker_heartbeat_threads.append(thread)
+                thread.setDaemon(True)
+                thread.start()
 
-            self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
+                self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         # a client connects to the master
         elif tag == remote_constants.CLIENT_CONNECT_TAG:
@@ -173,23 +171,18 @@ class Master(object):
             client_hostname = to_str(message[2])
             client_id = to_str(message[3])
             self.client_hostname[client_heartbeat_address] = client_hostname
-            logger.info(
-                "Client {} is connected.".format(client_heartbeat_address))
+            logger.info("Client {} is connected.".format(client_heartbeat_address))
 
             def heartbeat_exit_callback_func(client_heartbeat_address):
-                self.cluster_monitor.drop_client_status(
-                    client_heartbeat_address)
-                logger.warning("[Master] cannot connect to the client " +
-                               "{}. ".format(client_heartbeat_address) +
+                self.cluster_monitor.drop_client_status(client_heartbeat_address)
+                logger.warning("[Master] cannot connect to the client " + "{}. ".format(client_heartbeat_address) +
                                "Please check if it is still alive.")
-                if self.xpu == 'cpu':
-                    logger.info(
-                        "Master connects to {} workers and have {} vacant CPUs.\n".
-                        format(self.worker_num, self.cpu_num))
+                if self.xpu == remote_constants.CPU:
+                    logger.info("Master connects to {} workers and have {} vacant CPUs.\n".format(
+                        self.worker_num, self.cpu_num))
                 else:
-                    logger.info(
-                        "Master connects to {} workers and have {} vacant GPUs.\n".
-                        format(self.worker_num, self.gpu_num))
+                    logger.info("Master connects to {} workers and have {} vacant GPUs.\n".format(
+                        self.worker_num, self.gpu_num))
 
             # a thread for sending heartbeat signals to the client
             thread = HeartbeatClientThread(
@@ -200,11 +193,8 @@ class Master(object):
             thread.setDaemon(True)
             thread.start()
 
-            log_monitor_address = "{}/logs?client_id={}".format(
-                self.monitor_url, client_id)
-            self.client_socket.send_multipart(
-                [remote_constants.NORMAL_TAG,
-                 to_byte(log_monitor_address)])
+            log_monitor_address = "{}/logs?client_id={}".format(self.monitor_url, client_id)
+            self.client_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(log_monitor_address)])
 
         elif tag == remote_constants.CHECK_VERSION_TAG:
             self.client_socket.send_multipart([
@@ -218,39 +208,36 @@ class Master(object):
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
             # check available CPU resources
-            reject = self.xpu == 'cpu' and message[1] == remote_constants.GPU_JOB
-            reject = reject | (self.xpu == 'gpu' and message[1] == remote_constants.CPU_JOB)
-            if reject:
-                self.client_socket.send_multipart([remote_constants.REJECT_TAG])
-            elif self.xpu == 'cpu':
+            if self.xpu == remote_constants.CPU and message[1] == remote_constants.GPU_JOB:
+                self.client_socket.send_multipart([remote_constants.REJECT_GPU_JOB_TAG])
+            elif (self.xpu == remote_constants.GPU and message[1] == remote_constants.CPU_JOB):
+                self.client_socket.send_multipart([remote_constants.REJECT_CPU_JOB_TAG])
+            elif self.xpu == remote_constants.CPU:
                 if self.cpu_num > 0:
                     logger.info("Submitting job...")
                     job = self.job_center.request_job()
-                    self.client_socket.send_multipart([
-                        remote_constants.NORMAL_TAG,
-                        cloudpickle.dumps(job)
-                    ])
+                    self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job)])
                     client_id = to_str(message[3])
                     job_info = {job.job_id: job.log_server_address}
                     self.cluster_monitor.add_client_job(client_id, job_info)
                     self._print_workers()
                 else:
                     self.client_socket.send_multipart([remote_constants.CPU_TAG])
-            elif self.xpu == 'gpu':
+            elif self.xpu == remote_constants.GPU:
                 logger.info("Submitting job...")
                 n_gpus = int(message[4])
                 job = self.job_center.request_job(n_gpus=n_gpus)
                 if job:
-                    self.client_socket.send_multipart([
-                        remote_constants.NORMAL_TAG,
-                        cloudpickle.dumps(job)
-                    ])
+                    self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job)])
                     client_id = to_str(message[3])
                     job_info = {job.job_id: job.log_server_address}
                     self.cluster_monitor.add_client_job(client_id, job_info)
                     self._print_workers()
                 else:
-                    self.client_socket.send_multipart([remote_constants.GPU_TAG])
+                    if n_gpus > remote_constants.MAX_N_GPUS:
+                        self.client_socket.send_multipart([remote_constants.REJECT_INVALID_GPU_JOB_TAG])
+                    else:
+                        self.client_socket.send_multipart([remote_constants.GPU_TAG])
 
         # a worker updates
         elif tag == remote_constants.NEW_JOB_TAG:
@@ -258,9 +245,8 @@ class Master(object):
             last_job_address = to_str(message[2])
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
-            self.job_center.update_job(last_job_address, initialized_job,
-                                       initialized_job.worker_address)
-            if self.xpu == 'cpu':
+            self.job_center.update_job(last_job_address, initialized_job, initialized_job.worker_address)
+            if self.xpu == remote_constants.CPU:
                 logger.info("A worker updated. cpu_num:{}".format(self.cpu_num))
             else:
                 logger.info("A worker updated. gpu_num:{}".format(self.gpu_num))
@@ -272,10 +258,8 @@ class Master(object):
             client_heartbeat_address = to_str(message[1])
             client_status = cloudpickle.loads(message[2])
 
-            client_status['client_hostname'] = self.client_hostname[
-                client_heartbeat_address]
-            self.cluster_monitor.update_client_status(client_heartbeat_address,
-                                                      client_status)
+            client_status['client_hostname'] = self.client_hostname[client_heartbeat_address]
+            self.cluster_monitor.update_client_status(client_heartbeat_address, client_status)
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         # worker update status periodically
@@ -287,8 +271,8 @@ class Master(object):
             total_cpus = self.job_center.get_total_cpu(worker_address)
             vacant_gpus = self.job_center.get_vacant_gpu(worker_address)
             total_gpus = self.job_center.get_total_gpu(worker_address)
-            self.cluster_monitor.update_worker_status(
-                worker_status, worker_address, vacant_cpus, total_cpus, vacant_gpus, total_gpus)
+            self.cluster_monitor.update_worker_status(worker_status, worker_address, vacant_cpus, total_cpus,
+                                                      vacant_gpus, total_gpus)
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
@@ -325,8 +309,7 @@ class Master(object):
         4. A connected client submits a job after a remote object is created.
         """
         self.client_socket.linger = 0
-        self.client_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
+        self.client_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
 
         while self.master_is_alive:
             try:

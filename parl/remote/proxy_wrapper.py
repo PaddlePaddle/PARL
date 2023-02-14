@@ -54,8 +54,7 @@ def proxy_wrapper_func(remote_wrapper):
     class ProxyWrapper(object):
         def __init__(self, *args, **kwargs):
             for key in kwargs:
-                assert not key.startswith(
-                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
+                assert not key.startswith(XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
             # The following variables will be used in the RemoteWrapper, so we put them
             # into the kwargs.
@@ -65,8 +64,7 @@ def proxy_wrapper_func(remote_wrapper):
 
             self._xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
             for key in self._xparl_remote_wrapper_obj.get_attrs():
-                assert not key.startswith(
-                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
+                assert not key.startswith(XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
         def __getattr__(self, attr):
             return self._xparl_remote_wrapper_obj.get_remote_attr(attr)

@@ -42,23 +42,18 @@ def get_log():
     try:
         job_id = request.args['job_id']
     except:
-        return make_response(
-            jsonify(message="No job_id provided, please check your request."),
-            400)
+        return make_response(jsonify(message="No job_id provided, please check your request."), 400)
 
     log_dir = current_app.config.get('LOG_DIR')
     log_dir = os.path.expanduser(log_dir)
     log_file_path = os.path.join(log_dir, job_id, 'stdout.log')
     if not os.path.isfile(log_file_path):
-        return make_response(
-            jsonify(message="Log not exsits, please check your job_id"), 400)
+        return make_response(jsonify(message="Log not exsits, please check your job_id"), 400)
     else:
         line_num = current_app.config.get('LINE_NUM')
         linecache.checkcache(log_file_path)
         log_content = ''.join(linecache.getlines(log_file_path)[-line_num:])
-        return make_response(
-            jsonify(message="Log exsits, content in log", log=log_content),
-            200)
+        return make_response(jsonify(message="Log exsits, content in log", log=log_content), 200)
 
 
 @app.route(
@@ -75,15 +70,12 @@ def download_log():
     try:
         job_id = request.args['job_id']
     except:
-        return make_response(
-            jsonify(message="No job_id provided, please check your request."),
-            400)
+        return make_response(jsonify(message="No job_id provided, please check your request."), 400)
     log_dir = current_app.config.get('LOG_DIR')
     log_dir = os.path.expanduser(log_dir)
     log_file_path = os.path.join(log_dir, job_id, 'stdout.log')
     if not os.path.isfile(log_file_path):
-        return make_response(
-            jsonify(message="Log not exsits, please check your job_id"), 400)
+        return make_response(jsonify(message="Log not exsits, please check your job_id"), 400)
     else:
         return send_file(log_file_path, as_attachment=True)
 
@@ -123,17 +115,13 @@ if __name__ == "__main__":
     )
 
     def heartbeat_exit_callback_func():
-        logger.warning(
-            "[log_server] lost connnect with the worker. Please check if it is still alive."
-        )
+        logger.warning("[log_server] lost connnect with the worker. Please check if it is still alive.")
         os._exit(1)
 
-    heartbeat_server_thread = HeartbeatServerThread(
-        heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+    heartbeat_server_thread = HeartbeatServerThread(heartbeat_exit_callback_func=heartbeat_exit_callback_func)
     heartbeat_server_thread.setDaemon(True)
     heartbeat_server_thread.start()
 
-    send_heartbeat_addr_to_worker(args.worker_address,
-                                  heartbeat_server_thread.get_address())
+    send_heartbeat_addr_to_worker(args.worker_address, heartbeat_server_thread.get_address())
 
     app.run(host="0.0.0.0", port=args.port)

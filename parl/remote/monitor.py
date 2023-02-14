@@ -36,11 +36,12 @@ def worker():
 def clients():
     return render_template('clients.html')
 
+
 class ClusterMonitor(object):
     """A monitor which requests the cluster status every 10 seconds.
     """
 
-    def __init__(self, master_address, xpu):
+    def __init__(self, master_address, xpu='cpu'):
         ctx = zmq.Context()
         self.socket = ctx.socket(zmq.REQ)
         self.socket.setsockopt(zmq.RCVTIMEO, 30000)
@@ -74,15 +75,11 @@ class ClusterMonitor(object):
                         master_idx = idx
                     data['workers'].append(worker)
                     if self.xpu == 'cpu':
-                        total_used_cpus += worker[
-                            'used_cpus'] if 'used_cpus' in worker else 0
-                        total_vacant_cpus += worker[
-                            'vacant_cpus'] if 'vacant_cpus' in worker else 0
+                        total_used_cpus += worker['used_cpus'] if 'used_cpus' in worker else 0
+                        total_vacant_cpus += worker['vacant_cpus'] if 'vacant_cpus' in worker else 0
                     elif self.xpu == 'gpu':
-                        total_used_gpus += worker[
-                            'used_gpus'] if 'used_gpus' in worker else 0
-                        total_vacant_gpus += worker[
-                            'vacant_gpus'] if 'vacant_gpus' in worker else 0
+                        total_used_gpus += worker['used_gpus'] if 'used_gpus' in worker else 0
+                        total_vacant_gpus += worker['vacant_gpus'] if 'vacant_gpus' in worker else 0
 
                 if master_idx != 0 and master_idx is not None:
                     master_worker = data['workers'].pop(master_idx)
@@ -135,14 +132,10 @@ def get_jobs():
         for idx, job_id in enumerate(jobs):
             monitor_url = jobs[job_id]
             data.append({
-                "id":
-                idx,
-                "job_id":
-                job_id,
-                "log_url":
-                "http://{}/get-log?job_id={}".format(monitor_url, job_id),
-                "download_url":
-                "http://{}/download-log?job_id={}".format(monitor_url, job_id),
+                "id": idx,
+                "job_id": job_id,
+                "log_url": "http://{}/get-log?job_id={}".format(monitor_url, job_id),
+                "download_url": "http://{}/download-log?job_id={}".format(monitor_url, job_id),
             })
     return jsonify(data)
 

@@ -46,9 +46,7 @@ class TestMaxMemory(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    #In windows, multiprocessing.Process cannot run the method of class, but static method is ok.
-    @staticmethod
-    def actor(cluster_addr):
+    def actor(self, cluster_addr):
         parl.connect(cluster_addr)
         actor1 = Actor()
         time.sleep(10)
@@ -61,15 +59,15 @@ class TestMaxMemory(unittest.TestCase):
         th.start()
         time.sleep(5)
         cluster_addr = 'localhost:{}'.format(port)
-        worker = Worker(cluster_addr, 1)
+        worker = Worker(cluster_addr, 10)
         cluster_monitor = ClusterMonitor(cluster_addr)
         time.sleep(5)
         parl.connect(cluster_addr)
         actor = Actor()
-        time.sleep(20)
+        time.sleep(30)
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(10)
+        time.sleep(30)
         p = Process(target=self.actor, args=(cluster_addr, ))
         p.start()
 

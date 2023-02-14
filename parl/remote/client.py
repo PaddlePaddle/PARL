@@ -69,7 +69,7 @@ class Client(object):
 
         self.executable_path = self.get_executable_path()
 
-        self.actor_num = 0
+        self.actor_num = mp.Value('i', 0)
 
         self._create_sockets(master_address)
         self.check_env_consistency()
@@ -78,7 +78,7 @@ class Client(object):
         thread.setDaemon(True)
         thread.start()
         job_heartbeat_port = mp.Value('i', 0)
-        job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port)
+        job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
         job_heartbeat_process.daemon = True
         job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
@@ -253,11 +253,12 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
     def _update_client_status_to_master(self):
         while self.master_is_alive:
+            print("AAAAAAAAA actor_num:{}".format(self.actor_num.value))
             elapsed_time = datetime.timedelta(
                 seconds=int(time.time() - self.start_time))
             client_status = {
                 'file_path': self.executable_path,
-                'actor_num': self.actor_num,
+                'actor_num': self.actor_num.value,
                 'time': str(elapsed_time),
                 'log_monitor_url': self.log_monitor_url,
             }
@@ -279,8 +280,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
     def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
                                max_memory, actor_ref_monitor):
-        """ Sometimes the client may receive a job that is dead, thus 
-        we have to check if this job is still alive before adding it to the `actor_num`.
+        """ 
+        We have to check if this job is still alive before establishing connection with it.
         """
         # job_ping_socket: sends ping signal to job
         job_ping_socket = self.ctx.socket(zmq.REQ)
@@ -344,9 +345,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
                         job_heartbeat_address, job_ping_address, max_memory,
                         proxy_wrapper_nowait_object)
                     if check_result:
-                        self.lock.acquire()
-                        self.actor_num += 1
-                        self.lock.release()
                         return job_address
 
                 # no vacant CPU resources, cannot submit a new job

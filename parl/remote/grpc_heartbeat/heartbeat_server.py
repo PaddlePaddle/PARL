@@ -25,15 +25,16 @@ import multiprocessing as mp
 
 
 class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
-    def __init__(self):
+    def __init__(self, client_count=None):
         self.last_heartbeat_time = time.time()
-        self.last_heartheat_table = dict()
+        self.last_heartbeat_table = dict()
         self.exit_flag = False
+        self.client_count = client_count
 
     def Send(self, request, context):
         client_id = request.client_id
         self.last_heartbeat_time = time.time()
-        self.last_heartheat_table[client_id] = time.time()
+        self.last_heartbeat_table[client_id] = time.time()
         return heartbeat_pb2.Reply(tag=remote_constants.HEARTBEAT_TAG)
 
     def exit(self):
@@ -58,11 +59,12 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
             cur_time = time.time()
             to_del_client = []
-            for client_id, last_heartbeat_time in self.last_heartheat_table.items():
+            for client_id, last_heartbeat_time in self.last_heartbeat_table.items():
                 if cur_time - last_heartbeat_time > remote_constants.HEARTBEAT_RCVTIMEO_S:
-                    to_del_client = []
+                    to_del_client.append(client_id)
             for client_id in to_del_client:
-                del self.last_heartbeat_time[client_id]
+                del self.last_heartbeat_table[client_id]
+            self.client_count.value = len(self.last_heartbeat_table)
 
 class HeartbeatServerThread(threading.Thread):
     def __init__(self,
@@ -126,7 +128,7 @@ class HeartbeatServerThread(threading.Thread):
         self.heartbeat_server.exit()
 
 class HeartbeatServerProcess(mp.Process):
-    def __init__(self, port):
+    def __init__(self, port, client_count):
         """Create a process to run the heartbeat server.
             Args:
                 port(mp.Value): sharing servert port between the main prcoess and heartbeat server process.
@@ -137,14 +139,13 @@ class HeartbeatServerProcess(mp.Process):
             futures.ThreadPoolExecutor(max_workers=500),
             options=[('grpc.max_receive_message_length', -1),
                      ('grpc.max_send_message_length', -1)])
-        self.heartbeat_server = GrpcHeartbeatServer()
+        self.heartbeat_server = GrpcHeartbeatServer(client_count)
 
         heartbeat_pb2_grpc.add_GrpcHeartbeatServicer_to_server(
             self.heartbeat_server, self.grpc_server)
 
         with port.get_lock():
             port.value = self.grpc_server.add_insecure_port('[::]:0')
-
 
     def run(self):
         # unset http_proxy and https_proxy

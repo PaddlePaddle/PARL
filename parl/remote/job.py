@@ -186,6 +186,16 @@ class Job(object):
         self.client_heartbeat_client_thread.stop(
             remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG, stop_message)
 
+        with self.lock:
+            self.remove_job_socket.send_multipart(
+                [remote_constants.KILLJOB_TAG,
+                 to_byte(self.job_address)])
+            try:
+                _ = self.remove_job_socket.recv_multipart()
+            except zmq.error.Again as e:
+                pass
+        os._exit(1)
+
     def _reply_ping(self, socket):
         """Create a socket server that reply the ping signal from client.
         This signal is used to make sure that the job is still alive.

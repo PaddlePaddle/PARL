@@ -113,8 +113,8 @@ class TestCluster(unittest.TestCase):
         future_result = actor2.add_one(1)
         self.assertEqual(future_result.get(), 2)
         self.assertEqual(0, master.cpu_num)
-        del actor
-        del actor2
+        actor.destroy()
+        actor2.destroy()
         worker1.exit()
         master.exit()
 

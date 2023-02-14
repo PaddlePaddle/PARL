@@ -76,6 +76,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
         self.assertRaises(TypeError, call_non_existing_method)
         master.exit()
         worker1.exit()
+        actor.destroy()
 
 
 if __name__ == '__main__':

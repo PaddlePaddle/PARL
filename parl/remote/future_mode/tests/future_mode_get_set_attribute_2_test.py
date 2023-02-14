@@ -68,6 +68,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
         self.assertTrue(actor.internal_lock == 50)
         master.exit()
         worker1.exit()
+        actor.destroy()
 
     def test_same_name_of_attribute_and_method(self):
         port = get_free_tcp_port()
@@ -89,6 +90,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
             return actor.arg1(1, 2)
 
         self.assertRaises(TypeError, call_method)
+        actor.destroy()
         master.exit()
         worker1.exit()
 

@@ -71,6 +71,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
 
         master.exit()
         worker1.exit()
+        actor.destroy()
 
     def test_set_attribute(self):
         port = get_free_tcp_port()
@@ -96,6 +97,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
         self.assertTrue(arg4 == actor.GLOBAL_CLIENT)
         master.exit()
         worker1.exit()
+        actor.destroy()
 
 
 if __name__ == '__main__':

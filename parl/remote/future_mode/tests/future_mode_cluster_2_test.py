@@ -74,6 +74,7 @@ class TestCluster(unittest.TestCase):
             actor = Actor()
             future_result = actor.add_one(1)
             self.assertEqual(future_result.get(), 2)
+            actor.destroy()
         del actor
 
         for _ in range(10):

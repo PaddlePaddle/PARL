@@ -22,11 +22,12 @@ import zmq
 import parl
 import time
 import glob
+import multiprocessing as mp
 
 from parl.utils import to_str, to_byte, get_ip_address, logger, isnotebook
 from parl.remote.utils import get_subfiles_recursively
 from parl.remote import remote_constants
-from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
+from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatServerProcess
 from parl.remote.utils import get_version
 
 
@@ -51,7 +52,8 @@ class Client(object):
         """
         Args:
             master_addr (str): ip address of the master node.
-            process_id (str): id of the process that created the Client. 
+            job_heartbeat_server_addr(str): server address for heartbeat detection from jobs.
+            process_id (str): process id in which client is created. 
                               Should use os.getpid() to get the process id.
             distributed_files (list): A list of files to be distributed at all
                                       remote instances(e,g. the configuration
@@ -66,7 +68,6 @@ class Client(object):
         self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
-        self.all_job_heartbeat_threads = []
 
         self.actor_num = 0
 
@@ -76,6 +77,12 @@ class Client(object):
         thread = threading.Thread(target=self._update_client_status_to_master)
         thread.setDaemon(True)
         thread.start()
+        job_heartbeat_port = mp.Value('i', 0)
+        job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port)
+        job_heartbeat_process.daemon = True
+        job_heartbeat_process.start()
+        assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
+        self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
         self.pyfiles = self.read_local_files(distributed_files)
 
@@ -283,7 +290,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
         try:
             job_ping_socket.send_multipart(
                 [remote_constants.HEARTBEAT_TAG,
-                 to_byte(str(max_memory))])
+                to_byte(self.job_heartbeat_server_addr),
+                to_byte(str(max_memory))])
             job_ping_socket.recv_multipart()
         except zmq.error.Again:
             job_ping_socket.close(0)
@@ -292,22 +300,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 .format(job_ping_address))
             return False
         job_ping_socket.close(0)
-
-        def heartbeat_exit_callback_func():
-            self.lock.acquire()
-            self.actor_num -= 1
-            logger.error(
-                '[xparl] lost connection with a job, current actor num: {}'.
-                format(self.actor_num))
-            self.lock.release()
-
-        # a thread for sending heartbeat signals to job
-        job_heartbeat_thread = HeartbeatClientThread(
-            job_heartbeat_address,
-            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
-        self.all_job_heartbeat_threads.append(job_heartbeat_thread)
-        job_heartbeat_thread.setDaemon(True)
-        job_heartbeat_thread.start()
 
         if actor_ref_monitor is not None:
             # If `wait` argument is False in `@parl.remote_class` (future mode),
@@ -328,9 +320,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
         Args:
             actor_ref_monitor (ActorRefMonitor): used for detecting whether the actor 
                                                  has been deleted or out of scope;
-            job_heartbeat_thread(HeartbeatClientThread): thread used to send the heartbeat signal to the
-                                                         job. We will exit the thread after the actor is
-                                                         deleted.
         """
         while self.client_is_alive:
             if actor_ref_monitor.is_deleted():
@@ -464,9 +453,6 @@ def disconnect():
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is not None:
         GLOBAL_CLIENT.client_is_alive = False
-        for thread in GLOBAL_CLIENT.all_job_heartbeat_threads:
-            if thread.is_alive():
-                thread.exit()
 
         if GLOBAL_CLIENT.master_heartbeat_thread.is_alive():
             GLOBAL_CLIENT.master_heartbeat_thread.exit()

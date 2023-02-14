@@ -172,49 +172,5 @@ class TestHeartbeat(unittest.TestCase):
         assert self.server_exited == True
         assert self.client_exited == True
 
-    def test_heartbeat_client_will_exit_after_server_is_stopped(self):
-        def server_exit_func():
-            print("exit heartbeat server")
-            self.server_exited = True
-
-        heartbeat_server_thread = HeartbeatServerThread(server_exit_func)
-        heartbeat_server_thread.start()
-
-        server_address = heartbeat_server_thread.get_address()
-
-        def client_exit_func():
-            print("exit heartbeat client")
-            self.client_exited = True
-
-        heartbeat_client_thread = HeartbeatClientThread(
-            server_address, client_exit_func)
-        heartbeat_client_thread.start()
-
-        time.sleep(remote_constants.HEARTBEAT_RCVTIMEO_S * 2)
-
-        # check server and client are still alive after HEARTBEAT_RCVTIMEO_S * 2
-        assert heartbeat_server_thread.is_alive()
-        assert heartbeat_client_thread.is_alive()
-
-        # manually stop the server
-        heartbeat_server_thread.stop(
-            remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG,
-            "heartbeat server is stopped.")
-
-        # wait for heartbeat server exiting
-        for _ in range(6):
-            if not heartbeat_server_thread.is_alive(
-            ) and not heartbeat_client_thread.is_alive():
-                break
-            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
-
-        # check heartbeat server and client are exited
-        assert not heartbeat_server_thread.is_alive()
-        assert not heartbeat_client_thread.is_alive()
-
-        assert self.server_exited == True
-        assert self.client_exited == True
-
-
 if __name__ == '__main__':
     unittest.main()

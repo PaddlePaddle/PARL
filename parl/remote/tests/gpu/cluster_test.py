@@ -26,7 +26,7 @@ from parl.utils import logger
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(n_gpus=2)
+@parl.remote_class(n_gpus=1)
 class Actor(object):
     def __init__(self, arg1=None, arg2=None):
         self.arg1 = arg1
@@ -56,112 +56,113 @@ class Actor(object):
         x = 1 / 0
 
     def assert_device_count_fail(self):
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
         import torch
-        assert (torch.cuda.device_count() == 4)
+        assert (torch.cuda.device_count() == 2)
 
 
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
+        time.sleep(20)
 
     def test_actor_exception_1(self):
         port = get_free_tcp_port()
         logger.info("running:test_actor_exception")
-        master = Master(port=port, xpu='gpu')
+        master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 4)
-        for _ in range(3):
-            if master.gpu_num == 4:
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(2, master.gpu_num)
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(exceptions.RemoteError):
             actor1 = Actor(abcd='a bug')
-        for _ in range(3):
-            if master.gpu_num == 4:
-                break
-            time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
-
-        actor2 = Actor()
-        for _ in range(3):
+        for _ in range(2):
             if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(2, master.gpu_num)
-        del actor2
-        for _ in range(3):
-            if master.gpu_num == 4:
+
+        actor2 = Actor()
+        for _ in range(2):
+            if master.gpu_num == 1:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(actor2.add_one(1), 2)
+        self.assertEqual(1, master.gpu_num)
+        del actor2
+        for _ in range(2):
+            if master.gpu_num == 2:
+                break
+            time.sleep(10)
+        self.assertEqual(2, master.gpu_num)
 
         master.exit()
         worker1.exit()
 
     def test_actor_exception_2(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 4)
-        for _ in range(3):
-            if master.gpu_num == 4:
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(2, master.gpu_num)
 
         parl.connect('localhost:{}'.format(port))
         actor1 = Actor()
         with self.assertRaises(exceptions.RemoteError):
             actor1.will_raise_exception_func()
         actor2 = Actor()
-        for _ in range(5):
-            if master.gpu_num == 2:
+        for _ in range(2):
+            if master.gpu_num == 1:
                 break
             time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(2, master.gpu_num)
+        self.assertEqual(1, master.gpu_num)
         del actor1
         del actor2
-        for _ in range(5):
-            if master.gpu_num == 4:
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(2, master.gpu_num)
         worker1.exit()
         master.exit()
 
     def test_cuda_visible_devices_setting(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
         os.environ['PARL_BACKEND'] = 'torch'
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 4)
-        for _ in range(3):
-            if master.gpu_num == 4:
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(2, master.gpu_num)
 
         parl.connect('localhost:{}'.format(port))
         actor = Actor()
         with self.assertRaises(exceptions.RemoteError):
             actor.assert_device_count_fail()
-        for _ in range(5):
-            if master.gpu_num == 4:
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
             time.sleep(10)
-        self.assertEqual(4, master.gpu_num)
+        self.assertEqual(2, master.gpu_num)
         worker1.exit()
         master.exit()
 

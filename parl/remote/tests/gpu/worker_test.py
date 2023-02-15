@@ -30,18 +30,16 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 0, None, gpu_num=2)
+        worker = Worker('localhost:{}'.format(port), 0, None, 2)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        time.sleep(3)
 
-        for _ in range(3):
+        for _ in range(2):
             if master.gpu_num == 2:
                 break
             time.sleep(5)
         self.assertEqual(2, master.gpu_num)
 
-        time.sleep(3)
         assert worker_th.is_alive()
 
         master.exit()
@@ -53,13 +51,13 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 4, None, gpu_num=0)
+        worker = Worker('localhost:{}'.format(port), 1, None, 0)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        time.sleep(3)
-        for i in range(5):
+        for _ in range(2):
             if not worker.worker_is_alive:
                 break
+            time.sleep(5)
         self.assertEqual(master.gpu_num, 0)
 
         master.exit()
@@ -71,13 +69,13 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 0, None, gpu_num=4)
+        worker = Worker('localhost:{}'.format(port), 0, None, 2)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        time.sleep(3)
-        for i in range(5):
+        for _ in range(2):
             if not worker.worker_is_alive:
                 break
+            time.sleep(5)
         self.assertEqual(worker.worker_is_alive, False)
         self.assertEqual(master.cpu_num, 0)
 
@@ -91,16 +89,16 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         job_center = JobCenter('localhost:{}'.format(port), 'gpu')
-        worker = Worker('localhost:{}'.format(port), 0, None, gpu_num=4)
+        worker = Worker('localhost:{}'.format(port), 0, None, 2)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        for i in range(3):
-            if master.gpu_num == 4:
+        for _ in range(2):
+            if master.gpu_num == 2:
                 break
-            time.sleep(10)
-        self.assertEqual(master.gpu_num, 4)
+            time.sleep(5)
+        self.assertEqual(master.gpu_num, 2)
         worker.exit()
-        for i in range(3):
+        for _ in range(2):
             if master.gpu_num == 0:
                 break
             time.sleep(10)
@@ -114,13 +112,13 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         job_center = JobCenter('localhost:{}'.format(port), 'cpu')
-        worker = Worker('localhost:{}'.format(port), 4, None, gpu_num=0)
+        worker = Worker('localhost:{}'.format(port), 1, None, 0)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
         time.sleep(3)
-        self.assertEqual(master.cpu_num, 4)
+        self.assertEqual(master.cpu_num, 1)
         worker.exit()
-        for i in range(3):
+        for _ in range(2):
             if master.cpu_num == 0:
                 break
             time.sleep(10)

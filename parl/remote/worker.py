@@ -116,7 +116,8 @@ class Worker(object):
         if gpu_num is not None:
             assert isinstance(gpu_num, int), "gpu_num should be INT type, please check the input type."
             pynvml.nvmlInit()
-            self.gpu_num = min(gpu_num, pynvml.nvmlDeviceGetCount())
+            assert gpu_num <= pynvml.nvmlDeviceGetCount()
+            self.gpu_num = gpu_num
             pynvml.nvmlShutdown()
         else:
             pynvml.nvmlInit()

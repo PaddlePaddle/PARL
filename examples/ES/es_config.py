@@ -14,7 +14,7 @@
 
 config = {
     #==========  remote config ==========
-    'master_address': 'localhost:8037',
+    'master_address': 'localhost:8137',
     #==========  env config ==========
     'env_name': 'HalfCheetah-v4',
     #==========  actor config ==========

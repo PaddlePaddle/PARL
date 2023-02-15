@@ -428,7 +428,7 @@ def disconnect():
     """Disconnect the global client from the master node."""
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is not None:
-        GLOBAL_CLIENT.destoy()
+        GLOBAL_CLIENT.destroy()
         GLOBAL_CLIENT = None
     else:
         logger.info(

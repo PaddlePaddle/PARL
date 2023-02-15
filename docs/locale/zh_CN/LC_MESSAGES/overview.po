@@ -164,11 +164,11 @@ msgstr "如上图所示，真实的actor（橙色圆圈）运行在CPU集群，l
 msgid ""
 "For users, they can write code in a simple way, just like writing multi-"
 "thread code, but with actors consuming remote resources. We have also "
-"provided examples of parallelized algorithms like IMPALA, :doc:`A2C "
+"provided examples of parallelized algorithms like IMPALA, `A2C "
 "<https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C>`. For more details in usage please "
 "refer to these examples."
 msgstr ""
 "对于用户而言，完全可以像写多线程代码一样来实现并行算法，相当简单，但是这些多线程的运算利用了外部的计算资源。我们也提供了并行算法示例，更多细节请参考"
-" IMPALA , :doc:`A2C "
+" IMPALA , `A2C "
 "<https://github.com/PaddlePaddle/PARL/tree/develop/examples/A2C>`。"
 

@@ -88,7 +88,7 @@ class Client(object):
         self.pyfiles = self.read_local_files(distributed_files)
 
     def destroy(self):
-        """Destructor function for client."""
+        """Destructor function"""
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
         self.client_is_alive.value = False
@@ -285,7 +285,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
     def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
-                               max_memory, actor_ref_monitor):
+                               max_memory):
         """ 
         We have to check if this job is still alive before establishing connection with it.
         """
@@ -348,8 +348,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     job_ping_address = to_str(message[3])
 
                     check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, job_ping_address, max_memory,
-                        proxy_wrapper_nowait_object)
+                        job_heartbeat_address, job_ping_address, max_memory)
                     if check_result:
                         return job_address
 

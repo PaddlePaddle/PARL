@@ -65,6 +65,7 @@ class Client(object):
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
         self.master_is_alive = True
+        self.client_is_alive = mp.Value('i', True)
         self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
@@ -78,7 +79,7 @@ class Client(object):
         thread.setDaemon(True)
         thread.start()
         job_heartbeat_port = mp.Value('i', 0)
-        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.client_is_alive)
         self.job_heartbeat_process.daemon = True
         self.job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
@@ -90,7 +91,7 @@ class Client(object):
         """Destructor function for client."""
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
-        self.job_heartbeat_process.kill()
+        self.client_is_alive.value = False
 
     def get_executable_path(self):
         """Return current executable path."""

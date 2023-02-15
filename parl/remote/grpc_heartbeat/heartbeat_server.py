@@ -25,11 +25,12 @@ import multiprocessing as mp
 
 
 class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
-    def __init__(self, client_count=None):
+    def __init__(self, client_count=None, host_is_alive=True):
         self.last_heartbeat_time = time.time()
         self.last_heartbeat_table = dict()
         self.exit_flag = False
         self.client_count = client_count
+        self.host_is_alive = host_is_alive
 
     def Send(self, request, context):
         client_id = request.client_id
@@ -57,6 +58,10 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
     def timeout_time_mp(self):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+
+            if bool(self.host_is_alive.value) == False:
+                break
+
             cur_time = time.time()
             to_del_client = []
             for client_id, last_heartbeat_time in self.last_heartbeat_table.items():
@@ -128,10 +133,11 @@ class HeartbeatServerThread(threading.Thread):
         self.heartbeat_server.exit()
 
 class HeartbeatServerProcess(mp.Process):
-    def __init__(self, port, client_count):
+    def __init__(self, port, client_count, host_is_alive):
         """Create a process to run the heartbeat server.
             Args:
                 port(mp.Value): sharing servert port between the main prcoess and heartbeat server process.
+                host_is_alive(mp.Value): inidicating whether the host is running.
         """
 
         mp.Process.__init__(self)
@@ -139,7 +145,7 @@ class HeartbeatServerProcess(mp.Process):
             futures.ThreadPoolExecutor(max_workers=500),
             options=[('grpc.max_receive_message_length', -1),
                      ('grpc.max_send_message_length', -1)])
-        self.heartbeat_server = GrpcHeartbeatServer(client_count)
+        self.heartbeat_server = GrpcHeartbeatServer(client_count, host_is_alive)
 
         heartbeat_pb2_grpc.add_GrpcHeartbeatServicer_to_server(
             self.heartbeat_server, self.grpc_server)

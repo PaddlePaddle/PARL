@@ -141,7 +141,6 @@ class Job(object):
         # sends job information to the worker
         initialized_job = InitializedJob(
             self.job_address, worker_heartbeat_server_thread.get_address(),
-            '127.0.0.1:yobobo', # TODO: remove this attribute
             reply_client_ping_address, None, self.pid, self.job_id,
             self.log_server_address)
 

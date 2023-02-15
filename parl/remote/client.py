@@ -284,7 +284,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
-    def _check_and_monitor_job(self, job_heartbeat_address, job_ping_address,
+    def _check_and_monitor_job(self, job_ping_address,
                                max_memory):
         """ 
         We have to check if this job is still alive before establishing connection with it.
@@ -309,7 +309,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         job_ping_socket.close(0)
         return True
 
-    def submit_job(self, max_memory, proxy_wrapper_nowait_object):
+    def submit_job(self, max_memory):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
@@ -320,9 +320,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
             max_memory (float): Maximum memory (MB) can be used by each remote
                                 instance, the unit is in MB and default value is
                                 none(unlimited).
-            proxy_wrapper_nowait_object (object): instance of actor class which is decorated by @remote_class(wait=False),
-                                use the reference count of the object to detect whether 
-                                the object has been deleted or out of scope.
 
         Returns:
             job_address(str): IP address of the job. None if there is no available CPU in the cluster.
@@ -344,11 +341,10 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
                 if tag == remote_constants.NORMAL_TAG:
                     job_address = to_str(message[1])
-                    job_heartbeat_address = to_str(message[2])
-                    job_ping_address = to_str(message[3])
+                    job_ping_address = to_str(message[2])
 
                     check_result = self._check_and_monitor_job(
-                        job_heartbeat_address, job_ping_address, max_memory)
+                        job_ping_address, max_memory)
                     if check_result:
                         return job_address
 

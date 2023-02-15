@@ -206,7 +206,6 @@ class Master(object):
                 self.client_socket.send_multipart([
                     remote_constants.NORMAL_TAG,
                     to_byte(job.job_address),
-                    to_byte(job.client_heartbeat_address),
                     to_byte(job.ping_heartbeat_address),
                 ])
                 client_id = to_str(message[2])

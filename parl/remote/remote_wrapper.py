@@ -49,10 +49,6 @@ class RemoteWrapper(object):
         # GLOBAL_CLIENT will set `master_is_alive` to False when hearbeat
         # finds the master is dead.
 
-        # instance of actor class which is decorated by @remote_class(wait=False).
-        # use the reference count of the object to detect whether
-        # the object has been deleted or out of scope.
-        proxy_wrapper_nowait_object = kwargs.get('_xparl_proxy_wrapper_nowait')
 
         # class which is decorated by @remote_class
         cls = kwargs.get('_xparl_remote_class')
@@ -134,7 +130,7 @@ class RemoteWrapper(object):
         except zmq.error.Again as e:
             logger.error("Send python files failed.")
 
-    def request_cpu_resource(self, global_client, max_memory)
+    def request_cpu_resource(self, global_client, max_memory):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:

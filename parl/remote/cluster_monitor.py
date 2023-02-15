@@ -33,18 +33,24 @@ class ClusterMonitor(object):
         }
         self.lock = threading.Lock()
 
-    def add_worker_status(self, worker_address, hostname):
+    def add_worker_status(self, worker_address, hostname, total_cpus, total_gpus):
         """Record worker status when it is connected to the cluster.
         
         Args:
             worker_address (str): worker ip address
             hostname (str): worker hostname 
+            total_cpus(int): the number of CPU in the worker
+            total_gpus(int): the number of GPU in the worker
         """
         self.lock.acquire()
         worker_status = self.status['workers'][worker_address]
         worker_status['load_value'] = deque(maxlen=10)
         worker_status['load_time'] = deque(maxlen=10)
         worker_status['hostname'] = hostname
+        worker_status['vacant_cpus'] = total_cpus
+        worker_status['used_cpus'] = 0
+        worker_status['vacant_gpus'] = total_gpus
+        worker_status['used_gpus'] = 0
         self.lock.release()
 
     def add_client_job(self, client_id, job_info):
@@ -71,9 +77,9 @@ class ClusterMonitor(object):
             update_status (dict): worker updated status information 
                                 (vacant_memory, used_memory, load_time, load_value).
             worker_address (str): worker ip address.
-            vacant_cpus (int): vacant cpu number.
+            vacant_cpus (int): the number of available CPUs.
             total_cpus (int): total cpu number.
-            vacant_gpus (int): vacant gpu number.
+            vacant_gpus (int): the number of available GPUs.
             total_gpus (int): total gpu number.
         """
         self.lock.acquire()

@@ -135,11 +135,14 @@ class Master(object):
                     self.client_socket.send_multipart([remote_constants.REJECT_GPU_WORKER_TAG])
             else:
                 hostname = self.job_center.get_hostname(worker_address)
-                self.cluster_monitor.add_worker_status(worker_address, hostname)
                 if self.xpu == remote_constants.CPU:
+                    total_cpus = self.job_center.get_total_cpu(worker_address)
+                    self.cluster_monitor.add_worker_status(worker_address, hostname, total_cpus, 0)
                     logger.info("A new worker {} is added, ".format(worker_address) +
                                 "the cluster has {} CPUs.\n".format(self.cpu_num))
                 else:
+                    total_gpus = self.job_center.get_total_gpu(worker_address)
+                    self.cluster_monitor.add_worker_status(worker_address, hostname, 0, total_gpus)
                     logger.info("A new worker {} is added, ".format(worker_address) +
                                 "the cluster has {} GPUs.\n".format(self.gpu_num))
 

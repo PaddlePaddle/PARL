@@ -64,7 +64,6 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(60)
 
     def test_actor_exception_1(self):
         port = get_free_tcp_port()

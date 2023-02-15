@@ -94,7 +94,10 @@ class TestCluster(unittest.TestCase):
         worker = Worker('localhost:{}'.format(port), 0, None, gpu_num=4)
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        time.sleep(3)
+        for i in range(3):
+            if master.gpu_num == 4:
+                break
+            time.sleep(10)
         self.assertEqual(master.gpu_num, 4)
         worker.exit()
         for i in range(3):

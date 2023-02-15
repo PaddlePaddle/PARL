@@ -30,6 +30,7 @@ class InitializedWorker(object):
         self.master_heartbeat_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
+        self.gpu_num = gpu_num
         self.hostname = hostname
 
 

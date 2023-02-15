@@ -15,6 +15,7 @@
 import cloudpickle
 import datetime
 import os
+import signal
 import socket
 import sys
 import threading
@@ -64,7 +65,6 @@ class Client(object):
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
         self.master_is_alive = True
-        self.client_is_alive = True
         self.log_monitor_url = None
 
         self.executable_path = self.get_executable_path()
@@ -78,13 +78,19 @@ class Client(object):
         thread.setDaemon(True)
         thread.start()
         job_heartbeat_port = mp.Value('i', 0)
-        job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
-        job_heartbeat_process.daemon = True
-        job_heartbeat_process.start()
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
+        self.job_heartbeat_process.daemon = True
+        self.job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
         self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
         self.pyfiles = self.read_local_files(distributed_files)
+
+    def destroy(self):
+        """Destructor function for client."""
+        if self.master_heartbeat_thread.is_alive():
+            self.master_heartbeat_thread.exit()
+        self.job_heartbeat_process.kill()
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -422,11 +428,7 @@ def disconnect():
     """Disconnect the global client from the master node."""
     global GLOBAL_CLIENT
     if GLOBAL_CLIENT is not None:
-        GLOBAL_CLIENT.client_is_alive = False
-
-        if GLOBAL_CLIENT.master_heartbeat_thread.is_alive():
-            GLOBAL_CLIENT.master_heartbeat_thread.exit()
-
+        GLOBAL_CLIENT.destoy()
         GLOBAL_CLIENT = None
     else:
         logger.info(

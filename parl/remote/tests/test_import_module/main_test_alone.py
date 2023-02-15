@@ -20,11 +20,13 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import get_free_tcp_port
+import time
 
 
 class TestImport(unittest.TestCase):
     def tearDown(self):
         disconnect()
+        time.sleep(1)
 
     def test_import_local_module(self):
         from Module2 import B

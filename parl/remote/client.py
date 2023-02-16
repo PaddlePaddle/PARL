@@ -336,15 +336,15 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 ])
                 message = self.submit_job_socket.recv_multipart()
                 self.lock.release()
-
                 tag = message[0]
-
                 if tag == remote_constants.NORMAL_TAG:
                     job_address = to_str(message[1])
                     job_ping_address = to_str(message[2])
 
+                    self.lock.acquire()
                     check_result = self._check_and_monitor_job(
                         job_ping_address, max_memory)
+                    self.lock.release()
                     if check_result:
                         return job_address
 

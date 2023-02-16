@@ -25,7 +25,7 @@ import threading
 import random
 
 
-@parl.remote_class(n_gpus=2)
+@parl.remote_class(n_gpus=1)
 class Actor1(object):
     def __init__(self, arg):
         self.arg = arg
@@ -34,7 +34,7 @@ class Actor1(object):
         return x + 1
 
 
-@parl.remote_class(n_gpus=2)
+@parl.remote_class(n_gpus=1)
 class Actor2(object):
     def __init__(self):
         self._xparl_remote_wrapper_obj = 0
@@ -49,8 +49,10 @@ class Test_proxy_wrapper(unittest.TestCase):
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 4)
+        time.sleep(1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
 
         parl.connect('localhost:{}'.format(port))
 
@@ -60,6 +62,8 @@ class Test_proxy_wrapper(unittest.TestCase):
 
         assert actor.add_one(1) == 2
 
+        actor = None
+
         master.exit()
         worker1.exit()
 
@@ -68,13 +72,16 @@ class Test_proxy_wrapper(unittest.TestCase):
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, gpu_num=2)
+        time.sleep(1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
 
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(AssertionError):
             actor = Actor1(_xparl_proxy_wrapper_nowait__=1)
+            actor = None
 
         master.exit()
         worker1.exit()
@@ -84,13 +91,16 @@ class Test_proxy_wrapper(unittest.TestCase):
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, gpu_num=2)
+        time.sleep(1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
 
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(AssertionError):
             actor = Actor2()
+            actor = None
 
         master.exit()
         worker1.exit()

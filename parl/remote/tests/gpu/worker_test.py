@@ -125,5 +125,6 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(master.cpu_num, 0)
         master.exit()
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -64,7 +64,6 @@ class Actor(object):
 class TestCluster(unittest.TestCase):
     def tearDown(self):
         disconnect()
-        time.sleep(20)
 
     def test_actor_exception_1(self):
         port = get_free_tcp_port()
@@ -74,9 +73,13 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
+        time.sleep(1)
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
         parl.connect('localhost:{}'.format(port))
@@ -86,20 +89,24 @@ class TestCluster(unittest.TestCase):
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
 
         actor2 = Actor()
+        time.sleep(1)
         for _ in range(2):
             if master.gpu_num == 1:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(1, master.gpu_num)
-        del actor2
+        actor2 = None
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
 
@@ -111,11 +118,14 @@ class TestCluster(unittest.TestCase):
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
+        time.sleep(1)
         worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
 
@@ -127,6 +137,7 @@ class TestCluster(unittest.TestCase):
         for _ in range(2):
             if master.gpu_num == 1:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
         self.assertEqual(1, master.gpu_num)
@@ -135,6 +146,7 @@ class TestCluster(unittest.TestCase):
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
         worker1.exit()
@@ -145,12 +157,15 @@ class TestCluster(unittest.TestCase):
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
+        time.sleep(1)
         os.environ['PARL_BACKEND'] = 'torch'
         worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker_th = threading.Thread(target=worker1.run)
+        worker_th.start()
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
 
@@ -161,11 +176,11 @@ class TestCluster(unittest.TestCase):
         for _ in range(2):
             if master.gpu_num == 2:
                 break
+            logger.info("sleep 10s")
             time.sleep(10)
         self.assertEqual(2, master.gpu_num)
         worker1.exit()
         master.exit()
-
 
 
 if __name__ == '__main__':

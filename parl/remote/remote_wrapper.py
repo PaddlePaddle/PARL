@@ -91,13 +91,12 @@ class RemoteWrapper(object):
 
         self.send_file(self.job_socket)
 
-        xparl_reserved_kwargs = {}
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
-                xparl_reserved_kwargs[key] = kwargs.pop(key)
+                kwargs.pop(key)
+        xparl_reserved_kwargs = {}
         if job.gpus:
             xparl_reserved_kwargs[XPARL_RESERVED_PREFIX + "_" + 'CUDA_VISIBLE_DEVICES'] = ','.join(job.gpus)
-
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
             dump_remote_class(cls),

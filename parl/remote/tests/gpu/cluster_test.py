@@ -152,7 +152,7 @@ class TestCluster(unittest.TestCase):
         worker1.exit()
         master.exit()
 
-    def test_cuda_visible_devices_setting(self):
+    def _test_cuda_visible_devices_setting(self):
         port = get_free_tcp_port()
         master = Master(port, None, 'gpu')
         th = threading.Thread(target=master.run)

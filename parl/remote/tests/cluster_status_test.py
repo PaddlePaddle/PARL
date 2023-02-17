@@ -39,7 +39,7 @@ class Actor(object):
 
 class TestClusterStatus(unittest.TestCase):
     def tearDown(self):
-        disconnect
+        disconnect()
 
     def test_cluster_status(self):
         port = get_free_tcp_port()

@@ -136,7 +136,7 @@ function run_test_with_gpu() {
     Running unit tests with GPU...
     ========================================
 EOF
-    ctest --output-on-failure -j20
+    ctest --output-on-failure -j10
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
 }

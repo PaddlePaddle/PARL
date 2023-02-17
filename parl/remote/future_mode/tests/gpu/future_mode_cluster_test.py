@@ -74,7 +74,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(1, master.gpu_num)
         parl.connect('localhost:{}'.format(port))
 
-        with self.assertRaises(exceptions.RemoteError):
+        with self.assertRaises(exceptions.FutureFunctionError):
             actor = Actor(abcd='a bug')
             actor.get_arg1()  # calling any function will raise an exception
 
@@ -101,7 +101,7 @@ class TestCluster(unittest.TestCase):
         self.assertEqual(1, master.gpu_num)
         parl.connect('localhost:{}'.format(port))
         actor = Actor()
-        with self.assertRaises(exceptions.RemoteError):
+        with self.assertRaises(exceptions.FutureFunctionError):
             future_object = actor.will_raise_exception_func()
             future_object.get()  # raise exception
 

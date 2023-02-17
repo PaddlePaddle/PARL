@@ -60,17 +60,14 @@ class Client(object):
                                       remote instances(e,g. the configuration
                                       file for initialization) .
         """
+        self._create_heartbeat_server()
         self.master_address = master_address
         self.process_id = process_id
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
         self.master_is_alive = True
-        self.client_is_alive = mp.Value('i', True)
         self.log_monitor_url = None
-
         self.executable_path = self.get_executable_path()
-
-        self.actor_num = mp.Value('i', 0)
 
         self._create_sockets(master_address)
         self.check_env_consistency()
@@ -78,12 +75,6 @@ class Client(object):
         thread = threading.Thread(target=self._update_client_status_to_master)
         thread.setDaemon(True)
         thread.start()
-        job_heartbeat_port = mp.Value('i', 0)
-        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.client_is_alive)
-        self.job_heartbeat_process.daemon = True
-        self.job_heartbeat_process.start()
-        assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
-        self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
         self.pyfiles = self.read_local_files(distributed_files)
 
@@ -308,6 +299,18 @@ found in your current environment. To use "pyarrow" for serialization, please in
             return False
         job_ping_socket.close(0)
         return True
+
+    def _create_heartbeat_server(self):
+        """ Create the grpc-based heartbeat server at the subprocess.
+        """
+        job_heartbeat_port = mp.Value('i', 0)
+        self.actor_num = mp.Value('i', 0)
+        self.client_is_alive = mp.Value('i', True)
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.client_is_alive)
+        self.job_heartbeat_process.daemon = True
+        self.job_heartbeat_process.start()
+        assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
+        self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
     def submit_job(self, max_memory):
         """Send a job to the Master node.

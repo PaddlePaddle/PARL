@@ -50,8 +50,7 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
             if self.exit_flag:
                 break
 
-            if time.time(
-            ) - self.last_heartbeat_time > remote_constants.HEARTBEAT_RCVTIMEO_S:
+            if time.time() - self.last_heartbeat_time > remote_constants.HEARTBEAT_RCVTIMEO_S:
                 # heartbeat exit
                 break
 
@@ -136,7 +135,7 @@ class HeartbeatServerProcess(mp.Process):
     def __init__(self, port, client_count, host_is_alive):
         """Create a process to run the heartbeat server.
             Args:
-                port(mp.Value): sharing servert port between the main prcoess and heartbeat server process.
+                port(mp.Value): notify the main prcoess of the severt port.
                 host_is_alive(mp.Value): inidicating whether the host is running.
         """
 

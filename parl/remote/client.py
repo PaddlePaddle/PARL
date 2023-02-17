@@ -15,7 +15,6 @@
 import cloudpickle
 import datetime
 import os
-import signal
 import socket
 import sys
 import threading

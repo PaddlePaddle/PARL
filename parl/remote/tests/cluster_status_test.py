@@ -25,17 +25,11 @@ from parl.remote.monitor import ClusterMonitor
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(max_memory=300)
+@parl.remote_class
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
         self.data = []
-
-    def add_100mb(self):
-        self.data.append(os.urandom(100 * 1024**2))
-        self.x += 1
-        return self.x
-
 
 class TestClusterStatus(unittest.TestCase):
     def tearDown(self):
@@ -47,11 +41,11 @@ class TestClusterStatus(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(5)
+        parl.connect('localhost:{}'.format(port))
         worker = Worker('localhost:{}'.format(port), 1)
         time.sleep(5)
         status_info = master.cluster_monitor.get_status_info()
         self.assertEqual(status_info, 'has 0 used cpus, 1 vacant cpus.')
-        parl.connect('localhost:{}'.format(port))
         actor = Actor()
         time.sleep(50)
         status_info = master.cluster_monitor.get_status_info()

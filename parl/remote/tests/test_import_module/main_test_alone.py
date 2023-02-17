@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,24 @@ import os
 import unittest
 import parl
 import time
-import threading
+import multiprocessing as mp
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import get_free_tcp_port
 import time
+import signal
 
 
 class TestImport(unittest.TestCase):
+    def _create_master(self, port):
+        master = Master(port=port)
+        master.run()
+
+    def _create_worker(self, port, n_cpu):
+        worker = Worker('localhost:{}'.format(port), n_cpu)
+        worker.run()
+
     def tearDown(self):
         disconnect()
         time.sleep(1)
@@ -31,60 +40,66 @@ class TestImport(unittest.TestCase):
     def test_import_local_module(self):
         from Module2 import B
         port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
+        ctx = mp.get_context()
+        p_master = ctx.Process(target=self._create_master, args=(port, ))
+        p_master.start()
         time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
+        p_worker = ctx.Process(target=self._create_worker, args=(port, 1))
+        p_worker.start()
         time.sleep(10)
         parl.connect("localhost:{}".format(port))
         obj = B()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
-        worker.exit()
-        master.exit()
+
+        p_master.kill()
+        p_worker.kill()
+        p_master.join()
+        p_worker.join()
 
     def test_import_subdir_module_0(self):
         from subdir import Module
         port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
+        ctx = mp.get_context()
+        p_master = ctx.Process(target=self._create_master, args=(port, ))
+        p_master.start()
         time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
+        p_worker = ctx.Process(target=self._create_worker, args=(port, 1))
+        p_worker.start()
         time.sleep(10)
         parl.connect(
             "localhost:{}".format(port),
-            distributed_files=[
-                os.path.join('subdir', 'Module.py'),
-                os.path.join('subdir', '__init__.py')
-            ])
+            distributed_files=[os.path.join('subdir', 'Module.py'),
+                               os.path.join('subdir', '__init__.py')])
         obj = Module.A()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
-        worker.exit()
-        master.exit()
+        p_master.kill()
+        p_worker.kill()
+        p_master.join()
+        p_worker.join()
 
     def test_import_subdir_module_1(self):
         from subdir.Module import A
         port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
+        ctx = mp.get_context()
+        p_master = ctx.Process(target=self._create_master, args=(port, ))
+        p_master.start()
         time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
+        p_worker = ctx.Process(target=self._create_worker, args=(port, 1))
+        p_worker.start()
         time.sleep(10)
         parl.connect(
             "localhost:{}".format(port),
-            distributed_files=[
-                os.path.join('subdir', 'Module.py'),
-                os.path.join('subdir', '__init__.py')
-            ])
+            distributed_files=[os.path.join('subdir', 'Module.py'),
+                               os.path.join('subdir', '__init__.py')])
         obj = A()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
-        worker.exit()
-        master.exit()
+        p_master.kill()
+        p_worker.kill()
+        p_master.join()
+        p_worker.join()
 
 
 if __name__ == '__main__':

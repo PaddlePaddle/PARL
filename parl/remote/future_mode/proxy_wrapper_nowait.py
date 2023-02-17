@@ -56,6 +56,7 @@ def proxy_wrapper_nowait_func(remote_wrapper):
     '''
     original_class = remote_wrapper._original
     max_memory = remote_wrapper._max_memory
+    n_gpus = remote_wrapper._n_gpus
 
     class ProxyWrapperNoWait(object):
         def __init__(self, *args, **kwargs):
@@ -66,6 +67,7 @@ def proxy_wrapper_nowait_func(remote_wrapper):
             kwargs['_xparl_proxy_wrapper_nowait'] = self
             kwargs['_xparl_remote_class'] = original_class
             kwargs['_xparl_remote_class_max_memory'] = max_memory
+            kwargs['_xparl_remote_class_n_gpus'] = n_gpus
 
             self._xparl_remote_wrapper_calling_queue = queue.Queue()
             self._xparl_remote_wrapper_internal_lock = threading.Lock()

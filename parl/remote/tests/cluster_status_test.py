@@ -58,6 +58,7 @@ class TestClusterStatus(unittest.TestCase):
         self.assertEqual(status_info, 'has 1 used cpus, 0 vacant cpus.')
         worker.exit()
         master.exit()
+        th.join()
 
 
 if __name__ == '__main__':

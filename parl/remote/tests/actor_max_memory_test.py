@@ -46,12 +46,6 @@ class TestMaxMemory(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def actor(self, cluster_addr):
-        parl.connect(cluster_addr)
-        actor1 = Actor()
-        time.sleep(10)
-        actor1.add_500mb()
-
     def test_max_memory(self):
         port = get_free_tcp_port()
         master = Master(port=port)
@@ -59,7 +53,7 @@ class TestMaxMemory(unittest.TestCase):
         th.start()
         time.sleep(5)
         cluster_addr = 'localhost:{}'.format(port)
-        worker = Worker(cluster_addr, 10)
+        worker = Worker(cluster_addr, 1)
         cluster_monitor = ClusterMonitor(cluster_addr)
         time.sleep(5)
         parl.connect(cluster_addr)
@@ -67,9 +61,8 @@ class TestMaxMemory(unittest.TestCase):
         time.sleep(30)
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(30)
-        p = Process(target=self.actor, args=(cluster_addr, ))
-        p.start()
+        actor1 = Actor()
+        actor1.add_500mb()
 
         for _ in range(6):
             x = cluster_monitor.data['clients'][0]['actor_num']
@@ -80,10 +73,10 @@ class TestMaxMemory(unittest.TestCase):
         if x == 1:
             raise ValueError("Actor max memory test failed.")
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
-        p.terminate()
 
         worker.exit()
         master.exit()
+        th.join()
 
 
 if __name__ == '__main__':

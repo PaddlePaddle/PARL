@@ -27,7 +27,7 @@ import warnings
 import zmq
 from datetime import datetime
 import parl
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS 
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
 from parl.remote.status import WorkerStatus
@@ -452,7 +452,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
-        kill_process('remote/job.py.*{}'.format(self.reply_job_address))
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
 

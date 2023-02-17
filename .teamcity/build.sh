@@ -160,7 +160,7 @@ EOF
     then
         ctest --output-on-failure 
     else
-        ctest --output-on-failure -j10
+        ctest --output-on-failure -j20
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build

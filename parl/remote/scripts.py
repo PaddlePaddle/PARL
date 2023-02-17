@@ -123,11 +123,8 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
     if cpu_num is not None:
         assert cpu_num >= 0, "cpu_num should be greater than or equal to 0."
 
-    gpu_num = 0
     if gpu_ids:
         xpu = 'gpu'
-        gpu_num = len(gpu_ids.split(","))
-        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids
     assert xpu in ['cpu', 'gpu'], 'xpu should be cpu or gpu.'
 
     if debug:
@@ -161,8 +158,7 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
     worker_command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", "localhost:" + str(port), "--cpu_num",
         str(cpu_num), '--log_server_port',
-        str(log_server_port), "--xpu", xpu, "--gpu_num",
-        str(gpu_num)
+        str(log_server_port), "--gpu_ids", gpu_ids
     ]
     monitor_command = XPARL_PYTHON + [
         monitor_file, "--monitor_port",
@@ -174,7 +170,7 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
     # Redirect the output to DEVNULL to solve the warning log.
     _ = subprocess.Popen(master_command, stdout=FNULL, close_fds=True)
 
-    if cpu_num > 0 or gpu_num > 0:
+    if cpu_num > 0 or gpu_ids:
         # Sleep 1s for master ready
         time.sleep(1)
         _ = subprocess.Popen(worker_command, stdout=FNULL, close_fds=True)
@@ -188,7 +184,7 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
         _ = subprocess.Popen(monitor_command, stdout=FNULL, close_fds=True)
     FNULL.close()
 
-    if cpu_num > 0 or gpu_num > 0:
+    if cpu_num > 0 or gpu_ids:
         monitor_info = """
             # The Parl cluster is started at localhost:{}.
 
@@ -246,7 +242,7 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
         """.format(start_info, master_ip, port)
     click.echo(monitor_info)
 
-    if cpu_num > 0 or gpu_num > 0:
+    if cpu_num > 0 or gpu_ids:
         check_log_server_started(master_ip, log_server_port)
 
 
@@ -256,7 +252,7 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
     "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
-    "--gpu_ids", help="Set CUDA_VISIBLE_DEVICES manually. If not set, it will be empty string", default="", type=str)
+    "--gpu_ids", help="id list of gpu to be used on the worker. A empty string as default", default="", type=str)
 @click.option(
     "--log_server_port_range",
     help='''
@@ -268,12 +264,6 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
 def start_worker(address, cpu_num, gpu_ids, log_server_port_range):
     if cpu_num is not None:
         assert cpu_num >= 0, "cpu_num should be greater or equal to 0."
-
-    gpu_num = 0
-    if gpu_ids:
-        gpu_num = len(gpu_ids.split(','))
-        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids
-    xpu = 'cpu' if gpu_num == 0 else 'gpu'
 
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
@@ -288,8 +278,7 @@ def start_worker(address, cpu_num, gpu_ids, log_server_port_range):
     command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", address, "--cpu_num",
         str(cpu_num), "--log_server_port",
-        str(log_server_port), "--xpu", xpu, "--gpu_num",
-        str(gpu_num)
+        str(log_server_port), "--gpu_ids", gpu_ids
     ]
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, close_fds=True)

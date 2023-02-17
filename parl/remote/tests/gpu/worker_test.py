@@ -30,7 +30,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
 
@@ -51,7 +51,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 1, None, 0)
+        worker = Worker('localhost:{}'.format(port), 1, None, "")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
         for _ in range(2):
@@ -69,7 +69,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
         for _ in range(2):
@@ -89,7 +89,7 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         job_center = JobCenter('localhost:{}'.format(port), 'gpu')
-        worker = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
         for _ in range(2):
@@ -112,7 +112,7 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(3)
         job_center = JobCenter('localhost:{}'.format(port), 'cpu')
-        worker = Worker('localhost:{}'.format(port), 1, None, 0)
+        worker = Worker('localhost:{}'.format(port), 1, None, "")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
         time.sleep(3)

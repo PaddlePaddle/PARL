@@ -39,7 +39,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, gpu_num=2)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
         for _ in range(3):
             if master.gpu_num == 2:
                 break
@@ -64,7 +64,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, gpu_num=2)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
         for _ in range(3):
             if master.gpu_num == 2:
                 break

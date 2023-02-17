@@ -22,6 +22,7 @@ class ImportTest(unittest.TestCase):
     def setUp(self):
         jobs = []
         gpu_num = 4
+        gpu_ids = "0,1,2,3"
         for i in range(gpu_num):
             job = InitializedJob(
                 job_address='192.168.0.1:{}'.format(1000 + i),
@@ -32,10 +33,11 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        self.worker1 = InitializedWorker('192.168.0.1:8000', jobs, 0, gpu_num, 'worker1')
+        self.worker1 = InitializedWorker('192.168.0.1:8000', jobs, 0, gpu_ids, 'worker1')
 
         jobs = []
         gpu_num = 4
+        gpu_ids = "0,1,2,3"
         for i in range(gpu_num):
             job = InitializedJob(
                 job_address='192.168.0.2:{}'.format(1000 + i),
@@ -46,7 +48,7 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        self.worker2 = InitializedWorker('192.168.0.2:8000', jobs, 0, gpu_num, 'worker2')
+        self.worker2 = InitializedWorker('192.168.0.2:8000', jobs, 0, gpu_ids, 'worker2')
 
         jobs = []
         cpu_num = 4
@@ -60,11 +62,12 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        gpu_num = 0
-        self.worker3 = InitializedWorker('192.168.0.3:8000', jobs, cpu_num, gpu_num, 'worker3')
+        gpu_ids = ''
+        self.worker3 = InitializedWorker('192.168.0.3:8000', jobs, cpu_num, gpu_ids, 'worker3')
 
         jobs = []
         gpu_num = 8
+        gpu_ids = '0,1,2,3,4,5,6,7'
         for i in range(gpu_num):
             job = InitializedJob(
                 job_address='192.168.0.5:{}'.format(1000 + i),
@@ -75,7 +78,7 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        self.worker5 = InitializedWorker('192.168.0.5:8000', jobs, 0, gpu_num, 'worker5')
+        self.worker5 = InitializedWorker('192.168.0.5:8000', jobs, 0, gpu_ids, 'worker5')
 
     def test_add_worker(self):
         job_center = JobCenter('localhost', 'gpu')

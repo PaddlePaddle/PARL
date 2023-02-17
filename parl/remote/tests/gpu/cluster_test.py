@@ -72,7 +72,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
         time.sleep(1)
@@ -119,7 +119,7 @@ class TestCluster(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
         for _ in range(2):
@@ -159,7 +159,7 @@ class TestCluster(unittest.TestCase):
         th.start()
         time.sleep(1)
         os.environ['PARL_BACKEND'] = 'torch'
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 2)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
         for _ in range(2):

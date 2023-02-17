@@ -50,7 +50,7 @@ class Test_proxy_wrapper(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
 
@@ -73,7 +73,7 @@ class Test_proxy_wrapper(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
 
@@ -92,7 +92,7 @@ class Test_proxy_wrapper(unittest.TestCase):
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, 1)
+        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
         worker_th = threading.Thread(target=worker1.run)
         worker_th.start()
 

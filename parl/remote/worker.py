@@ -68,10 +68,10 @@ class Worker(object):
     Args:
         master_address (str): IP address of the master node.
         cpu_num (int): Number of cpu to be used on the worker.
-        gpu_num (int): Number of gpu to be used on the worker.
+        gpu_ids (str): id list of gpu to be used on the worker.
     """
 
-    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu_num=0):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu_ids=''):
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -79,7 +79,8 @@ class Worker(object):
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
         self._set_cpu_num(cpu_num)
-        self._set_gpu_num(gpu_num)
+        self._set_gpu_num(gpu_ids)
+        self.gpu_ids = gpu_ids
         self.xpu_num = max(self.cpu_num, self.gpu_num)
         self.job_buffer = queue.Queue(maxsize=self.xpu_num)
         self._create_sockets()
@@ -111,18 +112,11 @@ class Worker(object):
         else:
             self.cpu_num = multiprocessing.cpu_count()
 
-    def _set_gpu_num(self, gpu_num=None):
+    def _set_gpu_num(self, gpu_ids=''):
         """set useable gpu number for worker"""
-        if gpu_num is not None:
-            assert isinstance(gpu_num, int), "gpu_num should be INT type, please check the input type."
-            pynvml.nvmlInit()
-            assert gpu_num <= pynvml.nvmlDeviceGetCount()
-            self.gpu_num = gpu_num
-            pynvml.nvmlShutdown()
-        else:
-            pynvml.nvmlInit()
-            self.gpu_num = pynvml.nvmlDeviceGetCount()
-            pynvml.nvmlShutdown()
+        self.gpu_num = 0
+        if gpu_ids:
+            self.gpu_num = len(gpu_ids.split(','))
 
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
@@ -238,7 +232,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             job.worker_address = self.master_heartbeat_address
 
         initialized_worker = InitializedWorker(self.master_heartbeat_address, initialized_jobs, self.cpu_num,
-                                               self.gpu_num, socket.gethostname())
+                                               self.gpu_ids, socket.gethostname())
         self.request_master_socket.send_multipart(
             [remote_constants.WORKER_INITIALIZED_TAG,
              cloudpickle.dumps(initialized_worker)])

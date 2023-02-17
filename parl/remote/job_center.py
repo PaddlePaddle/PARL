@@ -65,7 +65,7 @@ class JobCenter(object):
             worker (InitializedWorker): New worker with initialized jobs.
         Return: True if succeeds.
         """
-        if self.xpu == remote_constants.CPU and worker.gpu_num and worker.gpu_num > 0:
+        if self.xpu == remote_constants.CPU and worker.gpu_ids:
             return False
         elif self.xpu == remote_constants.GPU and worker.cpu_num is not None and worker.cpu_num > 0:
             return False
@@ -76,7 +76,7 @@ class JobCenter(object):
 
         self.worker_vacant_jobs[worker.worker_address] = len(worker.initialized_jobs)
 
-        self.worker_vacant_gpus[worker.worker_address] = worker.gpu_ids
+        self.worker_vacant_gpus[worker.worker_address] = [e for e in worker.gpu_ids.split(',')]
 
         if self.master_ip and worker.worker_address.split(':')[0] == self.master_ip:
             self.worker_hostname[worker.worker_address] = "Master"

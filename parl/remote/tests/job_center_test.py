@@ -24,13 +24,13 @@ class InitializedWorker(object):
                  master_heartbeat_address='localhost:8010',
                  initialized_jobs=[],
                  cpu_num=4,
-                 gpu_num=0,
+                 gpu_ids="",
                  hostname=None):
         self.worker_address = worker_address
         self.master_heartbeat_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
-        self.gpu_num = gpu_num
+        self.gpu_ids = gpu_ids
         self.hostname = hostname
 
 

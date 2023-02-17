@@ -49,23 +49,17 @@ class InitializedJob(object):
 
 
 class InitializedWorker(object):
-    def __init__(self, master_heartbeat_address, initialized_jobs, cpu_num, gpu_num, hostname):
+    def __init__(self, master_heartbeat_address, initialized_jobs, cpu_num, gpu_ids, hostname):
         """
     Args:
       worker_address(str): Worker server address that receives commands from the master.
       master_heartbeat_address(str): Address to which the worker send heartbeat signals to.
       initialized_jobs(list): A list of ``InitializedJob`` containing the information for initialized jobs.
       cpu_num(int): The number of CPUs used in this worker.
-      gpu_num(int): The number of GPUs used in this worker.
+      gpu_ids (str): id list of gpu to be used on the worker.
     """
         self.worker_address = master_heartbeat_address
         self.initialized_jobs = initialized_jobs
         self.cpu_num = cpu_num
-        self.gpu_num = gpu_num
         self.hostname = hostname
-        self.gpu_ids = []
-        if self.gpu_num > 0:
-            for gpu_id in os.environ.get('CUDA_VISIBLE_DEVICES', '').split(','):
-                if gpu_id.strip():
-                    self.gpu_ids.append(gpu_id.strip())
-            assert self.gpu_num == len(self.gpu_ids)
+        self.gpu_ids = gpu_ids

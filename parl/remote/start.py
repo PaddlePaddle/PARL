@@ -37,15 +37,10 @@ def main(args):
         address = args.address
         log_server_port = args.log_server_port
         cpu_num = int(args.cpu_num) if args.cpu_num else None
-        gpu_num = int(args.gpu_num) if args.gpu_num else 0
-        if args.xpu == 'gpu':
-            if gpu_num == 0:
-                pynvml.nvmlInit()
-                gpu_num = pynvml.nvmlDeviceGetCount()
-                pynvml.nvmlShutdown()
-            if gpu_num > 0:
-                cpu_num = 0
-        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port, gpu_num=gpu_num)
+        gpu_ids = args.gpu_ids
+        if gpu_ids:
+            cpu_num = 0
+        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port, gpu_ids=gpu_ids)
         worker.run()
 
     else:
@@ -59,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)
-    parser.add_argument('--gpu_num', default='', type=str)
+    parser.add_argument('--gpu_ids', default='', type=str)
     parser.add_argument('--monitor_port', default='', type=str)
     parser.add_argument('--log_server_port', default='', type=str)
     args = parser.parse_args()

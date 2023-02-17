@@ -256,6 +256,8 @@ def start_master(port, xpu, cpu_num, gpu_ids, monitor_port, debug, log_server_po
     "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
 @click.option(
+    "--gpu_ids", help="Set CUDA_VISIBLE_DEVICES manually. If not set, it will be empty string", default="", type=str)
+@click.option(
     "--log_server_port_range",
     help='''
     Port range (start-end) of the log server on the worker. Default: 8000-9000. 

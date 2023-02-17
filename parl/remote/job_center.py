@@ -76,7 +76,7 @@ class JobCenter(object):
 
         self.worker_vacant_jobs[worker.worker_address] = len(worker.initialized_jobs)
 
-        self.worker_vacant_gpus[worker.worker_address] = [str(i) for i in range(worker.gpu_num)]
+        self.worker_vacant_gpus[worker.worker_address] = worker.gpu_ids
 
         if self.master_ip and worker.worker_address.split(':')[0] == self.master_ip:
             self.worker_hostname[worker.worker_address] = "Master"

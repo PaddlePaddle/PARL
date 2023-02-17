@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 
 class InitializedJob(object):
     def __init__(self,
@@ -61,3 +63,9 @@ class InitializedWorker(object):
         self.cpu_num = cpu_num
         self.gpu_num = gpu_num
         self.hostname = hostname
+        self.gpu_ids = []
+        if self.gpu_num > 0:
+            for gpu_id in os.environ.get('CUDA_VISIBLE_DEVICES', '').split(','):
+                if gpu_id.strip():
+                    self.gpu_ids.append(gpu_id.strip())
+            assert self.gpu_num == len(self.gpu_ids)

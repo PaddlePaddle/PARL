@@ -17,12 +17,8 @@ import parl
 import unittest
 import time
 import threading
-
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
 from parl.utils import _IS_WINDOWS
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class
@@ -34,17 +30,10 @@ class Actor(object):
         return os.path.exists('./rom_files/pong.bin')
 
 
-class TestSendFile(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestSendFile(XparlTestCase):
     def test_send_file(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        worker = Worker('localhost:{}'.format(port), 1)
-        time.sleep(2)
+        self.add_master()
+        self.add_worker(n_cpu=1)
 
         tmp_dir = 'rom_files'
         tmp_file = os.path.join(tmp_dir, 'pong.bin')
@@ -54,7 +43,7 @@ class TestSendFile(unittest.TestCase):
         else:
             os.system('touch {}'.format(tmp_file))
         assert os.path.exists(tmp_file)
-        parl.connect('localhost:{}'.format(port), distributed_files=[tmp_file])
+        parl.connect('localhost:{}'.format(self.port), distributed_files=[tmp_file])
         time.sleep(5)
         actor = Actor()
         for _ in range(10):
@@ -63,25 +52,13 @@ class TestSendFile(unittest.TestCase):
             time.sleep(10)
         self.assertEqual(True, actor.check_local_file())
         del actor
-        time.sleep(10)
-        worker.exit()
-        master.exit()
 
     def test_send_file2(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        worker = Worker('localhost:{}'.format(port), 1)
-        time.sleep(2)
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
         tmp_file = os.path.join('rom_files', 'no_pong.bin')
-        self.assertRaises(Exception, parl.connect, 'localhost:{}'.format(port),
+        self.assertRaises(Exception, parl.connect, 'localhost:{}'.format(self.port),
                           [tmp_file])
 
-        worker.exit()
-        master.exit()
-
-
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

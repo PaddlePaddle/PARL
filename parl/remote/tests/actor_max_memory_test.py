@@ -37,25 +37,16 @@ class TestMaxMemory(XparlTestCase):
         self.add_master()
         self.add_worker(n_cpu=1)
         cluster_addr = 'localhost:{}'.format(self.port)
-        cluster_monitor = ClusterMonitor(cluster_addr)
         time.sleep(5)
         parl.connect(cluster_addr)
         actor = Actor()
         time.sleep(30)
-        self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
+        self.assertEqual(1, parl.get_global_client().actor_num.value)
         del actor
         actor1 = Actor()
         actor1.add_500mb()
-
-        for _ in range(6):
-            x = cluster_monitor.data['clients'][0]['actor_num']
-            if x == 0:
-                break
-            else:
-                time.sleep(10)
-        if x == 1:
-            raise ValueError("Actor max memory test failed.")
-        self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
+        sleep(60)
+        self.assertEqual(0, parl.get_global_client.actor_num.value)
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ class TestCluster(XparlTestCase):
         parl.connect('localhost:{}'.format(self.port))
         for _ in range(10):
             actor = Actor()
-            ret = actor.add_one(1)
+            ret = actor.add(1, 1)
             self.assertEqual(ret, 2)
         del actor
 

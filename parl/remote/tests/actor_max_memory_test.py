@@ -16,9 +16,7 @@ import os
 import parl
 import unittest
 import time
-from parl.remote.monitor import ClusterMonitor
-
-from parl.utils import get_free_tcp_port
+from parl.remote.client import get_global_client
 from parl.utils.test_utils import XparlTestCase
 
 @parl.remote_class(max_memory=350)
@@ -41,12 +39,12 @@ class TestMaxMemory(XparlTestCase):
         parl.connect(cluster_addr)
         actor = Actor()
         time.sleep(30)
-        self.assertEqual(1, parl.get_global_client().actor_num.value)
+        self.assertEqual(1, get_global_client().actor_num.value)
         del actor
         actor1 = Actor()
         actor1.add_500mb()
         sleep(60)
-        self.assertEqual(0, parl.get_global_client.actor_num.value)
+        self.assertEqual(0, get_global_client.actor_num.value)
 
 
 if __name__ == '__main__':

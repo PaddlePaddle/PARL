@@ -48,8 +48,8 @@ class TestImport(unittest.TestCase):
         obj = B()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
-        p_master.kill()
-        p_worker.kill()
+        p_master.terminate()
+        p_worker.terminate()
         p_master.join()
         p_worker.join()
 

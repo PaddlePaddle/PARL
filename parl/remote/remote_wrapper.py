@@ -56,7 +56,7 @@ class RemoteWrapper(object):
         # max_memory argument in @remote_class decorator
         max_memory = kwargs.get('_xparl_remote_class_max_memory')
 
-        if self.GLOBAL_CLIENT.master_is_alive:
+        if self.GLOBAL_CLIENT.connected_to_master:
             job_address = self.request_cpu_resource(
                 self.GLOBAL_CLIENT, max_memory)
         else:

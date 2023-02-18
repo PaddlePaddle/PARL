@@ -11,48 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 import unittest
 import parl
-import time
-import multiprocessing as mp
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
-
-class TestImport(unittest.TestCase):
-    def _create_master(self, port):
-        master = Master(port=port)
-        master.run()
-
-    def _create_worker(self, port, n_cpu):
-        worker = Worker('localhost:{}'.format(port), n_cpu)
-        worker.run()
-
-    def tearDown(self):
-        disconnect()
-
+class TestImport(XparlTestCase):
     def test_import_local_module(self):
         from Module2 import B
-        port = get_free_tcp_port()
-        ctx = mp.get_context()
-        p_master = ctx.Process(target=self._create_master, args=(port, ))
-        p_master.start()
-        time.sleep(1)
-        p_worker = ctx.Process(target=self._create_worker, args=(port, 1))
-        p_worker.start()
-        time.sleep(10)
-        parl.connect("localhost:{}".format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect("localhost:{}".format(self.port))
         obj = B()
         res = obj.add_sum(10, 5)
         self.assertEqual(res, 15)
-        p_master.terminate()
-        p_worker.terminate()
-        p_master.join()
-        p_worker.join()
-
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

@@ -64,24 +64,28 @@ class Client(object):
         self.process_id = process_id
         self.ctx = zmq.Context()
         self.lock = threading.Lock()
-        self.master_is_alive = True
         self.log_monitor_url = None
+        self.threads = []
         self.executable_path = self.get_executable_path()
-
         self._create_sockets(master_address)
+        self.connected_to_master = True
         self.check_env_consistency()
 
         thread = threading.Thread(target=self._update_client_status_to_master)
         thread.setDaemon(True)
         thread.start()
+        self.threads.append(thread)
 
         self.pyfiles = self.read_local_files(distributed_files)
 
     def destroy(self):
         """Destructor function"""
-        if self.master_heartbeat_thread.is_alive():
-            self.master_heartbeat_thread.exit()
         self.client_is_alive.value = False
+        self.connected_to_master = False
+        self.master_heartbeat_thread.exit()
+        for th in self.threads:
+            th.join()
+        self.ctx.destroy()
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -180,14 +184,14 @@ class Client(object):
             logger.warning("[Client] Cannot connect to the master. "
                            "Please check if it is still alive.")
             logger.warning("Client exit replying heartbeat for master.")
-            self.master_is_alive = False
+            self.connected_to_master = False
 
         self.master_heartbeat_thread = HeartbeatServerThread(
-            heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
+        heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
         self.master_heartbeat_thread.setDaemon(True)
         self.master_heartbeat_thread.start()
-        self.reply_master_heartbeat_address = self.master_heartbeat_thread.get_address(
-        )
+        self.reply_master_heartbeat_address = self.master_heartbeat_thread.get_address()
+        self.threads.append(self.master_heartbeat_thread)
 
         self.client_id = self.reply_master_heartbeat_address.replace(':', '_') + \
                             '_' + str(int(time.time()))
@@ -206,7 +210,7 @@ class Client(object):
             logger.warning("[Client] Can not connect to the master, please "
                            "check if master is started and ensure the input "
                            "address {} is correct.".format(master_address))
-            self.master_is_alive = False
+            self.connected_to_master = False
             raise Exception("Client can not connect to the master, please "
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
@@ -249,7 +253,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             raise NotImplementedError
 
     def _update_client_status_to_master(self):
-        while self.master_is_alive:
+        while self.connected_to_master:
             elapsed_time = datetime.timedelta(
                 seconds=int(time.time() - self.start_time))
             client_status = {
@@ -268,7 +272,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 ])
                 message = self.submit_job_socket.recv_multipart()
             except zmq.error.Again as e:
-                self.master_is_alive = False
+                self.connected_to_master = False
             finally:
                 self.lock.release()
 
@@ -326,7 +330,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         Returns:
             job_address(str): IP address of the job. None if there is no available CPU in the cluster.
         """
-        if self.master_is_alive:
+        if self.connected_to_master:
 
             while True:
                 # A lock to prevent multiple actors from submitting job at the same time.
@@ -428,6 +432,7 @@ def disconnect():
     if GLOBAL_CLIENT is not None:
         GLOBAL_CLIENT.destroy()
         GLOBAL_CLIENT = None
+        logger.info("The client is disconneced to the master node.")
     else:
         logger.info(
             "No client to be released. Please make sure that you have called `parl.connect`"

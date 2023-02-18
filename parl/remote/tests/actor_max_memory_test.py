@@ -16,16 +16,10 @@ import os
 import parl
 import unittest
 import time
-import threading
-
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
 
-from multiprocessing import Process
 from parl.utils import get_free_tcp_port
-
+from parl.utils.test_utils import XparlTestCase
 
 @parl.remote_class(max_memory=350)
 class Actor(object):
@@ -38,22 +32,11 @@ class Actor(object):
         self.x += 1
         return self.x
 
-
-from parl.utils import logger
-
-
-class TestMaxMemory(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestMaxMemory(XparlTestCase):
     def test_max_memory(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(5)
-        cluster_addr = 'localhost:{}'.format(port)
-        worker = Worker(cluster_addr, 1)
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        cluster_addr = 'localhost:{}'.format(self.port)
         cluster_monitor = ClusterMonitor(cluster_addr)
         time.sleep(5)
         parl.connect(cluster_addr)
@@ -74,10 +57,6 @@ class TestMaxMemory(unittest.TestCase):
             raise ValueError("Actor max memory test failed.")
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
 
-        worker.exit()
-        master.exit()
-        th.join()
-
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

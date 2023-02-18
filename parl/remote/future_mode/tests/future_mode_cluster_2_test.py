@@ -17,13 +17,8 @@ import parl
 import time
 import subprocess
 import threading
-
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
 from parl.remote import exceptions
-from parl.utils import get_free_tcp_port
-
+from parl.utils.test_utils import XparlTestCase
 
 @parl.remote_class(wait=False)
 class Actor(object):
@@ -55,21 +50,11 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-        time.sleep(60)  # wait for test case finishing
-
+class TestCluster(XparlTestCase):
     def test_reset_actor(self):
-        port = get_free_tcp_port()
-        # start the master
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-
-        worker1 = Worker('localhost:{}'.format(port), 4)
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=2)
+        parl.connect('localhost:{}'.format(self.port))
         for _ in range(10):
             actor = Actor()
             future_result = actor.add_one(1)
@@ -77,15 +62,6 @@ class TestCluster(unittest.TestCase):
             actor.destroy()
         del actor
 
-        for _ in range(10):
-            if master.cpu_num == 4:
-                break
-            time.sleep(10)
-
-        self.assertEqual(master.cpu_num, 4)
-        worker1.exit()
-        master.exit()
-
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

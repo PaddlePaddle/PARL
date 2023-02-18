@@ -18,13 +18,8 @@ import numpy as np
 import time
 import threading
 import random
-
-from parl.remote.client import disconnect
 from parl.utils import logger
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.utils import get_free_tcp_port
-
+from parl.utils.test_utils import XparlTestCase
 
 @parl.remote_class(wait=False)
 class Actor(object):
@@ -45,39 +40,27 @@ class Actor(object):
         self.new_attr_1 = 200
 
 
-class Test_get_and_set_attribute(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class Test_get_and_set_attribute(XparlTestCase):
     def test_non_existing_attribute_same_with_existing_method(self):
-        port = get_free_tcp_port()
-        logger.info(
-            "running:test_non_existing_attribute_same_with_existing_method")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        self.add_master()
+        self.add_worker(n_cpu=1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port))
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(arg1, arg2, arg3, arg4)
         actor.new_attr_2 = 300
         self.assertEqual(300, actor.new_attr_2)
         actor.set_new_attr()
         self.assertEqual(200, actor.new_attr_1)
         self.assertTrue(callable(actor.arg5))
-
         def call_non_existing_method():
             return actor.arg2(10)
 
         self.assertRaises(TypeError, call_non_existing_method)
-        master.exit()
-        worker1.exit()
         actor.destroy()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

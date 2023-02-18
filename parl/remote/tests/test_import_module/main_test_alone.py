@@ -15,6 +15,7 @@ import unittest
 import parl
 import multiprocessing as mp
 from parl.utils.test_utils import XparlTestCase
+import os
 
 class TestImport(XparlTestCase):
     def test_import_local_module(self):

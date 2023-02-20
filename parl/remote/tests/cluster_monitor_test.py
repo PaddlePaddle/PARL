@@ -15,15 +15,12 @@
 import unittest
 
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 from parl.remote.monitor import ClusterMonitor
 import time
 import threading
-from parl.remote.client import disconnect
 from parl.remote import exceptions
 import subprocess
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class
@@ -56,25 +53,17 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestClusterMonitor(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestClusterMonitor(XparlTestCase):
     def test_one_worker(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
         time.sleep(1)
         self.assertEqual(1, len(cluster_monitor.data['workers']))
-        worker.exit()
+        self.remove_all_workers()
         time.sleep(40)
         self.assertEqual(0, len(cluster_monitor.data['workers']))
-        master.exit()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

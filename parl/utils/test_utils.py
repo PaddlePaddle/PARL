@@ -24,11 +24,13 @@ class XparlTestCase(unittest.TestCase):
         self.port = get_free_tcp_port()
         self.ctx = mp.get_context()
         self.sub_process = []
+        self.worker_process = []
 
     def tearDown(self):
         for p in self.sub_process:
-            p.terminate()
-            p.join()
+            if p.is_alive():
+                p.terminate()
+                p.join()
         disconnect()
 
     def _create_master(self):
@@ -50,3 +52,10 @@ class XparlTestCase(unittest.TestCase):
         p_worker.start()
         time.sleep(10)
         self.sub_process.append(p_worker)
+        self.worker_process.append(p_worker)
+
+    def remove_all_workers(self):
+        for p in self.worker_process:
+            if p.is_alive():
+                p.terminate()
+                p.join()

@@ -22,7 +22,7 @@ from tensorboardX import SummaryWriter
 from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE
 from parl.utils import logger
 
-if 'XPARL_import_core' not in os.environ: # load the core module by default
+if 'XPARL_igonre_core' not in os.environ: # load the core module by default
     if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
         assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
         logger.info(

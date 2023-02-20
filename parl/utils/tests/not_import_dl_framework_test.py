@@ -20,11 +20,11 @@ import importlib
 class TestNotImportPaddle(unittest.TestCase):
     def test_import(self):
         # setting this enviroment variable will not import deep learning framework
-        os.environ['XPARL_import_core'] = 'true'
+        os.environ['XPARL_igonre_core'] = 'true'
         import parl
         self.assertFalse('paddle' in sys.modules)
         # remove the environment vaiable and reimport the lib
-        del os.environ['XPARL_import_core']
+        del os.environ['XPARL_igonre_core']
         import parl
         importlib.reload(parl)
         self.assertTrue('paddle' in sys.modules)

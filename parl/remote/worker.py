@@ -355,6 +355,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 tag = message[0]
                 assert tag == remote_constants.KILLJOB_TAG
                 to_remove_job_address = to_str(message[1])
+                logger.info("[Worker] A job requests the worker to stop this job.")
                 self._remove_job(to_remove_job_address)
                 self.remove_job_socket.send_multipart(
                     [remote_constants.NORMAL_TAG])

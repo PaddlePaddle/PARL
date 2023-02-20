@@ -46,6 +46,6 @@ else:
         from parl.core.fluid.plutils.compiler import compile
     elif _HAS_TORCH:
         from parl.core.torch import *
+from parl import algorithms
 
 from parl.remote import remote_class, connect
-from parl import algorithms

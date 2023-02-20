@@ -14,7 +14,6 @@
 
 import csv
 import threading
-from parl.utils.utils import _IS_PY2
 
 __all__ = ['CSVLogger']
 
@@ -42,10 +41,7 @@ class CSVLogger(object):
         """
 
         # reference: https://stackoverflow.com/questions/1170214/python-2-csv-writer-produces-wrong-line-terminator-on-windows/1170297#1170297
-        if _IS_PY2:
-            self.output_file = open(output_file, "wb")
-        else:
-            self.output_file = open(output_file, "w", newline="")
+        self.output_file = open(output_file, "w", newline="")
 
         self.csv_writer = None
         self.lock = threading.Lock()

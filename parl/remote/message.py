@@ -17,7 +17,6 @@ class InitializedJob(object):
     def __init__(self,
                  job_address,
                  worker_heartbeat_address,
-                 client_heartbeat_address,
                  ping_heartbeat_address,
                  worker_address,
                  pid,
@@ -27,7 +26,6 @@ class InitializedJob(object):
     Args:
       job_address(str): Job address to which the new task connect.
       worker_heartbeat_address(str): Optional. The address to which the worker sends heartbeat signals.
-      client_heartbeat_address(str): Address to which the client sends heartbeat signals.
       ping_heartbeat_address(str): the server address to which the client sends ping signals.
                                     The signal is used to check if the job is alive.
       worker_address(str): Worker's server address that receive command from the master.
@@ -36,7 +34,6 @@ class InitializedJob(object):
     """
         self.job_address = job_address
         self.worker_heartbeat_address = worker_heartbeat_address
-        self.client_heartbeat_address = client_heartbeat_address
         self.ping_heartbeat_address = ping_heartbeat_address
         self.worker_address = worker_address
         self.pid = pid

@@ -16,14 +16,11 @@ import unittest
 import os
 import shutil
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 import time
 import threading
-from parl.remote.client import disconnect
 from parl.remote import exceptions
 from parl.utils import logger
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class
@@ -32,12 +29,10 @@ class Actor(object):
         return os.path.exists(filename)
 
 
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestCluster(XparlTestCase):
     def test_distributed_files_with_RegExp(self):
-        port = get_free_tcp_port()
+        self.add_master()
+        self.add_worker(n_cpu=1)
         if os.path.exists('distribute_test_dir'):
             shutil.rmtree('distribute_test_dir')
         os.mkdir('distribute_test_dir')
@@ -50,13 +45,8 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir/data2.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
         parl.connect(
-            'localhost:{}'.format(port),
+            'localhost:{}'.format(self.port),
             distributed_files=[
                 'distribute_test_dir/test*',
                 'distribute_test_dir/*npy',
@@ -68,11 +58,10 @@ class TestCluster(unittest.TestCase):
         self.assertTrue(actor.file_exists('distribute_test_dir/data2.npy'))
         self.assertFalse(actor.file_exists('distribute_test_dir/data3.npy'))
         shutil.rmtree('distribute_test_dir')
-        master.exit()
-        worker1.exit()
 
     def test_miss_match_case(self):
-        port = get_free_tcp_port()
+        self.add_master()
+        self.add_worker(n_cpu=1)
         if os.path.exists('distribute_test_dir_2'):
             shutil.rmtree('distribute_test_dir_2')
         os.mkdir('distribute_test_dir_2')
@@ -81,24 +70,18 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir_2/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_files_with_RegExp_error_case")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
 
         def connect_test():
             parl.connect(
-                'localhost:{}'.format(port),
+                'localhost:{}'.format(self.port),
                 distributed_files=['distribute_test_dir_2/miss_match*'])
 
         self.assertRaises(ValueError, connect_test)
         shutil.rmtree('distribute_test_dir_2')
-        master.exit()
-        worker1.exit()
 
     def test_distribute_folder(self):
-        port = get_free_tcp_port()
+        self.add_master()
+        self.add_worker(n_cpu=1)
         if os.path.exists('distribute_test_dir_3'):
             shutil.rmtree('distribute_test_dir_3')
         os.mkdir('distribute_test_dir_3')
@@ -109,13 +92,8 @@ class TestCluster(unittest.TestCase):
         f = open('distribute_test_dir_3/subfolder_test/data1.npy', 'wb')
         f.close()
         logger.info("running:test_distributed_folder")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
         parl.connect(
-            'localhost:{}'.format(port),
+            'localhost:{}'.format(self.port),
             distributed_files=[
                 'distribute_test_dir_3',
             ])
@@ -129,9 +107,7 @@ class TestCluster(unittest.TestCase):
         self.assertTrue(
             actor.file_exists('distribute_test_dir_3/empty_folder'))
         shutil.rmtree('distribute_test_dir_3')
-        master.exit()
-        worker1.exit()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

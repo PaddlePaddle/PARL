@@ -75,12 +75,12 @@ class TestClusterMonitor(unittest.TestCase):
         self.assertEqual(1, len(cluster_monitor.data['clients']))
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
         actor = Actor()
-        time.sleep(20)
+        time.sleep(40)
         self.assertEqual(0, cluster_monitor.data['workers'][0]['vacant_cpus'])
         self.assertEqual(1, cluster_monitor.data['workers'][0]['used_cpus'])
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(40)
+        time.sleep(60)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
 

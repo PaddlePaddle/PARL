@@ -14,14 +14,11 @@
 
 import unittest
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 import time
 import threading
-from parl.remote.client import disconnect
 from parl.remote import exceptions
 from parl.remote.future_mode import FutureObject
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class(wait=False)
@@ -41,26 +38,12 @@ class Actor(object):
         return self.arg1
 
 
-class TestFutureObject(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestFutureObject(XparlTestCase):
     def test_resulf_of_get_function(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(arg1=10, arg2=20)
-
         future_obj = actor.get_arg1()
         assert isinstance(future_obj, FutureObject)
         result = future_obj.get()
@@ -70,46 +53,23 @@ class TestFutureObject(unittest.TestCase):
         assert isinstance(future_obj, FutureObject)
         result = future_obj.get()
         assert result == 20
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_calling_get_function_twice(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor()
         future_obj = actor.get_arg1()
         result = future_obj.get()
         with self.assertRaises(exceptions.FutureGetRepeatedlyError):
             result = future_obj.get()
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_calling_get_function_with_block_false(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
 
         actor = Actor(arg1="arg1")
         sleep_seconds = 3
@@ -122,23 +82,12 @@ class TestFutureObject(unittest.TestCase):
         result = future_obj.get(block=False)
         assert result == "arg1"
 
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_calling_get_nowait_function(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(arg1="arg1")
         sleep_seconds = 3
         future_obj = actor.get_arg1_after_sleep(sleep_seconds=sleep_seconds)
@@ -149,23 +98,12 @@ class TestFutureObject(unittest.TestCase):
 
         result = future_obj.get_nowait()
         assert result == "arg1"
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_calling_get_function_with_timeout(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
 
         actor = Actor(arg1="arg1")
         sleep_seconds = 3
@@ -175,10 +113,8 @@ class TestFutureObject(unittest.TestCase):
 
         result = future_obj.get(timeout=sleep_seconds + 1)
         assert result == "arg1"
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

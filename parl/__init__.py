@@ -22,30 +22,31 @@ from tensorboardX import SummaryWriter
 from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE
 from parl.utils import logger
 
-if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-    assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
-    logger.info(
-        'Have found environment variable `PARL_BACKEND`==\'{}\', switching backend framework to [{}]'
-        .format(os.environ['PARL_BACKEND'], os.environ['PARL_BACKEND']))
-    if os.environ['PARL_BACKEND'] == 'paddle':
-        from parl.core.paddle import *
-    elif os.environ['PARL_BACKEND'] == 'fluid':
-        from parl.core.fluid import *
-        from parl.core.fluid.plutils.compiler import compile
-    elif os.environ['PARL_BACKEND'] == 'torch':
-        assert _HAS_TORCH, 'Torch-based PARL requires torch, which is not installed.'
-        from parl.core.torch import *
-else:
-    if _HAS_PADDLE:
-        from parl.core.paddle import *
-        if _HAS_TORCH:
-            logger.info("PARL detects two backend frameworks: paddle, torch. Use paddle by default.")
-            logger.info("To use torch as backend, `export PARL_BACKEND=torch` before running the scripts.")
-    elif _HAS_FLUID:
-        from parl.core.fluid import *
-        from parl.core.fluid.plutils.compiler import compile
-    elif _HAS_TORCH:
-        from parl.core.torch import *
+if 'XPARL_import_core' not in os.environ: # load the core module by default
+    if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+        assert os.environ['PARL_BACKEND'] in ['fluid', 'paddle', 'torch']
+        logger.info(
+            'Have found environment variable `PARL_BACKEND`==\'{}\', switching backend framework to [{}]'
+            .format(os.environ['PARL_BACKEND'], os.environ['PARL_BACKEND']))
+        if os.environ['PARL_BACKEND'] == 'paddle':
+            from parl.core.paddle import *
+        elif os.environ['PARL_BACKEND'] == 'fluid':
+            from parl.core.fluid import *
+            from parl.core.fluid.plutils.compiler import compile
+        elif os.environ['PARL_BACKEND'] == 'torch':
+            assert _HAS_TORCH, 'Torch-based PARL requires torch, which is not installed.'
+            from parl.core.torch import *
+    else:
+        if _HAS_PADDLE:
+            from parl.core.paddle import *
+            if _HAS_TORCH:
+                logger.info("PARL detects two backend frameworks: paddle, torch. Use paddle by default.")
+                logger.info("To use torch as backend, `export PARL_BACKEND=torch` before running the scripts.")
+        elif _HAS_FLUID:
+            from parl.core.fluid import *
+            from parl.core.fluid.plutils.compiler import compile
+        elif _HAS_TORCH:
+            from parl.core.torch import *
+    from parl import algorithms
 
-from parl import algorithms
 from parl.remote import remote_class, connect

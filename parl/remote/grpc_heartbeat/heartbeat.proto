@@ -21,11 +21,12 @@ service GrpcHeartbeat {
 
 // The request message.
 message Request {
-  bytes tag = 1;
+  string client_id = 1;
+  bytes tag = 2;
+  string extra_msg = 4;
 }
 
 // The response message
 message Reply {
   bytes tag = 1;
-  string extra_message = 2;
 }

@@ -18,12 +18,8 @@ import numpy as np
 import time
 import threading
 import random
-
-from parl.remote.client import disconnect
 from parl.utils import logger
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class(wait=False)
@@ -45,43 +41,29 @@ class Actor(object):
         self.new_attr_1 = 200
 
 
-class Test_get_and_set_attribute(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class Test_get_and_set_attribute(XparlTestCase):
     def test_create_new_attribute_same_with_wrapper(self):
-        port = get_free_tcp_port()
-        logger.info("running:test_create_new_attribute_same_with_wrapper")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        self.add_master()
+        self.add_worker(n_cpu=1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port))
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(arg1, arg2, arg3, arg4)
 
         actor.internal_lock = 50
         self.assertTrue(actor.internal_lock == 50)
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_same_name_of_attribute_and_method(self):
-        port = get_free_tcp_port()
-        logger.info("running:test_same_name_of_attribute_and_method")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
+        self.add_master()
+        self.add_worker(n_cpu=1)
         arg1 = np.random.randint(100)
         arg2 = np.random.randn()
         arg3 = np.random.randn(3, 3)
         arg4 = 100
-        parl.connect('localhost:{}'.format(port))
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(arg1, arg2, arg3, arg4)
         self.assertEqual(arg1, actor.arg1)
 
@@ -89,9 +71,7 @@ class Test_get_and_set_attribute(unittest.TestCase):
             return actor.arg1(1, 2)
 
         self.assertRaises(TypeError, call_method)
-        master.exit()
-        worker1.exit()
-
+        actor.destroy()
 
 if __name__ == '__main__':
     unittest.main()

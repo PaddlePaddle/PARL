@@ -15,12 +15,9 @@
 import unittest
 import parl
 import numpy as np
-from parl.remote.client import disconnect
-from parl.utils import logger, get_free_tcp_port
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 from parl.remote.exceptions import FutureFunctionError
 from parl.remote.future_mode.future_object import FutureObject
+from parl.utils.test_utils import XparlTestCase
 import time
 import threading
 import random
@@ -44,20 +41,11 @@ class Actor2(object):
         return 0
 
 
-class Test_proxy_wrapper(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class Test_proxy_wrapper(XparlTestCase):
     def test_proxy_wrapper_nowait(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-
-        parl.connect('localhost:{}'.format(port))
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
         actor = Actor(10)
 
         assert actor.arg == 10
@@ -68,42 +56,25 @@ class Test_proxy_wrapper(unittest.TestCase):
         future_obj = actor.add_one(1)
         assert isinstance(future_obj, FutureObject)
         assert future_obj.get() == 2
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_kwargs_with_reserved_names_1(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
 
         with self.assertRaises(AssertionError):
             actor = Actor(_xparl_proxy_wrapper_nowait__=1)
 
-        master.exit()
-        worker1.exit()
-
     def test_attribute_with_reserved_names_1(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
 
         actor = Actor2()  # will raise error in another thread
         with self.assertRaises(FutureFunctionError):
             actor.get_arg()  # calling any function will raise error
-
-        master.exit()
-        worker1.exit()
+        actor.destroy()
 
     def test_get_original_class(self):
         origin_class = Actor._original
@@ -114,4 +85,4 @@ class Test_proxy_wrapper(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

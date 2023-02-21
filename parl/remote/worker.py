@@ -30,7 +30,7 @@ import parl
 from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS 
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker
-from parl.remote.status import WorkerStatus
+from parl.remote.job_pool import JobPool
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 from six.moves import queue
@@ -75,7 +75,7 @@ class Worker(object):
         self.master_address = master_address
         self.master_is_alive = True
         self.worker_is_alive = True
-        self.worker_status = None  # initialized at `self._create_jobs`
+        self.job_pool = None  # initialized at `self._create_jobs`
         self._set_cpu_num(cpu_num)
         self.job_buffer = queue.Queue(maxsize=self.cpu_num)
         self._create_sockets()
@@ -198,7 +198,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 [remote_constants.WORKER_CONNECT_TAG])
             _ = self.request_master_socket.recv_multipart()
         except zmq.error.Again as e:
-            logger.error("Can not connect to the master, "
+            logger.error("[Worker] Can not connect to the master, "
                          "please check if master is started.")
             self.master_is_alive = False
             return
@@ -211,8 +211,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
             logger.warning(
                 "[Worker] lost connection with the master, will exit reply heartbeat for master."
             )
-            if self.worker_status is not None:
-                self.worker_status.clear()
+            if self.job_pool is not None:
+                self.job_pool.clear()
             self.log_server_proc.kill()
             self.log_server_proc.wait()
             # exit the worker
@@ -243,7 +243,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         ])
 
         _ = self.request_master_socket.recv_multipart()
-        self.worker_status = WorkerStatus(self.master_heartbeat_address,
+        self.job_pool = JobPool(self.master_heartbeat_address,
                                           initialized_jobs, self.cpu_num)
 
     def _fill_job_buffer(self):
@@ -257,7 +257,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     for job in initialized_jobs:
                         self.job_buffer.put(job)
 
-            time.sleep(0.02)
+            time.sleep(1)
         self.exit()
 
     def _init_jobs(self, job_num):
@@ -317,20 +317,20 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
     def _remove_job(self, job_address):
         """Kill a job process and update worker information"""
-        success = self.worker_status.remove_job(job_address)
+        success = self.job_pool.remove_job(job_address)
         if success:
             while True:
                 initialized_job = self.job_buffer.get()
                 initialized_job.worker_address = self.master_heartbeat_address
                 if initialized_job.is_alive:
-                    self.worker_status.add_job(initialized_job)
+                    self.job_pool.add_job(initialized_job)
                     if not initialized_job.is_alive:  # make sure that the job is still alive.
-                        self.worker_status.remove_job(
+                        self.job_pool.remove_job(
                             initialized_job.job_address)
                         continue
                 else:
                     logger.warning(
-                        "[Worker] a dead job found. The job buffer will not accept this one."
+                        "[Worker] The job is stopped. "
                     )
                 if initialized_job.is_alive:
                     break
@@ -355,7 +355,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 tag = message[0]
                 assert tag == remote_constants.KILLJOB_TAG
                 to_remove_job_address = to_str(message[1])
-                logger.info("[Worker] A job requests the worker to stop this job.")
+                logger.info("[Worker] A job with address {} requests the worker to stop this job.".format(to_remove_job_address))
                 self._remove_job(to_remove_job_address)
                 self.remove_job_socket.send_multipart(
                     [remote_constants.NORMAL_TAG])

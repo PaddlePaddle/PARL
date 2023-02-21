@@ -80,7 +80,6 @@ class Client(object):
 
     def destroy(self):
         """Destructor function"""
-        self.client_is_alive.value = False
         self.connected_to_master = False
         self.master_heartbeat_thread.exit()
         for th in self.threads:
@@ -308,8 +307,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         """
         job_heartbeat_port = mp.Value('i', 0)
         self.actor_num = mp.Value('i', 0)
-        self.client_is_alive = mp.Value('i', True)
-        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.client_is_alive)
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
         self.job_heartbeat_process.daemon = True
         self.job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."

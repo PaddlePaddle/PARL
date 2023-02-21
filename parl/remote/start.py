@@ -16,7 +16,7 @@ import argparse
 import os
 import threading
 import pynvml
-from parl.remote import Master, Worker
+from parl.remote import Master, Worker, remote_constants
 
 
 def main(args):
@@ -30,17 +30,18 @@ def main(args):
     if args.name == 'master':
         port = args.port
         monitor_port = args.monitor_port
-        master = Master(port, monitor_port, args.xpu)
+        device = remote_constants.GPU if args.gpu_cluster else remote_constants.CPU
+        master = Master(port, monitor_port, device)
         master.run()
 
     elif args.name == 'worker':
         address = args.address
         log_server_port = args.log_server_port
         cpu_num = int(args.cpu_num) if args.cpu_num else None
-        gpu_ids = args.gpu_ids
-        if gpu_ids:
+        gpu = args.gpu
+        if gpu:
             cpu_num = 0
-        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port, gpu_ids=gpu_ids)
+        worker = Worker(address, cpu_num=cpu_num, log_server_port=args.log_server_port, gpu=gpu)
         worker.run()
 
     else:
@@ -50,11 +51,11 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', default='master', type=str, help='master/worker')
-    parser.add_argument('--xpu', default='cpu', type=str, help='cpu/gpu')
+    parser.add_argument('--gpu_cluster', default=False, type=bool)
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)
-    parser.add_argument('--gpu_ids', default='', type=str)
+    parser.add_argument('--gpu', default='', type=str)
     parser.add_argument('--monitor_port', default='', type=str)
     parser.add_argument('--log_server_port', default='', type=str)
     args = parser.parse_args()

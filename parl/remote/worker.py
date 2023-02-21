@@ -30,7 +30,7 @@ import pynvml
 import parl
 from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
 from parl.remote import remote_constants
-from parl.remote.message import InitializedWorker
+from parl.remote.message import InitializedWorker, InitializedCpu, InitializedGpu
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
@@ -68,10 +68,10 @@ class Worker(object):
     Args:
         master_address (str): IP address of the master node.
         cpu_num (int): Number of cpu to be used on the worker.
-        gpu_ids (str): id list of gpu to be used on the worker.
+        gpu (str): Comma separated list of GPU(s) to use.
     """
 
-    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu_ids=''):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu=''):
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -79,10 +79,10 @@ class Worker(object):
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
         self._set_cpu_num(cpu_num)
-        self._set_gpu_num(gpu_ids)
-        self.gpu_ids = gpu_ids
-        self.xpu_num = max(self.cpu_num, self.gpu_num)
-        self.job_buffer = queue.Queue(maxsize=self.xpu_num)
+        self._set_gpu_num(gpu)
+        self.gpu = gpu
+        self.device_count = self.cpu_num + self.gpu_num
+        self.job_buffer = queue.Queue(maxsize=self.device_count)
         self._create_sockets()
         self.check_env_consistency()
         # create log server
@@ -112,11 +112,11 @@ class Worker(object):
         else:
             self.cpu_num = multiprocessing.cpu_count()
 
-    def _set_gpu_num(self, gpu_ids=''):
+    def _set_gpu_num(self, gpu=''):
         """set useable gpu number for worker"""
         self.gpu_num = 0
-        if gpu_ids:
-            self.gpu_num = len(gpu_ids.split(','))
+        if gpu:
+            self.gpu_num = len(gpu.split(','))
 
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
@@ -203,7 +203,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             self.master_is_alive = False
             return
 
-        initialized_jobs = self._init_jobs(job_num=self.xpu_num)
+        initialized_jobs = self._init_jobs(job_num=self.device_count)
         self.request_master_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
         def master_heartbeat_exit_callback_func():
@@ -231,15 +231,21 @@ found in your current environment. To use "pyarrow" for serialization, please in
         for job in initialized_jobs:
             job.worker_address = self.master_heartbeat_address
 
-        initialized_worker = InitializedWorker(self.master_heartbeat_address, initialized_jobs, self.cpu_num,
-                                               self.gpu_ids, socket.gethostname())
+        initialized_cpu = InitializedCpu(self.master_heartbeat_address, self.cpu_num)
+        initialized_gpu = InitializedGpu(self.master_heartbeat_address, self.gpu)
+        initialized_worker = InitializedWorker(self.master_heartbeat_address, initialized_jobs, initialized_cpu,
+                                               initialized_gpu, socket.gethostname())
         self.request_master_socket.send_multipart(
             [remote_constants.WORKER_INITIALIZED_TAG,
              cloudpickle.dumps(initialized_worker)])
 
         message = self.request_master_socket.recv_multipart()
-        if message[0] in [remote_constants.REJECT_CPU_WORKER_TAG, remote_constants.REJECT_GPU_WORKER_TAG]:
-            error_message = "[Worker] has {} CPUs, {} GPUs, is rejected".format(self.cpu_num, self.gpu_num)
+        if message[0] == remote_constants.REJECT_CPU_WORKER_TAG:
+            error_message = "[Worker] with CPUs connects to a Master with GPUs, but rejected"
+            logger.warning(error_message)
+            self.worker_is_alive = False
+        elif message[0] == remote_constants.REJECT_GPU_WORKER_TAG:
+            error_message = "[Worker] with GPUs connects to a Master with CPUs, but rejected"
             logger.warning(error_message)
             self.worker_is_alive = False
         else:
@@ -251,7 +257,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         initialized_jobs = []
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
-                job_num = self.xpu_num - self.job_buffer.qsize()
+                job_num = self.device_count - self.job_buffer.qsize()
                 if job_num > 0:
                     initialized_jobs = self._init_jobs(job_num=job_num)
                     for job in initialized_jobs:
@@ -359,11 +365,12 @@ found in your current environment. To use "pyarrow" for serialization, please in
         pynvml.nvmlInit()
         used_gpu_memory = 0
         vacant_gpu_memory = 0
-        for i in range(self.gpu_num):
-            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            memery_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            used_gpu_memory += int(memery_info.used / (1024 * 1024))
-            vacant_gpu_memory += int(memery_info.free / (1024 * 1024))
+        if self.gpu:
+            for gpu_id in self.gpu.split(','):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(int(gpu_id))
+                memery_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                used_gpu_memory += int(memery_info.used / (1024 * 1024))
+                vacant_gpu_memory += int(memery_info.free / (1024 * 1024))
         pynvml.nvmlShutdown()
         if _IS_WINDOWS:
             load_average = round(psutil.getloadavg()[0], 2)

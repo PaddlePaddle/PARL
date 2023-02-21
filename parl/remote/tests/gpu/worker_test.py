@@ -16,7 +16,7 @@ import unittest
 import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-from parl.remote.job_center import JobCenter
+from parl.remote.worker_manager import WorkerManager
 import time
 import threading
 from parl.remote.client import disconnect
@@ -26,7 +26,7 @@ from parl.utils import logger, get_free_tcp_port
 class TestCluster(unittest.TestCase):
     def test_worker_run(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
@@ -47,7 +47,7 @@ class TestCluster(unittest.TestCase):
 
     def test_cpu_worker_connect_gpu_master(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
@@ -65,7 +65,7 @@ class TestCluster(unittest.TestCase):
 
     def test_gpu_worker_connect_cpu_master(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='cpu')
+        master = Master(port=port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
@@ -84,11 +84,11 @@ class TestCluster(unittest.TestCase):
 
     def test_gpu_worker_exit(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        job_center = JobCenter('localhost:{}'.format(port), 'gpu')
+        worker_manager = WorkerManager('localhost:{}'.format(port), ['gpu'])
         worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
@@ -107,11 +107,11 @@ class TestCluster(unittest.TestCase):
 
     def test_cpu_worker_exit(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='cpu')
+        master = Master(port=port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
-        job_center = JobCenter('localhost:{}'.format(port), 'cpu')
+        worker_manager = WorkerManager('localhost:{}'.format(port), ['cpu'])
         worker = Worker('localhost:{}'.format(port), 1, None, "")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()

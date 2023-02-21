@@ -14,7 +14,7 @@
 
 import os
 # set the environment variables before importing any DL framework.
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ.pop('CUDA_VISIBLE_DEVICES', None)
 os.environ['XPARL'] = 'True'
 
 # Fix cloudpickle compatible problem we known.
@@ -62,8 +62,10 @@ class Job(object):
         Attributes:
             pid (int): Job process ID.
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
+            gpu (str): id list of GPUs can be used by each remote instance.
         """
         self.max_memory = None
+        self.gpu = ""
 
         self.job_address_receiver, job_address_sender = Pipe()
         self.job_id_receiver, job_id_sender = Pipe()
@@ -193,6 +195,7 @@ class Job(object):
         max_memory = to_str(message[1])
         if max_memory != 'None':
             self.max_memory = float(max_memory)
+        self.gpu = to_str(message[2])
         socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
         self.client_heartbeat_server_thread.start()
@@ -276,19 +279,25 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                xparl_reserved_kwargs = cloudpickle.loads(message[3])
-                for key, value in xparl_reserved_kwargs.items():
-                    if key.endswith('CUDA_VISIBLE_DEVICES'):
-                        os.environ['CUDA_VISIBLE_DEVICES'] = value
-                        if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-                            if os.environ['PARL_BACKEND'] == 'torch':
-                                # ensure CUDA_VISIBLE_DEVICES take a global unique effect
-                                import torch
-                                assert (torch.cuda.device_count() == len(value.split(',')))
-                            else:
-                                # ensure CUDA_VISIBLE_DEVICES take a global unique effect
-                                import paddle
-                                assert (paddle.device.cuda.device_count() == len(value.split(',')))
+                if self.gpu:
+                    os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
+                    if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+                        if os.environ['PARL_BACKEND'] == 'torch':
+                            # ensure CUDA_VISIBLE_DEVICES take a global unique effect
+                            import torch
+                            if torch.cuda.device_count() != len(self.gpu.split(',')):
+                                error_message = "torch device_count[{}] conflicts with job's gpus:[{}]".format(
+                                    torch.cuda_device_count(), self.gpu)
+                                logger.error(error_message)
+                            assert (torch.cuda.device_count() == len(self.gpu.split(',')))
+                        else:
+                            # ensure CUDA_VISIBLE_DEVICES take a global unique effect
+                            import paddle
+                            if paddle.device.cuda.device_count() != len(self.gpu.split(',')):
+                                error_message = "paddle device_count[{}] conflicts with job's gpus:[{}]".format(
+                                    paddle.device.cuda.device_count(), self.gpu)
+                                logger.error(error_message)
+                            assert (paddle.device.cuda.device_count() == len(self.gpu.split(',')))
                 cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
                 with redirect_output_to_file(self.logfile_path, os.devnull):

@@ -35,7 +35,7 @@ class WorkerStatus(object):
         self._lock = threading.Lock()
         self.cpu_num = cpu_num
         self.gpu_num = gpu_num
-        self.xpu_num = max(self.cpu_num, self.gpu_num)
+        self.device_count = self.cpu_num + self.gpu_num
 
     def remove_job(self, killed_job):
         """Rmove a job from internal job pool.
@@ -79,5 +79,5 @@ class WorkerStatus(object):
         """
         self._lock.acquire()
         self.jobs[new_job.job_address] = new_job
-        assert len(self.jobs) <= self.xpu_num
+        assert len(self.jobs) <= self.device_count
         self._lock.release()

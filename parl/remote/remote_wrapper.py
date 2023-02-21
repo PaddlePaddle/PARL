@@ -64,13 +64,10 @@ class RemoteWrapper(object):
 
         # max_memory argument in @remote_class decorator
         max_memory = kwargs.get('_xparl_remote_class_max_memory')
-        n_gpus = kwargs.get('_xparl_remote_class_n_gpus', 0)
+        n_gpu = kwargs.get('_xparl_remote_class_n_gpus', 0)
 
         if self.GLOBAL_CLIENT.master_is_alive:
-            if n_gpus > 0:
-                job = self.request_gpu_resource(self.GLOBAL_CLIENT, n_gpus, actor_ref_monitor)
-            else:
-                job = self.request_cpu_resource(self.GLOBAL_CLIENT, max_memory, actor_ref_monitor)
+            job = self.request_resource(self.GLOBAL_CLIENT, max_memory, n_gpu, actor_ref_monitor)
         else:
             raise Exception("Can not submit job to the master. " "Please check if master is still alive.")
 
@@ -93,15 +90,11 @@ class RemoteWrapper(object):
 
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
-                kwargs.pop(key)
-        xparl_reserved_kwargs = {}
-        if job.gpus:
-            xparl_reserved_kwargs[XPARL_RESERVED_PREFIX + "_" + 'CUDA_VISIBLE_DEVICES'] = ','.join(job.gpus)
+                del kwargs[key]
         self.job_socket.send_multipart([
             remote_constants.INIT_OBJECT_TAG,
             dump_remote_class(cls),
             cloudpickle.dumps([args, kwargs]),
-            cloudpickle.dumps(xparl_reserved_kwargs),
         ])
         message = self.job_socket.recv_multipart()
         tag = message[0]
@@ -145,27 +138,15 @@ class RemoteWrapper(object):
         except zmq.error.Again as e:
             logger.error("Send python files failed.")
 
-    def request_cpu_resource(self, global_client, max_memory, actor_ref_monitor):
+    def request_resource(self, global_client, max_memory, n_gpu, actor_ref_monitor):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job = global_client.submit_job(max_memory, 0, actor_ref_monitor)
+            job = global_client.submit_job(max_memory, n_gpu, actor_ref_monitor)
             if job is not None:
                 return job
             if cnt % 30 == 0:
-                logger.warning("No vacant cpu resources at the moment, " "will try {} times later.".format(cnt))
-            cnt -= 1
-        return None
-
-    def request_gpu_resource(self, global_client, n_gpus, actor_ref_monitor):
-        """Try to request gpu resource for 5 second/time for 60 times."""
-        cnt = 60
-        while cnt > 0:
-            job = global_client.submit_job(None, n_gpus, actor_ref_monitor)
-            if job is not None:
-                return job
-            if cnt % 5 == 0:
-                logger.warning("No vacant gpu resources at the moment, " "will try {} times later.".format(cnt))
+                logger.warning("No vacant cpu/gpu resources at the moment, " "will try {} times later.".format(cnt))
             cnt -= 1
         return None
 

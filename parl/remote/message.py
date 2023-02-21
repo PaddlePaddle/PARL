@@ -15,6 +15,26 @@
 import os
 
 
+class InitializedGpu(object):
+    def __init__(self, worker_address, gpu):
+        """
+        Args:
+            gpu(str): a comma separated list of GPU(s) used in a job
+        """
+        self.worker_address = worker_address
+        self.gpu = gpu
+
+
+class InitializedCpu(object):
+    def __init__(self, worker_address, n_cpu):
+        """
+        Args:
+            n_cpu(int): The number of CPU(s) used in a job.
+        """
+        self.worker_address = worker_address
+        self.n_cpu = n_cpu
+
+
 class InitializedJob(object):
     def __init__(self,
                  job_address,
@@ -45,21 +65,21 @@ class InitializedJob(object):
         self.is_alive = True
         self.job_id = job_id
         self.log_server_address = log_server_address
-        self.gpus = []  # Record which gpus does job has, should be set in JobCenter
+        self.initialized_cpu = None  # Record CPU(s) used in a job
+        self.initialized_gpu = None  # Record GPU(s) used in a job
 
 
 class InitializedWorker(object):
-    def __init__(self, master_heartbeat_address, initialized_jobs, cpu_num, gpu_ids, hostname):
+    def __init__(self, worker_address, initialized_jobs, initialized_cpu, initialized_gpu, hostname):
         """
     Args:
       worker_address(str): Worker server address that receives commands from the master.
-      master_heartbeat_address(str): Address to which the worker send heartbeat signals to.
       initialized_jobs(list): A list of ``InitializedJob`` containing the information for initialized jobs.
-      cpu_num(int): The number of CPUs used in this worker.
-      gpu_ids (str): id list of gpu to be used on the worker.
+      n_cpu(int): The number of CPUs used in this worker.
+      gpu (str): id list of gpu to be used on the worker.
     """
-        self.worker_address = master_heartbeat_address
+        self.worker_address = worker_address
         self.initialized_jobs = initialized_jobs
-        self.cpu_num = cpu_num
+        self.initialized_cpu = initialized_cpu
+        self.initialized_gpu = initialized_gpu
         self.hostname = hostname
-        self.gpu_ids = gpu_ids

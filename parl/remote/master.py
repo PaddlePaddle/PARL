@@ -86,7 +86,7 @@ class Master(object):
     def _print_workers(self):
         """Display `worker_pool` infomation."""
         logger.info(
-            "Master connects to {} workers and has {} vacant CPUs.\n".format(
+            "[Master] connects to {} workers and has {} vacant CPUs.\n".format(
                 self.worker_num, self.cpu_num))
 
     @property
@@ -106,7 +106,7 @@ class Master(object):
         tag = message[0]
 
         # a new worker connects to the master
-        if tag == remote_constants.WORKER_CONNECT_TAG:
+        if tag == remote_constants.WORKER_PING_TAG:
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         elif tag == remote_constants.MONITOR_TAG:
@@ -128,17 +128,16 @@ class Master(object):
             hostname = self.job_center.get_hostname(worker_address)
             total_cpus = self.job_center.get_total_cpu(worker_address)
             self.cluster_monitor.add_worker_status(worker_address, hostname, total_cpus)
-            logger.info("A new worker {} is added, ".format(worker_address) +
-                        "the cluster has {} CPUs.\n".format(self.cpu_num))
+            logger.info("[Master ] A new worker with {} CPUs is added.".format(worker_address, total_cpus) +
+                        "The cluster has {} CPUs.\n".format(self.cpu_num))
 
             def heartbeat_exit_callback_func(worker_address):
                 self.job_center.drop_worker(worker_address)
                 self.cluster_monitor.drop_worker_status(worker_address)
                 logger.warning("\n[Master] Cannot connect to the worker " +
                                "{}. ".format(worker_address) +
-                               "Worker_pool will drop this worker.")
+                               "The cluster will erase information of the worker.")
                 self._print_workers()
-                logger.warning("Exit worker monitor from master.")
 
             # a thread for sending heartbeat signals to the client
             thread = HeartbeatClientThread(
@@ -161,7 +160,7 @@ class Master(object):
             client_id = to_str(message[3])
             self.client_hostname[client_heartbeat_address] = client_hostname
             logger.info(
-                "Client {} is connected.".format(client_heartbeat_address))
+                "[Master] Client from {} is connected.".format(client_heartbeat_address))
 
             def heartbeat_exit_callback_func(client_heartbeat_address):
                 self.cluster_monitor.drop_client_status(
@@ -169,10 +168,6 @@ class Master(object):
                 logger.warning("[Master] cannot connect to the client " +
                                "{}. ".format(client_heartbeat_address) +
                                "Please check if it is still alive.")
-                logger.info(
-                    "Master connects to {} workers and have {} vacant CPUs.\n".
-                    format(self.worker_num, self.cpu_num))
-
             # a thread for sending heartbeat signals to the client
             thread = HeartbeatClientThread(
                 client_heartbeat_address,
@@ -201,7 +196,6 @@ class Master(object):
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
             # check available CPU resources
             if self.cpu_num:
-                logger.info("Submitting job...")
                 job = self.job_center.request_job()
                 self.client_socket.send_multipart([
                     remote_constants.NORMAL_TAG,
@@ -209,6 +203,7 @@ class Master(object):
                     to_byte(job.ping_heartbeat_address),
                 ])
                 client_id = to_str(message[2])
+                logger.info("[Master] receives request of 1 CPU from the client: {}".format(client_id))
                 job_info = {job.job_id: job.log_server_address}
                 self.cluster_monitor.add_client_job(client_id, job_info)
                 self._print_workers()
@@ -223,8 +218,7 @@ class Master(object):
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
             self.job_center.update_job(last_job_address, initialized_job,
                                        initialized_job.worker_address)
-            logger.info("A worker updated. cpu_num:{}".format(self.cpu_num))
-
+            logger.info("[Master] receives a new job from the worker:{}".format(initialized_job.worker_address))
             self._print_workers()
 
         # client update status periodically

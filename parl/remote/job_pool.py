@@ -57,7 +57,7 @@ class JobPool(object):
         return ret
 
     def clear(self):
-        """Remove all the jobs"""
+        """Remove all the jobs and kill the corresponding process"""
         self._lock.acquire()
         for job in self.jobs.values():
             try:

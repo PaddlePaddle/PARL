@@ -196,7 +196,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
     def _create_jobs(self):
         """Create jobs and send a instance of ``InitializedWorker`` that contains the worker information to the master."""
         try:
-            self.request_master_socket.send_multipart([remote_constants.WORKER_CONNECT_TAG])
+            self.request_master_socket.send_multipart([remote_constants.WORKER_PING_TAG])
             _ = self.request_master_socket.recv_multipart()
         except zmq.error.Again as e:
             logger.error("[Worker] Can not connect to the master, " "please check if master is started.")

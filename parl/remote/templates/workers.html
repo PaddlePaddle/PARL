@@ -51,10 +51,6 @@
           createDivs(res, start_num);
           addPlots(res, record, imgHandle, 0, start_num);
         });
-        // debugger;
-        // res = datas;
-        createDivs(res, start_num);
-        addPlots(res, record, imgHandle, 0, start_num);
 
         setInterval(function () {
           $.get("cluster", function (data, status) {

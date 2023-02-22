@@ -333,16 +333,15 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 ])
                 message = self.submit_job_socket.recv_multipart()
                 self.lock.release()
-
                 tag = message[0]
                 if tag == remote_constants.NORMAL_TAG:
                     job = cloudpickle.loads(message[1])
                     job_ping_address = job.ping_heartbeat_address
 
+                    self.lock.acquire()
                     check_result = self._check_and_monitor_job(job_ping_address, max_memory, job.initialized_gpu.gpu)
+                    self.lock.release()
                     if check_result:
-                        with self.actor_num.get_lock():
-                            self.actor_num.value += 1
                         return job
                 # no vacant CPU resources, cannot submit a new job
                 elif tag == remote_constants.CPU_TAG:

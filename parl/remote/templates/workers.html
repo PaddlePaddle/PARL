@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <title>Parl Cluster</title>
-      <link rel="shortcut icon" href="../static/favicon.ico">
-      
-      <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <link rel="shortcut icon" href="../static/favicon.ico" />
+
+    <script type="text/javascript" src="../static/js/jquery.min.js"></script>
     <script src="../static/js/echarts.min.js"></script>
     <script src="../static/js/parl.js"></script>
     <link rel="stylesheet" href="../static/css/bootstrap-parl.min.css" />
@@ -44,23 +44,28 @@
       var div_num = 5;
       var start_num = 5;
       var delta = 3;
-
-      $(document).ready(function() {
-        $.get("cluster", function(data, status) {
+      var flag = false;
+      $(document).ready(function () {
+        $.get("cluster", function (data, status) {
           res = data;
           createDivs(res, start_num);
           addPlots(res, record, imgHandle, 0, start_num);
         });
+        // debugger;
+        // res = datas;
+        createDivs(res, start_num);
+        addPlots(res, record, imgHandle, 0, start_num);
 
-        setInterval(function() {
-          $.get("cluster", function(data, status) {
+        setInterval(function () {
+          $.get("cluster", function (data, status) {
             res = data;
             createDivs(res, start_num);
             addPlots(res, record, imgHandle, 0, start_num);
           });
         }, 10000);
 
-        $(window).on("scroll", function() {
+        $(window).on("scroll", function () {
+          // debugger;
           var scrollTop = $(document).scrollTop();
           var windowHeight = $(window).height();
           var bodyHeight = $(document).height() - windowHeight;
@@ -71,6 +76,22 @@
               createDivs(res, div_num);
               addPlots(res, record, imgHandle, div_num - delta, div_num);
             }
+          }
+        });
+        $(window).on("mousewheel", function () {
+          if (!flag) {
+            var scrollTop = $(document).scrollTop();
+            var windowHeight = $(window).height();
+            var bodyHeight = $(document).height() - windowHeight;
+            var scrollPercentage = scrollTop / bodyHeight;
+            if (div_num < res.workers.length) {
+              div_num += delta;
+              createDivs(res, div_num);
+              addPlots(res, record, imgHandle, div_num - delta, div_num);
+            }
+          } else {
+            flag = true;
+            return;
           }
         });
       });

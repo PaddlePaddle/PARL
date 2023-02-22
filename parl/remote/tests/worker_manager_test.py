@@ -26,7 +26,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='172.18.182.39:{}'.format(1234 + i),
                 worker_heartbeat_address='172.18.182.39:48724',
-                client_heartbeat_address='172.18.182.39:48725',
                 ping_heartbeat_address='172.18.182.39:48726',
                 worker_address='172.18.182.39:8001',
                 pid=1234)
@@ -47,7 +46,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='172.18.182.39:{}'.format(2234 + i),
                 worker_heartbeat_address='172.18.182.39:48724',
-                client_heartbeat_address='172.18.182.39:48725',
                 ping_heartbeat_address='172.18.182.39:48726',
                 worker_address='172.18.182.39:8002',
                 pid=1234)
@@ -118,7 +116,6 @@ class ImportTest(unittest.TestCase):
         job = InitializedJob(
             job_address='172.18.182.39:{}'.format(9245),
             worker_heartbeat_address='172.18.182.39:48724',
-            client_heartbeat_address='172.18.182.39:48725',
             ping_heartbeat_address='172.18.182.39:48726',
             worker_address='172.18.182.39:478727',
             pid=1234)

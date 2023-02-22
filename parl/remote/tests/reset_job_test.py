@@ -18,11 +18,14 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import logger
+import multiprocessing as mp
 import subprocess
 import time
 import threading
 import subprocess
 import sys
+import os
+import signal
 
 
 @parl.remote_class
@@ -59,7 +62,7 @@ class TestJob(unittest.TestCase):
     def tearDown(self):
         disconnect()
 
-    def test_acor_exit_exceptionally(self):
+    def test_actor_exit_exceptionally(self):
         # reset_job_test.py will execute simulate_client.py, these two files must use the same port
         port = 1337  # can not use get_free_tcp_port()
         master = Master(port)
@@ -70,14 +73,14 @@ class TestJob(unittest.TestCase):
 
         file_path = __file__.replace('reset_job_test', 'simulate_client')
         command = [sys.executable, file_path]
-        proc = subprocess.Popen(command, close_fds=True)
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, preexec_fn=os.setsid)
         for _ in range(6):
             if master.cpu_num == 0:
                 break
             else:
                 time.sleep(10)
         self.assertEqual(master.cpu_num, 0)
-        proc.kill()
+        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
 
         parl.connect('localhost:{}'.format(port))
         actor = Actor()

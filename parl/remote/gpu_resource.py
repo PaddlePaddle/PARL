@@ -67,7 +67,8 @@ class GpuResource(object):
         """
         for gpu_id in initialized_gpu.gpu.split(","):
             self.worker_vacant_gpus[worker_address].append(gpu_id)
-            self.worker_used_gpus[worker_address].remove(gpu_id)
+            if gpu_id in self.worker_used_gpus[worker_address]:
+                self.worker_used_gpus[worker_address].remove(gpu_id)
 
     def get_vacant_gpu(self, worker_address):
         """Return vacant gpu number of a worker."""

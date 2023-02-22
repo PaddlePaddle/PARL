@@ -16,6 +16,7 @@ import os
 # set the environment variables before importing any DL framework.
 os.environ.pop('CUDA_VISIBLE_DEVICES', None)
 os.environ['XPARL'] = 'True'
+os.environ['XPARL_igonre_core'] = 'true'
 
 # Fix cloudpickle compatible problem we known.
 import compatible_trick
@@ -42,7 +43,10 @@ from parl.remote.message import InitializedJob
 from parl.remote.utils import redirect_output_to_file
 from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
-from parl.remote.grpc_heartbeat import HeartbeatServerThread
+from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
+
+if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+    assert os.environ['PARL_BACKEND'] not in sys.modules, "{} imported".format(os.environ['PARL_BACKEND'])
 
 
 class Job(object):
@@ -63,6 +67,7 @@ class Job(object):
             pid (int): Job process ID.
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
             gpu (str): id list of GPUs can be used by each remote instance.
+            job_id (str): Unique ID for the job. 
         """
         self.max_memory = None
         self.gpu = ""
@@ -107,7 +112,7 @@ class Job(object):
 
         Create two heartbeat server threads for each job:
         (1) worker_heartbeat_server_thread: reply heartbeat signal from the worker.
-        (2) client_heartbeat_server_thread: reply heartbeat signal from the client.
+        (2) client_heartbeat_client_thread: send heartbeat signal to the client.
         """
         # wait for another process to create reply socket
         self.job_address = self.job_address_receiver.recv()
@@ -134,26 +139,10 @@ class Job(object):
         worker_heartbeat_server_thread.setDaemon(True)
         worker_heartbeat_server_thread.start()
 
-        # This function will be called only after the heartbeat server thread is started
-        def client_heartbeat_exit_callback_func():
-            with self.lock:
-                self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
-                try:
-                    _ = self.remove_job_socket.recv_multipart()
-                except zmq.error.Again as e:
-                    pass
-            logger.warning("[Job]lost connection with the client, will exit")
-            os._exit(1)
-
-        # a thread that reply heartbeat signals from the client
-        self.client_heartbeat_server_thread = HeartbeatServerThread(
-            heartbeat_exit_callback_func=client_heartbeat_exit_callback_func)
-        self.client_heartbeat_server_thread.setDaemon(True)
-
         # sends job information to the worker
         initialized_job = InitializedJob(self.job_address, worker_heartbeat_server_thread.get_address(),
-                                         self.client_heartbeat_server_thread.get_address(), reply_client_ping_address,
-                                         None, self.pid, self.job_id, self.log_server_address)
+                                         reply_client_ping_address, None, self.pid, self.job_id,
+                                         self.log_server_address)
 
         try:
             self.job_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(initialized_job)])
@@ -185,20 +174,45 @@ class Job(object):
         logger.error("Memory used by this job exceeds {}. This job will exist.".format(self.max_memory))
 
         stop_message = "Job {} exceeds max memory usage, will stop this job.".format(self.job_address)
-        self.client_heartbeat_server_thread.stop(remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG, stop_message)
+        self.client_heartbeat_client_thread.stop(remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG, stop_message)
+
+        with self.lock:
+            self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
+            try:
+                _ = self.remove_job_socket.recv_multipart()
+            except zmq.error.Again as e:
+                pass
+        os._exit(1)
 
     def _reply_ping(self, socket):
         """Create a socket server that reply the ping signal from client.
         This signal is used to make sure that the job is still alive.
         """
         message = socket.recv_multipart()
-        max_memory = to_str(message[1])
+        client_heartbeat_server_addr = to_str(message[1])
+        max_memory = to_str(message[2])
         if max_memory != 'None':
             self.max_memory = float(max_memory)
-        self.gpu = to_str(message[2])
+        self.gpu = to_str(message[3])
         socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
-        self.client_heartbeat_server_thread.start()
+        def client_heartbeat_exit_callback_func():
+            with self.lock:
+                self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
+                try:
+                    _ = self.remove_job_socket.recv_multipart()
+                except zmq.error.Again as e:
+                    pass
+            logger.warning("[Job] lost connection with the client. This job will exit.")
+            os._exit(1)
+
+        # a thread that sends heartbeat signals from the client
+        self.client_heartbeat_client_thread = HeartbeatClientThread(
+            client_id=self.job_id,
+            heartbeat_server_addr=client_heartbeat_server_addr,
+            heartbeat_exit_callback_func=client_heartbeat_exit_callback_func)
+        self.client_heartbeat_client_thread.setDaemon(True)
+        self.client_heartbeat_client_thread.start()
 
         memory_monitor_thread = threading.Thread(target=self._check_used_memory)
         memory_monitor_thread.setDaemon(True)
@@ -282,12 +296,13 @@ class Job(object):
                 if self.gpu:
                     os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
                     if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+                        del os.environ['XPARL_igonre_core']
                         if os.environ['PARL_BACKEND'] == 'torch':
                             # ensure CUDA_VISIBLE_DEVICES take a global unique effect
                             import torch
                             if torch.cuda.device_count() != len(self.gpu.split(',')):
                                 error_message = "torch device_count[{}] conflicts with job's gpus:[{}]".format(
-                                    torch.cuda_device_count(), self.gpu)
+                                    torch.cuda.device_count(), self.gpu)
                                 logger.error(error_message)
                             assert (torch.cuda.device_count() == len(self.gpu.split(',')))
                         else:

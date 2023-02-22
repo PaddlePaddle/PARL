@@ -28,7 +28,7 @@ import zmq
 from datetime import datetime
 import pynvml
 import parl
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS, kill_process
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
 from parl.remote import remote_constants
 from parl.remote.message import InitializedWorker, InitializedCpu, InitializedGpu
 from parl.remote.status import WorkerStatus
@@ -350,6 +350,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 tag = message[0]
                 assert tag == remote_constants.KILLJOB_TAG
                 to_remove_job_address = to_str(message[1])
+                logger.info("[Worker] A job requests the worker to stop this job.")
                 self._remove_job(to_remove_job_address)
                 self.remove_job_socket.send_multipart([remote_constants.NORMAL_TAG])
             except zmq.error.Again as e:
@@ -455,7 +456,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
-        kill_process('remote/job.py.*{}'.format(self.reply_job_address))
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
 

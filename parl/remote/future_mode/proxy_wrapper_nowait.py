@@ -15,6 +15,7 @@
 from six.moves import queue
 import time
 import threading
+import weakref
 
 from collections import namedtuple
 from parl.remote.exceptions import FutureFunctionError
@@ -29,7 +30,7 @@ CallingRequest = namedtuple(
 
 
 def proxy_wrapper_nowait_func(remote_wrapper):
-    '''This function implements the remote decorator for asynchronous mode.
+    """This function implements the remote decorator for asynchronous mode.
     With this decorator, the function called by user return a `future` object immediately
     and it will not be blocked. Users can get the real return of the function by calling 
     the `get` function of the `future` object.
@@ -53,7 +54,7 @@ def proxy_wrapper_nowait_func(remote_wrapper):
         future_objects = [actor.func() for actor in actors]
         results = [future_obj.get() for future_obj in future_objects]
         ```
-    '''
+    """
     original_class = remote_wrapper._original
     max_memory = remote_wrapper._max_memory
     n_gpus = remote_wrapper._n_gpus
@@ -79,6 +80,16 @@ def proxy_wrapper_nowait_func(remote_wrapper):
             object_thread.setDaemon(True)
             object_thread.start()
 
+        def destroy(self):
+            calling_request = CallingRequest(
+                calling_type="destroy",
+                attr=None,
+                value=None,
+                args=None,
+                kwargs=None,
+                future_return_queue=None)
+            self._xparl_remote_wrapper_calling_queue.put(calling_request)
+
         def _run_object_in_backend(self, args, kwargs):
             try:
                 self._xparl_remote_wrapper_obj = remote_wrapper(
@@ -102,13 +113,13 @@ def proxy_wrapper_nowait_func(remote_wrapper):
             while True:
                 calling_request = self._xparl_remote_wrapper_calling_queue.get(
                 )
-                assert calling_request.calling_type in ["setattr", "getattr"]
+                assert calling_request.calling_type in ["setattr", "getattr", "destroy"]
 
                 try:
                     if calling_request.calling_type == "setattr":
                         self._xparl_remote_wrapper_obj.set_remote_attr(
                             calling_request.attr, calling_request.value)
-                    else:  # getattr
+                    elif calling_request.calling_type == "getattr":
                         is_attribute = self._xparl_remote_wrapper_obj.has_attr(
                             calling_request.attr)
 
@@ -122,6 +133,8 @@ def proxy_wrapper_nowait_func(remote_wrapper):
                                 *calling_request.args,
                                 **calling_request.kwargs)
                         calling_request.future_return_queue.put(return_result)
+                    else:
+                        break
 
                 except Exception as e:
                     async_error = FutureFunctionError(calling_request.attr)

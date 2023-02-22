@@ -14,15 +14,11 @@
 
 import unittest
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 import time
 import threading
-from parl.remote.client import disconnect
-from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class
@@ -31,68 +27,22 @@ class Actor(object):
         self.arg1 = arg1
         self.arg2 = arg2
 
-    def get_arg1(self):
-        return self.arg1
-
-    def get_arg2(self):
-        return self.arg2
-
-    def set_arg1(self, value):
-        self.arg1 = value
-
-    def set_arg2(self, value):
-        self.arg2 = value
-
-    def add_one(self, value):
-        value += 1
-        return value
-
     def add(self, x, y):
-        time.sleep(3)
         return x + y
 
-    def will_raise_exception_func(self):
-        x = 1 / 0
-
-
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestCluster(XparlTestCase):
     def test_add_worker(self):
-        port = get_free_tcp_port()
-        logger.info("running: test_add_worker")
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-
-        worker1 = Worker('localhost:{}'.format(port), 4)
-        for _ in range(3):
-            if master.cpu_num == 4:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 4)
-
-        worker2 = Worker('localhost:{}'.format(port), 4)
-        for _ in range(3):
-            if master.cpu_num == 8:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 8)
-
-        worker2.exit()
-
-        for _ in range(10):
-            if master.cpu_num == 4:
-                break
-            time.sleep(10)
-        self.assertEqual(master.cpu_num, 4)
-
-        master.exit()
-        worker1.exit()
-        th.join()
+        self.add_master()
+        self.add_worker(n_cpu=4)
+        self.add_worker(n_cpu=4)
+        parl.connect("localhost:{}".format(self.port))
+        actors = []
+        for i in range(8):
+            actors.append(Actor())
+        for i in range(8):
+            ret = actors[i].add(2, 3)
+            self.assertEqual(5, ret)
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

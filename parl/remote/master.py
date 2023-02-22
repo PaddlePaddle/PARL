@@ -202,13 +202,11 @@ class Master(object):
         # a client submits a job to the master
         elif tag == remote_constants.CLIENT_SUBMIT_TAG:
             # check available CPU/GPU resources
+            n_cpu = int(message[3])
             n_gpu = int(message[4])
-            n_cpu = 1
-            if n_gpu > 0:
-                n_cpu = 0
-            if self.device == remote_constants.CPU and message[1] == remote_constants.GPU_JOB:
+            if self.device == remote_constants.CPU and n_gpu > 0:
                 self.client_socket.send_multipart([remote_constants.REJECT_GPU_JOB_TAG])
-            elif (self.device == remote_constants.GPU and message[1] == remote_constants.CPU_JOB):
+            elif self.device == remote_constants.GPU and n_cpu > 0:
                 self.client_socket.send_multipart([remote_constants.REJECT_CPU_JOB_TAG])
             elif n_gpu > remote_constants.MAX_N_GPU:
                 self.client_socket.send_multipart([remote_constants.REJECT_INVALID_GPU_JOB_TAG])
@@ -217,7 +215,7 @@ class Master(object):
                 job = self.worker_manager.request_job(n_cpu=n_cpu, n_gpu=n_gpu)
                 if job:
                     self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job)])
-                    client_id = to_str(message[3])
+                    client_id = to_str(message[2])
                     job_info = {job.job_id: job.log_server_address}
                     self.cluster_monitor.add_client_job(client_id, job_info)
                     self._print_workers()

@@ -130,12 +130,12 @@ class WorkerManager(object):
             An ``InitializedJob`` that has information about available job address.
         """
         with self.lock:
-            candidates = self._filter(n_cpu, n_gpu)
+            candidates = self.filter(n_cpu, n_gpu)
             if candidates:
                 candidates = list(candidates)
                 random.shuffle(candidates)
                 worker_address = candidates[0]
-                initialized_resource = self._acquire(worker_address, n_cpu, n_gpu)
+                initialized_resource = self.acquire(worker_address, n_cpu, n_gpu)
                 job_address, job = self.worker_vacant_jobs[worker_address].popitem()
                 job.initialized_cpu = initialized_resource.initialized_cpu
                 job.initialized_gpu = initialized_resource.initialized_gpu
@@ -143,7 +143,7 @@ class WorkerManager(object):
                 return job
             return None
 
-    def _filter(self, n_cpu, n_gpu):
+    def filter(self, n_cpu, n_gpu):
         candidates = set(self.worker_vacant_jobs.keys())
         if n_gpu > 0:
             candidates = candidates.intersection(set(self.gpu_resource.filter(n_gpu)))
@@ -151,9 +151,9 @@ class WorkerManager(object):
             candidates = candidates.intersection(set(self.cpu_resource.filter(n_cpu)))
         return candidates
 
-    def _acquire(self, worker_address, n_cpu, n_gpu):
-        initialized_gpu = None
-        initialized_cpu = None
+    def acquire(self, worker_address, n_cpu, n_gpu):
+        initialized_gpu = InitializedGpu(worker_address, "")
+        initialized_cpu = InitializedCpu(worker_address, 0)
         if n_gpu > 0:
             initialized_gpu = self.gpu_resource.acquire(worker_address, n_gpu)
         if n_cpu > 0:
@@ -161,7 +161,7 @@ class WorkerManager(object):
         InitializedResource = namedtuple("InitializedResource", ["initialized_cpu", "initialized_gpu"])
         return InitializedResource(initialized_cpu=initialized_cpu, initialized_gpu=initialized_gpu)
 
-    def _release(self, killed_job):
+    def release(self, killed_job):
         if killed_job.initialized_cpu:
             self.cpu_resource.release(killed_job.worker_address, killed_job.initialized_cpu)
         if killed_job.initialized_gpu:
@@ -176,7 +176,7 @@ class WorkerManager(object):
         with self.lock:
             self.worker_used_jobs[job.worker_address].pop(job.job_address, None)
             self.worker_vacant_jobs[job.worker_address][job.job_address] = job
-            self._release(job)
+            self.release(job)
 
     def update_job(self, killed_job_address, new_job, worker_address):
         """When worker kill an old job, it will start a new job.
@@ -199,7 +199,7 @@ class WorkerManager(object):
                     killed_job = used_jobs.pop(killed_job_address)
                     break
 
-            self._release(killed_job)
+            self.release(killed_job)
 
     def get_vacant_cpu(self, worker_address):
         """Return vacant cpu number of a worker."""

@@ -62,7 +62,7 @@ class TestCluster(unittest.TestCase):
 
     def test_actor_exception(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)
@@ -93,7 +93,7 @@ class TestCluster(unittest.TestCase):
 
     def test_actor_exception_2(self):
         port = get_free_tcp_port()
-        master = Master(port=port, xpu='gpu')
+        master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(3)

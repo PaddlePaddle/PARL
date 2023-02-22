@@ -27,7 +27,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='192.168.0.1:{}'.format(1000 + i),
                 worker_heartbeat_address='192.168.0.1:{}'.format(1000 + i + gpu_num),
-                client_heartbeat_address='192.168.0.1:{}'.format(1000 + i + gpu_num * 2),
                 ping_heartbeat_address='192.168.0.1:{}'.format(1000 + i + gpu_num * 3),
                 worker_address='192.168.0.1:8000',
                 pid=1000 + i)
@@ -44,7 +43,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='192.168.0.2:{}'.format(1000 + i),
                 worker_heartbeat_address='192.168.0.2:{}'.format(1000 + i + gpu_num),
-                client_heartbeat_address='192.168.0.2:{}'.format(1000 + i + gpu_num * 2),
                 ping_heartbeat_address='192.168.0.2:{}'.format(1000 + i + gpu_num * 3),
                 worker_address='192.168.0.2:8000',
                 pid=1000 + i)
@@ -60,7 +58,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='192.168.0.3:{}'.format(1000 + i),
                 worker_heartbeat_address='192.168.0.3:{}'.format(1000 + i + cpu_num),
-                client_heartbeat_address='192.168.0.3:{}'.format(1000 + i + cpu_num * 2),
                 ping_heartbeat_address='192.168.0.3:{}'.format(1000 + i + cpu_num * 3),
                 worker_address='192.168.0.3:8000',
                 pid=1000 + i)
@@ -77,7 +74,6 @@ class ImportTest(unittest.TestCase):
             job = InitializedJob(
                 job_address='192.168.0.5:{}'.format(1000 + i),
                 worker_heartbeat_address='192.168.0.5:{}'.format(1000 + i + gpu_num),
-                client_heartbeat_address='192.168.0.5:{}'.format(1000 + i + gpu_num * 2),
                 ping_heartbeat_address='192.168.0.5:{}'.format(1000 + i + gpu_num * 3),
                 worker_address='192.168.0.5:8000',
                 pid=1000 + i)
@@ -149,7 +145,6 @@ class ImportTest(unittest.TestCase):
         job = InitializedJob(
             job_address='192.168.0.1:{}'.format(2000),
             worker_heartbeat_address='192.168.0.1:{}'.format(2000 + 1),
-            client_heartbeat_address='192.168.0.1:{}'.format(2000 + 2),
             ping_heartbeat_address='192.168.0.1:{}'.format(2000 + 3),
             worker_address='192.168.0.1:8000',
             pid=2000)

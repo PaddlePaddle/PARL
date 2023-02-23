@@ -17,7 +17,7 @@ __version__ = "2.1.1"
 generates new PARL python API
 """
 import os
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE
+from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE, _IS_WINDOWS
 from parl.utils import logger
 
 if 'XPARL_igonre_core' not in os.environ: # load the core module by default

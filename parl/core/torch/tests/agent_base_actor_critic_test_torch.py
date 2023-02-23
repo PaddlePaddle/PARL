@@ -219,11 +219,11 @@ class ACAgentBaseTest(unittest.TestCase):
         agent.train()
         self.assertTrue(agent.training)
         act_train = agent.predict(obs)
-        q_train = agent.alg.model.Q(obs).numpy()
+        q_train = agent.alg.model.Q(obs).detach().numpy()
         agent.eval()
         self.assertFalse(agent.training)
         act_eval = agent.predict(obs)
-        q_eval = agent.alg.model.Q(obs).numpy()
+        q_eval = agent.alg.model.Q(obs).detach().numpy()
         self.assertTrue((act_train == act_eval).all())
         self.assertTrue((q_train == q_eval).all())
 

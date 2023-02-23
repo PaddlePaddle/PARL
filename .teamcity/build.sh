@@ -215,6 +215,7 @@ function main() {
                 run_test_with_cpu $env "DIS_TESTING_SERIALLY"
                 run_test_with_cpu $env "DIS_TESTING_REMOTE"
                 xparl stop
+                # test with torch installed
                 if [ \( $env == "py38" \) ]
                 then
                     # install torch

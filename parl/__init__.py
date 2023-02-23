@@ -17,8 +17,6 @@ __version__ = "2.1.1"
 generates new PARL python API
 """
 import os
-
-from tensorboardX import SummaryWriter
 from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE
 from parl.utils import logger
 

@@ -16,7 +16,6 @@ import os
 # set the environment variables before importing any DL framework.
 os.environ.pop('CUDA_VISIBLE_DEVICES', None)
 os.environ['XPARL'] = 'True'
-os.environ['XPARL_igonre_core'] = 'true'
 
 # Fix cloudpickle compatible problem we known.
 import compatible_trick
@@ -45,8 +44,9 @@ from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 
-if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-    assert os.environ['PARL_BACKEND'] not in sys.modules, "{} imported".format(os.environ['PARL_BACKEND'])
+if os.environ.get('XPARL_igonre_core', '') == 'true':
+    if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
+        assert os.environ['PARL_BACKEND'] not in sys.modules, "{} imported".format(os.environ['PARL_BACKEND'])
 
 
 class Job(object):
@@ -296,7 +296,7 @@ class Job(object):
                 if self.gpu:
                     os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
                     if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-                        del os.environ['XPARL_igonre_core']
+                        os.environ.pop('XPARL_igonre_core', None)
                         if os.environ['PARL_BACKEND'] == 'torch':
                             # ensure CUDA_VISIBLE_DEVICES take a global unique effect
                             import torch

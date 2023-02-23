@@ -17,6 +17,7 @@ import multiprocessing as mp
 from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
+from parl.remote import remote_constants
 import time
 
 class XparlTestCase(unittest.TestCase):
@@ -33,22 +34,22 @@ class XparlTestCase(unittest.TestCase):
                 p.join()
         disconnect()
 
-    def _create_master(self):
-        master = Master(port=self.port)
+    def _create_master(self, device):
+        master = Master(port=self.port, device=device)
         master.run()
 
-    def _create_worker(self, n_cpu):
-        worker = Worker('localhost:{}'.format(self.port), n_cpu)
+    def _create_worker(self, n_cpu, gpu):
+        worker = Worker('localhost:{}'.format(self.port), n_cpu, None, gpu)
         worker.run()
 
-    def add_master(self):
-        p_master = self.ctx.Process(target=self._create_master)
+    def add_master(self, device=remote_constants.CPU):
+        p_master = self.ctx.Process(target=self._create_master, args=(device, ))
         p_master.start()
         self.sub_process.append(p_master)
         time.sleep(1)
 
-    def add_worker(self, n_cpu):
-        p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, ))
+    def add_worker(self, n_cpu, gpu=""):
+        p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, gpu))
         p_worker.start()
         time.sleep(10)
         self.sub_process.append(p_worker)

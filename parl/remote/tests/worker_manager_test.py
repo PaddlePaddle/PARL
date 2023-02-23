@@ -72,11 +72,11 @@ class ImportTest(unittest.TestCase):
             set(worker_manager.worker_vacant_jobs[self.worker1.worker_address].values()),
             set(self.worker1.initialized_jobs))
 
-    def test_drop_worker(self):
+    def test_remove_worker(self):
         worker_manager = WorkerManager('localhost')
         worker_manager.add_worker(self.worker1)
         worker_manager.add_worker(self.worker2)
-        worker_manager.drop_worker(self.worker2.worker_address)
+        worker_manager.remove_worker(self.worker2.worker_address)
 
         self.assertEqual(
             set(worker_manager.worker_vacant_jobs[self.worker1.worker_address].values()),
@@ -93,19 +93,6 @@ class ImportTest(unittest.TestCase):
         self.assertTrue(job_address2 in self.worker1.initialized_jobs)
         self.assertEqual(worker_manager.job_num, 4)
         self.assertEqual(worker_manager.cpu_num, 4)
-
-    def test_reset_job(self):
-        worker_manager = WorkerManager('localhost')
-        worker_manager.add_worker(self.worker1)
-
-        job_address = worker_manager.request_job(n_cpu=1)
-        self.assertTrue(job_address in self.worker1.initialized_jobs)
-        self.assertEqual(worker_manager.job_num, 4)
-        self.assertEqual(worker_manager.cpu_num, 4)
-
-        worker_manager.reset_job(job_address)
-        self.assertEqual(worker_manager.job_num, 5)
-        self.assertEqual(worker_manager.cpu_num, 5)
 
     def test_update_job(self):
 
@@ -139,7 +126,7 @@ class ImportTest(unittest.TestCase):
                 '172.18.182.39:1237', '172.18.182.39:1238'
             ]))
 
-        worker_manager.drop_worker(self.worker2.worker_address)
+        worker_manager.remove_worker(self.worker2.worker_address)
         self.assertEqual(5, len(self.worker1.initialized_jobs))
 
     def test_cpu_num(self):
@@ -157,7 +144,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(worker_manager.worker_num, 1)
         worker_manager.add_worker(self.worker2)
         self.assertEqual(worker_manager.worker_num, 2)
-        worker_manager.drop_worker(self.worker1.worker_address)
+        worker_manager.remove_worker(self.worker1.worker_address)
         self.assertEqual(worker_manager.worker_num, 1)
 
 

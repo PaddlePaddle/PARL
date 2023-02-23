@@ -162,7 +162,7 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
         monitor_port,
     ]
     if gpu_cluster:
-        monitor_command.append("--gpu_cluster")
+        master_command.append("--gpu_cluster")
     worker_command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", "localhost:" + str(port), "--cpu_num",
         str(cpu_num), '--log_server_port',

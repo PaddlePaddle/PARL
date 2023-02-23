@@ -23,7 +23,7 @@ from parl.remote.worker import Worker
 import time
 import threading
 import random
-
+from parl.utils.test_utils import XparlTestCase
 
 @parl.remote_class(n_gpu=1)
 class Actor1(object):
@@ -40,77 +40,41 @@ class Actor2(object):
         self._xparl_remote_wrapper_obj = 0
 
 
-class Test_proxy_wrapper(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class Test_proxy_wrapper(XparlTestCase):
     def test_proxy_wrapper_wait(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(10)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         actor = Actor1(10)
-
-        assert actor.arg == 10
-
-        assert actor.add_one(1) == 2
-
-        actor = None
-
-        master.exit()
-        worker1.exit()
+        self.assertEqual(actor.arg, 10)
+        self.assertEqual(actor.add_one(1), 2)
 
     def test_kwargs_with_reserved_names(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(10)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(AssertionError):
             actor = Actor1(_xparl_proxy_wrapper_nowait__=1)
-            actor = None
-
-        master.exit()
-        worker1.exit()
 
     def test_attribute_with_reserved_names(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(AssertionError):
             actor = Actor2()
-            actor = None
-
-        master.exit()
-        worker1.exit()
 
     def test_get_original_class(self):
         origin_class = Actor1._original
         origin_actor = origin_class(10)
 
-        assert origin_actor.arg == 10
-        assert origin_actor.add_one(1) == 2
+        self.assertEqual(origin_actor.arg, 10)
+        self.assertEqual(origin_actor.add_one(1), 2)
 
 
 if __name__ == '__main__':

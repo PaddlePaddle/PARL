@@ -16,7 +16,6 @@ import unittest
 import parl
 from parl.remote.master import Master
 from parl.remote.worker import Worker
-from parl.remote.worker_manager import WorkerManager
 import time
 import threading
 from parl.remote.client import disconnect
@@ -29,7 +28,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
+        time.sleep(10)
         worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
@@ -50,7 +49,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
+        time.sleep(10)
         worker = Worker('localhost:{}'.format(port), 1, None, "")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
@@ -68,7 +67,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
+        time.sleep(10)
         worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
@@ -87,8 +86,7 @@ class TestCluster(unittest.TestCase):
         master = Master(port=port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker_manager = WorkerManager('localhost:{}'.format(port), ['gpu'])
+        time.sleep(10)
         worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
@@ -110,12 +108,11 @@ class TestCluster(unittest.TestCase):
         master = Master(port=port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(3)
-        worker_manager = WorkerManager('localhost:{}'.format(port), ['cpu'])
+        time.sleep(10)
         worker = Worker('localhost:{}'.format(port), 1, None, "")
         worker_th = threading.Thread(target=worker.run)
         worker_th.start()
-        time.sleep(3)
+        time.sleep(10)
         self.assertEqual(master.cpu_num, 1)
         worker.exit()
         for _ in range(2):

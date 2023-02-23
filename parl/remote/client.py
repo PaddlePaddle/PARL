@@ -349,7 +349,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 # no vacant GPU resources, cannot submit a new job
                 elif tag == remote_constants.GPU_TAG:
                     # wait 5 second to avoid requesting in a high frequency.
-                    time.sleep(5)
+                    time.sleep(1)
                     return None
                 elif tag == remote_constants.REJECT_GPU_JOB_TAG:
                     error_message = "[Client] Request fails. It is not allowed to request CPU resource from a GPU cluster."

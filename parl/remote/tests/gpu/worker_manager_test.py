@@ -16,9 +16,10 @@ import unittest
 import socket
 from parl.remote.worker_manager import WorkerManager
 from parl.remote.message import InitializedWorker, InitializedJob, AllocatedCpu, AllocatedGpu
+from parl.utils.test_utils import XparlTestCase
 
 
-class ImportTest(unittest.TestCase):
+class ImportTest(XparlTestCase):
     def setUp(self):
         jobs = []
         gpu_num = 4

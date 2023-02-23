@@ -21,6 +21,7 @@ from parl.remote.master import Master
 from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class(n_gpu=2)
@@ -29,63 +30,31 @@ class Actor(object):
         pass
 
 
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestCluster(XparlTestCase):
     def test_class_decorated_by_remote_class(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        for _ in range(3):
-            if master.gpu_num == 2:
-                break
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0,1")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         actor = Actor()
 
-        for _ in range(3):
-            if master.gpu_num == 0:
-                break
-            time.sleep(10)
-        self.assertEqual(0, master.cpu_num)
-
-        master.exit()
-        worker1.exit()
-
     def test_function_decorated_by_remote_class(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        for _ in range(3):
-            if master.gpu_num == 2:
-                break
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0,1")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(AssertionError):
-
             @parl.remote_class(n_gpu=2)
             def func():
                 pass
 
-        self.assertEqual(2, master.gpu_num)
+        actor = Actor()
 
-        master.exit()
-        worker1.exit()
 
     def test_passing_arguments_with_unsupported_argument_names(self):
         with self.assertRaises(AssertionError):
-
             @parl.remote_class(xxx=10)
             class Actor2(object):
                 def __init__(self):

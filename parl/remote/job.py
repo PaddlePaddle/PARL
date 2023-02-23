@@ -16,6 +16,7 @@ import os
 # set the environment variables before importing any DL framework.
 os.environ['CUDA_VISIBLE_DEVICES'] = ""
 os.environ['XPARL'] = 'True'
+os.environ['XPARL_igonre_core'] = 'true'
 
 # Fix cloudpickle compatible problem we known.
 import compatible_trick
@@ -32,6 +33,8 @@ import threading
 import time
 import traceback
 import zmq
+import importlib
+import parl
 from multiprocessing import Process, Pipe
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.remote.communication import loads_argument, loads_return,\
@@ -44,9 +47,9 @@ from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
 
-if os.environ.get('XPARL_igonre_core', '') == 'true':
-    if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-        assert os.environ['PARL_BACKEND'] not in sys.modules, "{} imported".format(os.environ['PARL_BACKEND'])
+DL_FRAMEWORKS = ["paddle", "torch"]
+for dl_framework in DL_FRAMEWORKS:
+    assert dl_framework not in sys.modules, "{} imported".format(dl_framework)
 
 
 class Job(object):
@@ -295,24 +298,24 @@ class Job(object):
             try:
                 if self.gpu:
                     os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
-                    if 'PARL_BACKEND' in os.environ and os.environ['PARL_BACKEND'] != '':
-                        os.environ.pop('XPARL_igonre_core', None)
-                        if os.environ['PARL_BACKEND'] == 'torch':
+                    del os.environ['XPARL_igonre_core']
+                    importlib.reload(parl)
+                    for dl_framework in DL_FRAMEWORKS:
+                        try:
                             # ensure CUDA_VISIBLE_DEVICES take a global unique effect
-                            import torch
-                            if torch.cuda.device_count() != len(self.gpu.split(',')):
-                                error_message = "torch device_count[{}] conflicts with job's gpus:[{}]".format(
-                                    torch.cuda.device_count(), self.gpu)
+                            module = importlib.import_module(dl_framework)
+                            gpu_count = len(self.gpu.split(','))
+                            if dl_framework == "torch":
+                                device_count = module.cuda.device_count()
+                            else:
+                                device_count = module.device.cuda.device_count()
+                            if device_count != gpu_count:
+                                error_message = "{} device_count[{}] conflicts with job's gpus:[{}]".format(
+                                    dl_framework, device_count, self.gpu)
                                 logger.error(error_message)
-                            assert (torch.cuda.device_count() == len(self.gpu.split(',')))
-                        else:
-                            # ensure CUDA_VISIBLE_DEVICES take a global unique effect
-                            import paddle
-                            if paddle.device.cuda.device_count() != len(self.gpu.split(',')):
-                                error_message = "paddle device_count[{}] conflicts with job's gpus:[{}]".format(
-                                    paddle.device.cuda.device_count(), self.gpu)
-                                logger.error(error_message)
-                            assert (paddle.device.cuda.device_count() == len(self.gpu.split(',')))
+                                assert device_count == gpu_count
+                        except ImportError:
+                            pass
                 cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
                 with redirect_output_to_file(self.logfile_path, os.devnull):

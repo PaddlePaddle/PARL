@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-# os.environ['XPARL_igonre_core'] = 'true'
 import unittest
 import parl
 from parl.remote.master import Master
@@ -25,6 +24,7 @@ from parl.remote import exceptions
 import subprocess
 from parl.utils import logger
 from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class(n_gpu=1)
@@ -62,126 +62,59 @@ class Actor(object):
         assert (paddle.device.cuda.device_count() == 2)
 
 
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestCluster(XparlTestCase):
     def test_actor_exception_1(self):
-        port = get_free_tcp_port()
-        logger.info("running:test_actor_exception")
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-        time.sleep(1)
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0,1")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
 
         with self.assertRaises(exceptions.RemoteError):
-            actor1 = Actor(abcd='a bug')
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
+            actor = Actor(abcd='a bug')
+
+        actor1 = Actor()
+        self.assertEqual(actor1.add_one(1), 2)
 
         actor2 = Actor()
-        time.sleep(1)
-        for _ in range(2):
-            if master.gpu_num == 1:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(1, master.gpu_num)
-        actor2 = None
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
-
-        master.exit()
-        worker1.exit()
+        self.assertEqual(actor2.add(1, 2), 3)
 
     def test_actor_exception_2(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
-
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0,1")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
+
         actor1 = Actor()
         with self.assertRaises(exceptions.RemoteError):
             actor1.will_raise_exception_func()
+
         actor2 = Actor()
-        for _ in range(2):
-            if master.gpu_num == 1:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
         self.assertEqual(actor2.add_one(1), 2)
-        self.assertEqual(1, master.gpu_num)
+
         del actor1
         del actor2
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
-        worker1.exit()
-        master.exit()
 
-    def _test_cuda_visible_devices_setting(self):
-        port = get_free_tcp_port()
-        master = Master(port, None, 'gpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        os.environ['PARL_BACKEND'] = 'paddle'
-        worker1 = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker1.run)
-        worker_th.start()
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
+        actor3 = Actor()
+        self.assertEqual(actor3.add_one(1), 2)
 
+        actor4 = Actor()
+        self.assertEqual(actor3.add_one(1), 2)
+
+    def test_cuda_visible_devices_setting(self):
+        self.add_master(device="gpu")
+        self.add_worker(n_cpu=0, gpu="0,1")
+        port = self.port
         parl.connect('localhost:{}'.format(port))
-        actor = Actor()
+
+        actor1 = Actor()
+        self.assertEqual(actor1.add_one(1), 2)
+
+        actor2 = Actor()
         with self.assertRaises(exceptions.RemoteError):
-            actor.assert_device_count_fail()
-        for _ in range(2):
-            if master.gpu_num == 2:
-                break
-            logger.info("sleep 10s")
-            time.sleep(10)
-        self.assertEqual(2, master.gpu_num)
-        worker1.exit()
-        master.exit()
+            actor2.assert_device_count_fail()
+
+        actor3 = Actor()
+        self.assertEqual(actor3.add_one(1), 2)
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ generates new PARL python API
 import os
 
 from tensorboardX import SummaryWriter
-from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE
+from parl.utils.utils import _HAS_FLUID, _HAS_TORCH, _HAS_PADDLE, _IS_WINDOWS
 from parl.utils import logger
 
 if 'XPARL_igonre_core' not in os.environ: # load the core module by default
@@ -49,4 +49,5 @@ if 'XPARL_igonre_core' not in os.environ: # load the core module by default
             from parl.core.torch import *
     from parl import algorithms
 
-from parl.remote import remote_class, connect
+if not _IS_WINDOWS:
+    from parl.remote import remote_class, connect

@@ -47,4 +47,5 @@ if 'XPARL_igonre_core' not in os.environ: # load the core module by default
             from parl.core.torch import *
     from parl import algorithms
 
-from parl.remote import remote_class, connect
+if not _IS_WINDOWS:
+    from parl.remote import remote_class, connect

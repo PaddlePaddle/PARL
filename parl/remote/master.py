@@ -133,10 +133,10 @@ class Master(object):
             success = self.worker_manager.add_worker(initialized_worker)
             if not success:
                 if self.device == remote_constants.GPU:
-                    logger.error("GPU cluster rejects a CPU worker to join in")
+                    logger.error("GPU cluster is not allowed a CPU worker to join in")
                     self.client_socket.send_multipart([remote_constants.REJECT_CPU_WORKER_TAG])
                 else:
-                    logger.error("CPU cluster rejects a GPU worker to join in")
+                    logger.error("CPU cluster is not allowed a GPU worker to join in")
                     self.client_socket.send_multipart([remote_constants.REJECT_GPU_WORKER_TAG])
             else:
                 hostname = self.worker_manager.get_hostname(worker_address)
@@ -144,7 +144,7 @@ class Master(object):
                 total_gpus = self.worker_manager.get_total_gpu(worker_address)
                 self.cluster_monitor.add_worker_status(worker_address, hostname, total_cpus, total_gpus)
                 logger.info("A new worker {} is added, ".format(worker_address) +
-                            "the cluster has {} CPUs, hash {} GPUs.\n".format(self.cpu_num, self.gpu_num))
+                            "the cluster has {} CPUs, has {} GPUs.\n".format(self.cpu_num, self.gpu_num))
 
                 def heartbeat_exit_callback_func(worker_address):
                     self.worker_manager.remove_worker(worker_address)

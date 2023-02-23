@@ -14,7 +14,7 @@
 
 import os
 # set the environment variables before importing any DL framework.
-os.environ.pop('CUDA_VISIBLE_DEVICES', None)
+os.environ['CUDA_VISIBLE_DEVICES'] = ""
 os.environ['XPARL'] = 'True'
 
 # Fix cloudpickle compatible problem we known.

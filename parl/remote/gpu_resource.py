@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from collections import defaultdict
-from parl.remote.message import InitializedGpu
+from parl.remote.message import AllocatedGpu
 
 
 class GpuResource(object):
-    """The gpu center deals with everything related to allocation for GPUs.
+    """Record GPU information in each worker and respond to resource allocation of GPUs.
 
     Attributes:
         worker_vacant_gpus (dict): Record how many vacant gpus does each
@@ -30,15 +30,15 @@ class GpuResource(object):
         self.worker_vacant_gpus = defaultdict(list)
         self.worker_used_gpus = defaultdict(list)
 
-    def add_gpu(self, worker_address, initialized_gpu):
+    def add_gpu(self, worker_address, allocated_gpu):
         """add GPU resource to worker_vacant_gpus
         Args:
-            initialized_gpu (InitializedGpu): Record the GPU resource used in a job.
+            allocated_gpu (AllocatedGpu): Record the GPU resource used in a job.
         """
-        if initialized_gpu.gpu:
-            self.worker_vacant_gpus[worker_address].extend(initialized_gpu.gpu.split(","))
+        if allocated_gpu.gpu:
+            self.worker_vacant_gpus[worker_address].extend(allocated_gpu.gpu.split(","))
 
-    def drop_gpu(self, worker_address):
+    def remove_gpu(self, worker_address):
         """Remove gpus from GpuResource when a worker dies.
         """
         self.worker_vacant_gpus.pop(worker_address, None)
@@ -53,33 +53,33 @@ class GpuResource(object):
                 result.append(worker_address)
         return result
 
-    def acquire(self, worker_address, n_gpu):
-        """acquire n_gpu GPUs on worker_address
+    def allocate(self, worker_address, n_gpu):
+        """allocate n_gpu GPUs from the worker
         """
         gpu = ",".join(self.worker_vacant_gpus[worker_address][0:n_gpu])
         self.worker_used_gpus[worker_address].extend(self.worker_vacant_gpus[worker_address][0:n_gpu])
         self.worker_vacant_gpus[worker_address] = self.worker_vacant_gpus[worker_address][n_gpu:]
         assert len(self.worker_vacant_gpus[worker_address]) >= 0
-        return InitializedGpu(worker_address, gpu)
+        return AllocatedGpu(worker_address, gpu)
 
-    def release(self, worker_address, initialized_gpu):
-        """release n_gpu GPUs on worker_address
+    def recycle(self, worker_address, allocated_gpu):
+        """recycle n_gpu GPUs to the worker
         """
-        for gpu_id in initialized_gpu.gpu.split(","):
+        for gpu_id in allocated_gpu.gpu.split(","):
             self.worker_vacant_gpus[worker_address].append(gpu_id)
             if gpu_id in self.worker_used_gpus[worker_address]:
                 self.worker_used_gpus[worker_address].remove(gpu_id)
 
     def get_vacant_gpu(self, worker_address):
-        """Return vacant gpu number of a worker."""
+        """Return the number of vacant GPUs in the worker."""
         return sum([len(gpu) for gpu in self.worker_vacant_gpus[worker_address]])
 
     def get_total_gpu(self, worker_address):
-        """Return total gpu number of a worker."""
+        """Return the number of GPUs of all the workers."""
         vacant_gpu = sum([len(gpu) for gpu in self.worker_vacant_gpus[worker_address]])
         used_gpu = sum([len(gpu) for gpu in self.worker_used_gpus[worker_address]])
         return vacant_gpu + used_gpu
 
     def gpu_num(self):
-        """"Return vacant gpu number."""
+        """"Return the number vacant of GPUs of all the workers."""
         return sum([len(gpu) for gpu in self.worker_vacant_gpus.values()])

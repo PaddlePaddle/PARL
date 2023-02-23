@@ -23,7 +23,7 @@ from parl.remote.client import disconnect
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(n_gpus=2)
+@parl.remote_class(n_gpu=2)
 class Actor(object):
     def __init__(self):
         pass
@@ -74,7 +74,7 @@ class TestCluster(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
 
-            @parl.remote_class(n_gpus=2)
+            @parl.remote_class(n_gpu=2)
             def func():
                 pass
 

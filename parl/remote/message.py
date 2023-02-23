@@ -15,7 +15,7 @@
 import os
 
 
-class InitializedGpu(object):
+class AllocatedGpu(object):
     def __init__(self, worker_address, gpu):
         """
         Args:
@@ -25,7 +25,7 @@ class InitializedGpu(object):
         self.gpu = gpu
 
 
-class InitializedCpu(object):
+class AllocatedCpu(object):
     def __init__(self, worker_address, n_cpu):
         """
         Args:
@@ -62,21 +62,21 @@ class InitializedJob(object):
         self.is_alive = True
         self.job_id = job_id
         self.log_server_address = log_server_address
-        self.initialized_cpu = None  # Record CPU(s) used in a job
-        self.initialized_gpu = None  # Record GPU(s) used in a job
+        self.allocated_cpu = None  # Record CPU(s) used in a job
+        self.allocated_gpu = None  # Record GPU(s) used in a job
 
 
 class InitializedWorker(object):
-    def __init__(self, worker_address, initialized_jobs, initialized_cpu, initialized_gpu, hostname):
+    def __init__(self, worker_address, initialized_jobs, allocated_cpu, allocated_gpu, hostname):
         """
     Args:
-      worker_address(str): Worker server address that receives commands from the master.
-      initialized_jobs(list): A list of ``InitializedJob`` containing the information for initialized jobs.
-      n_cpu(int): The number of CPUs used in this worker.
-      gpu (str): id list of gpu to be used on the worker.
+        worker_address (str): Worker server address that receives commands from the master.
+        initialized_jobs (list): A list of ``InitializedJob`` containing the information for initialized jobs.
+        allocated_cpu (``AllocateCpu``): The allocation information of CPU
+        allocated_gpu (``AllocateGpu``): The allocation information of GPU
     """
         self.worker_address = worker_address
         self.initialized_jobs = initialized_jobs
-        self.initialized_cpu = initialized_cpu
-        self.initialized_gpu = initialized_gpu
+        self.allocated_cpu = allocated_cpu
+        self.allocated_gpu = allocated_gpu
         self.hostname = hostname

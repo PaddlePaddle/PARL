@@ -15,7 +15,7 @@
 import unittest
 import socket
 from parl.remote.worker_manager import WorkerManager
-from parl.remote.message import InitializedWorker, InitializedJob, InitializedCpu, InitializedGpu
+from parl.remote.message import InitializedWorker, InitializedJob, AllocatedCpu, AllocatedGpu
 
 
 class ImportTest(unittest.TestCase):
@@ -31,13 +31,13 @@ class ImportTest(unittest.TestCase):
                 pid=1234)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('172.18.182.39:8001', n_cpu)
-        initialized_gpu = InitializedGpu('172.18.182.39:8001', "")
+        allocated_cpu = AllocatedCpu('172.18.182.39:8001', n_cpu)
+        allocated_gpu = AllocatedGpu('172.18.182.39:8001', "")
         self.worker1 = InitializedWorker(
             worker_address='172.18.182.39:8001',
             initialized_jobs=jobs,
-            initialized_cpu=initialized_cpu,
-            initialized_gpu=initialized_gpu,
+            allocated_cpu=allocated_cpu,
+            allocated_gpu=allocated_gpu,
             hostname=socket.gethostname())
 
         n_cpu = 5
@@ -51,13 +51,13 @@ class ImportTest(unittest.TestCase):
                 pid=1234)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('172.18.182.39:8002', n_cpu)
-        initialized_gpu = InitializedGpu('172.18.182.39:8002', "")
+        allocated_cpu = AllocatedCpu('172.18.182.39:8002', n_cpu)
+        allocated_gpu = AllocatedGpu('172.18.182.39:8002', "")
         self.worker2 = InitializedWorker(
             worker_address='172.18.182.39:8002',
             initialized_jobs=jobs,
-            initialized_cpu=initialized_cpu,
-            initialized_gpu=initialized_gpu,
+            allocated_cpu=allocated_cpu,
+            allocated_gpu=allocated_gpu,
             hostname=socket.gethostname())
 
     def test_add_worker(self):

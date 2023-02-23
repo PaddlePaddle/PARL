@@ -25,7 +25,7 @@ import threading
 import random
 
 
-@parl.remote_class(n_gpus=1)
+@parl.remote_class(n_gpu=1)
 class Actor1(object):
     def __init__(self, arg):
         self.arg = arg
@@ -34,7 +34,7 @@ class Actor1(object):
         return x + 1
 
 
-@parl.remote_class(n_gpus=1)
+@parl.remote_class(n_gpu=1)
 class Actor2(object):
     def __init__(self):
         self._xparl_remote_wrapper_obj = 0

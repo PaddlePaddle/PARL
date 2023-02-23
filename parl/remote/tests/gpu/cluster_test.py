@@ -26,7 +26,7 @@ from parl.utils import logger
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(n_gpus=1)
+@parl.remote_class(n_gpu=1)
 class Actor(object):
     def __init__(self, arg1=None, arg2=None):
         self.arg1 = arg1
@@ -57,8 +57,8 @@ class Actor(object):
 
     def assert_device_count_fail(self):
         os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-        import torch
-        assert (torch.cuda.device_count() == 2)
+        import paddle
+        assert (paddle.device.cuda.device_count() == 2)
 
 
 class TestCluster(unittest.TestCase):

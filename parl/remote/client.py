@@ -315,7 +315,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             max_memory (float): Maximum memory (MB) can be used by each remote
                                 instance, the unit is in MB and default value is
                                 none(unlimited).
-            n_gpu (int): Number of GPUs can be used by each remote instance.
+            n_gpu (int): Number of GPUs can used in this remote instance.
         Returns:
             An ``InitializedJob`` that has information about available job address.
         """
@@ -335,14 +335,14 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 self.lock.release()
                 tag = message[0]
                 if tag == remote_constants.NORMAL_TAG:
-                    job = cloudpickle.loads(message[1])
-                    job_ping_address = job.ping_heartbeat_address
+                    job_info = cloudpickle.loads(message[1])
+                    job_ping_address = job_info.ping_heartbeat_address
 
                     self.lock.acquire()
-                    check_result = self._check_and_monitor_job(job_ping_address, max_memory, job.initialized_gpu.gpu)
+                    check_result = self._check_and_monitor_job(job_ping_address, max_memory, job_info.allocated_gpu.gpu)
                     self.lock.release()
                     if check_result:
-                        return job
+                        return job_info
                 # no vacant CPU resources, cannot submit a new job
                 elif tag == remote_constants.CPU_TAG:
                     # wait 1 second to avoid requesting in a high frequency.
@@ -354,11 +354,11 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     time.sleep(5)
                     return None
                 elif tag == remote_constants.REJECT_GPU_JOB_TAG:
-                    error_message = "[Client] connects to a CPUs Master."
+                    error_message = "[Client] Request fails. It is not allowed to request CPU resource from a GPU cluster."
                     logger.error(error_message)
                     raise Exception(error_message)
                 elif tag == remote_constants.REJECT_CPU_JOB_TAG:
-                    error_message = "[Client] connects to a GPUs Master."
+                    error_message = "[Client] Request fails. It is not allowed to request GPU resource from a CPU cluster."
                     logger.error(error_message)
                     raise Exception(error_message)
                 elif tag == remote_constants.REJECT_INVALID_GPU_JOB_TAG:

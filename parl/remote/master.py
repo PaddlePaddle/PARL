@@ -47,7 +47,10 @@ class Master(object):
     master node.
 
     Attributes:
-        worker_manager (WorkerManager): A thread-safe data structure that stores jobs,cpus,gpus about worker
+        worker_manager (WorkerManager): A thread-safe data structure used to 
+                                        respond to resource request, maintaining
+                                        the available computation resources in
+                                        each worker.
         client_socket (zmq.Context.socket): A socket that receives submitted
                                            job from the client, and later sends
                                            job_address back to the client.
@@ -130,8 +133,10 @@ class Master(object):
             success = self.worker_manager.add_worker(initialized_worker)
             if not success:
                 if self.device == remote_constants.GPU:
+                    logger.error("GPU cluster rejects a CPU worker to join in")
                     self.client_socket.send_multipart([remote_constants.REJECT_CPU_WORKER_TAG])
                 else:
+                    logger.error("CPU cluster rejects a GPU worker to join in")
                     self.client_socket.send_multipart([remote_constants.REJECT_GPU_WORKER_TAG])
             else:
                 hostname = self.worker_manager.get_hostname(worker_address)
@@ -142,7 +147,7 @@ class Master(object):
                             "the cluster has {} CPUs, hash {} GPUs.\n".format(self.cpu_num, self.gpu_num))
 
                 def heartbeat_exit_callback_func(worker_address):
-                    self.worker_manager.drop_worker(worker_address)
+                    self.worker_manager.remove_worker(worker_address)
                     self.cluster_monitor.drop_worker_status(worker_address)
                     logger.warning("\n[Master] Cannot connect to the worker " + "{}. ".format(worker_address) +
                                    "Worker_pool will drop this worker.")
@@ -212,12 +217,11 @@ class Master(object):
                 self.client_socket.send_multipart([remote_constants.REJECT_INVALID_GPU_JOB_TAG])
             else:
                 logger.info("Submitting job...")
-                job = self.worker_manager.request_job(n_cpu=n_cpu, n_gpu=n_gpu)
-                if job:
-                    self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job)])
+                job_info = self.worker_manager.request_job(n_cpu=n_cpu, n_gpu=n_gpu)
+                if job_info:
+                    self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job_info)])
                     client_id = to_str(message[2])
-                    job_info = {job.job_id: job.log_server_address}
-                    self.cluster_monitor.add_client_job(client_id, job_info)
+                    self.cluster_monitor.add_client_job(client_id, {job_info.job_id: job_info.log_server_address})
                     self._print_workers()
                 else:
                     if n_gpu > 0:

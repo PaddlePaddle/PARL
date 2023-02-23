@@ -54,18 +54,18 @@ class RemoteWrapper(object):
 
         # max_memory argument in @remote_class decorator
         max_memory = kwargs.get('_xparl_remote_class_max_memory')
-        n_gpu = kwargs.get('_xparl_remote_class_n_gpus', 0)
+        n_gpu = kwargs.get('_xparl_remote_class_n_gpu', 0)
 
         if self.GLOBAL_CLIENT.connected_to_master:
-            job = self.request_resource(self.GLOBAL_CLIENT, max_memory, n_gpu)
+            job_info = self.request_resource(self.GLOBAL_CLIENT, max_memory, n_gpu)
         else:
             raise Exception("Can not submit job to the master. " "Please check if master is still alive.")
 
-        if job is None:
+        if job_info is None:
             raise ResourceError("Cannot submit the job to the master. "
                                 "Please add more CPU resources to the "
                                 "master or try again later.")
-        job_address = job.job_address
+        job_address = job_info.job_address
 
         self.internal_lock = threading.Lock()
 
@@ -131,9 +131,9 @@ class RemoteWrapper(object):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job = global_client.submit_job(max_memory, n_gpu)
-            if job is not None:
-                return job
+            job_info = global_client.submit_job(max_memory, n_gpu)
+            if job_info is not None:
+                return job_info
             if cnt % 30 == 0:
                 logger.warning("No vacant cpu/gpu resources at the moment, " "will try {} times later.".format(cnt))
             cnt -= 1

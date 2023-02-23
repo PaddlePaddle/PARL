@@ -146,7 +146,7 @@ if __name__ == "__main__":
     log.disabled = True
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu_cluster', default=False, type=bool)
+    parser.add_argument('--gpu_cluster', action='store_true')
     parser.add_argument('--monitor_port', default=1234, type=int)
     parser.add_argument('--address', default='localhost:8010', type=str)
     args = parser.parse_args()

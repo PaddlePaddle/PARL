@@ -15,7 +15,7 @@
 import unittest
 import socket
 from parl.remote.worker_manager import WorkerManager
-from parl.remote.message import InitializedWorker, InitializedJob, InitializedCpu, InitializedGpu
+from parl.remote.message import InitializedWorker, InitializedJob, AllocatedCpu, AllocatedGpu
 
 
 class ImportTest(unittest.TestCase):
@@ -32,9 +32,9 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('192.168.0.1:8000', 0)
-        initialized_gpu = InitializedGpu('192.168.0.1:8000', gpu)
-        self.worker1 = InitializedWorker('192.168.0.1:8000', jobs, initialized_cpu, initialized_gpu, 'worker1')
+        allocated_cpu = AllocatedCpu('192.168.0.1:8000', 0)
+        allocated_gpu = AllocatedGpu('192.168.0.1:8000', gpu)
+        self.worker1 = InitializedWorker('192.168.0.1:8000', jobs, allocated_cpu, allocated_gpu, 'worker1')
 
         jobs = []
         gpu_num = 4
@@ -48,9 +48,9 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('192.168.0.2:8000', 0)
-        initialized_gpu = InitializedGpu('192.168.0.2:8000', gpu)
-        self.worker2 = InitializedWorker('192.168.0.2:8000', jobs, initialized_cpu, initialized_gpu, 'worker2')
+        allocated_cpu = AllocatedCpu('192.168.0.2:8000', 0)
+        allocated_gpu = AllocatedGpu('192.168.0.2:8000', gpu)
+        self.worker2 = InitializedWorker('192.168.0.2:8000', jobs, allocated_cpu, allocated_gpu, 'worker2')
 
         jobs = []
         cpu_num = 4
@@ -63,9 +63,9 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('192.168.0.3:8000', cpu_num)
-        initialized_gpu = InitializedGpu('192.168.0.3:8000', '')
-        self.worker3 = InitializedWorker('192.168.0.3:8000', jobs, initialized_cpu, initialized_gpu, 'worker3')
+        allocated_cpu = AllocatedCpu('192.168.0.3:8000', cpu_num)
+        allocated_gpu = AllocatedGpu('192.168.0.3:8000', '')
+        self.worker3 = InitializedWorker('192.168.0.3:8000', jobs, allocated_cpu, allocated_gpu, 'worker3')
 
         jobs = []
         gpu_num = 8
@@ -79,9 +79,9 @@ class ImportTest(unittest.TestCase):
                 pid=1000 + i)
             jobs.append(job)
 
-        initialized_cpu = InitializedCpu('192.168.0.5:8000', 0)
-        initialized_gpu = InitializedGpu('192.168.0.5:8000', gpu)
-        self.worker5 = InitializedWorker('192.168.0.5:8000', jobs, initialized_cpu, initialized_gpu, 'worker5')
+        allocated_cpu = AllocatedCpu('192.168.0.5:8000', 0)
+        allocated_gpu = AllocatedGpu('192.168.0.5:8000', gpu)
+        self.worker5 = InitializedWorker('192.168.0.5:8000', jobs, allocated_cpu, allocated_gpu, 'worker5')
 
     def test_add_worker(self):
         worker_manager = WorkerManager('localhost', ['gpu'])
@@ -97,7 +97,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(flag, False)
         self.assertEqual(worker_manager.job_num, 8)
 
-    def test_drop_worker(self):
+    def test_remove_worker(self):
         worker_manager = WorkerManager('localhost', ['gpu'])
         worker_manager.add_worker(self.worker1)
         worker_manager.add_worker(self.worker2)
@@ -106,11 +106,11 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(self.worker1.worker_address in worker_manager.worker_vacant_jobs, True)
         self.assertEqual(self.worker2.worker_address in worker_manager.worker_vacant_jobs, True)
 
-        worker_manager.drop_worker(self.worker1.worker_address)
+        worker_manager.remove_worker(self.worker1.worker_address)
         self.assertEqual(worker_manager.job_num, 4)
         self.assertEqual(self.worker1.worker_address in worker_manager.worker_vacant_jobs, False)
 
-        worker_manager.drop_worker(self.worker2.worker_address)
+        worker_manager.remove_worker(self.worker2.worker_address)
         self.assertEqual(worker_manager.job_num, 0)
         self.assertEqual(self.worker2.worker_address in worker_manager.worker_vacant_jobs, False)
 
@@ -163,7 +163,7 @@ class ImportTest(unittest.TestCase):
                 '192.168.0.2:1001', '192.168.0.2:1002', '192.168.0.2:1003'
             ]))
 
-        worker_manager.drop_worker(self.worker2.worker_address)
+        worker_manager.remove_worker(self.worker2.worker_address)
         self.assertEqual(4, len(self.worker1.initialized_jobs))
 
     def test_gpu_num(self):
@@ -181,7 +181,7 @@ class ImportTest(unittest.TestCase):
         self.assertEqual(worker_manager.worker_num, 1)
         worker_manager.add_worker(self.worker2)
         self.assertEqual(worker_manager.worker_num, 2)
-        worker_manager.drop_worker(self.worker1.worker_address)
+        worker_manager.remove_worker(self.worker1.worker_address)
         self.assertEqual(worker_manager.worker_num, 1)
 
 

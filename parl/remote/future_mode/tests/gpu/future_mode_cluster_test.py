@@ -25,7 +25,7 @@ from parl.remote import exceptions
 from parl.utils import get_free_tcp_port
 
 
-@parl.remote_class(wait=False, n_gpus=1)
+@parl.remote_class(wait=False, n_gpu=1)
 class Actor(object):
     def __init__(self, arg1=None, arg2=None):
         self.arg1 = arg1

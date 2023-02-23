@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from collections import defaultdict
-from parl.remote.message import InitializedCpu
+from parl.remote.message import AllocatedCpu
 
 
 class CpuResource(object):
-    """The cpu center deals with everything related to allocation for CPUs.
+    """Record CPU information in each worker and respond to resource allocation of CPUs.
 
     Attributes:
         worker_vacant_cpus (dict): Record how many vacant cpus does each
@@ -30,14 +30,14 @@ class CpuResource(object):
         self.worker_vacant_cpus = defaultdict(int)
         self.worker_used_cpus = defaultdict(int)
 
-    def add_cpu(self, worker_address, initialized_cpu):
+    def add_cpu(self, worker_address, allocated_cpu):
         """add CPU resource to worker_vacant_cpus
         Args:
-            initialized_cpu (InitializedCpu): Record the CPU resource used in a job.
+            allocated_cpu (AllocatedCpu): Record the CPU resource used in a job.
         """
-        self.worker_vacant_cpus[worker_address] += initialized_cpu.n_cpu
+        self.worker_vacant_cpus[worker_address] += allocated_cpu.n_cpu
 
-    def drop_cpu(self, worker_address):
+    def remove_cpu(self, worker_address):
         """Remove cpus from CpuResource when a worker dies.
         """
         self.worker_vacant_cpus.pop(worker_address, None)
@@ -52,29 +52,29 @@ class CpuResource(object):
                 result.append(worker_address)
         return result
 
-    def acquire(self, worker_address, n_cpu):
-        """acquire n_cpu CPUs on worker_address
+    def allocate(self, worker_address, n_cpu):
+        """allocate n_cpu CPUs from the worker
         """
         self.worker_vacant_cpus[worker_address] -= n_cpu
         self.worker_used_cpus[worker_address] += n_cpu
         assert self.worker_vacant_cpus[worker_address] >= 0
-        return InitializedCpu(worker_address, n_cpu)
+        return AllocatedCpu(worker_address, n_cpu)
 
-    def release(self, worker_address, initialized_cpu):
-        """release n_cpu CPUs on worker_address
+    def recycle(self, worker_address, allocated_cpu):
+        """recycle n_cpu CPUs to the worker
         """
-        self.worker_vacant_cpus[worker_address] += initialized_cpu.n_cpu
-        self.worker_used_cpus[worker_address] -= initialized_cpu.n_cpu
+        self.worker_vacant_cpus[worker_address] += allocated_cpu.n_cpu
+        self.worker_used_cpus[worker_address] -= allocated_cpu.n_cpu
         assert self.worker_used_cpus[worker_address] >= 0
 
     def get_vacant_cpu(self, worker_address):
-        """Return vacant cpu number of a worker."""
+        """Return the number of vacant CPUs in the worker."""
         return self.worker_vacant_cpus[worker_address]
 
     def cpu_num(self):
-        """"Return vacant cpu number."""
+        """"Return the number vacant of CPUs of all the workers."""
         return sum(self.worker_vacant_cpus.values())
 
     def get_total_cpu(self, worker_address):
-        """Return total cpu number of a worker."""
+        """Return the number of CPUs of all the workers."""
         return self.worker_vacant_cpus[worker_address] + self.worker_used_cpus[worker_address]

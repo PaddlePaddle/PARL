@@ -153,9 +153,16 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
         log_server_port = get_port_from_range(start, end)
 
     master_command = XPARL_PYTHON + [
-        start_file, "--name", "master", "--port", port, "--monitor_port", monitor_port, "--gpu_cluster",
-        str(gpu_cluster).replace("False", "")
+        start_file,
+        "--name",
+        "master",
+        "--port",
+        port,
+        "--monitor_port",
+        monitor_port,
     ]
+    if gpu_cluster:
+        monitor_command.append("--gpu_cluster")
     worker_command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", "localhost:" + str(port), "--cpu_num",
         str(cpu_num), '--log_server_port',
@@ -163,9 +170,10 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
     ]
     monitor_command = XPARL_PYTHON + [
         monitor_file, "--monitor_port",
-        str(monitor_port), "--address", "localhost:" + str(port), "--gpu_cluster",
-        str(gpu_cluster).replace("False", "")
+        str(monitor_port), "--address", "localhost:" + str(port)
     ]
+    if gpu_cluster:
+        monitor_command.append("--gpu_cluster")
 
     FNULL = open(os.devnull, 'w')
 

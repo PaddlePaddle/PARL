@@ -15,7 +15,6 @@
 import argparse
 import os
 import threading
-import pynvml
 from parl.remote import Master, Worker, remote_constants
 
 
@@ -51,7 +50,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', default='master', type=str, help='master/worker')
-    parser.add_argument('--gpu_cluster', default=False, type=bool)
+    parser.add_argument('--gpu_cluster', action='store_true')
     parser.add_argument('--port', default='1234', type=str)
     parser.add_argument('--address', default='localhost:1234', type=str)
     parser.add_argument('--cpu_num', default='', type=str)

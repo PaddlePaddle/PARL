@@ -207,28 +207,32 @@ function main() {
                 echo ========================================
                 pip config set global.index-url https://mirror.baidu.com/pypi/simple
                 pip install .
-                if [ \( $env == "py39" -o $env == "py36" -o $env == "py37" -o $env == "py38" \) ]
-                then
-                    run_import_test # import parl test
+                run_import_test # import parl test
 
-                    pip install -r .teamcity/requirements.txt
-                    pip install paddlepaddle==2.3.1
-                    run_test_with_cpu $env
-                    # uninstall paddlepaddle when testing remote module
+                pip install -r .teamcity/requirements.txt
+                pip install paddlepaddle==2.3.1
+                run_test_with_cpu $env
+                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                xparl stop
+                if [ \( $env == "py38" \) ]
+                then
+                    # install torch
                     pip uninstall -y paddlepaddle
-                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
-                else
+                    python -m pip uninstall -r .teamcity/requirements.txt -y
                     echo ========================================
                     echo "in torch environment"
                     echo ========================================
                     pip install -r .teamcity/requirements_torch.txt
+                    pip install torch
                     run_test_with_cpu $env "DIS_TESTING_TORCH"
+                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
+                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
+                    xparl stop
                 fi
                 # clean env
                 export LC_ALL=C.UTF-8
                 export LANG=C.UTF-8
-                xparl stop
             done
 
             pip install -r .teamcity/requirements.txt

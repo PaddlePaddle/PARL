@@ -239,6 +239,7 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
+            run_test_with_gpu $env "DIS_TESTING_REMOTE_WITH_GPU"
 
             ;;
         example)

@@ -230,6 +230,7 @@ function main() {
                     run_test_with_cpu $env "DIS_TESTING_SERIALLY"
                     run_test_with_cpu $env "DIS_TESTING_REMOTE"
                     xparl stop
+                    pip uninstall -y torch
                 fi
                 # clean env
                 export LC_ALL=C.UTF-8
@@ -239,6 +240,9 @@ function main() {
             pip install -r .teamcity/requirements.txt
             pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
             run_test_with_gpu $env
+            run_test_with_gpu $env "DIS_TESTING_REMOTE_WITH_GPU"
+            pip uninstall -y paddlepaddle # test xparl-gpu without deep learning framework installed
+            run_test_with_gpu $env "DIS_TESTING_REMOTE_WITH_GPU"
 
             ;;
         example)

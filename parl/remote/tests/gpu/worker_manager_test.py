@@ -19,7 +19,7 @@ from parl.remote.message import InitializedWorker, InitializedJob, AllocatedCpu,
 from parl.utils.test_utils import XparlTestCase
 
 
-class ImportTest(XparlTestCase):
+class ImportTest(unittest.TestCase):
     def setUp(self):
         jobs = []
         gpu_num = 4

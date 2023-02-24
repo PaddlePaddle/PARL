@@ -117,6 +117,13 @@ class Worker(object):
         self.gpu_num = 0
         if gpu:
             self.gpu_num = len(gpu.split(','))
+            pynvml.nvmlInit()
+            device_count = pynvml.nvmlDeviceGetCount()
+            pynvml.nvmlShutdown()
+            if self.gpu_num > device_count:
+                error_message = "gpu:{} exceeds device_count:{}".format(gpu, device_count)
+                logger.error(error_message)
+                assert self.gpu_num <= device_count, error_message
 
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process

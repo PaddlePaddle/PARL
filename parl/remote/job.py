@@ -296,26 +296,10 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
-                os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
+                if self.gpu:
+                    os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
                 del os.environ['XPARL_igonre_core']
                 importlib.reload(parl)
-                if self.gpu:
-                    for dl_framework in DL_FRAMEWORKS:
-                        try:
-                            # ensure CUDA_VISIBLE_DEVICES take a global unique effect
-                            module = importlib.import_module(dl_framework)
-                            gpu_count = len(self.gpu.split(','))
-                            if dl_framework == "torch":
-                                device_count = module.cuda.device_count()
-                            else:
-                                device_count = module.device.cuda.device_count()
-                            if device_count != gpu_count:
-                                error_message = "{} device_count[{}] conflicts with job's gpus:[{}]".format(
-                                    dl_framework, device_count, self.gpu)
-                                logger.error(error_message)
-                                assert device_count == gpu_count
-                        except ImportError:
-                            pass
                 cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
                 with redirect_output_to_file(self.logfile_path, os.devnull):

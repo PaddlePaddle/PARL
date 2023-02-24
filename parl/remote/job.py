@@ -296,10 +296,10 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
+                os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
+                del os.environ['XPARL_igonre_core']
+                importlib.reload(parl)
                 if self.gpu:
-                    os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
-                    del os.environ['XPARL_igonre_core']
-                    importlib.reload(parl)
                     for dl_framework in DL_FRAMEWORKS:
                         try:
                             # ensure CUDA_VISIBLE_DEVICES take a global unique effect

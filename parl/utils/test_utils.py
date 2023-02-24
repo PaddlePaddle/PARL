@@ -13,6 +13,8 @@
 # limitations under the License.
 import unittest
 from parl.utils import get_free_tcp_port
+from parl.utils import is_port_available
+from parl.utils import logger
 import multiprocessing as mp
 from parl.remote.master import Master
 from parl.remote.worker import Worker
@@ -46,7 +48,10 @@ class XparlTestCase(unittest.TestCase):
         p_master = self.ctx.Process(target=self._create_master, args=(device, ))
         p_master.start()
         self.sub_process.append(p_master)
-        time.sleep(1)
+        while is_port_available(self.port):
+            logger.info("Master[localhost:{}] starting".format(self.port))
+            time.sleep(1)
+        logger.info("Master[localhost:{}] started".format(self.port))
 
     def add_worker(self, n_cpu, gpu=""):
         p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, gpu))

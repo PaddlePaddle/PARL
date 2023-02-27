@@ -282,8 +282,6 @@ class PopArt(torch.nn.Module):
         self.mean_sq.mul_(self.beta).add_(batch_sq_mean * (1.0 - self.beta))
         self.debiasing_term.mul_(self.beta).add_(1.0 * (1.0 - self.beta))
 
-        self.stddev = (self.mean_sq - self.mean**2).sqrt().clamp(min=1e-4)
-
         new_mean, new_var = self.debiased_mean_var()
         new_stddev = torch.sqrt(new_var)
 

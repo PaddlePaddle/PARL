@@ -58,7 +58,7 @@ class TestClusterMonitor(XparlTestCase):
         self.add_master()
         self.add_worker(n_cpu=1)
         cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
-        time.sleep(1)
+        time.sleep(30)
         self.assertEqual(1, len(cluster_monitor.data['workers']))
         self.remove_all_workers()
         time.sleep(40)

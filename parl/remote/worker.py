@@ -14,6 +14,8 @@
 
 import cloudpickle
 import multiprocessing
+multiprocessing.set_start_method("spawn")
+
 import os
 import psutil
 import signal

@@ -30,8 +30,8 @@ class XparlTestCase(unittest.TestCase):
         self.worker_process = []
 
     def tearDown(self):
-        for p in self.sub_process:
-            if p.is_alive():
+        for _ in range(3):
+            for p in mp.active_children():
                 p.terminate()
                 p.join()
         disconnect()

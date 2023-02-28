@@ -478,6 +478,9 @@ found in your current environment. To use "pyarrow" for serialization, please in
         self.worker_is_alive = False
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
+        parent = psutil.Process(os.getpid())
+        for child in parent.children(recursive=True): 
+            child.terminate()
 
     def run(self):
         """Keep running until it lost connection with the master.

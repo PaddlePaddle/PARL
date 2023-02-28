@@ -21,6 +21,7 @@ from parl.remote.worker import Worker
 from parl.remote.client import disconnect
 from parl.remote import remote_constants
 import time
+import psutil
 
 class XparlTestCase(unittest.TestCase):
     def setUp(self):
@@ -30,8 +31,11 @@ class XparlTestCase(unittest.TestCase):
         self.worker_process = []
 
     def tearDown(self):
-        for _ in range(3):
-            for p in mp.active_children():
+        for p in self.sub_process:
+            parent = psutil.Process(p.pid)
+            for child in parent.children(recursive=True): 
+                child.terminate()
+            if p.is_alive():
                 p.terminate()
                 p.join()
         disconnect()

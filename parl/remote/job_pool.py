@@ -17,8 +17,8 @@ import signal
 import os
 
 
-class WorkerStatus(object):
-    """Maintain worker's information in a worker node. 
+class JobPool(object):
+    """Record information of the jobs created by the worker.
 
     Attributes:
         cpu_num(int): The number of CPUs to be used in this worker.
@@ -51,19 +51,19 @@ class WorkerStatus(object):
             try:
                 os.kill(pid, signal.SIGTERM)
             except OSError:
-                logger.warning("job:{} has been killed before".format(pid))
+                logger.warning("[Worker] job:{} has been killed before".format(pid))
             logger.info("[Worker] kills a job:{}".format(killed_job))
         self._lock.release()
         return ret
 
     def clear(self):
-        """Remove all the jobs"""
+        """Remove all the jobs and kill the corresponding process"""
         self._lock.acquire()
         for job in self.jobs.values():
             try:
                 os.kill(job.pid, signal.SIGTERM)
             except OSError:
-                logger.warning("job:{} has been killed before".format(job.pid))
+                logger.warning("[Worker] job:{} has been killed before".format(job.pid))
             logger.info("[Worker] kills a job:{}".format(job.pid))
         self.jobs = dict()
         self._lock.release()
@@ -76,5 +76,8 @@ class WorkerStatus(object):
         """
         self._lock.acquire()
         self.jobs[new_job.job_address] = new_job
+        if len(self.jobs) < self.cpu_num:
+            logger.error("[Worker] The number of jobs exceeds the maximum limitation. {} vs {}".format(
+                len(self.jobs), self.cpu_num))
         assert len(self.jobs) <= self.cpu_num
         self._lock.release()

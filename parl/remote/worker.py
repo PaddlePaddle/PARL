@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import cloudpickle
-import multiprocessing
+import multiprocessing as mp
 import os
 import psutil
 import signal
@@ -72,6 +72,13 @@ class Worker(object):
     """
 
     def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu=''):
+        # At first, fork a subprocess with blank context to launch job.py
+        self.cmd_queue = mp.Queue()
+        process = mp.Process(target=self._launch_cmd, args=(self.cmd_queue, ))
+        process.daemon = True
+        process.start()
+
+        # initialzation
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -110,7 +117,7 @@ class Worker(object):
             assert isinstance(cpu_num, int), "cpu_num should be INT type, please check the input type."
             self.cpu_num = cpu_num
         else:
-            self.cpu_num = multiprocessing.cpu_count()
+            self.cpu_num = mp.cpu_count()
 
     def _set_gpu_num(self, gpu=''):
         """set useable gpu number for worker"""
@@ -271,6 +278,13 @@ found in your current environment. To use "pyarrow" for serialization, please in
             time.sleep(0.02)
         self.exit()
 
+    def _launch_cmd(self, cmd_queue):
+        FNULL = open(os.devnull, 'w')
+        while True:
+            command = cmd_queue.get()
+            subprocess.Popen(command, stdout=FNULL, close_fds=True)
+        FNULL.close()
+
     def _init_jobs(self, job_num):
         """Create jobs.
 
@@ -289,11 +303,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
         # avoid that many jobs are killed and restarted at the same time.
         self.lock.acquire()
 
-        # Redirect the output to DEVNULL
-        FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(command, stdout=FNULL, close_fds=True)
-        FNULL.close()
+            self.cmd_queue.put(command)
 
         new_jobs = []
         for _ in range(job_num):

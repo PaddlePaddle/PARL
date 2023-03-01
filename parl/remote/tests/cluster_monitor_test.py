@@ -62,6 +62,7 @@ class TestClusterMonitor(XparlTestCase):
         self.assertEqual(1, len(cluster_monitor.data['workers']))
         self.remove_all_workers()
         time.sleep(40)
+        print("OOOOOOOOO", len(cluster_monitor.data['workers']))
         self.assertEqual(0, len(cluster_monitor.data['workers']))
 
 

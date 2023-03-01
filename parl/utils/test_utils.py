@@ -44,8 +44,6 @@ class XparlTestCase(unittest.TestCase):
                     proc.terminate()
                     proc.join()
             elif self.sub_process_type[i] == 'worker':
-                is_alive = proc.poll() is None 
-                if is_alive:
                     os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             else:
                 raise NotImplementedError
@@ -68,13 +66,14 @@ class XparlTestCase(unittest.TestCase):
             logger.info("Master[localhost:{}] starting".format(self.port))
             time.sleep(1)
         logger.info("Master[localhost:{}] started".format(self.port))
+        time.sleep(10)
 
     def add_worker(self, n_cpu, gpu=""):
         command = [
             "xparl", "connect", "--address", "localhost:{}".format(self.port), "--cpu_num",
             str(n_cpu), "--gpu", gpu
         ]
-        time.sleep(5)
+        time.sleep(3)
         p_worker = subprocess.Popen(command, close_fds=True, preexec_fn=os.setsid)
         time.sleep(2)
         self.sub_process.append(p_worker)
@@ -83,6 +82,4 @@ class XparlTestCase(unittest.TestCase):
 
     def remove_all_workers(self):
         for proc in self.worker_process:
-            is_alive = proc.poll() is None 
-            if is_alive:
-                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)

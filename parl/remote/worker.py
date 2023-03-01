@@ -237,10 +237,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
         logger.set_dir(
             os.path.expanduser('~/.parl_data/worker/{}'.format(self.master_heartbeat_address.replace(':', '_'))))
-        if self.cpu_num:
-            logger.info("[Worker] Connect to the master node successfully. " "({} CPUs)".format(self.cpu_num))
-        elif self.gpu_num:
-            logger.info("[Worker] Connect to the master node successfully. " "({} GPUs)".format(self.gpu_num))
 
         for job in initialized_jobs:
             job.worker_address = self.master_heartbeat_address
@@ -263,6 +259,10 @@ found in your current environment. To use "pyarrow" for serialization, please in
         else:
             self.worker_status = WorkerStatus(self.master_heartbeat_address, initialized_jobs, self.cpu_num,
                                               self.gpu_num)
+        if self.cpu_num:
+            logger.info("[Worker] Connect to the master node successfully. " "({} CPUs)".format(self.cpu_num))
+        elif self.gpu_num:
+            logger.info("[Worker] Connect to the master node successfully. " "({} GPUs)".format(self.gpu_num))
 
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""

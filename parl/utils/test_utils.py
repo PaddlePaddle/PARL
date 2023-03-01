@@ -32,10 +32,12 @@ class XparlTestCase(unittest.TestCase):
 
     def tearDown(self):
         for p in self.sub_process:
-            parent = psutil.Process(p.pid)
-            for child in parent.children(recursive=True): 
-                child.terminate()
             if p.is_alive():
+                # terminate its child process
+                parent = psutil.Process(p.pid)
+                for child in parent.children(recursive=True): 
+                    child.terminate()
+                # teminate the process
                 p.terminate()
                 p.join()
         disconnect()

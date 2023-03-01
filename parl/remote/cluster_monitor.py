@@ -134,10 +134,8 @@ class ClusterMonitor(object):
             used_gpus += worker.get('used_gpus', 0)
             vacant_gpus += worker.get('vacant_gpus', 0)
         self.lock.release()
-        if used_cpus + vacant_cpus != 0:
-            status_info = "has {} used cpus, {} vacant cpus.".format(used_cpus, vacant_cpus, used_gpus, vacant_gpus)
-        elif used_gpus + vacant_gpus != 0:
-            status_info = "has {} used_gpus, {} vacant_gpus.".format(used_cpus, vacant_cpus, used_gpus, vacant_gpus)
+        status_info = "has {} used cpus, {} vacant cpus, {} used_gpus, {} vacant_gpus.".format(
+                used_cpus, vacant_cpus, used_gpus, vacant_gpus)
         return status_info
 
     def get_status(self):

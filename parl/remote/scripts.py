@@ -246,10 +246,14 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
 
             xparl connect --address {}:{}
 
+        ## If you want to add more GPU resources, please call:
+
+            xparl connect --address {}:{} --gpu 0,1,2,...
+
         ## If you want to shutdown the cluster, please call:
 
             xparl stop        
-        """.format(start_info, master_ip, port)
+        """.format(start_info, master_ip, port, master_ip, port)
     click.echo(monitor_info)
 
     if cpu_num > 0 or gpu:
@@ -312,8 +316,11 @@ def status():
         cmd = r'ps -ef | grep remote/start.py\ --name\ worker\ --address'
 
     content = os.popen(cmd).read().strip()
-    pattern = re.compile('--address (.*?) --cpu')
-    clusters = set(pattern.findall(content))
+    cpu_pattern = re.compile('--address (.*?) --cpu')
+    cpu_clusters = set(cpu_pattern.findall(content))
+    gpu_pattern = re.compile('--address (.*?) --cpu.*? --gpu [0-9,]+')
+    gpu_clusters = set(gpu_pattern.findall(content))
+    clusters = cpu_clusters | gpu_clusters
     if len(clusters) == 0:
         click.echo('No active cluster is found.')
     else:
@@ -330,7 +337,8 @@ def status():
             monitors = pattern.findall(content)
 
             if len(monitors):
-                monitor_port, _, master_address = monitors[0].split(' ')
+                monitor_port = monitors[0].split(' ')[0]
+                master_address = monitors[0].split(' ')[2]
                 monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
                 socket = ctx.socket(zmq.REQ)
                 socket.setsockopt(zmq.RCVTIMEO, 10000)

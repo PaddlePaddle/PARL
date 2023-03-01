@@ -1,0 +1,93 @@
+
+
+
+tokenizer:
+  model_name: t5-base
+  padding_side: left
+  truncation_side: left
+  pad_token_as_eos_token: False
+
+reward_fn:
+  id: rouge
+  args:
+    rouge_type: "rouge1"
+
+datapool:
+  id: cnn_daily_mail
+  args:
+    prompt_prefix: "Summarize: "
+
+
+env:
+  ## CHANGE FOR DEBUG ##
+#  n_envs: 10
+  n_envs: 2
+  ## CHANGE FOR DEBUG ##
+  args:
+    max_prompt_length: 512
+    max_episode_length: 100
+    terminate_on_eos: True
+    prompt_truncation_side: "right"
+    context_start_token: 0
+
+alg:
+  id: ppo
+  args: 
+#    n_steps: 512
+    #####CHNAGE FOR DEBUG########
+    n_steps: 5
+    #####CHANGE FOR DEBUG########
+    batch_size: 16
+    verbose: 1
+    learning_rate: 0.000002
+    n_epochs: 5
+    ent_coef: 0.0
+  kl_div:
+    coeff: 0.001
+    target_kl: 0.2
+  policy:
+    id: seq2seq_lm_actor_critic_policy
+    args:
+      model_name: t5-base
+      apply_model_parallel: True
+      prompt_truncation_side: "right"
+      generation_kwargs:
+        do_sample: True
+        top_k: 50
+        min_length: 50
+        max_new_tokens: 100          
+    
+train_evaluation:
+  eval_batch_size: 100
+  n_iters: 100
+  eval_every: 10
+  save_every: 1
+  metrics:
+    - id: meteor
+      args: {}
+    - id: rouge
+    - id: bleu
+      args: {}
+    - id: bert_score
+      args:
+        language: en
+    # - id: bleurt
+    #   args:
+    #     config_name: bleurt-large-512
+    - id: diversity
+      args: {}
+    # - id: summaCZS
+    #   args:
+    #     granularity: sentence
+    #     use_ent: True
+    #     use_con: False
+    # - id: summaCConv
+    #   args:
+    #     granularity: sentence
+  generation_kwargs: 
+    do_sample: True
+    top_k: 0
+    temperature: 0.7
+    min_length: 50
+    max_new_tokens: 100
+

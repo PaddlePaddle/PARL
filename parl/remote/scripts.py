@@ -219,7 +219,7 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
     else:
         cmd = r'ps -ef | grep -v grep | grep remote/monitor.py\ --monitor_port\ {}\ --address\ localhost:{}'.format(
             monitor_port, port)
-    for i in range(3):
+    for i in range(10):
         check_monitor_is_started = os.popen(cmd).read()
         if len(check_monitor_is_started) > 0:
             monitor_is_started = True

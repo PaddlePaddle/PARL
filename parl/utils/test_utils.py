@@ -44,7 +44,9 @@ class XparlTestCase(unittest.TestCase):
                     proc.terminate()
                     proc.join()
             elif self.sub_process_type[i] == 'worker':
-                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                is_alive = proc.poll() is None 
+                if is_alive:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             else:
                 raise NotImplementedError
         disconnect()
@@ -81,4 +83,6 @@ class XparlTestCase(unittest.TestCase):
 
     def remove_all_workers(self):
         for proc in self.worker_process:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            is_alive = proc.poll() is None 
+            if is_alive:
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)

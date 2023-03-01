@@ -43,6 +43,7 @@ class TestMaxMemory(XparlTestCase):
         del actor
         actor1 = Actor()
         actor1.add_500mb()
+        print("sleep 60 seconds")
         time.sleep(60)
         self.assertEqual(0, get_global_client().actor_num.value)
 

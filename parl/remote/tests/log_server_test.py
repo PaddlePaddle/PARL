@@ -77,7 +77,7 @@ class TestLogServer(unittest.TestCase):
         master = Master(port=master_port)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(10)
 
         cluster_addr = 'localhost:{}'.format(master_port)
         log_server_port = get_free_tcp_port()
@@ -125,7 +125,7 @@ class TestLogServer(unittest.TestCase):
         master = Master(port=master_port, monitor_port=monitor_port)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(10)
         # start the cluster monitor
         monitor_file = __file__.replace('log_server_test.pyc', '../monitor.py')
         monitor_file = monitor_file.replace('log_server_test.py',

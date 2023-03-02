@@ -85,6 +85,7 @@ class Worker(object):
 
 
         # initialzation
+        self.all_threads = []
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -105,6 +106,7 @@ class Worker(object):
         self.remove_job_thread = threading.Thread(target=self._reply_remove_job)
         self.remove_job_thread.setDaemon(True)
         self.remove_job_thread.start()
+        self.all_threads.append(['remove_job_thread', self.remove_job_thread])
 
         self._create_jobs()
 
@@ -112,10 +114,12 @@ class Worker(object):
         job_thread = threading.Thread(target=self._fill_job_buffer)
         job_thread.setDaemon(True)
         job_thread.start()
+        self.all_threads.append(['_fill_job_buffer', job_thread])
 
         thread = threading.Thread(target=self._update_worker_status_to_master)
         thread.setDaemon(True)
         thread.start()
+        self.all_threads.append(['_update_worker_status_to_master', thread])
 
     def _set_cpu_num(self, cpu_num=None):
         """set useable cpu number for worker"""
@@ -231,13 +235,14 @@ found in your current environment. To use "pyarrow" for serialization, please in
             if self.worker_status is not None:
                 self.worker_status.clear()
             # exit the worker
-            self.exit()
+            self.worker_is_alive = False
 
         self.master_heartbeat_thread = HeartbeatServerThread(
             heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
         self.master_heartbeat_thread.setDaemon(True)
         self.master_heartbeat_thread.start()
         self.master_heartbeat_address = self.master_heartbeat_thread.get_address()
+        self.all_threads.append(['master_heartbeat_thread', self.master_heartbeat_thread])
 
         logger.set_dir(
             os.path.expanduser('~/.parl_data/worker/{}'.format(self.master_heartbeat_address.replace(':', '_'))))
@@ -280,7 +285,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
                         self.job_buffer.put(job)
 
             time.sleep(0.02)
-        self.exit()
 
     def _launch_cmd(self, cmd_queue):
         FNULL = open(os.devnull, 'w')
@@ -339,6 +343,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 exit_func_args=(initialized_job, ))
             thread.setDaemon(True)
             thread.start()
+            self.all_threads.append(['job_heartbeat', thread])
 
         self.lock.release()
         assert len(new_jobs) > 0, "init jobs failed"
@@ -478,6 +483,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             log_server_heartbeat_addr, heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         thread.setDaemon(True)
         thread.start()
+        self.all_threads.append(['clientheartbeat', thread])
 
         return log_server_address
 
@@ -494,6 +500,11 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 os.kill(job.pid, signal.SIGTERM)
             except OSError:
                 logger.warning("job:{} has been killed before".format(job.pid))
+        for [name, thread] in self.all_threads:
+            if thread.is_alive():
+                if hasattr(thread, 'exit'):
+                    thread.exit()
+                thread.join()
 
 
 
@@ -502,3 +513,4 @@ found in your current environment. To use "pyarrow" for serialization, please in
         """
         if self.worker_is_alive:
             self.master_heartbeat_thread.join()
+        self.exit()

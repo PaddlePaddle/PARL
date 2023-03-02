@@ -32,7 +32,7 @@ class XparlTestCase(unittest.TestCase):
     def setUp(self):
         self.port = get_free_tcp_port()
         self.ctx = mp.get_context()
-        self.worker_process = []
+        self.worker_events= []
         self.master_exit_event = mp.Event()
 
     def tearDown(self):
@@ -49,9 +49,10 @@ class XparlTestCase(unittest.TestCase):
         self.master_exit_event.wait()
         master.exit()
 
-    def _create_worker(self, n_cpu, gpu):
+    def _create_worker(self, n_cpu, gpu, exit_event):
         worker = Worker('localhost:{}'.format(self.port), n_cpu, None, gpu)
-        worker.run()
+        exit_event.wait()
+        worker.exit()
 
     def add_master(self, device=remote_constants.CPU):
         p_master = self.ctx.Process(target=self._create_master, args=(device, ))
@@ -63,15 +64,11 @@ class XparlTestCase(unittest.TestCase):
         time.sleep(10)
 
     def add_worker(self, n_cpu, gpu=""):
-        command = [
-            "xparl", "connect", "--address", "localhost:{}".format(self.port), "--cpu_num",
-            str(n_cpu), "--gpu", gpu
-        ]
-        time.sleep(3)
-        p_worker = subprocess.Popen(command, close_fds=True, preexec_fn=os.setsid)
-        time.sleep(2)
-        self.worker_process.append(p_worker)
+        exit_event = mp.Event()
+        p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, n_gpu, exit_event))
+        p_worker.start()
+        self.worker_events.append(exit_event)
 
     def remove_all_workers(self):
-        for proc in self.worker_process:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        for event in self.worker_events:
+            event.set()

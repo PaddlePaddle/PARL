@@ -56,9 +56,9 @@ class Actor(object):
 class TestClusterMonitor(XparlTestCase):
 
     def remove_ten_workers(self):
-        for i, proc in enumerate(self.worker_process):
+        for i, proc in enumerate(self.worker_events):
             if i == 10: break
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            self.worker_events[i].set()
 
     def test_twenty_worker(self):
         self.add_master()

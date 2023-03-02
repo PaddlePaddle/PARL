@@ -282,13 +282,11 @@ class Master(object):
             if thread.is_alive():
                 thread.exit()
                 thread.join()
-        print("EEEEEEEEEEEEE")
 
         for thread in self.all_worker_heartbeat_threads:
             if thread.is_alive():
                 thread.exit()
                 thread.join()
-        print("EEEEEEEEEEEEE2222")
 
     def run(self):
         """An infinite loop waiting for messages from the workers and

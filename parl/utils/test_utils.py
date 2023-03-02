@@ -65,7 +65,7 @@ class XparlTestCase(unittest.TestCase):
 
     def add_worker(self, n_cpu, gpu=""):
         exit_event = mp.Event()
-        p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, n_gpu, exit_event))
+        p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, gpu, exit_event))
         p_worker.start()
         self.worker_events.append(exit_event)
 

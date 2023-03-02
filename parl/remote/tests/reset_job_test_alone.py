@@ -81,11 +81,8 @@ class TestJobAlone(unittest.TestCase):
         time.sleep(20)
 
         master.exit()
-        print("MMMMMMMMMMMMaster")
         worker1.exit()
-        print("WWWWWWWWWWWWworker")
         disconnect()
-        print("DDDDDDDDD")
 
 
 if __name__ == '__main__':

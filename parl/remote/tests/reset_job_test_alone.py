@@ -55,9 +55,6 @@ class Actor(object):
 
 
 class TestJobAlone(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
     def test_job_exit_exceptionally(self):
         port = get_free_tcp_port()
         master = Master(port=port)
@@ -84,7 +81,11 @@ class TestJobAlone(unittest.TestCase):
         time.sleep(20)
 
         master.exit()
+        print("MMMMMMMMMMMMaster")
         worker1.exit()
+        print("WWWWWWWWWWWWworker")
+        disconnect()
+        print("DDDDDDDDD")
 
 
 if __name__ == '__main__':

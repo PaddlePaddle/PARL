@@ -62,11 +62,11 @@ class TestClusterMonitor(XparlTestCase):
 
     def test_twenty_worker(self):
         self.add_master()
+        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
 
         for _ in range(20):
             self.add_worker(n_cpu=1)
 
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
 
         check_flag = False
         for _ in range(10):

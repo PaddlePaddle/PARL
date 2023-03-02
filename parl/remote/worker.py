@@ -480,6 +480,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
         self.worker_status.clear()
+        self.cmd_queue.put("exit")
         while not self.job_buffer.empty():
             job = self.job_buffer.get()
             try:

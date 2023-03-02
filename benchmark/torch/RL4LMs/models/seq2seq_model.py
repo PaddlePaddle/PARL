@@ -18,19 +18,17 @@ from benchmark.torch.RL4LMs.utils import (
     PolicyType, EvaluateActionsOutput, GenerationOutputs,
 )
 
-from base_model import LMActorCriticPolicy
+from .base_model import LMActorCriticModel
 
 
-class Seq2SeqLMModel(LMActorCriticPolicy, ActorCriticWarmStartMixin):
+class Seq2SeqLMModel(LMActorCriticModel, ActorCriticWarmStartMixin):
     def __init__(
         self,
         observation_space: DictSpace,
         action_space: Discrete,
-        lr_schedule: Schedule,
         model_name: str,
         optimizer_kwargs: Dict[str, Any] = {},
         weight_decay: float = 1e-6,
-        use_sde: bool = None,
         apply_model_parallel: bool = True,
         optimizer_class: torch.optim.Optimizer = torch.optim.AdamW,
         generation_kwargs: Dict[str, Any] = {},
@@ -40,11 +38,9 @@ class Seq2SeqLMModel(LMActorCriticPolicy, ActorCriticWarmStartMixin):
         super().__init__(
             observation_space,
             action_space,
-            lr_schedule,
             model_name,
             optimizer_kwargs,
             weight_decay,
-            use_sde,
             apply_model_parallel,
             optimizer_class,
             generation_kwargs,

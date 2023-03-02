@@ -45,7 +45,7 @@ alg:
   kl_div:
     coeff: 0.001
     target_kl: 0.2
-  policy:
+  model:
     id: seq2seq_lm_actor_critic_policy
     args:
       model_name: t5-base

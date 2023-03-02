@@ -1,1 +1,1 @@
-from .rl4lm_ppo import RL4LMPPO
+from .ppo import RL4LMPPO

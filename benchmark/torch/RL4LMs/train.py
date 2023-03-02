@@ -67,13 +67,16 @@ if __name__ == '__main__':
         help="Base path to store experiment results",
         default=os.getcwd(),
     )
+    parser.add_argument(
+        "--entity_name", type=str, help="entity name", default=None
+    )
     args = parser.parse_args()
 
     # load the config file
     with open(args.config_path, "r") as fp:
         config = yaml.safe_load(fp)
 
-    recursive_dict_update(config, args)
+    recursive_dict_update(config, vars(args))
 
     main(config)
 

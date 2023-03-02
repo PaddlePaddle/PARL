@@ -4,7 +4,7 @@ import torch
 from datasets import load_metric
 from .data_wrapper import Observation
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from .metric_util import (
+from benchmark.torch.RL4LMs.metrics import (
     MeteorMetric,
     BERTScoreMetric,
     BLEUMetric,
@@ -96,7 +96,7 @@ class MeteorRewardFunction(RewardFunction):
     def __init__(self, shaping_fn: str = None) -> None:
         super().__init__()
         self._metric = MeteorMetric()
-        from rl4lms.envs.text_generation.registry import RewardFunctionRegistry
+        from benchmark.torch.RL4LMs.registry import RewardFunctionRegistry
 
         self._shaping_fn = (
             RewardFunctionRegistry.get(shaping_fn, {})
@@ -136,7 +136,7 @@ class RougeRewardFunction(RewardFunction):
         super().__init__()
         self._metric = load_metric("rouge")
         self._rouge_type = rouge_type
-        from rl4lms.envs.text_generation.registry import RewardFunctionRegistry
+        from benchmark.torch.RL4LMs.registry import RewardFunctionRegistry
 
         self._shaping_fn = (
             RewardFunctionRegistry.get(shaping_fn, {})
@@ -178,7 +178,7 @@ class RougeCombined(RewardFunction):
     def __init__(self, shaping_fn: str = None) -> None:
         super().__init__()
         self._metric = load_metric("rouge")
-        from rl4lms.envs.text_generation.registry import RewardFunctionRegistry
+        from benchmark.torch.RL4LMs.registry import RewardFunctionRegistry
 
         self._shaping_fn = (
             RewardFunctionRegistry.get(shaping_fn, {})
@@ -360,30 +360,30 @@ class BLEURTRewardFunction(RewardFunction):
         return 0
 
 
-class PARENTRewardFunction(RewardFunction):
-    """
-    PARENT F1 score as the reward
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._metric = ParentToTTo()
-
-    def __call__(
-        self,
-        current_observation: Observation,
-        action: int,
-        next_observation: Observation,
-        done: bool,
-        meta_info: Dict[str, Any] = None,
-    ) -> float:
-        if done:
-            generated_texts = [next_observation.context_text]
-            meta_infos = [meta_info]
-            scores = self._metric.compute(None, generated_texts, None, meta_infos)
-            reward = scores["table_to_text/parent_overall_f_score"][0][0]
-            return reward
-        return 0
+# class PARENTRewardFunction(RewardFunction):
+#     """
+#     PARENT F1 score as the reward
+#     """
+#
+#     def __init__(self) -> None:
+#         super().__init__()
+#         self._metric = ParentToTTo()
+#
+#     def __call__(
+#         self,
+#         current_observation: Observation,
+#         action: int,
+#         next_observation: Observation,
+#         done: bool,
+#         meta_info: Dict[str, Any] = None,
+#     ) -> float:
+#         if done:
+#             generated_texts = [next_observation.context_text]
+#             meta_infos = [meta_info]
+#             scores = self._metric.compute(None, generated_texts, None, meta_infos)
+#             reward = scores["table_to_text/parent_overall_f_score"][0][0]
+#             return reward
+#         return 0
 
 
 class RougeLMaxRewardFunction(RewardFunction):
@@ -421,8 +421,8 @@ if __name__ == "__main__":
     reward_fn = MeteorRewardFunction()
     print(reward_fn(None, None, observation, True))
 
-    reward_fn = chrF()
-    print(reward_fn(None, None, observation, True))
+    # reward_fn = chrF()
+    # print(reward_fn(None, None, observation, True))
 
     reward_fn = RougeCombined()
     print(reward_fn(None, None, observation, True))

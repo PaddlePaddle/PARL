@@ -1,6 +1,5 @@
 from typing import Any, Dict, List
 
-from benchmark.torch.RL4LMs.models import BasePolicy
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
@@ -18,7 +17,7 @@ def get_batch(samples: List[Sample], batch_size: int):
 
 
 def evaluate_on_samples(
-    policy: BasePolicy,
+    policy,
     tokenizer: AutoTokenizer,
     samples: List[Sample],
     batch_size: int,
@@ -100,16 +99,15 @@ def evaluate_on_samples(
         sample_predictions_dict.append(sample_prediction)
 
 
-    # TODO: change tracker to parl logging
-    # if tracker is not None:
-    #     # log the entire predictions
-    #     tracker.log_predictions(epoch, split_name, sample_predictions_dict)
-    #     # log the corpus level scores
-    #     tracker.log_metrics(epoch, split_name, corpus_level_metrics)
+    if tracker is not None:
+        # log the entire predictions
+        tracker.log_predictions(epoch, split_name, sample_predictions_dict)
+        # log the corpus level scores
+        tracker.log_metrics(epoch, split_name, corpus_level_metrics)
 
 
 def generate_text(
-    policy: BasePolicy,
+    policy,
     tokenizer: AutoTokenizer,
     samples: List[Sample],
     max_prompt_length: int,

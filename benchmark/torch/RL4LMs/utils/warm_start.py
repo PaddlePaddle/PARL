@@ -1,6 +1,6 @@
 import os
 from typing import Any, Dict
-
+from .tracker import Tracker
 import torch
 
 # from rl4lms.envs.text_generation.logging_utils import Tracker
@@ -79,69 +79,69 @@ class OnPolicyWarmStartMixin:
 #                 state_dict["replay_buffer"])
 #
 #
-# ################## Trainer Warm Start Mixins#######################################
-# class TrainerWarmStartMixin:
-#     def _get_recent_ckpt_path(self, tracker: Tracker):
-#         try:
-#             checkpoints = os.listdir(tracker.checkpoint_base_path)
-#         except:
-#             os.makedirs(tracker.checkpoint_base_path)
-#             checkpoints = os.listdir(tracker.checkpoint_base_path)
-#
-#         if len(checkpoints) == 0:
-#             return None, None
-#
-#         sorted_ckpts = sorted(checkpoints, reverse=True,
-#                               key=lambda ckpt: int(ckpt.split("_")[1]))
-#         recent_ckpt = sorted_ckpts[0]
-#         recent_ckpt_id = int(recent_ckpt.split("_")[1])
-#
-#         recent_ckpt_path = os.path.join(
-#             tracker.checkpoint_base_path, f"checkpoint_{recent_ckpt_id}")
-#         return recent_ckpt_path, recent_ckpt_id
-#
-#     def load_trainer_state(self, tracker: Tracker):
-#         recent_ckpt_path, _ = self._get_recent_ckpt_path(tracker)
-#         state_dict = None
-#         try:
-#             if recent_ckpt_path is not None:
-#                 state_dict = torch.load(
-#                     recent_ckpt_path, map_location=torch.device("cuda"))
-#                 tracker.log_info("Model checkpoint found - Warm starting")
-#                 self._policy_state_dict = state_dict["policy_state"]
-#                 self._alg_state_dict = state_dict["alg_state"]
-#                 self._trainer_state = state_dict["trainer_state"]
-#
-#                 tracker.log_info(
-#                     f"Loaded the current trainer state from: {self._trainer_state}")
-#             else:
-#                 self._policy_state_dict = None
-#                 self._alg_state_dict = None
-#                 self._trainer_state = {
-#                     "current_iter": 0,
-#                 }
-#         except Exception as e:
-#             tracker.log_info(f"Exception while doing warm start {e}")
-#             tracker.log_info(
-#                 f"Checkpoint may be corrupted...skipping warm start")
-#             self._policy_state_dict = None
-#             self._alg_state_dict = None
-#             self._trainer_state = {
-#                 "current_iter": 0,
-#             }
-#
-#     def save_trainer_state(self, tracker: Tracker,
-#                            policy: LMActorCriticPolicy,
-#                            trainer_state: Dict[str, Any]):
-#         full_state = {
-#             "alg_state": self._alg.get_state_dict(),
-#             "policy_state": policy.get_state_dict(),
-#             "trainer_state": trainer_state
-#         }
-#         _, recent_ckpt_id = self._get_recent_ckpt_path(tracker)
-#
-#         # hot fix - just to save only the last checkpoint (overwrite)
-#         new_ckpt_id = 0 if recent_ckpt_id is None else recent_ckpt_id + 1
-#         new_ckpt_path = os.path.join(
-#             tracker.checkpoint_base_path, f"checkpoint_{new_ckpt_id}")
-#         torch.save(full_state, new_ckpt_path, pickle_protocol=4)
+################## Trainer Warm Start Mixins#######################################
+class TrainerWarmStartMixin:
+    def _get_recent_ckpt_path(self, tracker: Tracker):
+        try:
+            checkpoints = os.listdir(tracker.checkpoint_base_path)
+        except:
+            os.makedirs(tracker.checkpoint_base_path)
+            checkpoints = os.listdir(tracker.checkpoint_base_path)
+
+        if len(checkpoints) == 0:
+            return None, None
+
+        sorted_ckpts = sorted(checkpoints, reverse=True,
+                              key=lambda ckpt: int(ckpt.split("_")[1]))
+        recent_ckpt = sorted_ckpts[0]
+        recent_ckpt_id = int(recent_ckpt.split("_")[1])
+
+        recent_ckpt_path = os.path.join(
+            tracker.checkpoint_base_path, f"checkpoint_{recent_ckpt_id}")
+        return recent_ckpt_path, recent_ckpt_id
+
+    def load_trainer_state(self, tracker: Tracker):
+        recent_ckpt_path, _ = self._get_recent_ckpt_path(tracker)
+        state_dict = None
+        try:
+            if recent_ckpt_path is not None:
+                state_dict = torch.load(
+                    recent_ckpt_path, map_location=torch.device("cuda"))
+                tracker.log_info("Model checkpoint found - Warm starting")
+                self._policy_state_dict = state_dict["policy_state"]
+                self._alg_state_dict = state_dict["alg_state"]
+                self._trainer_state = state_dict["trainer_state"]
+
+                tracker.log_info(
+                    f"Loaded the current trainer state from: {self._trainer_state}")
+            else:
+                self._policy_state_dict = None
+                self._alg_state_dict = None
+                self._trainer_state = {
+                    "current_iter": 0,
+                }
+        except Exception as e:
+            tracker.log_info(f"Exception while doing warm start {e}")
+            tracker.log_info(
+                f"Checkpoint may be corrupted...skipping warm start")
+            self._policy_state_dict = None
+            self._alg_state_dict = None
+            self._trainer_state = {
+                "current_iter": 0,
+            }
+
+    def save_trainer_state(self, tracker: Tracker,
+                           policy,
+                           trainer_state: Dict[str, Any]):
+        full_state = {
+            "alg_state": self._agent.alg.get_state_dict(),
+            "policy_state": policy.get_state_dict(),
+            "trainer_state": trainer_state
+        }
+        _, recent_ckpt_id = self._get_recent_ckpt_path(tracker)
+
+        # hot fix - just to save only the last checkpoint (overwrite)
+        new_ckpt_id = 0 if recent_ckpt_id is None else recent_ckpt_id + 1
+        new_ckpt_path = os.path.join(
+            tracker.checkpoint_base_path, f"checkpoint_{new_ckpt_id}")
+        torch.save(full_state, new_ckpt_path, pickle_protocol=4)

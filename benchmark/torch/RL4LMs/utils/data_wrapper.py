@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional
 from transformers import AutoTokenizer
 from copy import deepcopy
 from .type_wrapper import TensorDict
-import torch
 from typing import NamedTuple
 import torch
 import numpy as np

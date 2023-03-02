@@ -4,10 +4,10 @@ from typing import Any, Dict, Type, Union
 from benchmark.torch.RL4LMs.algorithms import RL4LMPPO
 from benchmark.torch.RL4LMs.summarization import RL4LMsSummaAgent
 
-from .data_pool import TextGenPool, CNNDailyMail
+from benchmark.torch.RL4LMs.utils  import TextGenPool, CNNDailyMail
 # from rl4lms.envs.text_generation.alg_wrappers import wrap_onpolicy_alg
 
-from .metric_util import (
+from benchmark.torch.RL4LMs.metrics import (
     BaseMetric,
     BERTScoreMetric,
     BLEUMetric,
@@ -23,18 +23,17 @@ from .metric_util import (
     TERMetric,
     chrFmetric,
 )
-from benchmark.torch.RL4LMs.models import LMActorCriticPolicy
+from benchmark.torch.RL4LMs.models import LMActorCriticModel
 
 from benchmark.torch.RL4LMs.models import Seq2SeqLMModel
 
-from .reward_util import (
+from benchmark.torch.RL4LMs.utils import (
     BERTScoreRewardFunction,
     BLEURewardFunction,
     BLEURTRewardFunction,
     CommonGenPenaltyShapingFunction,
     LearnedRewardFunction,
     MeteorRewardFunction,
-    PARENTRewardFunction,
     RewardFunction,
     RougeCombined,
     RougeLMaxRewardFunction,
@@ -70,7 +69,6 @@ class RewardFunctionRegistry:
         "bleurt": BLEURTRewardFunction,
         "rouge_combined": RougeCombined,
         "common_gen_repeat_penalty": CommonGenPenaltyShapingFunction,
-        "parent": PARENTRewardFunction,
         "sacre_bleu": SacreBleu,
         "rouge_l_max": RougeLMaxRewardFunction,
     }
@@ -117,19 +115,15 @@ class MetricRegistry:
         MetricRegistry._registry[id] = metric_cls
 
 
-class PolicyRegistry:
+class ModelRegistry:
     _registry = {
-        "seq2seq_lm_actor_critic_policy": Seq2SeqLMModel,
+        "seq2seq_lm_actor_critic_model": Seq2SeqLMModel,
     }
 
     @classmethod
-    def get(cls, policy_id: str) -> Type[LMActorCriticPolicy]:
-        policy_cls = cls._registry[policy_id]
-        return policy_cls
-
-    @classmethod
-    def add(cls, id: str, policy_cls: Type[LMActorCriticPolicy]):
-        PolicyRegistry._registry[id] = policy_cls
+    def get(cls, model_id: str) -> Type[LMActorCriticModel]:
+        model_cls = cls._registry[model_id]
+        return model_cls
 
 
 class AlgorithmRegistry:

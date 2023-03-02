@@ -67,8 +67,14 @@ class TestClusterMonitor(XparlTestCase):
             self.add_worker(n_cpu=1)
 
         cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
-        time.sleep(20)
-        self.assertEqual(20, len(cluster_monitor.data['workers']))
+
+        check_flag = False
+        for _ in range(10):
+            if 20 == len(cluster_monitor.data['workers']):
+                check_flag = True
+                break
+            time.sleep(10)
+        self.assertTrue(check_flag)
 
         self.remove_ten_workers()
 

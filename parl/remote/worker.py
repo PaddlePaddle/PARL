@@ -78,6 +78,12 @@ class Worker(object):
         process.daemon = True
         process.start()
 
+        # termination signal handler
+        def signal_handler(sig, frame):
+            self.exit()
+        signal.signal(signal.SIGTERM, signal_handler)
+
+
         # initialzation
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
@@ -93,7 +99,7 @@ class Worker(object):
         self._create_sockets()
         self.check_env_consistency()
         # create log server
-        self.log_server_proc, self.log_server_address = self._create_log_server(port=log_server_port)
+        self.log_server_address = self._create_log_server(port=log_server_port)
 
         # create a thread that waits commands from the job to kill the job.
         self.remove_job_thread = threading.Thread(target=self._reply_remove_job)
@@ -224,8 +230,6 @@ found in your current environment. To use "pyarrow" for serialization, please in
             logger.warning("[Worker] lost connection with the master, will exit reply heartbeat for master.")
             if self.worker_status is not None:
                 self.worker_status.clear()
-            self.log_server_proc.kill()
-            self.log_server_proc.wait()
             # exit the worker
             self.exit()
 
@@ -282,6 +286,8 @@ found in your current environment. To use "pyarrow" for serialization, please in
         FNULL = open(os.devnull, 'w')
         while True:
             command = cmd_queue.get()
+            if type(command) is str and command == "exit":
+                break
             subprocess.Popen(command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
@@ -448,12 +454,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         if sys.version_info.major == 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
-        if _IS_WINDOWS:
-            FNULL = tempfile.TemporaryFile()
-        else:
-            FNULL = open(os.devnull, 'w')
-        log_server_proc = subprocess.Popen(command, stdout=FNULL, close_fds=True)
-        FNULL.close()
+        self.cmd_queue.put(command)
 
         log_server_address = "{}:{}".format(self.worker_ip, port)
 
@@ -471,13 +472,22 @@ found in your current environment. To use "pyarrow" for serialization, please in
         thread.setDaemon(True)
         thread.start()
 
-        return log_server_proc, log_server_address
+        return log_server_address
 
     def exit(self):
         """close the worker"""
         self.worker_is_alive = False
         if self.master_heartbeat_thread.is_alive():
             self.master_heartbeat_thread.exit()
+        self.worker_status.clear()
+        while not self.job_buffer.empty():
+            job = self.job_buffer.get()
+            try:
+                os.kill(job.pid, signal.SIGTERM)
+            except OSError:
+                logger.warning("job:{} has been killed before".format(job.pid))
+
+
 
     def run(self):
         """Keep running until it lost connection with the master.

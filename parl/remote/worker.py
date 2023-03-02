@@ -284,12 +284,19 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
     def _launch_cmd(self, cmd_queue):
         FNULL = open(os.devnull, 'w')
+        alive_process = []
         while True:
             command = cmd_queue.get()
             if type(command) is str and command == "exit":
                 break
-            subprocess.Popen(command, stdout=FNULL, close_fds=True)
+            process = subprocess.Popen(command, stdout=FNULL, close_fds=True)
+            alive_process.append(process)
         FNULL.close()
+        for process in alive_process:
+            try:
+                os.kill(process.pid, signal.SIGTERM)
+            except OSError:
+                logger.warning("job:{} has been killed before".format(process.pid))
 
     def _init_jobs(self, job_num):
         """Create jobs.

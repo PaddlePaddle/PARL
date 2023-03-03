@@ -374,8 +374,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     initialized_job = self.job_buffer.get(timeout=30)
                 except queue.Empty:
                     logger.error("[Worker] fail to get job in 30s.")
-                    success = False
-                    return success
+                    return False
                 initialized_job.worker_address = self.master_heartbeat_address
                 if initialized_job.is_alive:
                     self.worker_status.add_job(initialized_job)
@@ -394,7 +393,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                  to_byte(job_address)])
             _ = self.request_master_socket.recv_multipart()
             self.lock.release()
-        return success
+        return True
 
     def _reply_remove_job(self):
         """Worker starts a thread to wait jobs' commands to remove the job immediately"""
@@ -532,6 +531,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
             except OSError:
                 logger.warning("job:{} has been killed before".format(job.pid))
         self.worker_status.clear()
+
 
 
     def run(self):

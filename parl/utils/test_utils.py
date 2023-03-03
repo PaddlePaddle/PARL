@@ -68,6 +68,7 @@ class XparlTestCase(unittest.TestCase):
         p_worker = self.ctx.Process(target=self._create_worker, args=(n_cpu, gpu, exit_event))
         p_worker.start()
         self.worker_events.append(exit_event)
+        time.sleep(10)
 
     def remove_all_workers(self):
         for event in self.worker_events:

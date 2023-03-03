@@ -134,7 +134,7 @@ class Job(object):
 
         # a thread that reply heartbeat signals from the worker
         def worker_heartbeat_exit_callback_func():
-            logger.warning("[Job]lost connection with the worker, will exit")
+            logger.warning("[Job] lost connection with the worker, will exit")
             os._exit(1)
 
         worker_heartbeat_server_thread = HeartbeatServerThread(

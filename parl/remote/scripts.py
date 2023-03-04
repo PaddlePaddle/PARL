@@ -79,7 +79,7 @@ def parse_port_range(log_server_port_range):
 
 def check_log_server_started(ip_address, port):
     started = False
-    for _ in range(10):
+    for i in range(10):
         try:
             r = requests.get("http://{}:{}/get-log".format(ip_address, port))
             if r.status_code == 400:

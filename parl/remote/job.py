@@ -138,7 +138,7 @@ class Job(object):
             os._exit(1)
 
         worker_heartbeat_server_thread = HeartbeatServerThread(
-            heartbeat_exit_callback_func=worker_heartbeat_exit_callback_func)
+            heartbeat_exit_callback_func=worker_heartbeat_exit_callback_func, host_type='job')
         worker_heartbeat_server_thread.setDaemon(True)
         worker_heartbeat_server_thread.start()
 

@@ -25,12 +25,13 @@ import multiprocessing as mp
 
 
 class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
-    def __init__(self, client_count=None, host_is_alive=True):
+    def __init__(self, client_count=None, host_is_alive=True, host_type='worker'):
         self.last_heartbeat_time = time.time()
         self.last_heartbeat_table = dict()
         self.exit_flag = False
         self.client_count = client_count
         self.host_is_alive = host_is_alive
+        self.host_type = host_type
 
     def Send(self, request, context):
         client_id = request.client_id
@@ -46,10 +47,11 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
     def timeout_timer(self):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+            if self.host_type == 'job':
+                ppid = os.getppid()
+                if ppid == 1:
+                    break
 
-            ppid = os.getppid()
-            if ppid == 1:
-                break
             if self.exit_flag:
                 break
 
@@ -81,7 +83,8 @@ class HeartbeatServerThread(threading.Thread):
     def __init__(self,
                  heartbeat_exit_callback_func,
                  exit_func_args=(),
-                 exit_func_kwargs={}):
+                 exit_func_kwargs={},
+                 host_type='worker'):
         """Create a thread to run the heartbeat server.
 
             Args:

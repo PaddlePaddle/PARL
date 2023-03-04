@@ -523,6 +523,9 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 thread.exit()
             if thread.is_alive():
                 thread.join()
+        for thread in threading.enumerate(): 
+            if hasattr(thread, 'exit'):
+                thread.exit()
 
         while not self.job_buffer.empty():
             job = self.job_buffer.get()

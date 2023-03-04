@@ -61,6 +61,7 @@ class TestCluster(XparlTestCase):
         actor2 = Actor()
         future_result = actor2.add_one(1)
         self.assertEqual(future_result.get(), 2)
+        time.sleep(20)
         actor.destroy()
         actor2.destroy()
 

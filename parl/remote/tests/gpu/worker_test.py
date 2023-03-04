@@ -20,102 +20,80 @@ import time
 import threading
 from parl.remote.client import disconnect
 from parl.utils import logger, get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
-class TestCluster(unittest.TestCase):
+class TestCluster(XparlTestCase):
     def test_worker_run(self):
-        port = get_free_tcp_port()
-        master = Master(port=port, device='gpu')
+        master = Master(port=self.port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(10)
-        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker.run)
-        worker_th.start()
+        self.add_worker(n_cpu=0, gpu="0,1")
 
-        for _ in range(2):
+        for _ in range(10):
             if master.gpu_num == 2:
                 break
             time.sleep(5)
         self.assertEqual(2, master.gpu_num)
 
-        assert worker_th.is_alive()
-
         master.exit()
-        worker.exit()
 
     def test_cpu_worker_connect_gpu_master(self):
-        port = get_free_tcp_port()
-        master = Master(port=port, device='gpu')
+        master = Master(port=self.port, device='gpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(10)
-        worker = Worker('localhost:{}'.format(port), 1, None, "")
-        worker_th = threading.Thread(target=worker.run)
-        worker_th.start()
-        for _ in range(2):
-            if not worker.worker_is_alive:
-                break
-            time.sleep(5)
+        self.add_worker(n_cpu=1, gpu="")
         self.assertEqual(master.gpu_num, 0)
-
-        master.exit()
-        worker.exit()
-
-    def test_gpu_worker_connect_cpu_master(self):
-        port = get_free_tcp_port()
-        master = Master(port=port, device='cpu')
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(10)
-        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker.run)
-        worker_th.start()
-        for _ in range(2):
-            if not worker.worker_is_alive:
-                break
-            time.sleep(5)
-        self.assertEqual(worker.worker_is_alive, False)
         self.assertEqual(master.cpu_num, 0)
 
         master.exit()
-        worker.exit()
 
-    def test_gpu_worker_exit(self):
-        port = get_free_tcp_port()
-        master = Master(port=port, device='gpu')
+    def test_gpu_worker_connect_cpu_master(self):
+        master = Master(port=self.port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(10)
-        worker = Worker('localhost:{}'.format(port), 0, None, "0,1")
-        worker_th = threading.Thread(target=worker.run)
-        worker_th.start()
-        for _ in range(2):
+        self.add_worker(n_cpu=0, gpu="0,1")
+
+        self.assertEqual(master.cpu_num, 0)
+        self.assertEqual(master.gpu_num, 0)
+
+        master.exit()
+
+    def test_gpu_worker_exit(self):
+        master = Master(port=self.port, device='gpu')
+        th = threading.Thread(target=master.run)
+        th.start()
+        time.sleep(10)
+        self.add_worker(n_cpu=0, gpu="0,1")
+
+        for _ in range(10):
             if master.gpu_num == 2:
                 break
             time.sleep(5)
         self.assertEqual(master.gpu_num, 2)
-        worker.exit()
-        for _ in range(2):
+        self.remove_all_workers()
+
+        for _ in range(10):
             if master.gpu_num == 0:
                 break
             time.sleep(10)
         self.assertEqual(master.gpu_num, 0)
+
         master.exit()
 
     def test_cpu_worker_exit(self):
-        port = get_free_tcp_port()
-        master = Master(port=port, device='cpu')
+        master = Master(port=self.port, device='cpu')
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(10)
-        worker = Worker('localhost:{}'.format(port), 1, None, "")
-        worker_th = threading.Thread(target=worker.run)
-        worker_th.start()
+        self.add_worker(n_cpu=1)
         time.sleep(10)
         self.assertEqual(master.cpu_num, 1)
-        worker.exit()
-        for _ in range(2):
+        self.remove_all_workers()
+        for _ in range(10):
             if master.cpu_num == 0:
                 break
             time.sleep(10)
@@ -124,4 +102,4 @@ class TestCluster(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

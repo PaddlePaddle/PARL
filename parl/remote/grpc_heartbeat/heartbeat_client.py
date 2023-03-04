@@ -20,6 +20,7 @@ from parl.remote import remote_constants
 from parl.remote.grpc_heartbeat import heartbeat_pb2
 from parl.remote.grpc_heartbeat import heartbeat_pb2_grpc
 from parl.utils import logger
+import multiprocessing as mp
 
 
 class HeartbeatClientThread(threading.Thread):
@@ -28,7 +29,8 @@ class HeartbeatClientThread(threading.Thread):
                  heartbeat_exit_callback_func,
                  exit_func_args=(),
                  exit_func_kwargs={},
-                 client_id='default'):
+                 client_id='default',
+                 host_is_alive=None):
         """Create a thread to run the heartbeat client.
 
             Args:
@@ -56,6 +58,7 @@ class HeartbeatClientThread(threading.Thread):
         self.stop_message = None
         self.exit_flag = False
         self.client_id = client_id
+        self.host_is_alive = host_is_alive
 
     def exit(self):
         self.exit_flag = True
@@ -69,6 +72,12 @@ class HeartbeatClientThread(threading.Thread):
         """
         self.stop_tag = stop_tag
         self.stop_message = stop_message
+
+    def should_exit(self):
+        if self.exit_flag: return True
+        if (self.host_is_alive is not None) and self.host_is_alive.value == False:
+            return True
+        return False
 
     def run(self):
         # unset http_proxy and https_proxy
@@ -84,7 +93,7 @@ class HeartbeatClientThread(threading.Thread):
             stub = heartbeat_pb2_grpc.GrpcHeartbeatStub(channel)
 
             while True:
-                if self.exit_flag:
+                if self.should_exit():
                     break
 
                 try:

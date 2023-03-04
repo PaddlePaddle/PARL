@@ -47,6 +47,9 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
+            ppid = os.getppid()
+            if ppid == 1:
+                break
             if self.exit_flag:
                 break
 

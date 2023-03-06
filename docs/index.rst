@@ -76,6 +76,13 @@ PARL
 
 .. toctree::
    :maxdepth: 1
+   :caption: Frequently Asked Questions
+
+   questions/distributed_training.rst
+
+
+.. toctree::
+   :maxdepth: 1
    :caption: EvoKit
 
    EvoKit/overview.rst

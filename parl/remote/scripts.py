@@ -79,7 +79,7 @@ def parse_port_range(log_server_port_range):
 
 def check_log_server_started(ip_address, port):
     started = False
-    for _ in range(3):
+    for i in range(10):
         try:
             r = requests.get("http://{}:{}/get-log".format(ip_address, port))
             if r.status_code == 400:
@@ -88,7 +88,7 @@ def check_log_server_started(ip_address, port):
         except:
             pass
         time.sleep(3)
-        click.echo("Checking status of log_server...")
+        click.echo("[{}/10] Checking status of log_server...".format(i))
 
     if started:
         click.echo("# Start the log server sucessfully.")
@@ -107,6 +107,8 @@ def cli():
 @click.option(
     "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
+@click.option("--gpu_cluster", help="Start as a cluster with GPUs.", is_flag=True)
+@click.option("--gpu", help="Comma separated list of GPU(s) to use.", default="", type=str)
 @click.option("--monitor_port", help="The port to start a cluster monitor.", type=str)
 @click.option(
     "--log_server_port_range",
@@ -116,9 +118,15 @@ def cli():
     ''',
     default="8000-9000",
     type=str)
-def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
+def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_server_port_range):
     if cpu_num is not None:
         assert cpu_num >= 0, "cpu_num should be greater than or equal to 0."
+
+    if not gpu_cluster:
+        gpu = ""
+    else:
+        cpu_num = 0
+
     if debug:
         os.environ['DEBUG'] = 'True'
 
@@ -153,22 +161,26 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         "--monitor_port",
         monitor_port,
     ]
+    if gpu_cluster:
+        master_command.append("--gpu_cluster")
     worker_command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", "localhost:" + str(port), "--cpu_num",
         str(cpu_num), '--log_server_port',
-        str(log_server_port)
+        str(log_server_port), "--gpu", gpu
     ]
     monitor_command = XPARL_PYTHON + [
         monitor_file, "--monitor_port",
         str(monitor_port), "--address", "localhost:" + str(port)
     ]
+    if gpu_cluster:
+        monitor_command.append("--gpu_cluster")
 
     FNULL = open(os.devnull, 'w')
 
     # Redirect the output to DEVNULL to solve the warning log.
     _ = subprocess.Popen(master_command, stdout=FNULL, close_fds=True)
 
-    if cpu_num > 0:
+    if cpu_num > 0 or gpu:
         # Sleep 1s for master ready
         time.sleep(1)
         _ = subprocess.Popen(worker_command, stdout=FNULL, close_fds=True)
@@ -182,7 +194,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
         _ = subprocess.Popen(monitor_command, stdout=FNULL, close_fds=True)
     FNULL.close()
 
-    if cpu_num > 0:
+    if cpu_num > 0 or gpu:
         monitor_info = """
             # The Parl cluster is started at localhost:{}.
 
@@ -234,13 +246,17 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
 
             xparl connect --address {}:{}
 
+        ## If you want to add more GPU resources, please call:
+
+            xparl connect --address {}:{} --gpu 0,1,2,...
+
         ## If you want to shutdown the cluster, please call:
 
             xparl stop        
-        """.format(start_info, master_ip, port)
+        """.format(start_info, master_ip, port, master_ip, port)
     click.echo(monitor_info)
 
-    if cpu_num > 0:
+    if cpu_num > 0 or gpu:
         check_log_server_started(master_ip, log_server_port)
 
 
@@ -249,6 +265,7 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
 @click.option(
     "--cpu_num", type=int, help="Set number of cpu manually. If not set, it will use all "
     "cpus of this machine.")
+@click.option("--gpu", help="Comma separated list of GPU(s) to use.", default="", type=str)
 @click.option(
     "--log_server_port_range",
     help='''
@@ -257,9 +274,9 @@ def start_master(port, cpu_num, monitor_port, debug, log_server_port_range):
     ''',
     default="8000-9000",
     type=str)
-def start_worker(address, cpu_num, log_server_port_range):
+def start_worker(address, cpu_num, gpu, log_server_port_range):
     if cpu_num is not None:
-        assert cpu_num > 0, "cpu_num should be greater than 0."
+        assert cpu_num >= 0, "cpu_num should be greater or equal to 0."
 
     start, end = parse_port_range(log_server_port_range)
     log_server_port = get_port_from_range(start, end)
@@ -274,7 +291,7 @@ def start_worker(address, cpu_num, log_server_port_range):
     command = XPARL_PYTHON + [
         start_file, "--name", "worker", "--address", address, "--cpu_num",
         str(cpu_num), "--log_server_port",
-        str(log_server_port)
+        str(log_server_port), "--gpu", gpu
     ]
     FNULL = open(os.devnull, 'w')
     p = subprocess.Popen(command, stdout=FNULL, close_fds=True)
@@ -299,8 +316,11 @@ def status():
         cmd = r'ps -ef | grep remote/start.py\ --name\ worker\ --address'
 
     content = os.popen(cmd).read().strip()
-    pattern = re.compile('--address (.*?) --cpu')
-    clusters = set(pattern.findall(content))
+    cpu_pattern = re.compile('--address (.*?) --cpu')
+    cpu_clusters = set(cpu_pattern.findall(content))
+    gpu_pattern = re.compile('--address (.*?) --cpu.*? --gpu [0-9,]+')
+    gpu_clusters = set(gpu_pattern.findall(content))
+    clusters = cpu_clusters | gpu_clusters
     if len(clusters) == 0:
         click.echo('No active cluster is found.')
     else:
@@ -317,7 +337,8 @@ def status():
             monitors = pattern.findall(content)
 
             if len(monitors):
-                monitor_port, _, master_address = monitors[0].split(' ')
+                monitor_port = monitors[0].split(' ')[0]
+                master_address = monitors[0].split(' ')[2]
                 monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
                 socket = ctx.socket(zmq.REQ)
                 socket.setsockopt(zmq.RCVTIMEO, 10000)

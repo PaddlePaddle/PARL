@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../static/js/jquery.min.js"></script>
     <script src="../static/js/echarts.min.js"></script>
     <script src="../static/js/parl.js"></script>
-    <!-- <script src="../static/js/mock.js"></script> -->
     <link rel="stylesheet" href="../static/css/bootstrap-parl.min.css" />
   </head>
 
@@ -52,11 +51,6 @@
           createDivs(res, start_num);
           addPlots(res, record, imgHandle, 0, start_num);
         });
-        // debugger;
-        // res = datas;
-        // createDivs(res, start_num);
-        // addPlots(res, record, imgHandle, 0, start_num);
-
         setInterval(function () {
           $.get("cluster", function (data, status) {
             res = data;
@@ -64,9 +58,7 @@
             addPlots(res, record, imgHandle, 0, start_num);
           });
         }, 10000);
-
         $(window).on("scroll", function () {
-          // debugger;
           var scrollTop = $(document).scrollTop();
           var windowHeight = $(window).height();
           var bodyHeight = $(document).height() - windowHeight;
@@ -79,22 +71,6 @@
             }
           }
         });
-        // $(window).on("mousewheel", function () {
-        //   if (!flag) {
-        //     var scrollTop = $(document).scrollTop();
-        //     var windowHeight = $(window).height();
-        //     var bodyHeight = $(document).height() - windowHeight;
-        //     var scrollPercentage = scrollTop / bodyHeight;
-        //     if (div_num < res.workers.length) {
-        //       div_num += delta;
-        //       createDivs(res, div_num);
-        //       addPlots(res, record, imgHandle, div_num - delta, div_num);
-        //     }
-        //   } else {
-        //     flag = true;
-        //     return;
-        //   }
-        // });
       });
     </script>
   </body>

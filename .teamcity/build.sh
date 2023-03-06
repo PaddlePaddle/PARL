@@ -227,13 +227,15 @@ function run_all_test_with_pyenv {
         xparl stop
     fi
 
-    # test with torch installed
+    # test with gpu-xparl
     if [ \( $specified_env == "py38" \) ]
     then
         pip uninstall -y paddlepaddle
         pip install -r .teamcity/requirements.txt
         pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
-        run_test_with_gpu $specified_env
+        run_test_with_gpu $specified_env ""DIS_TESTING_REMOTE_WITH_GPU""
+        pip uninstall -y paddlepaddle-gpu
+        run_test_with_gpu $specified_env ""DIS_TESTING_REMOTE_WITH_GPU""
     fi
 }
 

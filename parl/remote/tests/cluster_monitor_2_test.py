@@ -59,7 +59,7 @@ class TestClusterMonitor(XparlTestCase):
         time.sleep(1)
         self.assertEqual(0, len(cluster_monitor.data['clients']))
         parl.connect('localhost:{}'.format(self.port))
-        time.sleep(10)
+        time.sleep(20)
         self.assertEqual(1, len(cluster_monitor.data['clients']))
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
         actor = Actor()

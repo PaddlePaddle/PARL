@@ -20,13 +20,13 @@ def explained_variance(y_pred: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     return np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
 
 
-class RL4LMsSummaAgent(parl.Agent):
+class RL4LMsAgent(parl.Agent):
     def __init__(self,
                  algorithm,
                  alg_config,
                  norm_reward: bool = False,
                  ):
-        super(RL4LMsSummaAgent, self).__init__(algorithm)
+        super(RL4LMsAgent, self).__init__(algorithm)
         self.dataset = None
         self.config = alg_config
         self.n_epochs = alg_config["args"]["n_epochs"]

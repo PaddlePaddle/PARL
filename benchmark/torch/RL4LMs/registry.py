@@ -1,8 +1,8 @@
 from typing import Any, Dict, Type, Union
 
-
+import parl
 from benchmark.torch.RL4LMs.algorithms import RL4LMPPO
-from benchmark.torch.RL4LMs.agents import RL4LMsSummaAgent
+from benchmark.torch.RL4LMs.agents import RL4LMsAgent
 
 from benchmark.torch.RL4LMs.utils  import TextGenPool, CNNDailyMail
 # from rl4lms.envs.text_generation.alg_wrappers import wrap_onpolicy_alg
@@ -24,7 +24,6 @@ from benchmark.torch.RL4LMs.metrics import (
     TERMetric,
     chrFmetric,
 )
-from benchmark.torch.RL4LMs.models import LMActorCriticModel
 
 from benchmark.torch.RL4LMs.models import Seq2SeqLMModel
 
@@ -125,7 +124,7 @@ class ModelRegistry:
     }
 
     @classmethod
-    def get(cls, model_id: str) -> Type[LMActorCriticModel]:
+    def get(cls, model_id: str) -> Type[parl.Model]:
         model_cls = cls._registry[model_id]
         return model_cls
 
@@ -152,9 +151,9 @@ class AlgorithmRegistry:
         AlgorithmRegistry._registry[id] = alg_cls
 
 
-class WrapperRegistry:
+class AgentRegistry:
     _registry = {
-        "ppo": RL4LMsSummaAgent,
+        "rl4lm_agent": RL4LMsAgent,
     }
 
     @classmethod
@@ -166,22 +165,6 @@ class WrapperRegistry:
         return wrapper_def
 
     @classmethod
-    def add(cls, id: str, wrapper_def):
-        WrapperRegistry._registry[id] = wrapper_def
+    def add(cls, id: str, agent_def):
+        AgentRegistry._registry[id] = agent_def
 
-
-class PostProcessorRegistry:
-    _registry = {
-    }
-
-    @classmethod
-    def get(cls, post_processor_id: str):
-        try:
-            wrapper_def = cls._registry[post_processor_id]
-        except KeyError:
-            raise NotImplementedError
-        return wrapper_def
-
-    @classmethod
-    def add(cls, id: str, post_processor_fn):
-        PostProcessorRegistry._registry[id] = post_processor_fn

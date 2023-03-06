@@ -11,8 +11,7 @@ from .distribution_wrapper import CategoricalDistribution
 
 from .sample_util import PrioritySampler
 
-from .buffer import DictRolloutBuffer, RolloutBuffer,\
-    MaskableDictRolloutBuffer, MaskableRolloutBuffer
+from .buffer import MaskableDictRolloutBuffer
 
 from .kl_controller import KLController
 

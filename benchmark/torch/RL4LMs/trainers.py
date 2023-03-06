@@ -5,15 +5,14 @@ import numpy as np
 
 from benchmark.torch.RL4LMs.utils import Sample, RewardFunction,\
     evaluate_on_samples,\
-    KLController, RolloutBuffer, MaskableDictRolloutBuffer,\
+    KLController, MaskableDictRolloutBuffer,\
     TransitionInfo, TensorDict, RefPolicyOutput, ValueOutput, PolicyOutput
 from benchmark.torch.RL4LMs.registry import DataPoolRegistry, MetricRegistry, RewardFunctionRegistry, \
-    ModelRegistry, AlgorithmRegistry
+    ModelRegistry, AlgorithmRegistry, AgentRegistry
 from benchmark.torch.RL4LMs.env import TextGenEnv
 from transformers import AutoTokenizer
 from benchmark.torch.RL4LMs.env import LocalParallelVecEnv, make_vec_env
 from transformers import PreTrainedTokenizer
-from benchmark.torch.RL4LMs.agents import RL4LMsSummaAgent
 import torch
 from parl.utils import logger
 
@@ -90,6 +89,7 @@ def build_agent(alg_config: Dict[str, Any],
     model_config = alg_config["model"]
     model_cls = ModelRegistry.get(model_config["id"])
     alg_cls = AlgorithmRegistry.get(alg_config["id"])
+    agent_cls = AgentRegistry.get(alg_config["agent_id"])
 
     model_args = model_config["args"]
     model_args["state_dict"] = model_state
@@ -107,7 +107,7 @@ def build_agent(alg_config: Dict[str, Any],
         **alg_config.get("args")
     )
 
-    rl4lm_agent = RL4LMsSummaAgent(rl4lm_alg_cls, alg_config)
+    rl4lm_agent = agent_cls(rl4lm_alg_cls, alg_config)
     return rl4lm_agent
 
 
@@ -129,7 +129,7 @@ def unpack_observations(obs_tensor, n_envs: int):
     return unpacked_obs
 
 
-class OnPolicyTrainer():
+class OnPolicyTrainer:
     """
     A generic trainer for training LMs with onpolicy algorithms from SB3
     """
@@ -143,22 +143,89 @@ class OnPolicyTrainer():
                  train_eval_config: Dict[str, Any],
                  experiment_name: str = ''
                  ):
+        #
+        self._tokenizer = None
         self._tokenizer_config = tokenizer_config
+
+        # datapool
         self._datapool_config = datapool_config
+        self._samples_by_split = None
+
+        # reward function & metrics
         self._reward_config = reward_config
+        self._reward_fn = None
+        self._metrics = None
+        self._norm_reward = False
+
+        # env
         self._env_config = env_config
+        self._env = None
+
+        # algorithm config & model config
         self._on_policy_alg_config = on_policy_alg_config
+
+        # agent
+        self._agent = None
+
+        # rollout buffer
+        self._rollout_buffer = None
+
         self._train_eval_config = train_eval_config
         self._experiment_name = experiment_name
-        self._agent = None
-        self._env = None
-        self.num_timesteps = None
+        self._num_timesteps = None
         self._kl_controller = None
         self.device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
-        self._norm_reward = False
 
         self._setup()
+
+    def train_and_eval(self):
+        # evaluate on val and test set before fine-tuning once
+        # iter_start = self._trainer_state["current_iter"]
+        iter_start = 0
+        self._evaluate_on_datapools(epoch=iter_start)
+
+        # train for given number of iters
+        for epoch in range(iter_start, self._n_iters):
+            print("========== BEGIN ==========")
+            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
+            print("========== BEGIN ==========")
+            outer_start_time = time.time()
+            # current state
+            # self._trainer_state["current_iter"] = epoch
+
+            self._num_timesteps = 0
+
+            while self._num_timesteps < self._n_steps_per_iter:
+                self._collect_rollouts(self._env, self._rollout_buffer)
+                # inner rollout and learn loop for on-policy algorithm
+                # self._agent.learn(self._n_steps_per_iter)
+                self._agent.learn(self._rollout_buffer)
+
+            # save the policy checkpoint
+            # if (epoch + 1) % self._train_eval_config.get("save_every", 20) == 0:
+            #     self.save_trainer_state(
+            #         self._tracker, self._alg.policy, self._trainer_state)
+
+            # evaluate on val set in the given intervals
+            if (epoch + 1) % self._train_eval_config["eval_every"] == 0:
+                self._evaluate_on_datapools(epoch=epoch, splits=["val"])
+
+            outer_end_time = time.time()
+            print("========== END ==========")
+            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
+            print(f"time used: {outer_end_time - outer_start_time} second(s), left time:"
+                  f"  {1.0 * (outer_end_time - outer_start_time) * (self._n_iters - epoch - 1) / 60 / 60} hour(s)")
+            print("========== END ==========")
+
+
+        # finally evaluate on val and test samples
+        self._evaluate_on_datapools(epoch=epoch)
+
+        # # save model here - we save only the language model
+        # if self._tracker is not None:
+        #     self._tracker.save_auto_model(
+        #         self._alg.policy.get_language_model())
 
     def _setup(self):
 
@@ -204,69 +271,7 @@ class OnPolicyTrainer():
         self._eval_gen_kwargs = self._train_eval_config.get(
             "generation_kwargs", None)
 
-    def _evaluate_on_datapools(self, epoch: int,
-                               splits: List[str] = ["val", "test"]):
-        for split in splits:
-            evaluate_on_samples(policy=self._agent.alg.model,
-                                tokenizer=self._tokenizer,
-                                samples=self._samples_by_split[split],
-                                batch_size=self._eval_batch_size,
-                                max_prompt_length=self._max_prompt_length,
-                                metrics=self._metrics,
-                                epoch=epoch,
-                                split_name=split,
-                                gen_kwargs=self._eval_gen_kwargs)
-
-    def train_and_eval(self):
-        # evaluate on val and test set before fine-tuning once
-        # iter_start = self._trainer_state["current_iter"]
-        iter_start = 0
-        self._evaluate_on_datapools(epoch=iter_start)
-
-        # train for given number of iters
-        for epoch in range(iter_start, self._n_iters):
-            print("========== BEGIN ==========")
-            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
-            print("========== BEGIN ==========")
-            outer_start_time = time.time()
-            # current state
-            # self._trainer_state["current_iter"] = epoch
-
-            self._num_timesteps = 0
-
-            while self._num_timesteps < self._n_steps_per_iter:
-                self.collect_rollouts(self._env, self._rollout_buffer)
-                # inner rollout and learn loop for on-policy algorithm
-                # self._agent.learn(self._n_steps_per_iter)
-                self._agent.learn(self._rollout_buffer)
-
-            # save the policy checkpoint
-            # if (epoch + 1) % self._train_eval_config.get("save_every", 20) == 0:
-            #     self.save_trainer_state(
-            #         self._tracker, self._alg.policy, self._trainer_state)
-
-            # evaluate on val set in the given intervals
-            if (epoch + 1) % self._train_eval_config["eval_every"] == 0:
-                self._evaluate_on_datapools(epoch=epoch, splits=["val"])
-
-            outer_end_time = time.time()
-            print("========== END ==========")
-            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
-            print(f"time used: {outer_end_time - outer_start_time} second(s), left time:"
-                  f"  {1.0 * (outer_end_time - outer_start_time) * (self._n_iters - epoch - 1) / 60 / 60} hour(s)")
-            print("========== END ==========")
-
-
-        # finally evaluate on val and test samples
-        self._evaluate_on_datapools(epoch=epoch)
-
-        # # save model here - we save only the language model
-        # if self._tracker is not None:
-        #     self._tracker.save_auto_model(
-        #         self._alg.policy.get_language_model())
-
-
-    def get_policy_kwargs(
+    def _get_policy_kwargs(
         self,
         obs: TensorDict,
         action: torch.tensor,
@@ -283,7 +288,7 @@ class OnPolicyTrainer():
             policy_kwargs["action_masks"] = action_mask
         return policy_kwargs
 
-    def generate_batch(
+    def _generate_batch(
         self,
         rollout_buffer,
         tokenizer: PreTrainedTokenizer,
@@ -331,7 +336,7 @@ class OnPolicyTrainer():
                 obs_tensor = dict_to_tensor(current_obs, self.device)
 
                 # get log probs (TBD: generalize this a bit)
-                policy_kwargs = self.get_policy_kwargs(
+                policy_kwargs = self._get_policy_kwargs(
                     obs_tensor, actions_tensor, policy_past_state, action_mask
                 )
 
@@ -432,6 +437,19 @@ class OnPolicyTrainer():
         )
         return rollout_info
 
+    def _evaluate_on_datapools(self, epoch: int,
+                               splits: List[str] = ["val", "test"]):
+        for split in splits:
+            evaluate_on_samples(policy=self._agent.alg.model,
+                                tokenizer=self._tokenizer,
+                                samples=self._samples_by_split[split],
+                                batch_size=self._eval_batch_size,
+                                max_prompt_length=self._max_prompt_length,
+                                metrics=self._metrics,
+                                epoch=epoch,
+                                split_name=split,
+                                gen_kwargs=self._eval_gen_kwargs)
+
     def _add_to_buffer(
         self, rollout_buffer, episode_wise_transitions, rollout_info
     ):
@@ -494,10 +512,10 @@ class OnPolicyTrainer():
             rollout_info["rollout_info/ep_kl_rew"].append(total_kl_reward)
         return rollout_info
 
-    def collect_rollouts(
+    def _collect_rollouts(
         self,
         env,
-        rollout_buffer: RolloutBuffer,
+        rollout_buffer: MaskableDictRolloutBuffer,
     ) -> bool:
         # max episode steps
         max_steps = env.get_attr("max_steps", [0])[0]
@@ -525,7 +543,7 @@ class OnPolicyTrainer():
         }
         while not rollout_buffer.full:
             # generate batch of rollouts
-            rollout_info = self.generate_batch(
+            rollout_info = self._generate_batch(
                 rollout_buffer, tokenizer, max_steps, rollout_info
             )
 

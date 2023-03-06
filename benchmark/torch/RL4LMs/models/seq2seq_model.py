@@ -3,23 +3,25 @@ import torch
 from gym.spaces import Discrete
 from gym.spaces.dict import Dict as DictSpace
 from torch import nn
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel
 from copy import deepcopy
+from torch.distributions import Categorical
 
 from transformers.modeling_utils import unwrap_model
+
+import parl
 from benchmark.torch.RL4LMs.utils import (
     override_generation_routines,
 
-    TensorDict,
+    TensorDict, CategoricalDistribution,
 
     GenerationInputs, PolicyOutput, RefPolicyOutput, ValueOutput,
     PolicyType, EvaluateActionsOutput, GenerationOutputs,
 )
 
-from .base_model import LMActorCriticModel
 
 
-class Seq2SeqLMModel(LMActorCriticModel):
+class Seq2SeqLMModel(parl.Model):
     def __init__(
         self,
         observation_space: DictSpace,
@@ -34,18 +36,28 @@ class Seq2SeqLMModel(LMActorCriticModel):
         state_dict: Dict[str, Any] = None,
         device: torch.DeviceObjType = None,
     ):
-        super().__init__(
-            observation_space,
-            action_space,
-            model_name,
-            optimizer_kwargs,
-            weight_decay,
-            apply_model_parallel,
-            optimizer_class,
-            generation_kwargs,
-            prompt_truncation_side,
-            device=device
-        )
+        super(Seq2SeqLMModel, self).__init__()
+        if optimizer_kwargs is None:
+            optimizer_kwargs = {}
+
+        self.observation_space = observation_space
+        self.action_space = action_space
+
+        self.optimizer_class = optimizer_class
+        self.optimizer_kwargs = optimizer_kwargs
+        self.optimizer = None
+        self.device = device
+
+        self._action_space = action_space
+        self._apply_model_parallel = apply_model_parallel
+        self._build_model_heads(model_name)
+        self._setup_optimizer(optimizer_kwargs, weight_decay, optimizer_class)
+        self._action_dist = CategoricalDistribution(self._action_space.n)
+        self._generation_kwargs = generation_kwargs
+        self._prompt_truncation_side = prompt_truncation_side
+
+
+
         # self.load_from_dict(state_dict)
 
     def _build_model_heads(self, model_name: str):
@@ -323,3 +335,142 @@ class Seq2SeqLMModel(LMActorCriticModel):
 
     def get_policy_type(self):
         return PolicyType.SEQ2SEQ
+
+    def get_language_model(self):
+        return unwrap_model(self._policy_model)
+
+    def generate(
+        self,
+        tokenizer: AutoTokenizer,
+        texts: List[str] = None,
+        max_prompt_length: int = None,
+        input_ids: torch.tensor = None,
+        attention_mask: torch.tensor = None,
+        gen_kwargs: Dict[str, Any] = None,
+    ) -> GenerationOutputs:
+
+        # if it different from rollout gen kwargs
+        if gen_kwargs is None:
+            gen_kwargs = self._generation_kwargs
+
+        # switch to eval
+        self._policy_model.eval()
+
+        if (
+            input_ids is None
+            and attention_mask is None
+            and texts is not None
+            and max_prompt_length is not None
+        ):
+            # override truncation side for prompt
+            prev_truncation_side = tokenizer.truncation_side
+            tokenizer.truncation_side = self._prompt_truncation_side
+            encodings = tokenizer(
+                texts,
+                padding="max_length",
+                max_length=max_prompt_length,
+                return_tensors="pt",
+                return_attention_mask=True,
+                truncation=True,
+            )
+            input_ids = encodings.input_ids
+            attention_mask = encodings.attention_mask
+            tokenizer.truncation_side = prev_truncation_side
+
+        # if min_length argument is set and if policy is not a seq2seq LM (ie. causal LM)
+        # then it has to be adjusted to input_size + min_length
+        if "min_length" in gen_kwargs.keys() and not self.is_encoder_decoder(
+            self._policy_model
+        ):
+            generation_kwargs_ = deepcopy(gen_kwargs)
+            generation_kwargs_["min_length"] = (
+                input_ids.shape[1] + gen_kwargs["min_length"]
+            )
+        else:
+            generation_kwargs_ = gen_kwargs
+
+        # generate
+        gen_output = unwrap_model(self._policy_model).generate(
+            inputs=input_ids.to(self.get_policy_first_device()),
+            attention_mask=attention_mask.to(self.get_policy_first_device()),
+            return_dict_in_generate=True,
+            output_scores=True,
+            **generation_kwargs_,
+        )
+
+        # number of tokens generated
+        seq_length = len(gen_output["scores"])
+
+        # get only the generated text (excluding prompt)
+        gen_tokens = gen_output["sequences"][:, -seq_length:]
+
+        # to texts
+        gen_texts = [
+            tokenizer.decode(output, skip_special_tokens=True)
+            for output in gen_tokens.tolist()
+        ]
+
+        # extract scores (logits)
+        step_wise_logprobs = []
+        step_wise_actions = []
+        for step, logits in enumerate(gen_output["scores"]):
+            raw_logits, _ = logits
+            actions_at_step = gen_tokens[:, step]
+            distribution = Categorical(logits=raw_logits)
+            log_probs = distribution.log_prob(actions_at_step)
+            step_wise_logprobs.append(log_probs)
+            step_wise_actions.append(actions_at_step)
+
+        gen_output = GenerationOutputs(
+            step_wise_logprobs, step_wise_actions, gen_tokens, gen_texts
+        )
+        return gen_output
+
+
+    def is_encoder_decoder(self, model: PreTrainedModel):
+        return unwrap_model(model).config.is_encoder_decoder
+
+    def set_training_mode(self, mode: bool) -> None:
+        self.train(mode)
+
+
+    def _get_constructor_parameters(self) -> Dict[str, Any]:
+        return dict(
+            observation_space=self.observation_space,
+            action_space=self.action_space,
+        )
+
+    def save(self, path: str) -> None:
+        """
+        Save model to a given location.
+
+        :param path:
+        """
+        torch.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
+
+
+    def _setup_optimizer(
+        self,
+        optimizer_kwargs: Dict[str, Any],
+        weight_decay: float,
+        optimizer_class: torch.optim,
+    ):
+        params = list(self.named_parameters())
+
+        no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in params if not any(nd in n for nd in no_decay)],
+                "weight_decay": weight_decay,
+            },
+            {
+                "params": [p for n, p in params if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+        self.optimizer = optimizer_class(
+            optimizer_grouped_parameters, **optimizer_kwargs
+        )
+
+
+

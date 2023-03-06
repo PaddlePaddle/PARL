@@ -1,6 +1,5 @@
 
 
-
 tokenizer:
   model_name: t5-base
   padding_side: left
@@ -20,8 +19,8 @@ datapool:
 
 env:
   ## CHANGE FOR DEBUG ##
-  n_envs: 10
-#  n_envs: 2
+#  n_envs: 10
+  n_envs: 2
   ## CHANGE FOR DEBUG ##
   args:
     max_prompt_length: 512
@@ -31,11 +30,12 @@ env:
     context_start_token: 0
 
 alg:
+  agent_id: rl4lm_agent
   id: ppo
   args: 
-    n_steps: 512
+#    n_steps: 512
     #####CHNAGE FOR DEBUG########
-#    n_steps: 5
+    n_steps: 5
     #####CHANGE FOR DEBUG########
     batch_size: 32
 #    verbose: 1

@@ -26,16 +26,7 @@ class TransitionInfo:
     info: Dict[str, Any]
 
 
-class MaskableRolloutBufferSamples(NamedTuple):
-    observations: torch.Tensor
-    actions: torch.Tensor
-    old_values: torch.Tensor
-    old_log_prob: torch.Tensor
-    advantages: torch.Tensor
-    returns: torch.Tensor
-    action_masks: torch.Tensor
-
-class MaskableDictRolloutBufferSamples(MaskableRolloutBufferSamples):
+class MaskableDictRolloutBufferSamples(NamedTuple):
     observations: TensorDict
     actions: torch.Tensor
     old_values: torch.Tensor
@@ -43,24 +34,6 @@ class MaskableDictRolloutBufferSamples(MaskableRolloutBufferSamples):
     advantages: torch.Tensor
     returns: torch.Tensor
     action_masks: torch.Tensor
-
-
-class RolloutBufferSamples(NamedTuple):
-    observations: torch.Tensor
-    actions: torch.Tensor
-    old_values: torch.Tensor
-    old_log_prob: torch.Tensor
-    advantages: torch.Tensor
-    returns: torch.Tensor
-
-
-class DictRolloutBufferSamples(RolloutBufferSamples):
-    observations: TensorDict
-    actions: torch.Tensor
-    old_values: torch.Tensor
-    old_log_prob: torch.Tensor
-    advantages: torch.Tensor
-    returns: torch.Tensor
 
 
 @dataclass(init=True)

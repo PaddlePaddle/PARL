@@ -1,1 +1,1 @@
-from .rl4lms_summa_agent import RL4LMsSummaAgent
+from .rl4lms_agent import RL4LMsAgent

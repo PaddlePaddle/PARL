@@ -209,7 +209,7 @@ function run_all_test_with_pyenv {
     run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
     xparl stop
     # test with torch installed
-    if [ \( $specified_env == "py38" \) ]
+    if [ \( $specified_env == "py37" \) ]
     then
         # install torch
         pip uninstall -y paddlepaddle

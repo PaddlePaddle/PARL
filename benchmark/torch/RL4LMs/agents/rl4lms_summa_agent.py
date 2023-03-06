@@ -3,43 +3,7 @@ import numpy as np
 
 from typing import List
 import torch
-from benchmark.torch.RL4LMs.utils import  TransitionInfo,\
-     RewardFunction
 from parl.utils import logger
-
-
-def compute_batched_rewards(
-    episode_wise_transitions: List[List[TransitionInfo]], reward_fn: RewardFunction
-):
-    # first collect all the prompts, ref and gen texts
-    prompts = []
-    reference_texts = []
-    generated_texts = []
-    is_dones = []
-    indices = []
-    meta_infos = []
-    for env_ix, transitions in enumerate(episode_wise_transitions):
-        for trans_ix, transition in enumerate(transitions):
-            done = transition.done
-            info = transition.info
-            prompts.append(info["prompt_text"])
-            reference_texts.append(info["reference_text"])
-            generated_texts.append(info["output"])
-            is_dones.append(done)
-            meta_infos.append(info["meta_info"])
-            indices.append((env_ix, trans_ix))
-
-    # compute rewards all at once
-    rewards = reward_fn(prompts, generated_texts, reference_texts, is_dones, meta_infos)
-    # rewards = rewards.numpy().flatten()
-
-    # override the rewards in transitions
-    for (env_ix, trans_ix), reward in zip(indices, rewards):
-        episode_wise_transitions[env_ix][trans_ix].task_reward = reward
-        episode_wise_transitions[env_ix][trans_ix].total_reward = (
-            reward + episode_wise_transitions[env_ix][trans_ix].kl_reward
-        )
-
 
 def explained_variance(y_pred: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     """
@@ -69,9 +33,6 @@ class RL4LMsSummaAgent(parl.Agent):
         self._norm_reward = norm_reward
         self._n_updates = 0
 
-
-
-
     def learn(self, rollout_buffer):
         entropy_losses = []
         pg_losses, value_losses = [], []
@@ -85,7 +46,6 @@ class RL4LMsSummaAgent(parl.Agent):
             "approx_kl_divs": approx_kl_divs
         }
 
-        continue_training = True
         loss = torch.tensor(0.0)
 
         # train for n_epochs epochs
@@ -133,8 +93,11 @@ class RL4LMsSummaAgent(parl.Agent):
         }
 
         logger.info(ppo_train_info)
-        # for k, v in train_info.items():
-        #     print(f"{k}: {v}")
+
+
+    def get_inputs_for_generation(self, obs_tensor):
+        return self.alg.model.get_inputs_for_generation(obs_tensor)
+
 
     def predict(self, *args, **kwargs):
         pass
@@ -142,4 +105,51 @@ class RL4LMsSummaAgent(parl.Agent):
     def sample(self, *args, **kwargs):
         pass
 
+    def forward_value(
+        self,
+        obs,
+        past_model_kwargs = None,
+    ):
+        return self.alg.forward_value(obs, past_model_kwargs)
 
+    def forward_policy(
+        self,
+        obs,
+        actions,
+        past_model_kwargs = None,
+    ):
+        return self.alg.forward_policy(
+            obs = obs,
+            actions = actions,
+            past_model_kwargs = past_model_kwargs,
+        )
+
+
+    def get_log_probs_ref_model(
+        self,
+        obs,
+        action,
+        model_kwarpast_model_kwargsgs = None,
+    ):
+        return self.alg.get_log_probs_ref_model(obs, action, model_kwarpast_model_kwargsgs)
+
+    def generate(
+        self,
+        tokenizer,
+        texts = None,
+        max_prompt_length = None,
+        input_ids = None,
+        attention_mask = None,
+        gen_kwargs = None,
+    ):
+        return self.alg.generate(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            tokenizer=tokenizer,
+            texts=texts,
+            max_prompt_length=max_prompt_length,
+            gen_kwargs=gen_kwargs
+        )
+
+    def eval_mode(self):
+        self.alg.eval_mode()

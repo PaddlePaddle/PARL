@@ -2,7 +2,7 @@ from typing import Any, Dict, Type, Union
 
 
 from benchmark.torch.RL4LMs.algorithms import RL4LMPPO
-from benchmark.torch.RL4LMs.summarization import RL4LMsSummaAgent
+from benchmark.torch.RL4LMs.agents import RL4LMsSummaAgent
 
 from benchmark.torch.RL4LMs.utils  import TextGenPool, CNNDailyMail
 # from rl4lms.envs.text_generation.alg_wrappers import wrap_onpolicy_alg

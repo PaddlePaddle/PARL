@@ -10,9 +10,7 @@ from transformers.modeling_utils import unwrap_model
 from benchmark.torch.RL4LMs.utils import (
     override_generation_routines,
 
-    ActorCriticWarmStartMixin,
-
-    TensorDict, Schedule,
+    TensorDict,
 
     GenerationInputs, PolicyOutput, RefPolicyOutput, ValueOutput,
     PolicyType, EvaluateActionsOutput, GenerationOutputs,
@@ -21,7 +19,7 @@ from benchmark.torch.RL4LMs.utils import (
 from .base_model import LMActorCriticModel
 
 
-class Seq2SeqLMModel(LMActorCriticModel, ActorCriticWarmStartMixin):
+class Seq2SeqLMModel(LMActorCriticModel):
     def __init__(
         self,
         observation_space: DictSpace,

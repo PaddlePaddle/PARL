@@ -19,16 +19,6 @@ def recursive_dict_update(d, u):
 
 def main(config):
 
-    # load tracker
-    # tracker = Tracker(
-    #     config["base_path_to_store_results"],
-    #     config,
-    #     config["project_name"],
-    #     config["experiment_name"],
-    #     config["entity_name"],
-    #     False,
-    # )
-
     # instantiate the trainer here
     # TODO: currently only complete ppo
     if "ppo" == config["alg"]["id"]:

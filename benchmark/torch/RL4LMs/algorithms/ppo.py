@@ -138,5 +138,51 @@ class RL4LMPPO(parl.Algorithm):
     def value(self, obs):
         pass
 
+    def forward_value(
+        self,
+        obs,
+        past_model_kwargs = None,
+    ):
+        return self.model.forward_value(obs, past_model_kwargs)
+
+    def forward_policy(
+        self,
+        obs,
+        actions: torch.tensor,
+        past_model_kwargs = None,
+    ):
+        return self.model.forward_policy(
+            obs = obs,
+            actions = actions,
+            past_model_kwargs = past_model_kwargs,
+        )
 
 
+    def get_log_probs_ref_model(
+        self,
+        obs,
+        action,
+        model_kwarpast_model_kwargsgs = None,
+    ):
+        return self.model.get_log_probs_ref_model(obs, action, model_kwarpast_model_kwargsgs)
+
+    def generate(
+        self,
+        tokenizer,
+        texts = None,
+        max_prompt_length = None,
+        input_ids = None,
+        attention_mask = None,
+        gen_kwargs = None,
+    ):
+        return self.model.generate(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            tokenizer=tokenizer,
+            texts = texts,
+            max_prompt_length = max_prompt_length,
+            gen_kwargs = gen_kwargs
+        )
+
+    def eval_mode(self):
+        self.model.eval()

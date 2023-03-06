@@ -1,28 +1,19 @@
-import os
 import time
-from functools import partial
 from typing import Any, Dict, List
 import numpy as np
 
 
 from benchmark.torch.RL4LMs.utils import Sample, RewardFunction,\
     evaluate_on_samples,\
-    KLController, RolloutBuffer, DictRolloutBuffer, MaskableDictRolloutBuffer,\
+    KLController, RolloutBuffer, MaskableDictRolloutBuffer,\
     TransitionInfo, TensorDict, RefPolicyOutput, ValueOutput, PolicyOutput
 from benchmark.torch.RL4LMs.registry import DataPoolRegistry, MetricRegistry, RewardFunctionRegistry, \
     ModelRegistry, AlgorithmRegistry
 from benchmark.torch.RL4LMs.env import TextGenEnv
-from transformers import (AutoTokenizer,
-                          AutoModelForCausalLM,
-                          AutoModelForSeq2SeqLM,
-                          Trainer,
-                          TrainingArguments,
-                          DataCollatorForLanguageModeling,
-                          DataCollatorForSeq2Seq)
+from transformers import AutoTokenizer
 from benchmark.torch.RL4LMs.env import LocalParallelVecEnv, make_vec_env
 from transformers import PreTrainedTokenizer
-from benchmark.torch.RL4LMs.summarization import RL4LMsSummaAgent
-from benchmark.torch.RL4LMs.algorithms import RL4LMPPO
+from benchmark.torch.RL4LMs.agents import RL4LMsSummaAgent
 import torch
 from parl.utils import logger
 
@@ -189,8 +180,8 @@ class OnPolicyTrainer():
 
         self._rollout_buffer = MaskableDictRolloutBuffer(
             buffer_size=self._agent.alg.n_steps * self._env.num_envs,
-            observation_space=self._agent.alg.model.observation_space,
-            action_space=self._agent.alg.model.action_space,
+            observation_space=self._env.observation_space,
+            action_space=self._env.action_space,
             device=self.device,
             gamma=self._agent.alg.gamma,
             gae_lambda=self._agent.alg.gae_lambda,
@@ -309,8 +300,8 @@ class OnPolicyTrainer():
 
         # generate text using the model
         obs_tensor =  dict_to_tensor(current_obs, self.device)
-        generation_inputs = self._agent.alg.model.get_inputs_for_generation(obs_tensor)
-        gen_output = self._agent.alg.model.generate(
+        generation_inputs = self._agent.get_inputs_for_generation(obs_tensor)
+        gen_output = self._agent.generate(
             input_ids=generation_inputs.inputs,
             attention_mask=generation_inputs.attention_masks,
             tokenizer=tokenizer,
@@ -344,7 +335,7 @@ class OnPolicyTrainer():
                     obs_tensor, actions_tensor, policy_past_state, action_mask
                 )
 
-                policy_outputs: PolicyOutput = self._agent.alg.model.forward_policy(
+                policy_outputs: PolicyOutput = self._agent.forward_policy(
                     **policy_kwargs
                 )
                 raw_log_probs, log_probs, policy_past_state = (
@@ -364,7 +355,7 @@ class OnPolicyTrainer():
                 ), "Infinite values in log probs"
 
                 # get values
-                value_outputs: ValueOutput = self._agent.alg.model.forward_value(
+                value_outputs: ValueOutput = self._agent.forward_value(
                     obs_tensor, value_past_state
                 )
                 values, value_past_state = (
@@ -374,7 +365,7 @@ class OnPolicyTrainer():
 
                 # get reference log probs
                 ref_policy_outputs: RefPolicyOutput = (
-                    self._agent.alg.model.get_log_probs_ref_model(
+                    self._agent.get_log_probs_ref_model(
                         obs_tensor, actions_tensor, ref_past_state
                     )
                 )
@@ -516,7 +507,8 @@ class OnPolicyTrainer():
         tokenizer = tokenizer[0]
 
         # Switch to eval mode
-        self._agent.alg.model.set_training_mode(False)
+        # self._agent.alg.model.set_training_mode(False)
+        self._agent.eval_mode()
 
         # reset rollout buffer and stats
         rollout_buffer.reset()

@@ -49,22 +49,22 @@ def proxy_wrapper_func(remote_wrapper):
 
     original_class = remote_wrapper._original
     max_memory = remote_wrapper._max_memory
+    n_gpu = remote_wrapper._n_gpu
 
     class ProxyWrapper(object):
         def __init__(self, *args, **kwargs):
             for key in kwargs:
-                assert not key.startswith(
-                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
+                assert not key.startswith(XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
             # The following variables will be used in the RemoteWrapper, so we put them
             # into the kwargs.
             kwargs['_xparl_remote_class'] = original_class
             kwargs['_xparl_remote_class_max_memory'] = max_memory
+            kwargs['_xparl_remote_class_n_gpu'] = n_gpu
 
             self._xparl_remote_wrapper_obj = remote_wrapper(*args, **kwargs)
             for key in self._xparl_remote_wrapper_obj.get_attrs():
-                assert not key.startswith(
-                    XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
+                assert not key.startswith(XPARL_RESERVED_PREFIX), RESERVED_NAME_ERROR_STR.format(key)
 
         def __getattr__(self, attr):
             return self._xparl_remote_wrapper_obj.get_remote_attr(attr)

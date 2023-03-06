@@ -122,13 +122,10 @@ class Client(object):
         for distributed_file in distributed_files:
             parsed_list = glob.glob(distributed_file)
             if not parsed_list:
-                raise ValueError(
-                    "no local file is matched with '{}', please check your input"
-                    .format(distributed_file))
+                raise ValueError("no local file is matched with '{}', please check your input".format(distributed_file))
             for pathname in parsed_list:
                 if os.path.isdir(pathname):
-                    pythonfiles, otherfiles, emptysubfolders = get_subfiles_recursively(
-                        pathname)
+                    pythonfiles, otherfiles, emptysubfolders = get_subfiles_recursively(pathname)
                     user_files.extend(pythonfiles)
                     user_files.extend(otherfiles)
                     user_empty_subfolders.extend(emptysubfolders)
@@ -143,8 +140,7 @@ class Client(object):
             sep = os.sep
             if sep in main_file:
                 main_folder = sep.join(main_file.split(sep)[:-1])
-        code_files = filter(lambda x: x.endswith('.py'),
-                            os.listdir(main_folder))
+        code_files = filter(lambda x: x.endswith('.py'), os.listdir(main_folder))
 
         for file_name in code_files:
             file_path = os.path.join(main_folder, file_name)
@@ -155,9 +151,7 @@ class Client(object):
 
         for file_name in set(user_files):
             assert os.path.exists(file_name)
-            assert not os.path.isabs(
-                file_name
-            ), "[XPARL] Please do not distribute a file with absolute path."
+            assert not os.path.isabs(file_name), "[XPARL] Please do not distribute a file with absolute path."
             with open(file_name, 'rb') as f:
                 content = f.read()
                 pyfiles['other_files'][file_name] = content
@@ -174,19 +168,17 @@ class Client(object):
         # submit_job_socket: submits job to master
         self.submit_job_socket = self.ctx.socket(zmq.REQ)
         self.submit_job_socket.linger = 0
-        self.submit_job_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
+        self.submit_job_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.submit_job_socket.connect("tcp://{}".format(master_address))
         self.start_time = time.time()
 
         def master_heartbeat_exit_callback_func():
-            logger.warning("[Client] Cannot connect to the master. "
-                           "Please check if it is still alive.")
+            logger.warning("[Client] Cannot connect to the master. " "Please check if it is still alive.")
             logger.warning("Client exit replying heartbeat for master.")
             self.connected_to_master = False
 
         self.master_heartbeat_thread = HeartbeatServerThread(
-        heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
+            heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
         self.master_heartbeat_thread.setDaemon(True)
         self.master_heartbeat_thread.start()
         self.reply_master_heartbeat_address = self.master_heartbeat_thread.get_address()
@@ -217,8 +209,7 @@ class Client(object):
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
             matches that of the 'master' process'''
-        self.submit_job_socket.send_multipart(
-            [remote_constants.CHECK_VERSION_TAG])
+        self.submit_job_socket.send_multipart([remote_constants.CHECK_VERSION_TAG])
         message = self.submit_job_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
@@ -245,21 +236,19 @@ found in your current environment. To use "pyarrow" for serialization, please in
 "pyarrow={}" in your current environment!""".format(master_pyarrow_version)
                 else:
                     error_message = '''Version mismatch: the 'master' is of version 'pyarrow={}'. However, \
-'pyarrow={}'is provided in your current environment.'''.format(
-                        master_pyarrow_version, client_pyarrow_version)
+'pyarrow={}'is provided in your current environment.'''.format(master_pyarrow_version, client_pyarrow_version)
                 raise Exception(error_message)
         else:
             raise NotImplementedError
 
     def _update_client_status_to_master(self):
         while self.connected_to_master:
-            elapsed_time = datetime.timedelta(
-                seconds=int(time.time() - self.start_time))
+            elapsed_time = datetime.timedelta(seconds=int(time.time() - self.start_time))
             client_status = {
                 'file_path': self.executable_path,
                 'actor_num': self.actor_num.value,
                 'time': str(elapsed_time),
-                'log_monitor_url': self.log_monitor_url,
+                'log_monitor_url': self.log_monitor_url
             }
 
             self.lock.acquire()
@@ -277,8 +266,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
-    def _check_and_monitor_job(self, job_ping_address,
-                               max_memory):
+    def _check_and_monitor_job(self, job_ping_address, max_memory, gpu):
         """ 
         We have to check if this job is still alive before establishing connection with it.
         """
@@ -288,16 +276,17 @@ found in your current environment. To use "pyarrow" for serialization, please in
         job_ping_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
         job_ping_socket.connect("tcp://" + job_ping_address)
         try:
-            job_ping_socket.send_multipart(
-                [remote_constants.HEARTBEAT_TAG,
+            job_ping_socket.send_multipart([
+                remote_constants.HEARTBEAT_TAG,
                 to_byte(self.job_heartbeat_server_addr),
-                to_byte(str(max_memory))])
+                to_byte(str(max_memory)),
+                to_byte(gpu)
+            ], )
             job_ping_socket.recv_multipart()
         except zmq.error.Again:
             job_ping_socket.close(0)
             logger.error(
-                "[Client] connects to a finished job, will try again, job_ping_address:{}"
-                .format(job_ping_address))
+                "[Client] connects to a finished job, will try again, job_ping_address:{}".format(job_ping_address))
             return False
         job_ping_socket.close(0)
         return True
@@ -313,7 +302,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
         self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
-    def submit_job(self, max_memory):
+    def submit_job(self, max_memory, n_gpu):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
@@ -324,45 +313,60 @@ found in your current environment. To use "pyarrow" for serialization, please in
             max_memory (float): Maximum memory (MB) can be used by each remote
                                 instance, the unit is in MB and default value is
                                 none(unlimited).
-
+            n_gpu (int): Number of GPUs can used in this remote instance.
         Returns:
-            job_address(str): IP address of the job. None if there is no available CPU in the cluster.
+            An ``InitializedJob`` that has information about available job address.
         """
         if self.connected_to_master:
 
             while True:
-                # A lock to prevent multiple actors from submitting job at the same time.
                 self.lock.acquire()
+                n_cpu = 0 if n_gpu > 0 else 1
                 self.submit_job_socket.send_multipart([
                     remote_constants.CLIENT_SUBMIT_TAG,
                     to_byte(self.reply_master_heartbeat_address),
                     to_byte(self.client_id),
+                    to_byte(str(n_cpu)),
+                    to_byte(str(n_gpu))
                 ])
                 message = self.submit_job_socket.recv_multipart()
                 self.lock.release()
                 tag = message[0]
                 if tag == remote_constants.NORMAL_TAG:
-                    job_address = to_str(message[1])
-                    job_ping_address = to_str(message[2])
+                    job_info = cloudpickle.loads(message[1])
+                    job_ping_address = job_info.ping_heartbeat_address
 
                     self.lock.acquire()
-                    check_result = self._check_and_monitor_job(
-                        job_ping_address, max_memory)
+                    check_result = self._check_and_monitor_job(job_ping_address, max_memory, job_info.allocated_gpu.gpu)
                     self.lock.release()
                     if check_result:
-                        return job_address
-
+                        return job_info
                 # no vacant CPU resources, cannot submit a new job
                 elif tag == remote_constants.CPU_TAG:
-                    job_address = None
                     # wait 1 second to avoid requesting in a high frequency.
                     time.sleep(1)
-                    return job_address
+                    return None
+                # no vacant GPU resources, cannot submit a new job
+                elif tag == remote_constants.GPU_TAG:
+                    # wait 5 second to avoid requesting in a high frequency.
+                    time.sleep(1)
+                    return None
+                elif tag == remote_constants.REJECT_GPU_JOB_TAG:
+                    error_message = "[Client] Request fails. It is not allowed to request CPU resource from a GPU cluster."
+                    logger.error(error_message)
+                    raise Exception(error_message)
+                elif tag == remote_constants.REJECT_CPU_JOB_TAG:
+                    error_message = "[Client] Request fails. It is not allowed to request GPU resource from a CPU cluster."
+                    logger.error(error_message)
+                    raise Exception(error_message)
+                elif tag == remote_constants.REJECT_INVALID_GPU_JOB_TAG:
+                    error_message = "[Client] request {} GPUs, but rejected.".format(n_gpu)
+                    logger.error(error_message)
+                    raise Exception(error_message)
                 else:
                     raise NotImplementedError
         else:
-            raise Exception("Client can not submit job to the master, "
-                            "please check if master is connected.")
+            raise Exception("Client can not submit job to the master, please check if master is connected.")
         return None
 
 
@@ -388,21 +392,17 @@ def connect(master_address, distributed_files=[]):
 
     assert len(master_address.split(":")) == 2, "Please input address in " +\
         "{ip}:{port} format"
-    assert isinstance(distributed_files,
-                      list), "`distributed_files` should be a list."
+    assert isinstance(distributed_files, list), "`distributed_files` should be a list."
 
     global GLOBAL_CLIENT
     addr = master_address.split(":")[0]
     cur_process_id = os.getpid()
     if GLOBAL_CLIENT is None:
-        GLOBAL_CLIENT = Client(master_address, cur_process_id,
-                               distributed_files)
+        GLOBAL_CLIENT = Client(master_address, cur_process_id, distributed_files)
     else:
         if GLOBAL_CLIENT.process_id != cur_process_id:
-            GLOBAL_CLIENT = Client(master_address, cur_process_id,
-                                   distributed_files)
-    logger.info("Remote actors log url: {}".format(
-        GLOBAL_CLIENT.log_monitor_url))
+            GLOBAL_CLIENT = Client(master_address, cur_process_id, distributed_files)
+    logger.info("Remote actors log url: {}".format(GLOBAL_CLIENT.log_monitor_url))
 
 
 def get_global_client():
@@ -432,6 +432,4 @@ def disconnect():
         GLOBAL_CLIENT = None
         logger.info("The client is disconneced to the master node.")
     else:
-        logger.info(
-            "No client to be released. Please make sure that you have called `parl.connect`"
-        )
+        logger.info("No client to be released. Please make sure that you have called `parl.connect`")

@@ -105,12 +105,7 @@ class RemoteWrapper(object):
                 self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
                 _ = self.job_socket.recv_multipart()
                 self.job_socket.close(0)
-
-        except AttributeError:
-            pass
-        except zmq.error.ZMQError:
-            pass
-        except TypeError:
+        except Exception as e:
             pass
 
     def has_attr(self, attr):

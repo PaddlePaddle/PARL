@@ -85,6 +85,7 @@ setup(
         "requests",
         "grpcio==1.37.0",
         "protobuf>=3.14.0, <=3.20.0",
+        "pynvml"
     ],
     classifiers=[
         'Intended Audience :: Developers',

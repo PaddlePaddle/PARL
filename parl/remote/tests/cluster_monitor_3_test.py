@@ -20,6 +20,8 @@ import time
 import threading
 from parl.remote import exceptions
 from parl.utils.test_utils import XparlTestCase
+import os
+import signal
 
 @parl.remote_class
 class Actor(object):
@@ -54,20 +56,25 @@ class Actor(object):
 class TestClusterMonitor(XparlTestCase):
 
     def remove_ten_workers(self):
-        for i, p in enumerate(self.worker_process):
+        for i, proc in enumerate(self.worker_process):
             if i == 10: break
-            self.worker_process[i].terminate()
-            self.worker_process[i].join()
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
 
     def test_twenty_worker(self):
         self.add_master()
+        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
 
         for _ in range(20):
             self.add_worker(n_cpu=1)
 
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
-        time.sleep(20)
-        self.assertEqual(20, len(cluster_monitor.data['workers']))
+
+        check_flag = False
+        for _ in range(10):
+            if 20 == len(cluster_monitor.data['workers']):
+                check_flag = True
+                break
+            time.sleep(10)
+        self.assertTrue(check_flag)
 
         self.remove_ten_workers()
 

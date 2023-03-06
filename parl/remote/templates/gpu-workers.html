@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Parl Cluster</title>
+      <link rel="shortcut icon" href="../static/favicon.ico">
+      
+      <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <script src="../static/js/echarts.min.js"></script>
+    <script src="../static/js/gpu-parl.js"></script>
+    <link rel="stylesheet" href="../static/css/bootstrap-parl.min.css" />
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand">
+          <img src="../static/logo.png" style="height: 30px" />
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav">
+            <li class="nav-item" id="worker_nav">
+              <a class="btn text-white" href="workers">Worker</a>
+            </li>
+            <li class="nav-item" id="client_nav">
+              <a class="btn text-white" href="clients">Client</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container" id="worker_container">
+      <h5 class="font-weight-light text-center text-lg-left mt-4 mb-4">
+        Worker GPU usage, Memory usage and average loads.
+      </h5>
+      <div id="main"></div>
+    </div>
+
+    <script>
+      var record = {};
+      var imgHandle = {};
+      var res = {};
+      var div_num = 5;
+      var start_num = 5;
+      var delta = 3;
+
+      $(document).ready(function() {
+        $.get("cluster", function(data, status) {
+          res = data;
+          createDivs(res, start_num);
+          addPlots(res, record, imgHandle, 0, start_num);
+        });
+
+        setInterval(function() {
+          $.get("cluster", function(data, status) {
+            res = data;
+            createDivs(res, start_num);
+            addPlots(res, record, imgHandle, 0, start_num);
+          });
+        }, 10000);
+
+        $(window).on("scroll", function() {
+          var scrollTop = $(document).scrollTop();
+          var windowHeight = $(window).height();
+          var bodyHeight = $(document).height() - windowHeight;
+          var scrollPercentage = scrollTop / bodyHeight;
+          if (scrollPercentage > 0.25) {
+            if (div_num < res.workers.length) {
+              div_num += delta;
+              createDivs(res, div_num);
+              addPlots(res, record, imgHandle, div_num - delta, div_num);
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

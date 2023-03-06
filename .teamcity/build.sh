@@ -255,7 +255,7 @@ function main() {
                 run_all_test_with_pyenv py37
                 run_all_test_with_pyenv py38
                 run_all_test_with_pyenv py39
-            else:
+            else
                 run_all_test_with_pyenv $env
             fi
 

@@ -184,10 +184,65 @@ EOF
     rm -rf ${REPO_ROOT}/build
 }
 
+function run_all_test_with_pyenv {
+    specified_env=$1
+    # test code compability in environments with various python versions
+    declare -a envs=("py39" "py36" "py37" "py38")
+    if [[ ! " ${envs[*]} " =~ " ${specified_env} "  ]]; then
+        echo "specified env named ${specified_env} is not in ${envs[*]}"
+        exit 0
+    fi
+    source activate $specified_env
+    pip config set global.index-url https://mirror.baidu.com/pypi/simple
+    python -m pip install --upgrade pip
+    echo ========================================
+    echo Running tests in $specified_env ..
+    echo `which pip`
+    echo ========================================
+    pip install .
+    run_import_test # import parl test
+
+    pip install -r .teamcity/requirements.txt
+    pip install paddlepaddle==2.3.1
+    run_test_with_cpu $specified_env
+    run_test_with_cpu $specified_env "DIS_TESTING_SERIALLY"
+    run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
+    xparl stop
+    # test with torch installed
+    if [ \( $specified_env == "py38" \) ]
+    then
+        # install torch
+        pip uninstall -y paddlepaddle
+        python -m pip uninstall -r .teamcity/requirements.txt -y
+        echo ========================================
+        echo "in torch environment"
+        echo ========================================
+        pip install -r .teamcity/requirements_torch.txt
+        pip install torch
+        run_test_with_cpu $specified_env "DIS_TESTING_TORCH"
+        run_test_with_cpu $specified_env "DIS_TESTING_SERIALLY"
+        run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
+        xparl stop
+    fi
+    # clean env
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+    # test with torch installed
+    if [ \( $specified_env == "py38" \) ]
+    then
+        pip install -r .teamcity/requirements.txt
+        pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
+        run_test_with_gpu $specified_env
+    fi
+}
+
 
 function main() {
     set -e
     local CMD=$1
+    local env=$2
+    echo $CMD, $env
     
     init
     case $CMD in
@@ -195,50 +250,14 @@ function main() {
             check_style
             ;;
         test)
-            # test code compability in environments with various python versions
-            declare -a envs=("py39" "py36" "py37" "py38")
-            for env in "${envs[@]}";do
-                export PATH="/root/miniconda3/bin:$PATH"
-                source activate $env
-                python -m pip install --upgrade pip
-                echo ========================================
-                echo Running tests in $env ..
-                echo `which pip`
-                echo ========================================
-                pip config set global.index-url https://mirror.baidu.com/pypi/simple
-                pip install .
-                run_import_test # import parl test
-
-                pip install -r .teamcity/requirements.txt
-                pip install paddlepaddle==2.3.1
-                run_test_with_cpu $env
-                run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                run_test_with_cpu $env "DIS_TESTING_REMOTE"
-                xparl stop
-                # test with torch installed
-                if [ \( $env == "py38" \) ]
-                then
-                    # install torch
-                    pip uninstall -y paddlepaddle
-                    python -m pip uninstall -r .teamcity/requirements.txt -y
-                    echo ========================================
-                    echo "in torch environment"
-                    echo ========================================
-                    pip install -r .teamcity/requirements_torch.txt
-                    pip install torch
-                    run_test_with_cpu $env "DIS_TESTING_TORCH"
-                    run_test_with_cpu $env "DIS_TESTING_SERIALLY"
-                    run_test_with_cpu $env "DIS_TESTING_REMOTE"
-                    xparl stop
-                fi
-                # clean env
-                export LC_ALL=C.UTF-8
-                export LANG=C.UTF-8
-            done
-
-            pip install -r .teamcity/requirements.txt
-            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
-            run_test_with_gpu $env
+            if [ -z $env ]; then
+                run_all_test_with_pyenv py36
+                run_all_test_with_pyenv py37
+                run_all_test_with_pyenv py38
+                run_all_test_with_pyenv py39
+            else:
+                run_all_test_with_pyenv $env
+            fi
 
             ;;
         example)

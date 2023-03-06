@@ -25,6 +25,8 @@ function init() {
 
     export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
 }
 
 function run_example_test {
@@ -224,9 +226,6 @@ function run_all_test_with_pyenv {
         run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
         xparl stop
     fi
-    # clean env
-    export LC_ALL=C.UTF-8
-    export LANG=C.UTF-8
 
     # test with torch installed
     if [ \( $specified_env == "py38" \) ]

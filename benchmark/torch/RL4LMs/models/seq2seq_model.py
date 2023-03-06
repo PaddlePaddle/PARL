@@ -34,6 +34,7 @@ class Seq2SeqLMModel(LMActorCriticModel, ActorCriticWarmStartMixin):
         generation_kwargs: Dict[str, Any] = {},
         prompt_truncation_side: str = "left",
         state_dict: Dict[str, Any] = None,
+        device: torch.DeviceObjType = None,
     ):
         super().__init__(
             observation_space,
@@ -45,8 +46,9 @@ class Seq2SeqLMModel(LMActorCriticModel, ActorCriticWarmStartMixin):
             optimizer_class,
             generation_kwargs,
             prompt_truncation_side,
+            device=device
         )
-        self.load_from_dict(state_dict)
+        # self.load_from_dict(state_dict)
 
     def _build_model_heads(self, model_name: str):
         self._policy_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)

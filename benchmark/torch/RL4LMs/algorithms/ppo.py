@@ -1,5 +1,4 @@
 import parl
-from benchmark.torch.RL4LMs.utils import Tracker
 from benchmark.torch.RL4LMs.utils import Schedule
 from typing import Union, Optional, Dict, Any
 import torch
@@ -13,7 +12,6 @@ from  parl.algorithms.torch import PPO
 class RL4LMPPO(parl.Algorithm):
     def __init__(self,
                  model: parl.Model,
-                 tracker: Tracker,
                  learning_rate: Union[float, Schedule] = 3e-4,
                  n_steps: int = 2048,
                  batch_size: int = 64,
@@ -31,7 +29,6 @@ class RL4LMPPO(parl.Algorithm):
                  _init_setup_model: bool = True,
                  ):
         super(RL4LMPPO, self).__init__(model=model)
-        self.tracker = tracker
         self.learning_rate = learning_rate
         self.n_steps = n_steps
         self.batch_size = batch_size
@@ -49,7 +46,7 @@ class RL4LMPPO(parl.Algorithm):
 
     def learn(self, rollout_buffer, log_info):
         entropy_losses = log_info["entropy_losses"]
-        pg_losses = log_info["entropy_losses"]
+        pg_losses = log_info["pg_losses"]
         value_losses = log_info["value_losses"]
         clip_fractions = log_info["clip_fractions"]
         approx_kl_divs = log_info["approx_kl_divs"]

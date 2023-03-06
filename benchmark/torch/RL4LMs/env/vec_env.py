@@ -163,6 +163,13 @@ class LocalParallelVecEnv:
             process.join()
         self.closed = True
 
+    def get_attr(self, attr_name: str, indices) -> List[Any]:
+        """Return attribute from vectorized environment (see base class)."""
+        target_remotes = self._get_target_remotes(indices)
+        for remote in target_remotes:
+            remote.send(("get_attr", attr_name))
+        return [remote.recv() for remote in target_remotes]
+
     def set_attr(self, attr_name: str, value: Any, indices = None) -> None:
         """Set attribute inside vectorized environments (see base class)."""
         target_remotes = self._get_target_remotes(indices)

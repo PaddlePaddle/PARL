@@ -4,7 +4,8 @@ from tqdm import tqdm
 from transformers import AutoTokenizer
 
 from . import Sample
-from .metric_util import BaseMetric
+from benchmark.torch.RL4LMs.metrics import BaseMetric
+from parl.utils import logger
 
 
 def get_batch(samples: List[Sample], batch_size: int):
@@ -25,8 +26,6 @@ def evaluate_on_samples(
     metrics: List[BaseMetric],
     epoch: int,
     split_name: str,
-    # tracker: Tracker = None,
-    tracker = None, # TODO: change tracker to parl logging
     dt_control_token: str = "",
     gen_kwargs: Dict[str, Any] = None,
 ):
@@ -99,11 +98,14 @@ def evaluate_on_samples(
         sample_predictions_dict.append(sample_prediction)
 
 
-    if tracker is not None:
-        # log the entire predictions
-        tracker.log_predictions(epoch, split_name, sample_predictions_dict)
-        # log the corpus level scores
-        tracker.log_metrics(epoch, split_name, corpus_level_metrics)
+
+    metrics_dict_ = {
+        "epoch": epoch,
+        "metrics": corpus_level_metrics
+    }
+
+    # logger
+    logger.info(f"{split_name} metrics: {metrics_dict_}")
 
 
 def generate_text(

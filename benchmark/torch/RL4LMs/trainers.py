@@ -1,11 +1,12 @@
 import os
+import time
 from functools import partial
 from typing import Any, Dict, List
 import numpy as np
 
 
-from benchmark.torch.RL4LMs.utils import Sample, Tracker, RewardFunction,\
-    evaluate_on_samples, TrainerWarmStartMixin,\
+from benchmark.torch.RL4LMs.utils import Sample, RewardFunction,\
+    evaluate_on_samples,\
     KLController, RolloutBuffer, DictRolloutBuffer, MaskableDictRolloutBuffer,\
     TransitionInfo, TensorDict, RefPolicyOutput, ValueOutput, PolicyOutput
 from benchmark.torch.RL4LMs.registry import DataPoolRegistry, MetricRegistry, RewardFunctionRegistry, \
@@ -23,8 +24,10 @@ from transformers import PreTrainedTokenizer
 from benchmark.torch.RL4LMs.summarization import RL4LMsSummaAgent
 from benchmark.torch.RL4LMs.algorithms import RL4LMPPO
 import torch
+from parl.utils import logger
 
 def build_tokenizer(tokenizer_config: Dict[str, Any]):
+    logger.info(f"loading tokenizer of [{tokenizer_config['model_name']}] model")
     tokenizer = AutoTokenizer.from_pretrained(
         tokenizer_config["model_name"])
     if tokenizer.pad_token is None and tokenizer_config.get("pad_token_as_eos_token", True):
@@ -89,8 +92,8 @@ def build_env(env_config: Dict[str, Any],
 
 def build_agent(alg_config: Dict[str, Any],
             env: LocalParallelVecEnv,
-            tracker: Tracker,
             model_state: Dict[str, Any] = None, # TODO: save model checkpoint
+            device = None,
             alg_state: Dict[str, Any] = None    # TODO: save alg checkpoint
                 ):
     model_config = alg_config["model"]
@@ -103,15 +106,17 @@ def build_agent(alg_config: Dict[str, Any],
     rl4lms_model = model_cls(
         observation_space = env.observation_space,
         action_space= env.action_space,
+        device=device,
         **model_args
     )
 
     rl4lm_alg_cls = alg_cls(
         model=rl4lms_model,
+        device=device,
         **alg_config.get("args")
     )
 
-    rl4lm_agent = RL4LMsSummaAgent(rl4lm_alg_cls, alg_config, tracker)
+    rl4lm_agent = RL4LMsSummaAgent(rl4lm_alg_cls, alg_config)
     return rl4lm_agent
 
 
@@ -133,7 +138,7 @@ def unpack_observations(obs_tensor, n_envs: int):
     return unpacked_obs
 
 
-class OnPolicyTrainer(TrainerWarmStartMixin):
+class OnPolicyTrainer():
     """
     A generic trainer for training LMs with onpolicy algorithms from SB3
     """
@@ -145,7 +150,6 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
                  env_config: Dict[str, Any],
                  on_policy_alg_config: Dict[str, Any],
                  train_eval_config: Dict[str, Any],
-                 tracker: Tracker = None,
                  experiment_name: str = ''
                  ):
         self._tokenizer_config = tokenizer_config
@@ -154,7 +158,6 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
         self._env_config = env_config
         self._on_policy_alg_config = on_policy_alg_config
         self._train_eval_config = train_eval_config
-        self._tracker = tracker
         self._experiment_name = experiment_name
         self._agent = None
         self._env = None
@@ -169,7 +172,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
     def _setup(self):
 
         # load trainer state from available previous checkpoint if available
-        self.load_trainer_state(self._tracker)
+        # self.load_trainer_state(self._tracker)
 
         # build components
         self._tokenizer = build_tokenizer(self._tokenizer_config)
@@ -182,7 +185,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
 
 
         self._agent = build_agent(self._on_policy_alg_config,
-                                  self._env, self._tracker)
+                                  self._env, device=self.device)
 
         self._rollout_buffer = MaskableDictRolloutBuffer(
             buffer_size=self._agent.alg.n_steps * self._env.num_envs,
@@ -196,7 +199,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
 
         self._kl_controller = KLController(
             self._on_policy_alg_config["kl_div"]["coeff"],
-            self._on_policy_alg_config["kl_div"].get("norm_reward", False))
+            self._on_policy_alg_config["kl_div"].get("target_kl", None))
 
         # extract train params
         self._max_episode_length = self._env_config["args"]["max_episode_length"]
@@ -221,18 +224,22 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
                                 metrics=self._metrics,
                                 epoch=epoch,
                                 split_name=split,
-                                tracker=self._tracker,
                                 gen_kwargs=self._eval_gen_kwargs)
 
     def train_and_eval(self):
         # evaluate on val and test set before fine-tuning once
-        iter_start = self._trainer_state["current_iter"]
+        # iter_start = self._trainer_state["current_iter"]
+        iter_start = 0
         self._evaluate_on_datapools(epoch=iter_start)
 
         # train for given number of iters
         for epoch in range(iter_start, self._n_iters):
+            print("========== BEGIN ==========")
+            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
+            print("========== BEGIN ==========")
+            outer_start_time = time.time()
             # current state
-            self._trainer_state["current_iter"] = epoch
+            # self._trainer_state["current_iter"] = epoch
 
             self._num_timesteps = 0
 
@@ -243,21 +250,29 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
                 self._agent.learn(self._rollout_buffer)
 
             # save the policy checkpoint
-            if (epoch + 1) % self._train_eval_config.get("save_every", 20) == 0:
-                self.save_trainer_state(
-                    self._tracker, self._alg.policy, self._trainer_state)
+            # if (epoch + 1) % self._train_eval_config.get("save_every", 20) == 0:
+            #     self.save_trainer_state(
+            #         self._tracker, self._alg.policy, self._trainer_state)
 
             # evaluate on val set in the given intervals
             if (epoch + 1) % self._train_eval_config["eval_every"] == 0:
                 self._evaluate_on_datapools(epoch=epoch, splits=["val"])
 
+            outer_end_time = time.time()
+            print("========== END ==========")
+            print(f"outer epoch: {epoch} / {self._n_iters - 1}")
+            print(f"time used: {outer_end_time - outer_start_time} second(s), left time:"
+                  f"  {1.0 * (outer_end_time - outer_start_time) * (self._n_iters - epoch - 1) / 60 / 60} hour(s)")
+            print("========== END ==========")
+
+
         # finally evaluate on val and test samples
         self._evaluate_on_datapools(epoch=epoch)
 
-        # save model here - we save only the language model
-        if self._tracker is not None:
-            self._tracker.save_auto_model(
-                self._alg.policy.get_language_model())
+        # # save model here - we save only the language model
+        # if self._tracker is not None:
+        #     self._tracker.save_auto_model(
+        #         self._alg.policy.get_language_model())
 
 
     def get_policy_kwargs(
@@ -294,8 +309,8 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
 
         # generate text using the model
         obs_tensor =  dict_to_tensor(current_obs, self.device)
-        generation_inputs = self._agent.model.get_inputs_for_generation(obs_tensor)
-        gen_output = self._agent.model.generate(
+        generation_inputs = self._agent.alg.model.get_inputs_for_generation(obs_tensor)
+        gen_output = self._agent.alg.model.generate(
             input_ids=generation_inputs.inputs,
             attention_mask=generation_inputs.attention_masks,
             tokenizer=tokenizer,
@@ -329,7 +344,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
                     obs_tensor, actions_tensor, policy_past_state, action_mask
                 )
 
-                policy_outputs: PolicyOutput = self.policy.forward_policy(
+                policy_outputs: PolicyOutput = self._agent.alg.model.forward_policy(
                     **policy_kwargs
                 )
                 raw_log_probs, log_probs, policy_past_state = (
@@ -349,7 +364,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
                 ), "Infinite values in log probs"
 
                 # get values
-                value_outputs: ValueOutput = self.policy.forward_value(
+                value_outputs: ValueOutput = self._agent.alg.model.forward_value(
                     obs_tensor, value_past_state
                 )
                 values, value_past_state = (
@@ -359,7 +374,7 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
 
                 # get reference log probs
                 ref_policy_outputs: RefPolicyOutput = (
-                    self.policy.get_log_probs_ref_model(
+                    self._agent.alg.model.get_log_probs_ref_model(
                         obs_tensor, actions_tensor, ref_past_state
                     )
                 )
@@ -494,10 +509,10 @@ class OnPolicyTrainer(TrainerWarmStartMixin):
         rollout_buffer: RolloutBuffer,
     ) -> bool:
         # max episode steps
-        max_steps = env.unwrapped.get_attr("max_steps", [0])[0]
+        max_steps = env.get_attr("max_steps", [0])[0]
 
         # get tokenizer
-        tokenizer = env.unwrapped.get_attr("tokenizer", [0])
+        tokenizer = env.get_attr("tokenizer", [0])
         tokenizer = tokenizer[0]
 
         # Switch to eval mode

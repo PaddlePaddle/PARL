@@ -31,7 +31,8 @@ class BaseModel(parl.Model):
         observation_space: gym.spaces.Space,
         action_space: gym.spaces.Space,
         optimizer_class: Type[torch.optim.Optimizer] = torch.optim.Adam,
-        optimizer_kwargs: Optional[Dict[str, Any]] = None,):
+        optimizer_kwargs: Optional[Dict[str, Any]] = None,
+        device=None):
         super().__init__()
         if optimizer_kwargs is None:
             optimizer_kwargs = {}
@@ -42,6 +43,7 @@ class BaseModel(parl.Model):
         self.optimizer_class = optimizer_class
         self.optimizer_kwargs = optimizer_kwargs
         self.optimizer = None
+        self.device = device
 
     @abstractmethod
     def forward(self, *args, **kwargs):
@@ -176,6 +178,7 @@ class LMActorCriticModel(BaseModel):
         optimizer_class: torch.optim.Optimizer = torch.optim.AdamW,
         generation_kwargs: Dict[str, Any] = {},
         prompt_truncation_side: str = "left",
+        device=None
     ):
         """
 
@@ -190,7 +193,7 @@ class LMActorCriticModel(BaseModel):
             generation_kwargs (Dict[str, Any], optional): generation parameters for rollout. Defaults to {}.
             prompt_truncation_side (str, optional): truncation side for prompt text. Defaults to "left".
         """
-        super().__init__(observation_space, action_space)
+        super().__init__(observation_space, action_space, device=device)
         self._action_space = action_space
         self._apply_model_parallel = apply_model_parallel
         self._build_model_heads(model_name)

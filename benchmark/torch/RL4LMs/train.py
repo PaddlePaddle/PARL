@@ -1,10 +1,11 @@
 import os
+import sys
 from argparse import ArgumentParser
-
+import datetime
 import yaml
 import collections
 from trainers import OnPolicyTrainer
-from utils import Tracker
+from parl.utils import logger
 
 
 def recursive_dict_update(d, u):
@@ -19,14 +20,14 @@ def recursive_dict_update(d, u):
 def main(config):
 
     # load tracker
-    tracker = Tracker(
-        config["base_path_to_store_results"],
-        config,
-        config["project_name"],
-        config["experiment_name"],
-        config["entity_name"],
-        False,
-    )
+    # tracker = Tracker(
+    #     config["base_path_to_store_results"],
+    #     config,
+    #     config["project_name"],
+    #     config["experiment_name"],
+    #     config["entity_name"],
+    #     False,
+    # )
 
     # instantiate the trainer here
     # TODO: currently only complete ppo
@@ -38,7 +39,6 @@ def main(config):
             env_config=config["env"],
             on_policy_alg_config=config["alg"],
             train_eval_config=config["train_evaluation"],
-            tracker=tracker,
         )
     else:
         raise NotImplementedError
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         default=os.getcwd(),
     )
     parser.add_argument(
-        "--entity_name", type=str, help="entity name", default=None
+        "--entity_name", type=str, help="entity name", default="summarization"
     )
     args = parser.parse_args()
 
@@ -77,6 +77,11 @@ if __name__ == '__main__':
         config = yaml.safe_load(fp)
 
     recursive_dict_update(config, vars(args))
-
+    log_dir = f"./{args.project_name}/{args.experiment_name}/{args.entity_name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    logger.set_dir(log_dir)
+    config["logging_dir"] = log_dir
+    config["sys_arg"] = sys.argv
+    logger.info(config)
+    logger.set_level("DEBUG")
     main(config)
 

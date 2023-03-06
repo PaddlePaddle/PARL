@@ -6,6 +6,7 @@ from benchmark.torch.RL4LMs.summarization import RL4LMsSummaAgent
 
 from benchmark.torch.RL4LMs.utils  import TextGenPool, CNNDailyMail
 # from rl4lms.envs.text_generation.alg_wrappers import wrap_onpolicy_alg
+from parl.utils import logger
 
 from benchmark.torch.RL4LMs.metrics import (
     BaseMetric,
@@ -50,6 +51,7 @@ class DataPoolRegistry:
 
     @classmethod
     def get(cls, datapool_id: str, kwargs: Dict[str, Any]) -> TextGenPool:
+        logger.info(f"loading split of dataset: {datapool_id} -- {kwargs['split']}")
         datapool_cls = cls._registry[datapool_id]
         datapool = datapool_cls.prepare(**kwargs)
         return datapool
@@ -75,6 +77,7 @@ class RewardFunctionRegistry:
 
     @classmethod
     def get(cls, reward_fn_id: str, kwargs: Dict[str, Any]) -> RewardFunction:
+        logger.info(f"loading reward function: {reward_fn_id}")
         reward_cls = cls._registry[reward_fn_id]
         reward_fn = reward_cls(**kwargs)
         return reward_fn
@@ -106,6 +109,7 @@ class MetricRegistry:
 
     @classmethod
     def get(cls, metric_id: str, kwargs: Dict[str, Any]) -> BaseMetric:
+        logger.info(f"loading metric: {metric_id}")
         metric_cls = cls._registry[metric_id]
         metric = metric_cls(**kwargs)
         return metric

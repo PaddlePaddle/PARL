@@ -141,14 +141,3 @@ if __name__ == "__main__":
         {"ep_len": 3, "ep_reward": 0.5},
     ]
 
-    tracker = Tracker(base_path, run_config, "test_logs", "test_run", "T_1", False)
-    tracker.log_predictions(1, "val", predictions["1"])
-    tracker.log_metrics(1, "val", metrics["1"])
-    tracker.log_predictions(2, "val", predictions["2"])
-    tracker.log_metrics(2, "val", metrics["2"])
-    tracker.log_predictions(3, "val", predictions["3"])
-    tracker.log_metrics(3, "val", metrics["3"])
-    tracker.log_rollout_infos(rollout_infos[0])
-    tracker.log_rollout_infos(rollout_infos[1])
-    tracker.log_rollout_infos(rollout_infos[2])
-    tracker.done()

@@ -4,7 +4,8 @@ import numpy as np
 from typing import List
 import torch
 from benchmark.torch.RL4LMs.utils import  TransitionInfo,\
-     RewardFunction, Tracker
+     RewardFunction
+from parl.utils import logger
 
 
 def compute_batched_rewards(
@@ -59,14 +60,12 @@ class RL4LMsSummaAgent(parl.Agent):
     def __init__(self,
                  algorithm,
                  alg_config,
-                 tracker: Tracker,
                  norm_reward: bool = False,
                  ):
         super(RL4LMsSummaAgent, self).__init__(algorithm)
         self.dataset = None
         self.config = alg_config
-        self.n_epochs = alg_config["n_epochs"]
-        self._tracker = tracker
+        self.n_epochs = alg_config["args"]["n_epochs"]
         self._norm_reward = norm_reward
         self._n_updates = 0
 
@@ -80,7 +79,7 @@ class RL4LMsSummaAgent(parl.Agent):
         approx_kl_divs = []
         log_info = {
             "entropy_losses": entropy_losses,
-            "pg_losses": entropy_losses,
+            "pg_losses": pg_losses,
             "value_losses": value_losses,
             "clip_fractions": clip_fractions,
             "approx_kl_divs": approx_kl_divs
@@ -103,39 +102,37 @@ class RL4LMsSummaAgent(parl.Agent):
             rollout_buffer.values.flatten(), rollout_buffer.returns.flatten())
 
         # Logs
-        print("train/entropy_loss", np.mean(entropy_losses))
-        print("train/policy_gradient_loss", np.mean(pg_losses))
-        print("train/value_loss", np.mean(value_losses))
-        print("train/approx_kl", np.mean(approx_kl_divs))
-        print("train/clip_fraction", np.mean(clip_fractions))
-        print("train/loss", loss.item())
-        print("train/explained_variance", explained_var)
-        # self.logger.record("train/entropy_loss", np.mean(entropy_losses))
-        # self.logger.record("train/policy_gradient_loss", np.mean(pg_losses))
-        # self.logger.record("train/value_loss", np.mean(value_losses))
-        # self.logger.record("train/approx_kl", np.mean(approx_kl_divs))
-        # self.logger.record("train/clip_fraction", np.mean(clip_fractions))
-        # self.logger.record("train/loss", loss.item())
-        # self.logger.record("train/explained_variance", explained_var)
+        train_info = {
+            "train/entropy_loss": np.mean(entropy_losses),
+            "train/policy_gradient_loss": np.mean(pg_losses),
+            "train/value_loss": np.mean(value_losses),
+            "train/approx_kl": np.mean(approx_kl_divs),
+            "train/clip_fraction": np.mean(clip_fractions),
+            "train/loss": loss.item(),
+            "train/explained_variance": explained_var
+        }
+
         if hasattr(self.alg.model, "log_std"):
             # self.logger.record(
             #     "train/std", torch.exp(self.policy.log_std).mean().item())
-            print("train/std", torch.exp(self.alg.model.log_std).mean().item())
+            train_info["train/std"] = torch.exp(self.alg.model.log_std).mean().item()
 
         # self.logger.record("train/n_updates",
         #                    self._n_updates, exclude="tensorboard")
         # self.logger.record("train/clip_range", clip_range)
-        print("train/n_updates", self._n_updates)
-        print("train/clip_range", self.alg.clip_range)
+        train_info["train/n_updates"] = self._n_updates
+        train_info["train/clip_range"] =  self.alg.clip_range
 
-        train_info = {
+        logger.info(train_info)
+
+        ppo_train_info = {
             "ppo/entropy_loss":  np.mean(entropy_losses).item(),
             "ppo/policy_gradient_loss": np.mean(pg_losses).item(),
             "ppo/value_loss": np.mean(value_losses).item(),
             "ppo/approx_kl": np.mean(approx_kl_divs).item(),
         }
 
-        self._tracker.log_training_infos(train_info)
+        logger.info(ppo_train_info)
         # for k, v in train_info.items():
         #     print(f"{k}: {v}")
 

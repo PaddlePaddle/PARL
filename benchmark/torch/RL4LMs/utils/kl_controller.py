@@ -3,7 +3,7 @@ import torch
 
 
 class KLController:
-    def __init__(self, kl_coeff: float, target_kl: Optional[float] = None) -> None:
+    def __init__(self, kl_coeff, target_kl = None):
         self._kl_coeff = kl_coeff
         self._target_kl = target_kl
 

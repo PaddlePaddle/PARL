@@ -1,11 +1,10 @@
 import parl
 import numpy as np
 
-from typing import List
 import torch
 from parl.utils import logger
 
-def explained_variance(y_pred: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+def explained_variance(y_pred, y_true):
     """
     Computes fraction of variance that ypred explains about y.
     Returns 1 - Var[y-ypred] / Var[y]
@@ -24,7 +23,7 @@ class RL4LMsAgent(parl.Agent):
     def __init__(self,
                  algorithm,
                  alg_config,
-                 norm_reward: bool = False,
+                 norm_reward = False,
                  ):
         super(RL4LMsAgent, self).__init__(algorithm)
         self.dataset = None

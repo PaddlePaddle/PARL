@@ -1,27 +1,25 @@
 from cmath import inf
 from typing import Dict, Tuple, Optional, List
 
-import torch
 from gym import Env, spaces
 from gym.spaces.dict import Dict as DictSpace
 from gym.spaces.discrete import Discrete
 from benchmark.torch.RL4LMs.utils import Sample, Observation, PrioritySampler
-from benchmark.torch.RL4LMs.utils import RewardFunction, BatchedRewardFunction
 from transformers import AutoTokenizer
 
 
 class TextGenEnv(Env):
     def __init__(
         self,
-        tokenizer: AutoTokenizer,
-        reward_function: RewardFunction,
-        samples: Tuple[List[Sample], float],
-        max_episode_length: int = 512,
-        priority_scale: float = 0.0,
-        max_prompt_length: Optional[int] = None,
-        terminate_on_eos: bool = False,
-        context_start_token: Optional[int] = None,
-        prompt_truncation_side: str = "left",
+        tokenizer,
+        reward_function,
+        samples,
+        max_episode_length = 512,
+        priority_scale = 0.0,
+        max_prompt_length = None,
+        terminate_on_eos = False,
+        context_start_token = None,
+        prompt_truncation_side = "left",
     ):
         """
         A generic RL environment to generate textual sequences.
@@ -99,7 +97,7 @@ class TextGenEnv(Env):
         self.__current_obs = None
         self.__time_step = None
 
-    def step(self, action: int) -> Tuple[Dict[str, torch.tensor], int, bool, dict]:
+    def step(self, action):
         self.__time_step += 1
 
         # previous obs
@@ -114,20 +112,18 @@ class TextGenEnv(Env):
         )
 
         # compute reward
-        if not isinstance(self.reward_function, BatchedRewardFunction):
-            reward = (
-                None
-                if self.reward_function is None
-                else self.reward_function(
-                    previous_obs,
-                    action,
-                    self.__current_obs,
-                    done,
-                    self.__current_obs.meta_info,
-                )
+        reward = (
+            None
+            if self.reward_function is None
+            else self.reward_function(
+                previous_obs,
+                action,
+                self.__current_obs,
+                done,
+                self.__current_obs.meta_info,
             )
-        else:
-            reward = -inf  # will be overridden later
+        )
+
 
         # populate additional info
         info = {
@@ -141,7 +137,7 @@ class TextGenEnv(Env):
 
         return self.__current_obs.to_dict(), reward, done, info
 
-    def reset(self, sample: Sample = None) -> Dict[str, torch.tensor]:
+    def reset(self, sample = None):
         """
         Resets the environment and starts a new episode
         """
@@ -173,5 +169,5 @@ class TextGenEnv(Env):
     def close(self):
         pass
 
-    def add_sample(self, sample: Sample, weight: int = 1.0):
+    def add_sample(self, sample, weight = 1.0):
         self.sampler_for_replaying.add(sample, weight)

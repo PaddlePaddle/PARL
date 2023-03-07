@@ -7,7 +7,6 @@ tokenizer:
   pad_token_as_eos_token: False
 
 reward_fn:
-  id: rouge
   args:
     rouge_type: "rouge1"
 
@@ -30,8 +29,6 @@ env:
     context_start_token: 0
 
 alg:
-  agent_id: rl4lm_agent
-  id: ppo
   args: 
 #    n_steps: 512
     #####CHNAGE FOR DEBUG########

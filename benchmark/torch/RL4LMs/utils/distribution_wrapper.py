@@ -15,7 +15,7 @@ class CategoricalDistribution:
         super().__init__()
         self.action_dim = action_dim
 
-    def proba_distribution_net(self, latent_dim: int) -> nn.Module:
+    def proba_distribution_net(self, latent_dim):
         """
         Create the layer that represents the distribution:
         it will be the logits of the Categorical distribution.
@@ -28,35 +28,35 @@ class CategoricalDistribution:
         action_logits = nn.Linear(latent_dim, self.action_dim)
         return action_logits
 
-    def proba_distribution(self, action_logits: torch.Tensor) -> "CategoricalDistribution":
+    def proba_distribution(self, action_logits: torch.Tensor):
         self.distribution = Categorical(logits=action_logits)
         return self
 
-    def log_prob(self, actions: torch.Tensor) -> torch.Tensor:
+    def log_prob(self, actions):
         return self.distribution.log_prob(actions)
 
-    def entropy(self) -> torch.Tensor:
+    def entropy(self):
         return self.distribution.entropy()
 
-    def sample(self) -> torch.Tensor:
+    def sample(self):
         return self.distribution.sample()
 
-    def mode(self) -> torch.Tensor:
+    def mode(self):
         return torch.argmax(self.distribution.probs, dim=1)
 
 
-    def actions_from_params(self, action_logits: torch.Tensor, deterministic: bool = False) -> torch.Tensor:
+    def actions_from_params(self, action_logits, deterministic = False):
         # Update the proba distribution
         self.proba_distribution(action_logits)
         return self.get_actions(deterministic=deterministic)
 
-    def log_prob_from_params(self, action_logits: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def log_prob_from_params(self, action_logits):
         actions = self.actions_from_params(action_logits)
         log_prob = self.log_prob(actions)
         return actions, log_prob
 
 
-    def get_actions(self, deterministic: bool = False) -> torch.Tensor:
+    def get_actions(self, deterministic = False):
         """
         Return actions according to the probability distribution.
 

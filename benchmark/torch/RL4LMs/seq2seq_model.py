@@ -1,9 +1,6 @@
-from typing import Any, Dict, Optional, List, Union
 import torch
-from gym.spaces import Discrete
-from gym.spaces.dict import Dict as DictSpace
 from torch import nn
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel
+from transformers import AutoModelForSeq2SeqLM
 from copy import deepcopy
 from torch.distributions import Categorical
 
@@ -11,12 +8,10 @@ from transformers.modeling_utils import unwrap_model
 
 import parl
 from benchmark.torch.RL4LMs.utils import (
-    override_generation_routines,
-
-    TensorDict, CategoricalDistribution,
+    override_generation_routines, CategoricalDistribution,
 
     GenerationInputs, PolicyOutput, RefPolicyOutput, ValueOutput,
-    PolicyType, EvaluateActionsOutput, GenerationOutputs,
+    EvaluateActionsOutput, GenerationOutputs,
 )
 
 
@@ -24,17 +19,17 @@ from benchmark.torch.RL4LMs.utils import (
 class Seq2SeqLMModel(parl.Model):
     def __init__(
         self,
-        observation_space: DictSpace,
-        action_space: Discrete,
-        model_name: str,
-        optimizer_kwargs: Dict[str, Any] = {},
-        weight_decay: float = 1e-6,
-        apply_model_parallel: bool = True,
-        optimizer_class: torch.optim.Optimizer = torch.optim.AdamW,
-        generation_kwargs: Dict[str, Any] = {},
-        prompt_truncation_side: str = "left",
-        state_dict: Dict[str, Any] = None,
-        device: torch.DeviceObjType = None,
+        observation_space,
+        action_space,
+        model_name,
+        optimizer_kwargs = {},
+        weight_decay = 1e-6,
+        apply_model_parallel = True,
+        optimizer_class = torch.optim.AdamW,
+        generation_kwargs = {},
+        prompt_truncation_side = "left",
+        state_dict = None,
+        device = None,
     ):
         super(Seq2SeqLMModel, self).__init__()
         if optimizer_kwargs is None:
@@ -57,10 +52,7 @@ class Seq2SeqLMModel(parl.Model):
         self._prompt_truncation_side = prompt_truncation_side
 
 
-
-        # self.load_from_dict(state_dict)
-
-    def _build_model_heads(self, model_name: str):
+    def _build_model_heads(self, model_name):
         self._policy_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self._policy_model.__class__ = override_generation_routines(type(self._policy_model))
 
@@ -88,10 +80,10 @@ class Seq2SeqLMModel(parl.Model):
 
     def forward_policy(
         self,
-        obs: TensorDict,
-        actions: torch.tensor,
-        past_model_kwargs: Optional[Dict[str, torch.tensor]] = None,
-    ) -> PolicyOutput:
+        obs,
+        actions,
+        past_model_kwargs = None,
+    ):
 
         # Temp workaround for Seq2seq policy
         past_model_kwargs = None
@@ -162,9 +154,9 @@ class Seq2SeqLMModel(parl.Model):
 
     def forward_value(
         self,
-        obs: TensorDict,
-        past_model_kwargs: Optional[Dict[str, torch.tensor]] = None,
-    ) -> ValueOutput:
+        obs,
+        past_model_kwargs = None,
+    ):
         # Temp workaround for Seq2seq policy
         past_model_kwargs = None
 
@@ -231,8 +223,8 @@ class Seq2SeqLMModel(parl.Model):
         return value_output
 
     def evaluate_actions(
-        self, obs: torch.Tensor, actions: torch.Tensor
-    ) -> EvaluateActionsOutput:
+        self, obs, actions
+    ):
 
         policy_outputs = self.forward_policy(obs=obs, actions=actions)
         value_outputs = self.forward_value(obs)
@@ -244,7 +236,7 @@ class Seq2SeqLMModel(parl.Model):
         )
         return eval_outputs
 
-    def to(self, device: str):
+    def to(self, device):
         if self._apply_model_parallel:
             self._value_head = self._value_head.to(device)
             return self
@@ -253,10 +245,10 @@ class Seq2SeqLMModel(parl.Model):
 
     def get_log_probs_ref_model(
         self,
-        obs: TensorDict,
-        action: torch.tensor,
-        model_kwarpast_model_kwargsgs: Dict[str, Any] = None,
-    ) -> RefPolicyOutput:
+        obs,
+        action,
+        model_kwarpast_model_kwargsgs = None,
+    ):
         # Temp workaround for Seq2seq policy
         past_model_kwargs = None
 
@@ -326,28 +318,25 @@ class Seq2SeqLMModel(parl.Model):
             else self.device
         )
 
-    def get_inputs_for_generation(self, obs: TensorDict) -> GenerationInputs:
+    def get_inputs_for_generation(self, obs):
 
         generation_inputs = GenerationInputs(
             obs["prompt_or_input_encoded_pt"], obs["prompt_or_input_attention_mask_pt"]
         )
         return generation_inputs
 
-    def get_policy_type(self):
-        return PolicyType.SEQ2SEQ
-
     def get_language_model(self):
         return unwrap_model(self._policy_model)
 
     def generate(
         self,
-        tokenizer: AutoTokenizer,
-        texts: List[str] = None,
-        max_prompt_length: int = None,
-        input_ids: torch.tensor = None,
-        attention_mask: torch.tensor = None,
-        gen_kwargs: Dict[str, Any] = None,
-    ) -> GenerationOutputs:
+        tokenizer,
+        texts = None,
+        max_prompt_length = None,
+        input_ids = None,
+        attention_mask = None,
+        gen_kwargs = None,
+    ):
 
         # if it different from rollout gen kwargs
         if gen_kwargs is None:
@@ -427,20 +416,20 @@ class Seq2SeqLMModel(parl.Model):
         return gen_output
 
 
-    def is_encoder_decoder(self, model: PreTrainedModel):
+    def is_encoder_decoder(self, model):
         return unwrap_model(model).config.is_encoder_decoder
 
-    def set_training_mode(self, mode: bool) -> None:
+    def set_training_mode(self, mode):
         self.train(mode)
 
 
-    def _get_constructor_parameters(self) -> Dict[str, Any]:
+    def _get_constructor_parameters(self):
         return dict(
             observation_space=self.observation_space,
             action_space=self.action_space,
         )
 
-    def save(self, path: str) -> None:
+    def save(self, path):
         """
         Save model to a given location.
 
@@ -451,9 +440,9 @@ class Seq2SeqLMModel(parl.Model):
 
     def _setup_optimizer(
         self,
-        optimizer_kwargs: Dict[str, Any],
-        weight_decay: float,
-        optimizer_class: torch.optim,
+        optimizer_kwargs,
+        weight_decay,
+        optimizer_class,
     ):
         params = list(self.named_parameters())
 

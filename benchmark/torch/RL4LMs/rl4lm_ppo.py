@@ -1,5 +1,4 @@
 import parl
-from benchmark.torch.RL4LMs.utils import Schedule
 from typing import Union, Optional, Dict, Any
 import torch
 from gym import spaces
@@ -12,13 +11,13 @@ from  parl.algorithms.torch import PPO
 class RL4LMPPO(parl.Algorithm):
     def __init__(self,
                  model: parl.Model,
-                 learning_rate: Union[float, Schedule] = 3e-4,
+                 learning_rate = 3e-4,
                  n_steps: int = 2048,
                  batch_size: int = 64,
                  n_epochs: int = 10,
                  gamma: float = 0.99,
                  gae_lambda: float = 0.95,
-                 clip_range: Union[float, Schedule] = 0.2,
+                 clip_range = 0.2,
                  normalize_advantage: bool = True,
                  ent_coef: float = 0.0,
                  vf_coef: float = 0.5,

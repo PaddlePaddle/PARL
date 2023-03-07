@@ -1,11 +1,6 @@
-import warnings
-from abc import ABC, abstractmethod
-from typing import Any, Dict, Generator, List, Optional, Union, Tuple
-
 import numpy as np
 import torch
 from gym import spaces
-
 from .data_wrapper import MaskableDictRolloutBufferSamples
 
 try:
@@ -14,32 +9,9 @@ try:
 except ImportError:
     psutil = None
 
-
-def get_action_dim(action_space: spaces.Space) -> int:
-    """
-    Get the dimension of the action space.
-
-    :param action_space:
-    :return:
-    """
-    if isinstance(action_space, spaces.Box):
-        return int(np.prod(action_space.shape))
-    elif isinstance(action_space, spaces.Discrete):
-        # Action is an int
-        return 1
-    elif isinstance(action_space, spaces.MultiDiscrete):
-        # Number of discrete actions
-        return int(len(action_space.nvec))
-    elif isinstance(action_space, spaces.MultiBinary):
-        # Number of binary actions
-        return int(action_space.n)
-    else:
-        raise NotImplementedError(f"{action_space} action space is not supported")
-
-
 def get_obs_shape(
-    observation_space: spaces.Space,
-) -> Union[Tuple[int, ...], Dict[str, Tuple[int, ...]]]:
+    observation_space,
+):
     """
     Get the shape of the observation (useful for the buffers).
 
@@ -91,21 +63,20 @@ class MaskableDictRolloutBuffer:
 
     def __init__(
         self,
-        buffer_size: int,
-        observation_space: spaces.Space,
-        action_space: spaces.Space,
-        device: Union[torch.device, str] = "cpu",
-        gae_lambda: float = 1,
-        gamma: float = 0.99,
-        n_envs: int = 1,
+        buffer_size,
+        observation_space,
+        action_space,
+        device = "cpu",
+        gae_lambda = 1,
+        gamma = 0.99,
+        n_envs = 1,
     ):
-        self.action_masks = None
         self.buffer_size = buffer_size
         self.observation_space = observation_space
         self.action_space = action_space
         self.obs_shape = get_obs_shape(observation_space)
 
-        self.action_dim = get_action_dim(action_space)
+        self.action_dim = 1
         self.pos = 0
         self.full = False
         self.device = device
@@ -120,20 +91,8 @@ class MaskableDictRolloutBuffer:
         self.generator_ready = False
         self.reset()
 
-    def reset(self) -> None:
-        if isinstance(self.action_space, spaces.Discrete):
-            mask_dims = self.action_space.n
-        elif isinstance(self.action_space, spaces.MultiDiscrete):
-            mask_dims = sum(self.action_space.nvec)
-        elif isinstance(self.action_space, spaces.MultiBinary):
-            mask_dims = 2 * self.action_space.n  # One mask per binary outcome
-        else:
-            raise ValueError(
-                f"Unsupported action space {type(self.action_space)}")
-
-        self.mask_dims = mask_dims
-        self.action_masks = np.ones(
-            (self.buffer_size, self.n_envs, self.mask_dims))  # .to(self.device)
+    def reset(self):
+        self.mask_dims = self.action_space.n
 
         assert isinstance(self.obs_shape, dict), "DictRolloutBuffer must be used with Dict obs space only"
         self.observations = {}
@@ -152,13 +111,12 @@ class MaskableDictRolloutBuffer:
         self.full = False
 
     def add(self,
-            obs: Dict[str, np.ndarray],
-            action: np.ndarray,
-            reward: np.ndarray,
-            episode_start: np.ndarray,
-            value: torch.Tensor,
-            log_prob: torch.Tensor,
-            action_masks: Optional[torch.Tensor] = None) -> None:
+            obs,
+            action,
+            reward,
+            episode_start,
+            value,
+            log_prob,):
         """
         :param obs: Observation
         :param action: Action
@@ -168,11 +126,7 @@ class MaskableDictRolloutBuffer:
             following the current policy.
         :param log_prob: log probability of the action
             following the current policy.
-        :param action_masks: Masks applied to constrain the choice of possible actions.
         """
-        if action_masks is not None:
-            self.action_masks[self.pos] = action_masks.reshape(
-                (self.n_envs, self.mask_dims))
 
         if len(log_prob.shape) == 0:
             # Reshape 0-d tensor to avoid error
@@ -195,7 +149,7 @@ class MaskableDictRolloutBuffer:
         if self.pos == self.buffer_size:
             self.full = True
 
-    def compute_returns_and_advantage(self, last_values: torch.Tensor, dones: np.ndarray) -> None:
+    def compute_returns_and_advantage(self, last_values, dones):
         """
         Post-processing step: compute the lambda-return (TD(lambda) estimate)
         and GAE(lambda) advantage.
@@ -232,7 +186,7 @@ class MaskableDictRolloutBuffer:
         # in David Silver Lecture 4: https://www.youtube.com/watch?v=PnHCvfgC_ZA
         self.returns = self.advantages + self.values
 
-    def swap_and_flatten(self, arr: np.ndarray) -> np.ndarray:
+    def swap_and_flatten(self, arr):
         """
         Swap and then flatten axes 0 (buffer_size) and 1 (n_envs)
         to convert shape from [n_steps, n_envs, ...] (when ... is the shape of the features)
@@ -246,7 +200,7 @@ class MaskableDictRolloutBuffer:
             shape = shape + (1,)
         return arr.swapaxes(0, 1).reshape(shape[0] * shape[1], *shape[2:])
 
-    def get(self, batch_size: Optional[int] = None) -> Generator[MaskableDictRolloutBufferSamples, None, None]:
+    def get(self, batch_size):
         assert self.full, ""
         indices = np.random.permutation(self.buffer_size * self.n_envs)
         # Prepare the data
@@ -256,7 +210,7 @@ class MaskableDictRolloutBuffer:
                 self.observations[key] = self.swap_and_flatten(obs)
 
             _tensor_names = ["actions", "values", "log_probs",
-                             "advantages", "returns", "action_masks"]
+                             "advantages", "returns"]
 
             for tensor in _tensor_names:
                 self.__dict__[tensor] = self.swap_and_flatten(
@@ -272,7 +226,7 @@ class MaskableDictRolloutBuffer:
             yield self._get_samples(indices[start_idx: start_idx + batch_size])
             start_idx += batch_size
 
-    def to_torch(self, array: np.ndarray, copy: bool = True) -> torch.Tensor:
+    def to_torch(self, array, copy = True):
         """
         Convert a numpy array to a PyTorch tensor.
         Note: it copies the data by default
@@ -286,7 +240,7 @@ class MaskableDictRolloutBuffer:
             return torch.tensor(array).to(self.device)
         return torch.as_tensor(array).to(self.device)
 
-    def _get_samples(self, batch_inds: np.ndarray, env = None) -> MaskableDictRolloutBufferSamples:
+    def _get_samples(self, batch_inds):
 
         return MaskableDictRolloutBufferSamples(
             observations={key: self.to_torch(obs[batch_inds]) for (
@@ -296,6 +250,4 @@ class MaskableDictRolloutBuffer:
             old_log_prob=self.to_torch(self.log_probs[batch_inds].flatten()),
             advantages=self.to_torch(self.advantages[batch_inds].flatten()),
             returns=self.to_torch(self.returns[batch_inds].flatten()),
-            action_masks=self.to_torch(
-                self.action_masks[batch_inds].reshape(-1, self.mask_dims)),
         )

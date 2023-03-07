@@ -13,9 +13,8 @@ class CloudpickleWrapper:
     def __getstate__(self):
         return cloudpickle.dumps(self.var)
 
-    def __setstate__(self, var) -> None:
+    def __setstate__(self, var):
         self.var = cloudpickle.loads(var)
-
 
 def _flatten_obs(obs, space: gym.spaces.Space):
     assert isinstance(obs, (list, tuple)), "expected list or tuple of observations per environment"
@@ -32,10 +31,9 @@ def _flatten_obs(obs, space: gym.spaces.Space):
     else:
         return np.stack(obs)
 
-
 def _worker(
     remote: mp.connection.Connection, parent_remote: mp.connection.Connection, env_fn_wrapper: CloudpickleWrapper
-) -> None:
+):
     # Import here to avoid a circular import
 
     parent_remote.close()
@@ -75,27 +73,6 @@ def _worker(
         except EOFError:
             break
 
-
-def make_vec_env(
-    env_id: Union[str, Type[gym.Env]],
-    vec_env_cls,
-    n_envs: int = 1,
-    seed: Optional[int] = None,
-    start_index: int = 0,
-    env_kwargs: Optional[Dict[str, Any]] = None,
-):
-    def make_env(rank):
-        def _init():
-            env = env_id(**env_kwargs)
-            if seed is not None:
-                env.seed(seed + rank)
-                env.action_space.seed(seed + rank)
-            return env
-        return _init
-
-    return vec_env_cls([make_env(i + start_index) for i in range(n_envs)])
-
-
 class LocalParallelVecEnv:
 
     def __init__(self, env_fns, start_method = None):
@@ -127,7 +104,7 @@ class LocalParallelVecEnv:
         self.observation_space = observation_space
         self.action_space = action_space
 
-    def step_async(self, actions: np.ndarray) -> None:
+    def step_async(self, actions):
         for remote, action in zip(self.remotes, actions):
             remote.send(("step", action))
         self.waiting = True
@@ -208,3 +185,30 @@ class LocalParallelVecEnv:
         """
         self.step_async(actions)
         return self.step_wait()
+
+def make_vec_env(
+    env_id: Union[str, Type[gym.Env]],
+    seed: Optional[int] = None,
+    start_index: int = 0,
+    env_config = None,
+    reward_fn = None,
+    tokenizer = None,
+    train_samples = None
+):
+    n_envs = env_config["n_envs"]
+    env_kwargs = {
+        "reward_function": reward_fn,
+        "tokenizer": tokenizer,
+        "samples": train_samples,
+    }
+    env_kwargs = {**env_kwargs, **env_config.get("args", {})}
+    def make_env(rank):
+        def _init():
+            env = env_id(**env_kwargs)
+            if seed is not None:
+                env.seed(seed + rank)
+                env.action_space.seed(seed + rank)
+            return env
+        return _init
+
+    return LocalParallelVecEnv([make_env(i + start_index) for i in range(n_envs)])

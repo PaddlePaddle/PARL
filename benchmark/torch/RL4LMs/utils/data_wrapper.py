@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 from transformers import AutoTokenizer
 from copy import deepcopy
-from .type_wrapper import TensorDict
 from typing import NamedTuple
 import torch
 import numpy as np
+
+from typing import Any, Union
+
+TensorDict = Dict[Union[str, int], torch.Tensor]
 
 
 @dataclass
@@ -22,7 +25,6 @@ class TransitionInfo:
     done: np.ndarray
     ref_log_prob: torch.Tensor
     kl_reward: np.ndarray
-    action_mask: np.ndarray
     info: Dict[str, Any]
 
 
@@ -33,7 +35,6 @@ class MaskableDictRolloutBufferSamples(NamedTuple):
     old_log_prob: torch.Tensor
     advantages: torch.Tensor
     returns: torch.Tensor
-    action_masks: torch.Tensor
 
 
 @dataclass(init=True)
@@ -156,7 +157,7 @@ class Observation:
     # other meta info
     meta_info: Dict[str, Any]
 
-    def to_dict(self) -> Dict[str, torch.tensor]:
+    def to_dict(self):
         """
         For stable baselines (only return tensor items)
         """

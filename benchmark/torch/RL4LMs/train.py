@@ -4,8 +4,26 @@ from argparse import ArgumentParser
 import datetime
 import yaml
 import collections
-from trainers import OnPolicyTrainer
 from parl.utils import logger
+
+import torch
+import time
+
+# env and reward function
+from utils import build_reward_fn
+from env import TextGenEnv, make_vec_env
+
+# evaluation, metrics, tokenizer & dataset
+from utils import build_metrics, build_tokenizer, build_datapool
+from utils import evaluate_on_samples
+
+# rollout
+from utils import MaskableDictRolloutBuffer, RolloutUtil
+
+# agent, algorithm and model
+from rl4lm_ppo import RL4LMPPO
+from rl4lms_agent import RL4LMsAgent
+from seq2seq_model import Seq2SeqLMModel
 
 
 def recursive_dict_update(d, u):
@@ -18,25 +36,110 @@ def recursive_dict_update(d, u):
 
 
 def main(config):
+    device = torch.device("cuda" if torch.cuda.
+                                   is_available() else "cpu")
 
-    # instantiate the trainer here
-    # TODO: currently only complete ppo
-    if "ppo" == config["alg"]["id"]:
-        trainer = OnPolicyTrainer(
-            tokenizer_config=config["tokenizer"],
-            datapool_config=config["datapool"],
-            reward_config=config["reward_fn"],
-            env_config=config["env"],
-            on_policy_alg_config=config["alg"],
-            train_eval_config=config["train_evaluation"],
-        )
-    else:
-        raise NotImplementedError
-    trainer.train_and_eval()
+    rollout_util = RolloutUtil(config["alg"]["kl_div"])
+
+    tokenizer = build_tokenizer(config["tokenizer"])
+
+    # reward function & metrics
+    reward_fn = build_reward_fn(config["reward_fn"])
+    metrics = build_metrics(config["train_evaluation"]["metrics"])
+
+    # datapool
+    samples_by_split = build_datapool(config["datapool"])
+
+    env = make_vec_env(env_id=TextGenEnv,
+                       env_config=config["env"],
+                       reward_fn=reward_fn,
+                       tokenizer=tokenizer,
+                       train_samples= samples_by_split["train"])
+
+    rl4lms_model = Seq2SeqLMModel(
+        observation_space = env.observation_space,
+        action_space= env.action_space,
+        device=device,
+        **config["alg"]["model"]["args"]
+    )
+    rl4lm_alg = RL4LMPPO(model=rl4lms_model, device=device, **config["alg"]["args"])
+    agent = RL4LMsAgent(rl4lm_alg, config["alg"])
+
+    rollout_buffer = MaskableDictRolloutBuffer(
+        buffer_size=agent.alg.n_steps * env.num_envs,
+        observation_space=env.observation_space,
+        action_space=env.action_space,
+        device=device,
+        gamma=agent.alg.gamma,
+        gae_lambda=agent.alg.gae_lambda,
+        n_envs=1,
+    )
+
+    n_iters = int(config["train_evaluation"]["n_iters"])
+    n_steps_per_iter = env.num_envs * agent.alg.n_steps
+
+    max_prompt_length = config["env"]["args"]["max_prompt_length"]
+
+    # gen kwargs for evaluation
+    eval_gen_kwargs = config["train_evaluation"]["generation_kwargs"]
+    eval_batch_size = config["train_evaluation"]["eval_batch_size"]
+    eval_splits = ["val", "test"]
+
+    iter_start = 0
+    for sp in eval_splits:
+        evaluate_on_samples(policy=agent.alg.model,
+                            tokenizer=tokenizer,
+                            samples=samples_by_split[sp],
+                            batch_size=eval_batch_size,
+                            max_prompt_length=max_prompt_length,
+                            metrics=metrics,
+                            epoch=iter_start,
+                            split_name=sp,
+                            gen_kwargs=eval_gen_kwargs)
+    epoch = 0
+    for epoch in range(iter_start, n_iters):
+        print("========== BEGIN ==========")
+        print(f"outer epoch: {epoch} / {n_iters - 1}")
+        print("========== BEGIN ==========")
+        outer_start_time = time.time()
+
+        num_timesteps = 0
+
+        while num_timesteps < n_steps_per_iter:
+            run_timesteps = rollout_util.collect_rollouts(agent, env, rollout_buffer, device)
+            num_timesteps += run_timesteps
+            agent.learn(rollout_buffer)
+
+        outer_end_time = time.time()
+        print("========== END ==========")
+        print(f"outer epoch: {epoch} / {n_iters - 1}")
+        print(f"time used: {outer_end_time - outer_start_time} second(s), left time:"
+              f"  {1.0 * (outer_end_time - outer_start_time) * (n_iters - epoch - 1) / 60 / 60} hour(s)")
+        print("========== END ==========")
+
+        # evaluate on val set in the given intervals
+        if (epoch + 1) % config["train_evaluation"]["eval_every"] == 0:
+            evaluate_on_samples(policy=agent.alg.model,
+                                tokenizer=tokenizer,
+                                samples=samples_by_split["val"],
+                                batch_size=eval_batch_size,
+                                max_prompt_length=max_prompt_length,
+                                metrics=metrics,
+                                epoch=epoch,
+                                split_name="val",
+                                gen_kwargs=eval_gen_kwargs)
 
 
-
-
+    for sp in eval_splits:
+        evaluate_on_samples(policy=agent.alg.model,
+                            tokenizer=tokenizer,
+                            samples=samples_by_split[sp],
+                            batch_size=eval_batch_size,
+                            max_prompt_length=max_prompt_length,
+                            metrics=metrics,
+                            epoch=epoch,
+                            split_name=sp,
+                            gen_kwargs=eval_gen_kwargs)
 
 
 if __name__ == '__main__':
@@ -73,5 +176,6 @@ if __name__ == '__main__':
     config["sys_arg"] = sys.argv
     logger.info(config)
     logger.set_level("DEBUG")
+
     main(config)
 

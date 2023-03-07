@@ -10,10 +10,10 @@
 ### Main contribution
 
 - Change from **\{ trainer: \{ ppo: \{ env, rollout_buffer, policy/model \} \} \}** to 
-  **\{trainer: \{env, rollout_buffer, agent: \{ ppo: \{ model \} \} \} \}** according PARL architecture.
+  **\{trainer: \{env, rollout_buffer, agent: \{ ppo: \{ model \} \} \} \}** according to PARL architecture.
 
 ### Running command
 
 ```bash
-python train.py --config_path configs/summarization/t5_ppo.yml
+python train.py --config_path t5_ppo.yml
 ```

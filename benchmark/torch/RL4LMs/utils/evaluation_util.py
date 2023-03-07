@@ -4,11 +4,10 @@ from tqdm import tqdm
 from transformers import AutoTokenizer
 
 from . import Sample
-from benchmark.torch.RL4LMs.metrics import BaseMetric
 from parl.utils import logger
 
 
-def get_batch(samples: List[Sample], batch_size: int):
+def get_batch(samples, batch_size):
     current_ix = 0
     n_samples = len(samples)
     while current_ix < n_samples:
@@ -17,17 +16,18 @@ def get_batch(samples: List[Sample], batch_size: int):
         current_ix += batch_size
 
 
+
 def evaluate_on_samples(
     policy,
-    tokenizer: AutoTokenizer,
-    samples: List[Sample],
-    batch_size: int,
-    max_prompt_length: int,
-    metrics: List[BaseMetric],
-    epoch: int,
-    split_name: str,
-    dt_control_token: str = "",
-    gen_kwargs: Dict[str, Any] = None,
+    tokenizer,
+    samples,
+    batch_size,
+    max_prompt_length,
+    metrics,
+    epoch,
+    split_name,
+    dt_control_token = "",
+    gen_kwargs = None,
 ):
     # generate text by batch
     all_generated_texts = []
@@ -110,11 +110,11 @@ def evaluate_on_samples(
 
 def generate_text(
     policy,
-    tokenizer: AutoTokenizer,
-    samples: List[Sample],
-    max_prompt_length: int,
-    dt_control_token: str,
-    gen_kwargs: Dict[str, Any],
+    tokenizer,
+    samples,
+    max_prompt_length,
+    dt_control_token,
+    gen_kwargs,
 ):
     prompt_texts = [
         dt_control_token + sample.prompt_or_input_text for sample in samples

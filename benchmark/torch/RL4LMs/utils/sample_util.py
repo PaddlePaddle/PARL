@@ -1,7 +1,5 @@
 from collections import deque
-from typing import Any, List
 import numpy as np
-
 
 class PrioritySampler:
     def __init__(self, max_size: int = None, priority_scale: float = 0.0):
@@ -17,11 +15,11 @@ class PrioritySampler:
         self.item_priorities = deque(maxlen=self.max_size)
         self.priority_scale = priority_scale
 
-    def add(self, item: Any, priority: float):
+    def add(self, item, priority: float):
         self.items.append(item)
         self.item_priorities.append(priority)
 
-    def sample(self, size: int) -> List[Any]:
+    def sample(self, size: int):
         min_sample_size = min(len(self.items), size)
         scaled_item_priorities = np.array(
             self.item_priorities) ** self.priority_scale
@@ -30,11 +28,11 @@ class PrioritySampler:
             a=self.items, p=sample_probs, size=min_sample_size)
         return samples
 
-    def update(self, item: Any, priority: float):
+    def update(self, item, priority):
         index = self.items.index(item)
         del self.items[index]
         del self.item_priorities[index]
         self.add(item, priority)
 
-    def get_all_samples(self) -> List[Any]:
+    def get_all_samples(self):
         return self.items

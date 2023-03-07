@@ -123,52 +123,22 @@ class RolloutUtil:
                     "actions": actions_tensor,
                 }
 
-                policy_outputs = agent.forward_policy(
-                    **policy_kwargs
-                )
-                raw_log_probs, log_probs, policy_past_state = (
-                    policy_outputs.raw_log_probs,
-                    policy_outputs.log_probs,
-                    policy_outputs.past_model_kwargs,
-                )
+                _, log_probs, _, _ = agent.forward_policy(**policy_kwargs)
 
                 # sanity check
-                assert torch.all(
-                    torch.isfinite(log_probs)
-                ), "Infinite values in log probs"
-
-                # sanity check
-                assert torch.all(
-                    torch.isfinite(raw_log_probs)
-                ), "Infinite values in log probs"
+                assert torch.all(torch.isfinite(log_probs)), "Infinite values in log probs"
 
                 # get values
-                value_outputs = agent.forward_value(
-                    obs_tensor
-                )
-                values, value_past_state = (
-                    value_outputs.values,
-                    value_outputs.past_model_kwargs,
-                )
+                values, _ = agent.forward_value(obs_tensor)
 
                 # get reference log probs
-                ref_policy_outputs = (
-                    agent.get_log_probs_ref_model(
-                        obs_tensor, actions_tensor
-                    )
-                )
-                ref_log_probs, ref_past_state = (
-                    ref_policy_outputs.log_probs,
-                    ref_policy_outputs.past_model_kwargs,
-                )
+                ref_log_probs, _ = agent.get_log_probs_ref_model(obs_tensor, actions_tensor)
 
                 # sanity check
-                assert torch.all(
-                    torch.isfinite(ref_log_probs)
-                ), "Infinite values in log probs"
+                assert torch.all(torch.isfinite(ref_log_probs)), "Infinite values in log probs"
 
                 # compute KL rewards
-                kl_div = raw_log_probs - ref_log_probs
+                kl_div = log_probs - ref_log_probs
                 kl_rewards = -1 * self._kl_controller.kl_coeff * kl_div
 
             # step into env to get rewards

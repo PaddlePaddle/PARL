@@ -1,5 +1,4 @@
-from .data_wrapper import EvaluateActionsOutput, PolicyOutput, \
-    RefPolicyOutput, ValueOutput, GenerationInputs, GenerationOutputs,\
+from .data_wrapper import RefPolicyOutput, GenerationInputs, GenerationOutputs,\
     PolicyType, Sample, Observation, TransitionInfo
 
 

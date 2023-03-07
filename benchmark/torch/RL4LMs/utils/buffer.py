@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from gym import spaces
-from .data_wrapper import MaskableDictRolloutBufferSamples
+from .data_wrapper import DictRolloutBufferSamples
 
 try:
     # Check memory used by replay buffer when possible
@@ -238,7 +238,7 @@ class DictRolloutBuffer:
 
     def _get_samples(self, batch_inds):
 
-        return MaskableDictRolloutBufferSamples(
+        return DictRolloutBufferSamples(
             observations={key: self.to_torch(obs[batch_inds]) for (
                 key, obs) in self.observations.items()},
             actions=self.to_torch(self.actions[batch_inds]),

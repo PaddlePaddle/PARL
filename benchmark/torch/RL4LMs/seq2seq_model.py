@@ -10,8 +10,7 @@ import parl
 from benchmark.torch.RL4LMs.utils import (
     override_generation_routines,
 
-    GenerationInputs, PolicyOutput, RefPolicyOutput, ValueOutput,
-    EvaluateActionsOutput, GenerationOutputs,
+    GenerationInputs, GenerationOutputs,
 )
 
 
@@ -135,11 +134,7 @@ class Seq2SeqLMModel(parl.Model):
             dim=-1,
         )
 
-        policy_output = PolicyOutput(
-            actions, log_prob, log_prob, entropy, past_model_kwargs
-        )
-
-        return policy_output
+        return actions, log_prob, entropy, past_model_kwargs
 
     def forward_value(
         self,
@@ -199,23 +194,15 @@ class Seq2SeqLMModel(parl.Model):
             (decoder_attn_mask, torch.ones(batch_size, 1).to(decoder_attn_mask.device)),
             dim=-1,
         )
-
-        value_output = ValueOutput(values, past_model_kwargs)
-        return value_output
+        return values, past_model_kwargs
 
     def evaluate_actions(
         self, obs, actions
     ):
 
-        policy_outputs = self.forward_policy(obs=obs, actions=actions)
-        value_outputs = self.forward_value(obs)
-
-        eval_outputs = EvaluateActionsOutput(
-            values=value_outputs.values,
-            log_prob=policy_outputs.log_probs,
-            entropy=policy_outputs.entropy,
-        )
-        return eval_outputs
+        _, log_prob, entropy, _ = self.forward_policy(obs=obs, actions=actions)
+        values, _ = self.forward_value(obs)
+        return values, log_prob, entropy
 
     def to(self, device):
         if self._apply_model_parallel:
@@ -279,10 +266,7 @@ class Seq2SeqLMModel(parl.Model):
             (decoder_attn_mask, torch.ones(batch_size, 1).to(decoder_attn_mask.device)),
             dim=-1,
         )
-
-        ref_policy_output = RefPolicyOutput(log_prob, past_model_kwargs)
-
-        return ref_policy_output
+        return log_prob, past_model_kwargs
 
     def get_policy_first_device(self):
         return (

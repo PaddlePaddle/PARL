@@ -28,7 +28,7 @@ class TransitionInfo:
     info: Dict[str, Any]
 
 
-class MaskableDictRolloutBufferSamples(NamedTuple):
+class DictRolloutBufferSamples(NamedTuple):
     observations: TensorDict
     actions: torch.Tensor
     old_values: torch.Tensor
@@ -52,39 +52,6 @@ class PolicyType(Enum):
 
 
 @dataclass
-class EvaluateActionsOutput:
-    """
-    Dataclass for the output of the method policy.evaluate_actions().
-    This is invoked during training phase for each mini-batch in the rollout buffer
-    """
-
-    # values of the given state
-    values: torch.tensor
-    # log prob of chosen actions
-    log_prob: torch.tensor
-    # entropy of action dist
-    entropy: torch.tensor
-
-
-@dataclass
-class PolicyOutput:
-    """
-    Dataclass for the output of the method policy.foward_policy()
-    """
-
-    # chosen actions by policy
-    actions: torch.tensor
-    # raw log probs corresponding to chosen actions
-    raw_log_probs: torch.tensor
-    # processed log probs (eg: after action masking) for chosen actions
-    log_probs: torch.tensor
-    # entropy of action dist
-    entropy: torch.tensor
-    # cached policy activations for sequential forward passes
-    past_model_kwargs: torch.tensor
-
-
-@dataclass
 class RefPolicyOutput:
     """
     Dataclass for the output of the method policy.get_ref_log_probs()
@@ -94,18 +61,6 @@ class RefPolicyOutput:
     log_probs: torch.tensor
     # cached policy activations for sequential forward passes
     past_model_kwargs: torch.tensor
-
-
-@dataclass
-class ValueOutput:
-    """
-    Dataclass for the output of the method policy.forward_value()
-    """
-
-    # values corresponding to given state
-    values: torch.tensor
-    # cached value activations for sequential forward passes
-    past_model_kwargs: Dict[str, torch.tensor]
 
 
 @dataclass

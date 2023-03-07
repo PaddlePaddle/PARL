@@ -1,10 +1,7 @@
 import parl
-from typing import Union, Optional, Dict, Any
 import torch
 from gym import spaces
-from benchmark.torch.RL4LMs.utils import EvaluateActionsOutput
 from torch.nn import functional as F
-
 
 from  parl.algorithms.torch import PPO
 
@@ -60,9 +57,7 @@ class RL4LMPPO(parl.Algorithm):
                 actions = rollout_data.actions.long().flatten()
 
 
-            evaluation_output: EvaluateActionsOutput = self.model.evaluate_actions(
-                rollout_data.observations, actions)
-            values, log_prob, entropy = evaluation_output.values, evaluation_output.log_prob, evaluation_output.entropy
+            values, log_prob, entropy = self.model.evaluate_actions(rollout_data.observations, actions)
             values = values.flatten()
             # Normalize advantage
             advantages = rollout_data.advantages

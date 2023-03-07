@@ -1293,7 +1293,6 @@ class GenerationMixinWithRawScores:
             return input_ids
 
 
-
 def override_generation_routines(cls):
     bases = list(cls.__bases__)
     for base_ix in range(len(bases)):

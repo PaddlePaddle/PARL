@@ -22,17 +22,20 @@ class WorkerStatus(object):
 
     Attributes:
         cpu_num(int): The number of CPUs to be used in this worker.
+        gpu_num(int): The number of GPUs to be used in this worker.
         jobs(set): A set that records job addresses provided to the master.
         worker_address(str): Address of the worker.
     """
 
-    def __init__(self, worker_address, initialized_jobs, cpu_num):
+    def __init__(self, worker_address, initialized_jobs, cpu_num, gpu_num=0):
         self.worker_address = worker_address
         self.jobs = dict()
         for job in initialized_jobs:
             self.jobs[job.job_address] = job
         self._lock = threading.Lock()
         self.cpu_num = cpu_num
+        self.gpu_num = gpu_num
+        self.device_count = self.cpu_num + self.gpu_num
 
     def remove_job(self, killed_job):
         """Rmove a job from internal job pool.
@@ -76,5 +79,5 @@ class WorkerStatus(object):
         """
         self._lock.acquire()
         self.jobs[new_job.job_address] = new_job
-        assert len(self.jobs) <= self.cpu_num
+        assert len(self.jobs) <= self.device_count
         self._lock.release()

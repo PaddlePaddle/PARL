@@ -4,8 +4,9 @@ from typing import Dict, Tuple, Optional, List
 from gym import Env, spaces
 from gym.spaces.dict import Dict as DictSpace
 from gym.spaces.discrete import Discrete
-from benchmark.torch.RL4LMs.utils import Sample, Observation, PrioritySampler
-from transformers import AutoTokenizer
+from benchmark.torch.RL4LMs.utils import Sample, Observation
+from collections import deque
+import numpy as np
 
 
 class TextGenEnv(Env):
@@ -15,12 +16,12 @@ class TextGenEnv(Env):
         reward_function,
         samples,
         max_episode_length = 512,
-        priority_scale = 0.0,
         max_prompt_length = None,
         terminate_on_eos = False,
         context_start_token = None,
         prompt_truncation_side = "left",
     ):
+
         """
         A generic RL environment to generate textual sequences.
         For eg: text generation, summarization, machine translation, text simplification
@@ -29,7 +30,6 @@ class TextGenEnv(Env):
             reward_function (RewardFunction): reward functiom
             samples (Tuple[List[Sample], float]): list of samples
             max_episode_length (int, optional): Max steps to the model Defaults to 512.
-            priority_scale (float, optional): weight for the priority sampler Defaults to 0.0.
             max_prompt_length (Optional[int], optional): maximum prompt length. Defaults to None.
             terminate_on_eos (bool, optional): whether to terminate on EOS. Defaults to False.
             context_start_token (bool, optional): start token for the context (For Encoder-Decoder models! )
@@ -82,9 +82,9 @@ class TextGenEnv(Env):
         elif 't5' in self.tokenizer.name_or_path:
             n = 32128
             self.action_space = Discrete(n=n)
-        self.sampler_for_replaying = PrioritySampler(priority_scale=priority_scale)
+        self.samples_for_replaying = deque()
         for sample, weight in samples:
-            self.sampler_for_replaying.add(sample, weight)
+            self.samples_for_replaying.append(sample)
 
         # check the tokenizer and add padding tokens
         if self.tokenizer.pad_token is None:
@@ -112,18 +112,13 @@ class TextGenEnv(Env):
         )
 
         # compute reward
-        reward = (
-            None
-            if self.reward_function is None
-            else self.reward_function(
+        reward = self.reward_function(
                 previous_obs,
                 action,
                 self.__current_obs,
                 done,
                 self.__current_obs.meta_info,
             )
-        )
-
 
         # populate additional info
         info = {
@@ -143,7 +138,7 @@ class TextGenEnv(Env):
         """
         # gets a new sample if not provided
         if sample is None:
-            sample = self.sampler_for_replaying.sample(size=1)[0]
+            sample = np.random.choice(a=self.samples_for_replaying, size=min(len(self.samples_for_replaying), 1))[0]
         self.__current_sample = sample
 
         # init the observation
@@ -168,6 +163,3 @@ class TextGenEnv(Env):
 
     def close(self):
         pass
-
-    def add_sample(self, sample, weight = 1.0):
-        self.sampler_for_replaying.add(sample, weight)

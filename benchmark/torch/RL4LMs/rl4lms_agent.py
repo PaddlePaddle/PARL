@@ -101,26 +101,20 @@ class RL4LMsAgent(parl.Agent):
     def predict(self, *args, **kwargs):
         pass
 
-    def sample(self, *args, **kwargs):
-        pass
-
     def forward_value(
         self,
         obs,
-        past_model_kwargs = None,
     ):
-        return self.alg.forward_value(obs, past_model_kwargs)
+        return self.alg.forward_value(obs)
 
     def forward_policy(
         self,
         obs,
         actions,
-        past_model_kwargs = None,
     ):
         return self.alg.forward_policy(
             obs = obs,
             actions = actions,
-            past_model_kwargs = past_model_kwargs,
         )
 
 
@@ -128,11 +122,10 @@ class RL4LMsAgent(parl.Agent):
         self,
         obs,
         action,
-        model_kwarpast_model_kwargsgs = None,
     ):
-        return self.alg.get_log_probs_ref_model(obs, action, model_kwarpast_model_kwargsgs)
+        return self.alg.get_log_probs_ref_model(obs, action)
 
-    def generate(
+    def sample(
         self,
         tokenizer,
         texts = None,
@@ -141,7 +134,7 @@ class RL4LMsAgent(parl.Agent):
         attention_mask = None,
         gen_kwargs = None,
     ):
-        return self.alg.generate(
+        return self.alg.sample(
             input_ids=input_ids,
             attention_mask=attention_mask,
             tokenizer=tokenizer,

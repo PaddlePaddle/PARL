@@ -192,7 +192,7 @@ class Observation:
                              actual_size:] = 1
         return concatenated, concatenated_mask
 
-    def update(self, action: int, tokenizer: AutoTokenizer) -> "Observation":
+    def update(self, action: int, tokenizer: AutoTokenizer):
         """
         Updates the observation using the given action
         """

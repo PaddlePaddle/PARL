@@ -18,7 +18,7 @@ from utils import build_metrics, build_tokenizer, build_datapool
 from utils import evaluate_on_samples
 
 # rollout
-from utils import MaskableDictRolloutBuffer, RolloutUtil
+from utils import DictRolloutBuffer, RolloutUtil
 
 # agent, algorithm and model
 from rl4lm_ppo import RL4LMPPO
@@ -38,8 +38,6 @@ def recursive_dict_update(d, u):
 def main(config):
     device = torch.device("cuda" if torch.cuda.
                                    is_available() else "cpu")
-
-    rollout_util = RolloutUtil(config["alg"]["kl_div"])
 
     tokenizer = build_tokenizer(config["tokenizer"])
 
@@ -65,15 +63,15 @@ def main(config):
     rl4lm_alg = RL4LMPPO(model=rl4lms_model, device=device, **config["alg"]["args"])
     agent = RL4LMsAgent(rl4lm_alg, config["alg"])
 
-    rollout_buffer = MaskableDictRolloutBuffer(
+    rollout_buffer = DictRolloutBuffer(
         buffer_size=agent.alg.n_steps * env.num_envs,
         observation_space=env.observation_space,
         action_space=env.action_space,
         device=device,
         gamma=agent.alg.gamma,
         gae_lambda=agent.alg.gae_lambda,
-        n_envs=1,
     )
+    rollout_util = RolloutUtil(config["alg"]["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
     n_steps_per_iter = env.num_envs * agent.alg.n_steps

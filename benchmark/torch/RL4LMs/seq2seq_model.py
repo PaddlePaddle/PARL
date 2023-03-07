@@ -8,7 +8,7 @@ from transformers.modeling_utils import unwrap_model
 
 import parl
 from benchmark.torch.RL4LMs.utils import (
-    override_generation_routines, CategoricalDistribution,
+    override_generation_routines,
 
     GenerationInputs, PolicyOutput, RefPolicyOutput, ValueOutput,
     EvaluateActionsOutput, GenerationOutputs,
@@ -28,7 +28,6 @@ class Seq2SeqLMModel(parl.Model):
         optimizer_class = torch.optim.AdamW,
         generation_kwargs = {},
         prompt_truncation_side = "left",
-        state_dict = None,
         device = None,
     ):
         super(Seq2SeqLMModel, self).__init__()
@@ -47,7 +46,6 @@ class Seq2SeqLMModel(parl.Model):
         self._apply_model_parallel = apply_model_parallel
         self._build_model_heads(model_name)
         self._setup_optimizer(optimizer_kwargs, weight_decay, optimizer_class)
-        self._action_dist = CategoricalDistribution(self._action_space.n)
         self._generation_kwargs = generation_kwargs
         self._prompt_truncation_side = prompt_truncation_side
 
@@ -82,36 +80,27 @@ class Seq2SeqLMModel(parl.Model):
         self,
         obs,
         actions,
-        past_model_kwargs = None,
     ):
+        # 1. prepare model inputs
+        past_model_kwargs = {
+            "attention_mask": obs["prompt_or_input_attention_mask_pt"],
+        }
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
+            self._policy_model
+        )._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
+        )
 
-        # Temp workaround for Seq2seq policy
-        past_model_kwargs = None
+        # 2. prepare encoder outputs
+        past_model_kwargs = unwrap_model(
+            self._policy_model
+        )._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name
+        )
 
-        if past_model_kwargs is None:
-            # 1. prepare model inputs
-            past_model_kwargs = {
-                "attention_mask": obs["prompt_or_input_attention_mask_pt"],
-            }
-            inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-                self._policy_model
-            )._prepare_model_inputs(
-                obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-            )
-
-            # 2. prepare encoder outputs
-            past_model_kwargs = unwrap_model(
-                self._policy_model
-            )._prepare_encoder_decoder_kwargs_for_generation(
-                inputs_tensor, past_model_kwargs, model_input_name
-            )
-
-            # 3. Prepare input_ids for auto-regressive generation
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = obs["context_attention_mask_pt"]
-        else:
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = past_model_kwargs.pop("decoder_attention_mask")
+        # 3. Prepare input_ids for auto-regressive generation
+        input_ids = obs["context_encoded_pt"].int()
+        decoder_attn_mask = obs["context_attention_mask_pt"]
 
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
@@ -127,7 +116,7 @@ class Seq2SeqLMModel(parl.Model):
         next_token_logits = outputs.logits[:, -1, :]
 
         # get log probs
-        dist = self._action_dist.proba_distribution(action_logits=next_token_logits)
+        dist = Categorical(logits=next_token_logits)
         log_prob = dist.log_prob(actions)
         entropy = dist.entropy()
 
@@ -155,35 +144,27 @@ class Seq2SeqLMModel(parl.Model):
     def forward_value(
         self,
         obs,
-        past_model_kwargs = None,
     ):
-        # Temp workaround for Seq2seq policy
-        past_model_kwargs = None
+        # 1. prepare model inputs
+        past_model_kwargs = {
+            "attention_mask": obs["prompt_or_input_attention_mask_pt"],
+        }
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
+            self._value_model
+        )._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
+        )
 
-        if past_model_kwargs is None:
-            # 1. prepare model inputs
-            past_model_kwargs = {
-                "attention_mask": obs["prompt_or_input_attention_mask_pt"],
-            }
-            inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-                self._value_model
-            )._prepare_model_inputs(
-                obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-            )
+        # 2. prepare encoder outputs
+        past_model_kwargs = unwrap_model(
+            self._value_model
+        )._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name
+        )
 
-            # 2. prepare encoder outputs
-            past_model_kwargs = unwrap_model(
-                self._value_model
-            )._prepare_encoder_decoder_kwargs_for_generation(
-                inputs_tensor, past_model_kwargs, model_input_name
-            )
-
-            # 3. Prepare input_ids for auto-regressive generation
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = obs["context_attention_mask_pt"]
-        else:
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = past_model_kwargs.pop("decoder_attention_mask")
+        # 3. Prepare input_ids for auto-regressive generation
+        input_ids = obs["context_encoded_pt"].int()
+        decoder_attn_mask = obs["context_attention_mask_pt"]
 
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
@@ -247,35 +228,27 @@ class Seq2SeqLMModel(parl.Model):
         self,
         obs,
         action,
-        model_kwarpast_model_kwargsgs = None,
     ):
-        # Temp workaround for Seq2seq policy
-        past_model_kwargs = None
+        # 1. prepare model inputs
+        past_model_kwargs = {
+            "attention_mask": obs["prompt_or_input_attention_mask_pt"],
+        }
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
+            self._ref_model
+        )._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
+        )
 
-        if past_model_kwargs is None:
-            # 1. prepare model inputs
-            past_model_kwargs = {
-                "attention_mask": obs["prompt_or_input_attention_mask_pt"],
-            }
-            inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-                self._ref_model
-            )._prepare_model_inputs(
-                obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-            )
+        # 2. prepare encoder outputs
+        past_model_kwargs = unwrap_model(
+            self._ref_model
+        )._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name
+        )
 
-            # 2. prepare encoder outputs
-            past_model_kwargs = unwrap_model(
-                self._ref_model
-            )._prepare_encoder_decoder_kwargs_for_generation(
-                inputs_tensor, past_model_kwargs, model_input_name
-            )
-
-            # 3. Prepare input_ids for auto-regressive generation
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = obs["context_attention_mask_pt"]
-        else:
-            input_ids = obs["context_encoded_pt"].int()
-            decoder_attn_mask = past_model_kwargs.pop("decoder_attention_mask")
+        # 3. Prepare input_ids for auto-regressive generation
+        input_ids = obs["context_encoded_pt"].int()
+        decoder_attn_mask = obs["context_attention_mask_pt"]
 
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
@@ -291,7 +264,7 @@ class Seq2SeqLMModel(parl.Model):
         next_token_logits = outputs.logits[:, -1, :]
 
         # get log probs
-        dist = self._action_dist.proba_distribution(action_logits=next_token_logits)
+        dist = Categorical(logits=next_token_logits)
         log_prob = dist.log_prob(action)
 
         # update the model kwargs for further generation
@@ -328,7 +301,7 @@ class Seq2SeqLMModel(parl.Model):
     def get_language_model(self):
         return unwrap_model(self._policy_model)
 
-    def generate(
+    def sample(
         self,
         tokenizer,
         texts = None,

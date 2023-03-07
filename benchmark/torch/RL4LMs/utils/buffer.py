@@ -36,7 +36,7 @@ def get_obs_shape(
         raise NotImplementedError(f"{observation_space} observation space is not supported")
 
 
-class MaskableDictRolloutBuffer:
+class DictRolloutBuffer:
     """
     Dict Rollout buffer used in on-policy algorithms like A2C/PPO.
     Extends the RolloutBuffer to use dictionary observations
@@ -69,7 +69,6 @@ class MaskableDictRolloutBuffer:
         device = "cpu",
         gae_lambda = 1,
         gamma = 0.99,
-        n_envs = 1,
     ):
         self.buffer_size = buffer_size
         self.observation_space = observation_space
@@ -80,7 +79,6 @@ class MaskableDictRolloutBuffer:
         self.pos = 0
         self.full = False
         self.device = device
-        self.n_envs = n_envs
 
         assert isinstance(self.obs_shape, dict), "DictRolloutBuffer must be used with Dict obs space only"
 
@@ -92,19 +90,17 @@ class MaskableDictRolloutBuffer:
         self.reset()
 
     def reset(self):
-        self.mask_dims = self.action_space.n
-
         assert isinstance(self.obs_shape, dict), "DictRolloutBuffer must be used with Dict obs space only"
         self.observations = {}
         for key, obs_input_shape in self.obs_shape.items():
-            self.observations[key] = np.zeros((self.buffer_size, self.n_envs) + obs_input_shape, dtype=np.float32)
-        self.actions = np.zeros((self.buffer_size, self.n_envs, self.action_dim), dtype=np.float32)
-        self.rewards = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.returns = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.episode_starts = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.values = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.log_probs = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
-        self.advantages = np.zeros((self.buffer_size, self.n_envs), dtype=np.float32)
+            self.observations[key] = np.zeros((self.buffer_size, 1) + obs_input_shape, dtype=np.float32)
+        self.actions = np.zeros((self.buffer_size, 1, self.action_dim), dtype=np.float32)
+        self.rewards = np.zeros((self.buffer_size, 1), dtype=np.float32)
+        self.returns = np.zeros((self.buffer_size, 1), dtype=np.float32)
+        self.episode_starts = np.zeros((self.buffer_size, 1), dtype=np.float32)
+        self.values = np.zeros((self.buffer_size, 1), dtype=np.float32)
+        self.log_probs = np.zeros((self.buffer_size, 1), dtype=np.float32)
+        self.advantages = np.zeros((self.buffer_size, 1), dtype=np.float32)
         self.generator_ready = False
 
         self.pos = 0
@@ -137,7 +133,7 @@ class MaskableDictRolloutBuffer:
             # Reshape needed when using multiple envs with discrete observations
             # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
             if isinstance(self.observation_space.spaces[key], spaces.Discrete):
-                obs_ = obs_.reshape((self.n_envs,) + self.obs_shape[key])
+                obs_ = obs_.reshape((1,) + self.obs_shape[key])
             self.observations[key][self.pos] = obs_
 
         self.actions[self.pos] = np.array(action).copy()
@@ -202,7 +198,7 @@ class MaskableDictRolloutBuffer:
 
     def get(self, batch_size):
         assert self.full, ""
-        indices = np.random.permutation(self.buffer_size * self.n_envs)
+        indices = np.random.permutation(self.buffer_size * 1)
         # Prepare the data
         if not self.generator_ready:
 
@@ -219,10 +215,10 @@ class MaskableDictRolloutBuffer:
 
         # Return everything, don't create minibatches
         if batch_size is None:
-            batch_size = self.buffer_size * self.n_envs
+            batch_size = self.buffer_size * 1
 
         start_idx = 0
-        while start_idx < self.buffer_size * self.n_envs:
+        while start_idx < self.buffer_size * 1:
             yield self._get_samples(indices[start_idx: start_idx + batch_size])
             start_idx += batch_size
 

@@ -75,7 +75,6 @@ class RolloutUtil:
         self._kl_controller = KLController(kl_args["coeff"],
                                            kl_args["target_kl"])
 
-
     def _generate_batch(
             self,
             agent=None,
@@ -97,7 +96,7 @@ class RolloutUtil:
         # generate text using the model
         obs_tensor = dict_to_tensor(current_obs, device)
         generation_inputs = agent.get_inputs_for_generation(obs_tensor)
-        gen_output = agent.generate(
+        gen_output = agent.sample(
             input_ids=generation_inputs.inputs,
             attention_mask=generation_inputs.attention_masks,
             tokenizer=tokenizer,
@@ -106,9 +105,6 @@ class RolloutUtil:
         # process them one step at a time to collect rollout info
         episode_wise_transitions = [[] for _ in range(env.num_envs)]
         ep_terminated = np.zeros((env.num_envs,), dtype=bool)
-        value_past_state = None
-        ref_past_state = None
-        policy_past_state = None
 
         for actions_tensor, _ in zip(
                 gen_output.step_wise_actions, gen_output.step_wise_logprobs
@@ -125,7 +121,6 @@ class RolloutUtil:
                 policy_kwargs = {
                     "obs": obs_tensor,
                     "actions": actions_tensor,
-                    "past_model_kwargs": policy_past_state,
                 }
 
                 policy_outputs = agent.forward_policy(
@@ -149,7 +144,7 @@ class RolloutUtil:
 
                 # get values
                 value_outputs = agent.forward_value(
-                    obs_tensor, value_past_state
+                    obs_tensor
                 )
                 values, value_past_state = (
                     value_outputs.values,
@@ -159,7 +154,7 @@ class RolloutUtil:
                 # get reference log probs
                 ref_policy_outputs = (
                     agent.get_log_probs_ref_model(
-                        obs_tensor, actions_tensor, ref_past_state
+                        obs_tensor, actions_tensor
                     )
                 )
                 ref_log_probs, ref_past_state = (
@@ -230,10 +225,8 @@ class RolloutUtil:
             rollout_buffer,
             device
     ):
-        used_timesteps = 0
         # get tokenizer
-        tokenizer = env.get_attr("tokenizer", [0])
-        tokenizer = tokenizer[0]
+        tokenizer = env.tokenizer
 
         # Switch to eval mode
         # self._agent.alg.model.set_training_mode(False)
@@ -255,7 +248,7 @@ class RolloutUtil:
         num_timesteps = 0
         while not rollout_buffer.full:
             # generate batch of rollouts
-            rollout_info, run_timestamps = self._generate_batch(
+            rollout_info, run_timesteps = self._generate_batch(
                 agent=agent,
                 env=env,
                 rollout_buffer=rollout_buffer,
@@ -263,7 +256,7 @@ class RolloutUtil:
                 rollout_info=rollout_info,
                 device=device
             )
-            num_timesteps += run_timestamps
+            num_timesteps += run_timesteps
 
         # aggregate rollout info
         aggregated_rollout_info = {}

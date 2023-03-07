@@ -10,22 +10,22 @@ from  parl.algorithms.torch import PPO
 
 class RL4LMPPO(parl.Algorithm):
     def __init__(self,
-                 model: parl.Model,
+                 model,
                  learning_rate = 3e-4,
-                 n_steps: int = 2048,
-                 batch_size: int = 64,
-                 n_epochs: int = 10,
-                 gamma: float = 0.99,
-                 gae_lambda: float = 0.95,
+                 n_steps = 2048,
+                 batch_size = 64,
+                 n_epochs = 10,
+                 gamma = 0.99,
+                 gae_lambda = 0.95,
                  clip_range = 0.2,
-                 normalize_advantage: bool = True,
-                 ent_coef: float = 0.0,
-                 vf_coef: float = 0.5,
-                 max_grad_norm: float = 0.5,
-                 target_kl: Optional[float] = None,
-                 seed: Optional[int] = None,
-                 device: Union[torch.device, str] = "auto",
-                 _init_setup_model: bool = True,
+                 normalize_advantage = True,
+                 ent_coef = 0.0,
+                 vf_coef = 0.5,
+                 max_grad_norm = 0.5,
+                 target_kl = None,
+                 seed = None,
+                 device = "auto",
+                 _init_setup_model = True,
                  ):
         super(RL4LMPPO, self).__init__(model=model)
         self.learning_rate = learning_rate
@@ -127,10 +127,6 @@ class RL4LMPPO(parl.Algorithm):
 
         return continue_training, loss
 
-
-    def sample(self, obs):
-        pass
-
     def predict(self, obs):
         pass
 
@@ -140,20 +136,17 @@ class RL4LMPPO(parl.Algorithm):
     def forward_value(
         self,
         obs,
-        past_model_kwargs = None,
     ):
-        return self.model.forward_value(obs, past_model_kwargs)
+        return self.model.forward_value(obs)
 
     def forward_policy(
         self,
         obs,
-        actions: torch.tensor,
-        past_model_kwargs = None,
+        actions,
     ):
         return self.model.forward_policy(
             obs = obs,
             actions = actions,
-            past_model_kwargs = past_model_kwargs,
         )
 
 
@@ -161,11 +154,10 @@ class RL4LMPPO(parl.Algorithm):
         self,
         obs,
         action,
-        model_kwarpast_model_kwargsgs = None,
     ):
-        return self.model.get_log_probs_ref_model(obs, action, model_kwarpast_model_kwargsgs)
+        return self.model.get_log_probs_ref_model(obs, action)
 
-    def generate(
+    def sample(
         self,
         tokenizer,
         texts = None,
@@ -174,7 +166,7 @@ class RL4LMPPO(parl.Algorithm):
         attention_mask = None,
         gen_kwargs = None,
     ):
-        return self.model.generate(
+        return self.model.sample(
             input_ids=input_ids,
             attention_mask=attention_mask,
             tokenizer=tokenizer,

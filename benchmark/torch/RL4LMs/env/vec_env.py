@@ -2,7 +2,6 @@ import numpy as np
 import cloudpickle
 import gym
 from collections import OrderedDict
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, Dict
 import multiprocessing as mp
 
 
@@ -16,7 +15,7 @@ class CloudpickleWrapper:
     def __setstate__(self, var):
         self.var = cloudpickle.loads(var)
 
-def _flatten_obs(obs, space: gym.spaces.Space):
+def _flatten_obs(obs, space):
     assert isinstance(obs, (list, tuple)), "expected list or tuple of observations per environment"
     assert len(obs) > 0, "need observations from at least one environment"
 
@@ -32,7 +31,7 @@ def _flatten_obs(obs, space: gym.spaces.Space):
         return np.stack(obs)
 
 def _worker(
-    remote: mp.connection.Connection, parent_remote: mp.connection.Connection, env_fn_wrapper: CloudpickleWrapper
+    remote, parent_remote, env_fn_wrapper
 ):
     # Import here to avoid a circular import
 
@@ -53,21 +52,12 @@ def _worker(
             elif cmd == "reset":
                 observation = env.reset()
                 remote.send(observation)
-            elif cmd == "render":
-                remote.send(env.render(data))
             elif cmd == "close":
                 env.close()
                 remote.close()
                 break
             elif cmd == "get_spaces":
                 remote.send((env.observation_space, env.action_space))
-            elif cmd == "env_method":
-                method = getattr(env, data[0])
-                remote.send(method(*data[1], **data[2]))
-            elif cmd == "get_attr":
-                remote.send(getattr(env, data))
-            elif cmd == "set_attr":
-                remote.send(setattr(env, data[0], data[1]))
             else:
                 raise NotImplementedError(f"`{cmd}` is not implemented in the worker")
         except EOFError:
@@ -75,10 +65,11 @@ def _worker(
 
 class LocalParallelVecEnv:
 
-    def __init__(self, env_fns, start_method = None):
+    def __init__(self, env_fns, tokenizer=None, start_method = None):
         self.waiting = False
         self.closed = False
         n_envs = len(env_fns)
+        self.tokenizer = tokenizer
 
         if start_method is None:
             # Fork is not a thread safe method (see issue #217)
@@ -115,7 +106,7 @@ class LocalParallelVecEnv:
         obs, rews, dones, infos = zip(*results)
         return _flatten_obs(obs, self.observation_space), np.stack(rews), np.stack(dones), infos
 
-    def seed(self, seed: Optional[int] = None) -> List[Union[None, int]]:
+    def seed(self, seed = None):
         if seed is None:
             seed = np.random.randint(0, 2**32 - 1)
         for idx, remote in enumerate(self.remotes):
@@ -128,7 +119,7 @@ class LocalParallelVecEnv:
         obs = [remote.recv() for remote in self.remotes]
         return _flatten_obs(obs, self.observation_space)
 
-    def close(self) -> None:
+    def close(self):
         if self.closed:
             return
         if self.waiting:
@@ -140,43 +131,7 @@ class LocalParallelVecEnv:
             process.join()
         self.closed = True
 
-    def get_attr(self, attr_name: str, indices) -> List[Any]:
-        """Return attribute from vectorized environment (see base class)."""
-        target_remotes = self._get_target_remotes(indices)
-        for remote in target_remotes:
-            remote.send(("get_attr", attr_name))
-        return [remote.recv() for remote in target_remotes]
-
-    def set_attr(self, attr_name: str, value: Any, indices = None) -> None:
-        """Set attribute inside vectorized environments (see base class)."""
-        target_remotes = self._get_target_remotes(indices)
-        for remote in target_remotes:
-            remote.send(("set_attr", (attr_name, value)))
-        for remote in target_remotes:
-            remote.recv()
-
-    def env_method(self, method_name: str, *method_args, indices = None, **method_kwargs) -> List[Any]:
-        """Call instance methods of vectorized environments."""
-        target_remotes = self._get_target_remotes(indices)
-        for remote in target_remotes:
-            remote.send(("env_method", (method_name, method_args, method_kwargs)))
-        return [remote.recv() for remote in target_remotes]
-
-    def env_is_wrapped(self, wrapper_class: Type[gym.Wrapper], indices = None) -> List[bool]:
-        """Check if worker environments are wrapped with a given wrapper"""
-        target_remotes = self._get_target_remotes(indices)
-        for remote in target_remotes:
-            remote.send(("is_wrapped", wrapper_class))
-        return [remote.recv() for remote in target_remotes]
-
-    def _get_target_remotes(self, indices) -> List[Any]:
-        if indices is None:
-            indices = range(self.num_envs)
-        elif isinstance(indices, int):
-            indices = [indices]
-        return [self.remotes[i] for i in indices]
-
-    def step(self, actions: np.ndarray):
+    def step(self, actions):
         """
         Step the environments with the given action
 
@@ -187,9 +142,9 @@ class LocalParallelVecEnv:
         return self.step_wait()
 
 def make_vec_env(
-    env_id: Union[str, Type[gym.Env]],
-    seed: Optional[int] = None,
-    start_index: int = 0,
+    env_id,
+    seed = None,
+    start_index = 0,
     env_config = None,
     reward_fn = None,
     tokenizer = None,
@@ -211,4 +166,4 @@ def make_vec_env(
             return env
         return _init
 
-    return LocalParallelVecEnv([make_env(i + start_index) for i in range(n_envs)])
+    return LocalParallelVecEnv([make_env(i + start_index) for i in range(n_envs)], tokenizer=tokenizer)

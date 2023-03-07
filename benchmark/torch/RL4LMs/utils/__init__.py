@@ -5,11 +5,7 @@ from .data_wrapper import EvaluateActionsOutput, PolicyOutput, \
 
 from .huggingface_generation_util import override_generation_routines
 
-from .distribution_wrapper import CategoricalDistribution
-
-from .sample_util import PrioritySampler
-
-from .buffer import MaskableDictRolloutBuffer
+from .buffer import DictRolloutBuffer
 
 from .kl_controller import KLController
 

@@ -16,7 +16,6 @@ def get_batch(samples, batch_size):
         current_ix += batch_size
 
 
-
 def evaluate_on_samples(
     policy,
     tokenizer,
@@ -36,12 +35,10 @@ def evaluate_on_samples(
     all_meta_infos = []
     ###########CHANGE FOR DEBUG############
     tem = []
-    for i in range(200):
+    for i in range(100):
         tem.append(samples[i])
     samples = tem
     ###########CHANGE FOR DEBUG############
-
-
 
     n_samples = len(samples)
     for batch in tqdm(list(get_batch(samples, batch_size)), desc="Evaluating"):
@@ -97,8 +94,6 @@ def evaluate_on_samples(
             sample_prediction[metric_key] = sample_scores[ix]
         sample_predictions_dict.append(sample_prediction)
 
-
-
     metrics_dict_ = {
         "epoch": epoch,
         "metrics": corpus_level_metrics
@@ -119,7 +114,7 @@ def generate_text(
     prompt_texts = [
         dt_control_token + sample.prompt_or_input_text for sample in samples
     ]
-    generated_texts = policy.generate(
+    generated_texts = policy.sample(
         tokenizer, prompt_texts, max_prompt_length, gen_kwargs=gen_kwargs
     ).gen_texts
     return generated_texts

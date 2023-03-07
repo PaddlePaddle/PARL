@@ -56,35 +56,6 @@ from transformers.utils import ModelOutput, logging
 logger = logging.get_logger(__name__)
 
 @dataclass
-class SampleDecoderOnlyOutput(ModelOutput):
-    """
-    Base class for outputs of decoder-only generation models using sampling.
-
-
-    Args:
-        sequences (`torch.LongTensor` of shape `(batch_size*num_return_sequences, sequence_length)`):
-            The generated sequences. The second dimension (sequence_length) is either equal to `max_length` or shorter
-            if all batches finished early due to the `eos_token_id`.
-        scores (`tuple(torch.FloatTensor)` *optional*, returned when `output_scores=True` is passed or when `config.output_scores=True`):
-            Processed prediction scores of the language modeling head (scores for each vocabulary token before SoftMax)
-            at each generation step. `(max_length-input_ids.shape[-1],)`-shaped tuple of `torch.FloatTensor` with each
-            tensor of shape `(batch_size*num_return_sequences, config.vocab_size)`).
-        attentions (`tuple(tuple(torch.FloatTensor))`, *optional*, returned when `output_attentions=True` is passed or `config.output_attentions=True`):
-            Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
-            `torch.FloatTensor` of shape `(num_return_sequences*batch_size, num_heads, generated_length,
-            sequence_length)`.
-        hidden_states (`tuple(tuple(torch.FloatTensor))`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
-            Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
-            `torch.FloatTensor` of shape `(num_return_sequences*batch_size, generated_length, hidden_size)`.
-    """
-
-    sequences: torch.LongTensor = None
-    scores: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
-    hidden_states: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
-
-
-@dataclass
 class SampleEncoderDecoderOutput(ModelOutput):
     """
     Base class for outputs of encoder-decoder generation models using sampling. Hidden states and attention weights of
@@ -126,8 +97,6 @@ class SampleEncoderDecoderOutput(ModelOutput):
     cross_attentions: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
     decoder_hidden_states: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
 
-
-SampleOutput = Union[SampleEncoderDecoderOutput, SampleDecoderOnlyOutput]
 
 
 class GenerationMixinWithRawScores:
@@ -225,12 +194,6 @@ class GenerationMixinWithRawScores:
         Implement in subclasses of [`PreTrainedModel`] for custom behavior to prepare inputs in the generate method.
         """
         return {"input_ids": input_ids}
-
-    def adjust_logits_during_generation(self, logits: torch.FloatTensor, **kwargs) -> torch.FloatTensor:
-        """
-        Implement in subclasses of [`PreTrainedModel`] for custom behavior to adjust the logits in the generate method.
-        """
-        return logits
 
     def _prepare_input_ids_for_generation(
         self, bos_token_id: Optional[int], encoder_outputs: Optional[ModelOutput]
@@ -1080,7 +1043,7 @@ class GenerationMixinWithRawScores:
         return_dict_in_generate: Optional[bool] = None,
         synced_gpus: Optional[bool] = False,
         **model_kwargs,
-    ) -> Union[SampleOutput, torch.LongTensor]:
+    ):
         r"""
         Generates sequences of token ids for models with a language modeling head using **multinomial sampling** and
         can be used for text-decoder, text-to-text, speech-to-text, and vision-to-text models.
@@ -1325,12 +1288,7 @@ class GenerationMixinWithRawScores:
                     decoder_hidden_states=decoder_hidden_states,
                 )
             else:
-                return SampleDecoderOnlyOutput(
-                    sequences=input_ids,
-                    scores=scores,
-                    attentions=decoder_attentions,
-                    hidden_states=decoder_hidden_states,
-                )
+                raise NotImplementedError
         else:
             return input_ids
 

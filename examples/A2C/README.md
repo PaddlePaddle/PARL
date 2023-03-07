@@ -29,7 +29,7 @@ Performance of A2C on some envrionments in training process after 10 million sam
 At first, we can start a local cluster with 5 CPUs:
 
 ```bash
-xparl start --port 8010 --cpu_num 5
+xparl start --port 8110 --cpu_num 5
 ```
 
 Note that if you have started a master before, you don't have to run the above

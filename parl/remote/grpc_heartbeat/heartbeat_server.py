@@ -49,7 +49,7 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
-            if (self.host_pid is not None) and (not psutil.pid_exists()):
+            if (self.host_pid is not None) and (not psutil.pid_exists(self.host_pid)):
                 self.exit()
 
             if self.exit_flag:

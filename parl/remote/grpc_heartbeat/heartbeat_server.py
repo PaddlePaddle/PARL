@@ -25,11 +25,12 @@ import multiprocessing as mp
 
 
 class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
-    def __init__(self, client_count=None):
+    def __init__(self, client_count=None, host_is_alive=True):
         self.last_heartbeat_time = time.time()
         self.last_heartbeat_table = dict()
         self.exit_flag = False
         self.client_count = client_count
+        self.host_is_alive = host_is_alive
 
     def Send(self, request, context):
         client_id = request.client_id
@@ -54,6 +55,8 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
                 break
 
     def _parent_process_is_running(self):
+        if not self.host_is_alive.value:
+            return False
         ppid = os.getppid()
         return ppid != 1
 
@@ -133,7 +136,7 @@ class HeartbeatServerThread(threading.Thread):
         self.heartbeat_server.exit()
 
 class HeartbeatServerProcess(mp.Process):
-    def __init__(self, port, client_count):
+    def __init__(self, port, client_count, host_is_alive):
         """Create a process to run the heartbeat server.
             Args:
                 port(mp.Value): notify the main prcoess of the severt port.
@@ -144,7 +147,7 @@ class HeartbeatServerProcess(mp.Process):
             futures.ThreadPoolExecutor(max_workers=500),
             options=[('grpc.max_receive_message_length', -1),
                      ('grpc.max_send_message_length', -1)])
-        self.heartbeat_server = GrpcHeartbeatServer(client_count)
+        self.heartbeat_server = GrpcHeartbeatServer(client_count, host_is_alive)
 
         heartbeat_pb2_grpc.add_GrpcHeartbeatServicer_to_server(
             self.heartbeat_server, self.grpc_server)

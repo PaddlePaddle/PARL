@@ -79,6 +79,7 @@ class Worker(object):
         process.start()
 
         # initialzation
+        self.pid = str(os.getpid())
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -308,9 +309,9 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
         new_jobs = []
         for _ in range(job_num):
-            job_message = self.reply_job_socket.recv_multipart()
-            self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(self.remove_job_address)])
-            initialized_job = cloudpickle.loads(job_message[1])
+            job_init_message = self.reply_job_socket.recv_multipart()
+            self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(self.remove_job_address), to_byte(self.pid)])
+            initialized_job = cloudpickle.loads(job_init_message[1])
             new_jobs.append(initialized_job)
 
             def heartbeat_exit_callback_func(job):

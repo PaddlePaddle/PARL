@@ -31,6 +31,7 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
         self.exit_flag = False
         self.client_count = client_count
         self.host_is_alive = host_is_alive
+        self.host_pid = None
 
     def Send(self, request, context):
         client_id = request.client_id
@@ -46,6 +47,9 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
     def timeout_timer(self):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+
+            if (self.host_pid is not None) and (not psutil.pid_exists()):
+                self.exit()
 
             if self.exit_flag:
                 break
@@ -131,6 +135,9 @@ class HeartbeatServerThread(threading.Thread):
         # heartbeat is exit, call the exit function.
         self.heartbeat_exit_callback_func(*self._exit_func_args,
                                           **self._exit_func_kwargs)
+
+    def set_host_pid(self, host_pid):
+        self.heartbeat_server.host_pid = host_pid
 
     def exit(self):
         self.heartbeat_server.exit()

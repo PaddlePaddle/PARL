@@ -21,6 +21,7 @@ from parl.remote import remote_constants
 from parl.remote.grpc_heartbeat import heartbeat_pb2
 from parl.remote.grpc_heartbeat import heartbeat_pb2_grpc
 from parl.utils import logger, get_ip_address
+import psutil
 import multiprocessing as mp
 
 

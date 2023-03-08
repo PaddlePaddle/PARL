@@ -11,7 +11,7 @@ import time
 
 # env and reward function
 from utils import build_reward_fn
-from env import TextGenEnv, make_vec_env
+from reviewer import ReviewerGroup
 
 # evaluation, metrics, tokenizer & dataset
 from utils import build_metrics, build_tokenizer, build_datapool
@@ -48,15 +48,15 @@ def main(config):
     # datapool
     samples_by_split = build_datapool(config["datapool"])
 
-    env = make_vec_env(env_id=TextGenEnv,
-                       env_config=config["env"],
-                       reward_fn=reward_fn,
-                       tokenizer=tokenizer,
-                       train_samples= samples_by_split["train"])
+
+    reviewer_group = ReviewerGroup(reviewer_config=config["env"],
+                                   reward_fn=reward_fn,
+                                   tokenizer=tokenizer,
+                                   question_samples=samples_by_split["train"])
 
     rl4lms_model = Seq2SeqLMModel(
-        observation_space = env.observation_space,
-        action_space= env.action_space,
+        observation_space = reviewer_group.observation_space,
+        action_space= reviewer_group.action_space,
         device=device,
         **config["alg"]["model"]["args"]
     )
@@ -64,17 +64,17 @@ def main(config):
     agent = RL4LMsAgent(rl4lm_alg, config["alg"])
 
     rollout_buffer = DictRolloutBuffer(
-        buffer_size=agent.alg.n_steps * env.num_envs,
-        observation_space=env.observation_space,
-        action_space=env.action_space,
+        buffer_size=agent.alg.n_steps * reviewer_group.n_reviewers,
+        observation_space=reviewer_group.observation_space,
+        action_space=reviewer_group.action_space,
         device=device,
         gamma=agent.alg.gamma,
         gae_lambda=agent.alg.gae_lambda,
     )
-    rollout_util = RolloutUtil(config["alg"]["kl_div"])
+    rollout_util = RolloutUtil(config["alg"]["kl_div"], reviewer_group)
 
     n_iters = int(config["train_evaluation"]["n_iters"])
-    n_steps_per_iter = env.num_envs * agent.alg.n_steps
+    n_steps_per_iter = reviewer_group.n_reviewers * agent.alg.n_steps
 
     max_prompt_length = config["env"]["args"]["max_prompt_length"]
 
@@ -104,7 +104,7 @@ def main(config):
         num_timesteps = 0
 
         while num_timesteps < n_steps_per_iter:
-            run_timesteps = rollout_util.collect_rollouts(agent, env, rollout_buffer, device)
+            run_timesteps = rollout_util.collect_rollouts(agent, reviewer_group, rollout_buffer, device)
             num_timesteps += run_timesteps
             agent.learn(rollout_buffer)
 

@@ -39,6 +39,8 @@ class RL4LMPPO(parl.Algorithm):
         self.target_kl = target_kl
         self.seed = seed
         self.device = device
+        for param_group in self.model.optimizer.param_groups:
+            param_group["lr"] = self.learning_rate
 
     def learn(self, rollout_buffer, log_info):
         entropy_losses = log_info["entropy_losses"]

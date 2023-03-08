@@ -59,6 +59,7 @@ class Client(object):
                                       remote instances(e,g. the configuration
                                       file for initialization) .
         """
+        self.client_is_alive = mp.Value('i', True)
         self._create_heartbeat_server()
         self.master_address = master_address
         self.process_id = process_id
@@ -85,6 +86,8 @@ class Client(object):
         for th in self.threads:
             th.join()
         self.ctx.destroy()
+        self.client_is_alive.value = False
+        self.job_heartbeat_process.join()
 
     def get_executable_path(self):
         """Return current executable path."""
@@ -296,7 +299,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         """
         job_heartbeat_port = mp.Value('i', 0)
         self.actor_num = mp.Value('i', 0)
-        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.client_is_alive)
         self.job_heartbeat_process.daemon = True
         self.job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."

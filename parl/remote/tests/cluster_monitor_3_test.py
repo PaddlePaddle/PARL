@@ -15,16 +15,13 @@
 import unittest
 
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 from parl.remote.monitor import ClusterMonitor
 import time
 import threading
-from parl.remote.client import disconnect
 from parl.remote import exceptions
-import subprocess
-from parl.utils import get_free_tcp_port
-
+from parl.utils.test_utils import XparlTestCase
+import os
+import signal
 
 @parl.remote_class
 class Actor(object):
@@ -56,29 +53,30 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestClusterMonitor(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
+class TestClusterMonitor(XparlTestCase):
+
+    def remove_ten_workers(self):
+        for i, proc in enumerate(self.worker_process):
+            if i == 10: break
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
 
     def test_twenty_worker(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        workers = []
+        self.add_master()
+        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
+
         for _ in range(20):
-            worker = Worker('localhost:{}'.format(port), 1)
-            time.sleep(1)
-            workers.append(worker)
+            self.add_worker(n_cpu=1)
 
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
-        time.sleep(1)
-        self.assertEqual(20, len(cluster_monitor.data['workers']))
 
-        # check if the number of workers drops by 10
-        for i in range(10):
-            workers[i].exit()
+        check_flag = False
+        for _ in range(10):
+            if 20 == len(cluster_monitor.data['workers']):
+                check_flag = True
+                break
+            time.sleep(10)
+        self.assertTrue(check_flag)
+
+        self.remove_ten_workers()
 
         check_flag = False
         for _ in range(10):
@@ -88,9 +86,7 @@ class TestClusterMonitor(unittest.TestCase):
             time.sleep(10)
         self.assertTrue(check_flag)
 
-        for i in range(10, 20):
-            workers[i].exit()
-
+        self.remove_all_workers()
         # check if the number of workers drops to 0
         check_flag = False
         for _ in range(10):
@@ -100,8 +96,5 @@ class TestClusterMonitor(unittest.TestCase):
             time.sleep(10)
         self.assertTrue(check_flag)
 
-        master.exit()
-
-
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

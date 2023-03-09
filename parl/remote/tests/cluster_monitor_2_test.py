@@ -13,17 +13,12 @@
 # limitations under the License.
 
 import unittest
-
 import parl
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 from parl.remote.monitor import ClusterMonitor
 import time
 import threading
-from parl.remote.client import disconnect
 from parl.remote import exceptions
-import subprocess
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
 @parl.remote_class
@@ -56,37 +51,27 @@ class Actor(object):
         x = 1 / 0
 
 
-class TestClusterMonitor(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestClusterMonitor(XparlTestCase):
     def test_add_actor(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(1)
-        worker = Worker('localhost:{}'.format(port), 1)
-        cluster_monitor = ClusterMonitor('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        cluster_monitor = ClusterMonitor('localhost:{}'.format(self.port))
         time.sleep(1)
         self.assertEqual(0, len(cluster_monitor.data['clients']))
-        parl.connect('localhost:{}'.format(port))
-        time.sleep(10)
+        parl.connect('localhost:{}'.format(self.port))
+        time.sleep(20)
         self.assertEqual(1, len(cluster_monitor.data['clients']))
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
         actor = Actor()
-        time.sleep(20)
+        time.sleep(40)
         self.assertEqual(0, cluster_monitor.data['workers'][0]['vacant_cpus'])
         self.assertEqual(1, cluster_monitor.data['workers'][0]['used_cpus'])
         self.assertEqual(1, cluster_monitor.data['clients'][0]['actor_num'])
         del actor
-        time.sleep(40)
+        time.sleep(60)
         self.assertEqual(0, cluster_monitor.data['clients'][0]['actor_num'])
         self.assertEqual(1, cluster_monitor.data['workers'][0]['vacant_cpus'])
 
-        worker.exit()
-        master.exit()
-
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

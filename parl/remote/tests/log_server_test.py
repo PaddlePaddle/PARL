@@ -28,10 +28,10 @@ requests.adapters.DEFAULT_RETRIES = 5
 
 import parl
 from parl.remote.client import disconnect, get_global_client
-from parl.remote.master import Master
-from parl.remote.worker import Worker
 from parl.utils import _IS_WINDOWS
+from parl.utils.test_utils import XparlTestCase
 from parl.utils import get_free_tcp_port
+from parl.remote.master import Master
 
 
 @parl.remote_class
@@ -55,10 +55,7 @@ class Actor(object):
         return self.init_output + output
 
 
-class TestLogServer(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestLogServer(XparlTestCase):
     #In windows, multiprocessing.Process cannot run the method of class, but static method is ok.
     @staticmethod
     def _connect_and_create_actor(cluster_addr):
@@ -72,16 +69,16 @@ class TestLogServer(unittest.TestCase):
         return outputs
 
     def test_log_server(self):
-        master_port = get_free_tcp_port()
+        master_port = self.port
         # start the master
         master = Master(port=master_port)
         th = threading.Thread(target=master.run)
         th.start()
-        time.sleep(1)
+        time.sleep(10)
 
-        cluster_addr = 'localhost:{}'.format(master_port)
-        log_server_port = get_free_tcp_port()
-        worker = Worker(cluster_addr, 4, log_server_port=log_server_port)
+        self.add_worker(n_cpu=4)
+
+        cluster_addr = 'localhost:{}'.format(self.port)
         outputs = self._connect_and_create_actor(cluster_addr)
 
         # Get status
@@ -113,13 +110,10 @@ class TestLogServer(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             log_content = r.text.replace('\r\n', '\n')
             self.assertIn(log_content, outputs)
-
-        disconnect()
-        worker.exit()
         master.exit()
 
     def test_monitor_query_log_server(self):
-        master_port = get_free_tcp_port()
+        master_port = self.port
         monitor_port = get_free_tcp_port()
         # start the master
         master = Master(port=master_port, monitor_port=monitor_port)
@@ -143,8 +137,7 @@ class TestLogServer(unittest.TestCase):
 
         # Start worker
         cluster_addr = 'localhost:{}'.format(master_port)
-        log_server_port = get_free_tcp_port()
-        worker = Worker(cluster_addr, 4, log_server_port=log_server_port)
+        self.add_worker(n_cpu=4)
 
         # Test monitor API
         outputs = self._connect_and_create_actor(cluster_addr)
@@ -175,8 +168,6 @@ class TestLogServer(unittest.TestCase):
         # Clean context
         monitor_proc.kill()
         monitor_proc.wait()
-        disconnect()
-        worker.exit()
         master.exit()
 
 

@@ -83,7 +83,7 @@ setup(
         "psutil>=5.6.2",
         "flask_cors",
         "requests",
-        "grpcio==1.37.0",
+        "grpcio==1.48.2",
         "protobuf>=3.14.0, <=3.20.0",
         "pynvml"
     ],

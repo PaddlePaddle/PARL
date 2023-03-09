@@ -82,6 +82,7 @@ class Job(object):
         self.log_server_address = log_server_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
+        self.worker_pid = None
         """
         NOTE:
             In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.
@@ -151,7 +152,7 @@ class Job(object):
             self.job_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(initialized_job)])
             message = self.job_socket.recv_multipart()
         except zmq.error.Again as e:
-            logger.warning("[Job] Cannot connect to the worker{}. ".format(self.worker_address) + "Job will quit.")
+            logger.warning("[Job] Cannot connect to the worker {}. ".format(self.worker_address) + "Job will quit.")
             self.job_socket.close(0)
             os._exit(0)
 
@@ -159,6 +160,8 @@ class Job(object):
         assert tag == remote_constants.NORMAL_TAG
         # create the remove_job_socket
         remove_job_address = to_str(message[1])
+        self.worker_pid = int(to_str(message[2]))
+        worker_heartbeat_server_thread.set_host_pid(self.worker_pid)
         self.remove_job_socket = self.ctx.socket(zmq.REQ)
         self.remove_job_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.remove_job_socket.connect("tcp://{}".format(remove_job_address))

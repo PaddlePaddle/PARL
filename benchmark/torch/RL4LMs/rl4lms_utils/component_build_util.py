@@ -6,8 +6,13 @@ from .data_pool import CNNDailyMail
 
 def build_tokenizer(tokenizer_config):
     logger.info(f"loading tokenizer of [{tokenizer_config['model_name']}] model")
-    tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_config["model_name"])
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer_config["model_name"])
+    except Exception:
+        logger.info(f"trying to use local_files to load tokenizer of [{tokenizer_config['model_name']}] model")
+        tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer_config["model_name"], local_files_only=True)
     if tokenizer.pad_token is None and tokenizer_config.get("pad_token_as_eos_token", True):
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = tokenizer_config.get(
@@ -29,15 +34,24 @@ def build_metrics(metric_configs):
     return metrics
 
 
-def build_datapool(datapool_config):
+def build_datapool(datapool_config, remote_train=False):
     def _get_datapool_by_split(split):
         kwargs = datapool_config.get("args", {})
         kwargs["split"] = split
         logger.info(f"loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
         dp_split = CNNDailyMail.prepare(**kwargs)
+        logger.info(f"finish loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
         return dp_split
 
     train_datapool = _get_datapool_by_split("train")
+
+    if remote_train:
+        samples_by_split = {
+            "train": [(sample, weight)
+                      for sample, weight in train_datapool],
+        }
+        return samples_by_split
+
     val_datapool = _get_datapool_by_split("val")
     test_datapool = _get_datapool_by_split("test")
 

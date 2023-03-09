@@ -42,7 +42,7 @@ def main(config):
     tokenizer = build_tokenizer(config["tokenizer"])
 
     # reward function & metrics
-    reward_fn = build_reward_fn(config["reward_fn"])
+    # reward_fn = build_reward_fn(config["reward_fn"])   # build reward_fn in reviewer
     metrics = build_metrics(config["train_evaluation"]["metrics"])
 
     # datapool
@@ -50,9 +50,12 @@ def main(config):
 
 
     reviewer_group = ReviewerGroup(reviewer_config=config["reviewer"],
-                                   reward_fn=reward_fn,
+                                   reward_config=config["reward_fn"],
                                    tokenizer=tokenizer,
-                                   question_samples=samples_by_split["train"])
+                                   tokenizer_config=config["tokenizer"],
+                                   datapool_config=config["datapool"],)
+                                   # reward_fn=reward_fn,
+                                   # question_samples=samples_by_split["train"])
 
     rl4lms_model = Seq2SeqLMModel(
         observation_space = reviewer_group.observation_space,

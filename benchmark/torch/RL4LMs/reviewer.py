@@ -8,6 +8,7 @@ from gym.spaces.discrete import Discrete
 import parl
 from collections import deque
 import numpy as np
+from rl4lms_utils import build_datapool, build_tokenizer, build_reward_fn
 
 def _flatten_obs(obs, space):
     assert isinstance(obs, (list, tuple)), "expected list or tuple of observations per environment"
@@ -45,16 +46,18 @@ def unpack_observations(obs_tensor, n_envs):
 class Reviewer:
     def __init__(
         self,
-        tokenizer,
-        reward_function,
-        samples,
+        tokenizer=None,
+        reward_function=None,
+        samples=None,
+        reward_config=None,
+        tokenizer_config=None,
+        datapool_config=None,
         max_episode_length = 512,
         max_prompt_length = None,
         terminate_on_eos = False,
         context_start_token = None,
         prompt_truncation_side = "left",
     ):
-
         """
         A generic RL environment to generate textual sequences.
         For eg: text generation, summarization, machine translation, text simplification
@@ -68,6 +71,12 @@ class Reviewer:
             context_start_token (bool, optional): start token for the context (For Encoder-Decoder models! )
             prompt_truncation_side (str): truncation side for prompt text (Defaults to "left")
         """
+        if tokenizer is None:
+            tokenizer = build_tokenizer(tokenizer_config)
+        if samples is None:
+            samples = build_datapool(datapool_config, remote_train=True)["train"]
+        if reward_function is None:
+            reward_function = build_reward_fn(reward_config)
         self.tokenizer = tokenizer
         self.reward_function = reward_function
         self.max_steps = max_episode_length
@@ -204,24 +213,60 @@ class Reviewer:
 class ReviewerGroup:
     def __init__(self,
                 reviewer_config=None,
-                reward_fn=None,
+                reward_config=None,
                 tokenizer=None,
+                datapool_config=None,
+                tokenizer_config=None,
+                reward_fn=None,
                 question_samples=None,
                 seed = None,
                 start_index = 0,
                 ):
         self.n_reviewers = reviewer_config["n_reviewers"]
         reviewer_kwargs = {
-            "reward_function": reward_fn,
-            "tokenizer": tokenizer,
-            "samples": question_samples,
+            # "reward_function": reward_fn,
+            "reward_config": reward_config,
+            # "tokenizer": tokenizer,
+            "tokenizer_config": tokenizer_config,
+            # "samples": question_samples,
+            "datapool_config": datapool_config
         }
         reviewer_kwargs = {**reviewer_kwargs, **reviewer_config.get("args", {})}
         self.tokenizer = tokenizer
         self._remote_reviewers = self._create_reviewers(reviewer_kwargs, reviewer_config["parl_master_address"])
-        tem_future_object_ids = self._remote_reviewers[0].get_obs_and_action_space()
-        self.observation_space, self.action_space = tem_future_object_ids.get()
+        # tem_future_object_ids = self._remote_reviewers[0].get_obs_and_action_space()
+        # self.observation_space, self.action_space = tem_future_object_ids.get()
         # self.observation_space, self.action_space = tem_future_object_ids
+
+        # due to serialization, build obs space and action space here
+        self._vocab_size = tokenizer.vocab_size
+        self.observation_space = DictSpace(
+            {
+                # we have to provide fixed sized inputs (padded) because sb3 support for DictObsersevation is limited
+                # while creating rollout buffers, observations are concatenated for each key
+                "prompt_or_input_encoded_pt": spaces.Box(
+                    low=0, high=self._vocab_size, shape=(reviewer_kwargs["max_prompt_length"],)
+                ),
+                "prompt_or_input_attention_mask_pt": spaces.Box(
+                    low=0, high=1, shape=(reviewer_kwargs["max_prompt_length"],)
+                ),
+                "context_encoded_pt": spaces.Box(
+                    low=0, high=self._vocab_size, shape=(reviewer_kwargs["max_episode_length"],)
+                ),
+                "context_attention_mask_pt": spaces.Box(
+                    low=0, high=1, shape=(reviewer_kwargs["max_episode_length"],)
+                ),
+                "input_encoded_pt": spaces.Box(
+                    low=0,
+                    high=self._vocab_size,
+                    shape=(reviewer_kwargs["max_prompt_length"] + reviewer_kwargs["max_episode_length"],),
+                ),
+                "input_attention_mask_pt": spaces.Box(
+                    low=0, high=1, shape=(reviewer_kwargs["max_prompt_length"] + reviewer_kwargs["max_episode_length"],)
+                ),
+            }
+        )
+        self.action_space = Discrete(n=self._vocab_size)
 
     def ask(self):
         future_object_ids = [

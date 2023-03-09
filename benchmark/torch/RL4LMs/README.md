@@ -11,6 +11,7 @@
 
 - Change from **\{ trainer: \{ ppo: \{ env, rollout_buffer, policy/model \} \} \}** to 
   **\{trainer: \{env, rollout_buffer, agent: \{ ppo: \{ model \} \} \} \}** according to PARL architecture.
+- Use Parl parallel Training
 
 ### Running command
 

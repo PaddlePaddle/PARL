@@ -7,7 +7,7 @@ from torch.distributions import Categorical
 from transformers.modeling_utils import unwrap_model
 
 import parl
-from benchmark.torch.RL4LMs.utils import (
+from rl4lms_utils import (
     override_generation_routines,
 
     GenerationInputs, GenerationOutputs,

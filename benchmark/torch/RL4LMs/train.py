@@ -10,15 +10,15 @@ import torch
 import time
 
 # env and reward function
-from utils import build_reward_fn
+from rl4lms_utils import build_reward_fn
 from reviewer import ReviewerGroup
 
 # evaluation, metrics, tokenizer & dataset
-from utils import build_metrics, build_tokenizer, build_datapool
-from utils import evaluate_on_samples
+from rl4lms_utils import build_metrics, build_tokenizer, build_datapool
+from rl4lms_utils import evaluate_on_samples
 
 # rollout
-from utils import DictRolloutBuffer, RolloutUtil
+from rl4lms_utils import DictRolloutBuffer, RolloutUtil
 
 # agent, algorithm and model
 from rl4lm_ppo import RL4LMPPO
@@ -49,7 +49,7 @@ def main(config):
     samples_by_split = build_datapool(config["datapool"])
 
 
-    reviewer_group = ReviewerGroup(reviewer_config=config["env"],
+    reviewer_group = ReviewerGroup(reviewer_config=config["reviewer"],
                                    reward_fn=reward_fn,
                                    tokenizer=tokenizer,
                                    question_samples=samples_by_split["train"])
@@ -76,7 +76,7 @@ def main(config):
     n_iters = int(config["train_evaluation"]["n_iters"])
     n_steps_per_iter = reviewer_group.n_reviewers * agent.alg.n_steps
 
-    max_prompt_length = config["env"]["args"]["max_prompt_length"]
+    max_prompt_length = config["reviewer"]["args"]["max_prompt_length"]
 
     # gen kwargs for evaluation
     eval_gen_kwargs = config["train_evaluation"]["generation_kwargs"]

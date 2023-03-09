@@ -1,7 +1,7 @@
 import gym
 from collections import OrderedDict
 import torch
-from utils import TransitionInfo, Sample, Observation
+from rl4lms_utils import TransitionInfo, Sample, Observation
 from gym import Env, spaces
 from gym.spaces.dict import Dict as DictSpace
 from gym.spaces.discrete import Discrete
@@ -41,7 +41,7 @@ def unpack_observations(obs_tensor, n_envs):
     return unpacked_obs
 
 
-# @parl.remote_class(wait=False)
+@parl.remote_class(wait=False)
 class Reviewer:
     def __init__(
         self,
@@ -198,7 +198,7 @@ class Reviewer:
         return dict_observation
 
     def get_obs_and_action_space(self):
-        return self.observation_space, self.action_space
+        return (self.observation_space, self.action_space)
 
 
 class ReviewerGroup:
@@ -218,19 +218,19 @@ class ReviewerGroup:
         }
         reviewer_kwargs = {**reviewer_kwargs, **reviewer_config.get("args", {})}
         self.tokenizer = tokenizer
-        self._remote_reviewers = self._create_reviewers(reviewer_kwargs)
+        self._remote_reviewers = self._create_reviewers(reviewer_kwargs, reviewer_config["parl_master_address"])
         tem_future_object_ids = self._remote_reviewers[0].get_obs_and_action_space()
-        # self.observation_space, self.action_space = tem_future_object_ids.get()
-        self.observation_space, self.action_space = tem_future_object_ids
+        self.observation_space, self.action_space = tem_future_object_ids.get()
+        # self.observation_space, self.action_space = tem_future_object_ids
 
     def ask(self):
         future_object_ids = [
             remote_reviewer.ask() for remote_reviewer in self._remote_reviewers
         ]
-        # sample_questions = [
-        #     future_object.get() for future_object in future_object_ids
-        # ]
-        sample_questions = future_object_ids
+        sample_questions = [
+            future_object.get() for future_object in future_object_ids
+        ]
+        # sample_questions = future_object_ids
         return _flatten_obs(sample_questions, self.observation_space)
 
     def feedback(self, current_obs, gen_output, kl_criterion, agent, device):
@@ -321,16 +321,16 @@ class ReviewerGroup:
             self._remote_reviewers[i].get_new_obs_and_feedback_one_step(
                 actions[i]) for i in range(self.n_reviewers)
         ]
-        # feedback_res = [
-        #     future_object.get() for future_object in future_object_ids
-        # ]
-        feedback_res = future_object_ids
+        feedback_res = [
+            future_object.get() for future_object in future_object_ids
+        ]
+        # feedback_res = future_object_ids
         obs, rews, dones, infos = zip(*feedback_res)
         return _flatten_obs(obs, self.observation_space), np.stack(rews), np.stack(dones), infos
 
 
-    def _create_reviewers(self, reviewer_kwargs):
-        # parl.connect(reviewer_kwargs['parl_master_address'])
+    def _create_reviewers(self, reviewer_kwargs, parl_port=None):
+        parl.connect(parl_port, distributed_files=["./rl4lms_utils/*.py", "./*.py"])
         return [Reviewer(**reviewer_kwargs) for _ in range(self.n_reviewers)]
 
 

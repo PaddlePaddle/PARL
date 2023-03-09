@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import unittest
 import parl
-from parl.utils import logger
 from parl.utils.test_utils import XparlTestCase
+import time
+from parl.remote.exceptions import RemoteError
 
 @parl.remote_class
 class Actor(object):
@@ -25,26 +25,24 @@ class Actor(object):
 
     def add(self, x, y):
         return x + y
+    
+    def exit(self):
+        import sys
+        sys.exit(0)
 
-class TestCluster(XparlTestCase):
-    def test_reset_actor(self):
+class TestActorStatus(XparlTestCase):
+    def test_default_mode(self):
         self.add_master()
-        self.add_worker(n_cpu=4)
-        parl.connect('localhost:{}'.format(self.port))
-        for _ in range(10):
-            actor = Actor()
-            ret = actor.add(1, 1)
-            self.assertEqual(ret, 2)
-        del actor
-
-        actors = []
-        for i in range(4):
-            actors.append(Actor())
-        for i in range(4):
-            ret = actors[i].add(2, 3)
-            self.assertEqual(5, ret)
-        import time
-        time.sleep(201004)
+        self.add_worker(n_cpu=1)
+        parl.connect("localhost:{}".format(self.port))
+        actor = Actor()
+        with self.assertRaises(RemoteError):
+            actor.exit()
+        with self.assertRaises(RemoteError):
+            res = actor.add(10, 5)
+        actor = Actor()
+        ret = actor.add(10, 5)
+        self.assertEqual(ret, 15)
 
 if __name__ == '__main__':
     unittest.main(failfast=True)

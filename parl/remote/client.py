@@ -51,15 +51,17 @@ class Client(object):
     def __init__(self, master_address, process_id, distributed_files=[]):
         """
         Args:
-            master_addr (str): ip address of the master node.
-            job_heartbeat_server_addr(str): server address for heartbeat detection from jobs.
-            process_id (str): process id in which client is created. 
-                              Should use os.getpid() to get the process id.
-            distributed_files (list): A list of files to be distributed at all
-                                      remote instances(e,g. the configuration
+            master_addr (str): IP address of the master node.
+            job_heartbeat_server_addr(str): Server address for heartbeat detection from jobs.
+            process_id (str): Process id in which client is created. Should use os.getpid() to get the process id.
+            distributed_files (list): A list of files to be distributed at all remote instances(e,g. the configuration
                                       file for initialization) .
         """
+        self.dead_job_queue = mp.Queue()
         self._create_heartbeat_server()
+        th = threading.Thread(target=self._update_job_status, args=(self.dead_job_queue, ))
+        th.setDaemon(True)
+        th.start()
         self.master_address = master_address
         self.process_id = process_id
         self.ctx = zmq.Context()
@@ -70,6 +72,8 @@ class Client(object):
         self._create_sockets(master_address)
         self.connected_to_master = True
         self.check_env_consistency()
+        self.instance_count = 0
+        self.instance_id_to_job = dict()
 
         thread = threading.Thread(target=self._update_client_status_to_master)
         thread.setDaemon(True)
@@ -81,6 +85,7 @@ class Client(object):
     def destroy(self):
         """Destructor function"""
         self.connected_to_master = False
+        self.dead_job_queue.put('exit')
         self.master_heartbeat_thread.exit()
         for th in self.threads:
             th.join()
@@ -206,6 +211,16 @@ class Client(object):
                             "check if master is started and ensure the input "
                             "address {} is correct.".format(master_address))
 
+    def _update_job_status(self, dead_job_queue):
+        while True:
+            instance_id = dead_job_queue.get()
+            # the client calls the destroy function
+            if isinstance(instance_id, str) and instance_id == 'exit':
+                break
+            logger.error("[Client] lost connection with a remote instance. ID: {}".format(instance_id))
+            job_is_alive = self.instance_id_to_job[instance_id]
+            job_is_alive.value = False
+
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
             matches that of the 'master' process'''
@@ -266,43 +281,52 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
-    def _check_and_monitor_job(self, job_ping_address, max_memory, gpu):
+    def _check_job(self, job_ping_address, max_memory, gpu):
         """ 
-        We have to check if this job is still alive before establishing connection with it.
+        Check if this job is still alive before establishing connection with it.
+        Return: instance_id (int): an unique isntance id. -1 if the job is not ready for connection.
         """
         # job_ping_socket: sends ping signal to job
         job_ping_socket = self.ctx.socket(zmq.REQ)
         job_ping_socket.linger = 0
         job_ping_socket.setsockopt(zmq.RCVTIMEO, int(0.9 * 1000))
         job_ping_socket.connect("tcp://" + job_ping_address)
+        instance_id = self._generate_instance_id()
         try:
             job_ping_socket.send_multipart([
                 remote_constants.HEARTBEAT_TAG,
                 to_byte(self.job_heartbeat_server_addr),
                 to_byte(str(max_memory)),
-                to_byte(gpu)
+                to_byte(gpu),
+                to_byte(instance_id)
             ], )
             job_ping_socket.recv_multipart()
         except zmq.error.Again:
-            job_ping_socket.close(0)
             logger.error(
                 "[Client] connects to a finished job, will try again, job_ping_address:{}".format(job_ping_address))
-            return False
-        job_ping_socket.close(0)
-        return True
+            instance_id = -1
+        finally:
+            job_ping_socket.close(0)
+        return instance_id
 
     def _create_heartbeat_server(self):
         """ Create the grpc-based heartbeat server at the subprocess.
         """
         job_heartbeat_port = mp.Value('i', 0)
         self.actor_num = mp.Value('i', 0)
-        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num)
+        self.job_heartbeat_process = HeartbeatServerProcess(job_heartbeat_port, self.actor_num, self.dead_job_queue)
         self.job_heartbeat_process.daemon = True
         self.job_heartbeat_process.start()
         assert job_heartbeat_port.value != 0, "fail to initialize heartbeat server for jobs."
         self.job_heartbeat_server_addr = "{}:{}".format(get_ip_address(), job_heartbeat_port.value)
 
-    def submit_job(self, max_memory, n_gpu):
+    def _generate_instance_id(self):
+        """Return an unique instance id for the remote instance"""
+        self.instance_count += 1
+        unique_id = f"{self.instance_count:05}"
+        return unique_id
+
+    def submit_job(self, max_memory, n_gpu, job_is_alive):
         """Send a job to the Master node.
 
         When a `@parl.remote_class` object is created, the global client
@@ -337,9 +361,10 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     job_ping_address = job_info.ping_heartbeat_address
 
                     self.lock.acquire()
-                    check_result = self._check_and_monitor_job(job_ping_address, max_memory, job_info.allocated_gpu.gpu)
+                    instance_id = self._check_job(job_ping_address, max_memory, job_info.allocated_gpu.gpu)
                     self.lock.release()
-                    if check_result:
+                    if instance_id != -1:
+                        self.instance_id_to_job[instance_id] = job_is_alive
                         return job_info
                 # no vacant CPU resources, cannot submit a new job
                 elif tag == remote_constants.CPU_TAG:

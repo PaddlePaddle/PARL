@@ -63,7 +63,6 @@ class RemoteWrapper(object):
         else:
             raise Exception("Can not submit job to the master. " "Please check if master is still alive.")
 
-
         if job_info is None:
             raise ResourceError("Cannot submit the job to the master. "
                                 "Please add more computation resources to the "
@@ -85,11 +84,22 @@ class RemoteWrapper(object):
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
                 del kwargs[key]
-        self.job_socket.send_multipart([
-            remote_constants.INIT_OBJECT_TAG,
-            dump_remote_class(cls),
-            cloudpickle.dumps([args, kwargs]),
-        ])
+        serlization_finished = True
+        try:
+            self.job_socket.send_multipart([
+                remote_constants.INIT_OBJECT_TAG,
+                dump_remote_class(cls),
+                cloudpickle.dumps([args, kwargs]),
+            ])
+        except TypeError:
+            serlization_finished = False
+            logger.error("[xparl] fail to serialize the arguments for class initialization. \n\
+                        For more information, please check the documentation in: \n\
+                        https://parl.readthedocs.io/en/latest/questions/distributed_training.html#recommended-data-types-in-xparl"
+                         )
+        if not serlization_finished:
+            raise RemoteSerializeError('__init__', "fail to finish serialization.")
+
         message = self._receive_from_remote_instance('__init__')
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:

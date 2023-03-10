@@ -58,7 +58,6 @@ class DictRolloutBuffer:
     :param gae_lambda: Factor for trade-off of bias vs variance for Generalized Advantage Estimator
         Equivalent to classic advantage when set to 1.
     :param gamma: Discount factor
-    :param n_envs: Number of parallel environments
     """
 
     def __init__(
@@ -130,7 +129,7 @@ class DictRolloutBuffer:
 
         for key in self.observations.keys():
             obs_ = np.array(obs[key]).copy()
-            # Reshape needed when using multiple envs with discrete observations
+            # Reshape needed when using multiple reviewers with discrete observations
             # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
             if isinstance(self.observation_space.spaces[key], spaces.Discrete):
                 obs_ = obs_.reshape((1,) + self.obs_shape[key])
@@ -161,8 +160,8 @@ class DictRolloutBuffer:
 
         For more information, see discussion in https://github.com/DLR-RM/stable-baselines3/pull/375.
 
-        :param last_values: state value estimation for the last step (one for each env)
-        :param dones: if the last step was a terminal step (one bool for each env).
+        :param last_values: state value estimation for the last step (one for each reviewer)
+        :param dones: if the last step was a terminal step (one bool for each reviewer).
         """
         # Convert to numpy
         last_values = last_values.clone().cpu().numpy().flatten()
@@ -184,9 +183,9 @@ class DictRolloutBuffer:
 
     def swap_and_flatten(self, arr):
         """
-        Swap and then flatten axes 0 (buffer_size) and 1 (n_envs)
-        to convert shape from [n_steps, n_envs, ...] (when ... is the shape of the features)
-        to [n_steps * n_envs, ...] (which maintain the order)
+        Swap and then flatten axes 0 (buffer_size) and 1 (n_reviewers)
+        to convert shape from [n_steps, n_reviewers, ...] (when ... is the shape of the features)
+        to [n_steps * n_reviewers, ...] (which maintain the order)
 
         :param arr:
         :return:

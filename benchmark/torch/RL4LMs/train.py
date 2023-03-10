@@ -9,8 +9,7 @@ from parl.utils import logger
 import torch
 import time
 
-# env and reward function
-from rl4lms_utils import build_reward_fn
+# reviewer and reward function
 from reviewer import ReviewerGroup
 
 # evaluation, metrics, tokenizer & dataset
@@ -41,29 +40,34 @@ def main(config):
 
     tokenizer = build_tokenizer(config["tokenizer"])
 
-    # reward function & metrics
-    # reward_fn = build_reward_fn(config["reward_fn"])   # build reward_fn in reviewer
+    # metrics
     metrics = build_metrics(config["train_evaluation"]["metrics"])
 
     # datapool
     samples_by_split = build_datapool(config["datapool"])
-
 
     reviewer_group = ReviewerGroup(reviewer_config=config["reviewer"],
                                    reward_config=config["reward_fn"],
                                    tokenizer=tokenizer,
                                    tokenizer_config=config["tokenizer"],
                                    datapool_config=config["datapool"],)
-                                   # reward_fn=reward_fn,
-                                   # question_samples=samples_by_split["train"])
 
     rl4lms_model = Seq2SeqLMModel(
         observation_space = reviewer_group.observation_space,
         action_space= reviewer_group.action_space,
         device=device,
-        **config["alg"]["model"]["args"]
+        model_name=config["alg"]["model"]["args"]["model_name"],
+        apply_model_parallel=config["alg"]["model"]["args"]["apply_model_parallel"],
+        prompt_truncation_side=config["alg"]["model"]["args"]["prompt_truncation_side"],
+        generation_kwargs=config["alg"]["model"]["args"]["generation_kwargs"]
     )
-    rl4lm_alg = RL4LMPPO(model=rl4lms_model, device=device, **config["alg"]["args"])
+    rl4lm_alg = RL4LMPPO(model=rl4lms_model,
+                         device=device,
+                         n_steps=config["alg"]["args"]["n_steps"],
+                         batch_size=config["alg"]["args"]["batch_size"],
+                         learning_rate=config["alg"]["args"]["learning_rate"],
+                         n_epochs=config["alg"]["args"]["n_epochs"],
+                         ent_coef=config["alg"]["args"]["ent_coef"])
     agent = RL4LMsAgent(rl4lm_alg, config["alg"])
 
     rollout_buffer = DictRolloutBuffer(

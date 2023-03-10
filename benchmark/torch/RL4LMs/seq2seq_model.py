@@ -14,14 +14,12 @@ from rl4lms_utils import (
 )
 
 
-
 class Seq2SeqLMModel(parl.Model):
     def __init__(
         self,
         observation_space,
         action_space,
         model_name,
-        optimizer_kwargs = {},
         weight_decay = 1e-6,
         apply_model_parallel = True,
         optimizer_class = torch.optim.AdamW,
@@ -30,21 +28,18 @@ class Seq2SeqLMModel(parl.Model):
         device = None,
     ):
         super(Seq2SeqLMModel, self).__init__()
-        if optimizer_kwargs is None:
-            optimizer_kwargs = {}
 
         self.observation_space = observation_space
         self.action_space = action_space
 
         self.optimizer_class = optimizer_class
-        self.optimizer_kwargs = optimizer_kwargs
         self.optimizer = None
         self.device = device
 
         self._action_space = action_space
         self._apply_model_parallel = apply_model_parallel
         self._build_model_heads(model_name)
-        self._setup_optimizer(optimizer_kwargs, weight_decay, optimizer_class)
+        self._setup_optimizer(weight_decay, optimizer_class)
         self._generation_kwargs = generation_kwargs
         self._prompt_truncation_side = prompt_truncation_side
 
@@ -397,7 +392,6 @@ class Seq2SeqLMModel(parl.Model):
 
     def _setup_optimizer(
         self,
-        optimizer_kwargs,
         weight_decay,
         optimizer_class,
     ):
@@ -414,9 +408,7 @@ class Seq2SeqLMModel(parl.Model):
                 "weight_decay": 0.0,
             },
         ]
-        self.optimizer = optimizer_class(
-            optimizer_grouped_parameters, **optimizer_kwargs
-        )
+        self.optimizer = optimizer_class(optimizer_grouped_parameters)
 
 
 

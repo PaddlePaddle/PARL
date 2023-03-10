@@ -13,16 +13,16 @@ def dict_to_tensor(obs, device):
 def get_one_token_obs(obs, idx, space):
     return OrderedDict([(k, obs[k][:, idx, :]) for k in space.spaces.keys()])
 
-def unpack_observations(obs_tensor, n_envs):
+def unpack_observations(obs_tensor, n_reviewers):
     """
     Unpacks vectorized dict observations into separate dict observations
     """
     unpacked_obs = []
     keys = obs_tensor.keys()
-    for env_ix in range(n_envs):
+    for reviewer_ix in range(n_reviewers):
         obs_dict = {}
         for key in keys:
-            obs_dict[key] = obs_tensor[key][env_ix].reshape(1, -1).cpu()
+            obs_dict[key] = obs_tensor[key][reviewer_ix].reshape(1, -1).cpu()
         unpacked_obs.append(obs_dict)
     return unpacked_obs
 
@@ -80,42 +80,108 @@ class RolloutUtil:
     def __init__(self, kl_args):
         self._kl_controller = KLController(kl_args["coeff"], kl_args["target_kl"])
 
-    def _generate_batch(
+    def collect_rollouts(
             self,
-            agent=None,
-            reviewer_group=None,
-            rollout_buffer=None,
-            tokenizer=None,
-            rollout_info=None,
-            device=None
+            agent,
+            reviewer_group,
+            rollout_buffer,
+            device
     ):
-        # if rollout buffer is already full, do not continue
-        if rollout_buffer.full:
-            return
+        # get tokenizer
+        tokenizer = reviewer_group.tokenizer
 
-        # start parallel episodes
-        current_obs = reviewer_group.ask()
+        # Switch to eval mode both training and testing
+        agent.eval_mode()
 
+        # reset rollout buffer and stats
+        rollout_buffer.reset()
 
-        # generate text using the model
-        obs_tensor = dict_to_tensor(current_obs, device)
-        generation_inputs = agent.get_inputs_for_generation(obs_tensor)
-        gen_output = agent.sample(
-            input_ids=generation_inputs.inputs,
-            attention_mask=generation_inputs.attention_masks,
-            tokenizer=tokenizer,
+        # start the rollout process
+        rollout_info = {
+            "rollout_info/ep_rew": [],
+            "rollout_info/kl_div_mean": [],
+            "rollout_info/ep_lens": [],
+            "rollout_info/ep_kl_rew": [],
+            "rollout_info/log_prob": [],
+            "rollout_info/ref_log_prob": [],
+            "rollout_info/values": [],
+        }
+        num_timesteps = 0
+        while not rollout_buffer.full:
+            # start parallel episodes
+            current_obs = reviewer_group.ask()
+
+            # generate sentences using the model
+            obs_tensor = dict_to_tensor(current_obs, device)
+            generation_inputs = agent.get_inputs_for_generation(obs_tensor)
+            gen_output = agent.sample(
+                input_ids=generation_inputs.inputs,
+                attention_mask=generation_inputs.attention_masks,
+                tokenizer=tokenizer)
+
+            # get episode state, reward, dones, infos from reviewers
+            sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = reviewer_group.feedback_sentense(
+                gen_output=gen_output)
+
+            # generate batch of rollouts and add to buffer
+            rollout_info, run_timesteps = self._generate_transition_and_add_to_buffer(
+                gen_sentence=gen_output,
+                init_obs=current_obs,
+                agent=agent,
+                n_reviewers=reviewer_group.n_reviewers,
+                obs_space=reviewer_group.observation_space,
+                sentence_new_obs=sentence_new_obs,
+                sentence_rewards=sentence_rewards,
+                sentence_dones=sentence_dones,
+                sentence_infos=sentence_infos,
+                rollout_buffer=rollout_buffer,
+                rollout_info=rollout_info,
+                device=device,
+            )
+            num_timesteps += run_timesteps
+
+        # aggregate rollout info
+        aggregated_rollout_info = {}
+        for key, values in rollout_info.items():
+            aggregated_rollout_info[key] = np.mean(values).item()
+            aggregated_rollout_info[f"{key}_std"] = np.std(values).item()
+        aggregated_rollout_info[
+            "rollout_info/kl_coeff"
+        ] = self._kl_controller.kl_coeff
+
+        logger.info(f"Rollout Info: {aggregated_rollout_info}")
+
+        # adapt the KL coeff
+        self._kl_controller.step(
+            torch.tensor(aggregated_rollout_info["rollout_info/kl_div_mean"])
         )
+        return num_timesteps
+
+    def _generate_transition_and_add_to_buffer(
+            self,
+            gen_sentence=None,
+            agent=None,
+            n_reviewers=None,
+            obs_space=None,
+            rollout_buffer=None,
+            rollout_info=None,
+            device=None,
+            sentence_new_obs=None,
+            sentence_rewards=None,
+            sentence_dones=None,
+            sentence_infos=None,
+            init_obs=None
+    ):
+        current_obs = init_obs
 
         review_times = 0
-        episode_starts = np.ones((reviewer_group.n_reviewers,), dtype=bool)
+        episode_starts = np.ones((n_reviewers,), dtype=bool)
         # process them one step at a time to collect rollout info
-        episode_wise_transitions = [[] for _ in range(reviewer_group.n_reviewers)]
-        ep_terminated = np.zeros((reviewer_group.n_reviewers,), dtype=bool)
+        episode_wise_transitions = [[] for _ in range(n_reviewers)]
+        ep_terminated = np.zeros((n_reviewers,), dtype=bool)
 
-        sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = reviewer_group.feedback_sentense(
-                                                                               gen_output=gen_output)
 
-        for idx, actions_tensor in enumerate(gen_output.step_wise_actions):
+        for idx, actions_tensor in enumerate(gen_sentence.step_wise_actions):
             if np.all(ep_terminated):
                 break
 
@@ -123,13 +189,7 @@ class RolloutUtil:
             with torch.no_grad():
                 obs_tensor = dict_to_tensor(current_obs, device)
 
-                # get log probs (TBD: generalize this a bit)
-                policy_kwargs = {
-                    "obs": obs_tensor,
-                    "actions": actions_tensor,
-                }
-
-                _, log_probs, _, _ = agent.forward_policy(**policy_kwargs)
+                _, log_probs, _, _ = agent.forward_policy(obs=obs_tensor, actions=actions_tensor)
 
                 # sanity check
                 assert torch.all(torch.isfinite(log_probs)), "Infinite values in log probs"
@@ -150,43 +210,43 @@ class RolloutUtil:
             actions = actions_tensor.cpu().numpy()
             rewards = sentence_rewards[:, idx]
             dones = sentence_dones[:, idx]
-            new_obs = get_one_token_obs(sentence_new_obs, idx, reviewer_group.observation_space)
+            new_obs = get_one_token_obs(sentence_new_obs, idx, obs_space)
             infos = sentence_infos[:, idx]
 
-            review_times += reviewer_group.n_reviewers
+            review_times += n_reviewers
 
             # compute total rewards
             total_rewards = rewards + kl_rewards.cpu().numpy()
 
             # unpack individual observations
-            unpacked_obs = unpack_observations(obs_tensor, reviewer_group.n_reviewers)
+            unpacked_obs = unpack_observations(obs_tensor, n_reviewers)
 
             # store episode wise transitions separately
-            for env_ix in range(reviewer_group.n_reviewers):
+            for reviewer_ix in range(n_reviewers):
                 # only if not terminated already
-                if not ep_terminated[env_ix]:
+                if not ep_terminated[reviewer_ix]:
                     transtion = TransitionInfo(
-                        observation=unpacked_obs[env_ix],
-                        action=actions[env_ix],
-                        task_reward=rewards[env_ix],
-                        total_reward=total_rewards[env_ix],
-                        kl_div=kl_div.cpu().numpy()[env_ix],
-                        episode_start=episode_starts[env_ix],
-                        value=values[env_ix].cpu(),
-                        log_prob=log_probs[env_ix].cpu(),
-                        done=dones[env_ix],
-                        ref_log_prob=ref_log_probs[env_ix].cpu(),
-                        kl_reward=kl_rewards.cpu().numpy()[env_ix],
-                        info=infos[env_ix],
+                        observation=unpacked_obs[reviewer_ix],
+                        action=actions[reviewer_ix],
+                        task_reward=rewards[reviewer_ix],
+                        total_reward=total_rewards[reviewer_ix],
+                        kl_div=kl_div.cpu().numpy()[reviewer_ix],
+                        episode_start=episode_starts[reviewer_ix],
+                        value=values[reviewer_ix].cpu(),
+                        log_prob=log_probs[reviewer_ix].cpu(),
+                        done=dones[reviewer_ix],
+                        ref_log_prob=ref_log_probs[reviewer_ix].cpu(),
+                        kl_reward=kl_rewards.cpu().numpy()[reviewer_ix],
+                        info=infos[reviewer_ix],
                     )
 
-                    episode_wise_transitions[env_ix].append(transtion)
+                    episode_wise_transitions[reviewer_ix].append(transtion)
 
                 # mark this episode to terminated if done occurs once
-                if dones[env_ix]:
-                    ep_terminated[env_ix] = True
+                if dones[reviewer_ix]:
+                    ep_terminated[reviewer_ix] = True
 
-            episode_starts = np.zeros((reviewer_group.n_reviewers,), dtype=bool)
+            episode_starts = np.zeros((n_reviewers,), dtype=bool)
             current_obs = new_obs
 
         # now we flush all episode wise info to the 1-D buffer
@@ -194,62 +254,3 @@ class RolloutUtil:
             rollout_buffer, episode_wise_transitions, rollout_info
         )
         return rollout_info, review_times
-
-
-    def collect_rollouts(
-            self,
-            agent,
-            reviewer_group,
-            rollout_buffer,
-            device
-    ):
-        # get tokenizer
-        tokenizer = reviewer_group.tokenizer
-
-        # Switch to eval mode
-        # self._agent.alg.model.set_training_mode(False)
-        agent.eval_mode()
-
-        # reset rollout buffer and stats
-        rollout_buffer.reset()
-
-        # start the rollout process
-        rollout_info = {
-            "rollout_info/ep_rew": [],
-            "rollout_info/kl_div_mean": [],
-            "rollout_info/ep_lens": [],
-            "rollout_info/ep_kl_rew": [],
-            "rollout_info/log_prob": [],
-            "rollout_info/ref_log_prob": [],
-            "rollout_info/values": [],
-        }
-        num_timesteps = 0
-        while not rollout_buffer.full:
-            # generate batch of rollouts
-            rollout_info, run_timesteps = self._generate_batch(
-                agent=agent,
-                reviewer_group=reviewer_group,
-                rollout_buffer=rollout_buffer,
-                tokenizer=tokenizer,
-                rollout_info=rollout_info,
-                device=device
-            )
-            num_timesteps += run_timesteps
-
-        # aggregate rollout info
-        aggregated_rollout_info = {}
-        for key, values in rollout_info.items():
-            aggregated_rollout_info[key] = np.mean(values).item()
-            aggregated_rollout_info[f"{key}_std"] = np.std(values).item()
-        aggregated_rollout_info[
-            "rollout_info/kl_coeff"
-        ] = self._kl_controller.kl_coeff
-
-        logger.info(f"Rollout Info: {aggregated_rollout_info}")
-
-
-        # adapt the KL coeff
-        self._kl_controller.step(
-            torch.tensor(aggregated_rollout_info["rollout_info/kl_div_mean"])
-        )
-        return num_timesteps

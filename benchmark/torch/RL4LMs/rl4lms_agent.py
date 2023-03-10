@@ -99,6 +99,7 @@ class RL4LMsAgent(parl.Agent):
 
 
     def predict(self, *args, **kwargs):
+        # only use sample
         pass
 
     def forward_value(

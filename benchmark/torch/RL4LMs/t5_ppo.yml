@@ -19,11 +19,10 @@ datapool:
 reviewer:
   parl_master_address: "localhost:8811"
   ## CHANGE FOR DEBUG ##
-#  n_envs: 10
+#  n_reviewers: 10
   n_reviewers: 2
   ## CHANGE FOR DEBUG ##
   args:
-
     max_prompt_length: 512
     max_episode_length: 100
     terminate_on_eos: True

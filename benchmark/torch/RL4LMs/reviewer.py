@@ -1,8 +1,8 @@
 import gym
 from collections import OrderedDict
 import torch
-from rl4lms_utils import TransitionInfo, Sample, Observation
-from gym import Env, spaces
+from rl4lms_utils import Observation
+from gym import spaces
 from gym.spaces.dict import Dict as DictSpace
 from gym.spaces.discrete import Discrete
 import parl
@@ -11,31 +11,17 @@ import numpy as np
 from rl4lms_utils import build_datapool, build_tokenizer, build_reward_fn
 
 def _flatten_obs(obs, space, n_reviewer=None):
-    assert isinstance(obs, (list, tuple)), "expected list or tuple of observations per environment"
-    assert len(obs) > 0, "need observations from at least one environment"
-
-    if isinstance(space, gym.spaces.Dict):
-        assert isinstance(space.spaces, OrderedDict), "Dict space must have ordered subspaces"
-        assert isinstance(obs[0], dict), "non-dict observation for environment with Dict observation space"
-        if n_reviewer is not None:
-            return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_reviewer, -1, len(obs[0][k])))) for k in space.spaces.keys()])
-        return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
-    else:
-        raise NotImplementedError
+    if n_reviewer is not None:
+        return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_reviewer, -1, len(obs[0][k])))) for k in space.spaces.keys()])
+    return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
 
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
-
-
-
 
 @parl.remote_class(wait=False)
 class Reviewer:
     def __init__(
         self,
-        tokenizer=None,
-        reward_function=None,
-        samples=None,
         reward_config=None,
         tokenizer_config=None,
         datapool_config=None,
@@ -46,24 +32,17 @@ class Reviewer:
         prompt_truncation_side = "left",
     ):
         """
-        A generic RL environment to generate textual sequences.
-        For eg: text generation, summarization, machine translation, text simplification
+        Reviewer who gives reward
         Args:
-            tokenizer (AutoTokenizer): pre-trained tokenizer
-            reward_function (RewardFunction): reward functiom
-            samples (Tuple[List[Sample], float]): list of samples
             max_episode_length (int, optional): Max steps to the model Defaults to 512.
             max_prompt_length (Optional[int], optional): maximum prompt length. Defaults to None.
             terminate_on_eos (bool, optional): whether to terminate on EOS. Defaults to False.
             context_start_token (bool, optional): start token for the context (For Encoder-Decoder models! )
             prompt_truncation_side (str): truncation side for prompt text (Defaults to "left")
         """
-        if tokenizer is None:
-            tokenizer = build_tokenizer(tokenizer_config)
-        if samples is None:
-            samples = build_datapool(datapool_config, remote_train=True)["train"]
-        if reward_function is None:
-            reward_function = build_reward_fn(reward_config)
+        tokenizer = build_tokenizer(tokenizer_config)
+        samples = build_datapool(datapool_config, remote_train=True)["train"]
+        reward_function = build_reward_fn(reward_config)
         self.tokenizer = tokenizer
         self.reward_function = reward_function
         self.max_steps = max_episode_length
@@ -79,7 +58,6 @@ class Reviewer:
         self._vocab_size = tokenizer.vocab_size
         self.observation_space = DictSpace(
             {
-                # we have to provide fixed sized inputs (padded) because sb3 support for DictObsersevation is limited
                 # while creating rollout buffers, observations are concatenated for each key
                 "prompt_or_input_encoded_pt": spaces.Box(
                     low=0, high=self._vocab_size, shape=(self._max_text_length,)
@@ -176,7 +154,7 @@ class Reviewer:
 
     def ask(self, sample = None):
         """
-        Resets the environment and starts a new episode
+        Reset the reviewer and starts a new episode
         """
         # gets a new sample if not provided
         if sample is None:
@@ -211,32 +189,22 @@ class ReviewerGroup:
                 tokenizer=None,
                 datapool_config=None,
                 tokenizer_config=None,
-                reward_fn=None,
-                question_samples=None,
-                seed = None,
-                start_index = 0,
                 ):
         self.n_reviewers = reviewer_config["n_reviewers"]
+        # remote reviewers need to use config to initialize due to serialization problem
         reviewer_kwargs = {
-            # "reward_function": reward_fn,
             "reward_config": reward_config,
-            # "tokenizer": tokenizer,
             "tokenizer_config": tokenizer_config,
-            # "samples": question_samples,
             "datapool_config": datapool_config
         }
         reviewer_kwargs = {**reviewer_kwargs, **reviewer_config.get("args", {})}
         self.tokenizer = tokenizer
         self._remote_reviewers = self._create_reviewers(reviewer_kwargs, reviewer_config["parl_master_address"])
-        # tem_future_object_ids = self._remote_reviewers[0].get_obs_and_action_space()
-        # self.observation_space, self.action_space = tem_future_object_ids.get()
-        # self.observation_space, self.action_space = tem_future_object_ids
 
-        # due to serialization, build obs space and action space here
+        # due to serialization problem, build obs space and action space here
         self._vocab_size = tokenizer.vocab_size
         self.observation_space = DictSpace(
             {
-                # we have to provide fixed sized inputs (padded) because sb3 support for DictObsersevation is limited
                 # while creating rollout buffers, observations are concatenated for each key
                 "prompt_or_input_encoded_pt": spaces.Box(
                     low=0, high=self._vocab_size, shape=(reviewer_kwargs["max_prompt_length"],)
@@ -292,20 +260,6 @@ class ReviewerGroup:
         return _flatten_obs(obs, self.observation_space, self.n_reviewers), \
                np.stack(rews).reshape(self.n_reviewers, -1), np.stack(dones).reshape(self.n_reviewers, -1),\
                np.stack(infos).reshape(self.n_reviewers, -1)
-
-
-    def _feedback_one_step(self, actions):
-        future_object_ids = [
-            self._remote_reviewers[i].get_new_obs_and_feedback_one_step(
-                actions[i]) for i in range(self.n_reviewers)
-        ]
-        feedback_res = [
-            future_object.get() for future_object in future_object_ids
-        ]
-        # feedback_res = future_object_ids
-        obs, rews, dones, infos = zip(*feedback_res)
-        return _flatten_obs(obs, self.observation_space), np.stack(rews), np.stack(dones), infos
-
 
     def _create_reviewers(self, reviewer_kwargs, parl_port=None):
         parl.connect(parl_port, distributed_files=["./rl4lms_utils/*.py", "./*.py"])

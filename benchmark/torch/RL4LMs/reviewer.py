@@ -10,36 +10,23 @@ from collections import deque
 import numpy as np
 from rl4lms_utils import build_datapool, build_tokenizer, build_reward_fn
 
-def _flatten_obs(obs, space):
+def _flatten_obs(obs, space, n_reviewer=None):
     assert isinstance(obs, (list, tuple)), "expected list or tuple of observations per environment"
     assert len(obs) > 0, "need observations from at least one environment"
 
     if isinstance(space, gym.spaces.Dict):
         assert isinstance(space.spaces, OrderedDict), "Dict space must have ordered subspaces"
         assert isinstance(obs[0], dict), "non-dict observation for environment with Dict observation space"
+        if n_reviewer is not None:
+            return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_reviewer, -1, len(obs[0][k])))) for k in space.spaces.keys()])
         return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
-    elif isinstance(space, gym.spaces.Tuple):
-        assert isinstance(obs[0], tuple), "non-tuple observation for environment with Tuple observation space"
-        obs_len = len(space.spaces)
-        return tuple(np.stack([o[i] for o in obs]) for i in range(obs_len))
     else:
-        return np.stack(obs)
+        raise NotImplementedError
 
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
 
-def unpack_observations(obs_tensor, n_envs):
-    """
-    Unpacks vectorized dict observations into separate dict observations
-    """
-    unpacked_obs = []
-    keys = obs_tensor.keys()
-    for env_ix in range(n_envs):
-        obs_dict = {}
-        for key in keys:
-            obs_dict[key] = obs_tensor[key][env_ix].reshape(1, -1).cpu()
-        unpacked_obs.append(obs_dict)
-    return unpacked_obs
+
 
 
 @parl.remote_class(wait=False)
@@ -180,6 +167,13 @@ class Reviewer:
         else:
             return (self.__current_obs.to_dict(), reward, done, info)
 
+    def get_new_obs_and_feedback_sentence(self, sentence):
+        res = []
+        for token in sentence:
+            one_step_res = self.get_new_obs_and_feedback_one_step(token)
+            res.append(one_step_res)
+        return res
+
     def ask(self, sample = None):
         """
         Resets the environment and starts a new episode
@@ -278,88 +272,27 @@ class ReviewerGroup:
         # sample_questions = future_object_ids
         return _flatten_obs(sample_questions, self.observation_space)
 
-    def feedback(self, current_obs, gen_output, kl_criterion, agent, device):
-        review_times = 0
-        episode_starts = np.ones((self.n_reviewers,), dtype=bool)
-        # process them one step at a time to collect rollout info
-        episode_wise_transitions = [[] for _ in range(self.n_reviewers)]
-        ep_terminated = np.zeros((self.n_reviewers,), dtype=bool)
+    def feedback_sentense(self, gen_output):
+        sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = \
+            self._reviewers_feedback_sentence(gen_output.step_wise_actions)
 
-        for actions_tensor, _ in zip(
-                gen_output.step_wise_actions, gen_output.step_wise_logprobs
-        ):
-            # if all episodes are done, just break and do not continue
-            if np.all(ep_terminated):
-                break
+        return sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos
 
-            # evaluate actions with actions from rollout
-            with torch.no_grad():
-                obs_tensor = dict_to_tensor(current_obs, device)
 
-                # get log probs (TBD: generalize this a bit)
-                policy_kwargs = {
-                    "obs": obs_tensor,
-                    "actions": actions_tensor,
-                }
+    def _reviewers_feedback_sentence(self, all_sentences):
+        all_sentences = torch.stack(all_sentences).cpu().numpy().transpose(1, 0)
+        future_object_ids = [
+            self._remote_reviewers[i].get_new_obs_and_feedback_sentence(
+                all_sentences[i]) for i in range(self.n_reviewers)
+        ]
 
-                _, log_probs, _, _ = agent.forward_policy(**policy_kwargs)
+        feedback_res = np.stack([future_object.get() for future_object in future_object_ids])
 
-                # sanity check
-                assert torch.all(torch.isfinite(log_probs)), "Infinite values in log probs"
+        obs, rews, dones, infos = zip(*feedback_res.reshape(-1, 4))
+        return _flatten_obs(obs, self.observation_space, self.n_reviewers), \
+               np.stack(rews).reshape(self.n_reviewers, -1), np.stack(dones).reshape(self.n_reviewers, -1),\
+               np.stack(infos).reshape(self.n_reviewers, -1)
 
-                # get values
-                values, _ = agent.forward_value(obs_tensor)
-
-                # get reference log probs
-                ref_log_probs, _ = agent.get_log_probs_ref_model(obs_tensor, actions_tensor)
-
-                # sanity check
-                assert torch.all(torch.isfinite(ref_log_probs)), "Infinite values in log probs"
-
-                # compute KL rewards
-                kl_div = log_probs - ref_log_probs
-                kl_rewards = -1 * kl_criterion.kl_coeff * kl_div
-
-            # step into env to get rewards
-            actions = actions_tensor.cpu().numpy()
-            new_obs, rewards, dones, infos = self._feedback_one_step(actions)
-
-            review_times += self.n_reviewers
-
-            # compute total rewards
-            total_rewards = rewards + kl_rewards.cpu().numpy()
-
-            # unpack individual observations
-            unpacked_obs = unpack_observations(obs_tensor, self.n_reviewers)
-
-            # store episode wise transitions separately
-            for env_ix in range(self.n_reviewers):
-                # only if not terminated already
-                if not ep_terminated[env_ix]:
-                    transtion = TransitionInfo(
-                        observation=unpacked_obs[env_ix],
-                        action=actions[env_ix],
-                        task_reward=rewards[env_ix],
-                        total_reward=total_rewards[env_ix],
-                        kl_div=kl_div.cpu().numpy()[env_ix],
-                        episode_start=episode_starts[env_ix],
-                        value=values[env_ix].cpu(),
-                        log_prob=log_probs[env_ix].cpu(),
-                        done=dones[env_ix],
-                        ref_log_prob=ref_log_probs[env_ix].cpu(),
-                        kl_reward=kl_rewards.cpu().numpy()[env_ix],
-                        info=infos[env_ix],
-                    )
-
-                    episode_wise_transitions[env_ix].append(transtion)
-
-                # mark this episode to terminated if done occurs once
-                if dones[env_ix]:
-                    ep_terminated[env_ix] = True
-
-            episode_starts = np.zeros((self.n_reviewers,), dtype=bool)
-            current_obs = new_obs
-        return episode_wise_transitions, review_times
 
     def _feedback_one_step(self, actions):
         future_object_ids = [

@@ -3,10 +3,28 @@ import numpy as np
 
 from .kl_controller import KLController
 from parl.utils import logger
+from collections import OrderedDict
+from .data_wrapper import TransitionInfo
 
 
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
+
+def get_one_token_obs(obs, idx, space):
+    return OrderedDict([(k, obs[k][:, idx, :]) for k in space.spaces.keys()])
+
+def unpack_observations(obs_tensor, n_envs):
+    """
+    Unpacks vectorized dict observations into separate dict observations
+    """
+    unpacked_obs = []
+    keys = obs_tensor.keys()
+    for env_ix in range(n_envs):
+        obs_dict = {}
+        for key in keys:
+            obs_dict[key] = obs_tensor[key][env_ix].reshape(1, -1).cpu()
+        unpacked_obs.append(obs_dict)
+    return unpacked_obs
 
 
 def add_to_buffer(
@@ -59,9 +77,8 @@ def add_to_buffer(
 
 
 class RolloutUtil:
-    def __init__(self, kl_args, reviewer_group):
-        self._kl_controller = KLController(kl_args["coeff"],
-                                           kl_args["target_kl"])
+    def __init__(self, kl_args):
+        self._kl_controller = KLController(kl_args["coeff"], kl_args["target_kl"])
 
     def _generate_batch(
             self,
@@ -89,17 +106,94 @@ class RolloutUtil:
             tokenizer=tokenizer,
         )
 
-        episode_wise_transitions, num_timesteps = reviewer_group.feedback(current_obs=current_obs,
-                                                                               gen_output=gen_output,
-                                                                               kl_criterion=self._kl_controller,
-                                                                               agent=agent,
-                                                                               device=device)
+        review_times = 0
+        episode_starts = np.ones((reviewer_group.n_reviewers,), dtype=bool)
+        # process them one step at a time to collect rollout info
+        episode_wise_transitions = [[] for _ in range(reviewer_group.n_reviewers)]
+        ep_terminated = np.zeros((reviewer_group.n_reviewers,), dtype=bool)
+
+        sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = reviewer_group.feedback_sentense(
+                                                                               gen_output=gen_output)
+
+        for idx, actions_tensor in enumerate(gen_output.step_wise_actions):
+            if np.all(ep_terminated):
+                break
+
+            # evaluate actions with actions from rollout
+            with torch.no_grad():
+                obs_tensor = dict_to_tensor(current_obs, device)
+
+                # get log probs (TBD: generalize this a bit)
+                policy_kwargs = {
+                    "obs": obs_tensor,
+                    "actions": actions_tensor,
+                }
+
+                _, log_probs, _, _ = agent.forward_policy(**policy_kwargs)
+
+                # sanity check
+                assert torch.all(torch.isfinite(log_probs)), "Infinite values in log probs"
+
+                # get values
+                values, _ = agent.forward_value(obs_tensor)
+
+                # get reference log probs
+                ref_log_probs, _ = agent.get_log_probs_ref_model(obs_tensor, actions_tensor)
+
+                # sanity check
+                assert torch.all(torch.isfinite(ref_log_probs)), "Infinite values in log probs"
+
+                # compute KL rewards
+                kl_div = log_probs - ref_log_probs
+                kl_rewards = -1 * self._kl_controller.kl_coeff * kl_div
+
+            actions = actions_tensor.cpu().numpy()
+            rewards = sentence_rewards[:, idx]
+            dones = sentence_dones[:, idx]
+            new_obs = get_one_token_obs(sentence_new_obs, idx, reviewer_group.observation_space)
+            infos = sentence_infos[:, idx]
+
+            review_times += reviewer_group.n_reviewers
+
+            # compute total rewards
+            total_rewards = rewards + kl_rewards.cpu().numpy()
+
+            # unpack individual observations
+            unpacked_obs = unpack_observations(obs_tensor, reviewer_group.n_reviewers)
+
+            # store episode wise transitions separately
+            for env_ix in range(reviewer_group.n_reviewers):
+                # only if not terminated already
+                if not ep_terminated[env_ix]:
+                    transtion = TransitionInfo(
+                        observation=unpacked_obs[env_ix],
+                        action=actions[env_ix],
+                        task_reward=rewards[env_ix],
+                        total_reward=total_rewards[env_ix],
+                        kl_div=kl_div.cpu().numpy()[env_ix],
+                        episode_start=episode_starts[env_ix],
+                        value=values[env_ix].cpu(),
+                        log_prob=log_probs[env_ix].cpu(),
+                        done=dones[env_ix],
+                        ref_log_prob=ref_log_probs[env_ix].cpu(),
+                        kl_reward=kl_rewards.cpu().numpy()[env_ix],
+                        info=infos[env_ix],
+                    )
+
+                    episode_wise_transitions[env_ix].append(transtion)
+
+                # mark this episode to terminated if done occurs once
+                if dones[env_ix]:
+                    ep_terminated[env_ix] = True
+
+            episode_starts = np.zeros((reviewer_group.n_reviewers,), dtype=bool)
+            current_obs = new_obs
 
         # now we flush all episode wise info to the 1-D buffer
         rollout_info = add_to_buffer(
             rollout_buffer, episode_wise_transitions, rollout_info
         )
-        return rollout_info, num_timesteps
+        return rollout_info, review_times
 
 
     def collect_rollouts(

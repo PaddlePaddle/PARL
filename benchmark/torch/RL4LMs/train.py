@@ -74,7 +74,7 @@ def main(config):
         gamma=agent.alg.gamma,
         gae_lambda=agent.alg.gae_lambda,
     )
-    rollout_util = RolloutUtil(config["alg"]["kl_div"], reviewer_group)
+    rollout_util = RolloutUtil(config["alg"]["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
     n_steps_per_iter = reviewer_group.n_reviewers * agent.alg.n_steps

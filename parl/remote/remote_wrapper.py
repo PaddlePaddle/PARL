@@ -16,6 +16,7 @@ import cloudpickle
 import sys
 import threading
 import zmq
+import multiprocessing as mp
 
 from parl.utils import logger, to_str, to_byte
 from parl.remote.communication import loads_argument, loads_return,\
@@ -55,6 +56,7 @@ class RemoteWrapper(object):
         # max_memory argument in @remote_class decorator
         max_memory = kwargs.get('_xparl_remote_class_max_memory')
         n_gpu = kwargs.get('_xparl_remote_class_n_gpu', 0)
+        self.job_is_alive = mp.Value('i', True)
 
         if self.GLOBAL_CLIENT.connected_to_master:
             job_info = self.request_resource(self.GLOBAL_CLIENT, max_memory, n_gpu)
@@ -63,7 +65,7 @@ class RemoteWrapper(object):
 
         if job_info is None:
             raise ResourceError("Cannot submit the job to the master. "
-                                "Please add more CPU resources to the "
+                                "Please add more computation resources to the "
                                 "master or try again later.")
         job_address = job_info.job_address
 
@@ -73,26 +75,38 @@ class RemoteWrapper(object):
         self.job_socket = self.ctx.socket(zmq.REQ)
         self.job_socket.linger = 0
         self.job_socket.connect("tcp://{}".format(job_address))
+        # check the result every 20s to detect the job is still alive.
+        self.job_socket.setsockopt(zmq.RCVTIMEO, 20 * 1000)
         self.job_address = job_address
-        self.job_shutdown = False
 
-        self.send_file(self.job_socket)
+        self.send_file()
 
         for key in list(kwargs.keys()):
             if key.startswith(XPARL_RESERVED_PREFIX):
                 del kwargs[key]
-        self.job_socket.send_multipart([
-            remote_constants.INIT_OBJECT_TAG,
-            dump_remote_class(cls),
-            cloudpickle.dumps([args, kwargs]),
-        ])
-        message = self.job_socket.recv_multipart()
+        serlization_finished = True
+        try:
+            self.job_socket.send_multipart([
+                remote_constants.INIT_OBJECT_TAG,
+                dump_remote_class(cls),
+                cloudpickle.dumps([args, kwargs]),
+            ])
+        except TypeError:
+            serlization_finished = False
+            logger.error("[xparl] fail to serialize the arguments for class initialization. \n\
+                        For more information, please check the documentation in: \n\
+                        https://parl.readthedocs.io/en/latest/questions/distributed_training.html#recommended-data-types-in-xparl"
+                         )
+        if not serlization_finished:
+            raise RemoteSerializeError('__init__', "fail to finish serialization.")
+
+        message = self._receive_from_remote_instance('__init__')
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             self.remote_attribute_keys_set = loads_return(message[1])
         elif tag == remote_constants.EXCEPTION_TAG:
             traceback_str = to_str(message[1])
-            self.job_shutdown = True
+            self.job_is_alive.value = False
             raise RemoteError('__init__', traceback_str)
         else:
             pass
@@ -100,7 +114,7 @@ class RemoteWrapper(object):
     def __del__(self):
         """Delete the remote class object and release remote resources."""
         try:
-            if not self.job_shutdown:
+            if self.job_is_alive.value == True:
                 self.job_socket.setsockopt(zmq.RCVTIMEO, 1 * 1000)
                 self.job_socket.send_multipart([remote_constants.KILLJOB_TAG])
                 _ = self.job_socket.recv_multipart()
@@ -115,18 +129,18 @@ class RemoteWrapper(object):
     def get_attrs(self):
         return self.remote_attribute_keys_set
 
-    def send_file(self, socket):
+    def send_file(self):
         try:
-            socket.send_multipart([remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles])
-            _ = socket.recv_multipart()
+            self.job_socket.send_multipart([remote_constants.SEND_FILE_TAG, self.GLOBAL_CLIENT.pyfiles])
+            _ = self.job_socket.recv_multipart()
         except zmq.error.Again as e:
-            logger.error("Send python files failed.")
+            logger.error("[Client] Fail to send python files to the remote instance.")
 
     def request_resource(self, global_client, max_memory, n_gpu):
         """Try to request cpu resource for 1 second/time for 300 times."""
         cnt = 300
         while cnt > 0:
-            job_info = global_client.submit_job(max_memory, n_gpu)
+            job_info = global_client.submit_job(max_memory, n_gpu, self.job_is_alive)
             if job_info is not None:
                 return job_info
             if cnt % 30 == 0:
@@ -137,15 +151,29 @@ class RemoteWrapper(object):
     def set_remote_attr(self, attr, value):
         self.internal_lock.acquire()
         self.job_socket.send_multipart([remote_constants.SET_ATTRIBUTE_TAG, to_byte(attr), dumps_return(value)])
-        message = self.job_socket.recv_multipart()
+        message = self._receive_from_remote_instance(attr)
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
             self.remote_attribute_keys_set = loads_return(message[1])
             self.internal_lock.release()
         else:
-            self.job_shutdown = True
+            self.job_is_alive.value = False
             raise NotImplementedError()
         return
+    
+    def _receive_from_remote_instance(self, attr):
+        """Receive message from remote instance while checking the job status every  20 seconds.
+        """
+        message = None
+        while True:
+            try:
+                message = self.job_socket.recv_multipart()
+                return message
+            except zmq.error.Again as e:
+                pass
+            if not self.job_is_alive.value:
+                raise RemoteError(attr, "This instance is disconncted with the remote instance.")
+        return message
 
     def get_remote_attr(self, attr):
         """Call the function of the unwrapped class."""
@@ -153,8 +181,8 @@ class RemoteWrapper(object):
         is_attribute = attr in self.remote_attribute_keys_set
 
         def wrapper(*args, **kwargs):
-            if self.job_shutdown:
-                raise RemoteError(attr, "This actor losts connection with the job.")
+            if not self.job_is_alive.value:
+                raise RemoteError(attr, "This instance is disconncted with the remote instance.")
             self.internal_lock.acquire()
             if is_attribute:
                 self.job_socket.send_multipart([remote_constants.GET_ATTRIBUTE_TAG, to_byte(attr)])
@@ -162,7 +190,7 @@ class RemoteWrapper(object):
                 data = dumps_argument(*args, **kwargs)
                 self.job_socket.send_multipart([remote_constants.CALL_TAG, to_byte(attr), data])
 
-            message = self.job_socket.recv_multipart()
+            message = self._receive_from_remote_instance(attr)
             tag = message[0]
 
             if tag == remote_constants.NORMAL_TAG:
@@ -174,26 +202,26 @@ class RemoteWrapper(object):
 
             elif tag == remote_constants.EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                self.job_shutdown = True
+                self.job_is_alive.value = False
                 raise RemoteError(attr, error_str)
 
             elif tag == remote_constants.ATTRIBUTE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                self.job_shutdown = True
+                self.job_is_alive.value = False
                 raise RemoteAttributeError(attr, error_str)
 
             elif tag == remote_constants.SERIALIZE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                self.job_shutdown = True
+                self.job_is_alive.value = False
                 raise RemoteSerializeError(attr, error_str)
 
             elif tag == remote_constants.DESERIALIZE_EXCEPTION_TAG:
                 error_str = to_str(message[1])
-                self.job_shutdown = True
+                self.job_is_alive.value = False
                 raise RemoteDeserializeError(attr, error_str)
 
             else:
-                self.job_shutdown = True
+                self.job_is_alive.value = False
                 raise NotImplementedError()
 
         return wrapper() if is_attribute else wrapper

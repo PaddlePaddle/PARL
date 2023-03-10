@@ -77,7 +77,7 @@ setup(
         'cloudpickle==1.3.0; python_version<"3"',
         'cloudpickle==1.6.0; python_version>="3"',
         "tensorboardX==2.5",
-        "tensorboard",
+        "tensorboard<=2.11.0",
         "flask>=1.0.4",
         "click",
         "pickle5",

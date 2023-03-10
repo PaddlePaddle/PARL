@@ -43,8 +43,6 @@ class TestCluster(XparlTestCase):
         for i in range(4):
             ret = actors[i].add(2, 3)
             self.assertEqual(5, ret)
-        import time
-        time.sleep(201004)
 
 if __name__ == '__main__':
     unittest.main(failfast=True)

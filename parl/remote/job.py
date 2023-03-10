@@ -71,6 +71,7 @@ class Job(object):
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
             gpu (str): id list of GPUs can be used by each remote instance.
             job_id (str): Unique ID for the job. 
+            instance_id (str): Unique instance ID to which the job connects.
         """
         self.max_memory = None
         self.gpu = ""
@@ -200,6 +201,7 @@ class Job(object):
         if max_memory != 'None':
             self.max_memory = float(max_memory)
         self.gpu = to_str(message[3])
+        self.instance_id = to_str(message[4])
         socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
         def client_heartbeat_exit_callback_func():
@@ -214,7 +216,7 @@ class Job(object):
 
         # a thread that sends heartbeat signals from the client
         self.client_heartbeat_client_thread = HeartbeatClientThread(
-            client_id=self.job_id,
+            client_id=self.instance_id,
             heartbeat_server_addr=client_heartbeat_server_addr,
             heartbeat_exit_callback_func=client_heartbeat_exit_callback_func)
         self.client_heartbeat_client_thread.setDaemon(True)

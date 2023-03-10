@@ -58,6 +58,7 @@ def remote_class(*args, **kwargs):
         max_memory (float): Maximum memory (MB) can be used by each remote
                             instance, the unit is in MB and default value is
                             none(unlimited).
+        n_gpu (int): The number of GPUs required to run the remote instance.
 
     Returns:
         A remote wrapper for the remote class.

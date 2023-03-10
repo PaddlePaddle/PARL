@@ -62,6 +62,7 @@ PARL
     parallel_training/setup.rst
     parallel_training/recommended_practice1.rst
     parallel_training/recommended_practice2.rst
+    parallel_training/gpu_cluster.rst
     parallel_training/debug.rst
     parallel_training/file_distribution.rst
     parallel_training/serialization.rst
@@ -73,6 +74,15 @@ PARL
    apis/model.rst
    apis/algorithm.rst
    apis/agent.rst
+   apis/remote_class.rst
+   apis/connect.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Frequently Asked Questions
+
+   questions/distributed_training.rst
+
 
 .. toctree::
    :maxdepth: 1

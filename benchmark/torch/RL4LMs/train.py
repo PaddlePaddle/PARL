@@ -9,12 +9,12 @@ from parl.utils import logger
 import torch
 import time
 
-# reviewer and reward function
-from reviewer import ReviewerGroup
+# instructor and reward function
+from instructor import InstructorGroup
 
 # evaluation, metrics, tokenizer & dataset
 from rl4lms_utils import build_metrics, build_tokenizer, build_datapool
-from rl4lms_utils import evaluate_on_samples
+from rl4lms_utils import Examiner
 
 # rollout
 from rl4lms_utils import DictRolloutBuffer, RolloutUtil
@@ -46,15 +46,15 @@ def main(config):
     # datapool
     samples_by_split = build_datapool(config["datapool"])
 
-    reviewer_group = ReviewerGroup(reviewer_config=config["reviewer"],
+    instructor_group = InstructorGroup(instructor_config=config["instructor"],
                                    reward_config=config["reward_fn"],
                                    tokenizer=tokenizer,
                                    tokenizer_config=config["tokenizer"],
                                    datapool_config=config["datapool"],)
 
     rl4lms_model = Seq2SeqLMModel(
-        observation_space = reviewer_group.observation_space,
-        action_space= reviewer_group.action_space,
+        observation_space=instructor_group.observation_space,
+        action_space=instructor_group.action_space,
         device=device,
         model_name=config["alg"]["model"]["args"]["model_name"],
         apply_model_parallel=config["alg"]["model"]["args"]["apply_model_parallel"],
@@ -71,9 +71,9 @@ def main(config):
     agent = RL4LMsAgent(rl4lm_alg, config["alg"])
 
     rollout_buffer = DictRolloutBuffer(
-        buffer_size=agent.alg.n_steps * reviewer_group.n_reviewers,
-        observation_space=reviewer_group.observation_space,
-        action_space=reviewer_group.action_space,
+        buffer_size=agent.alg.n_steps * instructor_group.n_instructors,
+        observation_space=instructor_group.observation_space,
+        action_space=instructor_group.action_space,
         device=device,
         gamma=agent.alg.gamma,
         gae_lambda=agent.alg.gae_lambda,
@@ -81,26 +81,27 @@ def main(config):
     rollout_util = RolloutUtil(config["alg"]["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
-    n_steps_per_iter = reviewer_group.n_reviewers * agent.alg.n_steps
+    n_steps_per_iter = instructor_group.n_instructors * agent.alg.n_steps
 
-    max_prompt_length = config["reviewer"]["args"]["max_prompt_length"]
+    max_prompt_length = config["instructor"]["args"]["max_prompt_length"]
 
     # gen kwargs for evaluation
     eval_gen_kwargs = config["train_evaluation"]["generation_kwargs"]
     eval_batch_size = config["train_evaluation"]["eval_batch_size"]
-    eval_splits = ["val", "test"]
+    examiner = Examiner(
+                    tokenizer=tokenizer,
+                    eval_batch_size=eval_batch_size,
+                    metrics=metrics,
+                    eval_gen_kwargs=eval_gen_kwargs,
+                    samples_by_split=samples_by_split,
+                    max_prompt_length=max_prompt_length
+                )
 
     iter_start = 0
-    for sp in eval_splits:
-        evaluate_on_samples(policy=agent.alg.model,
-                            tokenizer=tokenizer,
-                            samples=samples_by_split[sp],
-                            batch_size=eval_batch_size,
-                            max_prompt_length=max_prompt_length,
-                            metrics=metrics,
-                            epoch=iter_start,
-                            split_name=sp,
-                            gen_kwargs=eval_gen_kwargs)
+    examiner.evaluate(policy=agent.alg.model,
+                      sample_name_list=["val", "test"],
+                      epoch=iter_start)
+
     epoch = 0
     for epoch in range(iter_start, n_iters):
         print("========== BEGIN ==========")
@@ -111,7 +112,7 @@ def main(config):
         num_timesteps = 0
 
         while num_timesteps < n_steps_per_iter:
-            run_timesteps = rollout_util.collect_rollouts(agent, reviewer_group, rollout_buffer, device)
+            run_timesteps = rollout_util.collect_rollouts(agent, instructor_group, rollout_buffer, device)
             num_timesteps += run_timesteps
             agent.learn(rollout_buffer)
 
@@ -124,27 +125,13 @@ def main(config):
 
         # evaluate on val set in the given intervals
         if (epoch + 1) % config["train_evaluation"]["eval_every"] == 0:
-            evaluate_on_samples(policy=agent.alg.model,
-                                tokenizer=tokenizer,
-                                samples=samples_by_split["val"],
-                                batch_size=eval_batch_size,
-                                max_prompt_length=max_prompt_length,
-                                metrics=metrics,
-                                epoch=epoch,
-                                split_name="val",
-                                gen_kwargs=eval_gen_kwargs)
+            examiner.evaluate(policy=agent.alg.model,
+                              sample_name_list=["val"],
+                              epoch=epoch)
 
-
-    for sp in eval_splits:
-        evaluate_on_samples(policy=agent.alg.model,
-                            tokenizer=tokenizer,
-                            samples=samples_by_split[sp],
-                            batch_size=eval_batch_size,
-                            max_prompt_length=max_prompt_length,
-                            metrics=metrics,
-                            epoch=epoch,
-                            split_name=sp,
-                            gen_kwargs=eval_gen_kwargs)
+    examiner.evaluate(policy=agent.alg.model,
+                      sample_name_list=["val", "test"],
+                      epoch=epoch)
 
 
 if __name__ == '__main__':

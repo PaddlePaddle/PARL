@@ -1,14 +1,13 @@
 from .data_wrapper import RefPolicyOutput, GenerationInputs, GenerationOutputs,\
     PolicyType, Sample, Observation, TransitionInfo
 
-
 from .huggingface_generation_util import override_generation_routines
 
 from .buffer import DictRolloutBuffer
 
 from .kl_controller import KLController
 
-from .evaluation_util import evaluate_on_samples
+from .examiner import Examiner
 
 from .data_pool import CNNDailyMail
 

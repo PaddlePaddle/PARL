@@ -13,16 +13,16 @@ def dict_to_tensor(obs, device):
 def get_one_token_obs(obs, idx, space):
     return OrderedDict([(k, obs[k][:, idx, :]) for k in space.spaces.keys()])
 
-def unpack_observations(obs_tensor, n_reviewers):
+def unpack_observations(obs_tensor, n_instructors):
     """
     Unpacks vectorized dict observations into separate dict observations
     """
     unpacked_obs = []
     keys = obs_tensor.keys()
-    for reviewer_ix in range(n_reviewers):
+    for instructor_ix in range(n_instructors):
         obs_dict = {}
         for key in keys:
-            obs_dict[key] = obs_tensor[key][reviewer_ix].reshape(1, -1).cpu()
+            obs_dict[key] = obs_tensor[key][instructor_ix].reshape(1, -1).cpu()
         unpacked_obs.append(obs_dict)
     return unpacked_obs
 
@@ -83,12 +83,12 @@ class RolloutUtil:
     def collect_rollouts(
             self,
             agent,
-            reviewer_group,
+            instructor_group,
             rollout_buffer,
             device
     ):
         # get tokenizer
-        tokenizer = reviewer_group.tokenizer
+        tokenizer = instructor_group.tokenizer
 
         # Switch to eval mode both training and testing
         agent.eval_mode()
@@ -109,7 +109,7 @@ class RolloutUtil:
         num_timesteps = 0
         while not rollout_buffer.full:
             # start parallel episodes
-            current_obs = reviewer_group.ask()
+            current_obs = instructor_group.ask()
 
             # generate sentences using the model
             obs_tensor = dict_to_tensor(current_obs, device)
@@ -119,8 +119,8 @@ class RolloutUtil:
                 attention_mask=generation_inputs.attention_masks,
                 tokenizer=tokenizer)
 
-            # get episode state, reward, dones, infos from reviewers
-            sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = reviewer_group.feedback_sentense(
+            # get episode state, reward, dones, infos from instructors
+            sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = instructor_group.feedback_sentense(
                 gen_output=gen_output)
 
             # generate batch of rollouts and add to buffer
@@ -128,8 +128,8 @@ class RolloutUtil:
                 gen_sentence=gen_output,
                 init_obs=current_obs,
                 agent=agent,
-                n_reviewers=reviewer_group.n_reviewers,
-                obs_space=reviewer_group.observation_space,
+                n_instructors=instructor_group.n_instructors,
+                obs_space=instructor_group.observation_space,
                 sentence_new_obs=sentence_new_obs,
                 sentence_rewards=sentence_rewards,
                 sentence_dones=sentence_dones,
@@ -161,7 +161,7 @@ class RolloutUtil:
             self,
             gen_sentence=None,
             agent=None,
-            n_reviewers=None,
+            n_instructors=None,
             obs_space=None,
             rollout_buffer=None,
             rollout_info=None,
@@ -175,10 +175,10 @@ class RolloutUtil:
         current_obs = init_obs
 
         review_times = 0
-        episode_starts = np.ones((n_reviewers,), dtype=bool)
+        episode_starts = np.ones((n_instructors,), dtype=bool)
         # process them one step at a time to collect rollout info
-        episode_wise_transitions = [[] for _ in range(n_reviewers)]
-        ep_terminated = np.zeros((n_reviewers,), dtype=bool)
+        episode_wise_transitions = [[] for _ in range(n_instructors)]
+        ep_terminated = np.zeros((n_instructors,), dtype=bool)
 
 
         for idx, actions_tensor in enumerate(gen_sentence.step_wise_actions):
@@ -213,40 +213,40 @@ class RolloutUtil:
             new_obs = get_one_token_obs(sentence_new_obs, idx, obs_space)
             infos = sentence_infos[:, idx]
 
-            review_times += n_reviewers
+            review_times += n_instructors
 
             # compute total rewards
             total_rewards = rewards + kl_rewards.cpu().numpy()
 
             # unpack individual observations
-            unpacked_obs = unpack_observations(obs_tensor, n_reviewers)
+            unpacked_obs = unpack_observations(obs_tensor, n_instructors)
 
             # store episode wise transitions separately
-            for reviewer_ix in range(n_reviewers):
+            for instructor_ix in range(n_instructors):
                 # only if not terminated already
-                if not ep_terminated[reviewer_ix]:
+                if not ep_terminated[instructor_ix]:
                     transtion = TransitionInfo(
-                        observation=unpacked_obs[reviewer_ix],
-                        action=actions[reviewer_ix],
-                        task_reward=rewards[reviewer_ix],
-                        total_reward=total_rewards[reviewer_ix],
-                        kl_div=kl_div.cpu().numpy()[reviewer_ix],
-                        episode_start=episode_starts[reviewer_ix],
-                        value=values[reviewer_ix].cpu(),
-                        log_prob=log_probs[reviewer_ix].cpu(),
-                        done=dones[reviewer_ix],
-                        ref_log_prob=ref_log_probs[reviewer_ix].cpu(),
-                        kl_reward=kl_rewards.cpu().numpy()[reviewer_ix],
-                        info=infos[reviewer_ix],
+                        observation=unpacked_obs[instructor_ix],
+                        action=actions[instructor_ix],
+                        task_reward=rewards[instructor_ix],
+                        total_reward=total_rewards[instructor_ix],
+                        kl_div=kl_div.cpu().numpy()[instructor_ix],
+                        episode_start=episode_starts[instructor_ix],
+                        value=values[instructor_ix].cpu(),
+                        log_prob=log_probs[instructor_ix].cpu(),
+                        done=dones[instructor_ix],
+                        ref_log_prob=ref_log_probs[instructor_ix].cpu(),
+                        kl_reward=kl_rewards.cpu().numpy()[instructor_ix],
+                        info=infos[instructor_ix],
                     )
 
-                    episode_wise_transitions[reviewer_ix].append(transtion)
+                    episode_wise_transitions[instructor_ix].append(transtion)
 
                 # mark this episode to terminated if done occurs once
-                if dones[reviewer_ix]:
-                    ep_terminated[reviewer_ix] = True
+                if dones[instructor_ix]:
+                    ep_terminated[instructor_ix] = True
 
-            episode_starts = np.zeros((n_reviewers,), dtype=bool)
+            episode_starts = np.zeros((n_instructors,), dtype=bool)
             current_obs = new_obs
 
         # now we flush all episode wise info to the 1-D buffer

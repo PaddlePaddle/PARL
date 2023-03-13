@@ -16,5 +16,9 @@
 ### Running command
 
 ```bash
+# start xparl
+xparl start --port 8811 --cpu_num 10
+
+# start training
 python train.py --config_path t5_ppo.yml
 ```

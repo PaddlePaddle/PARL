@@ -1,4 +1,3 @@
-import gym
 from collections import OrderedDict
 import torch
 from rl4lms_utils import Observation
@@ -10,16 +9,16 @@ from collections import deque
 import numpy as np
 from rl4lms_utils import build_datapool, build_tokenizer, build_reward_fn
 
-def _flatten_obs(obs, space, n_reviewer=None):
-    if n_reviewer is not None:
-        return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_reviewer, -1, len(obs[0][k])))) for k in space.spaces.keys()])
+def _flatten_obs(obs, space, n_instructor=None):
+    if n_instructor is not None:
+        return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_instructor, -1, len(obs[0][k])))) for k in space.spaces.keys()])
     return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
 
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
 
 @parl.remote_class(wait=False)
-class Reviewer:
+class Instructor:
     def __init__(
         self,
         reward_config=None,
@@ -32,7 +31,7 @@ class Reviewer:
         prompt_truncation_side = "left",
     ):
         """
-        Reviewer who gives reward
+        Instructor who gives reward
         Args:
             max_episode_length (int, optional): Max steps to the model Defaults to 512.
             max_prompt_length (Optional[int], optional): maximum prompt length. Defaults to None.
@@ -154,7 +153,7 @@ class Reviewer:
 
     def ask(self, sample = None):
         """
-        Reset the reviewer and starts a new episode
+        Reset the instructor and starts a new episode
         """
         # gets a new sample if not provided
         if sample is None:
@@ -182,24 +181,24 @@ class Reviewer:
         return (self.observation_space, self.action_space)
 
 
-class ReviewerGroup:
+class InstructorGroup:
     def __init__(self,
-                reviewer_config=None,
+                instructor_config=None,
                 reward_config=None,
                 tokenizer=None,
                 datapool_config=None,
                 tokenizer_config=None,
                 ):
-        self.n_reviewers = reviewer_config["n_reviewers"]
-        # remote reviewers need to use config to initialize due to serialization problem
-        reviewer_kwargs = {
+        self.n_instructors = instructor_config["n_instructors"]
+        # remote instructors need to use config to initialize due to serialization problem
+        instructor_kwargs = {
             "reward_config": reward_config,
             "tokenizer_config": tokenizer_config,
             "datapool_config": datapool_config
         }
-        reviewer_kwargs = {**reviewer_kwargs, **reviewer_config.get("args", {})}
+        instructor_kwargs = {**instructor_kwargs, **instructor_config.get("args", {})}
         self.tokenizer = tokenizer
-        self._remote_reviewers = self._create_reviewers(reviewer_kwargs, reviewer_config["parl_master_address"])
+        self._remote_instructors = self._create_instructors(instructor_kwargs, instructor_config["parl_master_address"])
 
         # due to serialization problem, build obs space and action space here
         self._vocab_size = tokenizer.vocab_size
@@ -207,24 +206,24 @@ class ReviewerGroup:
             {
                 # while creating rollout buffers, observations are concatenated for each key
                 "prompt_or_input_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(reviewer_kwargs["max_prompt_length"],)
+                    low=0, high=self._vocab_size, shape=(instructor_kwargs["max_prompt_length"],)
                 ),
                 "prompt_or_input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(reviewer_kwargs["max_prompt_length"],)
+                    low=0, high=1, shape=(instructor_kwargs["max_prompt_length"],)
                 ),
                 "context_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(reviewer_kwargs["max_episode_length"],)
+                    low=0, high=self._vocab_size, shape=(instructor_kwargs["max_episode_length"],)
                 ),
                 "context_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(reviewer_kwargs["max_episode_length"],)
+                    low=0, high=1, shape=(instructor_kwargs["max_episode_length"],)
                 ),
                 "input_encoded_pt": spaces.Box(
                     low=0,
                     high=self._vocab_size,
-                    shape=(reviewer_kwargs["max_prompt_length"] + reviewer_kwargs["max_episode_length"],),
+                    shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"],),
                 ),
                 "input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(reviewer_kwargs["max_prompt_length"] + reviewer_kwargs["max_episode_length"],)
+                    low=0, high=1, shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"],)
                 ),
             }
         )
@@ -232,7 +231,7 @@ class ReviewerGroup:
 
     def ask(self):
         future_object_ids = [
-            remote_reviewer.ask() for remote_reviewer in self._remote_reviewers
+            remote_instructor.ask() for remote_instructor in self._remote_instructors
         ]
         sample_questions = [
             future_object.get() for future_object in future_object_ids
@@ -242,28 +241,28 @@ class ReviewerGroup:
 
     def feedback_sentense(self, gen_output):
         sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = \
-            self._reviewers_feedback_sentence(gen_output.step_wise_actions)
+            self._instructors_feedback_sentence(gen_output.step_wise_actions)
 
         return sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos
 
 
-    def _reviewers_feedback_sentence(self, all_sentences):
+    def _instructors_feedback_sentence(self, all_sentences):
         all_sentences = torch.stack(all_sentences).cpu().numpy().transpose(1, 0)
         future_object_ids = [
-            self._remote_reviewers[i].get_new_obs_and_feedback_sentence(
-                all_sentences[i]) for i in range(self.n_reviewers)
+            self._remote_instructors[i].get_new_obs_and_feedback_sentence(
+                all_sentences[i]) for i in range(self.n_instructors)
         ]
 
         feedback_res = np.stack([future_object.get() for future_object in future_object_ids])
 
         obs, rews, dones, infos = zip(*feedback_res.reshape(-1, 4))
-        return _flatten_obs(obs, self.observation_space, self.n_reviewers), \
-               np.stack(rews).reshape(self.n_reviewers, -1), np.stack(dones).reshape(self.n_reviewers, -1),\
-               np.stack(infos).reshape(self.n_reviewers, -1)
+        return _flatten_obs(obs, self.observation_space, self.n_instructors), \
+               np.stack(rews).reshape(self.n_instructors, -1), np.stack(dones).reshape(self.n_instructors, -1),\
+               np.stack(infos).reshape(self.n_instructors, -1)
 
-    def _create_reviewers(self, reviewer_kwargs, parl_port=None):
+    def _create_instructors(self, instructor_kwargs, parl_port=None):
         parl.connect(parl_port, distributed_files=["./rl4lms_utils/*.py", "./*.py"])
-        return [Reviewer(**reviewer_kwargs) for _ in range(self.n_reviewers)]
+        return [Instructor(**instructor_kwargs) for _ in range(self.n_instructors)]
 
 
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import cloudpickle
-import multiprocessing
+import multiprocessing as mp
 import os
 import psutil
 import signal
@@ -26,10 +26,11 @@ import threading
 import warnings
 import zmq
 from datetime import datetime
+import pynvml
 import parl
-from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS 
+from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
 from parl.remote import remote_constants
-from parl.remote.message import InitializedWorker
+from parl.remote.message import InitializedWorker, AllocatedCpu, AllocatedGpu
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
@@ -67,9 +68,18 @@ class Worker(object):
     Args:
         master_address (str): IP address of the master node.
         cpu_num (int): Number of cpu to be used on the worker.
+        gpu (str): Comma separated list of GPU(s) to use.
     """
 
-    def __init__(self, master_address, cpu_num=None, log_server_port=None):
+    def __init__(self, master_address, cpu_num=None, log_server_port=None, gpu=''):
+        # At first, fork a subprocess with blank context to launch job.py
+        self.cmd_queue = mp.Queue()
+        process = mp.Process(target=self._launch_cmd, args=(self.cmd_queue, ))
+        process.daemon = True
+        process.start()
+
+        # initialzation
+        self.pid = str(os.getpid())
         self.lock = threading.Lock()
         self.ctx = zmq.Context.instance()
         self.master_address = master_address
@@ -77,16 +87,17 @@ class Worker(object):
         self.worker_is_alive = True
         self.worker_status = None  # initialized at `self._create_jobs`
         self._set_cpu_num(cpu_num)
-        self.job_buffer = queue.Queue(maxsize=self.cpu_num)
+        self._set_gpu_num(gpu)
+        self.gpu = gpu
+        self.device_count = self.cpu_num + self.gpu_num
+        self.job_buffer = queue.Queue(maxsize=self.device_count)
         self._create_sockets()
         self.check_env_consistency()
         # create log server
-        self.log_server_proc, self.log_server_address = self._create_log_server(
-            port=log_server_port)
+        self.log_server_proc, self.log_server_address = self._create_log_server(port=log_server_port)
 
         # create a thread that waits commands from the job to kill the job.
-        self.remove_job_thread = threading.Thread(
-            target=self._reply_remove_job)
+        self.remove_job_thread = threading.Thread(target=self._reply_remove_job)
         self.remove_job_thread.setDaemon(True)
         self.remove_job_thread.start()
 
@@ -104,18 +115,28 @@ class Worker(object):
     def _set_cpu_num(self, cpu_num=None):
         """set useable cpu number for worker"""
         if cpu_num is not None:
-            assert isinstance(
-                cpu_num, int
-            ), "cpu_num should be INT type, please check the input type."
+            assert isinstance(cpu_num, int), "cpu_num should be INT type, please check the input type."
             self.cpu_num = cpu_num
         else:
-            self.cpu_num = multiprocessing.cpu_count()
+            self.cpu_num = mp.cpu_count()
+
+    def _set_gpu_num(self, gpu=''):
+        """set useable gpu number for worker"""
+        self.gpu_num = 0
+        if gpu:
+            self.gpu_num = len(gpu.split(','))
+            pynvml.nvmlInit()
+            device_count = pynvml.nvmlDeviceGetCount()
+            pynvml.nvmlShutdown()
+            if self.gpu_num > device_count:
+                error_message = "gpu:{} exceeds device_count:{}".format(gpu, device_count)
+                logger.error(error_message)
+                assert self.gpu_num <= device_count, error_message
 
     def check_env_consistency(self):
         '''Verify that the parl & python version as well as some other packages in 'worker' process
             matches that of the 'master' process'''
-        self.request_master_socket.send_multipart(
-            [remote_constants.CHECK_VERSION_TAG])
+        self.request_master_socket.send_multipart([remote_constants.CHECK_VERSION_TAG])
         message = self.request_master_socket.recv_multipart()
         tag = message[0]
         if tag == remote_constants.NORMAL_TAG:
@@ -142,8 +163,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 "pyarrow={}" in your current environment!""".format(master_pyarrow_version)
                 else:
                     error_message = '''Version mismatch: the 'master' is of version 'pyarrow={}'. However, \
-'pyarrow={}'is provided in your current environment.'''.format(
-                        master_pyarrow_version, worker_pyarrow_version)
+'pyarrow={}'is provided in your current environment.'''.format(master_pyarrow_version, worker_pyarrow_version)
                 raise Exception(error_message)
         else:
             raise NotImplementedError
@@ -182,35 +202,27 @@ found in your current environment. To use "pyarrow" for serialization, please in
         self.remove_job_socket = self.ctx.socket(zmq.REP)
         self.remove_job_socket.linger = 0
         remove_job_port = self.remove_job_socket.bind_to_random_port("tcp://*")
-        self.remove_job_address = "{}:{}".format(self.worker_ip,
-                                                 remove_job_port)
+        self.remove_job_address = "{}:{}".format(self.worker_ip, remove_job_port)
 
         # reply_log_server_socket: receives log_server_heartbeat_address from subprocess
-        self.reply_log_server_socket, reply_log_server_port = create_server_socket(
-            self.ctx)
-        self.reply_log_server_address = "{}:{}".format(self.worker_ip,
-                                                       reply_log_server_port)
+        self.reply_log_server_socket, reply_log_server_port = create_server_socket(self.ctx)
+        self.reply_log_server_address = "{}:{}".format(self.worker_ip, reply_log_server_port)
 
     def _create_jobs(self):
         """Create jobs and send a instance of ``InitializedWorker`` that contains the worker information to the master."""
         try:
-            self.request_master_socket.send_multipart(
-                [remote_constants.WORKER_CONNECT_TAG])
+            self.request_master_socket.send_multipart([remote_constants.WORKER_CONNECT_TAG])
             _ = self.request_master_socket.recv_multipart()
         except zmq.error.Again as e:
-            logger.error("Can not connect to the master, "
-                         "please check if master is started.")
+            logger.error("Can not connect to the master, " "please check if master is started.")
             self.master_is_alive = False
             return
 
-        initialized_jobs = self._init_jobs(job_num=self.cpu_num)
-        self.request_master_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
+        initialized_jobs = self._init_jobs(job_num=self.device_count)
+        self.request_master_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
 
         def master_heartbeat_exit_callback_func():
-            logger.warning(
-                "[Worker] lost connection with the master, will exit reply heartbeat for master."
-            )
+            logger.warning("[Worker] lost connection with the master, will exit reply heartbeat for master.")
             if self.worker_status is not None:
                 self.worker_status.clear()
             self.log_server_proc.kill()
@@ -222,36 +234,43 @@ found in your current environment. To use "pyarrow" for serialization, please in
             heartbeat_exit_callback_func=master_heartbeat_exit_callback_func)
         self.master_heartbeat_thread.setDaemon(True)
         self.master_heartbeat_thread.start()
-        self.master_heartbeat_address = self.master_heartbeat_thread.get_address(
-        )
+        self.master_heartbeat_address = self.master_heartbeat_thread.get_address()
 
         logger.set_dir(
-            os.path.expanduser('~/.parl_data/worker/{}'.format(
-                self.master_heartbeat_address.replace(':', '_'))))
-        logger.info("[Worker] Connect to the master node successfully. "
-                    "({} CPUs)".format(self.cpu_num))
+            os.path.expanduser('~/.parl_data/worker/{}'.format(self.master_heartbeat_address.replace(':', '_'))))
+        if self.cpu_num:
+            logger.info("[Worker] Connect to the master node successfully. " "({} CPUs)".format(self.cpu_num))
+        elif self.gpu_num:
+            logger.info("[Worker] Connect to the master node successfully. " "({} GPUs)".format(self.gpu_num))
 
         for job in initialized_jobs:
             job.worker_address = self.master_heartbeat_address
 
-        initialized_worker = InitializedWorker(self.master_heartbeat_address,
-                                               initialized_jobs, self.cpu_num,
-                                               socket.gethostname())
-        self.request_master_socket.send_multipart([
-            remote_constants.WORKER_INITIALIZED_TAG,
-            cloudpickle.dumps(initialized_worker)
-        ])
+        allocated_cpu = AllocatedCpu(self.master_heartbeat_address, self.cpu_num)
+        allocated_gpu = AllocatedGpu(self.master_heartbeat_address, self.gpu)
+        initialized_worker = InitializedWorker(self.master_heartbeat_address, initialized_jobs, allocated_cpu,
+                                               allocated_gpu, socket.gethostname())
+        self.request_master_socket.send_multipart(
+            [remote_constants.WORKER_INITIALIZED_TAG,
+             cloudpickle.dumps(initialized_worker)])
 
-        _ = self.request_master_socket.recv_multipart()
-        self.worker_status = WorkerStatus(self.master_heartbeat_address,
-                                          initialized_jobs, self.cpu_num)
+        message = self.request_master_socket.recv_multipart()
+        if message[0] == remote_constants.REJECT_CPU_WORKER_TAG:
+            logger.error("GPU cluster rejects a CPU worker to join in")
+            self.worker_is_alive = False
+        elif message[0] == remote_constants.REJECT_GPU_WORKER_TAG:
+            logger.error("CPU cluster rejects a GPU worker to join in")
+            self.worker_is_alive = False
+        else:
+            self.worker_status = WorkerStatus(self.master_heartbeat_address, initialized_jobs, self.cpu_num,
+                                              self.gpu_num)
 
     def _fill_job_buffer(self):
         """An endless loop that adds initialized job into the job buffer"""
         initialized_jobs = []
         while self.worker_is_alive:
             if self.job_buffer.full() is False:
-                job_num = self.cpu_num - self.job_buffer.qsize()
+                job_num = self.device_count - self.job_buffer.qsize()
                 if job_num > 0:
                     initialized_jobs = self._init_jobs(job_num=job_num)
                     for job in initialized_jobs:
@@ -259,6 +278,13 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
             time.sleep(0.02)
         self.exit()
+
+    def _launch_cmd(self, cmd_queue):
+        FNULL = open(os.devnull, 'w')
+        while True:
+            command = cmd_queue.get()
+            subprocess.Popen(command, stdout=FNULL, close_fds=True)
+        FNULL.close()
 
     def _init_jobs(self, job_num):
         """Create jobs.
@@ -269,8 +295,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
         job_file = __file__.replace('worker.pyc', 'job.py')
         job_file = job_file.replace('worker.py', 'job.py')
         command = XPARL_PYTHON + [
-            job_file, "--worker_address", self.reply_job_address,
-            "--log_server_address", self.log_server_address
+            job_file, "--worker_address", self.reply_job_address, "--log_server_address", self.log_server_address
         ]
 
         if sys.version_info.major == 3:
@@ -279,27 +304,19 @@ found in your current environment. To use "pyarrow" for serialization, please in
         # avoid that many jobs are killed and restarted at the same time.
         self.lock.acquire()
 
-        # Redirect the output to DEVNULL
-        FNULL = open(os.devnull, 'w')
         for _ in range(job_num):
-            subprocess.Popen(command, stdout=FNULL, close_fds=True)
-        FNULL.close()
+            self.cmd_queue.put(command)
 
         new_jobs = []
         for _ in range(job_num):
-            job_message = self.reply_job_socket.recv_multipart()
-            self.reply_job_socket.send_multipart([
-                remote_constants.NORMAL_TAG,
-                to_byte(self.remove_job_address)
-            ])
-            initialized_job = cloudpickle.loads(job_message[1])
+            job_init_message = self.reply_job_socket.recv_multipart()
+            self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(self.remove_job_address), to_byte(self.pid)])
+            initialized_job = cloudpickle.loads(job_init_message[1])
             new_jobs.append(initialized_job)
 
             def heartbeat_exit_callback_func(job):
                 job.is_alive = False
-                logger.warning(
-                    "[Worker] lost connection with the job:{}".format(
-                        job.job_address))
+                logger.warning("[Worker] lost connection with the job:{}".format(job.job_address))
                 if self.master_is_alive and self.worker_is_alive:
                     self._remove_job(job.job_address)
 
@@ -325,30 +342,25 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 if initialized_job.is_alive:
                     self.worker_status.add_job(initialized_job)
                     if not initialized_job.is_alive:  # make sure that the job is still alive.
-                        self.worker_status.remove_job(
-                            initialized_job.job_address)
+                        self.worker_status.remove_job(initialized_job.job_address)
                         continue
                 else:
-                    logger.warning(
-                        "[Worker] a dead job found. The job buffer will not accept this one."
-                    )
+                    logger.warning("[Worker] a dead job found. The job buffer will not accept this one.")
                 if initialized_job.is_alive:
                     break
 
             self.lock.acquire()
-            self.request_master_socket.send_multipart([
-                remote_constants.NEW_JOB_TAG,
-                cloudpickle.dumps(initialized_job),
-                to_byte(job_address)
-            ])
+            self.request_master_socket.send_multipart(
+                [remote_constants.NEW_JOB_TAG,
+                 cloudpickle.dumps(initialized_job),
+                 to_byte(job_address)])
             _ = self.request_master_socket.recv_multipart()
             self.lock.release()
 
     def _reply_remove_job(self):
         """Worker starts a thread to wait jobs' commands to remove the job immediately"""
         self.remove_job_socket.linger = 0
-        self.remove_job_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
+        self.remove_job_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
         while self.worker_is_alive and self.master_is_alive:
             try:
                 message = self.remove_job_socket.recv_multipart()
@@ -357,8 +369,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
                 to_remove_job_address = to_str(message[1])
                 logger.info("[Worker] A job requests the worker to stop this job.")
                 self._remove_job(to_remove_job_address)
-                self.remove_job_socket.send_multipart(
-                    [remote_constants.NORMAL_TAG])
+                self.remove_job_socket.send_multipart([remote_constants.NORMAL_TAG])
             except zmq.error.Again as e:
                 #detect whether `self.worker_is_alive` is True periodically
                 pass
@@ -369,14 +380,30 @@ found in your current environment. To use "pyarrow" for serialization, please in
         total_memory = round(virtual_memory[0] / (1024**3), 2)
         used_memory = round(virtual_memory[3] / (1024**3), 2)
         vacant_memory = round(total_memory - used_memory, 2)
-        if _IS_WINDOWS:
-            load_average = round(psutil.getloadavg()[0], 2)
+        used_gpu_memory = 0
+        vacant_gpu_memory = 0
+        if self.gpu:
+            pynvml.nvmlInit()
+            rate = 0.0
+            for gpu_id in self.gpu.split(','):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(int(gpu_id))
+                memery_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                used_gpu_memory += int(memery_info.used / (1024 * 1024))
+                vacant_gpu_memory += int(memery_info.free / (1024 * 1024))
+                rate += pynvml.nvmlDeviceGetUtilizationRates(handle).gpu
+            load_average = round(rate / len(self.gpu.split('.')), 2)
+            pynvml.nvmlShutdown()
         else:
-            load_average = round(os.getloadavg()[0], 2)
+            if _IS_WINDOWS:
+                load_average = round(psutil.getloadavg()[0], 2)
+            else:
+                load_average = round(os.getloadavg()[0], 2)
 
         update_status = {
             "vacant_memory": vacant_memory,
             "used_memory": used_memory,
+            "vacant_gpu_memory": vacant_gpu_memory,
+            "used_gpu_memory": used_gpu_memory,
             "load_time": now,
             "load_value": load_average
         }
@@ -426,16 +453,14 @@ found in your current environment. To use "pyarrow" for serialization, please in
             FNULL = tempfile.TemporaryFile()
         else:
             FNULL = open(os.devnull, 'w')
-        log_server_proc = subprocess.Popen(
-            command, stdout=FNULL, close_fds=True)
+        log_server_proc = subprocess.Popen(command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
         log_server_address = "{}:{}".format(self.worker_ip, port)
 
         message = self.reply_log_server_socket.recv_multipart()
         log_server_heartbeat_addr = to_str(message[1])
-        self.reply_log_server_socket.send_multipart(
-            [remote_constants.NORMAL_TAG])
+        self.reply_log_server_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         def heartbeat_exit_callback_func():
             # only output warning
@@ -443,8 +468,7 @@ found in your current environment. To use "pyarrow" for serialization, please in
 
         # a thread for sending heartbeat signals to log_server
         thread = HeartbeatClientThread(
-            log_server_heartbeat_addr,
-            heartbeat_exit_callback_func=heartbeat_exit_callback_func)
+            log_server_heartbeat_addr, heartbeat_exit_callback_func=heartbeat_exit_callback_func)
         thread.setDaemon(True)
         thread.start()
 

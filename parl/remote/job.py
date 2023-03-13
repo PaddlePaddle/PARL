@@ -14,8 +14,9 @@
 
 import os
 # set the environment variables before importing any DL framework.
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['CUDA_VISIBLE_DEVICES'] = ""
 os.environ['XPARL'] = 'True'
+os.environ['XPARL_igonre_core'] = 'true'
 
 # Fix cloudpickle compatible problem we known.
 import compatible_trick
@@ -32,6 +33,8 @@ import threading
 import time
 import traceback
 import zmq
+import importlib
+import parl
 from multiprocessing import Process, Pipe
 from parl.utils import to_str, to_byte, get_ip_address, logger
 from parl.remote.communication import loads_argument, loads_return,\
@@ -43,6 +46,10 @@ from parl.remote.utils import redirect_output_to_file
 from parl.remote.remote_class_serialization import load_remote_class
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
+
+DL_FRAMEWORKS = ["paddle", "torch"]
+for dl_framework in DL_FRAMEWORKS:
+    assert dl_framework not in sys.modules, "{} imported".format(dl_framework)
 
 
 class Job(object):
@@ -62,9 +69,12 @@ class Job(object):
         Attributes:
             pid (int): Job process ID.
             max_memory (float): Maximum memory (MB) can be used by each remote instance.
+            gpu (str): id list of GPUs can be used by each remote instance.
             job_id (str): Unique ID for the job. 
+            instance_id (str): Unique instance ID to which the job connects.
         """
         self.max_memory = None
+        self.gpu = ""
 
         self.job_address_receiver, job_address_sender = Pipe()
         self.job_id_receiver, job_id_sender = Pipe()
@@ -73,6 +83,7 @@ class Job(object):
         self.log_server_address = log_server_address
         self.job_ip = get_ip_address()
         self.pid = os.getpid()
+        self.worker_pid = None
         """
         NOTE:
             In Windows, it will raise errors when creating threading.Lock before starting multiprocess.Process.
@@ -88,9 +99,7 @@ class Job(object):
         self.run(job_address_sender, job_id_sender)
 
         with self.lock:
-            self.remove_job_socket.send_multipart(
-                [remote_constants.KILLJOB_TAG,
-                 to_byte(self.job_address)])
+            self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
             try:
                 _ = self.remove_job_socket.recv_multipart()
             except zmq.error.Again as e:
@@ -116,14 +125,12 @@ class Job(object):
 
         self.ctx = zmq.Context()
         # create the job_socket
-        self.job_socket = create_client_socket(
-            self.ctx, self.worker_address, heartbeat_timeout=True)
+        self.job_socket = create_client_socket(self.ctx, self.worker_address, heartbeat_timeout=True)
 
         # a thread that reply ping signals from the client
         reply_client_ping_socket, port = create_server_socket(self.ctx)
         reply_client_ping_address = "{}:{}".format(self.job_ip, port)
-        ping_thread = threading.Thread(
-            target=self._reply_ping, args=(reply_client_ping_socket, ))
+        ping_thread = threading.Thread(target=self._reply_ping, args=(reply_client_ping_socket, ))
         ping_thread.setDaemon(True)
         ping_thread.start()
 
@@ -137,22 +144,16 @@ class Job(object):
         worker_heartbeat_server_thread.setDaemon(True)
         worker_heartbeat_server_thread.start()
 
-
         # sends job information to the worker
-        initialized_job = InitializedJob(
-            self.job_address, worker_heartbeat_server_thread.get_address(),
-            reply_client_ping_address, None, self.pid, self.job_id,
-            self.log_server_address)
+        initialized_job = InitializedJob(self.job_address, worker_heartbeat_server_thread.get_address(),
+                                         reply_client_ping_address, None, self.pid, self.job_id,
+                                         self.log_server_address)
 
         try:
-            self.job_socket.send_multipart([
-                remote_constants.NORMAL_TAG,
-                cloudpickle.dumps(initialized_job)
-            ])
+            self.job_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(initialized_job)])
             message = self.job_socket.recv_multipart()
         except zmq.error.Again as e:
-            logger.warning("[Job] Cannot connect to the worker{}. ".format(
-                self.worker_address) + "Job will quit.")
+            logger.warning("[Job] Cannot connect to the worker {}. ".format(self.worker_address) + "Job will quit.")
             self.job_socket.close(0)
             os._exit(0)
 
@@ -160,9 +161,10 @@ class Job(object):
         assert tag == remote_constants.NORMAL_TAG
         # create the remove_job_socket
         remove_job_address = to_str(message[1])
+        self.worker_pid = int(to_str(message[2]))
+        worker_heartbeat_server_thread.set_host_pid(self.worker_pid)
         self.remove_job_socket = self.ctx.socket(zmq.REQ)
-        self.remove_job_socket.setsockopt(
-            zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
+        self.remove_job_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.remove_job_socket.connect("tcp://{}".format(remove_job_address))
 
     def _check_used_memory(self):
@@ -176,19 +178,13 @@ class Job(object):
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
         # out of memory
-        logger.error(
-            "Memory used by this job exceeds {}. This job will exist.".format(
-                self.max_memory))
+        logger.error("Memory used by this job exceeds {}. This job will exist.".format(self.max_memory))
 
-        stop_message = "Job {} exceeds max memory usage, will stop this job.".format(
-            self.job_address)
-        self.client_heartbeat_client_thread.stop(
-            remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG, stop_message)
+        stop_message = "Job {} exceeds max memory usage, will stop this job.".format(self.job_address)
+        self.client_heartbeat_client_thread.stop(remote_constants.HEARTBEAT_OUT_OF_MEMORY_TAG, stop_message)
 
         with self.lock:
-            self.remove_job_socket.send_multipart(
-                [remote_constants.KILLJOB_TAG,
-                 to_byte(self.job_address)])
+            self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
             try:
                 _ = self.remove_job_socket.recv_multipart()
             except zmq.error.Again as e:
@@ -204,13 +200,13 @@ class Job(object):
         max_memory = to_str(message[2])
         if max_memory != 'None':
             self.max_memory = float(max_memory)
+        self.gpu = to_str(message[3])
+        self.instance_id = to_str(message[4])
         socket.send_multipart([remote_constants.HEARTBEAT_TAG])
 
         def client_heartbeat_exit_callback_func():
             with self.lock:
-                self.remove_job_socket.send_multipart(
-                    [remote_constants.KILLJOB_TAG,
-                     to_byte(self.job_address)])
+                self.remove_job_socket.send_multipart([remote_constants.KILLJOB_TAG, to_byte(self.job_address)])
                 try:
                     _ = self.remove_job_socket.recv_multipart()
                 except zmq.error.Again as e:
@@ -219,14 +215,14 @@ class Job(object):
             os._exit(1)
 
         # a thread that sends heartbeat signals from the client
-        self.client_heartbeat_client_thread = HeartbeatClientThread(client_id=self.job_id,
+        self.client_heartbeat_client_thread = HeartbeatClientThread(
+            client_id=self.instance_id,
             heartbeat_server_addr=client_heartbeat_server_addr,
             heartbeat_exit_callback_func=client_heartbeat_exit_callback_func)
         self.client_heartbeat_client_thread.setDaemon(True)
         self.client_heartbeat_client_thread.start()
 
-        memory_monitor_thread = threading.Thread(
-            target=self._check_used_memory)
+        memory_monitor_thread = threading.Thread(target=self._check_used_memory)
         memory_monitor_thread.setDaemon(True)
         memory_monitor_thread.start()
 
@@ -282,8 +278,7 @@ class Job(object):
             reply_socket.send_multipart([remote_constants.NORMAL_TAG])
             return envdir
         else:
-            logger.error("NotImplementedError:{}, received tag:{}".format(
-                job_address, tag))
+            logger.error("NotImplementedError:{}, received tag:{}".format(job_address, tag))
             raise NotImplementedError
 
     def wait_for_connection(self, reply_socket):
@@ -306,30 +301,27 @@ class Job(object):
 
         if tag == remote_constants.INIT_OBJECT_TAG:
             try:
+                if self.gpu:
+                    os.environ['CUDA_VISIBLE_DEVICES'] = self.gpu
+                del os.environ['XPARL_igonre_core']
+                importlib.reload(parl)
                 cls = load_remote_class(message[1])
                 args, kwargs = cloudpickle.loads(message[2])
-
                 with redirect_output_to_file(self.logfile_path, os.devnull):
                     obj = cls(*args, **kwargs)
             except Exception as e:
                 traceback_str = str(traceback.format_exc())
                 error_str = str(e)
                 logger.error("traceback:\n{}".format(traceback_str))
-                reply_socket.send_multipart([
-                    remote_constants.EXCEPTION_TAG,
-                    to_byte(error_str + "\ntraceback:\n" + traceback_str)
-                ])
+                reply_socket.send_multipart(
+                    [remote_constants.EXCEPTION_TAG,
+                     to_byte(error_str + "\ntraceback:\n" + traceback_str)])
                 return None
-            reply_socket.send_multipart([
-                remote_constants.NORMAL_TAG,
-                dumps_return(set(obj.__dict__.keys()))
-            ])
+            reply_socket.send_multipart([remote_constants.NORMAL_TAG, dumps_return(set(obj.__dict__.keys()))])
         else:
             logger.error("Message from job {}".format(message))
-            reply_socket.send_multipart([
-                remote_constants.EXCEPTION_TAG,
-                b"[job]Unkonwn tag when tried to receive the class definition"
-            ])
+            reply_socket.send_multipart(
+                [remote_constants.EXCEPTION_TAG, b"[job]Unkonwn tag when tried to receive the class definition"])
             raise NotImplementedError
 
         return obj
@@ -354,9 +346,7 @@ class Job(object):
         logger.set_dir(self.log_dir)
         self.logfile_path = os.path.join(self.log_dir, 'stdout.log')
 
-        logger.info(
-            "[Job] Job {} initialized. Reply heartbeat socket Address: {}.".
-            format(job_id, job_address))
+        logger.info("[Job] Job {} initialized. Reply heartbeat socket Address: {}.".format(job_id, job_address))
 
         job_address_sender.send(job_address)
         job_id_sender.send(job_id)
@@ -372,9 +362,7 @@ class Job(object):
 
             self.single_task(obj, reply_socket, job_address)
         except Exception as e:
-            logger.error(
-                "Error occurs when running a single task. We will reset this job. \nReason:{}"
-                .format(e))
+            logger.error("Error occurs when running a single task. We will reset this job. \nReason:{}".format(e))
             traceback_str = str(traceback.format_exc())
             logger.error("traceback:\n{}".format(traceback_str))
         shutil.rmtree(envdir)
@@ -410,34 +398,28 @@ class Job(object):
                         args, kwargs = loads_argument(data)
 
                         # Redirect stdout to stdout.log temporarily
-                        with redirect_output_to_file(self.logfile_path,
-                                                     os.devnull):
+                        with redirect_output_to_file(self.logfile_path, os.devnull):
                             ret = getattr(obj, function_name)(*args, **kwargs)
 
                         ret = dumps_return(ret)
-                        reply_socket.send_multipart([
-                            remote_constants.NORMAL_TAG, ret,
-                            dumps_return(set(obj.__dict__.keys()))
-                        ])
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG, ret,
+                             dumps_return(set(obj.__dict__.keys()))])
 
                     elif tag == remote_constants.GET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
-                        with redirect_output_to_file(self.logfile_path,
-                                                     os.devnull):
+                        with redirect_output_to_file(self.logfile_path, os.devnull):
                             ret = getattr(obj, attribute_name)
                         ret = dumps_return(ret)
-                        reply_socket.send_multipart(
-                            [remote_constants.NORMAL_TAG, ret])
+                        reply_socket.send_multipart([remote_constants.NORMAL_TAG, ret])
                     elif tag == remote_constants.SET_ATTRIBUTE_TAG:
                         attribute_name = to_str(message[1])
                         attribute_value = loads_return(message[2])
-                        with redirect_output_to_file(self.logfile_path,
-                                                     os.devnull):
+                        with redirect_output_to_file(self.logfile_path, os.devnull):
                             setattr(obj, attribute_name, attribute_value)
-                        reply_socket.send_multipart([
-                            remote_constants.NORMAL_TAG,
-                            dumps_return(set(obj.__dict__.keys()))
-                        ])
+                        reply_socket.send_multipart(
+                            [remote_constants.NORMAL_TAG,
+                             dumps_return(set(obj.__dict__.keys()))])
                     else:
                         pass
 
@@ -448,52 +430,38 @@ class Job(object):
                     logger.error(error_str)
 
                     if type(e) == AttributeError:
-                        reply_socket.send_multipart([
-                            remote_constants.ATTRIBUTE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
+                        reply_socket.send_multipart([remote_constants.ATTRIBUTE_EXCEPTION_TAG, to_byte(error_str)])
                         raise AttributeError
 
                     elif type(e) == SerializeError:
-                        reply_socket.send_multipart([
-                            remote_constants.SERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
+                        reply_socket.send_multipart([remote_constants.SERIALIZE_EXCEPTION_TAG, to_byte(error_str)])
                         raise SerializeError
 
                     elif type(e) == DeserializeError:
-                        reply_socket.send_multipart([
-                            remote_constants.DESERIALIZE_EXCEPTION_TAG,
-                            to_byte(error_str)
-                        ])
+                        reply_socket.send_multipart([remote_constants.DESERIALIZE_EXCEPTION_TAG, to_byte(error_str)])
                         raise DeserializeError
 
                     else:
                         traceback_str = str(traceback.format_exc())
                         logger.error("traceback:\n{}".format(traceback_str))
-                        reply_socket.send_multipart([
-                            remote_constants.EXCEPTION_TAG,
-                            to_byte(error_str + "\ntraceback:\n" +
-                                    traceback_str)
-                        ])
+                        reply_socket.send_multipart(
+                            [remote_constants.EXCEPTION_TAG,
+                             to_byte(error_str + "\ntraceback:\n" + traceback_str)])
                         break
 
             # receive DELETE_TAG from actor, and stop replying worker heartbeat
             elif tag == remote_constants.KILLJOB_TAG:
                 reply_socket.send_multipart([remote_constants.NORMAL_TAG])
-                logger.warning("An actor exits and this job {} will exit.".
-                               format(job_address))
+                logger.warning("An actor exits and this job {} will exit.".format(job_address))
                 break
             else:
-                logger.error(
-                    "The job receives an unknown message: {}".format(message))
+                logger.error("The job receives an unknown message: {}".format(message))
                 raise NotImplementedError
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--worker_address", required=True, type=str, help="worker_address")
+    parser.add_argument("--worker_address", required=True, type=str, help="worker_address")
     parser.add_argument(
         "--log_server_address",
         required=True,

@@ -58,6 +58,7 @@ def remote_class(*args, **kwargs):
         max_memory (float): Maximum memory (MB) can be used by each remote
                             instance, the unit is in MB and default value is
                             none(unlimited).
+        n_gpu (int): The number of GPUs required to run the remote instance.
 
     Returns:
         A remote wrapper for the remote class.
@@ -68,17 +69,16 @@ def remote_class(*args, **kwargs):
     """
 
     def decorator(cls):
-        assert inspect.isclass(
-            cls), "Only class can be decorated by `parl.remote_class`."
+        assert inspect.isclass(cls), "Only class can be decorated by `parl.remote_class`."
 
         # we are not going to create a remote actor in job.py
         if 'XPARL' in os.environ and os.environ['XPARL'] == 'True':
-            logger.warning(
-                "Note: this object will be runnning as a local object")
+            logger.warning("Note: this object will be runnning as a local object")
             return cls
 
         RemoteWrapper._original = cls
         RemoteWrapper._max_memory = max_memory
+        RemoteWrapper._n_gpu = n_gpu
 
         if wait:
             proxy_wrapper = proxy_wrapper_func(RemoteWrapper)
@@ -89,13 +89,14 @@ def remote_class(*args, **kwargs):
         proxy_wrapper._original = cls
         return proxy_wrapper
 
-    args_names = ['max_memory', 'wait']
+    args_names = ['max_memory', 'wait', 'n_gpu']
     for key in kwargs:
         assert key in args_names, "Argument `{}` is not supported in the `@parl.remote_class`, supported arguments: {}".format(
             key, args_names)
 
     max_memory = kwargs.get('max_memory')
     wait = kwargs.get('wait', True)
+    n_gpu = kwargs.get('n_gpu', 0)
     """
         Users may pass some arguments to the decorator (e.g., parl.remote_class(10)).
         The following code tries to handle this issue.

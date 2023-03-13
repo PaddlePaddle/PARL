@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "2.1.1"
+__version__ = "2.2"
 """
 generates new PARL python API
 """
@@ -36,6 +36,9 @@ if 'XPARL_igonre_core' not in os.environ: # load the core module by default
             from parl.core.torch import *
     else:
         if _HAS_PADDLE:
+            # disable the signal handler inside paddle, which shows signal information when we kill the job in xparl.
+            import paddle
+            paddle.disable_signal_handler()
             from parl.core.paddle import *
             if _HAS_TORCH:
                 logger.info("PARL detects two backend frameworks: paddle, torch. Use paddle by default.")

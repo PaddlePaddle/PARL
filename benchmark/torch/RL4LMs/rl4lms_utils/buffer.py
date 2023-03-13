@@ -9,9 +9,8 @@ try:
 except ImportError:
     psutil = None
 
-def get_obs_shape(
-    observation_space,
-):
+
+def get_obs_shape(observation_space, ):
     """
     Get the shape of the observation (useful for the buffers).
 
@@ -22,13 +21,13 @@ def get_obs_shape(
         return observation_space.shape
     elif isinstance(observation_space, spaces.Discrete):
         # Observation is an int
-        return (1,)
+        return (1, )
     elif isinstance(observation_space, spaces.MultiDiscrete):
         # Number of discrete features
-        return (int(len(observation_space.nvec)),)
+        return (int(len(observation_space.nvec)), )
     elif isinstance(observation_space, spaces.MultiBinary):
         # Number of binary features
-        return (int(observation_space.n),)
+        return (int(observation_space.n), )
     elif isinstance(observation_space, spaces.Dict):
         return {key: get_obs_shape(subspace) for (key, subspace) in observation_space.spaces.items()}
 
@@ -61,13 +60,13 @@ class DictRolloutBuffer:
     """
 
     def __init__(
-        self,
-        buffer_size,
-        observation_space,
-        action_space,
-        device = "cpu",
-        gae_lambda = 1,
-        gamma = 0.99,
+            self,
+            buffer_size,
+            observation_space,
+            action_space,
+            device="cpu",
+            gae_lambda=1,
+            gamma=0.99,
     ):
         self.buffer_size = buffer_size
         self.observation_space = observation_space
@@ -105,13 +104,15 @@ class DictRolloutBuffer:
         self.pos = 0
         self.full = False
 
-    def add(self,
+    def add(
+            self,
             obs,
             action,
             reward,
             episode_start,
             value,
-            log_prob,):
+            log_prob,
+    ):
         """
         :param obs: Observation
         :param action: Action
@@ -132,7 +133,7 @@ class DictRolloutBuffer:
             # Reshape needed when using multiple instructors with discrete observations
             # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
             if isinstance(self.observation_space.spaces[key], spaces.Discrete):
-                obs_ = obs_.reshape((1,) + self.obs_shape[key])
+                obs_ = obs_.reshape((1, ) + self.obs_shape[key])
             self.observations[key][self.pos] = obs_
 
         self.actions[self.pos] = np.array(action).copy()
@@ -192,7 +193,7 @@ class DictRolloutBuffer:
         """
         shape = arr.shape
         if len(shape) < 3:
-            shape = shape + (1,)
+            shape = shape + (1, )
         return arr.swapaxes(0, 1).reshape(shape[0] * shape[1], *shape[2:])
 
     def get(self, batch_size):
@@ -204,12 +205,10 @@ class DictRolloutBuffer:
             for key, obs in self.observations.items():
                 self.observations[key] = self.swap_and_flatten(obs)
 
-            _tensor_names = ["actions", "values", "log_probs",
-                             "advantages", "returns"]
+            _tensor_names = ["actions", "values", "log_probs", "advantages", "returns"]
 
             for tensor in _tensor_names:
-                self.__dict__[tensor] = self.swap_and_flatten(
-                    self.__dict__[tensor])
+                self.__dict__[tensor] = self.swap_and_flatten(self.__dict__[tensor])
             self.generator_ready = True
 
         # Return everything, don't create minibatches
@@ -218,10 +217,10 @@ class DictRolloutBuffer:
 
         start_idx = 0
         while start_idx < self.buffer_size * 1:
-            yield self._get_samples(indices[start_idx: start_idx + batch_size])
+            yield self._get_samples(indices[start_idx:start_idx + batch_size])
             start_idx += batch_size
 
-    def to_torch(self, array, copy = True):
+    def to_torch(self, array, copy=True):
         """
         Convert a numpy array to a PyTorch tensor.
         Note: it copies the data by default
@@ -238,8 +237,8 @@ class DictRolloutBuffer:
     def _get_samples(self, batch_inds):
 
         return DictRolloutBufferSamples(
-            observations={key: self.to_torch(obs[batch_inds]) for (
-                key, obs) in self.observations.items()},
+            observations={key: self.to_torch(obs[batch_inds])
+                          for (key, obs) in self.observations.items()},
             actions=self.to_torch(self.actions[batch_inds]),
             old_values=self.to_torch(self.values[batch_inds].flatten()),
             old_log_prob=self.to_torch(self.log_probs[batch_inds].flatten()),

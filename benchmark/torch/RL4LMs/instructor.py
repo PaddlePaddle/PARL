@@ -9,26 +9,30 @@ from collections import deque
 import numpy as np
 from rl4lms_utils import build_datapool, build_tokenizer, build_reward_fn
 
+
 def _flatten_obs(obs, space, n_instructor=None):
     if n_instructor is not None:
-        return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_instructor, -1, len(obs[0][k])))) for k in space.spaces.keys()])
+        return OrderedDict([(k, np.stack([o[k] for o in obs]).reshape((n_instructor, -1, len(obs[0][k]))))
+                            for k in space.spaces.keys()])
     return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
+
 
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
 
+
 @parl.remote_class(wait=False)
 class Instructor:
     def __init__(
-        self,
-        reward_config=None,
-        tokenizer_config=None,
-        datapool_config=None,
-        max_episode_length = 512,
-        max_prompt_length = None,
-        terminate_on_eos = False,
-        context_start_token = None,
-        prompt_truncation_side = "left",
+            self,
+            reward_config=None,
+            tokenizer_config=None,
+            datapool_config=None,
+            max_episode_length=512,
+            max_prompt_length=None,
+            terminate_on_eos=False,
+            context_start_token=None,
+            prompt_truncation_side="left",
     ):
         """
         Instructor who gives reward
@@ -45,9 +49,7 @@ class Instructor:
         self.tokenizer = tokenizer
         self.reward_function = reward_function
         self.max_steps = max_episode_length
-        self._max_text_length = (
-            max_prompt_length if max_prompt_length else tokenizer.model_max_length
-        )
+        self._max_text_length = (max_prompt_length if max_prompt_length else tokenizer.model_max_length)
         self._terminate_on_eos = terminate_on_eos
         self._context_start_token = context_start_token
         self._prompt_truncation_side = prompt_truncation_side
@@ -55,31 +57,25 @@ class Instructor:
 
         # set the observation and action space here
         self._vocab_size = tokenizer.vocab_size
-        self.observation_space = DictSpace(
-            {
-                # while creating rollout buffers, observations are concatenated for each key
-                "prompt_or_input_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(self._max_text_length,)
-                ),
-                "prompt_or_input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(self._max_text_length,)
-                ),
-                "context_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(self.max_steps,)
-                ),
-                "context_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(self.max_steps,)
-                ),
-                "input_encoded_pt": spaces.Box(
-                    low=0,
-                    high=self._vocab_size,
-                    shape=(self._max_text_length + self.max_steps,),
-                ),
-                "input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(self._max_text_length + self.max_steps,)
-                ),
-            }
-        )
+        self.observation_space = DictSpace({
+            # while creating rollout buffers, observations are concatenated for each key
+            "prompt_or_input_encoded_pt":
+            spaces.Box(low=0, high=self._vocab_size, shape=(self._max_text_length, )),
+            "prompt_or_input_attention_mask_pt":
+            spaces.Box(low=0, high=1, shape=(self._max_text_length, )),
+            "context_encoded_pt":
+            spaces.Box(low=0, high=self._vocab_size, shape=(self.max_steps, )),
+            "context_attention_mask_pt":
+            spaces.Box(low=0, high=1, shape=(self.max_steps, )),
+            "input_encoded_pt":
+            spaces.Box(
+                low=0,
+                high=self._vocab_size,
+                shape=(self._max_text_length + self.max_steps, ),
+            ),
+            "input_attention_mask_pt":
+            spaces.Box(low=0, high=1, shape=(self._max_text_length + self.max_steps, )),
+        })
         self.action_space = Discrete(n=self._vocab_size)
         # see https://github.com/huggingface/transformers/issues/4875 : rounding up to nearest power of 2 for better GPU efficiency
         if 'mt5' in self.tokenizer.name_or_path:
@@ -113,18 +109,17 @@ class Instructor:
         self.__current_obs = self.__current_obs.update(action, self.tokenizer)
 
         # decide if the episode is finished or not
-        done = (action == self.tokenizer.eos_token_id and self._terminate_on_eos) or (
-            self.__time_step == self.max_steps
-        )
+        done = (action == self.tokenizer.eos_token_id
+                and self._terminate_on_eos) or (self.__time_step == self.max_steps)
 
         # compute reward
         reward = self.reward_function(
-                previous_obs,
-                action,
-                self.__current_obs,
-                done,
-                self.__current_obs.meta_info,
-            )
+            previous_obs,
+            action,
+            self.__current_obs,
+            done,
+            self.__current_obs.meta_info,
+        )
 
         # populate additional info
         info = {
@@ -151,7 +146,7 @@ class Instructor:
             res.append(one_step_res)
         return res
 
-    def ask(self, sample = None):
+    def ask(self, sample=None):
         """
         Reset the instructor and starts a new episode
         """
@@ -182,13 +177,14 @@ class Instructor:
 
 
 class InstructorGroup:
-    def __init__(self,
-                instructor_config=None,
-                reward_config=None,
-                tokenizer=None,
-                datapool_config=None,
-                tokenizer_config=None,
-                ):
+    def __init__(
+            self,
+            instructor_config=None,
+            reward_config=None,
+            tokenizer=None,
+            datapool_config=None,
+            tokenizer_config=None,
+    ):
         self.n_instructors = instructor_config["n_instructors"]
         # remote instructors need to use config to initialize due to serialization problem
         instructor_kwargs = {
@@ -202,40 +198,33 @@ class InstructorGroup:
 
         # due to serialization problem, build obs space and action space here
         self._vocab_size = tokenizer.vocab_size
-        self.observation_space = DictSpace(
-            {
-                # while creating rollout buffers, observations are concatenated for each key
-                "prompt_or_input_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(instructor_kwargs["max_prompt_length"],)
-                ),
-                "prompt_or_input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(instructor_kwargs["max_prompt_length"],)
-                ),
-                "context_encoded_pt": spaces.Box(
-                    low=0, high=self._vocab_size, shape=(instructor_kwargs["max_episode_length"],)
-                ),
-                "context_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(instructor_kwargs["max_episode_length"],)
-                ),
-                "input_encoded_pt": spaces.Box(
-                    low=0,
-                    high=self._vocab_size,
-                    shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"],),
-                ),
-                "input_attention_mask_pt": spaces.Box(
-                    low=0, high=1, shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"],)
-                ),
-            }
-        )
+        self.observation_space = DictSpace({
+            # while creating rollout buffers, observations are concatenated for each key
+            "prompt_or_input_encoded_pt":
+            spaces.Box(low=0, high=self._vocab_size, shape=(instructor_kwargs["max_prompt_length"], )),
+            "prompt_or_input_attention_mask_pt":
+            spaces.Box(low=0, high=1, shape=(instructor_kwargs["max_prompt_length"], )),
+            "context_encoded_pt":
+            spaces.Box(low=0, high=self._vocab_size, shape=(instructor_kwargs["max_episode_length"], )),
+            "context_attention_mask_pt":
+            spaces.Box(low=0, high=1, shape=(instructor_kwargs["max_episode_length"], )),
+            "input_encoded_pt":
+            spaces.Box(
+                low=0,
+                high=self._vocab_size,
+                shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"], ),
+            ),
+            "input_attention_mask_pt":
+            spaces.Box(
+                low=0,
+                high=1,
+                shape=(instructor_kwargs["max_prompt_length"] + instructor_kwargs["max_episode_length"], )),
+        })
         self.action_space = Discrete(n=self._vocab_size)
 
     def ask(self):
-        future_object_ids = [
-            remote_instructor.ask() for remote_instructor in self._remote_instructors
-        ]
-        sample_questions = [
-            future_object.get() for future_object in future_object_ids
-        ]
+        future_object_ids = [remote_instructor.ask() for remote_instructor in self._remote_instructors]
+        sample_questions = [future_object.get() for future_object in future_object_ids]
         # sample_questions = future_object_ids
         return _flatten_obs(sample_questions, self.observation_space)
 
@@ -245,12 +234,11 @@ class InstructorGroup:
 
         return sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos
 
-
     def _instructors_feedback_sentence(self, all_sentences):
         all_sentences = torch.stack(all_sentences).cpu().numpy().transpose(1, 0)
         future_object_ids = [
-            self._remote_instructors[i].get_new_obs_and_feedback_sentence(
-                all_sentences[i]) for i in range(self.n_instructors)
+            self._remote_instructors[i].get_new_obs_and_feedback_sentence(all_sentences[i])
+            for i in range(self.n_instructors)
         ]
 
         feedback_res = np.stack([future_object.get() for future_object in future_object_ids])
@@ -263,7 +251,3 @@ class InstructorGroup:
     def _create_instructors(self, instructor_kwargs, parl_port=None):
         parl.connect(parl_port, distributed_files=["./rl4lms_utils/*.py", "./*.py"])
         return [Instructor(**instructor_kwargs) for _ in range(self.n_instructors)]
-
-
-
-

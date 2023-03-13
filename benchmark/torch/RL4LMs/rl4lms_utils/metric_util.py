@@ -7,44 +7,41 @@ from gem_metrics.texts import Predictions
 from parl.utils import logger
 
 
-
 class MeteorMetric:
     def __init__(self):
         super().__init__()
         self._metric = load_metric("meteor")
 
     def compute(
-        self,
-        prompt_texts,
-        generated_texts,
-        reference_texts,
-        meta_infos = None,
-        model = None,
-        split_name = None,
+            self,
+            prompt_texts,
+            generated_texts,
+            reference_texts,
+            meta_infos=None,
+            model=None,
+            split_name=None,
     ):
 
-        score = self._metric.compute(
-            predictions=generated_texts, references=reference_texts
-        )["meteor"]
+        score = self._metric.compute(predictions=generated_texts, references=reference_texts)["meteor"]
 
         metric_dict = {"lexical/meteor": (None, score)}
         return metric_dict
 
 
 class RougeMetric:
-    def __init__(self, use_single_ref = True):
+    def __init__(self, use_single_ref=True):
         super().__init__()
         self._metric = load_metric("rouge")
         self._use_single_ref = use_single_ref
 
     def compute(
-        self,
-        prompt_texts,
-        generated_texts,
-        reference_texts,
-        meta_infos = None,
-        model = None,
-        split_name = None,
+            self,
+            prompt_texts,
+            generated_texts,
+            reference_texts,
+            meta_infos=None,
+            model=None,
+            split_name=None,
     ):
         if self._use_single_ref:
             # TBD: this is required for CNN/DM dataset, without this we get low scores
@@ -53,9 +50,7 @@ class RougeMetric:
         else:
             ref_texts = reference_texts
 
-        metric_results = self._metric.compute(
-            predictions=generated_texts, references=ref_texts, use_stemmer=True
-        )
+        metric_results = self._metric.compute(predictions=generated_texts, references=ref_texts, use_stemmer=True)
         score_keys = ["rouge1", "rouge2", "rougeL", "rougeLsum"]
         metric_dict = {}
         for rouge_type in score_keys:
@@ -73,13 +68,13 @@ class BERTScoreMetric:
         self._last_gpu = f"cuda:{torch.cuda.device_count() - 1}"
 
     def compute(
-        self,
-        prompt_texts,
-        generated_texts,
-        reference_texts,
-        meta_infos = None,
-        model = None,
-        split_name = None,
+            self,
+            prompt_texts,
+            generated_texts,
+            reference_texts,
+            meta_infos=None,
+            model=None,
+            split_name=None,
     ):
         with torch.no_grad():
             metric_results = self._metric.compute(
@@ -100,13 +95,13 @@ class BLEUMetric:
         self._metric = load_metric("bleu")
 
     def compute(
-        self,
-        prompt_texts,
-        generated_texts,
-        reference_texts,
-        meta_infos = None,
-        model = None,
-        split_name = None,
+            self,
+            prompt_texts,
+            generated_texts,
+            reference_texts,
+            meta_infos=None,
+            model=None,
+            split_name=None,
     ):
 
         tokenized_predictions = []
@@ -119,8 +114,7 @@ class BLEUMetric:
 
         try:
             metric_results = self._metric.compute(
-                predictions=tokenized_predictions, references=tokenized_reference_texts
-            )
+                predictions=tokenized_predictions, references=tokenized_reference_texts)
             bleu_score = metric_results["bleu"]
             metric_dict = {"lexical/bleu": (None, bleu_score)}
             return metric_dict
@@ -129,18 +123,18 @@ class BLEUMetric:
 
 
 class DiversityMetrics:
-    def __init__(self, window_size = 100):
+    def __init__(self, window_size=100):
         self._msttr_metric = MSTTR(window_size=window_size)
         self._n_gram_metric = NGramStats()
 
     def compute(
-        self,
-        prompt_texts,
-        generated_texts,
-        reference_texts,
-        meta_infos = None,
-        model = None,
-        split_name = None,
+            self,
+            prompt_texts,
+            generated_texts,
+            reference_texts,
+            meta_infos=None,
+            model=None,
+            split_name=None,
     ):
 
         predictions = Predictions(data={"filename": "", "values": generated_texts})

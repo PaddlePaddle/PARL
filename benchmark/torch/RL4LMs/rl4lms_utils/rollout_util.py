@@ -10,8 +10,10 @@ from .data_wrapper import TransitionInfo
 def dict_to_tensor(obs, device):
     return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
 
+
 def get_one_token_obs(obs, idx, space):
     return OrderedDict([(k, obs[k][:, idx, :]) for k in space.spaces.keys()])
+
 
 def unpack_observations(obs_tensor, n_instructors):
     """
@@ -27,9 +29,7 @@ def unpack_observations(obs_tensor, n_instructors):
     return unpacked_obs
 
 
-def add_to_buffer(
-        rollout_buffer, episode_wise_transitions, rollout_info
-):
+def add_to_buffer(rollout_buffer, episode_wise_transitions, rollout_info):
     advantages_computed = False
     for ep_ix, transitions in enumerate(episode_wise_transitions):
         ep_length = len(transitions)
@@ -40,9 +40,7 @@ def add_to_buffer(
             total_kl_reward += transition.kl_reward
             rollout_info["rollout_info/kl_div_mean"].append(transition.kl_div)
             rollout_info["rollout_info/log_prob"].append(transition.log_prob)
-            rollout_info["rollout_info/ref_log_prob"].append(
-                transition.ref_log_prob
-            )
+            rollout_info["rollout_info/ref_log_prob"].append(transition.ref_log_prob)
             rollout_info["rollout_info/values"].append(transition.value.numpy())
 
             if not rollout_buffer.full:
@@ -59,15 +57,10 @@ def add_to_buffer(
             if rollout_buffer.full and not advantages_computed:
                 # we fetch the last value for the last time step
                 # values come from the next transitions's values
-                next_values = (
-                    transitions[transition_ix + 1].value
-                    if (transition_ix + 1) < ep_length
-                    else torch.tensor([0.0])
-                )
+                next_values = (transitions[transition_ix + 1].value if
+                               (transition_ix + 1) < ep_length else torch.tensor([0.0]))
 
-                rollout_buffer.compute_returns_and_advantage(
-                    last_values=next_values, dones=transition.done
-                )
+                rollout_buffer.compute_returns_and_advantage(last_values=next_values, dones=transition.done)
                 advantages_computed = True
 
         rollout_info["rollout_info/ep_rew"].append(total_reward)
@@ -80,13 +73,7 @@ class RolloutUtil:
     def __init__(self, kl_args):
         self._kl_controller = KLController(kl_args["coeff"], kl_args["target_kl"])
 
-    def collect_rollouts(
-            self,
-            agent,
-            instructor_group,
-            rollout_buffer,
-            device
-    ):
+    def collect_rollouts(self, agent, instructor_group, rollout_buffer, device):
         # get tokenizer
         tokenizer = instructor_group.tokenizer
 
@@ -145,41 +132,34 @@ class RolloutUtil:
         for key, values in rollout_info.items():
             aggregated_rollout_info[key] = np.mean(values).item()
             aggregated_rollout_info[f"{key}_std"] = np.std(values).item()
-        aggregated_rollout_info[
-            "rollout_info/kl_coeff"
-        ] = self._kl_controller.kl_coeff
+        aggregated_rollout_info["rollout_info/kl_coeff"] = self._kl_controller.kl_coeff
 
         logger.info(f"Rollout Info: {aggregated_rollout_info}")
 
         # adapt the KL coeff
-        self._kl_controller.step(
-            torch.tensor(aggregated_rollout_info["rollout_info/kl_div_mean"])
-        )
+        self._kl_controller.step(torch.tensor(aggregated_rollout_info["rollout_info/kl_div_mean"]))
         return num_timesteps
 
-    def _generate_transition_and_add_to_buffer(
-            self,
-            gen_sentence=None,
-            agent=None,
-            n_instructors=None,
-            obs_space=None,
-            rollout_buffer=None,
-            rollout_info=None,
-            device=None,
-            sentence_new_obs=None,
-            sentence_rewards=None,
-            sentence_dones=None,
-            sentence_infos=None,
-            init_obs=None
-    ):
+    def _generate_transition_and_add_to_buffer(self,
+                                               gen_sentence=None,
+                                               agent=None,
+                                               n_instructors=None,
+                                               obs_space=None,
+                                               rollout_buffer=None,
+                                               rollout_info=None,
+                                               device=None,
+                                               sentence_new_obs=None,
+                                               sentence_rewards=None,
+                                               sentence_dones=None,
+                                               sentence_infos=None,
+                                               init_obs=None):
         current_obs = init_obs
 
         review_times = 0
-        episode_starts = np.ones((n_instructors,), dtype=bool)
+        episode_starts = np.ones((n_instructors, ), dtype=bool)
         # process them one step at a time to collect rollout info
         episode_wise_transitions = [[] for _ in range(n_instructors)]
-        ep_terminated = np.zeros((n_instructors,), dtype=bool)
-
+        ep_terminated = np.zeros((n_instructors, ), dtype=bool)
 
         for idx, actions_tensor in enumerate(gen_sentence.step_wise_actions):
             if np.all(ep_terminated):
@@ -246,11 +226,9 @@ class RolloutUtil:
                 if dones[instructor_ix]:
                     ep_terminated[instructor_ix] = True
 
-            episode_starts = np.zeros((n_instructors,), dtype=bool)
+            episode_starts = np.zeros((n_instructors, ), dtype=bool)
             current_obs = new_obs
 
         # now we flush all episode wise info to the 1-D buffer
-        rollout_info = add_to_buffer(
-            rollout_buffer, episode_wise_transitions, rollout_info
-        )
+        rollout_info = add_to_buffer(rollout_buffer, episode_wise_transitions, rollout_info)
         return rollout_info, review_times

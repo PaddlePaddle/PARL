@@ -3,27 +3,29 @@ import torch
 from gym import spaces
 from torch.nn import functional as F
 
-from  parl.algorithms.torch import PPO
+from parl.algorithms.torch import PPO
+
 
 class RL4LMPPO(parl.Algorithm):
-    def __init__(self,
-                 model,
-                 learning_rate = 3e-4,
-                 n_steps = 2048,
-                 batch_size = 64,
-                 n_epochs = 10,
-                 gamma = 0.99,
-                 gae_lambda = 0.95,
-                 clip_range = 0.2,
-                 normalize_advantage = True,
-                 ent_coef = 0.0,
-                 vf_coef = 0.5,
-                 max_grad_norm = 0.5,
-                 target_kl = None,
-                 seed = None,
-                 device = "auto",
-                 _init_setup_model = True,
-                 ):
+    def __init__(
+            self,
+            model,
+            learning_rate=3e-4,
+            n_steps=2048,
+            batch_size=64,
+            n_epochs=10,
+            gamma=0.99,
+            gae_lambda=0.95,
+            clip_range=0.2,
+            normalize_advantage=True,
+            ent_coef=0.0,
+            vf_coef=0.5,
+            max_grad_norm=0.5,
+            target_kl=None,
+            seed=None,
+            device="auto",
+            _init_setup_model=True,
+    ):
         super(RL4LMPPO, self).__init__(model=model)
         self.learning_rate = learning_rate
         self.n_steps = n_steps
@@ -58,14 +60,12 @@ class RL4LMPPO(parl.Algorithm):
                 # Convert discrete action from float to long
                 actions = rollout_data.actions.long().flatten()
 
-
             values, log_prob, entropy = self.model.evaluate_actions(rollout_data.observations, actions)
             values = values.flatten()
             # Normalize advantage
             advantages = rollout_data.advantages
             if self.normalize_advantage:
-                advantages = (advantages - advantages.mean()
-                              ) / (advantages.std() + 1e-8)
+                advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
             # ratio between old and new policy, should be one at the first iteration
             ratio = torch.exp(log_prob - rollout_data.old_log_prob)
@@ -78,8 +78,7 @@ class RL4LMPPO(parl.Algorithm):
 
             # Logging
             pg_losses.append(policy_loss.item())
-            clip_fraction = torch.mean(
-                (torch.abs(ratio - 1) > self.clip_range).float()).item()
+            clip_fraction = torch.mean((torch.abs(ratio - 1) > self.clip_range).float()).item()
             clip_fractions.append(clip_fraction)
 
             # No clipping
@@ -106,8 +105,7 @@ class RL4LMPPO(parl.Algorithm):
             # and Schulman blog: http://joschu.net/blog/kl-approx.html
             with torch.no_grad():
                 log_ratio = log_prob - rollout_data.old_log_prob
-                approx_kl_div = torch.mean(
-                    (torch.exp(log_ratio) - 1) - log_ratio).cpu().numpy()
+                approx_kl_div = torch.mean((torch.exp(log_ratio) - 1) - log_ratio).cpu().numpy()
                 approx_kl_divs.append(approx_kl_div)
 
             if self.target_kl is not None and approx_kl_div > 1.5 * self.target_kl:
@@ -118,8 +116,7 @@ class RL4LMPPO(parl.Algorithm):
             self.model.optimizer.zero_grad()
             loss.backward()
             # Clip grad norm
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(), self.max_grad_norm)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
             self.model.optimizer.step()
 
         return continue_training, loss
@@ -131,46 +128,44 @@ class RL4LMPPO(parl.Algorithm):
         pass
 
     def forward_value(
-        self,
-        obs,
+            self,
+            obs,
     ):
         return self.model.forward_value(obs)
 
     def forward_policy(
-        self,
-        obs,
-        actions,
+            self,
+            obs,
+            actions,
     ):
         return self.model.forward_policy(
-            obs = obs,
-            actions = actions,
+            obs=obs,
+            actions=actions,
         )
 
-
     def get_log_probs_ref_model(
-        self,
-        obs,
-        action,
+            self,
+            obs,
+            action,
     ):
         return self.model.get_log_probs_ref_model(obs, action)
 
     def sample(
-        self,
-        tokenizer,
-        texts = None,
-        max_prompt_length = None,
-        input_ids = None,
-        attention_mask = None,
-        gen_kwargs = None,
+            self,
+            tokenizer,
+            texts=None,
+            max_prompt_length=None,
+            input_ids=None,
+            attention_mask=None,
+            gen_kwargs=None,
     ):
         return self.model.sample(
             input_ids=input_ids,
             attention_mask=attention_mask,
             tokenizer=tokenizer,
-            texts = texts,
-            max_prompt_length = max_prompt_length,
-            gen_kwargs = gen_kwargs
-        )
+            texts=texts,
+            max_prompt_length=max_prompt_length,
+            gen_kwargs=gen_kwargs)
 
     def eval_mode(self):
         self.model.eval()

@@ -35,8 +35,7 @@ def recursive_dict_update(d, u):
 
 
 def main(config):
-    device = torch.device("cuda" if torch.cuda.
-                                   is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     tokenizer = build_tokenizer(config["tokenizer"])
 
@@ -46,11 +45,13 @@ def main(config):
     # datapool
     samples_by_split = build_datapool(config["datapool"])
 
-    instructor_group = InstructorGroup(instructor_config=config["instructor"],
-                                   reward_config=config["reward_fn"],
-                                   tokenizer=tokenizer,
-                                   tokenizer_config=config["tokenizer"],
-                                   datapool_config=config["datapool"],)
+    instructor_group = InstructorGroup(
+        instructor_config=config["instructor"],
+        reward_config=config["reward_fn"],
+        tokenizer=tokenizer,
+        tokenizer_config=config["tokenizer"],
+        datapool_config=config["datapool"],
+    )
 
     rl4lms_model = Seq2SeqLMModel(
         observation_space=instructor_group.observation_space,
@@ -59,15 +60,15 @@ def main(config):
         model_name=config["alg"]["model"]["args"]["model_name"],
         apply_model_parallel=config["alg"]["model"]["args"]["apply_model_parallel"],
         prompt_truncation_side=config["alg"]["model"]["args"]["prompt_truncation_side"],
-        generation_kwargs=config["alg"]["model"]["args"]["generation_kwargs"]
-    )
-    rl4lm_alg = RL4LMPPO(model=rl4lms_model,
-                         device=device,
-                         n_steps=config["alg"]["args"]["n_steps"],
-                         batch_size=config["alg"]["args"]["batch_size"],
-                         learning_rate=config["alg"]["args"]["learning_rate"],
-                         n_epochs=config["alg"]["args"]["n_epochs"],
-                         ent_coef=config["alg"]["args"]["ent_coef"])
+        generation_kwargs=config["alg"]["model"]["args"]["generation_kwargs"])
+    rl4lm_alg = RL4LMPPO(
+        model=rl4lms_model,
+        device=device,
+        n_steps=config["alg"]["args"]["n_steps"],
+        batch_size=config["alg"]["args"]["batch_size"],
+        learning_rate=config["alg"]["args"]["learning_rate"],
+        n_epochs=config["alg"]["args"]["n_epochs"],
+        ent_coef=config["alg"]["args"]["ent_coef"])
     agent = RL4LMsAgent(rl4lm_alg, config["alg"])
 
     rollout_buffer = DictRolloutBuffer(
@@ -89,18 +90,15 @@ def main(config):
     eval_gen_kwargs = config["train_evaluation"]["generation_kwargs"]
     eval_batch_size = config["train_evaluation"]["eval_batch_size"]
     examiner = Examiner(
-                    tokenizer=tokenizer,
-                    eval_batch_size=eval_batch_size,
-                    metrics=metrics,
-                    eval_gen_kwargs=eval_gen_kwargs,
-                    samples_by_split=samples_by_split,
-                    max_prompt_length=max_prompt_length
-                )
+        tokenizer=tokenizer,
+        eval_batch_size=eval_batch_size,
+        metrics=metrics,
+        eval_gen_kwargs=eval_gen_kwargs,
+        samples_by_split=samples_by_split,
+        max_prompt_length=max_prompt_length)
 
     iter_start = 0
-    examiner.evaluate(policy=agent.alg.model,
-                      sample_name_list=["val", "test"],
-                      epoch=iter_start)
+    examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=iter_start)
 
     epoch = 0
     for epoch in range(iter_start, n_iters):
@@ -125,21 +123,15 @@ def main(config):
 
         # evaluate on val set in the given intervals
         if (epoch + 1) % config["train_evaluation"]["eval_every"] == 0:
-            examiner.evaluate(policy=agent.alg.model,
-                              sample_name_list=["val"],
-                              epoch=epoch)
+            examiner.evaluate(policy=agent.alg.model, sample_name_list=["val"], epoch=epoch)
 
-    examiner.evaluate(policy=agent.alg.model,
-                      sample_name_list=["val", "test"],
-                      epoch=epoch)
+    examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=epoch)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description="Fine-tune LM to generate controlled text")
     parser.add_argument("--config_path", type=str, help="path to the config file")
-    parser.add_argument(
-        "--project_name", type=str, help="project name", default="rl4lm_exps"
-    )
+    parser.add_argument("--project_name", type=str, help="project name", default="rl4lm_exps")
     parser.add_argument(
         "--experiment_name",
         type=str,
@@ -152,9 +144,7 @@ if __name__ == '__main__':
         help="Base path to store experiment results",
         default=os.getcwd(),
     )
-    parser.add_argument(
-        "--entity_name", type=str, help="entity name", default="summarization"
-    )
+    parser.add_argument("--entity_name", type=str, help="entity name", default="summarization")
     args = parser.parse_args()
 
     # load the config file
@@ -170,4 +160,3 @@ if __name__ == '__main__':
     logger.set_level("DEBUG")
 
     main(config)
-

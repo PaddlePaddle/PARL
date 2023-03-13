@@ -5,9 +5,7 @@ from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 
 
-
 class CNNDailyMail:
-
     def __init__(self, samples):
         self._samples = samples
 
@@ -21,37 +19,26 @@ class CNNDailyMail:
         return sample, 1.0
 
     @classmethod
-    def prepare(cls,
-                split,
-                prompt_suffix = "",
-                prompt_prefix = "",
-                truncate_article = None,
-                max_size = None):
-        split2name = {
-            "train": "train",
-            "val": "validation",
-            "test": "test"
-        }
+    def prepare(cls, split, prompt_suffix="", prompt_prefix="", truncate_article=None, max_size=None):
+        split2name = {"train": "train", "val": "validation", "test": "test"}
         dataset = load_dataset("cnn_dailymail", "3.0.0")
         dataset_split = split2name[split]
         samples = []
-        for ix, item in tqdm(enumerate(dataset[dataset_split]),
-                             desc="Tokenizing dataset",
-                             total=len(dataset[dataset_split])):
+        for ix, item in tqdm(
+                enumerate(dataset[dataset_split]), desc="Tokenizing dataset", total=len(dataset[dataset_split])):
 
             if truncate_article is not None:
                 tokens = word_tokenize(item["article"])
                 tokens = tokens[:truncate_article]
                 item["article"] = " ".join(tokens)
 
-            sample = Sample(id=f"{split}_{ix}",
-                            prompt_or_input_text=prompt_prefix +
-                            item["article"] + prompt_suffix,
-                            references=[item["highlights"]]
-                            )
+            sample = Sample(
+                id=f"{split}_{ix}",
+                prompt_or_input_text=prompt_prefix + item["article"] + prompt_suffix,
+                references=[item["highlights"]])
             samples.append(sample)
 
-            if max_size is not None and ix == (max_size-1):
+            if max_size is not None and ix == (max_size - 1):
                 break
 
         pool_instance = cls(samples)
@@ -67,6 +54,6 @@ class CNNDailyMail:
         for ratio in split_ratios:
             count = int(len(self) * ratio)
             end_ix = start_ix + count
-            pools.append(type(self)(self._samples[start_ix: end_ix]))
+            pools.append(type(self)(self._samples[start_ix:end_ix]))
             start_ix = end_ix
         return pools

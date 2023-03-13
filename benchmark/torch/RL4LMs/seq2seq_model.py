@@ -9,23 +9,23 @@ from transformers.modeling_utils import unwrap_model
 import parl
 from rl4lms_utils import (
     override_generation_routines,
-
-    GenerationInputs, GenerationOutputs,
+    GenerationInputs,
+    GenerationOutputs,
 )
 
 
 class Seq2SeqLMModel(parl.Model):
     def __init__(
-        self,
-        observation_space,
-        action_space,
-        model_name,
-        weight_decay = 1e-6,
-        apply_model_parallel = True,
-        optimizer_class = torch.optim.AdamW,
-        generation_kwargs = {},
-        prompt_truncation_side = "left",
-        device = None,
+            self,
+            observation_space,
+            action_space,
+            model_name,
+            weight_decay=1e-6,
+            apply_model_parallel=True,
+            optimizer_class=torch.optim.AdamW,
+            generation_kwargs={},
+            prompt_truncation_side="left",
+            device=None,
     ):
         super(Seq2SeqLMModel, self).__init__()
 
@@ -43,7 +43,6 @@ class Seq2SeqLMModel(parl.Model):
         self._generation_kwargs = generation_kwargs
         self._prompt_truncation_side = prompt_truncation_side
 
-
     def _build_model_heads(self, model_name):
         self._policy_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self._policy_model.__class__ = override_generation_routines(type(self._policy_model))
@@ -51,9 +50,7 @@ class Seq2SeqLMModel(parl.Model):
         self._value_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self._ref_model = deepcopy(self._policy_model).eval()
 
-        self._value_head = nn.Linear(
-            self._value_model.config.hidden_size, 1, bias=False
-        )
+        self._value_head = nn.Linear(self._value_model.config.hidden_size, 1, bias=False)
 
         # apply model parallel
         if torch.cuda.is_available():
@@ -66,31 +63,23 @@ class Seq2SeqLMModel(parl.Model):
                 self._policy_model = torch.nn.DataParallel(self._policy_model)
                 self._ref_model = torch.nn.DataParallel(self._ref_model)
                 self._value_model = torch.nn.DataParallel(self._value_model)
-                self._value_head = torch.nn.DataParallel(
-                    self._value_head.to(self.device)
-                )
+                self._value_head = torch.nn.DataParallel(self._value_head.to(self.device))
 
     def forward_policy(
-        self,
-        obs,
-        actions,
+            self,
+            obs,
+            actions,
     ):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
         }
-        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-            self._policy_model
-        )._prepare_model_inputs(
-            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-        )
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(self._policy_model)._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs)
 
         # 2. prepare encoder outputs
-        past_model_kwargs = unwrap_model(
-            self._policy_model
-        )._prepare_encoder_decoder_kwargs_for_generation(
-            inputs_tensor, past_model_kwargs, model_input_name
-        )
+        past_model_kwargs = unwrap_model(self._policy_model)._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name)
 
         # 3. Prepare input_ids for auto-regressive generation
         input_ids = obs["context_encoded_pt"].int()
@@ -99,14 +88,10 @@ class Seq2SeqLMModel(parl.Model):
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
         batch_size = input_ids.shape[0]
-        model_inputs = unwrap_model(self._policy_model).prepare_inputs_for_generation(
-            input_ids, **past_model_kwargs
-        )
+        model_inputs = unwrap_model(self._policy_model).prepare_inputs_for_generation(input_ids, **past_model_kwargs)
 
         # and forward pass to get next token logits
-        outputs = self._policy_model(
-            **model_inputs, decoder_attention_mask=decoder_attn_mask, return_dict=True
-        )
+        outputs = self._policy_model(**model_inputs, decoder_attention_mask=decoder_attn_mask, return_dict=True)
         next_token_logits = outputs.logits[:, -1, :]
 
         # get log probs
@@ -115,14 +100,10 @@ class Seq2SeqLMModel(parl.Model):
         entropy = dist.entropy()
 
         # update the model kwargs for further generation
-        past_model_kwargs = unwrap_model(
-            self._policy_model
-        )._update_model_kwargs_for_generation(
+        past_model_kwargs = unwrap_model(self._policy_model)._update_model_kwargs_for_generation(
             outputs,
             past_model_kwargs,
-            is_encoder_decoder=unwrap_model(
-                self._policy_model
-            ).config.is_encoder_decoder,
+            is_encoder_decoder=unwrap_model(self._policy_model).config.is_encoder_decoder,
         )
         past_model_kwargs["decoder_attention_mask"] = torch.cat(
             (decoder_attn_mask, torch.ones(batch_size, 1).to(decoder_attn_mask.device)),
@@ -132,25 +113,19 @@ class Seq2SeqLMModel(parl.Model):
         return actions, log_prob, entropy, past_model_kwargs
 
     def forward_value(
-        self,
-        obs,
+            self,
+            obs,
     ):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
         }
-        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-            self._value_model
-        )._prepare_model_inputs(
-            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-        )
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(self._value_model)._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs)
 
         # 2. prepare encoder outputs
-        past_model_kwargs = unwrap_model(
-            self._value_model
-        )._prepare_encoder_decoder_kwargs_for_generation(
-            inputs_tensor, past_model_kwargs, model_input_name
-        )
+        past_model_kwargs = unwrap_model(self._value_model)._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name)
 
         # 3. Prepare input_ids for auto-regressive generation
         input_ids = obs["context_encoded_pt"].int()
@@ -159,31 +134,21 @@ class Seq2SeqLMModel(parl.Model):
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
         batch_size = input_ids.shape[0]
-        model_inputs = unwrap_model(self._value_model).prepare_inputs_for_generation(
-            input_ids, **past_model_kwargs
-        )
+        model_inputs = unwrap_model(self._value_model).prepare_inputs_for_generation(input_ids, **past_model_kwargs)
 
         # and forrward pass to get hidden states
         outputs = self._value_model(
-            **model_inputs,
-            output_hidden_states=True,
-            decoder_attention_mask=decoder_attn_mask,
-            return_dict=True
-        )
+            **model_inputs, output_hidden_states=True, decoder_attention_mask=decoder_attn_mask, return_dict=True)
 
         # get decoder's last hidden state
         last_tokens_hidden = outputs.decoder_hidden_states[-1][:, -1, :].to(self.device)
         values = self._value_head.forward(last_tokens_hidden)
 
         # update the model kwargs for further generation
-        past_model_kwargs = unwrap_model(
-            self._value_model
-        )._update_model_kwargs_for_generation(
+        past_model_kwargs = unwrap_model(self._value_model)._update_model_kwargs_for_generation(
             outputs,
             past_model_kwargs,
-            is_encoder_decoder=unwrap_model(
-                self._value_model
-            ).config.is_encoder_decoder,
+            is_encoder_decoder=unwrap_model(self._value_model).config.is_encoder_decoder,
         )
         past_model_kwargs["decoder_attention_mask"] = torch.cat(
             (decoder_attn_mask, torch.ones(batch_size, 1).to(decoder_attn_mask.device)),
@@ -191,9 +156,7 @@ class Seq2SeqLMModel(parl.Model):
         )
         return values, past_model_kwargs
 
-    def evaluate_actions(
-        self, obs, actions
-    ):
+    def evaluate_actions(self, obs, actions):
 
         _, log_prob, entropy, _ = self.forward_policy(obs=obs, actions=actions)
         values, _ = self.forward_value(obs)
@@ -207,26 +170,20 @@ class Seq2SeqLMModel(parl.Model):
             return super().to(device)
 
     def get_log_probs_ref_model(
-        self,
-        obs,
-        action,
+            self,
+            obs,
+            action,
     ):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
         }
-        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(
-            self._ref_model
-        )._prepare_model_inputs(
-            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs
-        )
+        inputs_tensor, model_input_name, past_model_kwargs = unwrap_model(self._ref_model)._prepare_model_inputs(
+            obs["prompt_or_input_encoded_pt"].int(), None, past_model_kwargs)
 
         # 2. prepare encoder outputs
-        past_model_kwargs = unwrap_model(
-            self._ref_model
-        )._prepare_encoder_decoder_kwargs_for_generation(
-            inputs_tensor, past_model_kwargs, model_input_name
-        )
+        past_model_kwargs = unwrap_model(self._ref_model)._prepare_encoder_decoder_kwargs_for_generation(
+            inputs_tensor, past_model_kwargs, model_input_name)
 
         # 3. Prepare input_ids for auto-regressive generation
         input_ids = obs["context_encoded_pt"].int()
@@ -235,14 +192,10 @@ class Seq2SeqLMModel(parl.Model):
         # all set to get into auto-regressive mode
         # prepare all of the model inputs for the decoder
         batch_size = input_ids.shape[0]
-        model_inputs = unwrap_model(self._ref_model).prepare_inputs_for_generation(
-            input_ids, **past_model_kwargs
-        )
+        model_inputs = unwrap_model(self._ref_model).prepare_inputs_for_generation(input_ids, **past_model_kwargs)
 
         # and forward pass to get next token logits
-        outputs = self._ref_model(
-            **model_inputs, decoder_attention_mask=decoder_attn_mask, return_dict=True
-        )
+        outputs = self._ref_model(**model_inputs, decoder_attention_mask=decoder_attn_mask, return_dict=True)
         next_token_logits = outputs.logits[:, -1, :]
 
         # get log probs
@@ -250,9 +203,7 @@ class Seq2SeqLMModel(parl.Model):
         log_prob = dist.log_prob(action)
 
         # update the model kwargs for further generation
-        past_model_kwargs = unwrap_model(
-            self._ref_model
-        )._update_model_kwargs_for_generation(
+        past_model_kwargs = unwrap_model(self._ref_model)._update_model_kwargs_for_generation(
             outputs,
             past_model_kwargs,
             is_encoder_decoder=unwrap_model(self._ref_model).config.is_encoder_decoder,
@@ -264,30 +215,25 @@ class Seq2SeqLMModel(parl.Model):
         return log_prob, past_model_kwargs
 
     def get_policy_first_device(self):
-        return (
-            self._policy_model.get_encoder().first_device
-            if self._apply_model_parallel
-            else self.device
-        )
+        return (self._policy_model.get_encoder().first_device if self._apply_model_parallel else self.device)
 
     def get_inputs_for_generation(self, obs):
 
-        generation_inputs = GenerationInputs(
-            obs["prompt_or_input_encoded_pt"], obs["prompt_or_input_attention_mask_pt"]
-        )
+        generation_inputs = GenerationInputs(obs["prompt_or_input_encoded_pt"],
+                                             obs["prompt_or_input_attention_mask_pt"])
         return generation_inputs
 
     def get_language_model(self):
         return unwrap_model(self._policy_model)
 
     def sample(
-        self,
-        tokenizer,
-        texts = None,
-        max_prompt_length = None,
-        input_ids = None,
-        attention_mask = None,
-        gen_kwargs = None,
+            self,
+            tokenizer,
+            texts=None,
+            max_prompt_length=None,
+            input_ids=None,
+            attention_mask=None,
+            gen_kwargs=None,
     ):
 
         # if it different from rollout gen kwargs
@@ -297,12 +243,7 @@ class Seq2SeqLMModel(parl.Model):
         # switch to eval
         self._policy_model.eval()
 
-        if (
-            input_ids is None
-            and attention_mask is None
-            and texts is not None
-            and max_prompt_length is not None
-        ):
+        if (input_ids is None and attention_mask is None and texts is not None and max_prompt_length is not None):
             # override truncation side for prompt
             prev_truncation_side = tokenizer.truncation_side
             tokenizer.truncation_side = self._prompt_truncation_side
@@ -320,13 +261,9 @@ class Seq2SeqLMModel(parl.Model):
 
         # if min_length argument is set and if policy is not a seq2seq LM (ie. causal LM)
         # then it has to be adjusted to input_size + min_length
-        if "min_length" in gen_kwargs.keys() and not self.is_encoder_decoder(
-            self._policy_model
-        ):
+        if "min_length" in gen_kwargs.keys() and not self.is_encoder_decoder(self._policy_model):
             generation_kwargs_ = deepcopy(gen_kwargs)
-            generation_kwargs_["min_length"] = (
-                input_ids.shape[1] + gen_kwargs["min_length"]
-            )
+            generation_kwargs_["min_length"] = (input_ids.shape[1] + gen_kwargs["min_length"])
         else:
             generation_kwargs_ = gen_kwargs
 
@@ -346,10 +283,7 @@ class Seq2SeqLMModel(parl.Model):
         gen_tokens = gen_output["sequences"][:, -seq_length:]
 
         # to texts
-        gen_texts = [
-            tokenizer.decode(output, skip_special_tokens=True)
-            for output in gen_tokens.tolist()
-        ]
+        gen_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in gen_tokens.tolist()]
 
         # extract scores (logits)
         step_wise_logprobs = []
@@ -362,18 +296,14 @@ class Seq2SeqLMModel(parl.Model):
             step_wise_logprobs.append(log_probs)
             step_wise_actions.append(actions_at_step)
 
-        gen_output = GenerationOutputs(
-            step_wise_logprobs, step_wise_actions, gen_tokens, gen_texts
-        )
+        gen_output = GenerationOutputs(step_wise_logprobs, step_wise_actions, gen_tokens, gen_texts)
         return gen_output
-
 
     def is_encoder_decoder(self, model):
         return unwrap_model(model).config.is_encoder_decoder
 
     def set_training_mode(self, mode):
         self.train(mode)
-
 
     def _get_constructor_parameters(self):
         return dict(
@@ -389,11 +319,10 @@ class Seq2SeqLMModel(parl.Model):
         """
         torch.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
 
-
     def _setup_optimizer(
-        self,
-        weight_decay,
-        optimizer_class,
+            self,
+            weight_decay,
+            optimizer_class,
     ):
         params = list(self.named_parameters())
 
@@ -409,6 +338,3 @@ class Seq2SeqLMModel(parl.Model):
             },
         ]
         self.optimizer = optimizer_class(optimizer_grouped_parameters)
-
-
-

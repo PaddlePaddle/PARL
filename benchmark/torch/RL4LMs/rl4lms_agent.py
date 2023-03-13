@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from parl.utils import logger
 
+
 def explained_variance(y_pred, y_true):
     """
     Computes fraction of variance that ypred explains about y.
@@ -20,11 +21,12 @@ def explained_variance(y_pred, y_true):
 
 
 class RL4LMsAgent(parl.Agent):
-    def __init__(self,
-                 algorithm,
-                 alg_config,
-                 norm_reward = False,
-                 ):
+    def __init__(
+            self,
+            algorithm,
+            alg_config,
+            norm_reward=False,
+    ):
         super(RL4LMsAgent, self).__init__(algorithm)
         self.dataset = None
         self.config = alg_config
@@ -49,16 +51,13 @@ class RL4LMsAgent(parl.Agent):
 
         # train for n_epochs epochs
         for epoch in range(self.n_epochs):
-            continue_training, loss = self.alg.learn(rollout_buffer=rollout_buffer,
-                                                              log_info=log_info)
+            continue_training, loss = self.alg.learn(rollout_buffer=rollout_buffer, log_info=log_info)
             if not continue_training:
-                print(
-                        f"Early stopping at step {epoch} due to reaching max kl: {approx_kl_divs[-1]:.2f}")
+                print(f"Early stopping at step {epoch} due to reaching max kl: {approx_kl_divs[-1]:.2f}")
                 break
 
         self._n_updates += self.n_epochs
-        explained_var = explained_variance(
-            rollout_buffer.values.flatten(), rollout_buffer.returns.flatten())
+        explained_var = explained_variance(rollout_buffer.values.flatten(), rollout_buffer.returns.flatten())
 
         # Logs
         train_info = {
@@ -80,12 +79,12 @@ class RL4LMsAgent(parl.Agent):
         #                    self._n_updates, exclude="tensorboard")
         # self.logger.record("train/clip_range", clip_range)
         train_info["train/n_updates"] = self._n_updates
-        train_info["train/clip_range"] =  self.alg.clip_range
+        train_info["train/clip_range"] = self.alg.clip_range
 
         logger.info(train_info)
 
         ppo_train_info = {
-            "ppo/entropy_loss":  np.mean(entropy_losses).item(),
+            "ppo/entropy_loss": np.mean(entropy_losses).item(),
             "ppo/policy_gradient_loss": np.mean(pg_losses).item(),
             "ppo/value_loss": np.mean(value_losses).item(),
             "ppo/approx_kl": np.mean(approx_kl_divs).item(),
@@ -93,47 +92,44 @@ class RL4LMsAgent(parl.Agent):
 
         logger.info(ppo_train_info)
 
-
     def get_inputs_for_generation(self, obs_tensor):
         return self.alg.model.get_inputs_for_generation(obs_tensor)
-
 
     def predict(self, *args, **kwargs):
         # only use sample
         pass
 
     def forward_value(
-        self,
-        obs,
+            self,
+            obs,
     ):
         return self.alg.forward_value(obs)
 
     def forward_policy(
-        self,
-        obs,
-        actions,
+            self,
+            obs,
+            actions,
     ):
         return self.alg.forward_policy(
-            obs = obs,
-            actions = actions,
+            obs=obs,
+            actions=actions,
         )
 
-
     def get_log_probs_ref_model(
-        self,
-        obs,
-        action,
+            self,
+            obs,
+            action,
     ):
         return self.alg.get_log_probs_ref_model(obs, action)
 
     def sample(
-        self,
-        tokenizer,
-        texts = None,
-        max_prompt_length = None,
-        input_ids = None,
-        attention_mask = None,
-        gen_kwargs = None,
+            self,
+            tokenizer,
+            texts=None,
+            max_prompt_length=None,
+            input_ids=None,
+            attention_mask=None,
+            gen_kwargs=None,
     ):
         return self.alg.sample(
             input_ids=input_ids,
@@ -141,8 +137,7 @@ class RL4LMsAgent(parl.Agent):
             tokenizer=tokenizer,
             texts=texts,
             max_prompt_length=max_prompt_length,
-            gen_kwargs=gen_kwargs
-        )
+            gen_kwargs=gen_kwargs)
 
     def eval_mode(self):
         self.alg.eval_mode()

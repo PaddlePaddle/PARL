@@ -23,16 +23,16 @@ __all__ = ['dump_remote_class', 'load_remote_class']
 
 def simplify_code(code, end_of_file):
     """
-  @parl.remote_actor has to use this function to simplify the code.
+  @parl.remote_class has to use this function to simplify the code.
   To create a remote object, PARL has to import the module that contains the decorated class.
   It may run some unnecessary code when importing the module, and this is why we use this function
   to simplify the code.
 
   For example.
-  @parl.remote_actor
+  @parl.remote_class
   class A(object):
     def add(self, a, b):
-    return a + b
+      return a + b
   def data_process():
     XXXX
   ------------------>
@@ -40,7 +40,7 @@ def simplify_code(code, end_of_file):
   """
     to_write_lines = []
     for i, line in enumerate(code):
-        if line.startswith('parl.connect'):
+        if line.lstrip().startswith('parl.connect'):
             continue
         if i < end_of_file - 1:
             to_write_lines.append(line)

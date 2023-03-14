@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,16 +21,19 @@ from parl.remote import remote_constants
 from parl.remote.grpc_heartbeat import heartbeat_pb2
 from parl.remote.grpc_heartbeat import heartbeat_pb2_grpc
 from parl.utils import logger, get_ip_address
+import psutil
 import multiprocessing as mp
 
 
 class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
-    def __init__(self, client_count=None, host_is_alive=True):
+    def __init__(self, client_count=None, host_is_alive=True, dead_job_queue=None):
         self.last_heartbeat_time = time.time()
         self.last_heartbeat_table = dict()
         self.exit_flag = False
         self.client_count = client_count
+        self.dead_job_queue = dead_job_queue
         self.host_is_alive = host_is_alive
+        self.host_pid = None
 
     def Send(self, request, context):
         client_id = request.client_id
@@ -47,6 +50,9 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
         while True:
             time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
+            if (self.host_pid is not None) and (not psutil.pid_exists(self.host_pid)):
+                self.exit()
+
             if self.exit_flag:
                 break
 
@@ -54,12 +60,16 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
                 # heartbeat exit
                 break
 
-    def timeout_time_mp(self):
-        while True:
-            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
+    def _parent_process_is_running(self):
+        if not self.host_is_alive.value:
+            return False
+        ppid = os.getppid()
+        return ppid != 1
 
-            if bool(self.host_is_alive.value) == False:
-                break
+    def timeout_time_mp(self):
+
+        while self._parent_process_is_running():
+            time.sleep(remote_constants.HEARTBEAT_INTERVAL_S)
 
             cur_time = time.time()
             to_del_client = []
@@ -68,6 +78,7 @@ class GrpcHeartbeatServer(heartbeat_pb2_grpc.GrpcHeartbeatServicer):
                     to_del_client.append(client_id)
             for client_id in to_del_client:
                 del self.last_heartbeat_table[client_id]
+                self.dead_job_queue.put(client_id)
             self.client_count.value = len(self.last_heartbeat_table)
 
 class HeartbeatServerThread(threading.Thread):
@@ -128,15 +139,17 @@ class HeartbeatServerThread(threading.Thread):
         self.heartbeat_exit_callback_func(*self._exit_func_args,
                                           **self._exit_func_kwargs)
 
+    def set_host_pid(self, host_pid):
+        self.heartbeat_server.host_pid = host_pid
+
     def exit(self):
         self.heartbeat_server.exit()
 
 class HeartbeatServerProcess(mp.Process):
-    def __init__(self, port, client_count, host_is_alive):
+    def __init__(self, port, client_count, host_is_alive, dead_job_queue):
         """Create a process to run the heartbeat server.
             Args:
                 port(mp.Value): notify the main prcoess of the severt port.
-                host_is_alive(mp.Value): inidicating whether the host is running.
         """
 
         mp.Process.__init__(self)
@@ -144,7 +157,7 @@ class HeartbeatServerProcess(mp.Process):
             futures.ThreadPoolExecutor(max_workers=500),
             options=[('grpc.max_receive_message_length', -1),
                      ('grpc.max_send_message_length', -1)])
-        self.heartbeat_server = GrpcHeartbeatServer(client_count, host_is_alive)
+        self.heartbeat_server = GrpcHeartbeatServer(client_count, host_is_alive, dead_job_queue)
 
         heartbeat_pb2_grpc.add_GrpcHeartbeatServicer_to_server(
             self.heartbeat_server, self.grpc_server)

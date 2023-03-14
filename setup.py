@@ -77,7 +77,7 @@ setup(
         'cloudpickle==1.3.0; python_version<"3"',
         'cloudpickle==1.6.0; python_version>="3"',
         "tensorboardX==2.5",
-        "tensorboard",
+        "tensorboard<=2.11.0",
         "flask>=1.0.4",
         "click",
         "psutil>=5.6.2",
@@ -85,6 +85,7 @@ setup(
         "requests",
         "grpcio==1.37.0",
         "protobuf>=3.14.0, <=3.20.0",
+        "pynvml"
     ],
     classifiers=[
         'Intended Audience :: Developers',

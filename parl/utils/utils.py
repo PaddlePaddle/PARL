@@ -64,6 +64,32 @@ _HAS_FLUID = False
 _HAS_PADDLE = False
 _HAS_TORCH = False
 
+def check_installed_framework_in_windows():
+    global _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
+    # paddle & fluid
+    try:
+        _HAS_FLUID = False
+        _HAS_PADDLE = False
+        import paddle
+        from paddle import fluid
+
+        paddle_version = get_fluid_version()
+        logger.info("paddlepaddle version: {}.".format(paddle.__version__))
+        if paddle_version < 200 and paddle_version != 0:
+            assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 and paddle < 2.0.0"
+            _HAS_FLUID = True
+        else:
+            _HAS_PADDLE = True
+    except ImportError as e:
+        _HAS_FLUID = False
+        _HAS_PADDLE = False
+    # torch
+    try:
+        import torch
+        _HAS_TORCH = True
+    except ImportError:
+        _HAS_TORCH = False
+
 def check_installed_framework():
     def check(installed_framework):
         try:
@@ -101,10 +127,14 @@ def check_installed_framework():
     _HAS_TORCH = installed_framework['_HAS_TORCH']
     del manager, installed_framework
 
-check_installed_framework()
 
 _IS_WINDOWS = (sys.platform == 'win32')
 _IS_MAC = (sys.platform == 'darwin')
+
+if _IS_WINDOWS:
+    check_installed_framework_in_windows()
+else:
+    check_installed_framework()
 
 
 def kill_process(regex_pattern):

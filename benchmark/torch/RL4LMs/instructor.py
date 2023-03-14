@@ -67,7 +67,6 @@ class Instructor:
         self._terminate_on_eos = terminate_on_eos
         self._context_start_token = context_start_token
         self._prompt_truncation_side = prompt_truncation_side
-        super().__init__()
 
         # set the observation and action space here
         self._vocab_size = tokenizer.vocab_size

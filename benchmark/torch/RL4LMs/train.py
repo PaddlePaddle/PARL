@@ -33,7 +33,7 @@ from rl4lms_utils import Examiner
 from rl4lms_utils import DictRolloutBuffer, RolloutUtil
 
 # agent, algorithm and model
-from rl4lm_ppo import RL4LMPPO
+from rl4lms_ppo import RL4LMsPPO
 from rl4lms_agent import RL4LMsAgent
 from seq2seq_model import Seq2SeqLMModel
 
@@ -74,15 +74,16 @@ def main(config):
         apply_model_parallel=config["alg"]["model"]["args"]["apply_model_parallel"],
         prompt_truncation_side=config["alg"]["model"]["args"]["prompt_truncation_side"],
         generation_kwargs=config["alg"]["model"]["args"]["generation_kwargs"])
-    rl4lm_alg = RL4LMPPO(
+    rl4lm_alg = RL4LMsPPO(
         model=rl4lms_model,
         device=device,
         n_steps=config["alg"]["args"]["n_steps"],
-        batch_size=config["alg"]["args"]["batch_size"],
         learning_rate=config["alg"]["args"]["learning_rate"],
         n_epochs=config["alg"]["args"]["n_epochs"],
         ent_coef=config["alg"]["args"]["ent_coef"])
-    agent = RL4LMsAgent(rl4lm_alg, config["alg"])
+    agent = RL4LMsAgent(rl4lm_alg,
+                        n_epochs=config["alg"]["args"]["n_epochs"],
+                        batch_size=config["alg"]["args"]["batch_size"],)
 
     rollout_buffer = DictRolloutBuffer(
         buffer_size=agent.alg.n_steps * instructor_group.n_instructors,

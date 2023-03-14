@@ -14,7 +14,7 @@
 
 import parl
 import numpy as np
-
+from gym import spaces
 import torch
 from parl.utils import logger
 
@@ -38,13 +38,14 @@ class RL4LMsAgent(parl.Agent):
     def __init__(
             self,
             algorithm,
-            alg_config,
+            n_epochs,
+            batch_size=64,
             norm_reward=False,
     ):
         super(RL4LMsAgent, self).__init__(algorithm)
         self.dataset = None
-        self.config = alg_config
-        self.n_epochs = alg_config["args"]["n_epochs"]
+        self.n_epochs = n_epochs
+        self.batch_size = batch_size
         self._norm_reward = norm_reward
         self._n_updates = 0
 
@@ -53,24 +54,44 @@ class RL4LMsAgent(parl.Agent):
         pg_losses, value_losses = [], []
         clip_fractions = []
         approx_kl_divs = []
-        log_info = {
-            "entropy_losses": entropy_losses,
-            "pg_losses": pg_losses,
-            "value_losses": value_losses,
-            "clip_fractions": clip_fractions,
-            "approx_kl_divs": approx_kl_divs
-        }
 
         loss = torch.tensor(0.0)
 
         # train for n_epochs epochs
         for epoch in range(self.n_epochs):
-            continue_training, loss = self.alg.learn(rollout_buffer=rollout_buffer, log_info=log_info)
+            continue_training = True
+
+            for batch_ix, rollout_data in enumerate(list(rollout_buffer.get(self.batch_size))):
+                batch_action = rollout_data.actions
+                if isinstance(self.alg.model.action_space, spaces.Discrete):
+                    # Convert discrete action from float to long
+                    batch_action = rollout_data.actions.long().flatten()
+                batch_obs = rollout_data.observations
+                batch_adv = rollout_data.advantages
+                batch_logprob = rollout_data.old_log_prob
+                batch_return = rollout_data.returns
+
+                continue_training, alg_learn_info = self.alg.learn(
+                                    batch_obs=batch_obs,
+                                    batch_action=batch_action,
+                                    batch_logprob=batch_logprob,
+                                    batch_return=batch_return,
+                                    batch_adv=batch_adv)
+
+                entropy_losses.append(alg_learn_info["entropy_losses"])
+                pg_losses.append(alg_learn_info["pg_losses"])
+                value_losses.append(alg_learn_info["value_losses"])
+                clip_fractions.append(alg_learn_info["clip_fractions"])
+                approx_kl_divs.append(alg_learn_info["approx_kl_divs"])
+                if not continue_training:
+                    break
+
+            self._n_updates += 1 # according to stable-baseline3
             if not continue_training:
                 print(f"Early stopping at step {epoch} due to reaching max kl: {approx_kl_divs[-1]:.2f}")
                 break
 
-        self._n_updates += self.n_epochs
+        # self._n_updates += self.n_epochs # change original RL4LMs code
         explained_var = explained_variance(rollout_buffer.values.flatten(), rollout_buffer.returns.flatten())
 
         # Logs

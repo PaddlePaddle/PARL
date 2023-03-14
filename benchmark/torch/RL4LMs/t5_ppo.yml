@@ -70,4 +70,3 @@ train_evaluation:
     temperature: 0.7
     min_length: 50
     max_new_tokens: 100
-

@@ -30,15 +30,18 @@ kl_div:
   coeff: 0.001
   target_kl: 0.2
 
+rollout_buffer:
+  args:
+    n_steps_per_episode: 512   # buffer length = n_steps_per_episode * n_instructors
+
 agent:
   args:
     batch_size: 32
     n_epochs: 5
   alg:
     args:
-      n_steps: 512
-      learning_rate: 0.000002
-      ent_coef: 0.0
+      initial_lr: 0.000002
+      entropy_coef: 0.0
     model:
       args:
         model_name: t5-base

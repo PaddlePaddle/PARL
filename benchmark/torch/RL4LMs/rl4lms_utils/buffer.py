@@ -79,7 +79,7 @@ class DictRolloutBuffer:
             observation_space,
             action_space,
             device="cpu",
-            gae_lambda=1,
+            gae_lambda=0.95,
             gamma=0.99,
     ):
         self.buffer_size = buffer_size
@@ -200,7 +200,7 @@ class DictRolloutBuffer:
         """
         Swap and then flatten axes 0 (buffer_size) and 1 (n_instructors)
         to convert shape from [n_steps, n_instructors, ...] (when ... is the shape of the features)
-        to [n_steps * n_instructors, ...] (which maintain the order)
+        to [n_steps_per_episode * n_instructors, ...] (which maintain the order)
 
         :param arr:
         :return:

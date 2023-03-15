@@ -14,98 +14,113 @@
 
 import parl
 import torch
-from torch.nn import functional as F
+from parl.utils.utils import check_model_method
 
 
 class RL4LMsPPO(parl.Algorithm):
     def __init__(
             self,
             model,
-            learning_rate=3e-4,
-            n_steps=2048,
-            gamma=0.99,
-            gae_lambda=0.95,
-            clip_range=0.2,
-            normalize_advantage=True,
-            ent_coef=0.0,
-            vf_coef=0.5,
+            clip_param=0.2,
+            value_loss_coef=0.5,
+            entropy_coef=0.0,
+            initial_lr=3e-4,
             max_grad_norm=0.5,
+            use_clipped_value_loss=False,
+            norm_adv=True,
             target_kl=None,
             seed=None,
-            device="auto",
-            use_clipped_value_loss=False,
     ):
+        # check model method
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+
+        assert isinstance(clip_param, float)
+        assert isinstance(value_loss_coef, float)
+        assert isinstance(entropy_coef, float)
+        assert isinstance(initial_lr, float)
+        assert isinstance(max_grad_norm, float)
+        assert isinstance(use_clipped_value_loss, bool)
+        assert isinstance(norm_adv, bool)
+
         super(RL4LMsPPO, self).__init__(model=model)
-        self.learning_rate = learning_rate
-        self.n_steps = n_steps
-        self.gamma = gamma
-        self.gae_lambda = gae_lambda
-        self.clip_range = clip_range
-        self.normalize_advantage = normalize_advantage
-        self.ent_coef = ent_coef
-        self.vf_coef = vf_coef
+        self.initial_lr = initial_lr
+        self.clip_param = clip_param
+        self.norm_adv = norm_adv
+        self.entropy_coef = entropy_coef
+        self.value_loss_coef = value_loss_coef
         self.max_grad_norm = max_grad_norm
         self.target_kl = target_kl
         self.seed = seed
-        self.device = device
         self.use_clipped_value_loss = use_clipped_value_loss
+
         for param_group in self.model.optimizer.param_groups:
-            param_group["lr"] = self.learning_rate
+            param_group["lr"] = self.initial_lr
+        self.optimizer = self.model.optimizer
 
     def learn(self,
               batch_obs,
               batch_action,
-              batch_logprob,
+              batch_value,
               batch_return,
-              batch_adv):
+              batch_logprob,
+              batch_adv,
+              lr=None):
         # Do a complete pass on the rollout batch
         continue_training = True
         learn_info = {"entropy_losses": None,
-               "pg_losses": None,
-               "value_losses": None,
-               "clip_fractions": None,
-               "approx_kl_divs": None,
+                      "pg_losses": None,
+                      "value_losses": None,
+                      "clip_fractions": None,
+                      "approx_kl_divs": None,
                       "loss":None}
 
-        values, action_log_probs, entropy = self.model.evaluate_actions(batch_obs, batch_action)
+        values, _ = self.model.value(batch_obs)
+        action_log_probs, entropy, _ = self.model.policy(batch_obs, batch_action)
         values = values.flatten()
+        entropy_loss = torch.mean(entropy)
+        learn_info["entropy_losses"] = entropy_loss.item()
 
         # Normalize advantage
-        if self.normalize_advantage:
-            batch_adv = (batch_adv - batch_adv.mean()) / (batch_adv.std() + 1e-8)
+        if self.norm_adv:
+            batch_adv = (batch_adv - batch_adv.mean()) / (
+                    batch_adv.std() + 1e-8)
 
         # ratio between old and new policy, should be one at the first iteration
         ratio = torch.exp(action_log_probs - batch_logprob)
 
         # clipped surrogate loss
         surr1 = ratio * batch_adv
-        surr2 = torch.clamp(ratio, 1 - self.clip_range,
-                             1 + self.clip_range) * batch_adv
+        surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                             1.0 + self.clip_param) * batch_adv
 
-        policy_loss = -torch.min(surr1, surr2).mean()
+        action_loss = -torch.min(surr1, surr2).mean()
 
         # Logging
-        learn_info["pg_losses"] = policy_loss.item()
-        clip_fraction = torch.mean((torch.abs(ratio - 1) > self.clip_range).float()).item()
+        learn_info["pg_losses"] = action_loss.item()
+        clip_fraction = torch.mean((torch.abs(ratio - 1) > self.clip_param).float()).item()
         learn_info["clip_fractions"] = clip_fraction
 
-        # No clipping
-        values_pred = values
+        # clipping
+        # values_pred = values
+        if self.use_clipped_value_loss:
+            value_pred_clipped = batch_value + torch.clamp(
+                values - batch_value,
+                -self.clip_param,
+                self.clip_param,
+            )
+            value_losses = (values - batch_return).pow(2)
+            value_losses_clipped = (value_pred_clipped - batch_return).pow(2)
+            value_loss = 0.5 * torch.max(value_losses,
+                                         value_losses_clipped).mean()
+        else:
+            value_loss = 0.5 * (batch_return - values).pow(2).mean()
 
         # Value loss using the TD(gae_lambda) target
-        value_loss = F.mse_loss(batch_return, values_pred)
+        # value_loss = F.mse_loss(batch_return, values_pred)
         learn_info["value_losses"] = value_loss.item()
 
-        # Entropy loss favor exploration
-        if entropy is None:
-            # Approximate entropy when no analytical form
-            entropy_loss = -torch.mean(-action_log_probs)
-        else:
-            entropy_loss = -torch.mean(entropy)
-
-        learn_info["entropy_losses"] = entropy_loss.item()
-
-        loss = policy_loss + self.ent_coef * entropy_loss + self.vf_coef * value_loss
+        loss = value_loss * self.value_loss_coef + action_loss - self.entropy_coef * entropy_loss
 
         # Calculate approximate form of reverse KL Divergence for early stopping
         # see issue #417: https://github.com/DLR-RM/stable-baselines3/issues/417
@@ -122,12 +137,16 @@ class RL4LMsPPO(parl.Algorithm):
             continue_training = False
             return continue_training, learn_info
 
+        if lr:
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = lr
+
         # Optimization step
-        self.model.optimizer.zero_grad()
+        self.optimizer.zero_grad()
         loss.backward()
         # Clip grad norm
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
-        self.model.optimizer.step()
+        self.optimizer.step()
 
         return continue_training, learn_info
 

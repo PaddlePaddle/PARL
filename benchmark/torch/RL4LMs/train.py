@@ -74,27 +74,24 @@ def main(config):
     alg_config = config["agent"]["alg"]
     rl4lm_alg = RL4LMsPPO(
         model=rl4lms_model,
-        device=device,
-        n_steps=alg_config["args"]["n_steps"],
-        learning_rate=alg_config["args"]["learning_rate"],
-        ent_coef=alg_config["args"]["ent_coef"])
+        initial_lr=alg_config["args"]["initial_lr"],
+        entropy_coef=alg_config["args"]["entropy_coef"])
     agent_config = config["agent"]
     agent = RL4LMsAgent(rl4lm_alg,
                         n_epochs=agent_config["args"]["n_epochs"],
                         batch_size=agent_config["args"]["batch_size"],)
 
+    buffer_config = config["rollout_buffer"]
     rollout_buffer = DictRolloutBuffer(
-        buffer_size=agent.alg.n_steps * instructor_group.n_instructors,
+        buffer_size= buffer_config["args"]["n_steps_per_episode"] * instructor_group.n_instructors,
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
-        gamma=agent.alg.gamma,
-        gae_lambda=agent.alg.gae_lambda,
     )
     rollout_util = RolloutUtil(config["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
-    n_steps_per_iter = instructor_group.n_instructors * agent.alg.n_steps
+    n_steps_per_iter = instructor_group.n_instructors * buffer_config["args"]["n_steps_per_episode"]
 
     # gen kwargs for evaluation
     examiner_config = config["examiner"]

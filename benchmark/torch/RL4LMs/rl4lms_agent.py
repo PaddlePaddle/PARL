@@ -71,12 +71,14 @@ class RL4LMsAgent(parl.Agent):
                 batch_adv = rollout_data.advantages
                 batch_logprob = rollout_data.old_log_prob
                 batch_return = rollout_data.returns
+                batch_value = rollout_data.old_values
 
                 continue_training, alg_learn_info = self.alg.learn(
                                     batch_obs=batch_obs,
                                     batch_action=batch_action,
-                                    batch_logprob=batch_logprob,
+                                    batch_value=batch_value,
                                     batch_return=batch_return,
+                                    batch_logprob=batch_logprob,
                                     batch_adv=batch_adv)
 
                 entropy_losses.append(alg_learn_info["entropy_losses"])
@@ -115,7 +117,7 @@ class RL4LMsAgent(parl.Agent):
         #                    self._n_updates, exclude="tensorboard")
         # self.logger.record("train/clip_range", clip_range)
         train_info["train/n_updates"] = self._n_updates
-        train_info["train/clip_range"] = self.alg.clip_range
+        train_info["train/clip_param"] = self.alg.clip_param
 
         logger.info(train_info)
 
@@ -141,8 +143,8 @@ class RL4LMsAgent(parl.Agent):
     ):
         return self.alg.value(obs)
 
-    # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
-    #       task) for collecting data and testing, so here sample() only needs to return info
+    # note: RL4LMs uses the same way (language model always does sample() to generate in summarization task) for
+    #       collecting data and testing, so here use policy() instead of sample() and only need to return info
     #       like log_prob and gen_kwargs without action
     def policy(
             self,

@@ -133,24 +133,21 @@ class RL4LMsPPO(parl.Algorithm):
 
         return continue_training, learn_info
 
-    def predict(self, obs):
-        pass
-
-    def value(self, obs):
-        pass
-
-    def forward_value(
+    def value(
             self,
             obs,
     ):
-        return self.model.forward_value(obs)
+        return self.model.value(obs)
 
-    def forward_policy(
+    # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
+    #       task) for collecting data and testing, so here policy() only needs to return info
+    #       like log_prob and gen_kwargs without action
+    def policy(
             self,
             obs,
             actions,
     ):
-        return self.model.forward_policy(
+        return self.model.policy(
             obs=obs,
             actions=actions,
         )
@@ -162,7 +159,7 @@ class RL4LMsPPO(parl.Algorithm):
     ):
         return self.model.get_log_probs_ref_model(obs, action)
 
-    def sample(
+    def predict(
             self,
             tokenizer,
             texts=None,
@@ -171,7 +168,7 @@ class RL4LMsPPO(parl.Algorithm):
             attention_mask=None,
             gen_kwargs=None,
     ):
-        return self.model.sample(
+        return self.model.predict(
             input_ids=input_ids,
             attention_mask=attention_mask,
             tokenizer=tokenizer,

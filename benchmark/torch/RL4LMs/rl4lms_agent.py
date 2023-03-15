@@ -48,6 +48,7 @@ class RL4LMsAgent(parl.Agent):
         self.batch_size = batch_size
         self._norm_reward = norm_reward
         self._n_updates = 0
+        self.device = self.alg.model.device
 
     def learn(self, rollout_buffer):
         entropy_losses = []
@@ -127,25 +128,28 @@ class RL4LMsAgent(parl.Agent):
 
         logger.info(ppo_train_info)
 
-    def get_inputs_for_generation(self, obs_tensor):
+    def get_inputs_for_generation(self, dict_obs_tensor):
+        obs_tensor = self.prepare_obs_input(dict_obs_tensor)
         return self.alg.model.get_inputs_for_generation(obs_tensor)
 
-    def predict(self, *args, **kwargs):
-        # only use sample
-        pass
+    def prepare_obs_input(self, obs):
+        return {key: torch.as_tensor(_obs).to(self.device) for (key, _obs) in obs.items()}
 
-    def forward_value(
+    def value(
             self,
             obs,
     ):
-        return self.alg.forward_value(obs)
+        return self.alg.value(obs)
 
-    def forward_policy(
+    # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
+    #       task) for collecting data and testing, so here sample() only needs to return info
+    #       like log_prob and gen_kwargs without action
+    def policy(
             self,
             obs,
             actions,
     ):
-        return self.alg.forward_policy(
+        return self.alg.policy(
             obs=obs,
             actions=actions,
         )
@@ -157,7 +161,7 @@ class RL4LMsAgent(parl.Agent):
     ):
         return self.alg.get_log_probs_ref_model(obs, action)
 
-    def sample(
+    def predict(
             self,
             tokenizer,
             texts=None,
@@ -166,7 +170,7 @@ class RL4LMsAgent(parl.Agent):
             attention_mask=None,
             gen_kwargs=None,
     ):
-        return self.alg.sample(
+        return self.alg.predict(
             input_ids=input_ids,
             attention_mask=attention_mask,
             tokenizer=tokenizer,

@@ -120,6 +120,6 @@ class Examiner:
             dt_control_token,
     ):
         prompt_texts = [dt_control_token + sample.prompt_or_input_text for sample in samples]
-        generated_texts = policy.sample(
+        generated_texts = policy.predict(
             tokenizer, prompt_texts, max_prompt_length, gen_kwargs=self._gen_kwargs).gen_texts
         return generated_texts

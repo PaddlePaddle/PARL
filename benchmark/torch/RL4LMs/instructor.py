@@ -31,10 +31,6 @@ def _flatten_obs(obs, space, n_instructor=None):
     return OrderedDict([(k, np.stack([o[k] for o in obs])) for k in space.spaces.keys()])
 
 
-def dict_to_tensor(obs, device):
-    return {key: torch.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
-
-
 @parl.remote_class(wait=False)
 class Instructor:
     def __init__(

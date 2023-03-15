@@ -79,7 +79,10 @@ class Seq2SeqLMModel(parl.Model):
                 self._value_model = torch.nn.DataParallel(self._value_model)
                 self._value_head = torch.nn.DataParallel(self._value_head.to(self.device))
 
-    def forward_policy(
+    # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
+    #       task) for collecting data and testing, so here policy() only needs to return info
+    #       like log_prob and gen_kwargs without action
+    def policy(
             self,
             obs,
             actions,
@@ -124,9 +127,9 @@ class Seq2SeqLMModel(parl.Model):
             dim=-1,
         )
 
-        return actions, log_prob, entropy, past_model_kwargs
+        return log_prob, entropy, past_model_kwargs
 
-    def forward_value(
+    def value(
             self,
             obs,
     ):
@@ -172,8 +175,8 @@ class Seq2SeqLMModel(parl.Model):
 
     def evaluate_actions(self, obs, actions):
 
-        _, log_prob, entropy, _ = self.forward_policy(obs=obs, actions=actions)
-        values, _ = self.forward_value(obs)
+        log_prob, entropy, _ = self.policy(obs=obs, actions=actions)
+        values, _ = self.value(obs)
         return values, log_prob, entropy
 
     def to(self, device):
@@ -240,7 +243,7 @@ class Seq2SeqLMModel(parl.Model):
     def get_language_model(self):
         return unwrap_model(self._policy_model)
 
-    def sample(
+    def predict(
             self,
             tokenizer,
             texts=None,

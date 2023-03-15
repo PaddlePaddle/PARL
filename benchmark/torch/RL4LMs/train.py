@@ -124,7 +124,7 @@ def main(config):
         num_timesteps = 0
 
         while num_timesteps < n_steps_per_iter:
-            run_timesteps = rollout_util.collect_rollouts(agent, instructor_group, rollout_buffer, device)
+            run_timesteps = rollout_util.collect_rollouts(agent, instructor_group, rollout_buffer)
             num_timesteps += run_timesteps
             agent.learn(rollout_buffer)
 

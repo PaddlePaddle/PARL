@@ -52,38 +52,36 @@ def main(config):
 
     tokenizer = build_tokenizer(config["tokenizer"])
 
-    # metrics
-    metrics = build_metrics(config["train_evaluation"]["metrics"])
-
     # datapool
     samples_by_split = build_datapool(config["datapool"])
 
     instructor_group = InstructorGroup(
         instructor_config=config["instructor"],
-        reward_config=config["reward_fn"],
         tokenizer=tokenizer,
         tokenizer_config=config["tokenizer"],
         datapool_config=config["datapool"],
     )
 
+    model_config = config["agent"]["alg"]["model"]
     rl4lms_model = Seq2SeqLMModel(
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
-        model_name=config["alg"]["model"]["args"]["model_name"],
-        apply_model_parallel=config["alg"]["model"]["args"]["apply_model_parallel"],
-        prompt_truncation_side=config["alg"]["model"]["args"]["prompt_truncation_side"],
-        generation_kwargs=config["alg"]["model"]["args"]["generation_kwargs"])
+        model_name=model_config["args"]["model_name"],
+        apply_model_parallel=model_config["args"]["apply_model_parallel"],
+        prompt_truncation_side=model_config["args"]["prompt_truncation_side"],
+        generation_kwargs=model_config["args"]["generation_kwargs"])
+    alg_config = config["agent"]["alg"]
     rl4lm_alg = RL4LMsPPO(
         model=rl4lms_model,
         device=device,
-        n_steps=config["alg"]["args"]["n_steps"],
-        learning_rate=config["alg"]["args"]["learning_rate"],
-        n_epochs=config["alg"]["args"]["n_epochs"],
-        ent_coef=config["alg"]["args"]["ent_coef"])
+        n_steps=alg_config["args"]["n_steps"],
+        learning_rate=alg_config["args"]["learning_rate"],
+        ent_coef=alg_config["args"]["ent_coef"])
+    agent_config = config["agent"]
     agent = RL4LMsAgent(rl4lm_alg,
-                        n_epochs=config["alg"]["args"]["n_epochs"],
-                        batch_size=config["alg"]["args"]["batch_size"],)
+                        n_epochs=agent_config["args"]["n_epochs"],
+                        batch_size=agent_config["args"]["batch_size"],)
 
     rollout_buffer = DictRolloutBuffer(
         buffer_size=agent.alg.n_steps * instructor_group.n_instructors,
@@ -93,23 +91,23 @@ def main(config):
         gamma=agent.alg.gamma,
         gae_lambda=agent.alg.gae_lambda,
     )
-    rollout_util = RolloutUtil(config["alg"]["kl_div"])
+    rollout_util = RolloutUtil(config["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
     n_steps_per_iter = instructor_group.n_instructors * agent.alg.n_steps
 
-    max_prompt_length = config["instructor"]["args"]["max_prompt_length"]
-
     # gen kwargs for evaluation
-    eval_gen_kwargs = config["train_evaluation"]["generation_kwargs"]
-    eval_batch_size = config["train_evaluation"]["eval_batch_size"]
+    examiner_config = config["examiner"]
+    # metrics
+    metrics = build_metrics(examiner_config["metrics"])
     examiner = Examiner(
         tokenizer=tokenizer,
-        eval_batch_size=eval_batch_size,
+        eval_batch_size=examiner_config["args"]["eval_batch_size"],
+        max_prompt_length=examiner_config["args"]["max_prompt_length"],
+        eval_gen_kwargs=examiner_config["args"]["generation_kwargs"],
         metrics=metrics,
-        eval_gen_kwargs=eval_gen_kwargs,
         samples_by_split=samples_by_split,
-        max_prompt_length=max_prompt_length)
+    )
 
     iter_start = 0
     examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=iter_start)

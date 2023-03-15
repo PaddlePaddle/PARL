@@ -189,7 +189,6 @@ class InstructorGroup:
     def __init__(
             self,
             instructor_config=None,
-            reward_config=None,
             tokenizer=None,
             datapool_config=None,
             tokenizer_config=None,
@@ -197,7 +196,7 @@ class InstructorGroup:
         self.n_instructors = instructor_config["n_instructors"]
         # remote instructors need to use config to initialize due to serialization problem
         instructor_kwargs = {
-            "reward_config": reward_config,
+            "reward_config": instructor_config["reward_fn"],
             "tokenizer_config": tokenizer_config,
             "datapool_config": datapool_config
         }

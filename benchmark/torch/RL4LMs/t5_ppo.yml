@@ -1,4 +1,4 @@
-
+# config for RL4LMs summarization
 
 tokenizer:
   model_name: t5-base
@@ -6,9 +6,6 @@ tokenizer:
   truncation_side: left
   pad_token_as_eos_token: False
 
-reward_fn:
-  args:
-    rouge_type: "rouge1"
 
 datapool:
   id: cnn_daily_mail
@@ -19,6 +16,9 @@ datapool:
 instructor:
   parl_master_address: "localhost:8811"
   n_instructors: 10
+  reward_fn:
+    args:
+      rouge_type: "rouge1"
   args:
     max_prompt_length: 512
     max_episode_length: 100
@@ -26,47 +26,54 @@ instructor:
     prompt_truncation_side: "right"
     context_start_token: 0
 
-alg:
+kl_div:
+  coeff: 0.001
+  target_kl: 0.2
+
+agent:
   args:
-    n_steps: 512
     batch_size: 32
-    learning_rate: 0.000002
     n_epochs: 5
-    ent_coef: 0.0
-  kl_div:
-    coeff: 0.001
-    target_kl: 0.2
-  model:
-    id: seq2seq_lm_actor_critic_model
+  alg:
     args:
-      model_name: t5-base
-      apply_model_parallel: True
-      prompt_truncation_side: "right"
-      generation_kwargs:
-        do_sample: True
-        top_k: 50
-        min_length: 50
-        max_new_tokens: 100          
-    
-train_evaluation:
-  eval_batch_size: 100
-  n_iters: 100
-  eval_every: 10
-  save_every: 1
+      n_steps: 512
+      learning_rate: 0.000002
+      ent_coef: 0.0
+    model:
+      args:
+        model_name: t5-base
+        apply_model_parallel: True
+        prompt_truncation_side: "right"
+        generation_kwargs:
+          do_sample: True
+          top_k: 50
+          min_length: 50
+          max_new_tokens: 100
+
+examiner:
+  args:
+    max_prompt_length: 512
+    eval_batch_size: 100
+    generation_kwargs:
+      do_sample: True
+      top_k: 0
+      temperature: 0.7
+      min_length: 50
+      max_new_tokens: 100
   metrics:
     - id: meteor
-      args: {}
+      args: { }
     - id: rouge
     - id: bleu
-      args: {}
+      args: { }
     - id: bert_score
       args:
         language: en
     - id: diversity
-      args: {}
-  generation_kwargs: 
-    do_sample: True
-    top_k: 0
-    temperature: 0.7
-    min_length: 50
-    max_new_tokens: 100
+      args: { }
+
+
+train_evaluation:
+  n_iters: 100
+  eval_every: 10
+

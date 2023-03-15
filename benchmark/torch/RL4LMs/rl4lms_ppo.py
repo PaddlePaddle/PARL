@@ -23,7 +23,6 @@ class RL4LMsPPO(parl.Algorithm):
             model,
             learning_rate=3e-4,
             n_steps=2048,
-            n_epochs=10,
             gamma=0.99,
             gae_lambda=0.95,
             clip_range=0.2,
@@ -39,7 +38,6 @@ class RL4LMsPPO(parl.Algorithm):
         super(RL4LMsPPO, self).__init__(model=model)
         self.learning_rate = learning_rate
         self.n_steps = n_steps
-        self.n_epochs = n_epochs
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self.clip_range = clip_range

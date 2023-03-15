@@ -150,15 +150,15 @@ class RolloutUtil:
         return num_timesteps
 
     def _generate_transition(self,
-                           gen_sentence=None,
-                           agent=None,
-                           n_instructors=None,
-                           obs_space=None,
-                           sentence_new_obs=None,
-                           sentence_rewards=None,
-                           sentence_dones=None,
-                           sentence_infos=None,
-                           init_obs=None):
+                             gen_sentence=None,
+                             agent=None,
+                             n_instructors=None,
+                             obs_space=None,
+                             sentence_new_obs=None,
+                             sentence_rewards=None,
+                             sentence_dones=None,
+                             sentence_infos=None,
+                             init_obs=None):
         current_obs = init_obs
 
         review_times = 0

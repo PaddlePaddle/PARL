@@ -58,22 +58,17 @@ class RL4LMsPPO(parl.Algorithm):
             param_group["lr"] = self.initial_lr
         self.optimizer = self.model.optimizer
 
-    def learn(self,
-              batch_obs,
-              batch_action,
-              batch_value,
-              batch_return,
-              batch_logprob,
-              batch_adv,
-              lr=None):
+    def learn(self, batch_obs, batch_action, batch_value, batch_return, batch_logprob, batch_adv, lr=None):
         # Do a complete pass on the rollout batch
         continue_training = True
-        learn_info = {"entropy_losses": None,
-                      "pg_losses": None,
-                      "value_losses": None,
-                      "clip_fractions": None,
-                      "approx_kl_divs": None,
-                      "loss":None}
+        learn_info = {
+            "entropy_losses": None,
+            "pg_losses": None,
+            "value_losses": None,
+            "clip_fractions": None,
+            "approx_kl_divs": None,
+            "loss": None
+        }
 
         values, _ = self.model.value(batch_obs)
         action_log_probs, entropy, _ = self.model.policy(batch_obs, batch_action)
@@ -83,16 +78,14 @@ class RL4LMsPPO(parl.Algorithm):
 
         # Normalize advantage
         if self.norm_adv:
-            batch_adv = (batch_adv - batch_adv.mean()) / (
-                    batch_adv.std() + 1e-8)
+            batch_adv = (batch_adv - batch_adv.mean()) / (batch_adv.std() + 1e-8)
 
         # ratio between old and new policy, should be one at the first iteration
         ratio = torch.exp(action_log_probs - batch_logprob)
 
         # clipped surrogate loss
         surr1 = ratio * batch_adv
-        surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
-                             1.0 + self.clip_param) * batch_adv
+        surr2 = torch.clamp(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param) * batch_adv
 
         action_loss = -torch.min(surr1, surr2).mean()
 
@@ -111,8 +104,7 @@ class RL4LMsPPO(parl.Algorithm):
             )
             value_losses = (values - batch_return).pow(2)
             value_losses_clipped = (value_pred_clipped - batch_return).pow(2)
-            value_loss = 0.5 * torch.max(value_losses,
-                                         value_losses_clipped).mean()
+            value_loss = 0.5 * torch.max(value_losses, value_losses_clipped).mean()
         else:
             value_loss = 0.5 * (batch_return - values).pow(2).mean()
 

@@ -77,13 +77,15 @@ def main(config):
         initial_lr=alg_config["args"]["initial_lr"],
         entropy_coef=alg_config["args"]["entropy_coef"])
     agent_config = config["agent"]
-    agent = RL4LMsAgent(rl4lm_alg,
-                        n_epochs=agent_config["args"]["n_epochs"],
-                        batch_size=agent_config["args"]["batch_size"],)
+    agent = RL4LMsAgent(
+        rl4lm_alg,
+        n_epochs=agent_config["args"]["n_epochs"],
+        batch_size=agent_config["args"]["batch_size"],
+    )
 
     buffer_config = config["rollout_buffer"]
     rollout_buffer = DictRolloutBuffer(
-        buffer_size= buffer_config["args"]["n_steps_per_episode"] * instructor_group.n_instructors,
+        buffer_size=buffer_config["args"]["n_steps_per_episode"] * instructor_group.n_instructors,
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
@@ -140,12 +142,12 @@ def main(config):
 if __name__ == '__main__':
     parser = ArgumentParser(description="Fine-tune LM to generate controlled text")
     parser.add_argument("--config_path", type=str, help="path to the config file")
-    parser.add_argument("--project_name", type=str, help="project name", default="rl4lm_exps")
+    parser.add_argument("--project_name", type=str, help="project name", default="rl4lms_exps")
     parser.add_argument(
         "--experiment_name",
         type=str,
         help="experiment name",
-        default="rl4lm_experiment",
+        default="rl4lms_experiment",
     )
     parser.add_argument(
         "--base_path_to_store_results",

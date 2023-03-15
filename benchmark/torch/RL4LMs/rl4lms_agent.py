@@ -74,12 +74,12 @@ class RL4LMsAgent(parl.Agent):
                 batch_value = rollout_data.old_values
 
                 continue_training, alg_learn_info = self.alg.learn(
-                                    batch_obs=batch_obs,
-                                    batch_action=batch_action,
-                                    batch_value=batch_value,
-                                    batch_return=batch_return,
-                                    batch_logprob=batch_logprob,
-                                    batch_adv=batch_adv)
+                    batch_obs=batch_obs,
+                    batch_action=batch_action,
+                    batch_value=batch_value,
+                    batch_return=batch_return,
+                    batch_logprob=batch_logprob,
+                    batch_adv=batch_adv)
 
                 entropy_losses.append(alg_learn_info["entropy_losses"])
                 pg_losses.append(alg_learn_info["pg_losses"])
@@ -89,7 +89,7 @@ class RL4LMsAgent(parl.Agent):
                 if not continue_training:
                     break
 
-            self._n_updates += 1 # according to stable-baseline3
+            self._n_updates += 1  # according to stable-baseline3
             if not continue_training:
                 print(f"Early stopping at step {epoch} due to reaching max kl: {approx_kl_divs[-1]:.2f}")
                 break

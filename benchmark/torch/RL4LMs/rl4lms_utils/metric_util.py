@@ -21,7 +21,7 @@ from gem_metrics.texts import Predictions
 from parl.utils import logger
 
 
-class MeteorMetric:
+class MeteorMetric(object):
     def __init__(self):
         super().__init__()
         self._metric = load_metric("meteor")
@@ -42,7 +42,7 @@ class MeteorMetric:
         return metric_dict
 
 
-class RougeMetric:
+class RougeMetric(object):
     def __init__(self, use_single_ref=True):
         super().__init__()
         self._metric = load_metric("rouge")
@@ -73,7 +73,7 @@ class RougeMetric:
         return metric_dict
 
 
-class BERTScoreMetric:
+class BERTScoreMetric(object):
     def __init__(self, language):
         super().__init__()
         self._metric = load_metric("bertscore")
@@ -103,7 +103,7 @@ class BERTScoreMetric:
             return metric_dict
 
 
-class BLEUMetric:
+class BLEUMetric(object):
     def __init__(self):
         super().__init__()
         self._metric = load_metric("bleu")
@@ -136,7 +136,7 @@ class BLEUMetric:
             return {"lexical/bleu": (None, "n/a")}
 
 
-class DiversityMetrics:
+class DiversityMetrics(object):
     def __init__(self, window_size=100):
         self._msttr_metric = MSTTR(window_size=window_size)
         self._n_gram_metric = NGramStats()
@@ -164,7 +164,7 @@ class DiversityMetrics:
         return diversity_metrics
 
 
-class MetricRegistry:
+class MetricRegistry(object):
     _registry = {
         "meteor": MeteorMetric,
         "rouge": RougeMetric,

@@ -142,30 +142,19 @@ class RL4LMsPPO(parl.Algorithm):
 
         return continue_training, learn_info
 
-    def value(
-            self,
-            obs,
-    ):
+    def value(self, obs):
         return self.model.value(obs)
 
     # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
     #       task) for collecting data and testing, so here policy() only needs to return info
     #       like log_prob and gen_kwargs without action
-    def policy(
-            self,
-            obs,
-            actions,
-    ):
+    def policy(self, obs, actions):
         return self.model.policy(
             obs=obs,
             actions=actions,
         )
 
-    def get_log_probs_ref_model(
-            self,
-            obs,
-            action,
-    ):
+    def get_log_probs_ref_model(self, obs, action):
         return self.model.get_log_probs_ref_model(obs, action)
 
     def predict(

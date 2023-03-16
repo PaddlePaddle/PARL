@@ -137,30 +137,19 @@ class RL4LMsAgent(parl.Agent):
     def prepare_obs_input(self, obs):
         return {key: torch.as_tensor(_obs).to(self.device) for (key, _obs) in obs.items()}
 
-    def value(
-            self,
-            obs,
-    ):
+    def value(self, obs):
         return self.alg.value(obs)
 
     # note: RL4LMs uses the same way (language model always does sample() to generate in summarization task) for
     #       collecting data and testing, so here use policy() instead of sample() and only need to return info
     #       like log_prob and gen_kwargs without action
-    def policy(
-            self,
-            obs,
-            actions,
-    ):
+    def policy(self, obs, actions):
         return self.alg.policy(
             obs=obs,
             actions=actions,
         )
 
-    def get_log_probs_ref_model(
-            self,
-            obs,
-            action,
-    ):
+    def get_log_probs_ref_model(self, obs, action):
         return self.alg.get_log_probs_ref_model(obs, action)
 
     def predict(

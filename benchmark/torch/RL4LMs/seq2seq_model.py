@@ -82,11 +82,7 @@ class Seq2SeqLMModel(parl.Model):
     # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
     #       task) for collecting data and testing, so here policy() only needs to return info
     #       like log_prob and gen_kwargs without action
-    def policy(
-            self,
-            obs,
-            actions,
-    ):
+    def policy(self, obs, actions):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
@@ -129,10 +125,7 @@ class Seq2SeqLMModel(parl.Model):
 
         return log_prob, entropy, past_model_kwargs
 
-    def value(
-            self,
-            obs,
-    ):
+    def value(self, obs):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
@@ -186,11 +179,7 @@ class Seq2SeqLMModel(parl.Model):
         else:
             return super().to(device)
 
-    def get_log_probs_ref_model(
-            self,
-            obs,
-            action,
-    ):
+    def get_log_probs_ref_model(self, obs, action):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],

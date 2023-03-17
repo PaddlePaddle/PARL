@@ -72,7 +72,7 @@ def main(config):
 
     buffer_config = config["rollout_buffer"]
     rollout_buffer = DictRolloutBuffer(
-        buffer_size=buffer_config["args"]["n_steps_per_episode"] * instructor_group.n_instructors,
+        buffer_size=buffer_config["args"]["n_steps_per_instructor"] * instructor_group.n_instructors,
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
@@ -80,7 +80,7 @@ def main(config):
     rollout_util = RolloutUtil(config["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
-    n_steps_per_iter = instructor_group.n_instructors * buffer_config["args"]["n_steps_per_episode"]
+    n_steps_per_iter = instructor_group.n_instructors * buffer_config["args"]["n_steps_per_instructor"]
 
     # gen kwargs for evaluation
     examiner_config = config["examiner"]

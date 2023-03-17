@@ -27,7 +27,7 @@ config = {
     },
     'instructor': {
         'parl_master_address': 'localhost:8811',
-        'n_instructors': 100,
+        'n_instructors': 10,
         'reward_fn': {
             'args': {
                 'rouge_type': 'rouge1'
@@ -47,7 +47,7 @@ config = {
     },
     'rollout_buffer': {
         'args': {
-            'n_steps_per_episode': 512  # buffer length = n_steps_per_episode * n_instructors
+            'n_steps_per_instructor': 512  # buffer length = n_steps_per_instructor * n_instructors
         }
     },
     'agent': {

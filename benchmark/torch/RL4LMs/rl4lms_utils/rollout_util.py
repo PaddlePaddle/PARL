@@ -39,7 +39,7 @@ def unpack_observations(obs_tensor, n_instructors):
     return unpacked_obs
 
 
-class RolloutUtil:
+class RolloutUtil(object):
     def __init__(self, kl_args):
         self._kl_controller = KLController(kl_args["coeff"], kl_args["target_kl"])
 
@@ -68,14 +68,10 @@ class RolloutUtil:
             # start parallel episodes
             current_obs = instructor_group.ask()
 
-            # generate sentences using the model
-            generation_inputs = agent.get_inputs_for_generation(current_obs)
-
             # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
             #       task) for collecting data and testing, so here agent uses predict() rather than sample()
             gen_output = agent.predict(
-                input_ids=generation_inputs.inputs,
-                attention_mask=generation_inputs.attention_masks,
+                dict_obs_tensor=current_obs,
                 tokenizer=tokenizer)
 
             # get episode state, reward, dones, infos from instructors
@@ -98,43 +94,7 @@ class RolloutUtil:
 
             # now we flush all episode wise info to the 1-D buffer
             # log transition and add to buffer
-            advantages_computed = False
-            for ep_ix, transitions in enumerate(episode_wise_transitions):
-                ep_length = len(transitions)
-                total_reward = 0.0
-                total_kl_reward = 0.0
-                for transition_ix, transition in enumerate(transitions):
-                    total_reward += transition.task_reward
-                    total_kl_reward += transition.kl_reward
-                    rollout_info["rollout_info/kl_div_mean"].append(transition.kl_div)
-                    rollout_info["rollout_info/log_prob"].append(transition.log_prob)
-                    rollout_info["rollout_info/ref_log_prob"].append(transition.ref_log_prob)
-                    rollout_info["rollout_info/values"].append(transition.value.numpy())
-
-                    # add to buffer
-                    if not rollout_buffer.full:
-                        rollout_buffer.add(
-                            transition.observation,
-                            transition.action,
-                            transition.total_reward,
-                            transition.episode_start,
-                            transition.value,
-                            transition.log_prob,
-                        )
-
-                    # if the buffer is full, compute advantages
-                    if rollout_buffer.full and not advantages_computed:
-                        # we fetch the last value for the last time step
-                        # values come from the next transitions's values
-                        next_values = (transitions[transition_ix + 1].value if
-                                       (transition_ix + 1) < ep_length else torch.tensor([0.0]))
-
-                        rollout_buffer.compute_returns_and_advantage(last_values=next_values, dones=transition.done)
-                        advantages_computed = True
-
-                rollout_info["rollout_info/ep_rew"].append(total_reward)
-                rollout_info["rollout_info/ep_lens"].append(ep_length)
-                rollout_info["rollout_info/ep_kl_rew"].append(total_kl_reward)
+            rollout_buffer.add(episode_wise_transitions, rollout_info)
 
         # aggregate rollout info
         aggregated_rollout_info = {}
@@ -185,7 +145,7 @@ class RolloutUtil:
                 values, _ = agent.value(obs_tensor)
 
                 # get reference log probs
-                ref_log_probs, _ = agent.get_log_probs_ref_model(obs_tensor, actions_tensor)
+                ref_log_probs, _, _ = agent.ref_policy(obs_tensor, actions_tensor)
 
                 # sanity check
                 assert torch.all(torch.isfinite(ref_log_probs)), "Infinite values in log probs"

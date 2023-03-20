@@ -19,7 +19,7 @@ from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 
 
-class CNNDailyMail:
+class CNNDailyMail(object):
     def __init__(self, samples):
         self._samples = samples
 

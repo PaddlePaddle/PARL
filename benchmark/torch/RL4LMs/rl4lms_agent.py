@@ -73,13 +73,15 @@ class RL4LMsAgent(parl.Agent):
                 batch_return = rollout_data.returns
                 batch_value = rollout_data.old_values
 
-                continue_training, alg_learn_info = self.alg.learn(
+                alg_learn_info = self.alg.learn(
                     batch_obs=batch_obs,
                     batch_action=batch_action,
                     batch_value=batch_value,
                     batch_return=batch_return,
                     batch_logprob=batch_logprob,
                     batch_adv=batch_adv)
+
+                continue_training = alg_learn_info["continue_training"]
 
                 entropy_losses.append(alg_learn_info["entropy_losses"])
                 pg_losses.append(alg_learn_info["pg_losses"])
@@ -89,12 +91,13 @@ class RL4LMsAgent(parl.Agent):
                 if not continue_training:
                     break
 
-            self._n_updates += 1  # according to stable-baseline3
+            self._n_updates += 1  # fix the calculation of self._n_updates
             if not continue_training:
                 print(f"Early stopping at step {epoch} due to reaching max kl: {approx_kl_divs[-1]:.2f}")
                 break
 
-        # self._n_updates += self.n_epochs # change original RL4LMs code
+        # RL4LMs' method may lead to inaccurate calculation of self._n_updates when continue_training is false
+        # self._n_updates += self.n_epochs
         explained_var = explained_variance(rollout_buffer.values.flatten(), rollout_buffer.returns.flatten())
 
         # Logs
@@ -130,10 +133,6 @@ class RL4LMsAgent(parl.Agent):
 
         logger.info(ppo_train_info)
 
-    def get_inputs_for_generation(self, dict_obs_tensor):
-        obs_tensor = self.prepare_obs_input(dict_obs_tensor)
-        return self.alg.model.get_inputs_for_generation(obs_tensor)
-
     def prepare_obs_input(self, obs):
         return {key: torch.as_tensor(_obs).to(self.device) for (key, _obs) in obs.items()}
 
@@ -149,18 +148,21 @@ class RL4LMsAgent(parl.Agent):
             actions=actions,
         )
 
-    def get_log_probs_ref_model(self, obs, action):
-        return self.alg.get_log_probs_ref_model(obs, action)
+    def ref_policy(self, obs, action):
+        return self.alg.ref_policy(obs, action)
 
     def predict(
             self,
             tokenizer,
+            dict_obs_tensor=None,
             texts=None,
             max_prompt_length=None,
-            input_ids=None,
-            attention_mask=None,
             gen_kwargs=None,
     ):
+        obs_tensor = self.prepare_obs_input(dict_obs_tensor)
+        generation_inputs = self.alg.model.build_inputs(obs_tensor)
+        input_ids = generation_inputs.inputs
+        attention_mask = generation_inputs.attention_masks
         return self.alg.predict(
             input_ids=input_ids,
             attention_mask=attention_mask,

@@ -15,7 +15,7 @@
 import torch
 
 
-class KLController:
+class KLController(object):
     def __init__(self, kl_coeff, target_kl=None):
         self._kl_coeff = kl_coeff
         self._target_kl = target_kl

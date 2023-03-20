@@ -32,7 +32,7 @@ def _flatten_obs(obs, space, n_instructor=None):
 
 
 @parl.remote_class(wait=False)
-class Instructor:
+class Instructor(object):
     def __init__(
             self,
             reward_config=None,
@@ -185,7 +185,7 @@ class Instructor:
         return (self.observation_space, self.action_space)
 
 
-class InstructorGroup:
+class InstructorGroup(object):
     def __init__(
             self,
             instructor_config=None,

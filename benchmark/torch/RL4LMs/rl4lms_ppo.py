@@ -67,7 +67,8 @@ class RL4LMsPPO(parl.Algorithm):
             "value_losses": None,
             "clip_fractions": None,
             "approx_kl_divs": None,
-            "loss": None
+            "loss": None,
+            "continue_training": None
         }
 
         values, _ = self.model.value(batch_obs)
@@ -127,7 +128,8 @@ class RL4LMsPPO(parl.Algorithm):
 
         if self.target_kl is not None and approx_kl_div > 1.5 * self.target_kl:
             continue_training = False
-            return continue_training, learn_info
+            learn_info["continue_training"] = continue_training
+            return learn_info
 
         if lr:
             for param_group in self.optimizer.param_groups:
@@ -139,8 +141,8 @@ class RL4LMsPPO(parl.Algorithm):
         # Clip grad norm
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
         self.optimizer.step()
-
-        return continue_training, learn_info
+        learn_info["continue_training"] = continue_training
+        return learn_info
 
     def value(self, obs):
         return self.model.value(obs)
@@ -154,8 +156,8 @@ class RL4LMsPPO(parl.Algorithm):
             actions=actions,
         )
 
-    def get_log_probs_ref_model(self, obs, action):
-        return self.model.get_log_probs_ref_model(obs, action)
+    def ref_policy(self, obs, action):
+        return self.model.ref_policy(obs, action)
 
     def predict(
             self,

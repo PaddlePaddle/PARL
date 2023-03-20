@@ -49,7 +49,7 @@ def get_obs_shape(observation_space, ):
         raise NotImplementedError(f"{observation_space} observation space is not supported")
 
 
-class DictRolloutBuffer:
+class DictRolloutBuffer(object):
     """
     Dict Rollout buffer used in on-policy algorithms like A2C/PPO.
     Extends the RolloutBuffer to use dictionary observations
@@ -118,46 +118,62 @@ class DictRolloutBuffer:
         self.pos = 0
         self.full = False
 
-    def add(
-            self,
-            obs,
-            action,
-            reward,
-            episode_start,
-            value,
-            log_prob,
-    ):
-        """
-        :param obs: Observation
-        :param action: Action
-        :param reward:
-        :param episode_start: Start of episode signal.
-        :param value: estimated value of the current state
-            following the current policy.
-        :param log_prob: log probability of the action
-            following the current policy.
-        """
+    def add(self, episode_wise_transitions, rollout_info):
+        advantages_computed = False
+        for ep_ix, transitions in enumerate(episode_wise_transitions):
+            ep_length = len(transitions)
+            total_reward = 0.0
+            total_kl_reward = 0.0
+            for transition_ix, transition in enumerate(transitions):
+                total_reward += transition.task_reward
+                total_kl_reward += transition.kl_reward
+                rollout_info["rollout_info/kl_div_mean"].append(transition.kl_div)
+                rollout_info["rollout_info/log_prob"].append(transition.log_prob)
+                rollout_info["rollout_info/ref_log_prob"].append(transition.ref_log_prob)
+                rollout_info["rollout_info/values"].append(transition.value.numpy())
 
-        if len(log_prob.shape) == 0:
-            # Reshape 0-d tensor to avoid error
-            log_prob = log_prob.reshape(-1, 1)
+                # add to buffer
+                if not self.full:
+                    obs = transition.observation
+                    action = transition.action
+                    reward = transition.total_reward
+                    episode_start = transition.episode_start
+                    value = transition.value
+                    log_prob = transition.log_prob
+                    if len(log_prob.shape) == 0:
+                        # Reshape 0-d tensor to avoid error
+                        log_prob = log_prob.reshape(-1, 1)
 
-        for key in self.observations.keys():
-            obs_ = np.array(obs[key]).copy()
-            # Reshape needed when using multiple instructors with discrete observations
-            # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
-            if isinstance(self.observation_space.spaces[key], spaces.Discrete):
-                obs_ = obs_.reshape((1, ) + self.obs_shape[key])
-            self.observations[key][self.pos] = obs_
+                    for key in self.observations.keys():
+                        obs_ = np.array(obs[key]).copy()
+                        # Reshape needed when using multiple instructors with discrete observations
+                        # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
+                        if isinstance(self.observation_space.spaces[key], spaces.Discrete):
+                            obs_ = obs_.reshape((1,) + self.obs_shape[key])
+                        self.observations[key][self.pos] = obs_
 
-        self.actions[self.pos] = np.array(action).copy()
-        self.rewards[self.pos] = np.array(reward).copy()
-        self.episode_starts[self.pos] = np.array(episode_start).copy()
-        self.values[self.pos] = value.clone().cpu().numpy().flatten()
-        self.log_probs[self.pos] = log_prob.clone().cpu().numpy()
-        self.pos += 1
-        if self.pos == self.buffer_size:
-            self.full = True
+                    self.actions[self.pos] = np.array(action).copy()
+                    self.rewards[self.pos] = np.array(reward).copy()
+                    self.episode_starts[self.pos] = np.array(episode_start).copy()
+                    self.values[self.pos] = value.clone().cpu().numpy().flatten()
+                    self.log_probs[self.pos] = log_prob.clone().cpu().numpy()
+                    self.pos += 1
+                    if self.pos == self.buffer_size:
+                        self.full = True
+
+                # if the buffer is full, compute advantages
+                if self.full and not advantages_computed:
+                    # we fetch the last value for the last time step
+                    # values come from the next transitions's values
+                    next_values = (transitions[transition_ix + 1].value if
+                                   (transition_ix + 1) < ep_length else torch.tensor([0.0]))
+
+                    self.compute_returns_and_advantage(last_values=next_values, dones=transition.done)
+                    advantages_computed = True
+
+            rollout_info["rollout_info/ep_rew"].append(total_reward)
+            rollout_info["rollout_info/ep_lens"].append(ep_length)
+            rollout_info["rollout_info/ep_kl_rew"].append(total_kl_reward)
 
     def compute_returns_and_advantage(self, last_values, dones):
         """

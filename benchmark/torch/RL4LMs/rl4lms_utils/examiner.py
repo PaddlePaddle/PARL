@@ -17,7 +17,7 @@ from parl.utils import logger
 
 
 # class for results evaluation
-class Examiner:
+class Examiner(object):
     def __init__(self, tokenizer, eval_batch_size, metrics, eval_gen_kwargs, samples_by_split, max_prompt_length):
         self._tokenizer = tokenizer
         self._batch_size = eval_batch_size

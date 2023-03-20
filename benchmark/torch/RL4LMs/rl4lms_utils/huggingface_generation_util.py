@@ -87,7 +87,7 @@ class SampleEncoderDecoderOutput(ModelOutput):
     decoder_hidden_states: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
 
 
-class GenerationMixinWithRawScores:
+class GenerationMixinWithRawScores(object):
     """
     A class containing all functions for auto-regressive text generation, to be used as a mixin in [`PreTrainedModel`].
 

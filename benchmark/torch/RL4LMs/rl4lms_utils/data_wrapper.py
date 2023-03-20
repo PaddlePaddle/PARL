@@ -27,7 +27,7 @@ TensorDict = Dict[Union[str, int], torch.Tensor]
 
 
 @dataclass
-class TransitionInfo:
+class TransitionInfo(object):
     observation: TensorDict
     action: np.ndarray
     task_reward: np.ndarray
@@ -52,7 +52,7 @@ class DictRolloutBufferSamples(NamedTuple):
 
 
 @dataclass(init=True)
-class Sample:
+class Sample(object):
     id: str
     prompt_or_input_text: str
     references: List[str]
@@ -65,7 +65,7 @@ class PolicyType(Enum):
 
 
 @dataclass
-class RefPolicyOutput:
+class RefPolicyOutput(object):
     """
     Dataclass for the output of the method policy.get_ref_log_probs()
     """
@@ -77,7 +77,7 @@ class RefPolicyOutput:
 
 
 @dataclass
-class GenerationInputs:
+class GenerationInputs(object):
     # prompt inputs
     inputs: torch.tensor
     # prompt attention masks
@@ -85,7 +85,7 @@ class GenerationInputs:
 
 
 @dataclass
-class GenerationOutputs:
+class GenerationOutputs(object):
     # log probs at each time step
     step_wise_logprobs: List[List[torch.tensor]]
     # actions at each time step
@@ -99,7 +99,7 @@ class GenerationOutputs:
 
 
 @dataclass
-class Observation:
+class Observation(object):
     # encoded input
     prompt_or_input_encoded_pt: torch.tensor
     # attention mask for the input

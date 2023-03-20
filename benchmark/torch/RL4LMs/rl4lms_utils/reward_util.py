@@ -15,7 +15,7 @@
 from datasets import load_metric
 
 
-class RougeRewardFunction:
+class RougeRewardFunction(object):
     def __init__(self, rouge_type, use_single_ref=True):
         super().__init__()
         self._metric = load_metric("rouge")

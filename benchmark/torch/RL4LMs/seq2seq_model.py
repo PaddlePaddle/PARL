@@ -179,7 +179,7 @@ class Seq2SeqLMModel(parl.Model):
         else:
             return super().to(device)
 
-    def get_log_probs_ref_model(self, obs, action):
+    def ref_policy(self, obs, action):
         # 1. prepare model inputs
         past_model_kwargs = {
             "attention_mask": obs["prompt_or_input_attention_mask_pt"],
@@ -207,6 +207,7 @@ class Seq2SeqLMModel(parl.Model):
         # get log probs
         dist = Categorical(logits=next_token_logits)
         log_prob = dist.log_prob(action)
+        entropy = dist.entropy()
 
         # update the model kwargs for further generation
         past_model_kwargs = unwrap_model(self._ref_model)._update_model_kwargs_for_generation(
@@ -218,12 +219,12 @@ class Seq2SeqLMModel(parl.Model):
             (decoder_attn_mask, torch.ones(batch_size, 1).to(decoder_attn_mask.device)),
             dim=-1,
         )
-        return log_prob, past_model_kwargs
+        return log_prob, entropy, past_model_kwargs
 
     def get_policy_first_device(self):
         return (self._policy_model.get_encoder().first_device if self._apply_model_parallel else self.device)
 
-    def get_inputs_for_generation(self, obs):
+    def build_inputs(self, obs):
 
         generation_inputs = GenerationInputs(obs["prompt_or_input_encoded_pt"],
                                              obs["prompt_or_input_attention_mask_pt"])

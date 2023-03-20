@@ -35,7 +35,7 @@ def build_tokenizer(tokenizer_config):
 
 def build_reward_fn(reward_config):
     logger.info(f"loading reward function: rouge")
-    reward_fn = RougeRewardFunction(**reward_config.get("args", {}))
+    reward_fn = RougeRewardFunction(rouge_type=reward_config["rouge_type"])
     return reward_fn
 
 
@@ -48,10 +48,12 @@ def build_metrics(metric_configs):
 
 def build_datapool(datapool_config, remote_train=False):
     def _get_datapool_by_split(split):
-        kwargs = datapool_config.get("args", {})
-        kwargs["split"] = split
+        kwargs = {"prompt_prefix": datapool_config["prompt_prefix"], "split": split}
         logger.info(f"loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
-        dp_split = CNNDailyMail.prepare(**kwargs)
+        dp_split = CNNDailyMail.prepare(
+            split=kwargs["split"],
+            prompt_prefix=kwargs["prompt_prefix"]
+        )
         logger.info(f"finish loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
         return dp_split
 

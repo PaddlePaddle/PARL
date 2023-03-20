@@ -49,30 +49,30 @@ def main(config):
         datapool_config=config["datapool"],
     )
 
-    model_config = config["agent"]["alg"]["model"]
+    agent_config = config["agent"]
+    model_config = agent_config["model"]
     rl4lms_model = Seq2SeqLMModel(
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
-        model_name=model_config["args"]["model_name"],
-        apply_model_parallel=model_config["args"]["apply_model_parallel"],
-        prompt_truncation_side=model_config["args"]["prompt_truncation_side"],
-        generation_kwargs=model_config["args"]["generation_kwargs"])
-    alg_config = config["agent"]["alg"]
+        model_name=model_config["model_name"],
+        apply_model_parallel=model_config["apply_model_parallel"],
+        prompt_truncation_side=model_config["prompt_truncation_side"],
+        generation_kwargs=model_config["generation_kwargs"])
+    alg_config = agent_config["alg"]
     rl4lm_alg = RL4LMsPPO(
         model=rl4lms_model,
-        initial_lr=alg_config["args"]["initial_lr"],
-        entropy_coef=alg_config["args"]["entropy_coef"])
-    agent_config = config["agent"]
+        initial_lr=alg_config["initial_lr"],
+        entropy_coef=alg_config["entropy_coef"])
     agent = RL4LMsAgent(
         rl4lm_alg,
-        n_epochs=agent_config["args"]["n_epochs"],
-        batch_size=agent_config["args"]["batch_size"],
+        n_epochs=agent_config["n_epochs"],
+        batch_size=agent_config["batch_size"],
     )
 
     buffer_config = config["rollout_buffer"]
     rollout_buffer = DictRolloutBuffer(
-        buffer_size=buffer_config["args"]["n_steps_per_instructor"] * instructor_group.n_instructors,
+        buffer_size=buffer_config["n_steps_per_instructor"] * instructor_group.n_instructors,
         observation_space=instructor_group.observation_space,
         action_space=instructor_group.action_space,
         device=device,
@@ -80,7 +80,7 @@ def main(config):
     rollout_util = RolloutUtil(config["kl_div"])
 
     n_iters = int(config["train_evaluation"]["n_iters"])
-    n_steps_per_iter = instructor_group.n_instructors * buffer_config["args"]["n_steps_per_instructor"]
+    n_steps_per_iter = instructor_group.n_instructors * buffer_config["n_steps_per_instructor"]
 
     # gen kwargs for evaluation
     examiner_config = config["examiner"]
@@ -88,9 +88,9 @@ def main(config):
     metrics = build_metrics(examiner_config["metrics"])
     examiner = Examiner(
         tokenizer=tokenizer,
-        eval_batch_size=examiner_config["args"]["eval_batch_size"],
-        max_prompt_length=examiner_config["args"]["max_prompt_length"],
-        eval_gen_kwargs=examiner_config["args"]["generation_kwargs"],
+        eval_batch_size=examiner_config["eval_batch_size"],
+        max_prompt_length=examiner_config["max_prompt_length"],
+        eval_gen_kwargs=examiner_config["generation_kwargs"],
         metrics=metrics,
         samples_by_split=samples_by_split,
     )

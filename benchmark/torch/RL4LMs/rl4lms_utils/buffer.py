@@ -118,7 +118,7 @@ class DictRolloutBuffer(object):
         self.pos = 0
         self.full = False
 
-    def add(self, episode_wise_transitions, rollout_info):
+    def add_transitions(self, episode_wise_transitions, rollout_info):
         advantages_computed = False
         for ep_ix, transitions in enumerate(episode_wise_transitions):
             ep_length = len(transitions)

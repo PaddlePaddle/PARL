@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import time
 from collections import OrderedDict
 import torch
 from rl4lms_utils import Observation
@@ -43,6 +43,7 @@ class Instructor(object):
             terminate_on_eos=False,
             context_start_token=None,
             prompt_truncation_side="left",
+            waiting_time_idx=0,
     ):
         """
         Instructor who gives reward
@@ -53,6 +54,7 @@ class Instructor(object):
             context_start_token (bool, optional): start token for the context (For Encoder-Decoder models! )
             prompt_truncation_side (str): truncation side for prompt text (Defaults to "left")
         """
+        time.sleep(waiting_time_idx * 90)   # too many Instructors may cause problems if they load datasets at the same time
         tokenizer = build_tokenizer(tokenizer_config)
         samples = build_datapool(datapool_config, remote_train=True)["train"]
         reward_function = build_reward_fn(reward_config)
@@ -195,12 +197,14 @@ class InstructorGroup(object):
     ):
         self.n_instructors = instructor_config["n_instructors"]
         # remote instructors need to use config to initialize due to serialization problem
-        instructor_kwargs = {
-            "reward_config": instructor_config["reward_fn"],
-            "tokenizer_config": tokenizer_config,
-            "datapool_config": datapool_config
-        }
-        instructor_kwargs = {**instructor_kwargs, **instructor_config.get("args", {})}
+        instructor_kwargs = {"reward_config": instructor_config["reward_fn"],
+                             "tokenizer_config": tokenizer_config,
+                             "datapool_config": datapool_config,
+                             "max_prompt_length": instructor_config["max_prompt_length"],
+                             "max_episode_length": instructor_config["max_episode_length"],
+                             "terminate_on_eos": instructor_config["terminate_on_eos"],
+                             "prompt_truncation_side": instructor_config["prompt_truncation_side"],
+                             "context_start_token": instructor_config["context_start_token"]}
         self.tokenizer = tokenizer
         self._remote_instructors = self._create_instructors(instructor_kwargs, instructor_config["parl_master_address"])
 
@@ -258,4 +262,14 @@ class InstructorGroup(object):
 
     def _create_instructors(self, instructor_kwargs, parl_port=None):
         parl.connect(parl_port, distributed_files=["./rl4lms_utils/*.py", "./*.py"])
-        return [Instructor(**instructor_kwargs) for _ in range(self.n_instructors)]
+        return [Instructor(
+                    reward_config=instructor_kwargs["reward_config"],
+                    tokenizer_config=instructor_kwargs["tokenizer_config"],
+                    datapool_config=instructor_kwargs["datapool_config"],
+                    max_episode_length=instructor_kwargs["max_episode_length"],
+                    max_prompt_length=instructor_kwargs["max_prompt_length"],
+                    terminate_on_eos=instructor_kwargs["terminate_on_eos"],
+                    context_start_token=instructor_kwargs["context_start_token"],
+                    prompt_truncation_side=instructor_kwargs["prompt_truncation_side"],
+                    waiting_time_idx=idx,
+                    ) for idx in range(self.n_instructors)]

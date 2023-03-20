@@ -94,7 +94,7 @@ class RolloutUtil(object):
 
             # now we flush all episode wise info to the 1-D buffer
             # log transition and add to buffer
-            rollout_buffer.add(episode_wise_transitions, rollout_info)
+            rollout_buffer.add_transitions(episode_wise_transitions, rollout_info)
 
         # aggregate rollout info
         aggregated_rollout_info = {}

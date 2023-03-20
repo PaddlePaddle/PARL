@@ -21,72 +21,57 @@ config = {
     },
     'datapool': {
         'id': 'cnn_daily_mail',
-        'args': {
-            'prompt_prefix': 'Summarize: '
-        }
+        'prompt_prefix': 'Summarize: '
     },
     'instructor': {
         'parl_master_address': 'localhost:8811',
         'n_instructors': 10,
         'reward_fn': {
-            'args': {
-                'rouge_type': 'rouge1'
-            }
+            'rouge_type': 'rouge1'
         },
-        'args': {
-            'max_prompt_length': 512,
-            'max_episode_length': 100,
-            'terminate_on_eos': True,
-            'prompt_truncation_side': 'right',
-            'context_start_token': 0
-        }
+        'max_prompt_length': 512,
+        'max_episode_length': 100,
+        'terminate_on_eos': True,
+        'prompt_truncation_side': 'right',
+        'context_start_token': 0
     },
     'kl_div': {
         'coeff': 0.001,
         'target_kl': 0.2
     },
     'rollout_buffer': {
-        'args': {
-            'n_steps_per_instructor': 512  # buffer length = n_steps_per_instructor * n_instructors
-        }
+        'n_steps_per_instructor': 512  # buffer length = n_steps_per_instructor * n_instructors
     },
     'agent': {
-        'args': {
-            'batch_size': 32,
-            'n_epochs': 5
-        },
+        'batch_size': 32,
+        'n_epochs': 5,
         'alg': {
-            'args': {
-                'initial_lr': 0.000002,
-                'entropy_coef': 0.0
-            },
-            'model': {
-                'args': {
-                    'model_name': 't5-base',
-                    'apply_model_parallel': True,
-                    'prompt_truncation_side': 'right',
-                    'generation_kwargs': {
-                        'do_sample': True,
-                        'top_k': 50,
-                        'min_length': 50,
-                        'max_new_tokens': 100
-                    }
-                }
+            'initial_lr': 0.000002,
+            'entropy_coef': 0.0
+        },
+        'model': {
+            'model_name': 't5-base',
+            'apply_model_parallel': True,
+            'prompt_truncation_side': 'right',
+            'generation_kwargs': {
+                'do_sample': True,
+                'top_k': 50,
+                'min_length': 50,
+                'max_new_tokens': 100
             }
         }
     },
     'examiner': {
-        'args': {
-            'max_prompt_length': 512,
-            'eval_batch_size': 100,
-            'generation_kwargs': {
-                'do_sample': True,
-                'top_k': 0,
-                'temperature': 0.7,
-                'min_length': 50,
-                'max_new_tokens': 100
-            }
+        'max_prompt_length': 512,
+        'eval_batch_size': 100,
+        'generation_kwargs': {
+            'do_sample': True,
+            'top_k': 0,
+            'temperature': 0.7,
+            'min_length': 50,
+            'max_new_tokens': 100
         },
+        # metric list, each (id, args) is one metric
         'metrics': [{
             'id': 'meteor',
             'args': {}

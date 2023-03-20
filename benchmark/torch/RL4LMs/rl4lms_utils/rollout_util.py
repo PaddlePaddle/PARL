@@ -70,9 +70,7 @@ class RolloutUtil(object):
 
             # note: RL4LMs uses the same way (language model always does sample() to generate in summarization
             #       task) for collecting data and testing, so here agent uses predict() rather than sample()
-            gen_output = agent.predict(
-                dict_obs_tensor=current_obs,
-                tokenizer=tokenizer)
+            gen_output = agent.predict(dict_obs_tensor=current_obs, tokenizer=tokenizer)
 
             # get episode state, reward, dones, infos from instructors
             sentence_new_obs, sentence_rewards, sentence_dones, sentence_infos = instructor_group.feedback_sentense(

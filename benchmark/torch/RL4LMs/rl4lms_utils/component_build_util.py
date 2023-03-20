@@ -50,10 +50,7 @@ def build_datapool(datapool_config, remote_train=False):
     def _get_datapool_by_split(split):
         kwargs = {"prompt_prefix": datapool_config["prompt_prefix"], "split": split}
         logger.info(f"loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
-        dp_split = CNNDailyMail.prepare(
-            split=kwargs["split"],
-            prompt_prefix=kwargs["prompt_prefix"]
-        )
+        dp_split = CNNDailyMail.prepare(split=kwargs["split"], prompt_prefix=kwargs["prompt_prefix"])
         logger.info(f"finish loading split of dataset: {datapool_config['id']} -- {kwargs['split']}")
         return dp_split
 

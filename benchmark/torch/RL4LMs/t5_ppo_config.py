@@ -62,8 +62,10 @@ config = {
         }
     },
     'examiner': {
-        'max_prompt_length': 512,
-        'eval_batch_size': 100,
+        'max_prompt_length':
+        512,
+        'eval_batch_size':
+        100,
         'generation_kwargs': {
             'do_sample': True,
             'top_k': 0,

@@ -61,9 +61,7 @@ def main(config):
         generation_kwargs=model_config["generation_kwargs"])
     alg_config = agent_config["alg"]
     rl4lm_alg = RL4LMsPPO(
-        model=rl4lms_model,
-        initial_lr=alg_config["initial_lr"],
-        entropy_coef=alg_config["entropy_coef"])
+        model=rl4lms_model, initial_lr=alg_config["initial_lr"], entropy_coef=alg_config["entropy_coef"])
     agent = RL4LMsAgent(
         rl4lm_alg,
         n_epochs=agent_config["n_epochs"],

@@ -149,7 +149,7 @@ class DictRolloutBuffer(object):
                         # Reshape needed when using multiple instructors with discrete observations
                         # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
                         if isinstance(self.observation_space.spaces[key], spaces.Discrete):
-                            obs_ = obs_.reshape((1,) + self.obs_shape[key])
+                            obs_ = obs_.reshape((1, ) + self.obs_shape[key])
                         self.observations[key][self.pos] = obs_
 
                     self.actions[self.pos] = np.array(action).copy()

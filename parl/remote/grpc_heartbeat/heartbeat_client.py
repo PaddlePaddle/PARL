@@ -27,7 +27,8 @@ class HeartbeatClientThread(threading.Thread):
                  heartbeat_server_addr,
                  heartbeat_exit_callback_func,
                  exit_func_args=(),
-                 exit_func_kwargs={}):
+                 exit_func_kwargs={},
+                 client_id='default'):
         """Create a thread to run the heartbeat client.
 
             Args:
@@ -36,6 +37,7 @@ class HeartbeatClientThread(threading.Thread):
                                                         heartbeat exit.
                 exit_func_args(tuple): the argument tuple for calling the heartbeat_exit_callback_func. Defaults to ().
                 exit_func_kwargs(dict): the argument dict for calling the heartbeat_exit_callback_func. Defaults to {}.
+                client_id(str): unique ID of the client.
         """
         assert isinstance(heartbeat_server_addr, str)
         assert callable(
@@ -50,10 +52,23 @@ class HeartbeatClientThread(threading.Thread):
         self._exit_func_args = exit_func_args
         self._exit_func_kwargs = exit_func_kwargs
 
+        self.stop_tag = None
+        self.stop_message = None
         self.exit_flag = False
+        self.client_id = client_id
 
     def exit(self):
         self.exit_flag = True
+
+    def stop(self, stop_tag, stop_message):
+        """stop the heartbeat server and send the stop_message to the client.
+        
+        Args:
+            stop_tag(byte): tag to inform why stop the heartbeat.
+            stop_message(str): error message which will be sent to the client.
+        """
+        self.stop_tag = stop_tag
+        self.stop_message = stop_message
 
     def run(self):
         # unset http_proxy and https_proxy
@@ -73,9 +88,13 @@ class HeartbeatClientThread(threading.Thread):
                     break
 
                 try:
-                    response = stub.Send(
-                        heartbeat_pb2.Request(
-                            tag=remote_constants.HEARTBEAT_TAG),
+                    if self.stop_tag is not None:
+                        message = heartbeat_pb2.Request(
+                                tag=self.stop_tag, extra_message=self.stop_message,client_id=self.client_id)
+                        self.exit_flag = True
+                    else:
+                        message = heartbeat_pb2.Request(tag=remote_constants.HEARTBEAT_TAG, client_id=self.client_id)
+                    response = stub.Send(message,
                         timeout=remote_constants.HEARTBEAT_RCVTIMEO_S)
 
                     if response.tag == remote_constants.HEARTBEAT_TAG:

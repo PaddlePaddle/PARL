@@ -19,19 +19,13 @@ import os
 import sys
 import time
 import threading
-from six.moves import queue
-
-from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
+import queue
+from parl.utils.test_utils import XparlTestCase
 from parl.remote import exceptions
 from parl.utils import logger, get_free_tcp_port
 
 
-class TestCluster(unittest.TestCase):
-    def tearDown(self):
-        disconnect()
-
+class TestCluster(XparlTestCase):
     def _write_remote_actor_to_file(self, file_path):
         with open(file_path, 'w') as f:
             f.write('''\
@@ -84,52 +78,25 @@ class Actor(object):
         return relative_dir
 
     def test_locate_remote_file_with_absolute_env_path(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-
-        parl.connect('localhost:{}'.format(port))
+        self.add_master()
+        self.add_worker(n_cpu=1)
+        parl.connect('localhost:{}'.format(self.port))
 
         abs_dir = self._gen_remote_class_in_absolute_path("abs_actor.py")
 
         sys.path.append(abs_dir)  # add absolute environment path
         import abs_actor
-
         actor = abs_actor.Actor()
 
         self.assertEqual(actor.add_one(1), 2)
-
         shutil.rmtree(abs_dir)
-
         sys.path.remove(abs_dir)
-        master.exit()
-        worker1.exit()
 
     def test_locate_remote_file_with_absolute_env_path_in_multi_threads(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 10)
-        for _ in range(3):
-            if master.cpu_num == 10:
-                break
-            time.sleep(10)
-        self.assertEqual(10, master.cpu_num)
-
-        parl.connect('localhost:{}'.format(port))
-
+        self.add_master()
+        self.add_worker(n_cpu=10)
+        parl.connect('localhost:{}'.format(self.port))
         abs_dir = self._gen_remote_class_in_absolute_path("abs_actor2.py")
-
         sys.path.append(abs_dir)  # add absolute environment path
         import abs_actor2
 
@@ -140,7 +107,6 @@ class Actor(object):
             except Exception as e:
                 q.put(False)
                 raise e
-
             q.put(True)
 
         result = queue.Queue()
@@ -156,29 +122,15 @@ class Actor(object):
             assert no_exception
 
         shutil.rmtree(abs_dir)
-
         sys.path.remove(abs_dir)
-        master.exit()
-        worker1.exit()
 
     def test_locate_remote_file_with_relative_env_path_without_distributing_files(
             self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
         relative_dir = self._gen_remote_class_in_relative_path(
             "relative_actor1.py")
-
-        parl.connect('localhost:{}'.format(port))
+        parl.connect('localhost:{}'.format(self.port))
 
         sys.path.append(relative_dir)  # add relative environment path
         import relative_actor1
@@ -187,45 +139,24 @@ class Actor(object):
             actor = relative_actor1.Actor()
 
         shutil.rmtree(relative_dir)
-
         sys.path.remove(relative_dir)
-        master.exit()
-        worker1.exit()
 
     def test_locate_remote_file_with_relative_env_path_with_distributing_files(
             self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
-        th = threading.Thread(target=master.run)
-        th.start()
-        time.sleep(3)
-        worker1 = Worker('localhost:{}'.format(port), 1)
-        for _ in range(3):
-            if master.cpu_num == 1:
-                break
-            time.sleep(10)
-        self.assertEqual(1, master.cpu_num)
-
+        self.add_master()
+        self.add_worker(n_cpu=1)
         relative_dir = self._gen_remote_class_in_relative_path(
             "relative_actor2.py")
-
         parl.connect(
-            'localhost:{}'.format(port),
+            'localhost:{}'.format(self.port),
             distributed_files=["{}/*".format(relative_dir)])
 
         sys.path.append(relative_dir)  # add relative environment path
         import relative_actor2
-
         actor = relative_actor2.Actor()
-
         self.assertEqual(actor.add_one(1), 2)
-
         shutil.rmtree(relative_dir)
-
         sys.path.remove(relative_dir)
-        master.exit()
-        worker1.exit()
-
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(failfast=True)

@@ -19,45 +19,33 @@ import time
 import threading
 
 from parl.remote.master import Master
-from parl.remote.worker import Worker
-from parl.remote.client import disconnect
 from parl.remote.monitor import ClusterMonitor
-from parl.utils import get_free_tcp_port
+from parl.utils.test_utils import XparlTestCase
 
 
-@parl.remote_class(max_memory=300)
+@parl.remote_class
 class Actor(object):
     def __init__(self, x=10):
         self.x = x
         self.data = []
 
-    def add_100mb(self):
-        self.data.append(os.urandom(100 * 1024**2))
-        self.x += 1
-        return self.x
-
-
-class TestClusterStatus(unittest.TestCase):
-    def tearDown(self):
-        disconnect
-
+class TestClusterStatus(XparlTestCase):
     def test_cluster_status(self):
-        port = get_free_tcp_port()
-        master = Master(port=port)
+        master = Master(port=self.port)
         th = threading.Thread(target=master.run)
         th.start()
         time.sleep(5)
-        worker = Worker('localhost:{}'.format(port), 1)
-        time.sleep(5)
+        parl.connect('localhost:{}'.format(self.port))
+        self.add_worker(n_cpu=1)
+        time.sleep(40)
         status_info = master.cluster_monitor.get_status_info()
-        self.assertEqual(status_info, 'has 0 used cpus, 1 vacant cpus.')
-        parl.connect('localhost:{}'.format(port))
+        self.assertEqual(status_info, 'has 0 used cpus, 1 vacant cpus, 0 used_gpus, 0 vacant_gpus.')
         actor = Actor()
-        time.sleep(50)
+        time.sleep(40)
         status_info = master.cluster_monitor.get_status_info()
-        self.assertEqual(status_info, 'has 1 used cpus, 0 vacant cpus.')
-        worker.exit()
+        self.assertEqual(status_info, 'has 1 used cpus, 0 vacant cpus, 0 used_gpus, 0 vacant_gpus.')
         master.exit()
+        th.join()
 
 
 if __name__ == '__main__':

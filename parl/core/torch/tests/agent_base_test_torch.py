@@ -152,7 +152,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.eval()
         self.assertFalse(agent.training)
         eval_mode_output = agent.predict(obs)
-        self.assertNotEqual(train_mode_output, eval_mode_output)
+        self.assertNotEqual(train_mode_output.sum(), eval_mode_output.sum())
 
     def test_train_and_eval_mode_with_bn(self):
         agent = TestAgent(self.alg2)
@@ -163,7 +163,7 @@ class AgentBaseTest(unittest.TestCase):
         agent.eval()
         self.assertFalse(agent.training)
         eval_mode_output = agent.predict(obs)
-        self.assertNotEqual(train_mode_output, eval_mode_output)
+        self.assertNotEqual(train_mode_output.sum(), eval_mode_output.sum())
 
 
 if __name__ == '__main__':

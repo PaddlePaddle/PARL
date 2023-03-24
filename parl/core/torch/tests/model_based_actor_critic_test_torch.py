@@ -80,8 +80,8 @@ class ModelBaseTest(unittest.TestCase):
                 self.model.named_parameters(),
                 self.target_model2.named_parameters()):
             self.assertEqual(name1, name2)
-            var1_np = var1.numpy().sum()
-            var2_np = var2.numpy().sum()
+            var1_np = var1.detach().numpy().sum()
+            var2_np = var2.detach().numpy().sum()
             self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
 
     def test_model_copy_with_multi_copy(self):
@@ -92,8 +92,8 @@ class ModelBaseTest(unittest.TestCase):
                 self.target_model2.named_parameters(),
                 self.target_model3.named_parameters()):
             self.assertEqual(name1, name2)
-            var1_np = var1.numpy().sum()
-            var2_np = var2.numpy().sum()
+            var1_np = var1.detach().numpy().sum()
+            var2_np = var2.detach().numpy().sum()
             self.assertLess(float(np.abs(var1_np - var2_np)), 1e-5)
 
     def test_sync_weights_in_one_program(self):
@@ -101,8 +101,8 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = torch.randn(N, 4)
         for i in range(N):
             x = random_obs[i]
-            model_output = self.model.predict(x).numpy().sum()
-            target_model_output = self.target_model.predict(x).numpy().sum()
+            model_output = self.model.predict(x).detach().numpy().sum()
+            target_model_output = self.target_model.predict(x).detach().numpy().sum()
             self.assertGreater(
                 float(np.abs(model_output - target_model_output)), 1e-5)
 
@@ -111,8 +111,8 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = torch.randn(N, 4)
         for i in range(N):
             x = random_obs[i].view(1, -1)
-            model_output = self.model.predict(x).numpy().sum()
-            target_model_output = self.target_model.predict(x).numpy().sum()
+            model_output = self.model.predict(x).detach().numpy().sum()
+            target_model_output = self.target_model.predict(x).detach().numpy().sum()
             self.assertLess(
                 float(np.abs(model_output - target_model_output)), 1e-5)
 
@@ -143,16 +143,15 @@ class ModelBaseTest(unittest.TestCase):
             for i in range(N):
                 obs = np.expand_dims(random_obs[i], -1)
                 real_target_outputs = self.target_model.predict(
-                    torch.Tensor(obs).view(1, -1)).item()
+                    torch.Tensor(obs).view(1, -1))
                 out_np = np.dot(target_model_fc1_w, obs) + np.expand_dims(
                     target_model_fc1_b, -1)
                 out_np = np.dot(target_model_fc2_w, out_np) + np.expand_dims(
                     target_model_fc2_b, -1)
                 out_np = np.dot(target_model_fc3_w, out_np) + np.expand_dims(
                     target_model_fc3_b, -1)
-
-                self.assertLess(
-                    float(np.abs(real_target_outputs - out_np)), 1e-5)
+                diff = real_target_outputs.detach().numpy().sum() - out_np.sum()
+                self.assertLess(diff, 1e-5)
 
     def test_sync_weights_with_different_target_model(self):
         decay = 0.9
@@ -173,7 +172,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = np.expand_dims(random_obs[i], -1)  # 4, 1
             real_target_outputs = self.target_model.predict(
-                torch.Tensor(obs).view(1, -1)).item()
+                torch.Tensor(obs).view(1, -1))
 
             out_np = np.dot(target_model_fc1_w, obs) + np.expand_dims(
                 target_model_fc1_b, -1)  # (256, 256)
@@ -181,8 +180,9 @@ class ModelBaseTest(unittest.TestCase):
                 target_model_fc2_b, -1)
             out_np = np.dot(target_model_fc3_w, out_np) + np.expand_dims(
                 target_model_fc3_b, -1)
+            diff = real_target_outputs.detach().numpy().sum() - out_np.sum()
 
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+            self.assertLess(diff, 1e-5)
 
         decay = 0.8
 
@@ -201,7 +201,7 @@ class ModelBaseTest(unittest.TestCase):
         for i in range(N):
             obs = np.expand_dims(random_obs[i], -1)  # 4, 1
             real_target_outputs = self.target_model2.predict(
-                torch.Tensor(obs).view(1, -1)).item()
+                torch.Tensor(obs).view(1, -1)).detach().numpy().sum()
 
             out_np = np.dot(target_model_fc1_w, obs) + np.expand_dims(
                 target_model_fc1_b, -1)  # (256, 256)
@@ -210,7 +210,7 @@ class ModelBaseTest(unittest.TestCase):
             out_np = np.dot(target_model_fc3_w, out_np) + np.expand_dims(
                 target_model_fc3_b, -1)
 
-            self.assertLess(float(np.abs(real_target_outputs - out_np)), 1e-5)
+            self.assertLess(np.abs(real_target_outputs - out_np.sum()), 1e-5)
 
     def test_get_weights(self):
         params = self.model.get_weights()
@@ -237,9 +237,9 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = torch.randn(N, 4)
         for i in range(N):
             x = random_obs[i].view(1, -1)
-            model1_output = model1.predict(x).item()
-            model2_output = model2.predict(x).item()
-            self.assertNotEqual(model1_output, model2_output)
+            model1_output = model1.predict(x)
+            model2_output = model2.predict(x)
+            self.assertNotEqual(model1_output.sum(), model2_output.sum())
 
         params = model1.get_weights()
         model2.set_weights(params)
@@ -247,9 +247,9 @@ class ModelBaseTest(unittest.TestCase):
         random_obs = torch.randn(N, 4)
         for i in range(N):
             x = random_obs[i].view(1, -1)
-            model1_output = model1.predict(x).item()
-            model2_output = model2.predict(x).item()
-            self.assertEqual(model1_output, model2_output)
+            model1_output = model1.predict(x)
+            model2_output = model2.predict(x)
+            self.assertEqual(model1_output.sum(), model2_output.sum())
 
     def test_set_weights_with_wrong_params_num(self):
         params = self.model.get_weights()

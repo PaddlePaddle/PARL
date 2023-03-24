@@ -21,11 +21,13 @@ service GrpcHeartbeat {
 
 // The request message.
 message Request {
-  bytes tag = 1;
+  string client_id = 1;
+  bytes tag = 2;
+  string instance_id = 4; // used in heartbeat detection between the job and client.
+  string extra_msg = 8;
 }
 
 // The response message
 message Reply {
   bytes tag = 1;
-  string extra_message = 2;
 }

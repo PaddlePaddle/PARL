@@ -17,9 +17,10 @@ import os
 import subprocess
 import numpy as np
 from parl.utils import logger
+import multiprocessing as mp
 
 __all__ = [
-    'has_func', 'to_str', 'to_byte', '_IS_PY2', '_IS_PY3', 'MAX_INT32',
+    'has_func', 'to_str', 'to_byte', 'MAX_INT32',
     '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
     'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
     'check_version_for_fluid', 'check_model_method'
@@ -51,9 +52,6 @@ def to_byte(string):
     return string.encode()
 
 
-_IS_PY2 = (sys.version_info[0] == 2)
-_IS_PY3 = (sys.version_info[0] == 3)
-
 
 def get_fluid_version():
     import paddle
@@ -62,36 +60,81 @@ def get_fluid_version():
 
 
 MAX_INT32 = 0x7fffffff
+_HAS_FLUID = False
+_HAS_PADDLE = False
+_HAS_TORCH = False
 
-try:
-    _HAS_FLUID = False
-    _HAS_PADDLE = False
-    import paddle
-    from paddle import fluid
+def check_installed_framework_in_windows():
+    global _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
+    # paddle & fluid
+    try:
+        _HAS_FLUID = False
+        _HAS_PADDLE = False
+        import paddle
+        from paddle import fluid
 
-    paddle_version = get_fluid_version()
-    logger.info("paddlepaddle version: {}.".format(paddle.__version__))
-    if paddle_version < 200 and paddle_version != 0:
-        assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 and paddle < 2.0.0"
-        _HAS_FLUID = True
-    else:
-        _HAS_PADDLE = True
-except ImportError as e:
-    _HAS_FLUID = False
-    _HAS_PADDLE = False
-    if _IS_PY2 and "{}".format(e) != "No module named paddle":
-        logger.warning("import paddle error:\n{}".format(e))
-    if _IS_PY3 and "{}".format(e) != "No module named 'paddle'":
-        logger.warning("import paddle error:\n{}".format(e))
+        paddle_version = get_fluid_version()
+        logger.info("paddlepaddle version: {}.".format(paddle.__version__))
+        if paddle_version < 200 and paddle_version != 0:
+            assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 and paddle < 2.0.0"
+            _HAS_FLUID = True
+        else:
+            _HAS_PADDLE = True
+    except ImportError as e:
+        _HAS_FLUID = False
+        _HAS_PADDLE = False
+    # torch
+    try:
+        import torch
+        _HAS_TORCH = True
+    except ImportError:
+        _HAS_TORCH = False
 
-try:
-    import torch
-    _HAS_TORCH = True
-except ImportError:
-    _HAS_TORCH = False
+def check_installed_framework():
+    def check(installed_framework):
+        try:
+            fliud_installed = False
+            paddle_installed = False
+            import paddle
+            from paddle import fluid
+            paddle_version = get_fluid_version()
+            if paddle_version < 200 and paddle_version != 0:
+                assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 for paddle < 2.0.0"
+                fluid_installed = True
+            else:
+                paddle_installed = True
+        except ImportError as e:
+            fluid_installed = False
+            paddle_installed = False
+        
+        try:
+            import torch
+            torch_installed = True
+        except ImportError:
+            torch_installed = False
+        installed_framework['_HAS_FLUID'] = fliud_installed
+        installed_framework['_HAS_PADDLE'] = paddle_installed
+        installed_framework['_HAS_TORCH'] = torch_installed
+
+    manager = mp.Manager()
+    installed_framework = manager.dict()
+    process = mp.Process(target=check, args=(installed_framework,))
+    process.start()
+    process.join()
+    global _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
+    _HAS_FLUID = installed_framework['_HAS_FLUID']
+    _HAS_PADDLE = installed_framework['_HAS_PADDLE']
+    _HAS_TORCH = installed_framework['_HAS_TORCH']
+    del manager, installed_framework
+
 
 _IS_WINDOWS = (sys.platform == 'win32')
 _IS_MAC = (sys.platform == 'darwin')
+
+if _IS_WINDOWS:
+    check_installed_framework_in_windows()
+else:
+    check_installed_framework()
 
 
 def kill_process(regex_pattern):

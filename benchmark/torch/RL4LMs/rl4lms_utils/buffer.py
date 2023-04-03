@@ -118,7 +118,8 @@ class DictRolloutBuffer(object):
         self.pos = 0
         self.full = False
 
-    def add(self,
+    def add(
+            self,
             obs,
             action,
             reward,

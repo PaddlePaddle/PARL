@@ -99,7 +99,7 @@ def main(config):
         logger.info(f"loading model from {train_evaluation_config['checkpoint_path']}")
         rl4lms_model.load_state_dict(torch.load(train_evaluation_config["checkpoint_path"])["state_dict"])
     iter_start = 0
-    # examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=iter_start)
+    examiner.evaluate(policy=agent.alg.modell, sample_name_list=["val", "test"], epoch=iter_start)
 
     for epoch in range(iter_start, n_iters):
         print("========== BEGIN ==========")

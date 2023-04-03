@@ -17,6 +17,7 @@ from t5_ppo_config import config
 from parl.utils import logger
 import torch
 import time
+import os
 
 # instructor and reward function
 from instructor import InstructorGroup
@@ -77,7 +78,8 @@ def main(config):
     )
     rollout_util = RolloutUtil(config["kl_div"])
 
-    n_iters = int(config["train_evaluation"]["n_iters"])
+    train_evaluation_config = config["train_evaluation"]
+    n_iters = int(train_evaluation_config["n_iters"])
     n_steps_per_iter = instructor_group.n_instructors * buffer_config["n_steps_per_instructor"]
 
     # gen kwargs for evaluation
@@ -93,8 +95,11 @@ def main(config):
         samples_by_split=samples_by_split,
     )
 
+    if train_evaluation_config["load_model"]:
+        logger.info(f"loading model from {train_evaluation_config['checkpoint_path']}")
+        rl4lms_model.load_state_dict(torch.load(train_evaluation_config["checkpoint_path"])["state_dict"])
     iter_start = 0
-    examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=iter_start)
+    # examiner.evaluate(policy=agent.alg.model, sample_name_list=["val", "test"], epoch=iter_start)
 
     for epoch in range(iter_start, n_iters):
         print("========== BEGIN ==========")
@@ -116,8 +121,15 @@ def main(config):
               f"  {1.0 * (outer_end_time - outer_start_time) * (n_iters - epoch - 1) / 60 / 60} hour(s)")
         print("========== END ==========")
 
+        # save model
+        if train_evaluation_config['save_model'] and (epoch + 1) % train_evaluation_config["save_every"] == 0:
+            output_dir = train_evaluation_config['output_dir']
+            if not os.path.exists(output_dir):
+                os.mkdir(output_dir)
+            rl4lms_model.save(f"{output_dir}/checkpoint_{epoch}.pth")
+
         # evaluate on val set in the given intervals
-        if (epoch + 1) % config["train_evaluation"]["eval_every"] == 0:
+        if (epoch + 1) % train_evaluation_config["eval_every"] == 0:
             examiner.evaluate(policy=agent.alg.model, sample_name_list=["val"], epoch=epoch)
 
     # during training, we evaluate on VALIDATION set, and finally we evaluate on TEST set

@@ -118,6 +118,46 @@ class DictRolloutBuffer(object):
         self.pos = 0
         self.full = False
 
+    def add(self,
+            obs,
+            action,
+            reward,
+            episode_start,
+            value,
+            log_prob,
+    ):
+        """
+        :param obs: Observation
+        :param action: Action
+        :param reward:
+        :param episode_start: Start of episode signal.
+        :param value: estimated value of the current state
+            following the current policy.
+        :param log_prob: log probability of the action
+            following the current policy.
+        """
+
+        if len(log_prob.shape) == 0:
+            # Reshape 0-d tensor to avoid error
+            log_prob = log_prob.reshape(-1, 1)
+
+        for key in self.observations.keys():
+            obs_ = np.array(obs[key]).copy()
+            # Reshape needed when using multiple instructors with discrete observations
+            # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
+            if isinstance(self.observation_space.spaces[key], spaces.Discrete):
+                obs_ = obs_.reshape((1, ) + self.obs_shape[key])
+            self.observations[key][self.pos] = obs_
+
+        self.actions[self.pos] = np.array(action).copy()
+        self.rewards[self.pos] = np.array(reward).copy()
+        self.episode_starts[self.pos] = np.array(episode_start).copy()
+        self.values[self.pos] = value.clone().cpu().numpy().flatten()
+        self.log_probs[self.pos] = log_prob.clone().cpu().numpy()
+        self.pos += 1
+        if self.pos == self.buffer_size:
+            self.full = True
+
     def add_transitions(self, episode_wise_transitions, rollout_info):
         advantages_computed = False
         for ep_ix, transitions in enumerate(episode_wise_transitions):
@@ -134,32 +174,14 @@ class DictRolloutBuffer(object):
 
                 # add to buffer
                 if not self.full:
-                    obs = transition.observation
-                    action = transition.action
-                    reward = transition.total_reward
-                    episode_start = transition.episode_start
-                    value = transition.value
-                    log_prob = transition.log_prob
-                    if len(log_prob.shape) == 0:
-                        # Reshape 0-d tensor to avoid error
-                        log_prob = log_prob.reshape(-1, 1)
-
-                    for key in self.observations.keys():
-                        obs_ = np.array(obs[key]).copy()
-                        # Reshape needed when using multiple instructors with discrete observations
-                        # as numpy cannot broadcast (n_discrete,) to (n_discrete, 1)
-                        if isinstance(self.observation_space.spaces[key], spaces.Discrete):
-                            obs_ = obs_.reshape((1, ) + self.obs_shape[key])
-                        self.observations[key][self.pos] = obs_
-
-                    self.actions[self.pos] = np.array(action).copy()
-                    self.rewards[self.pos] = np.array(reward).copy()
-                    self.episode_starts[self.pos] = np.array(episode_start).copy()
-                    self.values[self.pos] = value.clone().cpu().numpy().flatten()
-                    self.log_probs[self.pos] = log_prob.clone().cpu().numpy()
-                    self.pos += 1
-                    if self.pos == self.buffer_size:
-                        self.full = True
+                    self.add(
+                        transition.observation,
+                        transition.action,
+                        transition.total_reward,
+                        transition.episode_start,
+                        transition.value,
+                        transition.log_prob,
+                    )
 
                 # if the buffer is full, compute advantages
                 if self.full and not advantages_computed:

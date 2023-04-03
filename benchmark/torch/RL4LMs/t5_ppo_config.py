@@ -93,7 +93,12 @@ config = {
         }]
     },
     'train_evaluation': {
+        'load_model': False,
+        'save_model': True,
         'n_iters': 100,
-        'eval_every': 10
+        'eval_every': 10,
+        'save_every': 10,
+        'checkpoint_path': "./checkpoint/checkpoint_0.pth",
+        'output_dir': "./checkpoint"
     }
 }

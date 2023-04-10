@@ -116,6 +116,7 @@ def check_installed_framework():
         installed_framework['_HAS_PADDLE'] = paddle_installed
         installed_framework['_HAS_TORCH'] = torch_installed
 
+    mp.set_start_method('fork')
     manager = mp.Manager()
     installed_framework = manager.dict()
     process = mp.Process(target=check, args=(installed_framework,))

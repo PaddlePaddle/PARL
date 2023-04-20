@@ -31,7 +31,7 @@ class RemoteError(Exception):
     """
 
     def __init__(self, func_name, error_info):
-        self.error_info = "[Error occured in xparl, when calling " +\
+        self.error_info = "[Error occurred in xparl, when calling " +\
             "function `{}`]:\n{}".format(func_name, error_info)
 
     def __str__(self):

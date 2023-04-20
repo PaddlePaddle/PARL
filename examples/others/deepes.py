@@ -79,20 +79,20 @@ if __name__ == '__main__':
     for epcho in range(100):
         rewards = []
         noises = []
-        lastest_flat_weights = agent.get_flat_weights()
+        latest_flat_weights = agent.get_flat_weights()
 
         for episode in range(10):
             noise = np.random.randn(agent.weights_total_size)
             perturbation = noise * 0.05
 
-            agent.set_flat_weights(lastest_flat_weights + perturbation)
+            agent.set_flat_weights(latest_flat_weights + perturbation)
             ep_reward = evaluate(env, agent)
 
             noises.append(noise)
             rewards.append(ep_reward)
 
         normalized_rewards = reward_normalize(rewards)
-        agent.set_flat_weights(lastest_flat_weights)
+        agent.set_flat_weights(latest_flat_weights)
         agent.learn(normalized_rewards, noises)
         # evaluate
         if (epcho % 10) == 0:

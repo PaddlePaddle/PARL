@@ -54,7 +54,7 @@ class AgentBase(object):
         raise NotImplementedError
 
     def predict(self, *args, **kwargs):
-        """Predict the action when given the observation of the enviroment.
+        """Predict the action when given the observation of the environment.
 
         In general, this function is used in test process.
 
@@ -66,7 +66,7 @@ class AgentBase(object):
         raise NotImplementedError
 
     def sample(self, *args, **kwargs):
-        """Sample the action when given the observation of the enviroment.
+        """Sample the action when given the observation of the environment.
             
         In general, this function is used in train process.
 

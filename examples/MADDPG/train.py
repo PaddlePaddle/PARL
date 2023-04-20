@@ -124,7 +124,7 @@ def main():
         agents.append(agent)
 
     if args.restore:
-        # restore modle
+        # restore model
         for i in range(len(agents)):
             model_file = args.model_dir + '/agent_' + str(i)
             if not os.path.exists(model_file):

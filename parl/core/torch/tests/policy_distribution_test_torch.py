@@ -129,8 +129,8 @@ class DiagGaussianDistributionTest(unittest.TestCase):
         dist2 = self.get_dist(mean=mean, logstd=torch.log(std2))
         kl = dist1.kl(dist2)
         single_kl_expect = np.log(2) - (3 / 8)
-        expect_ouput = self.num_actions * single_kl_expect
-        self.assertTrue(self.torch_check_eq(expect_ouput, kl))
+        expect_output = self.num_actions * single_kl_expect
+        self.assertTrue(self.torch_check_eq(expect_output, kl))
 
     def test_init_with_wrong_logits_shape(self):
         # input logits with wrong shape
@@ -165,7 +165,7 @@ class CategoricalDistributionTest(unittest.TestCase):
         self.assertGreaterEqual(torch.max(sample_action), 0)
         self.assertLess(torch.min(sample_action), self.num_actions)
 
-        # construct a logit to ouput determined class
+        # construct a logit to output determined class
         fool_logits = torch.zeros(size=(self.batch_size, self.num_actions))
         fool_logits[:, 0] = 9999999999
         set_random_seed(12)

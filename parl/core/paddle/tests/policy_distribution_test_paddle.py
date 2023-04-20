@@ -132,9 +132,9 @@ class DiagGaussianDistributionTest(unittest.TestCase):
         dist2 = self.get_dist(mean=mean, log_std=paddle.log(std2))
         kl = dist1.kl(dist2)
         single_kl_expect = np.log(2) - (3 / 8)
-        expect_ouput = paddle.ones_like(
+        expect_output = paddle.ones_like(
             kl) * self.num_actions * single_kl_expect
-        self.assertTrue(self.paddle_check_eq(kl, expect_ouput))
+        self.assertTrue(self.paddle_check_eq(kl, expect_output))
 
     def test_init_with_wrong_logits_shape(self):
         # input logits with wrong shape
@@ -169,7 +169,7 @@ class CategoricalDistributionTest(unittest.TestCase):
         self.assertGreaterEqual(paddle.max(sample_action), 0)
         self.assertLess(paddle.min(sample_action), self.num_actions)
 
-        # construct a logit to ouput determined class
+        # construct a logit to output determined class
         fool_logits = paddle.zeros(shape=(self.batch_size, self.num_actions))
         fool_logits[:, 0] = 9999999999
         set_random_seed(12)

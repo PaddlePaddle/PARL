@@ -82,7 +82,7 @@ class Learner(object):
 
         while num_episodes < self.config['min_episodes_per_batch'] or \
                 num_timesteps < self.config['min_steps_per_batch']:
-            # setting the lastest params to the actor, getting the fitness and the noise seed sync.
+            # setting the latest params to the actor, getting the fitness and the noise seed sync.
             future_object_ids = [remote_actor.sample(self.latest_flat_weights) \
                 for remote_actor in self.remote_actors]
             results = [

@@ -19,7 +19,7 @@ import importlib
 
 class TestNotImportPaddle(unittest.TestCase):
     def test_import(self):
-        # setting this enviroment variable will not import deep learning framework
+        # setting this environment variable will not import deep learning framework
         os.environ['XPARL_igonre_core'] = 'true'
         import parl
         self.assertFalse('torch' in sys.modules)

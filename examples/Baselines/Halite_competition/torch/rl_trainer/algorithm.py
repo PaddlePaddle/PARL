@@ -107,7 +107,7 @@ class PPO(parl.Algorithm):
         Return:
             value (torch.tensor): predicted state value
             action (torch.tensor): actions sampled from a distribution
-            action_log_probs (torch.tensor): the log probabilites of action
+            action_log_probs (torch.tensor): the log probabilities of action
         """
         with torch.no_grad():
             value = self.critic(obs)

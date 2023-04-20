@@ -42,7 +42,7 @@ class ActionMappingWrapper(gym.Wrapper):
     def step(self, model_output_act):
         """
         Args:
-            model_output_act(np.array): The values must be in in [-1, 1].
+            model_output_act(np.array): The values must be in [-1, 1].
         """
         assert np.all(((model_output_act<=1.0 + 1e-3), (model_output_act>=-1.0 - 1e-3))), \
             'the action should be in range [-1.0, 1.0]'

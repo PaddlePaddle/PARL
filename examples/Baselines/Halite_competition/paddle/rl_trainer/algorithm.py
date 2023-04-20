@@ -103,7 +103,7 @@ class PPO:
         Return:
             value (paddle.tensor): predicted state value
             action (paddle.tensor): actions sampled from a distribution
-            action_log_probs (paddle.tensor): the log probabilites of action
+            action_log_probs (paddle.tensor): the log probabilities of action
         """
 
         batch_size = obs.shape[0]

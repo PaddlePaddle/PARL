@@ -18,7 +18,7 @@ learn_program = parl.compile(learn_program, loss=training_loss)
 
 ## Demonstration
 
-We provide a demonstration of offline Q-learning with parallel executing, in which we seperate the procedures of collecting data and training the model. First we collect data by interacting with the environment and save them to a replay memory file, and then fit and evaluate the Q network with the collected data. Repeat these two steps to improve the performance gradually.
+We provide a demonstration of offline Q-learning with parallel executing, in which we separate the procedures of collecting data and training the model. First we collect data by interacting with the environment and save them to a replay memory file, and then fit and evaluate the Q network with the collected data. Repeat these two steps to improve the performance gradually.
 
 ### Dependencies:
 + [paddlepaddle==1.8.5](https://github.com/PaddlePaddle/Paddle)

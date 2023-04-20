@@ -77,7 +77,7 @@ class Learner(object):
         """
         1.setting latest_params to each actor model
         2.getting the sample data from all the actors synchronizely
-        3.traing the model with the sample data and the params is upgraded, and goto step 1
+        3.training the model with the sample data and the params is upgraded, and goto step 1
         """
 
         latest_params = self.agent.get_weights()

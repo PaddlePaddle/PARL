@@ -18,7 +18,7 @@ import os
 
 
 def format_uniform_path(path):
-    """format the path to a new path which seperated by os.sep.
+    """format the path to a new path which separated by os.sep.
     """
     path = path.replace("//", os.sep)
     path = path.replace("/", os.sep)

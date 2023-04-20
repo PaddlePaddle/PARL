@@ -113,7 +113,7 @@ class SimulatorServer(simulator_pb2_grpc.SimulatorServicer):
 
     def Send(self, request, context):
         """ Implement Send function in SimulatorServicer
-        Everytime a request comming, will create a new thread to handle
+        Everytime a request coming, will create a new thread to handle
     """
         ident, obs, reward, done, info = request.id, request.observation, request.reward, request.done, request.info
         client = self.clients[ident]

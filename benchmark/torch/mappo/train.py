@@ -82,7 +82,7 @@ def main():
         buffers.append(bu)
 
     if args.restore:
-        # restore modle
+        # restore model
         for i in range(len(agents)):
             model_file = args.model_dir + '/' + args.env_name + '/agent_' + str(
                 i)

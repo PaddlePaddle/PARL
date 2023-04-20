@@ -123,7 +123,7 @@ def train_agent():
     final_ep_ag_rewards = []  # agent rewards for training curve
 
     if args.restore:
-        # restore modle
+        # restore model
         for i in range(len(agents)):
             model_file = args.model_dir + '/agent_' + str(i)
             if not os.path.exists(model_file):

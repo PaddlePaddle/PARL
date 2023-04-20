@@ -48,7 +48,7 @@ class CSVLogger(object):
         self.keys_set = None
 
     def log_dict(self, result):
-        """Ouput result to the csv file.
+        """Output result to the csv file.
 
         Will create the header of the csv file automatically when the function is called for the first time.
         Ususally, the keys of the result should be the same every time you call the function.

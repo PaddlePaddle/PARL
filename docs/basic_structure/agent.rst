@@ -14,13 +14,13 @@ Methods
 
 3. predict(self, obs)
 
-    Predict the action with current observation of the enviroment. Note that this function will only do the prediction and it doesn't try any exploration.
+    Predict the action with current observation of the environment. Note that this function will only do the prediction and it doesn't try any exploration.
     To explore in the action space, you should create your process in `sample` function below.
     Basically, this function is often used in test process.
 
 4. sample(self, obs)
 
-    Predict the action given current observation of the enviroment. 
+    Predict the action given current observation of the environment. 
     Additionaly, action will be added noise here to explore a new trajectory. 
     Basically, this function is often used in training process.
 

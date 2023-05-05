@@ -381,11 +381,11 @@ found in your current environment. To use "pyarrow" for serialization, please in
                     time.sleep(1)
                     return None
                 elif tag == remote_constants.REJECT_GPU_JOB_TAG:
-                    error_message = "[Client] Request fails. It is not allowed to request CPU resource from a GPU cluster."
+                    error_message = "[Client] Request fails. It is not allowed to request GPU resource from a CPU cluster."
                     logger.error(error_message)
                     raise Exception(error_message)
                 elif tag == remote_constants.REJECT_CPU_JOB_TAG:
-                    error_message = "[Client] Request fails. It is not allowed to request GPU resource from a CPU cluster."
+                    error_message = "[Client] Request fails. It is not allowed to request CPU resource from a GPU cluster."
                     logger.error(error_message)
                     raise Exception(error_message)
                 elif tag == remote_constants.REJECT_INVALID_GPU_JOB_TAG:

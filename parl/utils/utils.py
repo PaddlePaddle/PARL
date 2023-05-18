@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
 import subprocess
-import numpy as np
-from parl.utils import logger
+import sys
 import multiprocessing as mp
 
+import numpy as np
+
+from parl.utils import logger
+
 __all__ = [
-    'has_func', 'to_str', 'to_byte', 'MAX_INT32',
-    '_HAS_FLUID', '_HAS_PADDLE', '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC',
-    'kill_process', 'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
+    'has_func', 'to_str', 'to_byte', 'MAX_INT32', '_HAS_FLUID', '_HAS_PADDLE',
+    '_HAS_TORCH', '_IS_WINDOWS', '_IS_MAC', 'kill_process',
+    'get_fluid_version', 'isnotebook', 'check_version_for_xpu',
     'check_version_for_fluid', 'check_model_method'
 ]
 
@@ -52,7 +54,6 @@ def to_byte(string):
     return string.encode()
 
 
-
 def get_fluid_version():
     import paddle
     paddle_version = int(paddle.__version__.replace('.', '').split('-')[0])
@@ -63,6 +64,7 @@ MAX_INT32 = 0x7fffffff
 _HAS_FLUID = False
 _HAS_PADDLE = False
 _HAS_TORCH = False
+
 
 def check_installed_framework_in_windows():
     global _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH
@@ -90,6 +92,7 @@ def check_installed_framework_in_windows():
     except ImportError:
         _HAS_TORCH = False
 
+
 def check_installed_framework():
     def check(installed_framework):
         try:
@@ -106,12 +109,24 @@ def check_installed_framework():
         except ImportError as e:
             fluid_installed = False
             paddle_installed = False
-        
+        except:
+            logger.warning(
+                "Failed to import PaddlePaddle, please check the PaddlePaddle installed in your environment"
+            )
+            fluid_installed = False
+            paddle_installed = False
+
         try:
             import torch
             torch_installed = True
         except ImportError:
             torch_installed = False
+        except:
+            logger.warning(
+                "Failed to import torch, please check the torch installed in your environment"
+            )
+            torch_installed = False
+
         installed_framework['_HAS_FLUID'] = fliud_installed
         installed_framework['_HAS_PADDLE'] = paddle_installed
         installed_framework['_HAS_TORCH'] = torch_installed
@@ -119,7 +134,7 @@ def check_installed_framework():
     mp.set_start_method('fork')
     manager = mp.Manager()
     installed_framework = manager.dict()
-    process = mp.Process(target=check, args=(installed_framework,))
+    process = mp.Process(target=check, args=(installed_framework, ))
     process.start()
     process.join()
     global _HAS_FLUID, _HAS_PADDLE, _HAS_TORCH

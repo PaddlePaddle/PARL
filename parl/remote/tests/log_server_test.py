@@ -15,7 +15,7 @@
 import json
 import multiprocessing
 import os
-import pickle
+import pickle5
 import subprocess
 import sys
 import tempfile
@@ -83,7 +83,7 @@ class TestLogServer(XparlTestCase):
 
         # Get status
         status = master._get_status()
-        client_jobs = pickle.loads(status).get('client_jobs')
+        client_jobs = pickle5.loads(status).get('client_jobs')
         self.assertIsNotNone(client_jobs)
 
         # Get job id

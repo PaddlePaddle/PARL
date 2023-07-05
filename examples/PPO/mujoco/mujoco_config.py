@@ -17,7 +17,7 @@ mujoco_config = {
 
     #==========  env config ==========
     'env': 'HalfCheetah-v2',  # environment name
-    'env_num': 1,  # number of the environment
+    'env_num': 5,  # number of the environment
     'seed': 120,  # seed of the experiment
     'xparl_addr': "localhost:8010",  # xparl address for distributed training
 
@@ -35,11 +35,6 @@ mujoco_config = {
     'loss_type': 'KLPEN',  # Choose loss type of PPO algorithm, 'CLIP' or 'KLPEN'
     'eps': 1e-5,  # Adam optimizer epsilon (default: 1e-5)
     'clip_param': 0.2,  # epsilon in clipping loss
-    'entropy_coef': 0.0,  # Entropy coefficient (ie. c_2 in the paper)
-    # 'value_loss_coef': 0.5,  # Value loss coefficient (ie. c_1 in the paper)
-    # 'max_grad_norm': 0.5,  # Max gradient norm for gradient clipping
-    # 'use_clipped_value_loss': True,  # advantages normalization
-    # 'clip_vloss': True,  # whether or not to use a clipped loss for the value function
     'gamma': 0.995,  # discounting factor
     'gae_lambda': 0.98,  # Lambda parameter for calculating N-step advantage
 }

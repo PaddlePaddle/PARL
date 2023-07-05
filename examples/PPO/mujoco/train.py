@@ -99,6 +99,7 @@ def main():
     config = mujoco_config
     config['env'] = args.env
     config['seed'] = args.seed
+    config['env_num'] = args.env_num
     config['test_every_episodes'] = args.test_every_episodes
     config['train_total_episodes'] = args.train_total_episodes
     config['episodes_per_batch'] = args.episodes_per_batch
@@ -125,7 +126,7 @@ def main():
     agent = MujocoAgent(alg, config)
 
     parl.connect(config['xparl_addr'])
-    actors = [Actor(config) for _ in range(args.episodes_per_batch // 2)]
+    actors = [Actor(config) for _ in range(config["env_num"])]
     # run a few episodes to initialize scaler
     get_remote_trajectories(actors, scaler)
 
@@ -165,7 +166,9 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, help='Mujoco environment name', default='Swimmer-v2')
-    parser.add_argument('--episodes_per_batch', type=int, default=6, help='Number of episodes per training batch')
+    parser.add_argument(
+        "--env_num", type=int, default=5, help="number of the environment, xparl is needed")
+    parser.add_argument('--episodes_per_batch', type=int, default=5, help='Number of episodes per training batch')
     parser.add_argument('--train_total_episodes', type=int, default=int(100), help='maximum training steps')
     parser.add_argument(
         '--test_every_episodes',

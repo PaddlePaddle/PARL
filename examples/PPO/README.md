@@ -52,7 +52,7 @@ Then we can start the distributed training for mujoco games by running:
 ```
 cd mujoco
 
-python train.py --env 'HalfCheetah-v2' --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
+python train.py --env 'HalfCheetah-v2' --train_total_episodes 100000 --env_num 5
 ```
 
 

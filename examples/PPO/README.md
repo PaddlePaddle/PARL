@@ -24,7 +24,7 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 + python3.7+
 + [paddle>=2.3.1](https://github.com/PaddlePaddle/Paddle)
 + [parl>=2.1.1](https://github.com/PaddlePaddle/PARL)
-+ gym>=0.26.0
++ gym==0.18.0
 + mujoco>=2.2.2
 
 ### Atari-Dependencies:
@@ -34,17 +34,8 @@ PARL currently supports the open-source version of Mujoco provided by DeepMind, 
 + atari-py==0.2.6
 + opencv-python
 
-### Training:
 
-```
-# To train an agent for discrete action game (Atari: PongNoFrameskip-v4 by default)
-python train.py
-
-# To train an agent for continuous action game (Mujoco)
-python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000
-```
-
-### Distributed Training
+### Training Mujoco Distributedly
 Accelerate training process by setting `xparl_addr` and `env_num > 1` when environment simulation running very slow.        
 At first, we can start a local cluster with 8 CPUs:
 
@@ -56,14 +47,24 @@ Note that if you have started a master before, you don't have to run the above
 command. For more information about the cluster, please refer to our
 [documentation](https://parl.readthedocs.io/en/latest/parallel_training/setup.html).
 
-Then we can start the distributed training by running:
+Then we can start the distributed training for mujoco games by running:
 
 ```
-# To train an agent distributedly
+cd mujoco
 
-# for discrete action game (Atari games)
+python train.py --env 'HalfCheetah-v2' --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
+```
+
+
+### Training Atari
+To train an agent for discrete action game (Atari: PongNoFrameskip-v4 by default):
+
+```
+cd atari
+
+# Local training
+python train.py
+# Distributed training
+xparl start --port 8010 --cpu_num 8
 python train.py --env "PongNoFrameskip-v4" --env_num 8 --xparl_addr 'localhost:8010'
-
-# for continuous action game (Mujoco games)
-python train.py --env 'HalfCheetah-v4' --continuous_action --train_total_steps 1000000 --env_num 5 --xparl_addr 'localhost:8010'
 ```

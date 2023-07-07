@@ -22,6 +22,7 @@ from parl.algorithms.paddle.qmix import *
 from parl.algorithms.paddle.a2c import *
 from parl.algorithms.paddle.ddqn import *
 from parl.algorithms.paddle.maddpg import *
-from parl.algorithms.paddle.ppo import *
+from parl.algorithms.paddle.ppo_atari import *
+from parl.algorithms.paddle.ppo_mujoco import *
 from parl.algorithms.paddle.cql import *
 from parl.algorithms.paddle.impala.impala import *

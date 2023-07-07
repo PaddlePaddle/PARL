@@ -24,7 +24,7 @@ mujoco_config = {
     #==========  training config ==========
     'train_total_episodes': int(1e6),  # max training steps
     'episodes_per_batch': 5,
-    'policy_learn_times': 20,  # number of times for updating (ie K in the paper)
+    'policy_learn_times': 20,  # number of epochs for updating (ie K in the paper)
     'value_learn_times': 10,
     'value_batch_size': 256,
     'eval_episode': 3,

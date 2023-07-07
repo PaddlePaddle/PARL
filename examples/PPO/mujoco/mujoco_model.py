@@ -21,8 +21,8 @@ import numpy as np
 class MujocoModel(parl.Model):
     """ The Model for Mujoco env
     Args:
-        obs_space (Box): observation space.
-        act_space (Box): action space.
+        obs_dim (int): observation dimension.
+        act_dim (int): action dimension.
     """
 
     def __init__(self, obs_dim, act_dim, init_logvar=0.0):
@@ -67,17 +67,13 @@ class PolicyModel(parl.Model):
 
         # logvar_speed is used to 'fool' gradient descent into making faster updates to log-variances.
         # heuristic sets logvar_speed based on network size.
-        # logvar_speed = (10 * hid3_size) // 48  # default setting in tf-ppo
-        logvar_speed = (10 * hid3_size) // 8  # finetuned for Humanoid-v2
+        logvar_speed = (10 * hid3_size) // 48  # default setting
+        # logvar_speed = (10 * hid3_size) // 8  # finetuned for Humanoid-v2 to achieve fast convergence
         self.fc_pi_std = paddle.create_parameter([logvar_speed, act_dim],
                                                  dtype='float32',
                                                  default_initializer=nn.initializer.Constant(value=init_logvar))
 
     def policy(self, obs):
-        """ Get policy network prediction
-        Args:
-            obs (np.array): current observation
-        """
         hid1 = paddle.tanh(self.fc1(obs))
         hid2 = paddle.tanh(self.fc2(hid1))
         hid3 = self.fc3(hid2)

@@ -26,10 +26,7 @@ class Actor(object):
     def __init__(self, config, seed=None):
         env = gym.make(config['env'])
         self.env = CompatWrapper(env)
-        try:
-            self.env.seed(seed)
-        except:
-            pass
+        self.env.seed(seed)
 
         obs_dim = self.env.observation_space.shape[0]
         act_dim = self.env.action_space.shape[0]

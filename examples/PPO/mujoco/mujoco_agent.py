@@ -18,30 +18,51 @@ import numpy as np
 
 
 class MujocoAgent(parl.Agent):
-    def __init__(self, algorithm, config, init_beta=1.0, init_lr_multi=1.0):
+    """ Agent of PPO env
+
+    Args:
+        algorithm (`parl.Algorithm`): algorithm to be used in this agent.
+        config (dict): configs that used in this agent
+    """
+    def __init__(self, algorithm, config):
         super(MujocoAgent, self).__init__(algorithm)
 
         self.config = config
         self.kl_targ = self.config['kl_targ']
         # Adaptive kl penalty coefficient
-        self.beta = init_beta  # dynamically adjusted D_KL loss multiplier
-        self.lr_multiplier = init_lr_multi  # dynamically adjust lr when D_KL out of control
+        self.beta = 1.0  # dynamically adjusted D_KL loss multiplier
+        self.lr_multiplier = 1.0  # dynamically adjust lr when D_KL out of control
 
         self.value_learn_buffer = None
 
     def sample(self, obs):
+        """ Sample action from current policy given observation
+
+        Args:
+            obs (np.array): observation, shape([batch_size] + obs_shape)
+        """
         obs = paddle.to_tensor(obs, dtype='float32')
         action = self.alg.sample(obs)
         action_numpy = action.detach().numpy()[0]
         return action_numpy
 
     def predict(self, obs):
+        """ Predict action from current policy given observation
+
+        Args:
+            obs (np.array): observation, shape([batch_size] + obs_shape)
+        """
         obs = paddle.to_tensor(obs, dtype='float32')
         action = self.alg.predict(obs)
         action_numpy = action.detach().numpy()[0]
         return action_numpy
 
     def value(self, obs):
+        """ use the model to predict obs values
+
+        Args:
+            obs (torch tensor): observation, shape([batch_size] + obs_shape)
+        """
         obs = paddle.to_tensor(obs, dtype='float32')
         value = self.alg.value(obs)
         value = value.detach().numpy()
@@ -63,11 +84,7 @@ class MujocoAgent(parl.Agent):
         return loss
 
     def policy_learn(self, obs, actions, advantages):
-        """ Learn policy:
-
-        1. Sync parameters of policy model to old policy model
-        2. Fix old policy model, and learn policy model multi times
-        3. if use KLPEN loss, Adjust kl loss coefficient: beta
+        """ policy learn
         """
         self.alg.sync_old_policy()
 
@@ -75,13 +92,11 @@ class MujocoAgent(parl.Agent):
         for _ in range(self.config['policy_learn_times']):
             loss, kl, entropy = self._batch_policy_learn(obs, actions, advantages)
             loss, kl, entropy = loss.numpy()[0], kl.numpy()[0], entropy.numpy()[0]
-            # print(self.alg.model.policy_model.state_dict()['fc_pi_std'])
             if kl > self.kl_targ * 4:  # early stopping if D_KL diverges badly
                 break
             all_loss.append(loss)
             all_kl.append(kl)
 
-        # fron tf policy
         if kl > self.kl_targ * 2:  # servo beta to reach D_KL target
             self.beta = np.minimum(35, 1.5 * self.beta)  # max clip beta
             if self.beta > 30 and self.lr_multiplier > 0.1:
@@ -93,7 +108,7 @@ class MujocoAgent(parl.Agent):
         return loss, kl, self.beta, self.lr_multiplier, entropy
 
     def value_learn(self, obs, discount_sum_rewards):
-        """ Fit model to current data batch + previous data batch
+        """ value learn
         """
         data_size = obs.shape[0]
         num_batches = max(data_size // self.config['value_batch_size'], 1)
@@ -126,6 +141,6 @@ class MujocoAgent(parl.Agent):
                 start += batch_size
         y_hat = self.alg.model.value(paddle.to_tensor(obs)).numpy().reshape(
             [-1])  # check explained variance prior to update
-        _loss = np.mean(np.square(y_hat - discount_sum_rewards))  # explained variance after update
+        value_loss = np.mean(np.square(y_hat - discount_sum_rewards))  # explained variance after update
         exp_var = 1 - np.var(discount_sum_rewards - y_hat) / np.var(discount_sum_rewards)
-        return _loss, exp_var, old_exp_var
+        return value_loss, exp_var, old_exp_var

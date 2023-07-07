@@ -16,6 +16,7 @@ import parl
 import paddle
 import numpy as np
 from copy import deepcopy
+from parl.utils.utils import check_model_method
 
 __all__ = ['PPO_Mujoco']
 
@@ -33,7 +34,18 @@ class PPO_Mujoco(parl.Algorithm):
             clip_param (float): epsilon used in the CLIP loss.
             eps (float): A small float value for numerical stability.
         """
+        # check model methods and member variables
+        check_model_method(model, 'value', self.__class__.__name__)
+        check_model_method(model, 'policy', self.__class__.__name__)
+        assert hasattr(model, 'policy_model')
+        assert hasattr(model, 'value_model')
+        assert hasattr(model, 'policy_lr')
+        assert hasattr(model, 'value_lr')
+
         assert isinstance(act_dim, int)
+        assert isinstance(kl_targ, float)
+        assert isinstance(eta, float)
+        assert isinstance(eps, float)
         assert isinstance(clip_param, float)
         assert loss_type == 'CLIP' or loss_type == 'KLPEN'
         self.loss_type = loss_type

@@ -111,10 +111,7 @@ def main():
 
     env = gym.make(args.env)
     env = CompatWrapper(env)
-    try:
-        env.seed(args.seed)
-    except:
-        pass
+    env.seed(args.seed)
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
@@ -152,7 +149,7 @@ def main():
         total_train_rewards = sum([np.sum(t['rewards']) for t in trajectories])
         logger.info('Training: Episode {}, Avg train reward: {}, Policy loss: {}, KL: {}, Value loss: {}'.format(
             episode, total_train_rewards / len(trajectories), policy_loss, kl, value_loss))
-        summary.add_scalar("train/avg_train_reward", total_train_rewards / len(trajectories), episode)
+        summary.add_scalar("train/episode_mean_reward", total_train_rewards / len(trajectories), episode)
 
         if episode // config['test_every_episodes'] >= test_flag:
             while episode // config['test_every_episodes'] >= test_flag:

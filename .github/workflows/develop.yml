@@ -17,7 +17,9 @@ jobs:
 
       - name: Build Docker image
         run: |
-          ls
+          ls -al
+          pwd
+          ls -al *
           pwd
           md5sum .teamcity/DOCKERFILE | cut -d' ' -f1 | xargs echo md5=
           docker build -t parltestimage -f .teamcity/DOCKERFILE .

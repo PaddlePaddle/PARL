@@ -16,5 +16,5 @@ jobs:
         run: |
           ls
           pwd
-          cat .github/workflows/develop.yml
+          cat .github/workflows/*.yml
           sh .teamcity/build.sh check_style

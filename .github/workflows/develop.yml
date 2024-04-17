@@ -1,22 +1,30 @@
-name: Test
+name: CI for PARL
 on: 
-  push:
-    branches:
-    - develop
   pull_request:
     branches:
     - develop
 
 jobs:
-  my-job:
-    name: Greeting for PARL
+  ci:
+    name: Unit-Test
     runs-on: ubuntu-latest
     steps:
-    - name: Print a greeting
-      env:
-        MY_VAR: Hi there! My name is
-        FIRST_NAME: PaddlePaddle
-        MIDDLE_NAME: Reinforement
-        LAST_NAME: Learning
-      run: |
-        echo $MY_VAR $FIRST_NAME $MIDDLE_NAME $LAST_NAME.
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        uses: docker://docker:stable
+
+      - name: Build Docker image
+        run: |
+          ls
+          pwd
+          md5sum Dockerfile |cut -d' ' -f1|xargs echo md5=
+          docker build -t parltestimage -f .teamcity/DOCKERFILE .
+
+      - name: Run tests
+        run: |
+          ls
+          pwd
+          cat .github/workflows/develop.yml
+          docker run parltestimage .teamcity/build.sh test

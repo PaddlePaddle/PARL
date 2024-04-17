@@ -19,10 +19,8 @@ jobs:
         run: |
           ls -al
           pwd
-          ls -al *
-          pwd
-          md5sum .teamcity/DOCKERFILE | cut -d' ' -f1 | xargs echo md5=
-          docker build -t parltestimage -f .teamcity/DOCKERFILE .
+          md5sum .teamcity/Dockerfile | cut -d' ' -f1 | xargs echo md5=
+          docker build -t parltestimage -f .teamcity/Dockerfile .
 
       - name: Run tests
         run: |

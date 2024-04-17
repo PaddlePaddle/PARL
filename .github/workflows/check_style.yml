@@ -1,0 +1,20 @@
+name: Check Style
+on: 
+  pull_request:
+    branches:
+    - develop
+
+jobs:
+  ci:
+    name: Check Style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+
+      - name: Check Style
+        run: |
+          ls
+          pwd
+          cat .github/workflows/develop.yml
+          sh .teamcity/build.sh check_style

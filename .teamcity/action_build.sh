@@ -184,8 +184,12 @@ function run_all_test_with_paddle {
     xparl stop
     pip install -r .teamcity/requirements.txt
     # pip install paddlepaddle==2.3.1
-    pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
+    pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
+    cat /proc/cpuinfo | grep -i avx
+
     pip install decorator
+    which python
+    python -c "import platform;print(platform.architecture()[0]);print(platform.machine())"
 
     run_test_with_cpu
     run_test_with_cpu "DIS_TESTING_SERIALLY"
@@ -244,7 +248,7 @@ function main() {
             # pip config set global.index-url https://mirror.baidu.com/pypi/simple
             pip install .
             # pip install paddlepaddle==2.3.1
-            pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
+            pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
             run_example_test
             ;;
         *)

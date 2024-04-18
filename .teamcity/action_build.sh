@@ -183,8 +183,8 @@ function run_all_test_with_paddle {
 
     xparl stop
     pip install -r .teamcity/requirements.txt
-    # pip install paddlepaddle==2.3.1
-    pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
+    pip install paddlepaddle==2.3.1
+    # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
     cat /proc/cpuinfo | grep -i avx
 
     pip install decorator
@@ -247,8 +247,8 @@ function main() {
             # run example test in env test_example(python 3.8)
             # pip config set global.index-url https://mirror.baidu.com/pypi/simple
             pip install .
-            # pip install paddlepaddle==2.3.1
-            pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
+            pip install paddlepaddle==2.3.1
+            # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
             run_example_test
             ;;
         *)

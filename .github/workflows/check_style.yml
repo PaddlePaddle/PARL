@@ -23,6 +23,5 @@ jobs:
           pwd
           ls
           cat .github/workflows/*.yml
-          sh .teamcity/action_build.sh check_style
-
+          bash .teamcity/action_build.sh check_style
 

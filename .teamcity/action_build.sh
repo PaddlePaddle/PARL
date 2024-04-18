@@ -140,10 +140,10 @@ function run_test_with_cpu() {
     fi
     cat <<EOF
     =====================================================
-    Running unit tests with CPU in the environment: $1
+    Running unit tests with CPU in the environment: `python --version`
     =====================================================
 EOF
-    if [ "$#" == 2 ] && [ "$2" == "DIS_TESTING_SERIALLY" ]
+    if [ "$#" == 1 ] && [ "$1" == "DIS_TESTING_SERIALLY" ]
     then
         ctest --output-on-failure 
     else

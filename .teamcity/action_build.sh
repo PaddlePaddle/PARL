@@ -94,7 +94,8 @@ function print_usage() {
     ${BOLD}$0${NONE} [OPTION]"
 
     echo -e "\n${RED}Options${NONE}:
-    ${BLUE}test${NONE}: run all unit tests
+    ${BLUE}test_paddle${NONE}: run all unit tests with paddlepaddle
+    ${BLUE}test_torch${NONE}: run all unit tests with torch
     ${BLUE}check_style${NONE}: run code style check
     "
 }
@@ -132,10 +133,10 @@ function run_test_with_cpu() {
 
     mkdir -p ${REPO_ROOT}/build
     cd ${REPO_ROOT}/build
-    if [ $# -eq 1 ];then
+    if [ $# -eq 0 ];then
         cmake ..
     else
-        cmake .. -$2=ON
+        cmake .. -$1=ON
     fi
     cat <<EOF
     =====================================================
@@ -182,10 +183,11 @@ function run_all_test_with_paddle {
 
     xparl stop
     pip install -r .teamcity/requirements.txt
-    pip install paddlepaddle==2.3.1
-    run_test_with_cpu $specified_env
-    run_test_with_cpu $specified_env "DIS_TESTING_SERIALLY"
-    run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
+    pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
+
+    run_test_with_cpu
+    run_test_with_cpu "DIS_TESTING_SERIALLY"
+    run_test_with_cpu "DIS_TESTING_REMOTE"
     xparl stop
     python -m pip uninstall -r .teamcity/requirements.txt -y
 }
@@ -210,9 +212,9 @@ function run_all_test_with_torch {
     echo ========================================
     pip install -r .teamcity/requirements_torch.txt
     pip install torch
-    run_test_with_cpu $specified_env "DIS_TESTING_TORCH"
-    run_test_with_cpu $specified_env "DIS_TESTING_SERIALLY"
-    run_test_with_cpu $specified_env "DIS_TESTING_REMOTE"
+    run_test_with_cpu "DIS_TESTING_TORCH"
+    run_test_with_cpu "DIS_TESTING_SERIALLY"
+    run_test_with_cpu "DIS_TESTING_REMOTE"
     python -m pip uninstall -r .teamcity/requirements_torch.txt -y
     xparl stop
 }
@@ -236,10 +238,9 @@ function main() {
         example)
             # run example test in env test_example(python 3.8)
             # pip config set global.index-url https://mirror.baidu.com/pypi/simple
-            declare -a test_example_env='test_example'
-            source activate $test_example_env
             pip install .
-            pip install /data/paddle_package/paddlepaddle_gpu-2.3.1-cp38-cp38-manylinux1_x86_64.whl
+            pip install paddlepaddle==2.3.1
+            # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
             run_example_test
             ;;
         *)

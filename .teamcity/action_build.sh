@@ -147,7 +147,7 @@ EOF
     then
         ctest --output-on-failure 
     else
-        ctest --output-on-failure -j20
+        ctest --output-on-failure -j10
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -183,7 +183,8 @@ function run_all_test_with_paddle {
 
     xparl stop
     pip install -r .teamcity/requirements.txt
-    pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
+    pip install paddlepaddle==2.3.1
+    # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
 
     run_test_with_cpu
     run_test_with_cpu "DIS_TESTING_SERIALLY"

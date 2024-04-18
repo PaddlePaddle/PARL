@@ -147,7 +147,7 @@ EOF
     then
         ctest --output-on-failure 
     else
-        ctest --output-on-failure -j10
+        ctest --output-on-failure -j1
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -185,6 +185,8 @@ function run_all_test_with_paddle {
     pip install -r .teamcity/requirements.txt
     # pip install paddlepaddle==2.3.1
     pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/noavx/stable.html --no-index --no-deps
+    pip list | grep decorator
+    pip install decorator
 
     run_test_with_cpu
     run_test_with_cpu "DIS_TESTING_SERIALLY"
@@ -213,6 +215,8 @@ function run_all_test_with_torch {
     echo ========================================
     pip install -r .teamcity/requirements_torch.txt
     pip install torch
+    pip install decorator
+
     run_test_with_cpu "DIS_TESTING_TORCH"
     run_test_with_cpu "DIS_TESTING_SERIALLY"
     run_test_with_cpu "DIS_TESTING_REMOTE"

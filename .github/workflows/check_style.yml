@@ -5,9 +5,9 @@ on:
     - develop
 
 jobs:
-  check_style:
+  CheckStyle:
     name: Check Style
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v3
@@ -24,3 +24,5 @@ jobs:
           ls
           cat .github/workflows/*.yml
           sh .teamcity/action_build.sh check_style
+
+

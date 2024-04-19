@@ -33,4 +33,4 @@ jobs:
 
       - name: Run Paddle tests
         run: |
-          bash .teamcity/action_build.sh test_paddle
+          bash .teamcity/action_build.sh test_torch

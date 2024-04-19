@@ -102,7 +102,8 @@ function print_usage() {
     echo -e "\n${RED}Options${NONE}:
     ${BLUE}test_paddle${NONE}: run all unit tests with paddlepaddle
     ${BLUE}test_torch${NONE}: run all unit tests with torch
-    ${BLUE}check_style${NONE}: run code style check
+    ${BLUE}check_style${NONE}: run check for code style
+    ${BLUE}example${NONE}: run examples
     "
 }
 
@@ -187,10 +188,10 @@ function run_all_test_with_paddle {
     # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
 
     run_test_with_cpu
-    # # run_test_with_cpu "DIS_TESTING_SERIALLY" # TODO: raise Timeout Error
-    # run_test_with_cpu "DIS_TESTING_REMOTE"
-    # xparl stop
-    # python -m pip uninstall -r .teamcity/requirements.txt -y
+    # run_test_with_cpu "DIS_TESTING_SERIALLY" # TODO: raise Timeout Error
+    run_test_with_cpu "DIS_TESTING_REMOTE"
+    xparl stop
+    python -m pip uninstall -r .teamcity/requirements.txt -y
 }
 
 function run_all_test_with_torch {

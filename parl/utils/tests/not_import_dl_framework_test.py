@@ -26,7 +26,7 @@ class TestNotImportPaddle(unittest.TestCase):
         # remove the environment vaiable and reimport the lib
         del os.environ['XPARL_igonre_core']
         importlib.reload(parl)
-        #self.assertTrue('paddle' in sys.modules)
+        self.assertTrue('paddle' in sys.modules)
 
 if __name__ == '__main__':
     unittest.main()

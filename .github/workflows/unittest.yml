@@ -28,8 +28,8 @@ jobs:
           sudo apt-get install -y cmake
           sudo apt-get install -y libgflags-dev libunwind-dev libgoogle-glog-dev libomp-dev unzip
           sudo apt-get install -y libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && sudo cmake .. && sudo make && sudo cp /usr/src/googletest/googletest/build/lib/libgtest*.a . && sudo cp libgtest*.a /usr/local/lib && ls -l  
-          g++ test.cpp -lgtest -lgtest_main -lpthread -o test
-          ./test
+          g++ googletest.cpp -lgtest -lgtest_main -lpthread -o googletest
+          ./googletest
 
       - name: Run Paddle tests
         run: |

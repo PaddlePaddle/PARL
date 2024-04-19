@@ -50,9 +50,9 @@ function run_example_test {
     # # python examples/DQN_variant/train.py --train_total_steps 200 --warmup_size 100 --test_every_steps 50 --dueling True --env PongNoFrameskip-v4
     # # python -m pip uninstall -r ./examples/DQN_variant/requirements.txt -y
     
-    python -m pip install -r ./examples/PPO/requirements_atari.txt
-    python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
-    python -m pip uninstall -r ./examples/PPO/requirements_atari.txt -y
+    # # python -m pip install -r ./examples/PPO/requirements_atari.txt
+    # # python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    # # python -m pip uninstall -r ./examples/PPO/requirements_atari.txt -y
 
     python -m pip install -r ./examples/PPO/requirements_mujoco.txt
     python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action

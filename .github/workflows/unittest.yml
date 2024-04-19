@@ -28,8 +28,8 @@ jobs:
           sudo apt-get install -y cmake
           sudo apt-get install -y libgflags-dev libunwind-dev libgoogle-glog-dev libomp-dev unzip
           sudo apt-get install -y libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && sudo cmake .. 
-          sudo make && sudo cp /usr/src/googletest/googletest/build/lib/libgtest*.a . && sudo cp libgtest*.a /usr/local/lib
-          ls -al /usr/src/googletest/googletest/build/lib/ && ls *  
+          sudo make && ls -l lib && sudo cp lib/libgtest*.a /usr/local/lib
+          md5sum/usr/src/googletest/googletest/build/lib/*.a && md5sum lib/*.a 
 
       - name: Run Paddle tests
         run: |

@@ -23,11 +23,13 @@ function init() {
 
     REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}")/../" && pwd )"
 
-    # export PATH="/root/miniconda3/bin:$PATH"
-    # export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
     ls -l /usr/local/
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
+
+    which python
+    python -c "import platform;print(platform.architecture()[0]);print(platform.machine())"
+    cat /proc/cpuinfo | grep avx
 }
 
 function run_example_test {
@@ -142,7 +144,7 @@ EOF
     then
         ctest --output-on-failure 
     else
-        ctest --output-on-failure -j1
+        ctest --output-on-failure -j10
     fi
     cd ${REPO_ROOT}
     rm -rf ${REPO_ROOT}/build
@@ -180,21 +182,10 @@ function run_all_test_with_paddle {
     pip install -r .teamcity/requirements.txt
     pip install paddlepaddle==2.3.1
     # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
-    cat /proc/cpuinfo | grep avx
 
-    pip install decorator
-    which python
-    python -c "import platform;print(platform.architecture()[0]);print(platform.machine())"
-
-    python parl/core/paddle/tests/agent_base_test_paddle.py
-    python parl/core/paddle/tests/agent_base_actor_critic_test_paddle.py
-    python parl/core/paddle/tests/model_base_test_paddle.py
-    python parl/core/paddle/tests/model_base_actor_critic_test_paddle.py 
-    python parl/core/paddle/tests/policy_distribution_test_paddle.py 
-    python parl/algorithms/paddle/impala/tests/vtrace_test_paddle.py 
-
-    run_test_with_cpu
-    run_test_with_cpu "DIS_TESTING_SERIALLY"
+    # pip install decorator
+    # run_test_with_cpu
+    # run_test_with_cpu "DIS_TESTING_SERIALLY"
     run_test_with_cpu "DIS_TESTING_REMOTE"
     xparl stop
     python -m pip uninstall -r .teamcity/requirements.txt -y

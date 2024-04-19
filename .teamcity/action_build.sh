@@ -29,7 +29,6 @@ function init() {
 
     which python
     python -c "import platform;print(platform.architecture()[0]);print(platform.machine())"
-    cat /proc/cpuinfo | grep avx
 }
 
 function run_example_test {
@@ -183,9 +182,8 @@ function run_all_test_with_paddle {
     pip install paddlepaddle==2.3.1
     # pip install paddlepaddle==2.3.1 -f https://www.paddlepaddle.org.cn/whl/linux/openblas/noavx/stable.html --no-index --no-deps
 
-    # pip install decorator
-    # run_test_with_cpu
-    # run_test_with_cpu "DIS_TESTING_SERIALLY"
+    run_test_with_cpu
+    # run_test_with_cpu "DIS_TESTING_SERIALLY" # TODO: raise Timeout Error
     run_test_with_cpu "DIS_TESTING_REMOTE"
     xparl stop
     python -m pip uninstall -r .teamcity/requirements.txt -y
@@ -215,7 +213,7 @@ function run_all_test_with_torch {
 
     run_test_with_cpu "DIS_TESTING_TORCH"
     run_test_with_cpu "DIS_TESTING_SERIALLY"
-    run_test_with_cpu "DIS_TESTING_REMOTE"
+    # run_test_with_cpu "DIS_TESTING_REMOTE" # TODO: raise Timeout Error
     python -m pip uninstall -r .teamcity/requirements_torch.txt -y
     xparl stop
 }

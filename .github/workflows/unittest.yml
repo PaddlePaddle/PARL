@@ -6,8 +6,8 @@ on:
 
 jobs:
 
-  UnitTest:
-    name: Unit Test
+  ExampleTest:
+    name: Test for Examples
     runs-on: ubuntu-20.04
     strategy:
       matrix:

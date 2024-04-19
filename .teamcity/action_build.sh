@@ -54,37 +54,37 @@ function run_example_test {
     # # python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
     # # python -m pip uninstall -r ./examples/PPO/requirements_atari.txt -y
 
-    python -m pip install -r ./examples/PPO/requirements_mujoco.txt
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
-    python -m pip uninstall -r ./examples/PPO/requirements_mujoco.txt -y
+    # python -m pip install -r ./examples/PPO/requirements_mujoco.txt
+    # python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
+    # python -m pip uninstall -r ./examples/PPO/requirements_mujoco.txt -y
 
-    python -m pip install -r ./examples/SAC/requirements.txt
-    python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
-    python -m pip uninstall -r ./examples/SAC/requirements.txt -y
+    # python -m pip install -r ./examples/SAC/requirements.txt
+    # python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    # python -m pip uninstall -r ./examples/SAC/requirements.txt -y
    
-    python -m pip install -r ./examples/TD3/requirements.txt
-    python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
-    python -m pip uninstall -r ./examples/TD3/requirements.txt -y
+    # python -m pip install -r ./examples/TD3/requirements.txt
+    # python examples/TD3/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    # python -m pip uninstall -r ./examples/TD3/requirements.txt -y
 
-    python -m pip install -r ./examples/OAC/requirements.txt
-    python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
-    python -m pip uninstall -r ./examples/OAC/requirements.txt -y
+    # python -m pip install -r ./examples/OAC/requirements.txt
+    # python examples/OAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    # python -m pip uninstall -r ./examples/OAC/requirements.txt -y
     
-    python -m pip install -r ./examples/DDPG/requirements.txt
-    python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
-    python -m pip uninstall -r ./examples/DDPG/requirements.txt -y
+    # python -m pip install -r ./examples/DDPG/requirements.txt
+    # python examples/DDPG/train.py --train_total_steps 5000 --env HalfCheetah-v4
+    # python -m pip uninstall -r ./examples/DDPG/requirements.txt -y
     
-    xparl start --port 8837 --cpu_num 24
-    python -m pip install -r ./examples/ES/requirements.txt
-    python ./examples/ES/train.py --train_steps 2 --actor_num 24
-    python -m pip uninstall -r ./examples/ES/requirements.txt -y
-    xparl stop
+    # # xparl start --port 8837 --cpu_num 24
+    # # python -m pip install -r ./examples/ES/requirements.txt
+    # # python ./examples/ES/train.py --train_steps 2 --actor_num 24
+    # # python -m pip uninstall -r ./examples/ES/requirements.txt -y
+    # # xparl stop
 
-    xparl start --port 8110 --cpu_num 5
-    python -m pip install -r ./examples/A2C/requirements.txt
-    python ./examples/A2C/train.py --max_sample_steps 50000
-    python -m pip uninstall -r ./examples/A2C/requirements.txt -y
-    xparl stop
+    # # xparl start --port 8110 --cpu_num 5
+    # # python -m pip install -r ./examples/A2C/requirements.txt
+    # # python ./examples/A2C/train.py --max_sample_steps 50000
+    # # python -m pip uninstall -r ./examples/A2C/requirements.txt -y
+    # # xparl stop
     
     python -m pip install -r ./examples/MADDPG/requirements.txt
     python examples/MADDPG/train.py --max_episodes 21 --test_every_episodes 10

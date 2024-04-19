@@ -25,7 +25,7 @@ function init() {
 
     # export PATH="/root/miniconda3/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/TensorRT-6.0.1.5/lib:$LD_LIBRARY_PATH"
-    ls /usr/local/TensorRT*
+    ls -l /usr/local/
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
 }

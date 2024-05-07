@@ -26,7 +26,7 @@ jobs:
           bash .teamcity/action_build.sh check_style
 
   PaddleTest:
-    name: UnitTest for Paddle
+    name: UnitTestPaddle
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -55,7 +55,7 @@ jobs:
           bash .teamcity/action_build.sh test_paddle
 
   TorchTest:
-    name: UnitTest for Troch
+    name: UnitTestTorch
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -84,7 +84,7 @@ jobs:
           bash .teamcity/action_build.sh test_torch
 
   ExampleTest:
-    name: Test for Examples
+    name: TestExamples
     runs-on: ubuntu-20.04
     strategy:
       matrix:

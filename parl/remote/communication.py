@@ -15,6 +15,7 @@
 import cloudpickle
 import subprocess
 import os
+import pickle5
 from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
@@ -35,21 +36,10 @@ if pyarrow_installed:
         val.__dict__.update(obj["data"])
         return val
 
-    context = pyarrow.default_serialization_context()
+    buffer_list = []
 
-    # support deserialize in another environment
-    context.set_pickle(cloudpickle.dumps, cloudpickle.loads)
-
-    # support serialize and deserialize custom class
-    context.register_type(
-        object,
-        "object",
-        custom_serializer=_serialize_serializable,
-        custom_deserializer=_deserialize_serializable)
-
-    # if pyarrow is installed, parl will use pyarrow to serialize/deserialize objects.
-    serialize = lambda data: pyarrow.serialize(data, context=context).to_buffer()
-    deserialize = lambda data: pyarrow.deserialize(data, context=context)
+    serialize = lambda data: pickle5.dumps(data, protocol=5, buffer_callback=buffer_list.append)
+    deserialize = lambda data: pickle5.loads(data, buffers=buffer_list)
 else:
     # if pyarrow is not installed, parl will use cloudpickle to serialize/deserialize objects.
     serialize = lambda data: cloudpickle.dumps(data)

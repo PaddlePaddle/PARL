@@ -200,8 +200,7 @@ class Master(object):
                 remote_constants.NORMAL_TAG,
                 to_byte(parl.__version__),
                 to_byte(str(sys.version_info.major)),
-                to_byte(str(sys.version_info.minor)),
-                to_byte(str(get_version('pyarrow')))
+                to_byte(str(sys.version_info.minor))
             ])
 
         # a client submits a job to the master

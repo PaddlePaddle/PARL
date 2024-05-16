@@ -19,41 +19,8 @@ from parl.utils import SerializeError, DeserializeError
 
 __all__ = ['dumps_argument', 'loads_argument', 'dumps_return', 'loads_return']
 
-try:
-    import pyarrow
-    pyarrow_installed = True
-except ImportError:
-    pyarrow_installed = False
-
-if pyarrow_installed:
-    # Reference: https://github.com/apache/arrow/blob/f88474c84e7f02e226eb4cc32afef5e2bbc6e5b4/python/pyarrow/tests/test_serialization.py#L658-L682
-    def _serialize_serializable(obj):
-        return {"type": type(obj), "data": obj.__dict__}
-
-    def _deserialize_serializable(obj):
-        val = obj["type"].__new__(obj["type"])
-        val.__dict__.update(obj["data"])
-        return val
-
-    context = pyarrow.default_serialization_context()
-
-    # support deserialize in another environment
-    context.set_pickle(cloudpickle.dumps, cloudpickle.loads)
-
-    # support serialize and deserialize custom class
-    context.register_type(
-        object,
-        "object",
-        custom_serializer=_serialize_serializable,
-        custom_deserializer=_deserialize_serializable)
-
-    # if pyarrow is installed, parl will use pyarrow to serialize/deserialize objects.
-    serialize = lambda data: pyarrow.serialize(data, context=context).to_buffer()
-    deserialize = lambda data: pyarrow.deserialize(data, context=context)
-else:
-    # if pyarrow is not installed, parl will use cloudpickle to serialize/deserialize objects.
-    serialize = lambda data: cloudpickle.dumps(data)
-    deserialize = lambda data: cloudpickle.loads(data)
+serialize = lambda data: cloudpickle.dumps(data)
+deserialize = lambda data: cloudpickle.loads(data)
 
 
 def dumps_argument(*args, **kwargs):

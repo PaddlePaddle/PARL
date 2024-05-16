@@ -150,21 +150,6 @@ class Worker(object):
                         to_str(message[1]), to_str(message[2]), to_str(message[3]),
                         worker_parl_version, worker_python_version_major, worker_python_version_minor
                     )
-            worker_pyarrow_version = str(get_version('pyarrow'))
-            master_pyarrow_version = to_str(message[4])
-            if worker_pyarrow_version != master_pyarrow_version:
-                if master_pyarrow_version == 'None':
-                    error_message = """"pyarrow" is provided in your current environment, however, it is not \
-found in "master"'s environment. To use "pyarrow" for serialization, please install \
-"pyarrow={}" in "master"'s environment!""".format(worker_pyarrow_version)
-                elif worker_pyarrow_version == 'None':
-                    error_message = """"pyarrow" is provided in "master"'s environment, however, it is not \
-found in your current environment. To use "pyarrow" for serialization, please install \
-"pyarrow={}" in your current environment!""".format(master_pyarrow_version)
-                else:
-                    error_message = '''Version mismatch: the 'master' is of version 'pyarrow={}'. However, \
-'pyarrow={}'is provided in your current environment.'''.format(master_pyarrow_version, worker_pyarrow_version)
-                raise Exception(error_message)
         else:
             raise NotImplementedError
 

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 class UtilsError(Exception):
     """
     Super class of exceptions in utils module.
@@ -24,13 +23,13 @@ class UtilsError(Exception):
 
 class SerializeError(UtilsError):
     """
-    Serialize error raised by pyarrow.
+    Serialize error raised by the serialization library.
     """
 
     def __init__(self, error_info):
         error_info = (
             'Serialize error, you may have provided an object that cannot be '
-            + 'serialized by pyarrow. Detailed error:\n{}'.format(error_info))
+            + 'serialized by the serialization library. Detailed error:\n{}'.format(error_info))
         super(SerializeError, self).__init__(error_info)
 
     def __str__(self):
@@ -39,14 +38,14 @@ class SerializeError(UtilsError):
 
 class DeserializeError(UtilsError):
     """
-    Deserialize error raised by pyarrow.
+    Deserialize error raised by the serialization library.
     """
 
     def __init__(self, error_info):
         error_info = (
             'Deserialize error, you may have provided an object that cannot be '
             +
-            'deserialized by pyarrow. Detailed error:\n{}'.format(error_info))
+            'deserialized by the serialization library. Detailed error:\n{}'.format(error_info))
         super(DeserializeError, self).__init__(error_info)
 
     def __str__(self):

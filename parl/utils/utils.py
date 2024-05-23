@@ -99,7 +99,10 @@ def check_installed_framework():
             fliud_installed = False
             paddle_installed = False
             import paddle
-            from paddle import fluid
+            try:
+                from paddle import fluid
+            except ImportError as e:
+                fluid_installed = False
             paddle_version = get_fluid_version()
             if paddle_version < 200 and paddle_version != 0:
                 assert paddle_version >= 185, "PARL requires paddle >= 1.8.5 for paddle < 2.0.0"

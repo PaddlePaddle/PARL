@@ -100,7 +100,7 @@ def check_installed_framework():
             paddle_installed = False
             import paddle
             try:
-                from paddle import fluid
+                from paddle import fluid # will raise error in latest paddle
             except ImportError as e:
                 fluid_installed = False
             paddle_version = get_fluid_version()

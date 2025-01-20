@@ -12,12 +12,18 @@
 <!-- toc -->
 
 - [概览](#概览)
-  - [特点](#特点)
-  - [框架结构](#框架结构)
-  - [简易高效的并行接口](#简易高效的并行接口)
-- [安装](#安装)
+	- [特点](#特点)
+	- [框架结构](#框架结构)
+		- [Model](#model)
+		- [Algorithm](#algorithm)
+		- [Agent](#agent)
+	- [简易高效的并行接口](#简易高效的并行接口)
+- [安装:](#安装)
+		- [依赖](#依赖)
 - [快速开始](#快速开始)
 - [算法示例](#算法示例)
+- [xparl 安全说明](#xparl-安全说明)
+	- [安全性注意事项](#安全性注意事项)
 
 # 概览
 ## 特点
@@ -112,3 +118,18 @@ pip install parl
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>
 <img src=".github/Aircraft.gif"  width = "808" height ="300"  alt="NeurlIPS2018"/>
+
+# xparl 安全说明
+
+`xparl` 提供了跨多机集群的多进程并行功能，类似于 Python 自带的单机多进程。这意味着在某个客户端上编写代码后，可以在集群内的任意机器上执行任意代码，例如获取其他机器上的数据、增删文件等。
+
+这是设计的初衷，因为强化学习环境多种多样，`env_wrapper` 需要具备执行各种可能操作的能力。`xparl` 使用了 `pickle` 实现这一功能（类似于 `ray`）。与大多数情况下将 `pickle` 视为可注入代码的漏洞不同，这里使用 `pickle` 是一种特性。
+
+## 安全性注意事项
+
+由于支持任意代码执行，用户需要确保集群环境是安全的：
+
+- **不要允许不信任的机器加入集群。**  
+- **不要让不信任的用户访问集群，例如不要将 `xparl` 的端口暴露在公网。**  
+- **不要在集群上执行不信任的代码。**
+

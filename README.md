@@ -13,10 +13,16 @@ English | [简体中文](./README.cn.md)
 - [About PARL](#about-parl)
   - [Features](#features)
   - [Abstractions](#abstractions)
+    - [Model](#model)
+    - [Algorithm](#algorithm)
+    - [Agent](#agent)
   - [Parallelization](#parallelization)
-- [Install](#install)
+- [Install:](#install)
+    - [Dependencies](#dependencies)
 - [Getting Started](#getting-started)
 - [Examples](#examples)
+- [xparl Security](#xparl-security)
+  - [Security Considerations](#security-considerations)
 
 # About PARL
 ## Features
@@ -113,3 +119,17 @@ For beginners who know little about reinforcement learning, we also provide an i
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "280" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "280" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "195" height ="200" alt="Breakout"/>
 <br>
 <img src=".github/Aircraft.gif"  width = "762" height ="300"  alt="NeurlIPS2018"/>
+
+# xparl Security
+
+`xparl` provides multi-process parallelism across a multi-machine cluster, similar to Python's built-in single-machine multiprocessing. This means that after writing code on a client, you can execute arbitrary code on any machine within the cluster, such as retrieving data from other machines, adding or deleting files, etc. 
+
+This behavior is by design, as reinforcement learning environments are diverse, and `env_wrapper` needs the ability to perform any possible operation. `xparl` achieves this functionality using `pickle` (similar to `ray`). Unlike in most cases where `pickle` may be considered a vulnerability, here it is an essential feature.
+
+## Security Considerations
+
+Since arbitrary code execution is possible, users must ensure the cluster is secure:
+
+- **Do not allow untrusted machines to join the cluster.**  
+- **Do not expose the `xparl` ports to the public internet or allow untrusted users to access the cluster.**  
+- **Do not execute untrusted code on the cluster.**

@@ -89,6 +89,8 @@ ans = agent.sum(1,5) # run remotely and not comsume any local computation resour
 pip install parl
 ```
 
+[详细安装说明 (持续更新)](docs/installation_guide_cn.md)
+
 # 快速开始
 请查看一下几个教程帮助您快速上手PARL:
 - [教程](https://parl.readthedocs.io/zh_CN/latest/tutorial/getting_started.html) : 解决经典的 CartPole 问题。

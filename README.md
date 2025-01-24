@@ -85,6 +85,7 @@ For users, they can write code in a simple way, just like writing multi-thread c
 - Python 3.6+(Python 3.8+ is preferable for distributed training). 
 - [paddlepaddle>=2.3.1](https://github.com/PaddlePaddle/Paddle) (**Optional**, if you only want to use APIs related to parallelization alone)  
 
+[Detailed Installation Instructions](docs/installation_guide.md)
 
 ```
 pip install parl

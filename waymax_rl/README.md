@@ -45,9 +45,10 @@
 ## 为什么要开源 waymax-RL？
 
 - Waymax 官方开源了 GPU 仿真器本身，但出于一些原因， **并未开源配套的全 GPU RL 训练框架**，参见 [issue](https://github.com/waymo-research/waymax/issues/11)  
-- 若仅将仿真改为GPU驱动（如Waymax），但继续使用 **rllib、parl 等传统 CPU 分布式框架**，并不能实现万倍以上的实时效率， CPU ↔ GPU 的数据交换会成为新的瓶颈（详见下图a），仿真的sim step由gpu并行加速后，仍然有大量的RL操作存在于cpu上，只有同时配合完全GPU训练框架，才能发挥超高效率，如图b。
+- 若仅将仿真改为GPU驱动（如Waymax），但继续使用 **rllib、parl 等传统 CPU 分布式框架**，并不能实现万倍以上的实时效率， CPU ↔ GPU 的数据交换会成为新的瓶颈（详见下图a），仿真的sim step由gpu并行加速后，仍然有大量的RL操作存在于cpu上。
 ![图a](cpu_loop.png)
 
+只有同时配合完全GPU RL训练框架，GPU仿真才能发挥超高效率，如图b。
 ![图b](gpu_loop.png)
 
 > ⚠️ 注：上图 a 和 b 截取自 NVIDIA Isaac Gym 官方介绍视频  

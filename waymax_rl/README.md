@@ -8,7 +8,7 @@
 
 **waymax-RL** is an **all-GPU reinforcement learning training framework** developed for **Waymax** (GPU-based autonomous driving simulation).
 
-- **State-of-the-art all-GPU training** for autonomous driving, surpassing traditional RL frameworks  
+- **GPU-based autonomous driving RL**, far surpassing traditional RL frameworks
 - Supports **direct execution on Colab**  
 - Built on **DLPack**, enabling direct GPU memory exchange between simulation and deep learning frameworks, compatible with **PyTorch, Paddle, TensorFlow, JAX**  
 - Currently provides a **PyTorch-based training workflow**  

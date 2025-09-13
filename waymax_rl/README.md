@@ -14,7 +14,7 @@
 - 当前提供了 **基于 PyTorch 的训练流程**  
 - 内部版本的Waymax-RL早已经过**实车测试**，证明了大规模高效RL训练的先进性
 
-👉 **快速体验**：Colab 上在线运行示例 [[Colab Demo]](https://colab.research.google.com/drive/1l7TxIeM8Qd-THscwMoTcJS1Dfz8TeT5u?usp=sharing)
+👉 **快速体验**：Colab 上在线运行示例 [[Colab Example]](https://colab.research.google.com/drive/1l7TxIeM8Qd-THscwMoTcJS1Dfz8TeT5u?usp=sharing)
 
 ---
 
@@ -45,7 +45,15 @@
 ## 为什么要开源 waymax-RL？
 
 - Waymax 官方开源了 GPU 仿真器本身，但出于一些原因， **并未开源配套的全 GPU RL 训练框架**，参见 [issue](https://github.com/waymo-research/waymax/issues/11)  
-- 若仅将仿真改为GPU驱动（如Waymax），但继续使用 **rllib、parl 等传统 CPU 分布式框架**，并不能实现万倍以上的实时效率， CPU ↔ GPU 的数据交换会成为新的瓶颈（详见图 1）
+- 若仅将仿真改为GPU驱动（如Waymax），但继续使用 **rllib、parl 等传统 CPU 分布式框架**，并不能实现万倍以上的实时效率， CPU ↔ GPU 的数据交换会成为新的瓶颈（详见下图a），仿真的sim step由gpu并行加速后，仍然有大量的RL操作存在于cpu上，只有同时配合完全GPU训练框架，才能发挥超高效率，如图b。
+![图a](cpu_loop.png)
+
+![图b](gpu_loop.png)
+
+> ⚠️ 注：上图 a 和 b 截取自 NVIDIA Isaac Gym 官方介绍视频  
+> [Isaac Gym Overview](https://youtu.be/nleDq-oJjGk?si=9I0fKCklk3c6QFTS)。  
+> 图片仅用于学术/展示目的，版权归 NVIDIA 所有。
+
 - 在机器人领域，全GPU RL训练已经带来了惊人的突破，利用的就是是GPU仿真（例如isaac-sim）与GPU训练框架（如isaaclab、 rl-games等）组成 的全GPU RL训练流。他山之石，可以攻玉，我们希望Waymax-RL的开源，能够推动自动驾驶领域的全GPU RL训练研究。
 
 因此我们开源 **waymax-RL**，提供与 GPU 仿真紧密配合的 RL 训练框架，帮助研究者和工程师更方便地在 GPU 上高效训练自动驾驶智能体。  

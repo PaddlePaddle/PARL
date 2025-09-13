@@ -125,7 +125,7 @@ For beginners who know little about reinforcement learning, we also provide an i
 
 # Waymax-RL(2025 Update, GPU-RL Autonomous Driving)
 - End-to-End GPU Reinforcement Learning for Waymax Autonomous Driving Simulation.  
-  Full documentation and instructions: [waymax_rl/README_cn.md](./waymax_rl/README.md)
+  Full documentation and instructions: [waymax_rl/README.md](./waymax_rl/README.md)
 
 # xparl Security
 

@@ -1,0 +1,7 @@
+tensorflow-cpu==2.20
+jax==0.6.2
+torch==2.8.0
+hydra-core==1.3.2
+brax==0.1.2
+gym==0.23.1
+rl_games==1.6.1

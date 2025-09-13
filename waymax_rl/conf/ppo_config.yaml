@@ -1,0 +1,88 @@
+params:
+  seed: 1
+
+  algo:
+    name: a2c_continuous
+
+  model:
+    name: continuous_a2c_logstd
+
+  network:
+    name: actor_critic
+    separate: False
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: 0
+        fixed_sigma: True
+    mlp:
+      units: [256, 128, 64]
+      activation: elu
+      d2rl: False
+      
+      initializer:
+        name: default
+      regularizer:
+        name: None
+
+  config:
+    name: waymax
+    full_experiment_name: waymax
+    env_name: waymax
+    multi_gpu: False
+    mixed_precision: True
+    normalize_input: True
+    normalize_value: True
+    normalize_advantage: True
+    use_smooth_clamp: True
+    reward_shaper:
+      scale_value: 1.0
+    gamma: 0.99
+    tau: 0.95
+    learning_rate: 3e-4
+    lr_schedule: adaptive
+    kl_threshold: 0.008
+    score_to_win: 20000
+    max_epochs: 1000
+    save_best_after: 100
+    save_frequency: 50
+    grad_norm: 1.0
+    entropy_coef: 0.0
+    truncate_grads: True
+    e_clip: 0.2
+    horizon_length: 90
+    num_actors: 512
+    minibatch_size: 5120
+    mini_epochs: 5
+    critic_coef: 2
+    clip_value: False
+    bounds_loss_coef: 0.0001
+
+    env_config:
+      env_name: waymax
+      backend: gpu
+      data_cfg:
+        data_path: '/your_data_path/uncompressed_tf_example_training_training_tfexample.tfrecord-00000-of-01000'
+        data_type: 'tfrecord'
+      max_num_objects: 128
+      action_space:
+        is_discrete: False
+        steering_acc: True
+      reward_cfg:
+        log_divergence: 1
+        overlap: 1
+        offroad: 1
+        sdc_wrongway: 0
+        sdc_progression: 0
+        sdc_off_route: 0
+        sdc_kinematic_infeasibility: 0
+      visualize_cfg:
+        visualize: False
+        save_path: "./output"
+        global_state: True       

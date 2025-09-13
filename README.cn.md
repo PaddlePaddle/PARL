@@ -22,6 +22,7 @@
 		- [依赖](#依赖)
 - [快速开始](#快速开始)
 - [算法示例](#算法示例)
+- [Waymax-RL(2025 Update, GPU-RL 自动驾驶)](#waymax-rl2025-update-gpu-rl-自动驾驶)
 - [xparl 安全说明](#xparl-安全说明)
 	- [安全性注意事项](#安全性注意事项)
 
@@ -120,6 +121,10 @@ pip install parl
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>
 <img src=".github/Aircraft.gif"  width = "808" height ="300"  alt="NeurlIPS2018"/>
+
+# Waymax-RL(2025 Update, GPU-RL 自动驾驶)
+- 基于waymax仿真的端到端GPU RL自动驾驶训练框架
+  Full documentation and instructions: [waymax_rl/README_cn.md](./waymax_rl/README_cn.md)
 
 # xparl 安全说明
 

@@ -21,6 +21,7 @@ English | [简体中文](./README.cn.md)
     - [Dependencies](#dependencies)
 - [Getting Started](#getting-started)
 - [Examples](#examples)
+- [Waymax-RL(2025 Update, GPU-RL Autonomous Driving)](#waymax-rl2025-update-gpu-rl-autonomous-driving)
 - [xparl Security](#xparl-security)
   - [Security Considerations](#security-considerations)
 
@@ -121,6 +122,10 @@ For beginners who know little about reinforcement learning, we also provide an i
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "280" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "280" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "195" height ="200" alt="Breakout"/>
 <br>
 <img src=".github/Aircraft.gif"  width = "762" height ="300"  alt="NeurlIPS2018"/>
+
+# Waymax-RL(2025 Update, GPU-RL Autonomous Driving)
+- End-to-End GPU Reinforcement Learning for Waymax Autonomous Driving Simulation.  
+  Full documentation and instructions: [waymax_rl/README_cn.md](./waymax_rl/README_cn.md)
 
 # xparl Security
 

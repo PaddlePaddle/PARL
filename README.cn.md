@@ -22,6 +22,7 @@
 		- [依赖](#依赖)
 - [快速开始](#快速开始)
 - [算法示例](#算法示例)
+- [Waymax-RL(2025 Update, GPU-RL 自动驾驶)](#waymax-rl2025-update-gpu-rl-自动驾驶)
 - [xparl 安全说明](#xparl-安全说明)
 	- [安全性注意事项](#安全性注意事项)
 
@@ -116,6 +117,10 @@ pip install parl
 - [冠军解决方案：NIPS2018强化学习假肢挑战赛](examples/NeurIPS2018-AI-for-Prosthetics-Challenge/)
 - [冠军解决方案：NIPS2019强化学习仿生人控制赛事](examples/NeurIPS2019-Learn-to-Move-Challenge/)
 - [冠军解决方案：NIPS2020强化学习电网调度赛事](examples/NeurIPS2020-Learning-to-Run-a-Power-Network-Challenge/)
+
+# Waymax-RL(2025 Update, GPU-RL 自动驾驶)
+- 基于waymax仿真的端到端GPU RL自动驾驶训练框架
+  Full documentation and instructions: [waymax_rl/README_cn.md](./waymax_rl/README_cn.md)
 
 <img src="examples/NeurIPS2019-Learn-to-Move-Challenge/image/performance.gif" width = "300" height ="200" alt="NeurlIPS2018"/> <img src=".github/Half-Cheetah.gif" width = "300" height ="200" alt="Half-Cheetah"/> <img src=".github/Breakout.gif" width = "200" height ="200" alt="Breakout"/> 
 <br>

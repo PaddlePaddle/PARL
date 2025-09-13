@@ -45,7 +45,7 @@ Following Waymax, Apple released related research such as **GIGAFLOW** in 2025, 
 ## Why Open-source waymax-RL?
 
 - While Waymax officially open-sourced the GPU simulator, **the fully GPU RL training framework was not released**, see [issue](https://github.com/waymo-research/waymax/issues/11)  
-- Simply replacing the simulator with GPU-driven Waymax, but continuing to use **traditional CPU-based distributed RL frameworks** like rllib or parl, **cannot achieve ten-thousand-fold real-time efficiency**. CPU ↔ GPU data transfer becomes the new bottleneck (see Figure a). Although sim steps are GPU-parallelized, a large part of RL operations remain on the CPU—a classic “Lü Bu riding a dog” scenario.  
+- Simply replacing the simulator with GPU-driven Waymax, but continuing to use **traditional CPU-based distributed RL frameworks** like rllib or parl, **cannot achieve ten-thousand-fold real-time efficiency**. CPU ↔ GPU data transfer becomes the new bottleneck (see Figure a). Although sim steps are GPU-parallelized, a large part of RL operations remain on the CPU.  
 
 ![Figure a](cpu_loop.png)
 

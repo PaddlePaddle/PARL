@@ -17,13 +17,13 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import paddle.optimizer as optim
-from paddle.distribution import Normal, Categorical
+from paddle.distribution import Categorical
 from parl.utils.utils import check_model_method
 
-__all__ = ['PPO']
+__all__ = ['PPO_Atari']
 
 
-class PPO(parl.Algorithm):
+class PPO_Atari(parl.Algorithm):
     def __init__(self,
                  model,
                  clip_param=0.1,
@@ -33,9 +33,8 @@ class PPO(parl.Algorithm):
                  eps=1e-5,
                  max_grad_norm=0.5,
                  use_clipped_value_loss=True,
-                 norm_adv=True,
-                 continuous_action=False):
-        """ PPO algorithm
+                 norm_adv=True):
+        """ PPO algorithm for Atari
 
         Args:
             model (parl.Model): forward network of actor and critic.
@@ -47,7 +46,6 @@ class PPO(parl.Algorithm):
             max_grad_norm (float): max gradient norm for gradient clipping.
             use_clipped_value_loss (bool): whether or not to use a clipped loss for the value function.
             norm_adv (bool): whether or not to use advantages normalization.
-            continuous_action (bool): whether or not is continuous action environment.
         """
         # check model methods
         check_model_method(model, 'value', self.__class__.__name__)
@@ -61,7 +59,6 @@ class PPO(parl.Algorithm):
         assert isinstance(max_grad_norm, float)
         assert isinstance(use_clipped_value_loss, bool)
         assert isinstance(norm_adv, bool)
-        assert isinstance(continuous_action, bool)
 
         self.clip_param = clip_param
         self.value_loss_coef = value_loss_coef
@@ -69,24 +66,13 @@ class PPO(parl.Algorithm):
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
         self.norm_adv = norm_adv
-        self.continuous_action = continuous_action
 
         self.model = model
         clip = nn.ClipGradByNorm(self.max_grad_norm)
         self.optimizer = optim.Adam(
-            parameters=self.model.parameters(),
-            learning_rate=initial_lr,
-            epsilon=eps,
-            grad_clip=clip)
+            parameters=self.model.parameters(), learning_rate=initial_lr, epsilon=eps, grad_clip=clip)
 
-    def learn(self,
-              batch_obs,
-              batch_action,
-              batch_value,
-              batch_return,
-              batch_logprob,
-              batch_adv,
-              lr=None):
+    def learn(self, batch_obs, batch_action, batch_value, batch_return, batch_logprob, batch_adv, lr=None):
         """ update model with PPO algorithm
 
         Args:
@@ -103,44 +89,34 @@ class PPO(parl.Algorithm):
             entropy_loss (float): entropy loss
         """
         values = self.model.value(batch_obs)
-        if self.continuous_action:
-            mean, std = self.model.policy(batch_obs)
-            dist = Normal(mean, std)
-            action_log_probs = dist.log_prob(batch_action).sum(1)
-            dist_entropy = dist.entropy().sum(1)
-        else:
-            logits = self.model.policy(batch_obs)
-            dist = Categorical(logits=logits)
 
-            act_dim = logits.shape[-1]
-            batch_action = paddle.to_tensor(batch_action, dtype='int64')
-            actions_onehot = F.one_hot(batch_action, act_dim)
+        logits = self.model.policy(batch_obs)
+        dist = Categorical(logits=logits)
 
-            action_log_probs = paddle.sum(
-                F.log_softmax(logits) * actions_onehot, axis=-1)
-            dist_entropy = dist.entropy()
+        act_dim = logits.shape[-1]
+        batch_action = paddle.to_tensor(batch_action, dtype='int64')
+        actions_onehot = F.one_hot(batch_action, act_dim)
+
+        action_log_probs = paddle.sum(F.log_softmax(logits) * actions_onehot, axis=-1)
+        dist_entropy = dist.entropy()
         entropy_loss = dist_entropy.mean()
 
         batch_adv = batch_adv
         if self.norm_adv:
-            batch_adv = (batch_adv - batch_adv.mean()) / (
-                batch_adv.std() + 1e-8)
+            batch_adv = (batch_adv - batch_adv.mean()) / (batch_adv.std() + 1e-8)
 
         ratio = paddle.exp(action_log_probs - batch_logprob)
         surr1 = ratio * batch_adv
-        surr2 = paddle.clip(ratio, 1.0 - self.clip_param,
-                            1.0 + self.clip_param) * batch_adv
+        surr2 = paddle.clip(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param) * batch_adv
         action_loss = -paddle.minimum(surr1, surr2).mean()
 
         values = values.reshape([-1])
         # calculate value loss using semi gradient TD
         if self.use_clipped_value_loss:
-            value_pred_clipped = batch_value + paddle.clip(
-                values - batch_value, -self.clip_param, self.clip_param)
+            value_pred_clipped = batch_value + paddle.clip(values - batch_value, -self.clip_param, self.clip_param)
             value_losses = (values - batch_return).pow(2)
             value_losses_clipped = (value_pred_clipped - batch_return).pow(2)
-            value_loss = 0.5 * paddle.maximum(value_losses,
-                                              value_losses_clipped).mean()
+            value_loss = 0.5 * paddle.maximum(value_losses, value_losses_clipped).mean()
         else:
             value_loss = 0.5 * (values - batch_return).pow(2).mean()
 
@@ -168,23 +144,14 @@ class PPO(parl.Algorithm):
         """
         value = self.model.value(obs)
 
-        if self.continuous_action:
-            mean, std = self.model.policy(obs)
-            dist = Normal(mean, std)
-            action = dist.sample([1])
+        logits = self.model.policy(obs)
+        dist = Categorical(logits=logits)
+        action = dist.sample([1])
 
-            action_log_probs = dist.log_prob(action).sum(-1)
-            action_entropy = dist.entropy().sum(-1).mean()
-        else:
-            logits = self.model.policy(obs)
-            dist = Categorical(logits=logits)
-            action = dist.sample([1])
-
-            act_dim = logits.shape[-1]
-            actions_onehot = F.one_hot(action, act_dim)
-            action_log_probs = paddle.sum(
-                F.log_softmax(logits) * actions_onehot, axis=-1)
-            action_entropy = dist.entropy()
+        act_dim = logits.shape[-1]
+        actions_onehot = F.one_hot(action, act_dim)
+        action_log_probs = paddle.sum(F.log_softmax(logits) * actions_onehot, axis=-1)
+        action_entropy = dist.entropy()
 
         return value, action, action_log_probs, action_entropy
 
@@ -197,12 +164,9 @@ class PPO(parl.Algorithm):
             action (torch tensor): action, shape([batch_size] + action_shape),
                 noted that in the discrete case we take the argmax along the last axis as action
         """
-        if self.continuous_action:
-            action, _ = self.model.policy(obs)
-        else:
-            logits = self.model.policy(obs)
-            probs = F.softmax(logits)
-            action = paddle.argmax(probs, 1)
+        logits = self.model.policy(obs)
+        probs = F.softmax(logits)
+        action = paddle.argmax(probs, 1)
         return action
 
     def value(self, obs):

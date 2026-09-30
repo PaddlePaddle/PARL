@@ -73,6 +73,7 @@ class RemoteWrapper(object):
 
         # Send actor commands like `init` and `call` to the job.
         self.job_socket = self.ctx.socket(zmq.REQ)
+        self.ctx.authenticate_client(self.job_socket)
         self.job_socket.linger = 0
         self.job_socket.connect("tcp://{}".format(job_address))
         # check the result every 20s to detect the job is still alive.
@@ -160,7 +161,7 @@ class RemoteWrapper(object):
             self.job_is_alive.value = False
             raise NotImplementedError()
         return
-    
+
     def _receive_from_remote_instance(self, attr):
         """Receive message from remote instance while checking the job status every  20 seconds.
         """

@@ -29,9 +29,9 @@ def create_server_socket(ctx, heartbeat_timeout=False):
         port(int): port of the server socket.
     """
     socket = ctx.socket(zmq.REP)
+    ctx.authenticate_server(socket)
     if heartbeat_timeout:
-        socket.setsockopt(zmq.RCVTIMEO,
-                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
+        socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
     socket.linger = 0
     port = socket.bind_to_random_port(addr="tcp://*")
     return socket, port
@@ -51,9 +51,9 @@ def create_client_socket(ctx, server_socket_address, heartbeat_timeout=False):
         socket(zmq.Context().socket): socket of the client.
     """
     socket = ctx.socket(zmq.REQ)
+    ctx.authenticate_client(socket)
     if heartbeat_timeout:
-        socket.setsockopt(zmq.RCVTIMEO,
-                          remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
+        socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_RCVTIMEO_S * 1000)
     socket.linger = 0
     socket.connect("tcp://{}".format(server_socket_address))
 

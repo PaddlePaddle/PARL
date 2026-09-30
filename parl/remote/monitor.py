@@ -13,15 +13,17 @@
 # limitations under the License.
 
 import argparse
-import pickle
 import random
 import time
 import zmq
 import threading
 
 from flask import Flask, render_template, jsonify, request
+from parl.remote import control_serialization
+from parl.remote.security import SecureContext, get_control_bind_host, require_http_auth
 
 app = Flask(__name__)
+app.before_request(require_http_auth)
 
 
 @app.route('/')
@@ -42,8 +44,9 @@ class ClusterMonitor(object):
     """
 
     def __init__(self, master_address, gpu_cluster=False):
-        ctx = zmq.Context()
+        ctx = SecureContext()
         self.socket = ctx.socket(zmq.REQ)
+        ctx.authenticate_client(self.socket)
         self.socket.setsockopt(zmq.RCVTIMEO, 30000)
         self.socket.connect('tcp://{}'.format(master_address))
         self.data = None
@@ -60,7 +63,7 @@ class ClusterMonitor(object):
                 self.socket.send_multipart([b'[MONITOR]'])
                 msg = self.socket.recv_multipart()
 
-                status = pickle.loads(msg[1])
+                status = control_serialization.loads(msg[1])
                 data = {'workers': [], 'clients': []}
                 total_vacant_cpus = 0
                 total_used_cpus = 0
@@ -152,4 +155,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     CLUSTER_MONITOR = ClusterMonitor(args.address, args.gpu_cluster)
-    app.run(host="0.0.0.0", port=args.monitor_port)
+    app.run(host=get_control_bind_host(), port=args.monitor_port)

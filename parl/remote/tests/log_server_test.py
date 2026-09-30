@@ -15,7 +15,6 @@
 import json
 import multiprocessing
 import os
-import pickle
 import subprocess
 import sys
 import tempfile
@@ -32,6 +31,12 @@ from parl.utils import _IS_WINDOWS
 from parl.utils.test_utils import XparlTestCase
 from parl.utils import get_free_tcp_port
 from parl.remote.master import Master
+from parl.remote import control_serialization
+from parl.remote.security import get_auth_token
+
+
+def authenticated_get(url, **kwargs):
+    return requests.get(url, auth=('xparl', get_auth_token()), **kwargs)
 
 
 @parl.remote_class
@@ -83,7 +88,7 @@ class TestLogServer(XparlTestCase):
 
         # Get status
         status = master._get_status()
-        client_jobs = pickle.loads(status).get('client_jobs')
+        client_jobs = control_serialization.loads(status).get('client_jobs')
         self.assertIsNotNone(client_jobs)
 
         # Get job id
@@ -94,10 +99,10 @@ class TestLogServer(XparlTestCase):
         for job_id, log_server_addr in jobs.items():
             log_url = "http://{}/get-log".format(log_server_addr)
             # Test response without job_id
-            r = requests.get(log_url)
+            r = authenticated_get(log_url)
             self.assertEqual(r.status_code, 400)
             # Test normal response
-            r = requests.get(log_url, params={'job_id': job_id})
+            r = authenticated_get(log_url, params={'job_id': job_id})
             self.assertEqual(r.status_code, 200)
             log_content = json.loads(r.text).get('log')
             self.assertIsNotNone(log_content)
@@ -106,7 +111,7 @@ class TestLogServer(XparlTestCase):
 
             # Test download
             download_url = "http://{}/download-log".format(log_server_addr)
-            r = requests.get(download_url, params={'job_id': job_id})
+            r = authenticated_get(download_url, params={'job_id': job_id})
             self.assertEqual(r.status_code, 200)
             log_content = r.text.replace('\r\n', '\n')
             self.assertIn(log_content, outputs)
@@ -122,8 +127,7 @@ class TestLogServer(XparlTestCase):
         time.sleep(1)
         # start the cluster monitor
         monitor_file = __file__.replace('log_server_test.pyc', '../monitor.py')
-        monitor_file = monitor_file.replace('log_server_test.py',
-                                            '../monitor.py')
+        monitor_file = monitor_file.replace('log_server_test.py', '../monitor.py')
         command = [
             sys.executable, monitor_file, "--monitor_port",
             str(monitor_port), "--address", "localhost:" + str(master_port)
@@ -132,8 +136,7 @@ class TestLogServer(XparlTestCase):
             FNULL = tempfile.TemporaryFile()
         else:
             FNULL = open(os.devnull, 'w')
-        monitor_proc = subprocess.Popen(
-            command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
+        monitor_proc = subprocess.Popen(command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
 
         # Start worker
         cluster_addr = 'localhost:{}'.format(master_port)
@@ -143,15 +146,14 @@ class TestLogServer(XparlTestCase):
         outputs = self._connect_and_create_actor(cluster_addr)
         time.sleep(5)  # Wait for the status update
         client = get_global_client()
-        jobs_url = "{}/get-jobs?client_id={}".format(master.monitor_url,
-                                                     client.client_id)
-        r = requests.get(jobs_url)
+        jobs_url = "{}/get-jobs?client_id={}".format(master.monitor_url, client.client_id)
+        r = authenticated_get(jobs_url)
         self.assertEqual(r.status_code, 200)
         data = json.loads(r.text)
         for job in data:
             log_url = job.get('log_url')
             self.assertIsNotNone(log_url)
-            r = requests.get(log_url)
+            r = authenticated_get(log_url)
             self.assertEqual(r.status_code, 200)
             log_content = json.loads(r.text).get('log')
             self.assertIsNotNone(log_content)
@@ -160,7 +162,7 @@ class TestLogServer(XparlTestCase):
 
             # Test download
             download_url = job.get('download_url')
-            r = requests.get(download_url)
+            r = authenticated_get(download_url)
             self.assertEqual(r.status_code, 200)
             log_content = r.text.replace('\r\n', '\n')
             self.assertIn(log_content, outputs)

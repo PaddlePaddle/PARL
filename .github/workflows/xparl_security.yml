@@ -1,0 +1,29 @@
+name: xparl security
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  control-security:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install xparl test dependencies
+        run: |
+          python -m pip install 'setuptools<81' 'numpy<2' scipy 'pyzmq==22.3.0' 'cloudpickle==1.6.0' 'grpcio>=1.48' 'protobuf==3.20.0' termcolor psutil flask flask-cors click requests pynvml six
+          python -m pip install --no-deps .
+      - name: Test control authentication and JSON metadata
+        env:
+          XPARL_igonre_core: '1'
+        run: python -m unittest discover -s parl/remote/tests -p control_security_test.py -v

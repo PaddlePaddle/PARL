@@ -26,6 +26,7 @@ import threading
 import tempfile
 import warnings
 import zmq
+from parl.remote.security import SecureContext, get_control_bind_host
 from multiprocessing import Process
 from parl.utils import (_IS_WINDOWS, get_free_tcp_port, get_ip_address, get_port_from_range, is_port_available,
                         kill_process, to_str)
@@ -50,8 +51,9 @@ if sys.version_info.major == 3:
 
 
 def is_master_started(address):
-    ctx = zmq.Context()
+    ctx = SecureContext()
     socket = ctx.socket(zmq.REQ)
+    ctx.authenticate_client(socket)
     socket.linger = 0
     socket.setsockopt(zmq.RCVTIMEO, 500)
     socket.connect("tcp://{}".format(address))
@@ -226,7 +228,9 @@ def start_master(port, gpu_cluster, cpu_num, gpu, monitor_port, debug, log_serve
             break
         time.sleep(3)
 
-    master_ip = get_ip_address()
+    master_ip = get_control_bind_host()
+    if master_ip in ('0.0.0.0', '*'):
+        master_ip = get_ip_address()
     if monitor_is_started:
         start_info = """
         ## If you want to check cluster status, please view:
@@ -324,7 +328,7 @@ def status():
     if len(clusters) == 0:
         click.echo('No active cluster is found.')
     else:
-        ctx = zmq.Context()
+        ctx = SecureContext()
         status = []
         for cluster in clusters:
             if _IS_WINDOWS:
@@ -341,6 +345,7 @@ def status():
                 master_address = monitors[0].split(' ')[2]
                 monitor_address = "{}:{}".format(get_ip_address(), monitor_port)
                 socket = ctx.socket(zmq.REQ)
+                ctx.authenticate_client(socket)
                 socket.setsockopt(zmq.RCVTIMEO, 10000)
                 socket.connect('tcp://{}'.format(master_address))
                 try:

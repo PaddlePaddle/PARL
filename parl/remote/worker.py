@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cloudpickle
+from parl.remote import control_serialization
 import multiprocessing as mp
 import os
 import psutil
@@ -25,12 +25,13 @@ import time
 import threading
 import warnings
 import zmq
+from parl.remote.security import SecureContext, get_control_bind_host
 from datetime import datetime
 import pynvml
 import parl
 from parl.utils import get_ip_address, to_byte, to_str, logger, _IS_WINDOWS
 from parl.remote import remote_constants
-from parl.remote.message import InitializedWorker, AllocatedCpu, AllocatedGpu
+from parl.remote.message import InitializedWorker, InitializedJob, AllocatedCpu, AllocatedGpu
 from parl.remote.status import WorkerStatus
 from parl.remote.zmq_utils import create_server_socket, create_client_socket
 from parl.remote.grpc_heartbeat import HeartbeatServerThread, HeartbeatClientThread
@@ -81,7 +82,7 @@ class Worker(object):
         # initialzation
         self.pid = str(os.getpid())
         self.lock = threading.Lock()
-        self.ctx = zmq.Context.instance()
+        self.ctx = SecureContext.instance()
         self.master_address = master_address
         self.master_is_alive = True
         self.worker_is_alive = True
@@ -171,6 +172,7 @@ class Worker(object):
 
         # request_master_socket: sends job address to master
         self.request_master_socket = self.ctx.socket(zmq.REQ)
+        self.ctx.authenticate_client(self.request_master_socket)
         self.request_master_socket.linger = 0
 
         # wait for 0.5 second to check whether master is started
@@ -179,12 +181,14 @@ class Worker(object):
 
         # reply_job_socket: receives job_address from subprocess
         self.reply_job_socket = self.ctx.socket(zmq.REP)
+        self.ctx.authenticate_server(self.reply_job_socket)
         self.reply_job_socket.linger = 0
         reply_job_port = self.reply_job_socket.bind_to_random_port("tcp://*")
         self.reply_job_address = "{}:{}".format(self.worker_ip, reply_job_port)
 
         # remove_job_socket
         self.remove_job_socket = self.ctx.socket(zmq.REP)
+        self.ctx.authenticate_server(self.remove_job_socket)
         self.remove_job_socket.linger = 0
         remove_job_port = self.remove_job_socket.bind_to_random_port("tcp://*")
         self.remove_job_address = "{}:{}".format(self.worker_ip, remove_job_port)
@@ -237,7 +241,7 @@ class Worker(object):
                                                allocated_gpu, socket.gethostname())
         self.request_master_socket.send_multipart(
             [remote_constants.WORKER_INITIALIZED_TAG,
-             cloudpickle.dumps(initialized_worker)])
+             control_serialization.dumps(initialized_worker)])
 
         message = self.request_master_socket.recv_multipart()
         if message[0] == remote_constants.REJECT_CPU_WORKER_TAG:
@@ -295,8 +299,11 @@ class Worker(object):
         new_jobs = []
         for _ in range(job_num):
             job_init_message = self.reply_job_socket.recv_multipart()
-            self.reply_job_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(self.remove_job_address), to_byte(self.pid)])
-            initialized_job = cloudpickle.loads(job_init_message[1])
+            self.reply_job_socket.send_multipart(
+                [remote_constants.NORMAL_TAG,
+                 to_byte(self.remove_job_address),
+                 to_byte(self.pid)])
+            initialized_job = control_serialization.loads(job_init_message[1], InitializedJob)
             new_jobs.append(initialized_job)
 
             def heartbeat_exit_callback_func(job):
@@ -337,7 +344,7 @@ class Worker(object):
             self.lock.acquire()
             self.request_master_socket.send_multipart(
                 [remote_constants.NEW_JOB_TAG,
-                 cloudpickle.dumps(initialized_job),
+                 control_serialization.dumps(initialized_job),
                  to_byte(job_address)])
             _ = self.request_master_socket.recv_multipart()
             self.lock.release()
@@ -403,7 +410,7 @@ class Worker(object):
                 self.request_master_socket.send_multipart([
                     remote_constants.WORKER_STATUS_UPDATE_TAG,
                     to_byte(self.master_heartbeat_address),
-                    cloudpickle.dumps(worker_status)
+                    control_serialization.dumps(worker_status)
                 ])
                 message = self.request_master_socket.recv_multipart()
             except zmq.error.Again as e:
@@ -441,7 +448,10 @@ class Worker(object):
         log_server_proc = subprocess.Popen(command, stdout=FNULL, close_fds=True)
         FNULL.close()
 
-        log_server_address = "{}:{}".format(self.worker_ip, port)
+        log_host = get_control_bind_host()
+        if log_host in ('0.0.0.0', '*'):
+            log_host = self.worker_ip
+        log_server_address = "{}:{}".format(log_host, port)
 
         message = self.reply_log_server_socket.recv_multipart()
         log_server_heartbeat_addr = to_str(message[1])

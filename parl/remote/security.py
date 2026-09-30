@@ -65,8 +65,12 @@ class SecureContext(zmq.Context):
         with self._xparl_auth_lock:
             if self._xparl_authenticator is None:
                 authenticator = ThreadAuthenticator(self)
-                authenticator.configure_curve_callback('xparl', _ClusterCredentials(client_public))
                 authenticator.start()
+                try:
+                    authenticator.configure_curve_callback('xparl', _ClusterCredentials(client_public))
+                except Exception:
+                    authenticator.stop()
+                    raise
                 self._xparl_authenticator = authenticator
         socket.curve_publickey = server_public
         socket.curve_secretkey = server_secret

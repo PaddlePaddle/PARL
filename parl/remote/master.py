@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import pickle
 import threading
 import time
 import zmq
@@ -25,9 +24,11 @@ from parl.remote import remote_constants
 from parl.remote.worker_manager import WorkerManager
 from parl.remote.cluster_monitor import ClusterMonitor
 from parl.remote.grpc_heartbeat import HeartbeatClientThread
-import cloudpickle
 import time
 from parl.remote.utils import get_version
+from parl.remote import control_serialization
+from parl.remote.message import InitializedWorker, InitializedJob
+from parl.remote.security import SecureContext, get_control_bind_host
 
 
 class Master(object):
@@ -65,14 +66,19 @@ class Master(object):
     """
 
     def __init__(self, port, monitor_port=None, device=remote_constants.CPU):
-        self.ctx = zmq.Context()
+        self.ctx = SecureContext()
         self.master_ip = get_ip_address()
         self.all_client_heartbeat_threads = []
         self.all_worker_heartbeat_threads = []
-        self.monitor_url = "http://{}:{}".format(self.master_ip, monitor_port)
+        monitor_host = get_control_bind_host()
+        if monitor_host in ('0.0.0.0', '*'):
+            monitor_host = self.master_ip
+        self.monitor_url = "http://{}:{}".format(monitor_host, monitor_port)
         logger.set_dir(os.path.expanduser('~/.parl_data/master/{}_{}'.format(self.master_ip, port)))
         self.client_socket = self.ctx.socket(zmq.REP)
-        self.client_socket.bind("tcp://*:{}".format(port))
+        self.ctx.authenticate_server(self.client_socket)
+        self.client_socket.setsockopt(zmq.MAXMSGSIZE, control_serialization.MAX_CONTROL_BYTES)
+        self.client_socket.bind("tcp://{}:{}".format(get_control_bind_host(), port))
         self.client_socket.linger = 0
         self.port = port
         self.device = device
@@ -112,6 +118,11 @@ class Master(object):
         submittion; (5) reset job.
         """
         message = self.client_socket.recv_multipart()
+        try:
+            self._validate_message(message)
+        except (ValueError, TypeError, KeyError):
+            self.client_socket.send_multipart([remote_constants.INVALID_MESSAGE_TAG])
+            return
         tag = message[0]
 
         # a new worker connects to the master
@@ -128,7 +139,7 @@ class Master(object):
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG, to_byte(status_info)])
 
         elif tag == remote_constants.WORKER_INITIALIZED_TAG:
-            initialized_worker = cloudpickle.loads(message[1])
+            initialized_worker = control_serialization.loads(message[1], InitializedWorker)
             worker_address = initialized_worker.worker_address
             success = self.worker_manager.add_worker(initialized_worker)
             if not success:
@@ -218,7 +229,9 @@ class Master(object):
                 logger.info("Submitting job...")
                 job_info = self.worker_manager.request_job(n_cpu=n_cpu, n_gpu=n_gpu)
                 if job_info:
-                    self.client_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(job_info)])
+                    self.client_socket.send_multipart(
+                        [remote_constants.NORMAL_TAG,
+                         control_serialization.dumps(job_info)])
                     client_id = to_str(message[2])
                     self.cluster_monitor.add_client_job(client_id, {job_info.job_id: job_info.log_server_address})
                     self._print_workers()
@@ -230,7 +243,7 @@ class Master(object):
 
         # a worker updates
         elif tag == remote_constants.NEW_JOB_TAG:
-            initialized_job = cloudpickle.loads(message[1])
+            initialized_job = control_serialization.loads(message[1], InitializedJob)
             last_job_address = to_str(message[2])
 
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
@@ -245,7 +258,7 @@ class Master(object):
         # client update status periodically
         elif tag == remote_constants.CLIENT_STATUS_UPDATE_TAG:
             client_heartbeat_address = to_str(message[1])
-            client_status = cloudpickle.loads(message[2])
+            client_status = control_serialization.loads_status(message[2])
 
             client_status['client_hostname'] = self.client_hostname[client_heartbeat_address]
             self.cluster_monitor.update_client_status(client_heartbeat_address, client_status)
@@ -254,7 +267,7 @@ class Master(object):
         # worker update status periodically
         elif tag == remote_constants.WORKER_STATUS_UPDATE_TAG:
             worker_address = to_str(message[1])
-            worker_status = cloudpickle.loads(message[2])
+            worker_status = control_serialization.loads_status(message[2], worker=True)
 
             vacant_cpus = self.worker_manager.get_vacant_cpu(worker_address)
             total_cpus = self.worker_manager.get_total_cpu(worker_address)
@@ -270,7 +283,51 @@ class Master(object):
             self.client_socket.send_multipart([remote_constants.NORMAL_TAG])
 
         else:
-            raise NotImplementedError()
+            self.client_socket.send_multipart([remote_constants.INVALID_MESSAGE_TAG])
+
+    def _validate_message(self, message):
+        counts = {
+            remote_constants.WORKER_CONNECT_TAG: 1,
+            remote_constants.MONITOR_TAG: 1,
+            remote_constants.STATUS_TAG: 1,
+            remote_constants.WORKER_INITIALIZED_TAG: 2,
+            remote_constants.CLIENT_CONNECT_TAG: 4,
+            remote_constants.CHECK_VERSION_TAG: 1,
+            remote_constants.CLIENT_SUBMIT_TAG: 5,
+            remote_constants.NEW_JOB_TAG: 3,
+            remote_constants.CLIENT_STATUS_UPDATE_TAG: 3,
+            remote_constants.WORKER_STATUS_UPDATE_TAG: 3,
+            remote_constants.NORMAL_TAG: 1
+        }
+        if not message or message[0] not in counts or len(message) != counts[message[0]]:
+            raise ValueError('Invalid control message frames.')
+        tag = message[0]
+        payload_frame = {
+            remote_constants.WORKER_INITIALIZED_TAG: 1,
+            remote_constants.NEW_JOB_TAG: 1,
+            remote_constants.CLIENT_STATUS_UPDATE_TAG: 2,
+            remote_constants.WORKER_STATUS_UPDATE_TAG: 2
+        }.get(tag)
+        for index, frame in enumerate(message[1:], 1):
+            if index != payload_frame:
+                if len(frame) > 4096:
+                    raise ValueError('Control field is too large.')
+                frame.decode('utf-8')
+        if tag == remote_constants.WORKER_INITIALIZED_TAG:
+            control_serialization.loads(message[1], InitializedWorker)
+        elif tag == remote_constants.NEW_JOB_TAG:
+            job = control_serialization.loads(message[1], InitializedJob)
+            if job.worker_address not in self.worker_manager.worker_hostname:
+                raise ValueError('Unknown worker.')
+        elif tag == remote_constants.CLIENT_STATUS_UPDATE_TAG:
+            control_serialization.loads_status(message[2])
+        elif tag == remote_constants.WORKER_STATUS_UPDATE_TAG:
+            control_serialization.loads_status(message[2], worker=True)
+            if to_str(message[1]) not in self.worker_manager.worker_hostname:
+                raise ValueError('Unknown worker.')
+        elif tag == remote_constants.CLIENT_SUBMIT_TAG:
+            if int(message[3]) < 0 or int(message[4]) < 0:
+                raise ValueError('Negative resource request.')
 
     def exit(self):
         """ Close the master.

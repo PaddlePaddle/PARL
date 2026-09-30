@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cloudpickle
+from parl.remote import control_serialization
 import threading
 from collections import defaultdict, deque
 from parl.utils import to_str
@@ -135,12 +135,10 @@ class ClusterMonitor(object):
             vacant_gpus += worker.get('vacant_gpus', 0)
         self.lock.release()
         status_info = "has {} used cpus, {} vacant cpus, {} used_gpus, {} vacant_gpus.".format(
-                used_cpus, vacant_cpus, used_gpus, vacant_gpus)
+            used_cpus, vacant_cpus, used_gpus, vacant_gpus)
         return status_info
 
     def get_status(self):
-        """Return a cloudpickled status."""
-        self.lock.acquire()
-        status = cloudpickle.dumps(self.status)
-        self.lock.release()
-        return status
+        """Return data-only JSON status."""
+        with self.lock:
+            return control_serialization.dumps(self.status)

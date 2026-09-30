@@ -23,6 +23,7 @@ import compatible_trick
 
 import argparse
 import cloudpickle
+from parl.remote import control_serialization
 import pickle
 import psutil
 import re
@@ -33,6 +34,7 @@ import threading
 import time
 import traceback
 import zmq
+from parl.remote.security import SecureContext
 import importlib
 import parl
 from multiprocessing import Process, Pipe
@@ -123,7 +125,7 @@ class Job(object):
         self.job_address = self.job_address_receiver.recv()
         self.job_id = self.job_id_receiver.recv()
 
-        self.ctx = zmq.Context()
+        self.ctx = SecureContext()
         # create the job_socket
         self.job_socket = create_client_socket(self.ctx, self.worker_address, heartbeat_timeout=True)
 
@@ -150,7 +152,7 @@ class Job(object):
                                          self.log_server_address)
 
         try:
-            self.job_socket.send_multipart([remote_constants.NORMAL_TAG, cloudpickle.dumps(initialized_job)])
+            self.job_socket.send_multipart([remote_constants.NORMAL_TAG, control_serialization.dumps(initialized_job)])
             message = self.job_socket.recv_multipart()
         except zmq.error.Again as e:
             logger.warning("[Job] Cannot connect to the worker {}. ".format(self.worker_address) + "Job will quit.")
@@ -164,6 +166,7 @@ class Job(object):
         self.worker_pid = int(to_str(message[2]))
         worker_heartbeat_server_thread.set_host_pid(self.worker_pid)
         self.remove_job_socket = self.ctx.socket(zmq.REQ)
+        self.ctx.authenticate_client(self.remove_job_socket)
         self.remove_job_socket.setsockopt(zmq.RCVTIMEO, remote_constants.HEARTBEAT_TIMEOUT_S * 1000)
         self.remove_job_socket.connect("tcp://{}".format(remove_job_address))
 
@@ -332,10 +335,11 @@ class Job(object):
         Args:
             job_address_sender(sending end of multiprocessing.Pipe): send job address of reply_socket to main process.
         """
-        ctx = zmq.Context()
+        ctx = SecureContext()
 
         # create the reply_socket
         reply_socket = ctx.socket(zmq.REP)
+        ctx.authenticate_server(reply_socket)
         job_port = reply_socket.bind_to_random_port(addr="tcp://*")
         reply_socket.linger = 0
         job_ip = get_ip_address()

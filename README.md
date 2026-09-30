@@ -129,14 +129,13 @@ For beginners who know little about reinforcement learning, we also provide an i
 
 # xparl Security
 
-`xparl` provides multi-process parallelism across a multi-machine cluster, similar to Python's built-in single-machine multiprocessing. This means that after writing code on a client, you can execute arbitrary code on any machine within the cluster, such as retrieving data from other machines, adding or deleting files, etc. 
-
-This behavior is by design, as reinforcement learning environments are diverse, and `env_wrapper` needs the ability to perform any possible operation. `xparl` achieves this functionality using `pickle` (similar to `ray`). Unlike in most cases where `pickle` may be considered a vulnerability, here it is an essential feature.
+`xparl` runs Python code on trusted cluster machines. Set a shared, randomly generated `XPARL_AUTH_TOKEN` of at least 32 bytes on every master, worker, and client before startup. All ZeroMQ connections require CURVE authentication and encryption; control metadata uses validated JSON. The master and HTTP services bind to loopback by default, and HTTP monitoring/log routes require credentials.
 
 ## Security Considerations
 
-Since arbitrary code execution is possible, users must ensure the cluster is secure:
+- Only trusted users and machines may hold the cluster secret or submit code.
+- Keep all cluster and heartbeat ports on a private network behind a firewall.
+- Upgrade all nodes and clients together; older processes cannot use the new protocol.
+- Existing published packages require an upgrade to patched source or a release containing the fix.
 
-- **Do not allow untrusted machines to join the cluster.**  
-- **Do not expose the `xparl` ports to the public internet or allow untrusted users to access the cluster.**  
-- **Do not execute untrusted code on the cluster.**
+See the [security and upgrade guide](docs/xparl_security.md) for configuration, monitoring access, and migration steps.

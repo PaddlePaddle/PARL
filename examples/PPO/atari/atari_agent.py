@@ -18,7 +18,7 @@ import numpy as np
 from parl.utils.scheduler import LinearDecayScheduler
 
 
-class PPOAgent(parl.Agent):
+class AtariAgent(parl.Agent):
     """ Agent of PPO env
 
     Args:
@@ -27,12 +27,11 @@ class PPOAgent(parl.Agent):
     """
 
     def __init__(self, algorithm, config):
-        super(PPOAgent, self).__init__(algorithm)
+        super(AtariAgent, self).__init__(algorithm)
 
         self.config = config
         if self.config['lr_decay']:
-            self.lr_scheduler = LinearDecayScheduler(
-                self.config['initial_lr'], self.config['num_updates'])
+            self.lr_scheduler = LinearDecayScheduler(self.config['initial_lr'], self.config['num_updates'])
 
     def predict(self, obs):
         """ Predict action from current policy given observation
@@ -85,8 +84,7 @@ class PPOAgent(parl.Agent):
         else:
             lr = None
 
-        minibatch_size = int(
-            self.config['batch_size'] // self.config['num_minibatches'])
+        minibatch_size = int(self.config['batch_size'] // self.config['num_minibatches'])
 
         indexes = np.arange(self.config['batch_size'])
         for epoch in range(self.config['update_epochs']):
@@ -105,9 +103,8 @@ class PPOAgent(parl.Agent):
                 batch_return = paddle.to_tensor(batch_return)
                 batch_value = paddle.to_tensor(batch_value)
 
-                value_loss, action_loss, entropy_loss = self.alg.learn(
-                    batch_obs, batch_action, batch_value, batch_return,
-                    batch_logprob, batch_adv, lr)
+                value_loss, action_loss, entropy_loss = self.alg.learn(batch_obs, batch_action, batch_value,
+                                                                       batch_return, batch_logprob, batch_adv, lr)
 
                 value_loss_epoch += value_loss
                 action_loss_epoch += action_loss

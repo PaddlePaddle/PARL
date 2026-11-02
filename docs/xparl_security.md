@@ -18,7 +18,7 @@ All HTTP monitor and log routes require HTTP Basic authentication: username `xpa
 
 ## Upgrading affected installations
 
-The fix is in the `develop` source branch. Existing PyPI packages and earlier tags are not changed by a source merge. Install the patched source commit on all nodes, or upgrade to a subsequently published release containing it. This JSON/CURVE protocol is incompatible with older xparl processes. Stop the old cluster, configure the secret and private bind addresses, upgrade every node/client, and then restart.
+The fix is included in the `v2.2.2` GitHub source release and in `develop` starting at commit `252deeb9d522ecb42ef0106524b2e9de56c05666` (PR #1176). Older published packages, including PyPI 2.2.1, do not include this fix. A GitHub release does not update existing PyPI artifacts. Install the fixed tag on every node/client with `python -m pip install --upgrade "git+https://github.com/PaddlePaddle/PARL.git@v2.2.2"`, or use a later package release that contains the patch. This JSON/CURVE protocol is incompatible with older xparl processes. Stop the old cluster, configure the secret and private bind addresses, upgrade every node/client, and then restart.
 
 For an installation that cannot yet upgrade, restrict the master, monitor, log, worker/job, and heartbeat ports to trusted hosts through firewalls or security groups. The reported ports 8010/8137/8200 are examples; check actual configuration and dynamic ports. Remove public exposure immediately. If an old installation was exposed, investigate its host and logs; applying a source patch does not establish whether it was previously compromised.
 

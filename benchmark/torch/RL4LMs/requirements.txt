@@ -1,0 +1,11 @@
+parl>=2.1.1
+datasets==2.10.1
+torch==1.11.0
+torchvision==0.12.0
+transformers==4.18.0
+charset-normalizer==3.0.1
+gym==0.21.0
+cchardet==2.1.7
+nltk==3.7
+gem-metrics @ git+https://github.com/GEM-benchmark/GEM-metrics.git@431a8174bd6b3637e8d6118bfad2983e39e99733
+bert-score==0.3.11

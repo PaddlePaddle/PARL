@@ -49,12 +49,14 @@ function run_example_test {
     python -m pip uninstall -r ./examples/DQN_variant/requirements.txt -y
     
     python -m pip install -r ./examples/PPO/requirements_atari.txt
-    python examples/PPO/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
+    python examples/PPO/atari/train.py --train_total_steps 5000 --env PongNoFrameskip-v4
     python -m pip uninstall -r ./examples/PPO/requirements_atari.txt -y
 
+    xparl start --port 8010 --cpu_num 8
     python -m pip install -r ./examples/PPO/requirements_mujoco.txt
-    python examples/PPO/train.py --train_total_steps 5000 --env HalfCheetah-v4 --continuous_action
+    python examples/PPO/mujoco/train.py --env 'HalfCheetah-v2' --train_total_episodes 100 --env_num 5
     python -m pip uninstall -r ./examples/PPO/requirements_mujoco.txt -y
+    xparl stop
 
     python -m pip install -r ./examples/SAC/requirements.txt
     python examples/SAC/train.py --train_total_steps 5000 --env HalfCheetah-v4
